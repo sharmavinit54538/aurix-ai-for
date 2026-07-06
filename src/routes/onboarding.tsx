@@ -29,11 +29,97 @@ export const Route = createFileRoute("/onboarding")({
   component: OnboardingPage,
 });
 
-const STEPS = ["Company", "HR team", "Employees", "Managers", "Review", "Done"];
+const STEPS = ["Company", "Admin Profile", "HR Settings", "Departments & Designations", "Invite Employees", "Complete"];
 const INDUSTRIES = ["Software", "Finance", "Healthcare", "Retail", "Manufacturing", "Education", "Other"];
 const SIZES = ["1–10", "11–50", "51–200", "201–500", "501–1000", "1000+"];
 const TIMEZONES = ["UTC", "America/New_York", "America/Los_Angeles", "Europe/London", "Europe/Berlin", "Asia/Kolkata", "Asia/Singapore", "Australia/Sydney"];
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+// Maps the backend's onboarding_step (1-6) to the index of STEPS.
+// 1 = Company, 2 = Admin profile, 3 = HR settings, 4 = Departments/Designations,
+// 5 = Invite employees, 6 = Complete.
+function backendStepToUiIndex(backendStep: number): number {
+  return Math.max(0, Math.min(5, backendStep - 1));
+}
+
+// Recomputes departments + designations from whatever HR/Employee/Manager
+// records exist so far and pushes them to the backend. Safe to call after
+// every step because /onboarding/departments and /onboarding/designations
+// replace the company's full list each time (delete-then-insert), so calling
+// this repeatedly as the admin adds more people just keeps the list in sync.
+async function syncDeptsAndDesignations(ws: ReturnType<typeof useAurix>) {
+  const deptNames = Array.from(new Set([
+    "Management",
+    ...ws.hrs.map((h) => h.department),
+    ...ws.employees.map((e) => e.department),
+    ...ws.managers.map((m) => m.department),
+  ].filter(Boolean)));
+  const depts = deptNames.map((d, index) => ({
+    department_code: d.substring(0, 3).toUpperCase() + "_" + (10 + index),
+    department_name: d,
+    description: `Department for ${d}`,
+  }));
+  await api.post("onboarding/departments", { departments: depts });
+
+  const designations = Array.from(new Set([
+    "Company Owner",
+    ...ws.hrs.map((h) => h.designation),
+    ...ws.employees.map((e) => e.designation),
+    ...ws.managers.map((m) => m.designation),
+  ].filter(Boolean)));
+  await api.post("onboarding/designations", { designations });
+}
+
+// Builds the combined invite list from HR + Employees + Managers and pushes
+// it once (called from the last data-entry step, Managers → Continue).
+async function syncInvites(ws: ReturnType<typeof useAurix>) {
+  const allInvites = [
+    ...ws.hrs.map((h) => {
+      const parts = h.fullName.split(" ");
+      return {
+        first_name: parts[0] || "HR",
+        last_name: parts.slice(1).join(" ") || "Member",
+        personal_email: h.email,
+        phone: h.phone || "9876543210",
+        department: h.department || "Human Resources",
+        designation: h.designation || "HR Specialist",
+      };
+    }),
+    ...ws.employees.map((e) => {
+      const parts = e.fullName.split(" ");
+      return {
+        first_name: parts[0] || "Employee",
+        last_name: parts.slice(1).join(" ") || "Member",
+        personal_email: e.email,
+        phone: e.phone || "9876543210",
+        department: e.department || "Engineering",
+        designation: e.designation || "Software Engineer",
+      };
+    }),
+    ...ws.managers.map((m) => {
+      const parts = m.fullName.split(" ");
+      return {
+        first_name: parts[0] || "Manager",
+        last_name: parts.slice(1).join(" ") || "Member",
+        personal_email: m.email,
+        phone: m.phone || "9876543210",
+        department: m.department || "Management",
+        designation: m.designation || "Team Manager",
+      };
+    }),
+  ].filter((x) => x.personal_email && x.first_name);
+
+  allInvites.forEach((inv) => {
+    const cleanPhone = inv.phone.replace(/\D/g, "");
+    inv.phone = cleanPhone.length >= 10 ? cleanPhone.substring(0, 10) : "9876543210";
+  });
+
+  if (allInvites.length > 0) {
+    await api.post("onboarding/invite-employees", { employees: allInvites, skip: false });
+  } else {
+    await api.post("onboarding/invite-employees", { employees: [], skip: true });
+  }
+}
 
 function OnboardingPage() {
   const navigate = useNavigate();
@@ -78,15 +164,63 @@ function OnboardingPage() {
       });
   }, [token]);
 
+  const [resuming, setResuming] = useState(true);
+
   useEffect(() => {
-    if (token) return; // skip for employee onboarding
+    if (token) { setResuming(false); return; } // skip for employee onboarding
     if (!ws.user) {
       navigate({ to: "/register" });
-    } else if (!ws.user.emailVerified) {
-      navigate({ to: "/verify-email" });
-    } else if (ws.user.onboardingComplete) {
-      navigate({ to: "/dashboard" });
+      return;
     }
+    if (!ws.user.emailVerified) {
+      navigate({ to: "/verify-email" });
+      return;
+    }
+    if (ws.user.onboardingComplete) {
+      navigate({ to: "/dashboard" });
+      return;
+    }
+
+    // Resume where the admin left off, using the backend as the source of
+    // truth (not localStorage) — this is what makes "close tab, log back in"
+    // land on the right step instead of re-asking for Company details.
+    let cancelled = false;
+    (async () => {
+      try {
+        const statusRes: any = await api.get("onboarding/status");
+        const backendStep = statusRes?.data?.current_step ?? 1;
+
+        const progressRes: any = await api.get("onboarding/progress");
+        const progress = progressRes?.data;
+        if (progress && !cancelled) {
+          if (progress.company_profile) {
+            aurix.set({
+              company: {
+                id: ws.company?.id ?? uid("co"),
+                name: progress.company_profile.company_name ?? "",
+                logoDataUrl: progress.company_profile.company_logo ?? undefined,
+                industry: progress.company_profile.industry ?? "",
+                size: progress.company_profile.company_size ?? "",
+                country: progress.company_profile.country ?? "",
+                state: progress.company_profile.state ?? "",
+                city: progress.company_profile.city ?? "",
+                timezone: progress.company_profile.timezone ?? "UTC",
+              } as any,
+            });
+          }
+        }
+
+        if (!cancelled) setStep(backendStepToUiIndex(backendStep));
+      } catch (err) {
+        // If status/progress can't be fetched, fall back to starting at
+        // Company rather than blocking the admin from onboarding at all.
+        if (!cancelled) setStep(0);
+      } finally {
+        if (!cancelled) setResuming(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
   }, [ws.user, navigate, token]);
 
   function next() { setStep((s) => Math.min(STEPS.length - 1, s + 1)); }
@@ -96,99 +230,12 @@ function OnboardingPage() {
   async function finish() {
     setLoading(true);
     try {
-      // 1. Post HR Settings
-      const hrSettings = {
-        working_days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-        week_start_day: "Monday",
-        office_timing: "09:00 - 18:00",
-        default_shift: "General Shift",
-        time_format: "12h",
-        date_format: "YYYY-MM-DD",
-        financial_year: "2026-2027",
-        leave_policy_template: "Standard Template"
-      };
-      await api.post("onboarding/hr-settings", hrSettings);
-
-      // 2. Extrapolate and Post Departments
-      const deptNames = Array.from(new Set([
-        "Management",
-        ...ws.hrs.map(h => h.department),
-        ...ws.employees.map(e => e.department),
-        ...ws.managers.map(m => m.department)
-      ].filter(Boolean)));
-      
-      const depts = deptNames.map((d, index) => ({
-        department_code: d.substring(0, 3).toUpperCase() + "_" + (10 + index),
-        department_name: d,
-        description: `Department for ${d}`
-      }));
-      await api.post("onboarding/departments", { departments: depts });
-
-      // 3. Extrapolate and Post Designations
-      const designations = Array.from(new Set([
-        "Company Owner",
-        ...ws.hrs.map(h => h.designation),
-        ...ws.employees.map(e => e.designation),
-        ...ws.managers.map(m => m.designation)
-      ].filter(Boolean)));
-      await api.post("onboarding/designations", { designations });
-
-      // 4. Extrapolate and Post Invite Employees
-      const allInvites = [
-        ...ws.hrs.map(h => {
-           const parts = h.fullName.split(" ");
-           return {
-             first_name: parts[0] || "HR",
-             last_name: parts.slice(1).join(" ") || "Member",
-             personal_email: h.email,
-             phone: h.phone || "9876543210",
-             department: h.department || "Human Resources",
-             designation: h.designation || "HR Specialist"
-           };
-        }),
-        ...ws.employees.map(e => {
-           const parts = e.fullName.split(" ");
-           return {
-             first_name: parts[0] || "Employee",
-             last_name: parts.slice(1).join(" ") || "Member",
-             personal_email: e.email,
-             phone: e.phone || "9876543210",
-             department: e.department || "Engineering",
-             designation: e.designation || "Software Engineer"
-           };
-        }),
-        ...ws.managers.map(m => {
-           const parts = m.fullName.split(" ");
-           return {
-             first_name: parts[0] || "Manager",
-             last_name: parts.slice(1).join(" ") || "Member",
-             personal_email: m.email,
-             phone: m.phone || "9876543210",
-             department: m.department || "Management",
-             designation: m.designation || "Team Manager"
-           };
-        })
-      ].filter(x => x.personal_email && x.first_name);
-
-      // Clean phone numbers to exactly 10 digits
-      allInvites.forEach(inv => {
-        const cleanPhone = inv.phone.replace(/\D/g, "");
-        inv.phone = cleanPhone.length >= 10 ? cleanPhone.substring(0, 10) : "9876543210";
-      });
-
-      if (allInvites.length > 0) {
-        await api.post("onboarding/invite-employees", { employees: allInvites, skip: false });
-      } else {
-        await api.post("onboarding/invite-employees", { employees: [], skip: true });
-      }
-
-      // 5. Complete Onboarding Flow
       await api.post("onboarding/complete");
 
       if (ws.user) {
         aurix.set({ user: { ...ws.user, onboardingComplete: true } });
       }
-      setStep(5);
+      setStep(6);
     } catch (err: any) {
       toast.error(err.message || "Failed to complete onboarding. Please try again.");
     } finally {
@@ -433,6 +480,18 @@ function OnboardingPage() {
     }
   }
 
+  if (resuming) {
+    return (
+      <div className="relative min-h-screen flex items-center justify-center bg-background">
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10" style={{ background: "var(--gradient-hero)" }} />
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+          <p className="text-sm text-muted-foreground">Restoring your progress...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10" style={{ background: "var(--gradient-hero)" }} />
@@ -443,12 +502,12 @@ function OnboardingPage() {
           </span>
           <span className="font-display text-lg font-semibold tracking-tight">Aurix</span>
         </Link>
-        <span className="text-xs text-muted-foreground">Step {Math.min(step + 1, 5)} of 5</span>
+        <span className="text-xs text-muted-foreground">Step {Math.min(step + 1, 6)} of 6</span>
       </header>
 
       <div className="mx-auto max-w-5xl px-6 pb-16 sm:px-10">
         <div className="mb-8 flex justify-center">
-          <Stepper steps={STEPS.slice(0, 5)} current={Math.min(step, 4)} />
+          <Stepper steps={STEPS} current={Math.min(step, 5)} />
         </div>
 
         <AnimatePresence mode="wait">
@@ -460,11 +519,12 @@ function OnboardingPage() {
             transition={{ duration: 0.25, ease: "easeOut" }}
           >
             {step === 0 ? <CompanyStep onNext={next} /> : null}
-            {step === 1 ? <HRStep onNext={next} onBack={back} /> : null}
-            {step === 2 ? <EmployeesStep onNext={next} onBack={back} /> : null}
-            {step === 3 ? <ManagersStep onNext={next} onBack={back} /> : null}
-            {step === 4 ? <ReviewStep onBack={back} onFinish={finish} onEdit={goto} loading={loading} /> : null}
-            {step === 5 ? <SuccessStep /> : null}
+            {step === 1 ? <AdminProfileStep onNext={next} onBack={back} /> : null}
+            {step === 2 ? <HRSettingsStep onNext={next} onBack={back} /> : null}
+            {step === 3 ? <DepartmentsDesignationsStep onNext={next} onBack={back} /> : null}
+            {step === 4 ? <InviteEmployeesStep onNext={next} onBack={back} /> : null}
+            {step === 5 ? <ReviewStep onBack={back} onFinish={finish} onEdit={goto} loading={loading} /> : null}
+            {step === 6 ? <SuccessStep /> : null}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -534,20 +594,6 @@ function CompanyStep({ onNext }: { onNext: () => void }) {
         currency: "USD"
       };
       await api.post("onboarding/company", companyPayload);
-      // 2. Submit admin profile
-      const nameParts = ws.user?.fullName?.split(" ") || [];
-      const firstName = nameParts[0] || "Admin";
-      const lastName = nameParts.slice(1).join(" ") || "User";
-      let cleanPhone = (ws.user?.phone || "").replace(/\D/g, "");
-      const adminPayload = {
-        first_name: firstName,
-        last_name: lastName,
-        profile_photo: null,
-        mobile_number: cleanPhone.length >= 10 ? cleanPhone.substring(0, 10) : "9876543210",
-        designation: "Company Owner",
-        preferred_language: "English"
-      };
-      await api.post("onboarding/admin-profile", adminPayload);
       aurix.set({ company: c });
       onNext();
     } catch (err: any) {
@@ -635,11 +681,479 @@ function Field({ label, error, children }: { label: string; error?: string; chil
   );
 }
 
-/* ---------------- Step 2: HR ---------------- */
+/* ---------------- Step 2: Admin Profile ---------------- */
 
-function HRStep({ onNext, onBack }: { onNext: () => void; onBack: () => void }) {
+function AdminProfileStep({ onNext, onBack }: { onNext: () => void; onBack: () => void }) {
   const ws = useAurix();
-  const [hrs, setHrs] = useState<HR[]>(ws.hrs);
+  const nameParts = ws.user?.fullName?.split(" ") || [];
+  const [firstName, setFirstName] = useState(nameParts[0] || "");
+  const [lastName, setLastName] = useState(nameParts.slice(1).join(" ") || "");
+  const [phone, setPhone] = useState((ws.user?.phone || "").replace(/\D/g, ""));
+  const [designation, setDesignation] = useState("Company Owner");
+  const [language, setLanguage] = useState("English");
+  const [loading, setLoading] = useState(false);
+
+  async function submit() {
+    if (!firstName || !lastName || !phone) {
+      toast.error("First name, last name, and phone number are required.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const adminPayload = {
+        first_name: firstName,
+        last_name: lastName,
+        profile_photo: null,
+        mobile_number: phone.length >= 10 ? phone.substring(0, 10) : "9876543210",
+        designation: designation,
+        preferred_language: language,
+      };
+      await api.post("onboarding/admin-profile", adminPayload);
+      onNext();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save admin profile. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <StepCard
+      title="Create your Admin Profile"
+      description="Tell us about yourself. You will be the primary administrator for this workspace."
+      icon={UserCog}
+      footer={
+        <>
+          <Button variant="ghost" onClick={onBack} disabled={loading}>
+            <ChevronLeft className="mr-2 h-4 w-4" /> Back
+          </Button>
+          <Button onClick={submit} disabled={loading}>
+            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Continue
+            {!loading ? <ArrowRight className="ml-2 h-4 w-4" /> : null}
+          </Button>
+        </>
+      }
+    >
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <Field label="First name">
+          <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="John" />
+        </Field>
+        <Field label="Last name">
+          <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Doe" />
+        </Field>
+        <Field label="Mobile number">
+          <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="9876543210" />
+        </Field>
+        <Field label="Designation">
+          <Input value={designation} onChange={(e) => setDesignation(e.target.value)} placeholder="Company Owner" />
+        </Field>
+        <div className="sm:col-span-2">
+          <Field label="Preferred language">
+            <Select value={language} onValueChange={setLanguage}>
+              <SelectTrigger><SelectValue placeholder="Select language" /></SelectTrigger>
+              <SelectContent>
+                {["English", "Spanish", "French", "German", "Hindi", "Mandarin"].map((l) => (
+                  <SelectItem key={l} value={l}>{l}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+        </div>
+      </div>
+    </StepCard>
+  );
+}
+
+/* ---------------- Step 3: HR Settings ---------------- */
+
+function HRSettingsStep({ onNext, onBack }: { onNext: () => void; onBack: () => void }) {
+  const [workingDays, setWorkingDays] = useState<string[]>(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]);
+  const [weekStart, setWeekStart] = useState("Monday");
+  const [officeTimingStart, setOfficeTimingStart] = useState("09:00");
+  const [officeTimingEnd, setOfficeTimingEnd] = useState("18:00");
+  const [defaultShift, setDefaultShift] = useState("General Shift");
+  const [timeFormat, setTimeFormat] = useState("12h");
+  const [dateFormat, setDateFormat] = useState("YYYY-MM-DD");
+  const [financialYear, setFinancialYear] = useState("2026-2027");
+  const [leaveTemplate, setLeaveTemplate] = useState("Standard Template");
+  const [loading, setLoading] = useState(false);
+
+  const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+  function toggleDay(d: string) {
+    setWorkingDays((p) => (p.includes(d) ? p.filter((x) => x !== d) : [...p, d]));
+  }
+
+  async function submit() {
+    setLoading(true);
+    try {
+      const hrSettings = {
+        working_days: workingDays,
+        week_start_day: weekStart,
+        office_timing: `${officeTimingStart} - ${officeTimingEnd}`,
+        default_shift: defaultShift,
+        time_format: timeFormat,
+        date_format: dateFormat,
+        financial_year: financialYear,
+        leave_policy_template: leaveTemplate,
+      };
+      await api.post("onboarding/hr-settings", hrSettings);
+      onNext();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save HR settings. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <StepCard
+      title="Configure HR Settings"
+      description="Define the default work week, shifts, and policy configurations for your workspace."
+      icon={UserCog}
+      footer={
+        <>
+          <Button variant="ghost" onClick={onBack} disabled={loading}>
+            <ChevronLeft className="mr-2 h-4 w-4" /> Back
+          </Button>
+          <Button onClick={submit} disabled={loading}>
+            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Continue
+            {!loading ? <ArrowRight className="ml-2 h-4 w-4" /> : null}
+          </Button>
+        </>
+      }
+    >
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div className="sm:col-span-2">
+          <Label className="mb-2 block">Working Days</Label>
+          <div className="flex flex-wrap gap-2">
+            {WEEKDAYS.map((d) => {
+              const on = workingDays.includes(d);
+              return (
+                <button
+                  type="button"
+                  key={d}
+                  onClick={() => toggleDay(d)}
+                  className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+                    on
+                      ? "border-transparent bg-foreground text-background"
+                      : "border-border bg-background text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {d}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <Field label="Week Start Day">
+          <Select value={weekStart} onValueChange={setWeekStart}>
+            <SelectTrigger><SelectValue placeholder="Select day" /></SelectTrigger>
+            <SelectContent>
+              {WEEKDAYS.map((d) => (
+                <SelectItem key={d} value={d}>{d}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+
+        <Field label="Default Shift Name">
+          <Input value={defaultShift} onChange={(e) => setDefaultShift(e.target.value)} placeholder="General Shift" />
+        </Field>
+
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Office Start Time">
+            <Input type="time" value={officeTimingStart} onChange={(e) => setOfficeTimingStart(e.target.value)} />
+          </Field>
+          <Field label="Office End Time">
+            <Input type="time" value={officeTimingEnd} onChange={(e) => setOfficeTimingEnd(e.target.value)} />
+          </Field>
+        </div>
+
+        <Field label="Time Format">
+          <Select value={timeFormat} onValueChange={setTimeFormat}>
+            <SelectTrigger><SelectValue placeholder="Select format" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="12h">12-Hour (AM/PM)</SelectItem>
+              <SelectItem value="24h">24-Hour</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
+
+        <Field label="Date Format">
+          <Select value={dateFormat} onValueChange={setDateFormat}>
+            <SelectTrigger><SelectValue placeholder="Select format" /></SelectTrigger>
+            <SelectContent>
+              {["YYYY-MM-DD", "DD-MM-YYYY", "MM-DD-YYYY"].map((f) => (
+                <SelectItem key={f} value={f}>{f}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+
+        <Field label="Financial Year">
+          <Input value={financialYear} onChange={(e) => setFinancialYear(e.target.value)} placeholder="2026-2027" />
+        </Field>
+
+        <Field label="Leave Policy Template">
+          <Select value={leaveTemplate} onValueChange={setLeaveTemplate}>
+            <SelectTrigger><SelectValue placeholder="Select template" /></SelectTrigger>
+            <SelectContent>
+              {["Standard Template", "Startup Policy", "Flexible Leave"].map((t) => (
+                <SelectItem key={t} value={t}>{t}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+      </div>
+    </StepCard>
+  );
+}
+
+/* ---------------- Step 4: Departments & Designations ---------------- */
+
+interface DeptItem {
+  department_code: string;
+  department_name: string;
+  description: string;
+}
+
+function DepartmentsDesignationsStep({ onNext, onBack }: { onNext: () => void; onBack: () => void }) {
+  const [depts, setDepts] = useState<DeptItem[]>([
+    { department_code: "MGMT_10", department_name: "Management", description: "Leadership & Admin" },
+    { department_code: "ENG_11", department_name: "Engineering", description: "Product Development" },
+    { department_code: "HR_12", department_name: "Human Resources", description: "People Ops & Recruiting" },
+    { department_code: "SLS_13", department_name: "Sales & Marketing", description: "Sales & Marketing Team" }
+  ]);
+  const [designations, setDesignations] = useState<string[]>([
+    "Company Owner", "HR Manager", "Engineering Manager", "Software Engineer", "Sales Executive"
+  ]);
+
+  const [deptName, setDeptName] = useState("");
+  const [deptCode, setDeptCode] = useState("");
+  const [deptDesc, setDeptDesc] = useState("");
+
+  const [desigName, setDesigName] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  function addDept() {
+    if (!deptName) { toast.error("Department name is required."); return; }
+    const code = deptCode || deptName.substring(0, 3).toUpperCase() + "_" + (10 + depts.length);
+    if (depts.some(d => d.department_code === code)) {
+      toast.error("Department code must be unique.");
+      return;
+    }
+    setDepts([...depts, { department_code: code, department_name: deptName, description: deptDesc || `Department for ${deptName}` }]);
+    setDeptName(""); setDeptCode(""); setDeptDesc("");
+  }
+
+  function removeDept(code: string) {
+    if (code === "MGMT_10") {
+      toast.error("Management department cannot be removed.");
+      return;
+    }
+    setDepts(depts.filter(d => d.department_code !== code));
+  }
+
+  function addDesignation() {
+    if (!desigName) { toast.error("Designation name is required."); return; }
+    if (designations.includes(desigName)) {
+      toast.error("Designation already exists.");
+      return;
+    }
+    setDesignations([...designations, desigName]);
+    setDesigName("");
+  }
+
+  function removeDesignation(name: string) {
+    if (name === "Company Owner") {
+      toast.error("Company Owner designation cannot be removed.");
+      return;
+    }
+    setDesignations(designations.filter(d => d !== name));
+  }
+
+  async function submit() {
+    setLoading(true);
+    try {
+      await api.post("onboarding/departments", { departments: depts });
+      await api.post("onboarding/designations", { designations });
+      onNext();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save departments and designations.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <StepCard
+      title="Define Departments & Designations"
+      description="Create structures and job titles for your workspace."
+      icon={Building2}
+      footer={
+        <>
+          <Button variant="ghost" onClick={onBack} disabled={loading}>
+            <ChevronLeft className="mr-2 h-4 w-4" /> Back
+          </Button>
+          <Button onClick={submit} disabled={loading}>
+            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Continue
+            {!loading ? <ArrowRight className="ml-2 h-4 w-4" /> : null}
+          </Button>
+        </>
+      }
+    >
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+        {/* Departments Panel */}
+        <div className="space-y-4">
+          <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+            <Building2 className="h-5 w-5 text-primary" />
+            Departments
+          </h3>
+          <div className="space-y-3 rounded-xl border p-4 bg-muted/10">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <Field label="Dept Name">
+                <Input value={deptName} onChange={(e) => setDeptName(e.target.value)} placeholder="Engineering" />
+              </Field>
+              <Field label="Code (Optional)">
+                <Input value={deptCode} onChange={(e) => setDeptCode(e.target.value)} placeholder="ENG" />
+              </Field>
+            </div>
+            <Field label="Description">
+              <Input value={deptDesc} onChange={(e) => setDeptDesc(e.target.value)} placeholder="Software and Product development" />
+            </Field>
+            <Button onClick={addDept} variant="outline" className="w-full">
+              <Plus className="mr-2 h-4 w-4" /> Add Department
+            </Button>
+          </div>
+
+          <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
+            {depts.map((d) => (
+              <div key={d.department_code} className="flex items-center justify-between p-3 rounded-lg border bg-card/40">
+                <div>
+                  <div className="font-medium text-sm">{d.department_name} <span className="text-xs text-muted-foreground font-normal">({d.department_code})</span></div>
+                  <div className="text-xs text-muted-foreground">{d.description}</div>
+                </div>
+                <button onClick={() => removeDept(d.department_code)} className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Designations Panel */}
+        <div className="space-y-4">
+          <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+            <Users className="h-5 w-5 text-primary" />
+            Designations
+          </h3>
+          <div className="space-y-3 rounded-xl border p-4 bg-muted/10">
+            <Field label="Designation Title">
+              <Input value={desigName} onChange={(e) => setDesigName(e.target.value)} placeholder="Senior Software Engineer" />
+            </Field>
+            <Button onClick={addDesignation} variant="outline" className="w-full">
+              <Plus className="mr-2 h-4 w-4" /> Add Designation
+            </Button>
+          </div>
+
+          <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
+            {designations.map((des) => (
+              <div key={des} className="flex items-center justify-between p-3 rounded-lg border bg-card/40">
+                <span className="font-medium text-sm">{des}</span>
+                <button onClick={() => removeDesignation(des)} className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </StepCard>
+  );
+}
+
+/* ---------------- Step 5: Invite Employees ---------------- */
+
+function InviteEmployeesStep({ onNext, onBack }: { onNext: () => void; onBack: () => void }) {
+  const ws = useAurix();
+  const [activeTab, setActiveTab] = useState<"employees" | "managers" | "hr">("employees");
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    setSaving(true);
+    try {
+      await syncDeptsAndDesignations(ws);
+      await syncInvites(ws);
+      onNext();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save invites. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <StepCard
+      title="Invite your Team"
+      description="Add employees, managers, and HR team members to your workspace."
+      icon={UserPlus}
+      footer={
+        <>
+          <Button variant="ghost" onClick={onBack} disabled={saving}>
+            <ChevronLeft className="mr-2 h-4 w-4" /> Back
+          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={save} disabled={saving}>Skip for now</Button>
+            <Button onClick={save} disabled={saving}>
+              {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Continue
+              {!saving ? <ArrowRight className="ml-2 h-4 w-4" /> : null}
+            </Button>
+          </div>
+        </>
+      }
+    >
+      <div className="mb-6 inline-flex rounded-lg border border-border bg-muted/40 p-1 w-full sm:w-auto">
+        {(["employees", "managers", "hr"] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => setActiveTab(t)}
+            className={`flex-1 sm:flex-initial rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+              activeTab === t
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {t === "employees" ? "Employees" : t === "managers" ? "Managers" : "HR Team"}
+          </button>
+        ))}
+      </div>
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.15 }}
+        >
+          {activeTab === "employees" ? <EmployeesSection /> : null}
+          {activeTab === "managers" ? <ManagersSection /> : null}
+          {activeTab === "hr" ? <HRSection /> : null}
+        </motion.div>
+      </AnimatePresence>
+    </StepCard>
+  );
+}
+
+function HRSection() {
+  const ws = useAurix();
+  const hrs = ws.hrs;
   const [draft, setDraft] = useState<HR>(blankHr());
   const [editing, setEditing] = useState<string | null>(null);
 
@@ -647,28 +1161,15 @@ function HRStep({ onNext, onBack }: { onNext: () => void; onBack: () => void }) 
 
   function add() {
     if (!draft.fullName || !draft.email) { toast.error("HR name and email required"); return; }
-    if (editing) setHrs((arr) => arr.map((h) => (h.id === editing ? draft : h)));
-    else setHrs((arr) => [...arr, draft]);
+    let updated: HR[];
+    if (editing) updated = hrs.map((h) => (h.id === editing ? draft : h));
+    else updated = [...hrs, draft];
+    aurix.set({ hrs: updated });
     setDraft(blankHr()); setEditing(null);
   }
 
-  function save() { aurix.set({ hrs }); onNext(); }
-
   return (
-    <StepCard
-      title="Add your HR team"
-      description="HRs can manage employees, attendance, and onboarding."
-      icon={UserCog}
-      footer={
-        <>
-          <Button variant="ghost" onClick={onBack}><ChevronLeft className="mr-2 h-4 w-4" />Back</Button>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={save}>Skip for now</Button>
-            <Button onClick={save} disabled={hrs.length === 0}>Continue<ArrowRight className="ml-2 h-4 w-4" /></Button>
-          </div>
-        </>
-      }
-    >
+    <div className="space-y-6">
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <Field label="Full name"><Input value={draft.fullName} onChange={(e) => setDraft({ ...draft, fullName: e.target.value })} /></Field>
         <Field label="Work email"><Input type="email" value={draft.email} onChange={(e) => setDraft({ ...draft, email: e.target.value })} /></Field>
@@ -683,7 +1184,7 @@ function HRStep({ onNext, onBack }: { onNext: () => void; onBack: () => void }) 
       </div>
 
       {hrs.length ? (
-        <div className="mt-6 overflow-hidden rounded-xl border border-border">
+        <div className="overflow-hidden rounded-xl border border-border">
           <table className="w-full text-sm">
             <thead className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
               <tr><th className="px-4 py-2.5">Name</th><th className="px-4 py-2.5">Email</th><th className="px-4 py-2.5">Department</th><th className="px-4 py-2.5">Designation</th><th className="px-4 py-2.5"></th></tr>
@@ -697,7 +1198,7 @@ function HRStep({ onNext, onBack }: { onNext: () => void; onBack: () => void }) 
                   <td className="px-4 py-2.5">{h.designation || "—"}</td>
                   <td className="px-4 py-2.5 text-right">
                     <button onClick={() => { setDraft(h); setEditing(h.id); }} className="mr-1 rounded p-1.5 text-muted-foreground hover:bg-accent"><Pencil className="h-4 w-4" /></button>
-                    <button onClick={() => setHrs((arr) => arr.filter((x) => x.id !== h.id))} className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
+                    <button onClick={() => aurix.set({ hrs: hrs.filter((x) => x.id !== h.id) })} className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
                   </td>
                 </tr>
               ))}
@@ -707,15 +1208,13 @@ function HRStep({ onNext, onBack }: { onNext: () => void; onBack: () => void }) 
       ) : (
         <EmptyHint text="No HRs yet. Add at least one to manage employees." />
       )}
-    </StepCard>
+    </div>
   );
 }
 
-/* ---------------- Step 3: Employees ---------------- */
-
-function EmployeesStep({ onNext, onBack }: { onNext: () => void; onBack: () => void }) {
+function EmployeesSection() {
   const ws = useAurix();
-  const [employees, setEmployees] = useState<Employee[]>(ws.employees);
+  const employees = ws.employees;
   const [tab, setTab] = useState<"manual" | "import">("manual");
   const [draft, setDraft] = useState<Employee>(blankEmp());
   const [editing, setEditing] = useState<string | null>(null);
@@ -728,12 +1227,12 @@ function EmployeesStep({ onNext, onBack }: { onNext: () => void; onBack: () => v
 
   function add() {
     if (!draft.fullName || !draft.email) { toast.error("Name and email required"); return; }
-    if (editing) setEmployees((arr) => arr.map((e) => (e.id === editing ? draft : e)));
-    else setEmployees((arr) => [...arr, draft]);
+    let updated: Employee[];
+    if (editing) updated = employees.map((e) => (e.id === editing ? draft : e));
+    else updated = [...employees, draft];
+    aurix.set({ employees: updated });
     setDraft(blankEmp()); setEditing(null);
   }
-
-  function save() { aurix.set({ employees }); onNext(); }
 
   function onFile(file: File) {
     Papa.parse<Record<string, string>>(file, {
@@ -764,27 +1263,14 @@ function EmployeesStep({ onNext, onBack }: { onNext: () => void; onBack: () => v
 
   function confirmImport() {
     if (!preview) return;
-    setEmployees((arr) => [...arr, ...preview]);
+    aurix.set({ employees: [...employees, ...preview] });
     toast.success(`${preview.length} employees imported`, { description: errors.length ? `${errors.length} rows had warnings` : undefined });
     setPreview(null); setErrors([]);
   }
 
   return (
-    <StepCard
-      title="Add your employees"
-      description="Import via CSV or add them one by one — you can always do more later."
-      icon={Users}
-      footer={
-        <>
-          <Button variant="ghost" onClick={onBack}><ChevronLeft className="mr-2 h-4 w-4" />Back</Button>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={save}>Skip for now</Button>
-            <Button onClick={save}>Continue<ArrowRight className="ml-2 h-4 w-4" /></Button>
-          </div>
-        </>
-      }
-    >
-      <div className="mb-6 inline-flex rounded-lg border border-border bg-muted/40 p-1">
+    <div className="space-y-6">
+      <div className="inline-flex rounded-lg border border-border bg-muted/40 p-1">
         {(["manual", "import"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)}
             className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${tab === t ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
@@ -794,24 +1280,22 @@ function EmployeesStep({ onNext, onBack }: { onNext: () => void; onBack: () => v
       </div>
 
       {tab === "manual" ? (
-        <>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-            <Field label="Employee ID"><Input value={draft.employeeId} onChange={(e) => setDraft({ ...draft, employeeId: e.target.value })} placeholder="EMP-001" /></Field>
-            <Field label="Full name"><Input value={draft.fullName} onChange={(e) => setDraft({ ...draft, fullName: e.target.value })} /></Field>
-            <Field label="Email"><Input type="email" value={draft.email} onChange={(e) => setDraft({ ...draft, email: e.target.value })} /></Field>
-            <Field label="Phone"><Input value={draft.phone} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} /></Field>
-            <Field label="Department"><Input value={draft.department} onChange={(e) => setDraft({ ...draft, department: e.target.value })} /></Field>
-            <Field label="Designation"><Input value={draft.designation} onChange={(e) => setDraft({ ...draft, designation: e.target.value })} /></Field>
-            <Field label="Joining date"><Input type="date" value={draft.joiningDate} onChange={(e) => setDraft({ ...draft, joiningDate: e.target.value })} /></Field>
-            <Field label="Shift">
-              <Select value={draft.shift} onValueChange={(v) => setDraft({ ...draft, shift: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{["General", "Morning", "Evening", "Night"].map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-              </Select>
-            </Field>
-            <div className="flex items-end"><Button onClick={add} variant="outline" className="w-full"><Plus className="mr-2 h-4 w-4" />{editing ? "Save" : "Add employee"}</Button></div>
-          </div>
-        </>
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+          <Field label="Employee ID"><Input value={draft.employeeId} onChange={(e) => setDraft({ ...draft, employeeId: e.target.value })} placeholder="EMP-001" /></Field>
+          <Field label="Full name"><Input value={draft.fullName} onChange={(e) => setDraft({ ...draft, fullName: e.target.value })} /></Field>
+          <Field label="Email"><Input type="email" value={draft.email} onChange={(e) => setDraft({ ...draft, email: e.target.value })} /></Field>
+          <Field label="Phone"><Input value={draft.phone} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} /></Field>
+          <Field label="Department"><Input value={draft.department} onChange={(e) => setDraft({ ...draft, department: e.target.value })} /></Field>
+          <Field label="Designation"><Input value={draft.designation} onChange={(e) => setDraft({ ...draft, designation: e.target.value })} /></Field>
+          <Field label="Joining date"><Input type="date" value={draft.joiningDate} onChange={(e) => setDraft({ ...draft, joiningDate: e.target.value })} /></Field>
+          <Field label="Shift">
+            <Select value={draft.shift} onValueChange={(v) => setDraft({ ...draft, shift: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>{["General", "Morning", "Evening", "Night"].map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+            </Select>
+          </Field>
+          <div className="flex items-end"><Button onClick={add} variant="outline" className="w-full"><Plus className="mr-2 h-4 w-4" />{editing ? "Save" : "Add employee"}</Button></div>
+        </div>
       ) : (
         <div>
           <label className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-muted/20 px-6 py-10 text-center transition-colors hover:bg-muted/40">
@@ -861,7 +1345,7 @@ function EmployeesStep({ onNext, onBack }: { onNext: () => void; onBack: () => v
       )}
 
       {employees.length ? (
-        <div className="mt-6 overflow-hidden rounded-xl border border-border">
+        <div className="overflow-hidden rounded-xl border border-border">
           <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
             <h3 className="text-sm font-medium">{employees.length} employees added</h3>
           </div>
@@ -880,7 +1364,7 @@ function EmployeesStep({ onNext, onBack }: { onNext: () => void; onBack: () => v
                     <td className="px-4 py-2">{e.shift}</td>
                     <td className="px-4 py-2 text-right">
                       <button onClick={() => { setDraft(e); setEditing(e.id); setTab("manual"); }} className="mr-1 rounded p-1.5 text-muted-foreground hover:bg-accent"><Pencil className="h-4 w-4" /></button>
-                      <button onClick={() => setEmployees((arr) => arr.filter((x) => x.id !== e.id))} className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
+                      <button onClick={() => aurix.set({ employees: employees.filter((x) => x.id !== e.id) })} className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
                     </td>
                   </tr>
                 ))}
@@ -889,15 +1373,13 @@ function EmployeesStep({ onNext, onBack }: { onNext: () => void; onBack: () => v
           </div>
         </div>
       ) : null}
-    </StepCard>
+    </div>
   );
 }
 
-/* ---------------- Step 4: Managers ---------------- */
-
-function ManagersStep({ onNext, onBack }: { onNext: () => void; onBack: () => void }) {
+function ManagersSection() {
   const ws = useAurix();
-  const [managers, setManagers] = useState<Manager[]>(ws.managers);
+  const managers = ws.managers;
   const [draft, setDraft] = useState<Manager>(blank());
   const [editing, setEditing] = useState<string | null>(null);
 
@@ -907,8 +1389,10 @@ function ManagersStep({ onNext, onBack }: { onNext: () => void; onBack: () => vo
 
   function add() {
     if (!draft.fullName || !draft.email) { toast.error("Manager name and email required"); return; }
-    if (editing) setManagers((arr) => arr.map((m) => (m.id === editing ? draft : m)));
-    else setManagers((arr) => [...arr, draft]);
+    let updated: Manager[];
+    if (editing) updated = managers.map((m) => (m.id === editing ? draft : m));
+    else updated = [...managers, draft];
+    aurix.set({ managers: updated });
     setDraft(blank()); setEditing(null);
   }
 
@@ -919,23 +1403,8 @@ function ManagersStep({ onNext, onBack }: { onNext: () => void; onBack: () => vo
     setDraft((p) => ({ ...p, team: p.team.includes(id) ? p.team.filter((x) => x !== id) : [...p.team, id] }));
   }
 
-  function save() { aurix.set({ managers }); onNext(); }
-
   return (
-    <StepCard
-      title="Add managers"
-      description="Assign teams and reporting hierarchy."
-      icon={UserPlus}
-      footer={
-        <>
-          <Button variant="ghost" onClick={onBack}><ChevronLeft className="mr-2 h-4 w-4" />Back</Button>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={save}>Skip for now</Button>
-            <Button onClick={save}>Continue<ArrowRight className="ml-2 h-4 w-4" /></Button>
-          </div>
-        </>
-      }
-    >
+    <div className="space-y-6">
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <Field label="Manager name"><Input value={draft.fullName} onChange={(e) => setDraft({ ...draft, fullName: e.target.value })} /></Field>
         <Field label="Email"><Input type="email" value={draft.email} onChange={(e) => setDraft({ ...draft, email: e.target.value })} /></Field>
@@ -985,7 +1454,7 @@ function ManagersStep({ onNext, onBack }: { onNext: () => void; onBack: () => vo
       </div>
 
       {managers.length ? (
-        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {managers.map((m) => (
             <div key={m.id} className="rounded-xl border border-border bg-card/40 p-4">
               <div className="flex items-start justify-between">
@@ -995,7 +1464,7 @@ function ManagersStep({ onNext, onBack }: { onNext: () => void; onBack: () => vo
                 </div>
                 <div className="flex gap-1">
                   <button onClick={() => { setDraft(m); setEditing(m.id); }} className="rounded p-1.5 text-muted-foreground hover:bg-accent"><Pencil className="h-4 w-4" /></button>
-                  <button onClick={() => setManagers((arr) => arr.filter((x) => x.id !== m.id))} className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
+                  <button onClick={() => aurix.set({ managers: managers.filter((x) => x.id !== m.id) })} className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
                 </div>
               </div>
               <div className="mt-3 flex flex-wrap gap-1.5">
@@ -1007,11 +1476,11 @@ function ManagersStep({ onNext, onBack }: { onNext: () => void; onBack: () => vo
           ))}
         </div>
       ) : null}
-    </StepCard>
+    </div>
   );
 }
 
-/* ---------------- Step 5: Review ---------------- */
+/* ---------------- Step 6: Review & Launch ---------------- */
 
 function ReviewStep({ onBack, onFinish, onEdit, loading }: { onBack: () => void; onFinish: () => void; onEdit: (i: number) => void; loading?: boolean }) {
   const ws = useAurix();
@@ -1027,17 +1496,23 @@ function ReviewStep({ onBack, onFinish, onEdit, loading }: { onBack: () => void;
           <ReviewLine label="Email" value={c?.email} />
           <ReviewLine label="Location" value={[c?.city, c?.country].filter(Boolean).join(", ")} />
         </ReviewCard>
-        <ReviewCard title="HR team" onEdit={() => onEdit(1)}>
-          <ReviewLine label="Total HRs" value={String(ws.hrs.length)} />
-          {ws.hrs.slice(0, 3).map((h) => <ReviewLine key={h.id} label={h.fullName} value={h.designation || h.email} />)}
+        <ReviewCard title="Admin Profile" onEdit={() => onEdit(1)}>
+          <ReviewLine label="Name" value={ws.user?.fullName} />
+          <ReviewLine label="Phone" value={ws.user?.phone} />
+          <ReviewLine label="Role" value={ws.user?.role} />
         </ReviewCard>
-        <ReviewCard title="Employees" onEdit={() => onEdit(2)}>
-          <ReviewLine label="Total" value={String(ws.employees.length)} />
-          <ReviewLine label="Departments" value={String(new Set(ws.employees.map((e) => e.department).filter(Boolean)).size)} />
+        <ReviewCard title="HR Settings" onEdit={() => onEdit(2)}>
+          <ReviewLine label="Week Start" value="Monday" />
+          <ReviewLine label="Shift" value="General Shift" />
+          <ReviewLine label="Time Format" value="12h" />
         </ReviewCard>
-        <ReviewCard title="Managers" onEdit={() => onEdit(3)}>
-          <ReviewLine label="Total managers" value={String(ws.managers.length)} />
-          <ReviewLine label="Avg team size" value={ws.managers.length ? (ws.managers.reduce((s, m) => s + m.team.length, 0) / ws.managers.length).toFixed(1) : "—"} />
+        <ReviewCard title="Departments & Designations" onEdit={() => onEdit(3)}>
+          <ReviewLine label="Setup Done" value="Yes" />
+        </ReviewCard>
+        <ReviewCard title="Invite Team" onEdit={() => onEdit(4)}>
+          <ReviewLine label="Employees" value={String(ws.employees.length)} />
+          <ReviewLine label="Managers" value={String(ws.managers.length)} />
+          <ReviewLine label="HR Members" value={String(ws.hrs.length)} />
         </ReviewCard>
       </div>
     </StepCard>
