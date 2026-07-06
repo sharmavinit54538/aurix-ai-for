@@ -2,8 +2,7 @@ import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { aurix } from "@/lib/aurix-store";
 import { getTokens, setTokens } from "./tokens";
 
-export const BASE_URL =
-  (import.meta.env.VITE_API_URL || "http://localhost:8001").replace(/\/$/, "") + "/api/v1";
+export const BASE_URL =(import.meta.env.VITE_API_URL as string).replace(/\/$/, "") + "/api/v1";
 
 const apiInstance = axios.create({
   baseURL: BASE_URL,

@@ -534,12 +534,10 @@ function CompanyStep({ onNext }: { onNext: () => void }) {
         currency: "USD"
       };
       await api.post("onboarding/company", companyPayload);
-
       // 2. Submit admin profile
       const nameParts = ws.user?.fullName?.split(" ") || [];
       const firstName = nameParts[0] || "Admin";
       const lastName = nameParts.slice(1).join(" ") || "User";
-      
       let cleanPhone = (ws.user?.phone || "").replace(/\D/g, "");
       const adminPayload = {
         first_name: firstName,
@@ -550,7 +548,6 @@ function CompanyStep({ onNext }: { onNext: () => void }) {
         preferred_language: "English"
       };
       await api.post("onboarding/admin-profile", adminPayload);
-
       aurix.set({ company: c });
       onNext();
     } catch (err: any) {
