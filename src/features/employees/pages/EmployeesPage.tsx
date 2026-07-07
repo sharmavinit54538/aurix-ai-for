@@ -142,7 +142,7 @@ export function EmployeesPage() {
       phone: "",
       department: "",
       designation: "",
-      joiningDate: new Date().toISOString().split("T")[0],
+      joiningDate: "",
       managerName: "",
       shift: "General",
     });
@@ -171,8 +171,11 @@ export function EmployeesPage() {
           payload: {
             first_name,
             last_name,
+            personal_email: draft.email,
+            phone: draft.phone || undefined,
             department: draft.department,
             designation: draft.designation,
+            joining_date: draft.joiningDate || undefined,
             shift: draft.shift,
           },
         }),
@@ -194,7 +197,7 @@ export function EmployeesPage() {
           phone: draft.phone || "9876543210",
           department: draft.department || "Engineering",
           designation: draft.designation || "Engineer",
-          joining_date: draft.joiningDate || new Date().toISOString().split("T")[0],
+          joining_date: draft.joiningDate,
           employee_id: draft.employeeId || `EMP-${Math.floor(100000 + Math.random() * 900000)}`,
           employment_type: "FULL_TIME",
           employment_status: "PROBATION",
@@ -497,7 +500,7 @@ export function EmployeesPage() {
                 <Input
                   type="email"
                   value={draft.email}
-                  disabled={draft.id !== ""}
+                  // disabled={draft.id !== ""}
                   onChange={(e) => setDraft({ ...draft, email: e.target.value })}
                 />
               </Lbl>
@@ -511,7 +514,9 @@ export function EmployeesPage() {
                 <Input value={draft.designation} onChange={(e) => setDraft({ ...draft, designation: e.target.value })} />
               </Lbl>
               <Lbl label="Joining date">
-                <Input type="date" value={draft.joiningDate} onChange={(e) => setDraft({ ...draft, joiningDate: e.target.value })} />
+                <Input type="date" value={draft.joiningDate} onChange={(e) => setDraft({ ...draft, joiningDate: e.target.value })} 
+                className="!text-red"
+                />
               </Lbl>
             </div>
           ) : null}
