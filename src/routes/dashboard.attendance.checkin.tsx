@@ -89,11 +89,22 @@ function SectionHeader({ title, subtitle, icon: Icon }: { title: string; subtitl
 
 // ── Live Clock ─────────────────────────────────────────────────
 function LiveClock() {
+  const [mounted, setMounted] = useState(false);
   const [time, setTime] = useState(new Date());
   useEffect(() => {
+    setMounted(true);
     const t = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
+
+  if (!mounted) {
+    return (
+      <span className="font-mono text-sm tabular-nums text-foreground">
+        --:--:--
+      </span>
+    );
+  }
+
   return (
     <span className="font-mono text-sm tabular-nums text-foreground">
       {time.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true })}

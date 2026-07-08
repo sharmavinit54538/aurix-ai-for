@@ -19,11 +19,23 @@ export interface EmployeesState {
   loading: boolean;
   submitting: boolean;
   error: string | null;
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+  has_next: boolean;
+  has_previous: boolean;
 }
 
 export interface FetchEmployeesParams {
   search?: string;
   department?: string;
+  designation?: string;
+  shift?: string;
+  status?: string;
+  sort?: string;
+  order?: string;
+  page?: number;
   limit?: number;
 }
 
@@ -47,6 +59,7 @@ export interface UpdateEmployeePayload {
   first_name: string;
   last_name: string;
   personal_email: string;
+  company_email?: string;
   phone?: string;
   department: string;
   designation: string;

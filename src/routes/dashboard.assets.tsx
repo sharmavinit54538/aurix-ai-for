@@ -1404,8 +1404,13 @@ function AssetsPage() {
                 </div>
                 
                 {/* QR Canvas */}
-                <div className="my-3 p-1.5 border border-slate-100 bg-white rounded shadow-inner">
-                  <QrTile value={targetAsset.id} size={130} label={targetAsset.serial} />
+                <div className="my-3 p-1.5 border border-slate-100 bg-white rounded shadow-inner flex flex-col items-center justify-center">
+                  {targetAsset.qrCodeData ? (
+                    <img src={targetAsset.qrCodeData} width={130} height={130} className="w-[130px] h-[130px]" alt="Asset QR Code" />
+                  ) : (
+                    <div className="w-[130px] h-[130px] flex items-center justify-center bg-slate-50 text-[10px] text-slate-400">Generating QR...</div>
+                  )}
+                  <div className="font-mono text-[10px] text-slate-500 mt-1.5">{targetAsset.serial ?? targetAsset.id}</div>
                 </div>
 
                 <div className="text-[10px] font-semibold text-slate-700 truncate max-w-full">{targetAsset.name}</div>
@@ -1524,8 +1529,13 @@ function AssetsPage() {
                   <div className="space-y-1.5">
                     <Label className="text-xs font-semibold text-muted-foreground">Asset QR Sticker Identification</Label>
                     <div className="rounded-xl border border-border bg-muted/30 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                      <div className="rounded bg-white p-2 border border-slate-200">
-                        <QrTile value={detailAsset.id} size={110} label={detailAsset.serial} />
+                      <div className="rounded bg-white p-2 border border-slate-200 flex flex-col items-center justify-center">
+                        {detailAsset.qrCodeData ? (
+                          <img src={detailAsset.qrCodeData} width={110} height={110} className="w-[110px] h-[110px]" alt="Asset QR Code" />
+                        ) : (
+                          <div className="w-[110px] h-[110px] flex items-center justify-center bg-slate-50 text-[10px] text-slate-400">Generating QR...</div>
+                        )}
+                        <div className="font-mono text-[10px] text-slate-500 mt-1">{detailAsset.serial ?? detailAsset.id}</div>
                       </div>
                       <div className="text-xs text-left space-y-2 flex-1">
                         <p className="font-semibold text-foreground">Scannable QR Label</p>

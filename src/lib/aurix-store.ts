@@ -105,6 +105,7 @@ export interface Workspace {
   documentActivities?: HRDocumentActivity[];
   pendingOtp?: string;
   isDemoUser?: boolean;
+  isRestoring?: boolean;
 }
 
 const KEY = "aurix:workspace:v1";
@@ -118,6 +119,7 @@ const defaultState: Workspace = {
   managers: [],
   documents: [],
   documentActivities: [],
+  isRestoring: false,
 };
 
 let state: Workspace = defaultState;
@@ -131,6 +133,15 @@ function load() {
       const parsed = JSON.parse(raw);
       state = { ...defaultState, ...parsed };
     }
+    
+    // Check if we have tokens stored to restore session on startup
+    const tokensRaw = localStorage.getItem("aurix:tokens");
+    if (tokensRaw) {
+      const tokens = JSON.parse(tokensRaw);
+      if (tokens && tokens.accessToken) {
+        state.isRestoring = true;
+      }
+    }
   } catch {}
 }
 load();
@@ -138,7 +149,9 @@ load();
 function persist() {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(KEY, JSON.stringify(state));
+    const toSave = { ...state };
+    delete toSave.isRestoring;
+    localStorage.setItem(KEY, JSON.stringify(toSave));
   } catch {}
 }
 

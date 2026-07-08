@@ -21,6 +21,8 @@ import { aurix, useAurix, uid, type Employee, type HR, type Manager } from "@/li
 import { api, setTokens } from "@/api";
 import { toast } from "sonner";
 
+import { AuthLoadingScreen } from "@/components/aurix/AuthLoadingScreen";
+
 export const Route = createFileRoute("/onboarding")({
   validateSearch: z.object({
     token: z.string().optional(),
@@ -168,6 +170,7 @@ function OnboardingPage() {
 
   useEffect(() => {
     if (token) { setResuming(false); return; } // skip for employee onboarding
+    if (ws.isRestoring) return;
     if (!ws.user) {
       navigate({ to: "/register" });
       return;
@@ -188,7 +191,16 @@ function OnboardingPage() {
     (async () => {
       try {
         const statusRes: any = await api.get("onboarding/status");
-        const backendStep = statusRes?.data?.current_step ?? 1;
+        const backendStep = statusRes?.current_step ?? statusRes?.data?.current_step ?? 1;
+        const onboardingCompleted = statusRes?.onboarding_completed ?? statusRes?.data?.onboarding_completed ?? false;
+
+        if (onboardingCompleted || backendStep >= 7) {
+          if (ws.user) {
+            aurix.set({ user: { ...ws.user, onboardingComplete: true } });
+          }
+          navigate({ to: "/dashboard", replace: true });
+          return;
+        }
 
         const progressRes: any = await api.get("onboarding/progress");
         const progress = progressRes?.data;
@@ -241,6 +253,10 @@ function OnboardingPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (ws.isRestoring) {
+    return <AuthLoadingScreen />;
   }
 
   if (token) {
