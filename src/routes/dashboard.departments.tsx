@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { lazyFeaturePage } from "./_lib/lazyFeaturePage";
 
 const DepartmentsPage = lazyFeaturePage(
-  () => import("@/features/departments/pages/DepartmentsPage"),
+  () => import("@/features/admin/departments/pages/DepartmentsPage"),
   "DepartmentsPage",
 );
 

@@ -10,7 +10,16 @@ Do **not** create `src/pages/` — that is a Next.js convention.
 | **`src/routes/`** | URL wiring only — `createFileRoute`, page title/meta, lazy import |
 | **`src/features/`** | UI, Redux, business logic — pages, components, thunks, slices |
 
-**Rule:** Route files should stay thin (~15 lines). Put screens in `features/{module}/pages/`.
+**Rule:** Route files should stay thin (~15 lines). Put screens in `features/{area}/{module}/pages/`.
+
+## Feature folder layout
+
+| Folder | Purpose |
+|--------|---------|
+| `features/admin/` | HR/Admin management (employees, managers, departments, performance) |
+| `features/portal/` | Role-based user dashboards (employee self-service, manager team lead) |
+| `features/dashboard/` | Executive overview |
+| `features/attendance/` | Attendance module |
 
 ## File naming → URL
 
@@ -38,7 +47,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { lazyFeaturePage } from "./_lib/lazyFeaturePage";
 
 const EmployeesPage = lazyFeaturePage(
-  () => import("@/features/employees/pages/EmployeesPage"),
+  () => import("@/features/admin/employees/pages/EmployeesPage"),
   "EmployeesPage",
 );
 
@@ -61,12 +70,12 @@ These routes are thin and load from `features/`:
 | Route file | Feature page |
 |------------|--------------|
 | `dashboard.index.tsx` | `features/dashboard/pages/ExecutiveDashboardPage.tsx` |
-| `dashboard.employees.tsx` | `features/employees/pages/EmployeesPage.tsx` |
-| `dashboard.departments.tsx` | `features/departments/pages/DepartmentsPage.tsx` |
-| `dashboard.managers.tsx` | `features/managers/pages/ManagersPage.tsx` |
-| `dashboard.performance.tsx` | `features/performance/pages/PerformancePage.tsx` |
-| `dashboard.employee.tsx` | `features/employee/pages/EmployeePage.tsx` (self-service) |
-| `dashboard.manager.tsx` | `features/manager/pages/ManagerPage.tsx` (team lead) |
+| `dashboard.employees.tsx` | `features/admin/employees/pages/EmployeesPage.tsx` |
+| `dashboard.departments.tsx` | `features/admin/departments/pages/DepartmentsPage.tsx` |
+| `dashboard.managers.tsx` | `features/admin/managers/pages/ManagersPage.tsx` |
+| `dashboard.performance.tsx` | `features/admin/performance/pages/PerformancePage.tsx` |
+| `dashboard.employee.tsx` | `features/portal/employee/pages/EmployeePage.tsx` (self-service) |
+| `dashboard.manager.tsx` | `features/portal/manager/pages/ManagerPage.tsx` (team lead) |
 | `dashboard.attendance.holidays.tsx` | `features/attendance/pages/HolidaysPage.tsx` |
 | `dashboard.attendance.rosters.tsx` | `features/attendance/pages/RostersPage.tsx` |
 

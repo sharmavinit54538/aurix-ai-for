@@ -25,7 +25,7 @@ import {
   STATUS_OPTIONS,
 } from "../constants";
 import { validateDepartmentForm } from "../utils";
-import { useManagersList } from "../../managers/hooks/useManagersList";
+import { useManagersList } from "../managers/hooks/useManagersList";
 import { toast } from "sonner";
 import * as LucideIcons from "lucide-react";
 

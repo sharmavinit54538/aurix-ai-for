@@ -69,7 +69,7 @@ import type { Department, DepartmentFilters, SortField, SortDir } from "../types
 import { OFFICES, STATUS_OPTIONS, EMPLOYEE_COUNT_RANGES, DEFAULT_FILTERS } from "../constants";
 import { applyFilters, applySorting, paginate, buildCSV } from "../utils";
 import { useAurix } from "@/lib/aurix-store";
-import { useManagersList } from "../../managers/hooks/useManagersList";
+import { useManagersList } from "../managers/hooks/useManagersList";
 import { toast } from "sonner";
 
 export function DepartmentsPage() {
