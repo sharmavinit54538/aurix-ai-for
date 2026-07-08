@@ -2,7 +2,7 @@ import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { aurix } from "@/lib/aurix-store";
 import { getTokens, setTokens } from "./tokens";
 
-export const BASE_URL =(import.meta.env.VITE_API_URL as string).replace(/\/$/, "") + "/api/v1";
+export const BASE_URL = (import.meta.env.VITE_API_URL as string).replace(/\/$/, "") + "/api/v1";
 
 const apiInstance = axios.create({
   baseURL: BASE_URL,
@@ -31,13 +31,13 @@ async function refreshAccessToken(): Promise<string> {
   }
 
   try {
-    const res = await axios.post(`${BASE_URL}/auth/refresh-token`, {
+    const res = await axios.post(`${BASE_URL}/auth/refresh`, {
       refresh_token: tokens.refreshToken,
     });
 
     if (!res.data?.success || !res.data?.data) {
       setTokens(null);
-      aurix.reset();
+      aurix.set({ isRestoring: false, user: null, company: null });
       throw new Error("Invalid session refresh response");
     }
 
@@ -51,7 +51,7 @@ async function refreshAccessToken(): Promise<string> {
     const status = (error as AxiosError)?.response?.status;
     if (status === 400 || status === 401 || status === 403) {
       setTokens(null);
-      aurix.reset();
+      aurix.set({ isRestoring: false, user: null, company: null });
     }
     throw new Error("Failed to refresh session");
   }
@@ -76,6 +76,11 @@ apiInstance.interceptors.response.use(
 
     const tokens = getTokens();
     if (!tokens?.refreshToken) {
+      setTokens(null);
+      aurix.set({ isRestoring: false, user: null, company: null });
+      if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
+        window.location.replace("/login");
+      }
       return Promise.reject(error);
     }
 
@@ -90,6 +95,11 @@ apiInstance.interceptors.response.use(
       } catch (refreshError) {
         isRefreshing = false;
         refreshSubscribers = [];
+        setTokens(null);
+        aurix.set({ isRestoring: false, user: null, company: null });
+        if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
+          window.location.replace("/login");
+        }
         return Promise.reject(refreshError);
       }
     }

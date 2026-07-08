@@ -137,7 +137,7 @@ function RootComponent() {
       api.get<AuthMeResponse>("auth/me")
         .then((res) => {
           if (res.success && res.data) {
-            const ws = aurix.get();
+            const companyId = res.data.company_id ? String(res.data.company_id) : "default";
             aurix.set({
               user: {
                 id: String(res.data.id),
@@ -145,17 +145,27 @@ function RootComponent() {
                 email: res.data.email,
                 phone: res.data.phone || "",
                 role: res.data.role,
-                companyId: ws.user?.companyId || "workspace",
+                companyId,
                 emailVerified: res.data.is_verified,
                 onboardingComplete: res.data.onboarding_completed ?? false,
                 createdAt: res.data.created_at ?? new Date().toISOString(),
-              }
+              },
+              company: {
+                id: companyId,
+                name: res.data.company_name || res.data.name,
+              },
+              isRestoring: false,
             });
+          } else {
+            aurix.set({ isRestoring: false });
           }
         })
         .catch((err) => {
           console.error("Failed to load user profile on startup:", err);
+          aurix.set({ isRestoring: false });
         });
+    } else {
+      aurix.set({ isRestoring: false });
     }
   }, []);
 

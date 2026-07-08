@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Briefcase, Sparkles } from "lucide-react";
-import { aurix } from "@/lib/aurix-store";
+import { useAurix } from "@/lib/aurix-store";
+import { AuthLoadingScreen } from "@/components/aurix/AuthLoadingScreen";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -17,16 +18,32 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const navigate = useNavigate();
+  const workspace = useAurix();
 
   useEffect(() => {
-    const workspace = aurix.get();
+    if (workspace.isRestoring) return;
 
     if (!workspace.user) {
       navigate({ to: "/login", replace: true });
     } else {
-      navigate({ to: "/dashboard/recruitment", replace: true });
+      // Redirect based on user role
+      if (!workspace.user.emailVerified) {
+        navigate({ to: "/verify-email", replace: true });
+      } else if (!workspace.user.onboardingComplete) {
+        navigate({ to: "/onboarding", replace: true });
+      } else if (workspace.user.role === "manager") {
+        navigate({ to: "/dashboard/manager", replace: true });
+      } else if (workspace.user.role === "employee") {
+        navigate({ to: "/dashboard/employee", replace: true });
+      } else {
+        navigate({ to: "/dashboard/recruitment", replace: true });
+      }
     }
-  }, [navigate]);
+  }, [navigate, workspace.user, workspace.isRestoring]);
+
+  if (workspace.isRestoring) {
+    return <AuthLoadingScreen />;
+  }
 
   return (
     <div className="grid min-h-screen place-items-center bg-background text-foreground">

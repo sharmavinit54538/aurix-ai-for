@@ -7,6 +7,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 import { aurix, useAurix } from "@/lib/aurix-store";
 import { api } from "@/api";
 import { toast } from "sonner";
+import { AuthLoadingScreen } from "@/components/aurix/AuthLoadingScreen";
 
 export const Route = createFileRoute("/verify-email")({
   head: () => ({ meta: [{ title: "Verify your email — Aurix" }] }),
@@ -24,12 +25,18 @@ function VerifyEmailPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (ws.isRestoring) return;
+
     if (!ws.user) {
       navigate({ to: "/register" });
     } else if (ws.user.emailVerified) {
       navigate({ to: "/onboarding" });
     }
-  }, [ws.user, navigate]);
+  }, [ws.user, ws.isRestoring, navigate]);
+
+  if (ws.isRestoring) {
+    return <AuthLoadingScreen />;
+  }
 
   useEffect(() => {
     if (secondsLeft <= 0) return;

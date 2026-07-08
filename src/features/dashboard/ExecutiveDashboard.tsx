@@ -161,11 +161,23 @@ const ICON_MAP: Record<string, React.ElementType> = {
 
 // ── 1. Live DateTime Clock ────────────────────────────────────
 function LiveClock() {
+  const [mounted, setMounted] = useState(false);
   const [time, setTime] = useState(new Date());
   useEffect(() => {
+    setMounted(true);
     const t = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
+  
+  if (!mounted) {
+    return (
+      <div className="text-right hidden sm:block">
+        <div className="text-sm font-semibold tabular-nums">--:--:--</div>
+        <div className="text-xs text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="text-right hidden sm:block">
       <div className="text-sm font-semibold tabular-nums">

@@ -16,6 +16,12 @@ const initialState: EmployeesState = {
   loading: false,
   submitting: false,
   error: null,
+  total: 0,
+  page: 1,
+  limit: 10,
+  pages: 0,
+  has_next: false,
+  has_previous: false,
 };
 
 const mutationThunks = [
@@ -44,7 +50,13 @@ const employeesSlice = createSlice({
       })
       .addCase(fetchEmployees.fulfilled, (state, action) => {
         state.loading = false;
-        state.employees = action.payload;
+        state.employees = action.payload.items;
+        state.total = action.payload.total;
+        state.page = action.payload.page;
+        state.limit = action.payload.limit;
+        state.pages = action.payload.pages;
+        state.has_next = action.payload.has_next;
+        state.has_previous = action.payload.has_previous;
       })
       .addCase(fetchEmployees.rejected, (state, action) => {
         state.loading = false;

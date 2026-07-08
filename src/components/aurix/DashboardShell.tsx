@@ -17,6 +17,8 @@ import {
 import { aurix, useAurix, type Role } from "@/lib/aurix-store";
 import { Input } from "@/components/ui/input";
 import { useTheme } from "@/components/site/ThemeProvider";
+import { api, getTokens, setTokens } from "@/api";
+import { AuthLoadingScreen } from "@/components/aurix/AuthLoadingScreen";
 
 // ── Badge type ─────────────────────────────────────────────────
 type BadgeKind = "New" | "AI" | "Beta" | "Hot";
@@ -841,6 +843,8 @@ export function DashboardShell() {
 
   // ── Auth & Role guard ────────────────────────────────────────
   useEffect(() => {
+    if (ws.isRestoring) return;
+
     if (!ws.user) {
       navigate({ to: "/login" });
       return;
@@ -903,13 +907,25 @@ export function DashboardShell() {
         navigate({ to: "/dashboard/employee" });
       }
     }
-  }, [ws.user, pathname, role, navigate]);
+  }, [ws.user, ws.isRestoring, pathname, role, navigate]);
 
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
-  function logout() {
-    aurix.reset();
-    navigate({ to: "/login" });
+  async function logout() {
+    const tokens = getTokens();
+    try {
+      if (tokens?.refreshToken) {
+        await api.post("auth/logout", {
+          refresh_token: tokens.refreshToken,
+        });
+      }
+    } catch (err) {
+      console.error("Logout request failed:", err);
+    } finally {
+      setTokens(null);
+      aurix.reset();
+      navigate({ to: "/login" });
+    }
   }
 
   const initials = ws.user?.fullName?.split(" ").map((p) => p[0]).slice(0, 2).join("") || "A";
@@ -924,6 +940,10 @@ export function DashboardShell() {
       : role === "employee"
       ? "/dashboard/employee"
       : "/dashboard";
+
+  if (ws.isRestoring) {
+    return <AuthLoadingScreen />;
+  }
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background text-foreground">
