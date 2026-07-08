@@ -15,6 +15,8 @@ import {
   BookMarked, PenLine, FileEdit, Landmark, Coins, Building, Hash,
 } from "lucide-react";
 import { aurix, useAurix, type Role } from "@/lib/aurix-store";
+import { useAuthReady } from "@/lib/auth-bootstrap";
+import { setTokens } from "@/api";
 import { Input } from "@/components/ui/input";
 import { useTheme } from "@/components/site/ThemeProvider";
 
@@ -829,6 +831,7 @@ function DemoBanner({ role, onDismiss }: { role: Role; onDismiss: () => void }) 
 
 export function DashboardShell() {
   const ws = useAurix();
+  const authReady = useAuthReady();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -841,6 +844,8 @@ export function DashboardShell() {
 
   // ── Auth & Role guard ────────────────────────────────────────
   useEffect(() => {
+    if (!authReady) return;
+
     if (!ws.user) {
       navigate({ to: "/login" });
       return;
@@ -903,11 +908,12 @@ export function DashboardShell() {
         navigate({ to: "/dashboard/employee" });
       }
     }
-  }, [ws.user, pathname, role, navigate]);
+  }, [authReady, ws.user, pathname, role, navigate]);
 
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
   function logout() {
+    setTokens(null);
     aurix.reset();
     navigate({ to: "/login" });
   }

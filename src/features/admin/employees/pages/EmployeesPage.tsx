@@ -187,7 +187,6 @@ export function EmployeesPage() {
         <EmployeesFilters
           search={q}
           department={dept}
-          departments={departments}
           onSearchChange={setQ}
           onDepartmentChange={setDept}
         />

@@ -1,11 +1,11 @@
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DepartmentSelectContent } from "./DepartmentSelectContent";
 
 interface EmployeesFiltersProps {
   search: string;
   department: string;
-  departments: string[];
   onSearchChange: (value: string) => void;
   onDepartmentChange: (value: string) => void;
 }
@@ -13,7 +13,6 @@ interface EmployeesFiltersProps {
 export function EmployeesFilters({
   search,
   department,
-  departments,
   onSearchChange,
   onDepartmentChange,
 }: EmployeesFiltersProps) {
@@ -32,14 +31,7 @@ export function EmployeesFilters({
         <SelectTrigger className="h-9 w-48">
           <SelectValue placeholder="All departments" />
         </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All departments</SelectItem>
-          {departments.map((d) => (
-            <SelectItem key={d} value={d}>
-              {d}
-            </SelectItem>
-          ))}
-        </SelectContent>
+        <DepartmentSelectContent includeAllOption />
       </Select>
     </div>
   );

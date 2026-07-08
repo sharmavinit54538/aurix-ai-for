@@ -11,9 +11,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
-import { api, getTokens } from "@/api";
-import type { AuthMeResponse } from "@/api";
-import { aurix } from "../lib/aurix-store";
+import { bootstrapAuth } from "../lib/auth-bootstrap";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -129,34 +127,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   useEffect(() => {
-    // Only run on client side
-    if (typeof window === "undefined") return;
-
-    const tokens = getTokens();
-    if (tokens?.accessToken) {
-      api.get<AuthMeResponse>("auth/me")
-        .then((res) => {
-          if (res.success && res.data) {
-            const ws = aurix.get();
-            aurix.set({
-              user: {
-                id: String(res.data.id),
-                fullName: res.data.name,
-                email: res.data.email,
-                phone: res.data.phone || "",
-                role: res.data.role,
-                companyId: ws.user?.companyId || "workspace",
-                emailVerified: res.data.is_verified,
-                onboardingComplete: res.data.onboarding_completed ?? false,
-                createdAt: res.data.created_at ?? new Date().toISOString(),
-              }
-            });
-          }
-        })
-        .catch((err) => {
-          console.error("Failed to load user profile on startup:", err);
-        });
-    }
+    void bootstrapAuth();
   }, []);
 
   return (

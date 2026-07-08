@@ -53,6 +53,7 @@ export const createEmployee = createAsyncThunk<
   { rejectValue: string }
 >("employees/createEmployee", async (payload, thunkAPI) => {
   try {
+    console.log(payload);
     await apiInstance.post("/employees", payload);
   } catch (error) {
     return thunkAPI.rejectWithValue(getErrorMessage(error, "Failed to add employee"));

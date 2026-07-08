@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Briefcase, Sparkles } from "lucide-react";
 import { aurix } from "@/lib/aurix-store";
+import { useAuthReady } from "@/lib/auth-bootstrap";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -17,8 +18,11 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const navigate = useNavigate();
+  const authReady = useAuthReady();
 
   useEffect(() => {
+    if (!authReady) return;
+
     const workspace = aurix.get();
 
     if (!workspace.user) {
@@ -26,7 +30,7 @@ function Index() {
     } else {
       navigate({ to: "/dashboard/recruitment", replace: true });
     }
-  }, [navigate]);
+  }, [authReady, navigate]);
 
   return (
     <div className="grid min-h-screen place-items-center bg-background text-foreground">

@@ -5,6 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { Employee } from "../employeesTypes";
+import { DepartmentSelectContent } from "./DepartmentSelectContent";
+import { resolveDepartmentValue } from "../utils/departmentOptions";
 
 const SHIFT_OPTIONS = ["General", "Morning", "Evening", "Night"] as const;
 
@@ -25,6 +27,8 @@ export function EmployeeFormDialog({
   submitting,
   onSave,
 }: EmployeeFormDialogProps) {
+  const departmentValue = resolveDepartmentValue(draft?.department);
+console.log(draft);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
@@ -67,10 +71,25 @@ export function EmployeeFormDialog({
               <Input value={draft.phone} onChange={(e) => onDraftChange({ ...draft, phone: e.target.value })} />
             </FormField>
             <FormField label="Department">
-              <Input value={draft.department} onChange={(e) => onDraftChange({ ...draft, department: e.target.value })} />
+              <Select
+                value={departmentValue}
+                onValueChange={(v) => onDraftChange({ ...draft, department: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select department" />
+                </SelectTrigger>
+                <DepartmentSelectContent
+                  key={draft.id || "new"}
+                  selectedValue={departmentValue}
+                  extraValues={draft.department ? [draft.department] : []}
+                />
+              </Select>
             </FormField>
             <FormField label="Designation">
-              <Input value={draft.designation} onChange={(e) => onDraftChange({ ...draft, designation: e.target.value })} />
+              <Input
+                value={draft.designation}
+                onChange={(e) => onDraftChange({ ...draft, designation: e.target.value })}
+              />
             </FormField>
             <FormField label="Joining date">
               <Input
