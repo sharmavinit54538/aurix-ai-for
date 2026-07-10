@@ -1061,7 +1061,7 @@ function AssetsPage() {
           ADD ASSET MODAL
          ---------------------------------------------------- */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent className="sm:max-w-lg bg-background border-border shadow-2xl">
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-background border-border shadow-2xl">
           <DialogHeader>
             <DialogTitle className="font-display font-bold text-lg">Register New Asset</DialogTitle>
           </DialogHeader>
@@ -1156,7 +1156,7 @@ function AssetsPage() {
           EDIT ASSET MODAL
          ---------------------------------------------------- */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="sm:max-w-lg bg-background border-border shadow-2xl">
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-autobg-background border-border shadow-2xl">
           <DialogHeader>
             <DialogTitle className="font-display font-bold text-lg">Edit Asset Specifications</DialogTitle>
           </DialogHeader>
