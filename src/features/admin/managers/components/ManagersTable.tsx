@@ -1,6 +1,5 @@
 import React, { useMemo } from "react";
 import {
-  Table,
   TableBody,
   TableCell,
   TableHead,
@@ -93,9 +92,8 @@ export function ManagersTable({
   };
 
   return (
-    <div className="rounded-2xl border border-border/80 bg-card/30 overflow-hidden shadow-sm">
-      <div className="overflow-x-auto">
-        <Table>
+    <div className="w-full max-w-full overflow-x-auto">
+      <table className="w-full min-w-[1100px] caption-bottom text-sm">
           <TableHeader className="bg-muted/10 border-b border-border/60">
             <TableRow>
               <TableHead className="w-[50px] pl-4">
@@ -144,8 +142,9 @@ export function ManagersTable({
           </TableHeader>
           <TableBody>
             {managers.map((m) => {
-              const hue = avatarHue(m.fullName);
-              const initials = m.fullName
+              const displayName = m.fullName || "Manager";
+              const hue = avatarHue(displayName);
+              const initials = displayName
                 .split(" ")
                 .map((n) => n[0])
                 .slice(0, 2)
@@ -310,8 +309,7 @@ export function ManagersTable({
               );
             })}
           </TableBody>
-        </Table>
-      </div>
+      </table>
     </div>
   );
 }

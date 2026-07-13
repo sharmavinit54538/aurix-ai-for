@@ -1,20 +1,15 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 import { Loader2 } from "lucide-react";
-import { AuthShell } from "@/components/aurix/AuthShell";
+import { AuthShell } from "@/features/auth/components/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api } from "@/api";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/forgot-password")({
-  head: () => ({ meta: [{ title: "Reset password — Aurix" }] }),
-  component: ForgotPage,
-});
-
-function ForgotPage() {
+export function ForgotPasswordPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -36,13 +31,14 @@ function ForgotPage() {
         navigate({
           to: "/verify-reset-otp",
           search: { email },
-          state: { email } as any,
+          state: { email } as Record<string, string>,
         });
       } else {
         toast.error(res.message || "Failed to send OTP.");
       }
-    } catch (err: any) {
-      toast.error(err.message || "User not found or connection error");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "User not found or connection error";
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -52,7 +48,11 @@ function ForgotPage() {
     <AuthShell
       title="Reset your password"
       subtitle="Enter the email tied to your workspace and we'll send a verification OTP."
-      footer={<Link to="/login" className="font-medium text-foreground underline-offset-4 hover:underline">Back to sign in</Link>}
+      footer={
+        <Link to="/login" className="font-medium text-foreground underline-offset-4 hover:underline">
+          Back to sign in
+        </Link>
+      }
     >
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
         <div className="space-y-2">

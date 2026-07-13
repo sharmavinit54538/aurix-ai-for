@@ -1,5 +1,6 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { aurix } from "@/lib/aurix-store";
+import { isAccessTokenExpired } from "./token-utils";
 import { getTokens, setTokens } from "./tokens";
 
 export const BASE_URL = (import.meta.env.VITE_API_URL as string).replace(/\/$/, "") + "/api/v1";
@@ -75,6 +76,12 @@ apiInstance.interceptors.response.use(
     }
 
     const tokens = getTokens();
+
+    // Access token is still valid — don't clear the session on unrelated 401 responses.
+    if (tokens?.accessToken && !isAccessTokenExpired(tokens.accessToken)) {
+      return Promise.reject(error);
+    }
+
     if (!tokens?.refreshToken) {
       setTokens(null);
       aurix.set({ isRestoring: false, user: null, company: null });

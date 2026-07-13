@@ -64,18 +64,18 @@ export function ManagerStatsCards({ managers }: ManagerStatsCardsProps) {
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+    <div className="mb-6 grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-3 2xl:grid-cols-6">
       {stats.map((stat, i) => {
         const Icon = stat.icon;
         return (
           <Card
             key={i}
-            className="group relative overflow-hidden rounded-2xl border border-border/80 bg-card/40 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-border hover:shadow-md hover:bg-card/60"
+            className="group relative min-w-0 overflow-hidden rounded-2xl border border-border/80 bg-card/40 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-border hover:shadow-md hover:bg-card/60"
           >
             <div className="absolute inset-0 bg-gradient-to-br opacity-0 transition-opacity duration-300 group-hover:opacity-100 -z-10" />
-            <CardContent className="p-4 flex flex-col justify-between h-full min-h-[110px]">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-muted-foreground line-clamp-1">{stat.label}</span>
+            <CardContent className="flex h-full min-h-[110px] flex-col justify-between p-4">
+              <div className="flex min-w-0 items-center justify-between gap-2">
+                <span className="min-w-0 flex-1 truncate text-xs font-medium text-muted-foreground">{stat.label}</span>
                 <div className={`flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br border ${stat.color}`}>
                   <Icon className="h-4 w-4" />
                 </div>

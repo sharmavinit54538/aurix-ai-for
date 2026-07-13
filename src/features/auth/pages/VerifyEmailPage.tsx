@@ -1,20 +1,16 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { CheckCircle2, Loader2 } from "lucide-react";
-import { AuthShell } from "@/components/aurix/AuthShell";
+import { AuthShell } from "@/features/auth/components/AuthShell";
+import { AuthLoadingScreen } from "@/features/auth/components/AuthLoadingScreen";
 import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { aurix, useAurix } from "@/lib/aurix-store";
 import { api } from "@/api";
 import { toast } from "sonner";
-import { AuthLoadingScreen } from "@/components/aurix/AuthLoadingScreen";
+import type { ApiResponse } from "@/api/types";
 
-export const Route = createFileRoute("/verify-email")({
-  head: () => ({ meta: [{ title: "Verify your email — Aurix" }] }),
-  component: VerifyEmailPage,
-});
-
-function VerifyEmailPage() {
+export function VerifyEmailPage() {
   const navigate = useNavigate();
   const ws = useAurix();
   const [code, setCode] = useState("");
@@ -34,15 +30,15 @@ function VerifyEmailPage() {
     }
   }, [ws.user, ws.isRestoring, navigate]);
 
-  if (ws.isRestoring) {
-    return <AuthLoadingScreen />;
-  }
-
   useEffect(() => {
     if (secondsLeft <= 0) return;
     const t = setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
     return () => clearTimeout(t);
   }, [secondsLeft]);
+
+  if (ws.isRestoring) {
+    return <AuthLoadingScreen />;
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -52,7 +48,7 @@ function VerifyEmailPage() {
 
     try {
       const email = ws.user?.email || "";
-      const res = await api.post("auth/verify-email", {
+      const res = await api.post<ApiResponse>("auth/verify-email", {
         email,
         otp: code,
       });
@@ -67,8 +63,9 @@ function VerifyEmailPage() {
       } else {
         setError(res.message || "Verification failed");
       }
-    } catch (err: any) {
-      setError(err.message || "Incorrect or expired code");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Incorrect or expired code";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -77,18 +74,18 @@ function VerifyEmailPage() {
   async function resend() {
     const email = ws.user?.email || "";
     const payload = { email };
-    console.log("Resend OTP Payload:", payload);
     setResending(true);
     try {
-      const res = await api.post("auth/resend-otp", payload);
+      const res = await api.post<ApiResponse>("auth/resend-otp", payload);
       if (res.success) {
         setSecondsLeft(30);
         toast.success(res.message || "OTP sent successfully.");
       } else {
         toast.error(res.message || "Failed to resend code");
       }
-    } catch (err: any) {
-      toast.error(err.message || "Too many attempts, please try again later.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Too many attempts, please try again later.";
+      toast.error(message);
     } finally {
       setResending(false);
     }

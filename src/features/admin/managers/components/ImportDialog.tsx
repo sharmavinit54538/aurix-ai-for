@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Upload, AlertCircle, FileText, CheckCircle2 } from "lucide-react";
+import { Loader } from "@/components/aurix/Loader";
 import type { Manager } from "../types";
 import { validateEmail, validatePhone } from "../utils";
 import { toast } from "sonner";
@@ -20,7 +21,8 @@ interface ImportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   existingManagers: Manager[];
-  onImport: (imported: Manager[]) => void;
+  submitting?: boolean;
+  onImport: (imported: Manager[]) => void | Promise<void>;
 }
 
 interface ParsedRow {
@@ -35,6 +37,7 @@ export function ImportDialog({
   open,
   onOpenChange,
   existingManagers,
+  submitting = false,
   onImport,
 }: ImportDialogProps) {
   const [file, setFile] = useState<File | null>(null);
@@ -213,7 +216,7 @@ export function ImportDialog({
     reader.readAsText(file);
   };
 
-  const handleImport = () => {
+  const handleImport = async () => {
     if (parsedRows.length === 0) {
       toast.error("No valid data parsed to import");
       return;
@@ -233,6 +236,7 @@ export function ImportDialog({
 
       return {
         id: `mgr_imported_${Math.random().toString(36).substr(2, 9)}`,
+        managerId: d.employeeId || `MGR-IMP-${idx + 1}`,
         employeeId: d.employeeId || `EMP-IMP-${idx + 1}`,
         firstName,
         lastName,
@@ -245,6 +249,7 @@ export function ImportDialog({
         designation: d.designation || "Manager",
         managerRole: (d.managerRole as any) || "team_lead",
         reportingManagerId: null,
+        reportingManagerCode: "",
         reportingManagerName: d.reportingManagerName || "None",
         office,
         workLocation: "hybrid",
@@ -266,7 +271,7 @@ export function ImportDialog({
       };
     });
 
-    onImport(importedManagers);
+    await onImport(importedManagers);
     toast.success(`Import Successful: ${importedManagers.length} managers added`);
     resetState();
     onOpenChange(false);
@@ -448,6 +453,7 @@ export function ImportDialog({
             type="button"
             variant="outline"
             onClick={() => { onOpenChange(false); resetState(); }}
+            disabled={submitting}
             className="rounded-xl border-border bg-card hover:bg-muted"
           >
             Cancel
@@ -455,11 +461,17 @@ export function ImportDialog({
           <Button
             type="button"
             onClick={handleImport}
-            disabled={!file || hasErrors}
+            disabled={!file || hasErrors || submitting}
             className="rounded-xl bg-brand text-brand-foreground shadow-glow hover:bg-brand/90 disabled:opacity-50"
           >
-            <CheckCircle2 className="h-4 w-4 mr-2" />
-            Complete Import
+            {submitting ? (
+              <Loader label="Importing..." size="sm" className="text-brand-foreground" />
+            ) : (
+              <>
+                <CheckCircle2 className="mr-2 h-4 w-4" />
+                Complete Import
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

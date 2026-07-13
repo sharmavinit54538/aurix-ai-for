@@ -21,7 +21,7 @@ import { aurix, useAurix, uid, type Employee, type HR, type Manager } from "@/li
 import { api, setTokens } from "@/api";
 import { toast } from "sonner";
 
-import { AuthLoadingScreen } from "@/components/aurix/AuthLoadingScreen";
+import { AuthLoadingScreen } from "@/features/auth/components/AuthLoadingScreen";
 
 export const Route = createFileRoute("/onboarding")({
   validateSearch: z.object({

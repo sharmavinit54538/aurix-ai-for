@@ -1,29 +1,22 @@
-import { createFileRoute, useNavigate, useLocation } from "@tanstack/react-router";
+import { useNavigate, useLocation, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { AuthShell } from "@/components/aurix/AuthShell";
+import { AuthShell } from "@/features/auth/components/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { api } from "@/api";
 import { toast } from "sonner";
-import { z } from "zod";
 
-export const Route = createFileRoute("/reset-password")({
-  validateSearch: z.object({
-    email: z.string().optional(),
-    resetToken: z.string().optional(),
-  }),
-  head: () => ({ meta: [{ title: "Set new password — Aurix" }] }),
-  component: ResetPasswordPage,
-});
-
-function ResetPasswordPage() {
+export function ResetPasswordPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { email: searchEmail, resetToken: searchResetToken } = Route.useSearch();
+  const { email: searchEmail, resetToken: searchResetToken } = useSearch({ strict: false }) as {
+    email?: string;
+    resetToken?: string;
+  };
 
-  const state = location.state as any;
+  const state = location.state as { email?: string; resetToken?: string } | undefined;
   const email = searchEmail || state?.email || "";
   const resetToken = searchResetToken || state?.resetToken || "";
 
@@ -89,8 +82,9 @@ function ResetPasswordPage() {
       } else {
         toast.error(res.message || "Failed to reset password.");
       }
-    } catch (err: any) {
-      toast.error(err.message || "Failed to reset password.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to reset password.";
+      toast.error(message);
     } finally {
       setLoading(false);
     }
