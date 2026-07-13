@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useState } from "react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -17,312 +18,274 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Manager, Gender, EmploymentType, ManagerRole, ManagerPermissions } from "../types";
-import {
-  DEPARTMENTS,
-  OFFICES,
-  SHIFTS,
-  STATUS_OPTIONS,
-  EMPLOYMENT_TYPE_OPTIONS,
-  MANAGER_ROLE_OPTIONS,
-  WORK_LOCATION_OPTIONS,
-  GENDER_OPTIONS,
-  PERMISSION_LABELS,
-  DEFAULT_PERMISSIONS,
-} from "../constants";
+import { DepartmentSelectContent } from "@/features/admin/employees/components/DepartmentSelectContent";
+import { resolveDepartmentValue } from "@/features/admin/employees/utils/departmentOptions";
+import { Loader } from "@/components/aurix/Loader";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import type { Manager } from "../types";
+import type { SaveManagerResult } from "../managersTypes";
+import { setManagerForm, resetManagerForm, initManagerForm } from "../managersSlice";
+import type { ManagerFormState } from "../managersTypes";
 import { validateManagerForm } from "../utils";
-import { toast } from "sonner";
+import {
+  OFFICES,
+  STATUS_OPTIONS,
+  GENDER_OPTIONS,
+  MANAGER_FORM_EMPLOYMENT_TYPE_OPTIONS,
+  MANAGER_FORM_WORK_LOCATION_OPTIONS,
+  MANAGER_FORM_PERMISSION_FIELDS,
+  SHIFT_OPTIONS,
+} from "../constants";
+import type { ManagerPermissions } from "../types";
 
 interface ManagerFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  manager: Manager | null; // null for add, Manager for edit
-  existingManagers: Manager[];
-  onSave: (manager: Manager) => void;
+  isEdit?: boolean;
+  manager?: Manager | null;
+  detailLoading?: boolean;
+  detailError?: string | null;
+  existingManagers?: Manager[];
+  onSubmit: () => Promise<SaveManagerResult>;
 }
 
 export function ManagerFormDialog({
   open,
   onOpenChange,
+  isEdit = false,
   manager,
-  existingManagers,
-  onSave,
+  detailLoading = false,
+  detailError = null,
+  existingManagers = [],
+  onSubmit,
 }: ManagerFormDialogProps) {
-  const isEdit = !!manager;
+  const dispatch = useAppDispatch();
+  const form = useAppSelector((state) => state.managers.managerForm);
+  const selectedManagerForm = useAppSelector((state) => state.managers.selectedManagerForm);
+  const submitting = useAppSelector((state) => state.managers.submitting);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const departmentValue = useMemo(() => resolveDepartmentValue(form.department), [form.department]);
 
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [profileImage, setProfileImage] = useState("");
-  const [employeeId, setEmployeeId] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [dob, setDob] = useState("");
-  const [gender, setGender] = useState<Gender>("prefer_not_to_say");
-
-  const [department, setDepartment] = useState("");
-  const [designation, setDesignation] = useState("");
-  const [managerRole, setManagerRole] = useState<ManagerRole>("team_lead");
-  const [reportingManagerId, setReportingManagerId] = useState<string>("none");
-  const [office, setOffice] = useState("");
-  const [workLocation, setWorkLocation] = useState<"on_site" | "remote" | "hybrid">("hybrid");
-  const [joiningDate, setJoiningDate] = useState("");
-  const [employmentType, setEmploymentType] = useState<EmploymentType>("full_time");
-  const [shift, setShift] = useState("");
-  const [salary, setSalary] = useState<string>("");
-  const [status, setStatus] = useState<Manager["status"]>("active");
-
-  const [permissions, setPermissions] = useState<Manager["permissions"]>({
-    ...DEFAULT_PERMISSIONS,
-  });
-
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  // Populate form on edit
-  useEffect(() => {
-    if (open) {
-      setErrors({});
-      if (manager) {
-        setFirstName(manager.firstName);
-        setLastName(manager.lastName);
-        setProfileImage(manager.profileImage || "");
-        setEmployeeId(manager.employeeId);
-        setEmail(manager.email);
-        setPhone(manager.phone);
-        setDob(manager.dob);
-        setGender(manager.gender);
-        setDepartment(manager.department);
-        setDesignation(manager.designation);
-        setManagerRole(manager.managerRole);
-        setReportingManagerId(manager.reportingManagerId || "none");
-        setOffice(manager.office);
-        setWorkLocation(manager.workLocation);
-        setJoiningDate(manager.joiningDate);
-        setEmploymentType(manager.employmentType);
-        setShift(manager.shift);
-        setSalary(manager.salary ? String(manager.salary) : "");
-        setStatus(manager.status);
-        setPermissions({ ...manager.permissions });
-      } else {
-        setFirstName("");
-        setLastName("");
-        setProfileImage("");
-        // Generate a new employee ID recommendation (e.g. EMP-XXXX)
-        const nextNum = 1000 + existingManagers.length + 1;
-        setEmployeeId(`EMP-${nextNum}`);
-        setEmail("");
-        setPhone("");
-        setDob("");
-        setGender("prefer_not_to_say");
-        setDepartment(DEPARTMENTS[0] || "");
-        setDesignation("");
-        setManagerRole("team_lead");
-        setReportingManagerId("none");
-        setOffice(OFFICES[0] || "");
-        setWorkLocation("hybrid");
-        // Today in YYYY-MM-DD
-        setJoiningDate(new Date().toISOString().split("T")[0]);
-        setEmploymentType("full_time");
-        setShift(SHIFTS[0] || "");
-        setSalary("");
-        setStatus("active");
-        setPermissions({ ...DEFAULT_PERMISSIONS });
-      }
+  const reportingManagerOptions = useMemo(() => {
+    const options = existingManagers.filter((m) => !manager || m.id !== manager.id);
+    const reportingId = form.reporting_to;
+    if (reportingId && !options.some((m) => m.id === reportingId)) {
+      const reportingName =
+        manager?.reportingManagerName ||
+        existingManagers.find((m) => m.id === reportingId)?.fullName ||
+        "Reporting Manager";
+      return [
+        {
+          id: reportingId,
+          fullName: reportingName,
+          designation: "",
+        } as Manager,
+        ...options,
+      ];
     }
-  }, [open, manager, existingManagers]);
+    return options;
+  }, [existingManagers, form.reporting_to, manager]);
+  const officeOptions = useMemo(() => {
+    if (form.branch && !OFFICES.includes(form.branch)) {
+      return [form.branch, ...OFFICES];
+    }
+    return OFFICES;
+  }, [form.branch]);
+  const shiftOptions = useMemo(() => {
+    if (form.shift && !SHIFT_OPTIONS.some((opt) => opt.value === form.shift)) {
+      return [{ value: form.shift, label: form.shift }, ...SHIFT_OPTIONS];
+    }
+    return SHIFT_OPTIONS;
+  }, [form.shift]);
+  const genderOptions = useMemo(() => {
+    if (form.gender && !GENDER_OPTIONS.some((opt) => opt.value === form.gender)) {
+      const label = form.gender.charAt(0).toUpperCase() + form.gender.slice(1).replace(/_/g, " ");
+      return [{ value: form.gender, label }, ...GENDER_OPTIONS];
+    }
+    return GENDER_OPTIONS;
+  }, [form.gender]);
+  const workLocationOptions = useMemo(() => {
+    if (
+      form.work_location &&
+      !MANAGER_FORM_WORK_LOCATION_OPTIONS.some((opt) => opt.value === form.work_location)
+    ) {
+      const label = form.work_location.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+      return [{ value: form.work_location, label }, ...MANAGER_FORM_WORK_LOCATION_OPTIONS];
+    }
+    return MANAGER_FORM_WORK_LOCATION_OPTIONS;
+  }, [form.work_location]);
+  React.useEffect(() => {
+    if (!open) return;
+    setFormErrors({});
+    if (!isEdit) {
+      dispatch(resetManagerForm());
+      return;
+    }
+    if (detailLoading || !selectedManagerForm) return;
+    dispatch(initManagerForm(selectedManagerForm));
+  }, [dispatch, detailLoading, isEdit, open, selectedManagerForm]);
 
-  // Form options for Reporting Manager
-  const reportingManagerOptions = existingManagers.filter(
-    (m) => !manager || m.id !== manager.id
-  );
+  const updateField = <K extends keyof ManagerFormState>(field: K, value: ManagerFormState[K]) => {
+    dispatch(setManagerForm({ [field]: value } as Partial<ManagerFormState>));
+    if (formErrors[field]) {
+      setFormErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
+  };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const selectedReport = reportingManagerOptions.find((m) => m.id === reportingManagerId);
-
-    const draft: Partial<Manager> = {
-      id: manager?.id,
-      firstName,
-      lastName,
-      email,
-      phone,
-      employeeId,
-      department,
-      designation,
-      dob,
-      gender,
-      profileImage: profileImage || undefined,
-      managerRole,
-      reportingManagerId: reportingManagerId === "none" ? null : reportingManagerId,
-      reportingManagerName: reportingManagerId === "none" ? "None" : selectedReport?.fullName || "None",
-      office,
-      workLocation,
-      joiningDate,
-      employmentType,
-      shift,
-      salary: salary ? parseFloat(salary) : undefined,
-      status,
-      permissions,
-    };
-
-    const val = validateManagerForm(draft, existingManagers, isEdit);
-
-    if (!val.valid) {
-      setErrors(val.errors);
-      toast.error("Please resolve validation errors in the form.");
+    const validation = validateManagerForm(form, existingManagers, isEdit, manager?.id);
+    if (!validation.valid) {
+      setFormErrors(validation.errors);
+      toast.error("Please fix the highlighted fields");
       return;
     }
 
-    // Build the final manager object
-    const finalManager: Manager = {
-      id: manager?.id || `mgr_${Math.random().toString(36).substr(2, 9)}`,
-      employeeId: employeeId.trim(),
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      fullName: `${firstName.trim()} ${lastName.trim()}`,
-      email: email.trim(),
-      phone: phone.trim(),
-      dob,
-      gender,
-      profileImage: profileImage.trim() || undefined,
-      department,
-      designation: designation.trim(),
-      managerRole,
-      reportingManagerId: reportingManagerId === "none" ? null : reportingManagerId,
-      reportingManagerName: reportingManagerId === "none" ? "None" : selectedReport?.fullName || "None",
-      office,
-      workLocation,
-      joiningDate,
-      employmentType,
-      shift,
-      salary: salary ? parseFloat(salary) : undefined,
-      status,
-      teamSize: manager?.teamSize ?? 0,
-      teamIds: manager?.teamIds ?? [],
-      permissions,
-      lastActive: manager?.lastActive || new Date().toISOString(),
-      attendanceSummary: manager?.attendanceSummary || { present: 20, absent: 0, late: 0, leave: 0 },
-      leaveBalance: manager?.leaveBalance || { annual: 12, sick: 6, casual: 4 },
-      performanceScore: manager?.performanceScore ?? 85,
-      recentActivity: manager?.recentActivity || [
-        { id: `act_${Date.now()}`, action: isEdit ? "Updated manager profile" : "Manager created", timestamp: new Date().toISOString() }
-      ],
-    };
+    const result = await onSubmit();
+    if (!result.success) {
+      setFormErrors(result.fieldErrors);
+      if (result.message) toast.error(result.message);
+      return;
+    }
 
-    onSave(finalManager);
-    toast.success(isEdit ? "Manager Updated Successfully" : "Manager Created Successfully");
+    setFormErrors({});
     onOpenChange(false);
   };
 
+
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl border-border bg-card p-6 backdrop-blur-xl md:max-w-4xl">
+      <DialogContent
+        overlayClassName="bg-black/60 backdrop-blur-sm"
+        className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl border-border bg-card p-6 md:max-w-4xl"
+        onPointerDownOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
             {isEdit ? "✏️ Edit Manager" : "➕ Add Manager"}
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6 py-4">
-          {/* Section 1: Personal Information */}
+        {isEdit && detailLoading ? (
+          <Loader variant="panel" label="Loading manager details..." className="py-12" />
+        ) : isEdit && detailError ? (
+          <div className="py-12 text-center text-sm text-rose-500">{detailError}</div>
+        ) : (
+        <form key={manager?.id ?? "new-manager"} onSubmit={handleSubmit} className="space-y-6 py-4">
           <div className="space-y-4">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               Personal Information
             </h3>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               <div className="space-y-2">
-                <Label htmlFor="firstName" className="after:content-['*'] after:text-rose-500 after:ml-0.5">First Name</Label>
+                <Label htmlFor="first_name" className="after:content-['*'] after:text-rose-500 after:ml-0.5">First Name</Label>
                 <Input
-                  id="firstName"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
+                  id="first_name"
+                  value={form.first_name}
+                  onChange={(e) => updateField("first_name", e.target.value)}
                   placeholder="e.g. John"
-                  className={errors.firstName ? "border-rose-500" : ""}
+                  className={formErrors.first_name ? "border-rose-500" : ""}
                 />
-                {errors.firstName && <p className="text-[10px] text-rose-500">{errors.firstName}</p>}
+                {formErrors.first_name && <p className="text-[10px] text-rose-500">{formErrors.first_name}</p>}
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="lastName" className="after:content-['*'] after:text-rose-500 after:ml-0.5">Last Name</Label>
+                <Label htmlFor="last_name" className="after:content-['*'] after:text-rose-500 after:ml-0.5">Last Name</Label>
                 <Input
-                  id="lastName"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
+                  id="last_name"
+                  value={form.last_name}
+                  onChange={(e) => updateField("last_name", e.target.value)}
                   placeholder="e.g. Doe"
-                  className={errors.lastName ? "border-rose-500" : ""}
+                  className={formErrors.last_name ? "border-rose-500" : ""}
                 />
-                {errors.lastName && <p className="text-[10px] text-rose-500">{errors.lastName}</p>}
+                {formErrors.last_name && <p className="text-[10px] text-rose-500">{formErrors.last_name}</p>}
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="employeeId" className="after:content-['*'] after:text-rose-500 after:ml-0.5">Employee ID</Label>
+                <Label htmlFor="personal_email" className="after:content-['*'] after:text-rose-500 after:ml-0.5">Email Address</Label>
                 <Input
-                  id="employeeId"
-                  value={employeeId}
-                  onChange={(e) => setEmployeeId(e.target.value)}
-                  placeholder="e.g. EMP-1009"
-                  className={errors.employeeId ? "border-rose-500" : ""}
-                />
-                {errors.employeeId && <p className="text-[10px] text-rose-500">{errors.employeeId}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email" className="after:content-['*'] after:text-rose-500 after:ml-0.5">Email Address</Label>
-                <Input
-                  id="email"
+                  id="personal_email"
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={form.personal_email}
+                  onChange={(e) => {
+                    const email = e.target.value;
+                    dispatch(setManagerForm({ personal_email: email, company_email: email }));
+                  }}
                   placeholder="e.g. john.doe@aurix.com"
-                  className={errors.email ? "border-rose-500" : ""}
+                  className={formErrors.personal_email ? "border-rose-500" : ""}
                 />
-                {errors.email && <p className="text-[10px] text-rose-500">{errors.email}</p>}
+                {formErrors.personal_email && <p className="text-[10px] text-rose-500">{formErrors.personal_email}</p>}
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="phone" className="after:content-['*'] after:text-rose-500 after:ml-0.5">Phone Number</Label>
                 <Input
                   id="phone"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  value={form.phone}
+                  onChange={(e) => updateField("phone", e.target.value)}
                   placeholder="e.g. +91 98765 43210"
-                  className={errors.phone ? "border-rose-500" : ""}
+                  className={formErrors.phone ? "border-rose-500" : ""}
                 />
-                {errors.phone && <p className="text-[10px] text-rose-500">{errors.phone}</p>}
+                {formErrors.phone && <p className="text-[10px] text-rose-500">{formErrors.phone}</p>}
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="dob">Date of Birth</Label>
+                <Label htmlFor="date_of_birth" className="after:content-['*'] after:text-rose-500 after:ml-0.5">Date of Birth</Label>
                 <Input
-                  id="dob"
+                  id="date_of_birth"
                   type="date"
-                  value={dob}
-                  onChange={(e) => setDob(e.target.value)}
+                  value={form.date_of_birth}
+                  onChange={(e) => updateField("date_of_birth", e.target.value)}
+                  className={formErrors.date_of_birth ? "border-rose-500" : ""}
                 />
+                {formErrors.date_of_birth && <p className="text-[10px] text-rose-500">{formErrors.date_of_birth}</p>}
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="gender">Gender</Label>
-                <Select value={gender} onValueChange={(val) => setGender(val as Gender)}>
-                  <SelectTrigger id="gender">
+                <Label htmlFor="gender" className="after:content-['*'] after:text-rose-500 after:ml-0.5">Gender</Label>
+                <Select
+                  key={`gender-${form.gender}`}
+                  value={form.gender || undefined}
+                  onValueChange={(val) => updateField("gender", val)}
+                >
+                  <SelectTrigger id="gender" className={formErrors.gender ? "border-rose-500" : ""}>
                     <SelectValue placeholder="Select Gender" />
                   </SelectTrigger>
                   <SelectContent>
-                    {GENDER_OPTIONS.map((g) => (
+                    {genderOptions.map((g) => (
                       <SelectItem key={g.value} value={g.value}>
                         {g.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                {formErrors.gender && <p className="text-[10px] text-rose-500">{formErrors.gender}</p>}
               </div>
-
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="profileImage">Profile Image URL (Optional)</Label>
+              <div className="space-y-2">
+                <Label htmlFor="blood_group" className="after:content-['*'] after:text-rose-500 after:ml-0.5">Blood Group</Label>
                 <Input
-                  id="profileImage"
-                  value={profileImage}
-                  onChange={(e) => setProfileImage(e.target.value)}
+                  id="blood_group"
+                  value={form.blood_group}
+                  onChange={(e) => updateField("blood_group", e.target.value)}
+                  placeholder="e.g. A+"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="marital_status" className="after:content-['*'] after:text-rose-500 after:ml-0.5">Marital Status</Label>
+                <Input
+                  id="marital_status"
+                  value={form.marital_status}
+                  onChange={(e) => updateField("marital_status", e.target.value)}
+                  placeholder="e.g. Single"
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="profile_photo_url">Profile Image URL (Optional)</Label>
+                <Input
+                  id="profile_photo_url"
+                  value={form.profile_photo_url}
+                  onChange={(e) => updateField("profile_photo_url", e.target.value)}
                   placeholder="https://images.unsplash.com/... or leave blank for initials"
                 />
               </div>
@@ -331,7 +294,6 @@ export function ManagerFormDialog({
 
           <hr className="border-border/60" />
 
-          {/* Section 2: Job Information */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               Job Information
@@ -339,122 +301,120 @@ export function ManagerFormDialog({
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="department" className="after:content-['*'] after:text-rose-500 after:ml-0.5">Department</Label>
-                <Select value={department} onValueChange={(val) => setDepartment(val)}>
-                  <SelectTrigger id="department" className={errors.department ? "border-rose-500" : ""}>
+                <Select
+                  key={`department-${departmentValue ?? form.department}`}
+                  value={departmentValue}
+                  onValueChange={(val) => updateField("department", val)}
+                >
+                  <SelectTrigger id="department" className={formErrors.department ? "border-rose-500" : ""}>
                     <SelectValue placeholder="Select Department" />
                   </SelectTrigger>
-                  <SelectContent>
-                    {DEPARTMENTS.map((dept) => (
-                      <SelectItem key={dept} value={dept}>
-                        {dept}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
+                  <DepartmentSelectContent
+                    key={`${manager?.id ?? "new"}-${departmentValue ?? form.department}`}
+                    selectedValue={departmentValue ?? form.department}
+                    extraValues={form.department ? [form.department] : []}
+                  />
                 </Select>
-                {errors.department && <p className="text-[10px] text-rose-500">{errors.department}</p>}
+                {formErrors.department && <p className="text-[10px] text-rose-500">{formErrors.department}</p>}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="designation" className="after:content-['*'] after:text-rose-500 after:ml-0.5">Designation</Label>
                 <Input
                   id="designation"
-                  value={designation}
-                  onChange={(e) => setDesignation(e.target.value)}
+                  value={form.designation}
+                  onChange={(e) => updateField("designation", e.target.value)}
                   placeholder="e.g. Senior Engineering Manager"
-                  className={errors.designation ? "border-rose-500" : ""}
+                  className={formErrors.designation ? "border-rose-500" : ""}
                 />
-                {errors.designation && <p className="text-[10px] text-rose-500">{errors.designation}</p>}
+                {formErrors.designation && <p className="text-[10px] text-rose-500">{formErrors.designation}</p>}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="managerRole">Manager Role</Label>
-                <Select value={managerRole} onValueChange={(val) => setManagerRole(val as ManagerRole)}>
-                  <SelectTrigger id="managerRole">
-                    <SelectValue placeholder="Select Manager Role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MANAGER_ROLE_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="reportingManager">Reporting Manager</Label>
-                <Select value={reportingManagerId} onValueChange={(val) => setReportingManagerId(val)}>
-                  <SelectTrigger id="reportingManager">
+                <Label htmlFor="reporting_to">Reporting Manager</Label>
+                <Select
+                  key={`reporting-${form.reporting_to}`}
+                  value={form.reporting_to || undefined}
+                  onValueChange={(val) => updateField("reporting_to", val)}
+                >
+                  <SelectTrigger id="reporting_to">
                     <SelectValue placeholder="Select Reporting Manager" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">None (C-Level / Board)</SelectItem>
-                    {reportingManagerOptions.map((opt) => (
+                    {reportingManagerOptions.length > 0 ? reportingManagerOptions.map((opt) => (
                       <SelectItem key={opt.id} value={opt.id}>
-                        {opt.fullName} ({opt.designation})
+                        {opt.designation ? `${opt.fullName} (${opt.designation})` : opt.fullName}
                       </SelectItem>
-                    ))}
+                    )) : null}
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="office">Office Location</Label>
-                <Select value={office} onValueChange={(val) => setOffice(val)}>
-                  <SelectTrigger id="office">
+                <Label htmlFor="branch" className="after:content-['*'] after:text-rose-500 after:ml-0.5">Office Location</Label>
+                <Select
+                  key={`branch-${form.branch}`}
+                  value={form.branch || undefined}
+                  onValueChange={(val) => updateField("branch", val)}
+                >
+                  <SelectTrigger id="branch" className={formErrors.branch ? "border-rose-500" : ""}>
                     <SelectValue placeholder="Select Office" />
                   </SelectTrigger>
                   <SelectContent>
-                    {OFFICES.map((off) => (
+                    {officeOptions.map((off) => (
                       <SelectItem key={off} value={off}>
                         {off}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                {formErrors.branch && <p className="text-[10px] text-rose-500">{formErrors.branch}</p>}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="workLocation">Work Location Mode</Label>
+                <Label htmlFor="work_location" className="after:content-['*'] after:text-rose-500 after:ml-0.5">Work Location Mode</Label>
                 <Select
-                  value={workLocation}
-                  onValueChange={(val) => setWorkLocation(val as "on_site" | "remote" | "hybrid")}
+                  key={`work-location-${form.work_location}`}
+                  value={form.work_location || undefined}
+                  onValueChange={(val) => updateField("work_location", val)}
                 >
-                  <SelectTrigger id="workLocation">
+                  <SelectTrigger id="work_location" className={formErrors.work_location ? "border-rose-500" : ""}>
                     <SelectValue placeholder="Select Location Mode" />
                   </SelectTrigger>
                   <SelectContent>
-                    {WORK_LOCATION_OPTIONS.map((opt) => (
+                    {workLocationOptions.map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>
                         {opt.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                {formErrors.work_location && <p className="text-[10px] text-rose-500">{formErrors.work_location}</p>}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="joiningDate">Joining Date</Label>
+                <Label htmlFor="joining_date" className="after:content-['*'] after:text-rose-500 after:ml-0.5">Joining Date</Label>
                 <Input
-                  id="joiningDate"
+                  id="joining_date"
                   type="date"
-                  value={joiningDate}
-                  onChange={(e) => setJoiningDate(e.target.value)}
+                  value={form.joining_date}
+                  onChange={(e) => updateField("joining_date", e.target.value)}
+                  className={formErrors.joining_date ? "border-rose-500" : ""}
                 />
+                {formErrors.joining_date && <p className="text-[10px] text-rose-500">{formErrors.joining_date}</p>}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="employmentType">Employment Type</Label>
+                <Label htmlFor="employment_type">Employment Type</Label>
                 <Select
-                  value={employmentType}
-                  onValueChange={(val) => setEmploymentType(val as EmploymentType)}
+                  value={form.employment_type || undefined}
+                  onValueChange={(val) => updateField("employment_type", val)}
                 >
-                  <SelectTrigger id="employmentType">
-                    <SelectValue placeholder="Select Type" />
+                  <SelectTrigger id="employment_type">
+                    <SelectValue placeholder="Select Employment Type" />
                   </SelectTrigger>
                   <SelectContent>
-                    {EMPLOYMENT_TYPE_OPTIONS.map((opt) => (
+                    {MANAGER_FORM_EMPLOYMENT_TYPE_OPTIONS.map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>
                         {opt.label}
                       </SelectItem>
@@ -465,39 +425,12 @@ export function ManagerFormDialog({
 
               <div className="space-y-2">
                 <Label htmlFor="shift">Work Shift</Label>
-                <Select value={shift} onValueChange={(val) => setShift(val)}>
+                <Select value={form.shift || undefined} onValueChange={(val) => updateField("shift", val)}>
                   <SelectTrigger id="shift">
-                    <SelectValue placeholder="Select Shift" />
+                    <SelectValue placeholder="Select Work Shift" />
                   </SelectTrigger>
                   <SelectContent>
-                    {SHIFTS.map((sh) => (
-                      <SelectItem key={sh} value={sh}>
-                        {sh}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="salary">Salary (Optional Annual USD)</Label>
-                <Input
-                  id="salary"
-                  type="number"
-                  value={salary}
-                  onChange={(e) => setSalary(e.target.value)}
-                  placeholder="e.g. 120000"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="status">Employment Status</Label>
-                <Select value={status} onValueChange={(val) => setStatus(val as Manager["status"])}>
-                  <SelectTrigger id="status">
-                    <SelectValue placeholder="Select Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {STATUS_OPTIONS.map((opt) => (
+                    {shiftOptions.map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>
                         {opt.label}
                       </SelectItem>
@@ -505,56 +438,92 @@ export function ManagerFormDialog({
                   </SelectContent>
                 </Select>
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="ctc">CTC (Optional Annual USD)</Label>
+                <Input
+                  id="ctc"
+                  type="number"
+                  value={form.ctc || ""}
+                  onChange={(e) => updateField("ctc", Number(e.target.value) || 0)}
+                  placeholder="e.g. 120000"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="employment_status">Employment Status</Label>
+                <Select
+                  value={form.employment_status || undefined}
+                  onValueChange={(val) => {
+                    dispatch(
+                      setManagerForm({
+                        employment_status: val,
+                        probation_period_months: val === "PROBATION" ? 3 : 0,
+                      }),
+                    );
+                  }}
+                >
+                  <SelectTrigger id="employment_status">
+                    <SelectValue placeholder="Select Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUS_OPTIONS.map((status) => (
+                      <SelectItem key={status.value} value={status.value}>
+                        {status.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
-
           <hr className="border-border/60" />
-
-          {/* Section 3: Permissions */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               Permissions & Access Settings
             </h3>
             <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {(Object.keys(PERMISSION_LABELS) as Array<keyof ManagerPermissions>).map((key) => (
+              {(Object.keys(form.permissions) as Array<keyof ManagerPermissions>).map((key) => (
                 <div key={key} className="flex items-center space-x-2 rounded-xl border border-border/40 p-3 bg-muted/20 hover:bg-muted/40 transition-colors">
                   <Checkbox
                     id={key}
-                    checked={permissions[key]}
+                    checked={form.permissions[key as keyof ManagerFormState["permissions"] as keyof ManagerPermissions & keyof ManagerFormState["permissions"]]}
                     onCheckedChange={(checked) =>
-                      setPermissions((prev) => ({
-                        ...prev,
-                        [key]: !!checked,
-                      }))
+                      updateField("permissions", { ...form.permissions, [key as keyof ManagerFormState["permissions"] as keyof ManagerPermissions & keyof ManagerFormState["permissions"]]: !!checked })
                     }
                     className="cursor-pointer"
                   />
                   <Label htmlFor={key} className="text-xs font-medium cursor-pointer leading-tight select-none">
-                    {PERMISSION_LABELS[key]}
+                    {key.charAt(0).toUpperCase() + key.slice(1)}
                   </Label>
                 </div>
               ))}
             </div>
           </div>
-
-          {/* Footer Actions */}
           <DialogFooter className="mt-6 flex gap-2 justify-end">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
+              disabled={submitting}
               className="rounded-xl border-border bg-card hover:bg-muted/50"
             >
               Cancel
             </Button>
             <Button
               type="submit"
+              disabled={submitting}
               className="rounded-xl bg-brand text-brand-foreground shadow-glow hover:bg-brand/90"
             >
-              Save Manager
+              {submitting ? (
+                <Loader label="Saving..." size="sm" className="text-brand-foreground" />
+              ) : (
+                "Save Manager"
+              )}
             </Button>
           </DialogFooter>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   );

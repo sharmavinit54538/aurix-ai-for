@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { Briefcase, Sparkles } from "lucide-react";
 import { aurix } from "@/lib/aurix-store";
 import { useAuthReady } from "@/lib/auth-bootstrap";
+import { hasValidAccessToken } from "@/api";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -25,7 +26,7 @@ function Index() {
 
     const workspace = aurix.get();
 
-    if (!workspace.user) {
+    if (!workspace.user && !hasValidAccessToken()) {
       navigate({ to: "/login", replace: true });
     } else {
       navigate({ to: "/dashboard/recruitment", replace: true });

@@ -5,7 +5,6 @@ import { Sparkles, KeyRound, Copy } from "lucide-react";
 import { useAurix } from "@/lib/aurix-store";
 import { toast } from "sonner";
 
-
 interface AuthShellProps {
   title: string;
   subtitle?: string;
@@ -16,10 +15,9 @@ interface AuthShellProps {
 export function AuthShell({ title, subtitle, children, footer }: AuthShellProps) {
   const ws = useAurix();
   const showOtpPreview = false;
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
-
-      {/* Ambient brand glow */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 -z-10"
@@ -105,4 +103,3 @@ export function AuthShell({ title, subtitle, children, footer }: AuthShellProps)
     </div>
   );
 }
-

@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Manager } from "../types";
+import { STATUS_OPTIONS } from "../constants";
+import { getDepartmentLabel } from "@/features/admin/employees/utils/departmentOptions";
 import {
   Mail,
   Phone,
@@ -21,22 +23,72 @@ import {
   Award,
   CircleCheck,
   Plane,
-  HeartPulse,
   UserCheck2,
 } from "lucide-react";
 import { fmtDate, avatarHue } from "../utils";
+import { Loader } from "@/components/aurix/Loader";
+
+const STATUS_STYLES: Record<Manager["status"], string> = {
+  PROBATION: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  CONFIRMED: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+  NOTICE_PERIOD: "bg-rose-500/10 text-rose-500 border-rose-500/20",
+};
+
+const WORK_LOCATION_LABELS: Record<Manager["workLocation"], string> = {
+  on_site: "On Site",
+  remote: "Remote",
+  hybrid: "Hybrid",
+};
+
+function getStatusLabel(status: Manager["status"]): string {
+  return STATUS_OPTIONS.find((option) => option.value === status)?.label ?? status;
+}
+
+function formatReportingManager(manager: Manager): string {
+  if (!manager.reportingManagerName) return "—";
+  if (manager.reportingManagerCode) {
+    return `${manager.reportingManagerName} (${manager.reportingManagerCode})`;
+  }
+  return manager.reportingManagerName;
+}
 
 interface ManagerProfileDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   manager: Manager | null;
+  loading?: boolean;
+  error?: string | null;
 }
 
 export function ManagerProfileDrawer({
   open,
   onOpenChange,
   manager,
+  loading = false,
+  error = null,
 }: ManagerProfileDrawerProps) {
+  if (!open) return null;
+
+  if (loading) {
+    return (
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent className="w-full sm:max-w-md md:max-w-lg border-l border-border bg-card/90 backdrop-blur-xl p-0 shadow-2xl flex flex-col h-full">
+          <Loader variant="panel" label="Loading manager profile..." className="h-full" />
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  if (error) {
+    return (
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent className="w-full sm:max-w-md md:max-w-lg border-l border-border bg-card/90 backdrop-blur-xl p-0 shadow-2xl flex flex-col h-full">
+          <div className="flex h-full items-center justify-center p-6 text-sm text-rose-500">{error}</div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
   if (!manager) return null;
 
   const initials = manager.fullName
@@ -46,21 +98,6 @@ export function ManagerProfileDrawer({
     .join("");
 
   const hue = avatarHue(manager.fullName);
-
-  // Status badges colors
-  const statusColors: Record<Manager["status"], string> = {
-    active: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
-    probation: "bg-amber-500/10 text-amber-500 border-amber-500/20",
-    inactive: "bg-rose-500/10 text-rose-500 border-rose-500/20",
-    on_leave: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-  };
-
-  const statusLabels: Record<Manager["status"], string> = {
-    active: "Active",
-    probation: "Probation",
-    inactive: "Inactive",
-    on_leave: "On Leave",
-  };
 
   // Mock document list
   const mockDocuments = [
@@ -78,7 +115,6 @@ export function ManagerProfileDrawer({
         .replace(/([A-Z])/g, " $1")
         .replace(/^can /, "Can ");
     });
-
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-md md:max-w-lg border-l border-border bg-card/90 backdrop-blur-xl p-0 shadow-2xl flex flex-col h-full">
@@ -106,12 +142,17 @@ export function ManagerProfileDrawer({
               </SheetTitle>
               <p className="text-sm font-medium text-muted-foreground truncate">{manager.designation}</p>
               <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                <Badge variant="outline" className={`px-2 py-0.5 text-xs font-semibold ${statusColors[manager.status]}`}>
-                  {statusLabels[manager.status]}
+                <Badge
+                  variant="outline"
+                  className={`px-2 py-0.5 text-xs font-semibold ${STATUS_STYLES[manager.status]}`}
+                >
+                  {getStatusLabel(manager.status)}
                 </Badge>
-                <Badge variant="secondary" className="px-2 py-0.5 text-xs font-medium">
-                  {manager.employeeId}
-                </Badge>
+                {manager.managerId ? (
+                  <Badge variant="secondary" className="px-2 py-0.5 text-xs font-medium">
+                    {manager.managerId}
+                  </Badge>
+                ) : null}
               </div>
             </div>
           </div>
@@ -148,7 +189,7 @@ export function ManagerProfileDrawer({
                 <div className="min-w-0">
                   <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Dept & Office</p>
                   <p className="text-xs font-medium truncate text-foreground">
-                    {manager.department} ({manager.office})
+                    {getDepartmentLabel(manager.department)} · {manager.office}
                   </p>
                 </div>
               </div>
@@ -169,7 +210,19 @@ export function ManagerProfileDrawer({
                 </div>
                 <div className="min-w-0">
                   <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Reporting To</p>
-                  <p className="text-xs font-medium truncate text-foreground">{manager.reportingManagerName}</p>
+                  <p className="text-xs font-medium truncate text-foreground">{formatReportingManager(manager)}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground flex-shrink-0">
+                  <Building className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Work Mode</p>
+                  <p className="text-xs font-medium truncate text-foreground">
+                    {WORK_LOCATION_LABELS[manager.workLocation]}
+                  </p>
                 </div>
               </div>
 

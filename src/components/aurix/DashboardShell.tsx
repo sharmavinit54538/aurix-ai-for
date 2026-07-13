@@ -16,7 +16,8 @@ import {
 } from "lucide-react";
 import { aurix, useAurix, type Role } from "@/lib/aurix-store";
 import { useAuthReady } from "@/lib/auth-bootstrap";
-import { setTokens } from "@/api";
+import { AuthLoadingScreen } from "@/features/auth/components/AuthLoadingScreen";
+import { hasValidAccessToken, setTokens } from "@/api";
 import { Input } from "@/components/ui/input";
 import { useTheme } from "@/components/site/ThemeProvider";
 
@@ -844,12 +845,13 @@ export function DashboardShell() {
 
   // ── Auth & Role guard ────────────────────────────────────────
   useEffect(() => {
-    if (!authReady) return;
+    if (!authReady || ws.isRestoring) return;
 
-    if (!ws.user) {
+    if (!ws.user && !hasValidAccessToken()) {
       navigate({ to: "/login" });
       return;
     }
+    if (!ws.user) return;
     if (!ws.user.emailVerified) {
       navigate({ to: "/verify-email" });
       return;
@@ -908,9 +910,15 @@ export function DashboardShell() {
         navigate({ to: "/dashboard/employee" });
       }
     }
-  }, [authReady, ws.user, pathname, role, navigate]);
+  }, [authReady, ws.isRestoring, ws.user, pathname, role, navigate]);
 
   useEffect(() => { setMobileOpen(false); }, [pathname]);
+
+  const visibleNav = useMemo(() => filterNavForRole(NAV_SECTIONS, role as any), [role]);
+
+  if (!authReady || ws.isRestoring || !ws.user) {
+    return <AuthLoadingScreen />;
+  }
 
   function logout() {
     setTokens(null);
@@ -918,10 +926,7 @@ export function DashboardShell() {
     navigate({ to: "/login" });
   }
 
-  const initials = ws.user?.fullName?.split(" ").map((p) => p[0]).slice(0, 2).join("") || "A";
-
-  // ── Filter nav based on role ────────────────────────────────
-  const visibleNav = useMemo(() => filterNavForRole(NAV_SECTIONS, role as any), [role]);
+  const initials = ws.user.fullName?.split(" ").map((p) => p[0]).slice(0, 2).join("") || "A";
 
   // ── Sidebar home link per role ──────────────────────────────
   const homeLink =
@@ -932,7 +937,7 @@ export function DashboardShell() {
       : "/dashboard";
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background text-foreground">
+    <div className="flex min-h-screen w-full flex-col overflow-x-hidden bg-background text-foreground">
       {/* Demo Mode Banner */}
       {isDemo && (
         <DemoBanner
@@ -941,7 +946,7 @@ export function DashboardShell() {
         />
       )}
 
-      <div className="flex flex-1">
+      <div className="flex min-w-0 flex-1">
         {/* Sidebar */}
         <aside
           className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r border-border bg-card/60 backdrop-blur-xl transition-all duration-200 lg:static lg:translate-x-0 ${
@@ -1029,7 +1034,7 @@ export function DashboardShell() {
 
         {mobileOpen ? <div onClick={() => setMobileOpen(false)} className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm lg:hidden" /> : null}
 
-        <div className="flex min-h-screen flex-1 flex-col">
+        <div className="flex min-h-screen min-w-0 flex-1 flex-col overflow-x-hidden">
           {/* Topbar */}
           <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/70 px-4 backdrop-blur-xl sm:px-6">
             <button onClick={() => setMobileOpen(true)} className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground lg:hidden" aria-label="Open menu">
@@ -1056,7 +1061,7 @@ export function DashboardShell() {
             </div>
           </header>
 
-          <main className="flex-1 p-4 sm:p-6 lg:p-8">
+          <main className="min-w-0 flex-1 overflow-x-hidden p-4 sm:p-6 lg:p-8">
             <Outlet />
           </main>
         </div>
@@ -1141,12 +1146,12 @@ function NavGroup({ item, pathname, collapsed }: { item: NavParent; pathname: st
 
 export function PageHeader({ title, description, actions }: { title: string; description?: string; actions?: React.ReactNode }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-      <div>
+    <div className="mb-6 flex min-w-0 flex-wrap items-end justify-between gap-4">
+      <div className="min-w-0 flex-1">
         <h1 className="font-display text-2xl font-semibold tracking-tight">{title}</h1>
         {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
       </div>
-      {actions ? <div className="flex gap-2">{actions}</div> : null}
+      {actions ? <div className="flex shrink-0 flex-wrap gap-2">{actions}</div> : null}
     </div>
   );
 }

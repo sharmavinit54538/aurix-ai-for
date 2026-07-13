@@ -1,36 +1,27 @@
-import { createFileRoute, useNavigate, useLocation } from "@tanstack/react-router";
+import { useNavigate, useLocation, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
-import { AuthShell } from "@/components/aurix/AuthShell";
+import { AuthShell } from "@/features/auth/components/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { api } from "@/api";
 import { toast } from "sonner";
-import { z } from "zod";
+import type { ApiResponse } from "@/api/types";
 
-export const Route = createFileRoute("/verify-reset-otp")({
-  validateSearch: z.object({
-    email: z.string().optional(),
-  }),
-  head: () => ({ meta: [{ title: "Verify OTP — Aurix" }] }),
-  component: VerifyResetOtpPage,
-});
-
-function VerifyResetOtpPage() {
+export function VerifyResetOtpPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { email: searchEmail } = Route.useSearch();
-  
-  // Retrieve email from state
-  const state = location.state as any;
+  const { email: searchEmail } = useSearch({ strict: false }) as { email?: string };
+
+  const state = location.state as { email?: string } | undefined;
   const email = searchEmail || state?.email || "";
 
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
-  const [expiryTime, setExpiryTime] = useState(300); // 5 minutes
-  const [resendCooldown, setResendCooldown] = useState(30); // 30 seconds
+  const [expiryTime, setExpiryTime] = useState(300);
+  const [resendCooldown, setResendCooldown] = useState(30);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -40,21 +31,18 @@ function VerifyResetOtpPage() {
     }
   }, [email, navigate]);
 
-  // Expiry Countdown
   useEffect(() => {
     if (expiryTime <= 0) return;
     const t = setTimeout(() => setExpiryTime((s) => s - 1), 1000);
     return () => clearTimeout(t);
   }, [expiryTime]);
 
-  // Resend Cooldown Countdown
   useEffect(() => {
     if (resendCooldown <= 0) return;
     const t = setTimeout(() => setResendCooldown((s) => s - 1), 1000);
     return () => clearTimeout(t);
   }, [resendCooldown]);
 
-  // Format seconds as mm:ss
   const formatTime = (sec: number) => {
     const mins = Math.floor(sec / 60);
     const secs = sec % 60;
@@ -69,26 +57,27 @@ function VerifyResetOtpPage() {
     setLoading(true);
 
     try {
-      const res = await api.post("auth/verify-reset-otp", {
+      const res = await api.post<ApiResponse<{ resetToken: string }>>("auth/verify-reset-otp", {
         email,
         otp: code,
       });
 
       if (res.success && res.data) {
         toast.success(res.message || "OTP verified successfully!");
-        const { resetToken } = res.data;
+        const { resetToken } = res.data as { resetToken: string };
         navigate({
           to: "/reset-password",
           search: { email, resetToken },
-          state: { email, resetToken } as any,
+          state: { email, resetToken } as Record<string, string>,
         });
       } else {
         setError(res.message || "Verification failed");
         toast.error(res.message || "Verification failed");
       }
-    } catch (err: any) {
-      setError(err.message || "Incorrect or expired code");
-      toast.error(err.message || "Incorrect or expired code");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Incorrect or expired code";
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -99,7 +88,7 @@ function VerifyResetOtpPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.post("auth/forgot-password", { email });
+      const res = await api.post<ApiResponse>("auth/forgot-password", { email });
       if (res.success) {
         setExpiryTime(300);
         setResendCooldown(30);
@@ -108,8 +97,9 @@ function VerifyResetOtpPage() {
       } else {
         toast.error(res.message || "Failed to resend OTP");
       }
-    } catch (err: any) {
-      toast.error(err.message || "Failed to resend OTP");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to resend OTP";
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -144,9 +134,12 @@ function VerifyResetOtpPage() {
             </InputOTPGroup>
           </InputOTP>
           {error ? <p className="text-xs text-destructive self-start mt-1">{error}</p> : null}
-          
+
           <div className="flex w-full justify-between items-center text-xs mt-3 text-muted-foreground">
-            <span>Code expires in: <span className="font-mono font-medium text-foreground">{formatTime(expiryTime)}</span></span>
+            <span>
+              Code expires in:{" "}
+              <span className="font-mono font-medium text-foreground">{formatTime(expiryTime)}</span>
+            </span>
             {resendCooldown > 0 ? (
               <span>Resend in {resendCooldown}s</span>
             ) : (

@@ -1,6 +1,6 @@
 // ─── Manager Types ───────────────────────────────────────────────────────────
 
-export type ManagerStatus = "active" | "inactive" | "on_leave" | "probation";
+export type ManagerStatus = "PROBATION" | "CONFIRMED" | "NOTICE_PERIOD";
 export type EmploymentType = "full_time" | "part_time" | "contract" | "intern";
 export type ManagerRole = "team_lead" | "senior_manager" | "department_head" | "vp" | "director" | "c_level";
 export type Gender = "male" | "female" | "other" | "prefer_not_to_say";
@@ -18,6 +18,8 @@ export interface ManagerPermissions {
 
 export interface Manager {
   id: string;
+  /** Business manager code from API `manager_id` (e.g. MGR-202607-0009). */
+  managerId: string;
   employeeId: string;
   firstName: string;
   lastName: string;
@@ -31,11 +33,15 @@ export interface Manager {
   designation: string;
   managerRole: ManagerRole;
   reportingManagerId: string | null;
+  /** Reporting manager business code from API `reportingManagerId` (e.g. MGR-101). */
+  reportingManagerCode: string;
   reportingManagerName: string;
   office: string;
   workLocation: "on_site" | "remote" | "hybrid";
   joiningDate: string;
   employmentType: EmploymentType;
+  bloodGroup: string;
+  maritalStatus: string;
   shift: string;
   salary?: number;
   status: ManagerStatus;

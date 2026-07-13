@@ -17,6 +17,7 @@ Do **not** create `src/pages/` — that is a Next.js convention.
 | Folder | Purpose |
 |--------|---------|
 | `features/admin/` | HR/Admin management (employees, managers, departments, performance) |
+| `features/auth/` | Login, register, password reset, email verification |
 | `features/portal/` | Role-based user dashboards (employee self-service, manager team lead) |
 | `features/dashboard/` | Executive overview |
 | `features/attendance/` | Attendance module |
@@ -27,7 +28,12 @@ Dots in filenames become path segments:
 
 | Route file | URL |
 |------------|-----|
-| `login.tsx` | `/login` |
+| `_auth/login.tsx` | `/login` |
+| `_auth/register.tsx` | `/register` |
+| `_auth/forgot-password.tsx` | `/forgot-password` |
+| `_auth/reset-password.tsx` | `/reset-password` |
+| `_auth/verify-email.tsx` | `/verify-email` |
+| `_auth/verify-reset-otp.tsx` | `/verify-reset-otp` |
 | `dashboard.tsx` | `/dashboard` (layout shell) |
 | `dashboard.index.tsx` | `/dashboard/` |
 | `dashboard.employees.tsx` | `/dashboard/employees` |
@@ -89,7 +95,13 @@ Many older routes (recruitment, payroll, assets, documents, etc.) still have UI 
 src/routes/
 ├── __root.tsx              # App shell, providers
 ├── index.tsx               # Marketing home (/)
-├── login.tsx               # Auth at /login (must stay at root for URL)
+├── _auth/                  # Auth routes (pathless group — URLs stay /login, /register, etc.)
+│   ├── login.tsx
+│   ├── register.tsx
+│   ├── forgot-password.tsx
+│   ├── reset-password.tsx
+│   ├── verify-email.tsx
+│   └── verify-reset-otp.tsx
 ├── dashboard.tsx           # Dashboard layout
 ├── dashboard.*.tsx         # Dashboard child routes
 ├── ai.*.tsx                # AI module routes

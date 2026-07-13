@@ -1,27 +1,29 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { AuthShell } from "@/components/aurix/AuthShell";
+import { AuthShell } from "@/features/auth/components/AuthShell";
+import { getApiResponseMessage, parseLoginResponse } from "@/features/auth/utils/parseLoginResponse";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { aurix, rememberStore } from "@/lib/aurix-store";
-import { api, ApiError, setTokens, type LoginResponse } from "@/api";
+import { rememberStore } from "@/lib/aurix-store";
+import { getPostLoginRoute, persistAuthSession } from "@/lib/auth-bootstrap";
+import { api } from "@/api";
+import { getErrorMessage } from "@/api/utils";
 import { toast } from "sonner";
-
-export const Route = createFileRoute("/login")({
-  head: () => ({ meta: [{ title: "Sign in — Aurix" }] }),
-  component: LoginPage,
-});
 
 const schema = z.object({
   email: z.string().email("Enter a valid work email"),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
-function LoginPage() {
+function formatLoginError(message: string) {
+  return message === "Invalid email or password." ? "Invalid email or password" : message;
+}
+
+export function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -38,7 +40,7 @@ function LoginPage() {
     }
   }, []);
 
-  async function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: FormEvent) {
     e.preventDefault();
     const r = schema.safeParse({ email, password });
     if (!r.success) {
@@ -54,74 +56,22 @@ function LoginPage() {
       if (remember) rememberStore.set(email);
       else rememberStore.clear();
 
-      const res = await api.post<LoginResponse>("auth/login", {
+      const res = await api.post("auth/login", {
         identifier: email,
-        password: password,
+        password,
       });
-
-      if (res.success && res.data) {
-        const { access_token, refresh_token, user } = res.data;
-        
-        setTokens({ accessToken: access_token, refreshToken: refresh_token });
-
-        const companyId = user.company_id ? String(user.company_id) : "default";
-
-        aurix.set({
-          user: {
-            id: String(user.id),
-            fullName: user.name,
-            email: user.email,
-            phone: user.phone || "",
-            role: user.role,
-            companyId,
-            emailVerified: user.is_verified,
-            onboardingComplete: user.onboarding_completed ?? false,
-            createdAt: new Date().toISOString(),
-          },
-          company: {
-            id: companyId,
-            name: user.company_name || user.name,
-          },
-        });
-
+      const login = parseLoginResponse(res);
+      if (login) {
+        const { accessToken, refreshToken, user } = login;
+        persistAuthSession(user, { accessToken, refreshToken });
         toast.success(`Welcome back, ${user.name}!`);
+        navigate({ to: getPostLoginRoute(user) });
+        return;
+      }
 
-        // Redirect based on user role
-        if (!user.is_verified) {
-          navigate({ to: "/verify-email" });
-        } else if (!user.onboarding_completed) {
-          navigate({ to: "/onboarding" });
-        } else if (user.role === "manager") {
-          navigate({ to: "/dashboard/manager" });
-        } else if (user.role === "employee") {
-          navigate({ to: "/dashboard/employee" });
-        } else {
-          navigate({ to: "/dashboard" });
-        }
-      } else {
-        let displayError = "Server error";
-        if (res.message === "Invalid email or password.") {
-          displayError = "Invalid email or password";
-        }
-        toast.error(displayError);
-      }
+      toast.error(formatLoginError(getApiResponseMessage(res)));
     } catch (err: unknown) {
-      let displayError = "Server error";
-      const apiErr = err instanceof ApiError ? err : null;
-      const message = (apiErr?.message || (err instanceof Error ? err.message : "")).toLowerCase();
-      if (apiErr?.status === 401) {
-        displayError = "Invalid email or password";
-      } else if (
-        message.includes("network") ||
-        message.includes("fetch") ||
-        message.includes("connection") ||
-        message === "network error"
-      ) {
-        displayError = "Network error";
-      } else {
-        displayError = "Server error";
-      }
-      toast.error(displayError);
+      toast.error(formatLoginError(getErrorMessage(err, "Server error")));
     } finally {
       setLoading(false);
     }

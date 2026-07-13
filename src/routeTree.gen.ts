@@ -9,17 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as VerifyResetOtpRouteImport } from './routes/verify-reset-otp'
-import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as RegisterRouteImport } from './routes/register'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -79,6 +73,12 @@ import { Route as AiChatAssistantRouteImport } from './routes/ai.chat-assistant'
 import { Route as AiBrainRouteImport } from './routes/ai.brain'
 import { Route as AiAttendanceMonitorRouteImport } from './routes/ai.attendance-monitor'
 import { Route as AiAnalyticsCenterRouteImport } from './routes/ai.analytics-center'
+import { Route as AuthVerifyResetOtpRouteImport } from './routes/_auth/verify-reset-otp'
+import { Route as AuthVerifyEmailRouteImport } from './routes/_auth/verify-email'
+import { Route as AuthResetPasswordRouteImport } from './routes/_auth/reset-password'
+import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
+import { Route as AuthLoginRouteImport } from './routes/_auth/login'
+import { Route as AuthForgotPasswordRouteImport } from './routes/_auth/forgot-password'
 import { Route as DashboardRecruitmentIndexRouteImport } from './routes/dashboard.recruitment.index'
 import { Route as DashboardPayrollIndexRouteImport } from './routes/dashboard.payroll.index'
 import { Route as DashboardAttendanceIndexRouteImport } from './routes/dashboard.attendance.index'
@@ -132,16 +132,6 @@ import { Route as DashboardRecruitmentJobsJobIdRouteImport } from './routes/dash
 import { Route as DashboardRecruitmentCandidatesCandidateIdRouteImport } from './routes/dashboard.recruitment.candidates.$candidateId'
 import { Route as DashboardRecruitmentJobsJobIdPublishRouteImport } from './routes/dashboard.recruitment.jobs.$jobId.publish'
 
-const VerifyResetOtpRoute = VerifyResetOtpRouteImport.update({
-  id: '/verify-reset-otp',
-  path: '/verify-reset-otp',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const VerifyEmailRoute = VerifyEmailRouteImport.update({
-  id: '/verify-email',
-  path: '/verify-email',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -150,16 +140,6 @@ const TermsRoute = TermsRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RegisterRoute = RegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -175,16 +155,6 @@ const PricingRoute = PricingRouteImport.update({
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FeaturesRoute = FeaturesRouteImport.update({
@@ -483,6 +453,36 @@ const AiAnalyticsCenterRoute = AiAnalyticsCenterRouteImport.update({
   id: '/analytics-center',
   path: '/analytics-center',
   getParentRoute: () => AiRoute,
+} as any)
+const AuthVerifyResetOtpRoute = AuthVerifyResetOtpRouteImport.update({
+  id: '/_auth/verify-reset-otp',
+  path: '/verify-reset-otp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
+  id: '/_auth/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
+  id: '/_auth/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRegisterRoute = AuthRegisterRouteImport.update({
+  id: '/_auth/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/_auth/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
+  id: '/_auth/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRecruitmentIndexRoute =
   DashboardRecruitmentIndexRouteImport.update({
@@ -799,17 +799,17 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRouteWithChildren
   '/faq': typeof FaqRoute
   '/features': typeof FeaturesRoute
-  '/forgot-password': typeof ForgotPasswordRoute
-  '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
-  '/register': typeof RegisterRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
-  '/verify-email': typeof VerifyEmailRoute
-  '/verify-reset-otp': typeof VerifyResetOtpRoute
+  '/forgot-password': typeof AuthForgotPasswordRoute
+  '/login': typeof AuthLoginRoute
+  '/register': typeof AuthRegisterRoute
+  '/reset-password': typeof AuthResetPasswordRoute
+  '/verify-email': typeof AuthVerifyEmailRoute
+  '/verify-reset-otp': typeof AuthVerifyResetOtpRoute
   '/ai/analytics-center': typeof AiAnalyticsCenterRoute
   '/ai/attendance-monitor': typeof AiAttendanceMonitorRoute
   '/ai/brain': typeof AiBrainRoute
@@ -920,17 +920,17 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/faq': typeof FaqRoute
   '/features': typeof FeaturesRoute
-  '/forgot-password': typeof ForgotPasswordRoute
-  '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
-  '/register': typeof RegisterRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
-  '/verify-email': typeof VerifyEmailRoute
-  '/verify-reset-otp': typeof VerifyResetOtpRoute
+  '/forgot-password': typeof AuthForgotPasswordRoute
+  '/login': typeof AuthLoginRoute
+  '/register': typeof AuthRegisterRoute
+  '/reset-password': typeof AuthResetPasswordRoute
+  '/verify-email': typeof AuthVerifyEmailRoute
+  '/verify-reset-otp': typeof AuthVerifyResetOtpRoute
   '/ai/analytics-center': typeof AiAnalyticsCenterRoute
   '/ai/attendance-monitor': typeof AiAttendanceMonitorRoute
   '/ai/brain': typeof AiBrainRoute
@@ -1041,17 +1041,17 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRouteWithChildren
   '/faq': typeof FaqRoute
   '/features': typeof FeaturesRoute
-  '/forgot-password': typeof ForgotPasswordRoute
-  '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
-  '/register': typeof RegisterRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
-  '/verify-email': typeof VerifyEmailRoute
-  '/verify-reset-otp': typeof VerifyResetOtpRoute
+  '/_auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/_auth/login': typeof AuthLoginRoute
+  '/_auth/register': typeof AuthRegisterRoute
+  '/_auth/reset-password': typeof AuthResetPasswordRoute
+  '/_auth/verify-email': typeof AuthVerifyEmailRoute
+  '/_auth/verify-reset-otp': typeof AuthVerifyResetOtpRoute
   '/ai/analytics-center': typeof AiAnalyticsCenterRoute
   '/ai/attendance-monitor': typeof AiAttendanceMonitorRoute
   '/ai/brain': typeof AiBrainRoute
@@ -1167,15 +1167,15 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/faq'
     | '/features'
-    | '/forgot-password'
-    | '/login'
     | '/onboarding'
     | '/pricing'
     | '/privacy'
-    | '/register'
-    | '/reset-password'
     | '/sitemap.xml'
     | '/terms'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
+    | '/reset-password'
     | '/verify-email'
     | '/verify-reset-otp'
     | '/ai/analytics-center'
@@ -1288,15 +1288,15 @@ export interface FileRouteTypes {
     | '/contact'
     | '/faq'
     | '/features'
-    | '/forgot-password'
-    | '/login'
     | '/onboarding'
     | '/pricing'
     | '/privacy'
-    | '/register'
-    | '/reset-password'
     | '/sitemap.xml'
     | '/terms'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
+    | '/reset-password'
     | '/verify-email'
     | '/verify-reset-otp'
     | '/ai/analytics-center'
@@ -1408,17 +1408,17 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/faq'
     | '/features'
-    | '/forgot-password'
-    | '/login'
     | '/onboarding'
     | '/pricing'
     | '/privacy'
-    | '/register'
-    | '/reset-password'
     | '/sitemap.xml'
     | '/terms'
-    | '/verify-email'
-    | '/verify-reset-otp'
+    | '/_auth/forgot-password'
+    | '/_auth/login'
+    | '/_auth/register'
+    | '/_auth/reset-password'
+    | '/_auth/verify-email'
+    | '/_auth/verify-reset-otp'
     | '/ai/analytics-center'
     | '/ai/attendance-monitor'
     | '/ai/brain'
@@ -1533,37 +1533,23 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRouteWithChildren
   FaqRoute: typeof FaqRoute
   FeaturesRoute: typeof FeaturesRoute
-  ForgotPasswordRoute: typeof ForgotPasswordRoute
-  LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
-  RegisterRoute: typeof RegisterRoute
-  ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
-  VerifyEmailRoute: typeof VerifyEmailRoute
-  VerifyResetOtpRoute: typeof VerifyResetOtpRoute
+  AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
+  AuthLoginRoute: typeof AuthLoginRoute
+  AuthRegisterRoute: typeof AuthRegisterRoute
+  AuthResetPasswordRoute: typeof AuthResetPasswordRoute
+  AuthVerifyEmailRoute: typeof AuthVerifyEmailRoute
+  AuthVerifyResetOtpRoute: typeof AuthVerifyResetOtpRoute
   ApiAiBrainRoute: typeof ApiAiBrainRoute
   ApiPayrollCopilotRoute: typeof ApiPayrollCopilotRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/verify-reset-otp': {
-      id: '/verify-reset-otp'
-      path: '/verify-reset-otp'
-      fullPath: '/verify-reset-otp'
-      preLoaderRoute: typeof VerifyResetOtpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/verify-email': {
-      id: '/verify-email'
-      path: '/verify-email'
-      fullPath: '/verify-email'
-      preLoaderRoute: typeof VerifyEmailRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/terms': {
       id: '/terms'
       path: '/terms'
@@ -1576,20 +1562,6 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -1611,20 +1583,6 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/forgot-password': {
-      id: '/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/features': {
@@ -2039,6 +1997,48 @@ declare module '@tanstack/react-router' {
       fullPath: '/ai/analytics-center'
       preLoaderRoute: typeof AiAnalyticsCenterRouteImport
       parentRoute: typeof AiRoute
+    }
+    '/_auth/verify-reset-otp': {
+      id: '/_auth/verify-reset-otp'
+      path: '/verify-reset-otp'
+      fullPath: '/verify-reset-otp'
+      preLoaderRoute: typeof AuthVerifyResetOtpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_auth/verify-email': {
+      id: '/_auth/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof AuthVerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_auth/reset-password': {
+      id: '/_auth/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof AuthResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_auth/register': {
+      id: '/_auth/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof AuthRegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_auth/login': {
+      id: '/_auth/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_auth/forgot-password': {
+      id: '/_auth/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof AuthForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/dashboard/recruitment/': {
       id: '/dashboard/recruitment/'
@@ -2702,17 +2702,17 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRouteWithChildren,
   FaqRoute: FaqRoute,
   FeaturesRoute: FeaturesRoute,
-  ForgotPasswordRoute: ForgotPasswordRoute,
-  LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
-  RegisterRoute: RegisterRoute,
-  ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
-  VerifyEmailRoute: VerifyEmailRoute,
-  VerifyResetOtpRoute: VerifyResetOtpRoute,
+  AuthForgotPasswordRoute: AuthForgotPasswordRoute,
+  AuthLoginRoute: AuthLoginRoute,
+  AuthRegisterRoute: AuthRegisterRoute,
+  AuthResetPasswordRoute: AuthResetPasswordRoute,
+  AuthVerifyEmailRoute: AuthVerifyEmailRoute,
+  AuthVerifyResetOtpRoute: AuthVerifyResetOtpRoute,
   ApiAiBrainRoute: ApiAiBrainRoute,
   ApiPayrollCopilotRoute: ApiPayrollCopilotRoute,
 }

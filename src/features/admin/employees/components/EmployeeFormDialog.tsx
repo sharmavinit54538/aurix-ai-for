@@ -28,7 +28,7 @@ export function EmployeeFormDialog({
   onSave,
 }: EmployeeFormDialogProps) {
   const departmentValue = resolveDepartmentValue(draft?.department);
-console.log(draft);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
@@ -37,12 +37,6 @@ console.log(draft);
         </DialogHeader>
         {draft ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <FormField label="Employee ID">
-              <Input
-                value={draft.employeeId}
-                onChange={(e) => onDraftChange({ ...draft, employeeId: e.target.value })}
-              />
-            </FormField>
             <FormField label="Shift">
               <Select value={draft.shift} onValueChange={(v) => onDraftChange({ ...draft, shift: v })}>
                 <SelectTrigger>

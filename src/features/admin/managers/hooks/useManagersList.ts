@@ -9,6 +9,7 @@ function mergeManagers(reduxManagers: Manager[], aurixManagers: AurixManager[]):
     if (!merged.some((m) => m.email.toLowerCase() === sm.email.toLowerCase())) {
       merged.push({
         id: sm.id,
+        managerId: sm.id,
         employeeId: sm.id,
         firstName: sm.fullName.split(" ")[0] || "Manager",
         lastName: sm.fullName.split(" ").slice(1).join(" ") || "",
@@ -21,6 +22,7 @@ function mergeManagers(reduxManagers: Manager[], aurixManagers: AurixManager[]):
         designation: sm.designation,
         managerRole: "team_lead",
         reportingManagerId: null,
+        reportingManagerCode: "",
         reportingManagerName: "",
         office: "",
         workLocation: "on_site",

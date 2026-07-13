@@ -1,8 +1,8 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { AuthShell } from "@/components/aurix/AuthShell";
+import { AuthShell } from "@/features/auth/components/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,26 +11,18 @@ import { aurix } from "@/lib/aurix-store";
 import { api } from "@/api";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/register")({
-  head: () => ({ meta: [{ title: "Create your workspace — Aurix" }] }),
-  component: RegisterPage,
-});
-
 const schema = z
   .object({
-    // Backend: validate_name → min 3 chars, only A-Za-z and single spaces
     fullName: z
       .string()
       .min(3, "Name must be at least 3 characters")
       .max(100, "Name must be at most 100 characters")
       .regex(/^[A-Za-z]+(?: [A-Za-z]+)*$/, "Name can contain only letters and single spaces"),
     email: z.string().email("Enter a valid work email"),
-    // Backend: PHONE_PATTERN = ^[6-9]\d{9}$  (10-digit Indian mobile)
     phone: z
       .string()
       .regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit Indian mobile number (e.g. 9876543210)"),
     companyName: z.string().min(2, "Enter your company name"),
-    // Backend: requires uppercase, lowercase, number, special char, 8-64 chars
     password: z
       .string()
       .min(8, "At least 8 characters")
@@ -52,10 +44,10 @@ function passwordScore(p: string) {
   if (/[a-z]/.test(p)) s++;
   if (/[0-9]/.test(p)) s++;
   if (/[^A-Za-z0-9]/.test(p)) s++;
-  return Math.min(s, 4); // cap at 4
+  return Math.min(s, 4);
 }
 
-function RegisterPage() {
+export function RegisterPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
     fullName: "",
@@ -94,11 +86,9 @@ function RegisterPage() {
         password: form.password,
         company_name: form.companyName,
       };
-      console.log("[Register] Payload →", JSON.stringify(payload, null, 2));
       const res = await api.post("auth/register", payload);
-
+console.log("Register response:", res);
       if (res.success) {
-        // Save placeholder user info in the store
         aurix.set({
           user: {
             id: "",
@@ -122,12 +112,10 @@ function RegisterPage() {
       } else {
         toast.error(res.message || "Registration failed");
       }
-    } catch (err: any) {
-      console.error("[Register] API error:", err);
-      // Surface backend field-level errors (422 responses include an `errors` array)
-      const apiErrors: Array<{ field?: string | null; message: string }> = err?.data?.errors ?? [];
+    } catch (err: unknown) {
+      const apiErr = err as { data?: { errors?: Array<{ field?: string | null; message: string }> }; message?: string };
+      const apiErrors = apiErr?.data?.errors ?? [];
       if (apiErrors.length > 0) {
-        // Map backend field names → frontend form keys
         const fieldMap: Record<string, string> = {
           name: "fullName",
           company_name: "companyName",
@@ -140,9 +128,9 @@ function RegisterPage() {
           }
         });
         if (Object.keys(fe).length > 0) setErrors(fe);
-        toast.error(apiErrors[0]?.message ?? err.message ?? "Validation failed");
+        toast.error(apiErrors[0]?.message ?? apiErr.message ?? "Validation failed");
       } else {
-        toast.error(err.message || "Registration failed. Please check your details.");
+        toast.error(apiErr.message || "Registration failed. Please check your details.");
       }
     } finally {
       setLoading(false);
