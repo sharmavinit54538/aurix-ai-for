@@ -5,6 +5,7 @@
 import { Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import jsPDF from "jspdf";
 import {
   AlertTriangle,
   Award,
@@ -97,7 +98,24 @@ const stagger = (i: number) => ({
   animate: { opacity: 1, y: 0 },
   transition: { duration: 0.4, ease: "easeOut" as const, delay: i * 0.06 },
 });
+// export pdf functin 
+const handleExport = () => {
 
+    const doc = new jsPDF();
+
+    doc.setFontSize(20);
+    doc.text("Aurix HR Dashboard Report", 20, 20);
+
+    doc.setFontSize(12);
+
+    doc.text(
+        `Generated On: ${new Date().toLocaleString()}`,
+        20,
+        35
+    );
+
+    doc.save("dashboard-report.pdf");
+};
 // ── Shared card wrapper ───────────────────────────────────────
 function Card({
   children,
@@ -1208,9 +1226,15 @@ export function ExecutiveDashboard() {
               <Button variant="outline" size="sm" className="gap-1.5 text-xs">
                 <RefreshCw className="h-3.5 w-3.5" /> Refresh
               </Button>
-              <Button variant="outline" size="sm" className="gap-1.5 text-xs">
-                <Download className="h-3.5 w-3.5" /> Export
-              </Button>
+              <Button
+    variant="outline"
+    size="sm"
+    className="gap-1.5 text-xs"
+    onClick={handleExport}
+>
+    <Download className="h-3.5 w-3.5" />
+    Export
+</Button>
             </div>
           </div>
         </div>
