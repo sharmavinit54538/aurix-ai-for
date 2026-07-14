@@ -1,10 +1,33 @@
 import { createFileRoute, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState, useMemo } from "react";
+import { useEmployees } from "@/hooks/useEmployees";
 import {
-  Package, Search, Plus, Upload, Download, CheckCircle2, Clock, XCircle, Wrench,
-  QrCode, Trash2, Edit, Printer, FileSpreadsheet, RefreshCw, Info, Calendar,
-  User, Building2, MapPin, Tag, ShieldCheck, DollarSign, ExternalLink, QrCode as QrIcon,
-  AlertCircle
+  Package,
+  Search,
+  Plus,
+  Upload,
+  Download,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  Wrench,
+  QrCode,
+  Trash2,
+  Edit,
+  Printer,
+  FileSpreadsheet,
+  RefreshCw,
+  Info,
+  Calendar,
+  User,
+  Building2,
+  MapPin,
+  Tag,
+  ShieldCheck,
+  DollarSign,
+  ExternalLink,
+  QrCode as QrIcon,
+  AlertCircle,
 } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Input } from "@/components/ui/input";
@@ -13,20 +36,61 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { hrms, newId, useHrms } from "@/lib/hrms/store";
 import { useAurix } from "@/lib/aurix-store";
-import type { Asset, AssetCategory, AssetStatus, AssetAssignmentHistory, AssetMaintenanceRecord, AssetTimelineEvent } from "@/lib/hrms/types";
+import type {
+  Asset,
+  AssetCategory,
+  AssetStatus,
+  AssetAssignmentHistory,
+  AssetMaintenanceRecord,
+  AssetTimelineEvent,
+} from "@/lib/hrms/types";
 import { QrTile } from "@/components/hrms/Shared";
 import { toast } from "sonner";
 import {
-  Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis,
-  Pie, PieChart, Cell
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+  Pie,
+  PieChart,
+  Cell,
 } from "recharts";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/api";
@@ -57,7 +121,12 @@ const STATUSES: { value: AssetStatus; label: string; color: string; bg: string }
   { value: "assigned", label: "Assigned", color: "text-blue-500", bg: "bg-blue-500/10" },
   { value: "under-repair", label: "Under Repair", color: "text-amber-500", bg: "bg-amber-500/10" },
   { value: "lost", label: "Lost", color: "text-rose-500", bg: "bg-rose-500/10" },
-  { value: "expired", label: "Expired/Retired", color: "text-neutral-500", bg: "bg-neutral-500/10" },
+  {
+    value: "expired",
+    label: "Expired/Retired",
+    color: "text-neutral-500",
+    bg: "bg-neutral-500/10",
+  },
   { value: "retired", label: "Retired", color: "text-purple-500", bg: "bg-purple-500/10" },
 ];
 
@@ -67,6 +136,11 @@ const COLORS = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#3b82f6"
 // MAIN COMPONENT
 // ----------------------------------------------------
 function AssetsPage() {
+   const {
+        data: employees = [],
+        isLoading: employeesLoading
+    } = useEmployees();
+
   const authWs = useAurix(); // For employees list
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -104,6 +178,7 @@ function AssetsPage() {
   const [warrantyUntil, setWarrantyUntil] = useState("");
   const [location, setLocation] = useState("");
   const [notes, setNotes] = useState("");
+  const [assetImage, setAssetImage] = useState<File | null>(null);
 
   // Assignment Form State
   const [assignEmpId, setAssignEmpId] = useState("");
@@ -128,12 +203,12 @@ function AssetsPage() {
       if (statusFilter && statusFilter !== "all") params.set("status", statusFilter);
       params.set("limit", "100");
       return api.get(`assets?${params.toString()}`);
-    }
+    },
   });
 
   const { data: analyticsData } = useQuery({
     queryKey: ["assets-analytics"],
-    queryFn: () => api.get("assets/analytics")
+    queryFn: () => api.get("assets/analytics"),
   });
 
   const assets: Asset[] = listData?.data?.items || [];
@@ -143,16 +218,19 @@ function AssetsPage() {
     assigned_assets: 0,
     under_repair_assets: 0,
     lost_assets: 0,
-    expiring_warranty_assets: 0
+    expiring_warranty_assets: 0,
   };
 
   // ----------------------------------------------------
   // PARSE DEEP LINK QR SCAN
   // ----------------------------------------------------
-  const searchParams = useRouterState({ select: (s) => s.location.search }) as Record<string, string>;
+  const searchParams = useRouterState({ select: (s) => s.location.search }) as Record<
+    string,
+    string
+  >;
   useEffect(() => {
     if (searchParams && searchParams.scan && assets.length > 0) {
-      const matched = assets.find(a => a.id === searchParams.scan || a.tag === searchParams.scan);
+      const matched = assets.find((a) => a.id === searchParams.scan || a.tag === searchParams.scan);
       if (matched) {
         setDetailAsset(matched);
         toast.success(`Scanned QR Code for asset: ${matched.tag} (${matched.name})`);
@@ -165,14 +243,30 @@ function AssetsPage() {
   const showApiError = (err: any, fallback: string) => {
     let msg = err.message || fallback;
     if (err.data && err.data.detail && Array.isArray(err.data.detail)) {
-      const details = err.data.detail.map((d: any) => `${d.loc.slice(1).join(".")} : ${d.msg}`).join(", ");
+      const details = err.data.detail
+        .map((d: any) => `${d.loc.slice(1).join(".")} : ${d.msg}`)
+        .join(", ");
       msg = `Validation error: ${details}`;
     } else if (err.data && err.data.errors && Array.isArray(err.data.errors)) {
       msg = err.data.errors.map((e: any) => e.message).join(", ");
     }
     toast.error(msg);
   };
+  // image upload function
+  const uploadImage = async () => {
+    if (!assetImage) return "";
 
+    const formData = new FormData();
+    formData.append("file", assetImage);
+
+    const response = await api.post("assets/upload-image", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return response.data.image_url;
+  };
   // Mutations
   const createMutation = useMutation({
     mutationFn: (newAsset: any) => api.post("assets", newAsset),
@@ -190,10 +284,11 @@ function AssetsPage() {
       setVendor("");
       setNotes("");
       setLocation("");
+      setAssetImage(null);
     },
     onError: (err: any) => {
       showApiError(err, "Failed to create asset");
-    }
+    },
   });
 
   const editMutation = useMutation({
@@ -209,7 +304,7 @@ function AssetsPage() {
     },
     onError: (err: any) => {
       showApiError(err, "Failed to update asset specifications");
-    }
+    },
   });
 
   const deleteMutation = useMutation({
@@ -223,11 +318,12 @@ function AssetsPage() {
     },
     onError: (err: any) => {
       showApiError(err, "Failed to delete asset");
-    }
+    },
   });
 
   const assignMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: any }) => api.post(`assets/${id}/assign`, payload),
+    mutationFn: ({ id, payload }: { id: string; payload: any }) =>
+      api.post(`assets/${id}/assign`, payload),
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["assets"] });
       queryClient.invalidateQueries({ queryKey: ["assets-analytics"] });
@@ -237,7 +333,7 @@ function AssetsPage() {
     },
     onError: (err: any) => {
       showApiError(err, "Failed to assign asset");
-    }
+    },
   });
 
   const returnMutation = useMutation({
@@ -250,11 +346,12 @@ function AssetsPage() {
     },
     onError: (err: any) => {
       showApiError(err, "Failed to return asset");
-    }
+    },
   });
 
   const transferMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: any }) => api.post(`assets/${id}/transfer`, payload),
+    mutationFn: ({ id, payload }: { id: string; payload: any }) =>
+      api.post(`assets/${id}/transfer`, payload),
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["assets"] });
       queryClient.invalidateQueries({ queryKey: ["assets-analytics"] });
@@ -264,7 +361,7 @@ function AssetsPage() {
     },
     onError: (err: any) => {
       showApiError(err, "Failed to transfer asset");
-    }
+    },
   });
 
   const lostMutation = useMutation({
@@ -277,7 +374,7 @@ function AssetsPage() {
     },
     onError: (err: any) => {
       showApiError(err, "Failed to mark asset as lost");
-    }
+    },
   });
 
   const retiredMutation = useMutation({
@@ -290,11 +387,12 @@ function AssetsPage() {
     },
     onError: (err: any) => {
       showApiError(err, "Failed to retire asset");
-    }
+    },
   });
 
   const repairMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: any }) => api.post(`assets/${id}/maintenance`, payload),
+    mutationFn: ({ id, payload }: { id: string; payload: any }) =>
+      api.post(`assets/${id}/maintenance`, payload),
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["assets"] });
       queryClient.invalidateQueries({ queryKey: ["assets-analytics"] });
@@ -304,7 +402,7 @@ function AssetsPage() {
     },
     onError: (err: any) => {
       showApiError(err, "Failed to send asset for repair");
-    }
+    },
   });
 
   // ----------------------------------------------------
@@ -312,25 +410,35 @@ function AssetsPage() {
   // ----------------------------------------------------
 
   // 1. Create Asset
-  const handleAddSubmit = (e: React.FormEvent) => {
+  const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!assetName || !serial || !brand) {
       toast.error("Please fill in Asset Name, Brand, and Serial Number.");
       return;
     }
 
-    const tagPrefix = {
-      laptop: "LAP",
-      desktop: "DKT",
-      monitor: "MON",
-      phone: "PHN",
-      accessory: "ACC",
-      vehicle: "VEH",
-      other: "AST"
-    }[assetCategory] || "AST";
+    const tagPrefix =
+      {
+        laptop: "LAP",
+        desktop: "DKT",
+        monitor: "MON",
+        phone: "PHN",
+        accessory: "ACC",
+        vehicle: "VEH",
+        other: "AST",
+      }[assetCategory] || "AST";
     const assetTag = `${tagPrefix}-${Math.floor(1000 + Math.random() * 9000)}`;
     const costNum = parseFloat(purchaseCost) || 0;
+    let imageUrl = "";
 
+    try {
+      if (assetImage) {
+        imageUrl = await uploadImage();
+      }
+    } catch (error) {
+      toast.error("Image upload failed");
+      return;
+    }
     createMutation.mutate({
       tag: assetTag,
       name: assetName,
@@ -338,12 +446,15 @@ function AssetsPage() {
       serial: serial,
       vendor: vendor || "Unknown Vendor",
       purchase_date: purchaseDate,
-      warranty_until: warrantyUntil || new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split("T")[0],
+      warranty_until:
+        warrantyUntil ||
+        new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split("T")[0],
       brand: brand,
       model: model,
       purchase_cost: costNum,
       location: location || "HQ IT Desk",
-      notes: notes
+      notes: notes,
+      image_url: imageUrl,
     });
   };
 
@@ -381,8 +492,8 @@ function AssetsPage() {
         vendor,
         warranty_until: warrantyUntil,
         location,
-        notes
-      }
+        notes,
+      },
     });
   };
 
@@ -397,7 +508,11 @@ function AssetsPage() {
     setTargetAsset(asset);
     setAssignNotes("");
     setAssignReturnDate("");
-    if (authWs.employees.length > 0) setAssignEmpId(authWs.employees[0].fullName);
+    if (employees.length > 0) {
+    setAssignEmpId(
+      `${employees[0].first_name} ${employees[0].last_name}`
+    );
+}
     setAssignOpen(true);
   };
 
@@ -405,16 +520,23 @@ function AssetsPage() {
     e.preventDefault();
     if (!targetAsset || !assignEmpId) return;
 
-    const emp = authWs.employees.find(x => x.fullName === assignEmpId) || { fullName: assignEmpId, department: "General Operations" };
+   const emp =
+  employees.find(
+    x => `${x.first_name} ${x.last_name}` === assignEmpId
+  ) || {
+    first_name: assignEmpId,
+    last_name: "",
+    department: "General Operations",
+  };
 
     assignMutation.mutate({
       id: targetAsset.id,
       payload: {
-        employee_name: emp.fullName,
+        employee_name: `${emp.first_name} ${emp.last_name}`,
         department: emp.department,
         expected_return_date: assignReturnDate || null,
-        notes: assignNotes
-      }
+        notes: assignNotes,
+      },
     });
   };
 
@@ -425,25 +547,42 @@ function AssetsPage() {
 
   // 6. Transfer Asset
   const handleTransferOpen = (asset: Asset) => {
+
     setTargetAsset(asset);
+
     setTransferNotes("");
-    if (authWs.employees.length > 0) setTransferEmpId(authWs.employees[0].fullName);
+
+    if (employees.length > 0) {
+        setTransferEmpId(
+          `${employees[0].first_name} ${employees[0].last_name}`
+        );
+    }
+
     setTransferOpen(true);
-  };
+};
 
   const handleTransferSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!targetAsset || !transferEmpId) return;
 
-    const emp = authWs.employees.find(x => x.fullName === transferEmpId) || { fullName: transferEmpId, department: "Operations" };
+   const emp =
+    employees.find(
+        x =>
+            `${x.first_name} ${x.last_name}` === transferEmpId
+    ) || {
+        first_name: transferEmpId,
+        last_name: "",
+        department: "General Operations",
+    };
 
     transferMutation.mutate({
       id: targetAsset.id,
       payload: {
-        employee_name: emp.fullName,
+        employee_name:
+`${emp.first_name} ${emp.last_name}`,
         department: emp.department,
-        notes: transferNotes
-      }
+        notes: transferNotes,
+      },
     });
   };
 
@@ -475,15 +614,15 @@ function AssetsPage() {
       payload: {
         vendor: repairVendor || "Authorized Service Partner",
         cost: parseFloat(repairCost) || 0,
-        notes: repairNotes
-      }
+        notes: repairNotes,
+      },
     });
   };
 
   // Scan simulation URL trigger
   const handleScanSimulation = () => {
     if (!scannedAssetTag) return;
-    const matched = assets.find(a => a.tag === scannedAssetTag || a.id === scannedAssetTag);
+    const matched = assets.find((a) => a.tag === scannedAssetTag || a.id === scannedAssetTag);
     if (matched) {
       setDetailAsset(matched);
       setScanOpen(false);
@@ -504,30 +643,55 @@ function AssetsPage() {
       assigned: apiStats.assigned_assets ?? 0,
       repair: apiStats.under_repair_assets ?? 0,
       lost: apiStats.lost_assets ?? 0,
-      expiring: apiStats.expiring_warranty_assets ?? 0
+      expiring: apiStats.expiring_warranty_assets ?? 0,
     };
   }, [apiStats]);
 
   const notifications = useMemo(() => {
-    const alerts: { id: string; type: "warning" | "error" | "info"; message: string; asset?: Asset }[] = [];
+    const alerts: {
+      id: string;
+      type: "warning" | "error" | "info";
+      message: string;
+      asset?: Asset;
+    }[] = [];
 
     // Warranty expiring
     const mockNow = new Date("2026-06-28").getTime();
     const thirtyDaysLimit = mockNow + 30 * 24 * 60 * 60 * 1000;
-    assets.forEach(a => {
+    assets.forEach((a) => {
       if (a.warrantyUntil) {
         const wTime = new Date(a.warrantyUntil).getTime();
         if (wTime > 0 && wTime < mockNow) {
-          alerts.push({ id: `war_exp_${a.id}`, type: "error", message: `Warranty expired for ${a.tag} (${a.name}) on ${a.warrantyUntil}.`, asset: a });
+          alerts.push({
+            id: `war_exp_${a.id}`,
+            type: "error",
+            message: `Warranty expired for ${a.tag} (${a.name}) on ${a.warrantyUntil}.`,
+            asset: a,
+          });
         } else if (wTime >= mockNow && wTime <= thirtyDaysLimit) {
-          alerts.push({ id: `war_soon_${a.id}`, type: "warning", message: `Warranty expiring soon for ${a.tag} on ${a.warrantyUntil}.`, asset: a });
+          alerts.push({
+            id: `war_soon_${a.id}`,
+            type: "warning",
+            message: `Warranty expiring soon for ${a.tag} on ${a.warrantyUntil}.`,
+            asset: a,
+          });
         }
       }
       if (a.status === "lost") {
-        alerts.push({ id: `lost_${a.id}`, type: "error", message: `Audit flagged: Asset ${a.tag} is lost. Pending replacement.`, asset: a });
+        alerts.push({
+          id: `lost_${a.id}`,
+          type: "error",
+          message: `Audit flagged: Asset ${a.tag} is lost. Pending replacement.`,
+          asset: a,
+        });
       }
       if (a.status === "under-repair") {
-        alerts.push({ id: `rep_${a.id}`, type: "info", message: `${a.tag} is currently in repair at vendor.`, asset: a });
+        alerts.push({
+          id: `rep_${a.id}`,
+          type: "info",
+          message: `${a.tag} is currently in repair at vendor.`,
+          asset: a,
+        });
       }
     });
 
@@ -536,8 +700,9 @@ function AssetsPage() {
 
   // Search & Status filters
   const filteredAssets = useMemo(() => {
-    return assets.filter(a => {
-      const matchQ = !q ||
+    return assets.filter((a) => {
+      const matchQ =
+        !q ||
         a.name.toLowerCase().includes(q.toLowerCase()) ||
         a.tag.toLowerCase().includes(q.toLowerCase()) ||
         a.serial.toLowerCase().includes(q.toLowerCase()) ||
@@ -594,10 +759,34 @@ function AssetsPage() {
             <Button
               variant="outline"
               onClick={() => {
-                const headers = ["Asset Tag", "Asset Name", "Category", "Brand", "Model", "Serial", "Purchase Cost", "Purchase Date", "Status", "Assigned Employee"];
-                const rows = assets.map(a => [
-                  a.tag, a.name, a.category, a.brand || "", a.model || "", a.serial, (a.purchaseCost || 0).toString(), a.purchaseDate, a.status, a.assignedTo || "Unassigned"
-                ].map(v => `"${v.replace(/"/g, '""')}"`).join(","));
+                const headers = [
+                  "Asset Tag",
+                  "Asset Name",
+                  "Category",
+                  "Brand",
+                  "Model",
+                  "Serial",
+                  "Purchase Cost",
+                  "Purchase Date",
+                  "Status",
+                  "Assigned Employee",
+                ];
+                const rows = assets.map((a) =>
+                  [
+                    a.tag,
+                    a.name,
+                    a.category,
+                    a.brand || "",
+                    a.model || "",
+                    a.serial,
+                    (a.purchaseCost || 0).toString(),
+                    a.purchaseDate,
+                    a.status,
+                    a.assignedTo || "Unassigned",
+                  ]
+                    .map((v) => `"${v.replace(/"/g, '""')}"`)
+                    .join(","),
+                );
                 const csv = [headers.join(","), ...rows].join("\n");
                 const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
                 const link = document.createElement("a");
@@ -626,23 +815,63 @@ function AssetsPage() {
       {/* 2. STATS CARDS */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
         {[
-          { key: "total", title: "Total Assets", count: stats.total, color: "text-blue-500", bg: "bg-blue-500/10" },
-          { key: "available", title: "Available Assets", count: stats.available, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-          { key: "assigned", title: "Assigned Assets", count: stats.assigned, color: "text-indigo-500", bg: "bg-indigo-500/10" },
-          { key: "repair", title: "Under Repair", count: stats.repair, color: "text-amber-500", bg: "bg-amber-500/10" },
-          { key: "lost", title: "Lost Assets", count: stats.lost, color: "text-rose-500", bg: "bg-rose-500/10" },
-          { key: "expiring", title: "Expiring Warranty", count: stats.expiring, color: "text-purple-500", bg: "bg-purple-500/10" },
-        ].map(card => (
+          {
+            key: "total",
+            title: "Total Assets",
+            count: stats.total,
+            color: "text-blue-500",
+            bg: "bg-blue-500/10",
+          },
+          {
+            key: "available",
+            title: "Available Assets",
+            count: stats.available,
+            color: "text-emerald-500",
+            bg: "bg-emerald-500/10",
+          },
+          {
+            key: "assigned",
+            title: "Assigned Assets",
+            count: stats.assigned,
+            color: "text-indigo-500",
+            bg: "bg-indigo-500/10",
+          },
+          {
+            key: "repair",
+            title: "Under Repair",
+            count: stats.repair,
+            color: "text-amber-500",
+            bg: "bg-amber-500/10",
+          },
+          {
+            key: "lost",
+            title: "Lost Assets",
+            count: stats.lost,
+            color: "text-rose-500",
+            bg: "bg-rose-500/10",
+          },
+          {
+            key: "expiring",
+            title: "Expiring Warranty",
+            count: stats.expiring,
+            color: "text-purple-500",
+            bg: "bg-purple-500/10",
+          },
+        ].map((card) => (
           <Card key={card.key} className="border-border bg-card/40 backdrop-blur-xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold text-muted-foreground truncate leading-none">{card.title}</span>
+                <span className="text-[11px] font-semibold text-muted-foreground truncate leading-none">
+                  {card.title}
+                </span>
                 <span className={`grid h-7 w-7 place-items-center rounded-lg ${card.bg}`}>
                   <Package className={`h-3.5 w-3.5 ${card.color}`} />
                 </span>
               </div>
               <div className="mt-2.5 flex items-baseline gap-1">
-                <span className="text-2xl font-bold font-display tracking-tight leading-none">{card.count}</span>
+                <span className="text-2xl font-bold font-display tracking-tight leading-none">
+                  {card.count}
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -652,10 +881,16 @@ function AssetsPage() {
       {/* 3. TABS CONTAINER: INVENTORY TABLE OR ANALYTICS REPORTS */}
       <Tabs defaultValue="inventory" className="space-y-4">
         <TabsList className="bg-card/60 border border-border p-1 rounded-xl h-10 w-fit shrink-0">
-          <TabsTrigger value="inventory" className="text-xs h-8 px-4 font-medium rounded-lg cursor-pointer">
+          <TabsTrigger
+            value="inventory"
+            className="text-xs h-8 px-4 font-medium rounded-lg cursor-pointer"
+          >
             Assets Inventory
           </TabsTrigger>
-          <TabsTrigger value="reports" className="text-xs h-8 px-4 font-medium rounded-lg cursor-pointer">
+          <TabsTrigger
+            value="reports"
+            className="text-xs h-8 px-4 font-medium rounded-lg cursor-pointer"
+          >
             Analytics & Reports
           </TabsTrigger>
         </TabsList>
@@ -671,7 +906,10 @@ function AssetsPage() {
                     <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       value={q}
-                      onChange={e => { setQ(e.target.value); setCurrentPage(1); }}
+                      onChange={(e) => {
+                        setQ(e.target.value);
+                        setCurrentPage(1);
+                      }}
                       placeholder="Search by ID, name, brand, employee..."
                       className="h-9 pl-9 border-border bg-background/50 focus-visible:ring-1 focus-visible:ring-ring"
                     />
@@ -685,10 +923,13 @@ function AssetsPage() {
                       { id: "under-repair", label: "In Repair" },
                       { id: "lost", label: "Lost" },
                       { id: "retired", label: "Decommissioned" },
-                    ].map(tab => (
+                    ].map((tab) => (
                       <button
                         key={tab.id}
-                        onClick={() => { setStatusFilter(tab.id); setCurrentPage(1); }}
+                        onClick={() => {
+                          setStatusFilter(tab.id);
+                          setCurrentPage(1);
+                        }}
                         className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold border transition-colors cursor-pointer ${
                           statusFilter === tab.id
                             ? "bg-foreground text-background border-foreground"
@@ -709,7 +950,8 @@ function AssetsPage() {
                     </div>
                     <p className="font-semibold text-foreground">No assets found</p>
                     <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-                      No records match the current filters. Adjust your search or register a new asset.
+                      No records match the current filters. Adjust your search or register a new
+                      asset.
                     </p>
                   </div>
                 ) : (
@@ -731,9 +973,13 @@ function AssetsPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {paginatedAssets.map(asset => {
-                          const statusInfo = STATUSES.find(s => s.value === asset.status) || STATUSES[0];
-                          const isWSoon = asset.warrantyUntil && new Date(asset.warrantyUntil).getTime() <= new Date("2026-06-28").getTime() + 30 * 24 * 60 * 60 * 1000;
+                        {paginatedAssets.map((asset) => {
+                          const statusInfo =
+                            STATUSES.find((s) => s.value === asset.status) || STATUSES[0];
+                          const isWSoon =
+                            asset.warrantyUntil &&
+                            new Date(asset.warrantyUntil).getTime() <=
+                              new Date("2026-06-28").getTime() + 30 * 24 * 60 * 60 * 1000;
 
                           return (
                             <TableRow
@@ -742,8 +988,18 @@ function AssetsPage() {
                               onClick={() => setDetailAsset(asset)}
                             >
                               {/* QR Code Col */}
-                              <TableCell className="px-4 py-2 text-center" onClick={e => { e.stopPropagation(); setTargetAsset(asset); setQrOpen(true); }}>
-                                <div className="grid place-items-center h-8 w-8 rounded border border-border bg-white cursor-pointer hover:scale-105 transition-transform" title="Click to view full sticker">
+                              <TableCell
+                                className="px-4 py-2 text-center"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setTargetAsset(asset);
+                                  setQrOpen(true);
+                                }}
+                              >
+                                <div
+                                  className="grid place-items-center h-8 w-8 rounded border border-border bg-white cursor-pointer hover:scale-105 transition-transform"
+                                  title="Click to view full sticker"
+                                >
                                   <QrCode className="h-5 w-5 text-slate-800" />
                                 </div>
                               </TableCell>
@@ -751,36 +1007,61 @@ function AssetsPage() {
                                 {asset.tag}
                               </TableCell>
                               <TableCell className="px-4 py-3">
-                                <div className="font-semibold text-foreground truncate max-w-[150px]">{asset.name}</div>
+                                <div className="font-semibold text-foreground truncate max-w-[150px]">
+                                  {asset.name}
+                                </div>
                               </TableCell>
                               <TableCell className="px-4 py-3">
-                                <span className="text-xs text-muted-foreground capitalize">{asset.category}</span>
+                                <span className="text-xs text-muted-foreground capitalize">
+                                  {asset.category}
+                                </span>
                               </TableCell>
                               <TableCell className="px-4 py-3 text-xs text-foreground/80">
-                                {asset.brand} <span className="text-muted-foreground">({asset.model || "—"})</span>
+                                {asset.brand}{" "}
+                                <span className="text-muted-foreground">
+                                  ({asset.model || "—"})
+                                </span>
                               </TableCell>
                               <TableCell className="px-4 py-3 font-mono text-xs text-muted-foreground">
                                 {asset.serial}
                               </TableCell>
                               <TableCell className="px-4 py-3 text-xs font-semibold text-foreground/90">
-                                {asset.assignedTo || <span className="text-muted-foreground/40 font-normal italic">Unassigned</span>}
+                                {asset.assignedTo || (
+                                  <span className="text-muted-foreground/40 font-normal italic">
+                                    Unassigned
+                                  </span>
+                                )}
                               </TableCell>
                               <TableCell className="px-4 py-3 text-xs text-muted-foreground">
-                                {asset.assignedTo ? (authWs.employees.find(x => x.fullName === asset.assignedTo)?.department || "Operations") : "—"}
+                                {asset.assignedTo
+                                  ? employees.find((x) => x.fullName === asset.assignedTo)
+                                      ?.department || "Operations"
+                                  : "—"}
                               </TableCell>
                               <TableCell className="px-4 py-3 text-xs">
-                                <span className={isWSoon ? "text-purple-500 font-semibold" : "text-muted-foreground"}>
+                                <span
+                                  className={
+                                    isWSoon
+                                      ? "text-purple-500 font-semibold"
+                                      : "text-muted-foreground"
+                                  }
+                                >
                                   {asset.warrantyUntil || "—"}
                                 </span>
                               </TableCell>
                               {/* Status Badge */}
                               <TableCell className="px-4 py-3 text-center">
-                                <Badge className={`${statusInfo.bg} ${statusInfo.color} border-none shadow-none text-xs font-semibold capitalize`}>
+                                <Badge
+                                  className={`${statusInfo.bg} ${statusInfo.color} border-none shadow-none text-xs font-semibold capitalize`}
+                                >
                                   {statusInfo.label}
                                 </Badge>
                               </TableCell>
                               {/* Action Row */}
-                              <TableCell className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
+                              <TableCell
+                                className="px-4 py-3 text-right"
+                                onClick={(e) => e.stopPropagation()}
+                              >
                                 <div className="flex justify-end gap-1 opacity-80 group-hover:opacity-100">
                                   {asset.status === "available" && (
                                     <Button
@@ -812,16 +1093,17 @@ function AssetsPage() {
                                       </Button>
                                     </>
                                   )}
-                                  {asset.status !== "under-repair" && asset.status !== "retired" && (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => handleRepairOpen(asset)}
-                                      className="h-7 text-[10px] px-2 text-amber-600 border-border cursor-pointer hover:bg-amber-500/10"
-                                    >
-                                      Repair
-                                    </Button>
-                                  )}
+                                  {asset.status !== "under-repair" &&
+                                    asset.status !== "retired" && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleRepairOpen(asset)}
+                                        className="h-7 text-[10px] px-2 text-amber-600 border-border cursor-pointer hover:bg-amber-500/10"
+                                      >
+                                        Repair
+                                      </Button>
+                                    )}
                                   <Button
                                     size="icon"
                                     variant="ghost"
@@ -833,7 +1115,10 @@ function AssetsPage() {
                                   <Button
                                     size="icon"
                                     variant="ghost"
-                                    onClick={() => { setTargetAsset(asset); setDeleteOpen(true); }}
+                                    onClick={() => {
+                                      setTargetAsset(asset);
+                                      setDeleteOpen(true);
+                                    }}
                                     className="h-7 w-7 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 cursor-pointer"
                                   >
                                     <Trash2 className="h-3.5 w-3.5" />
@@ -852,14 +1137,16 @@ function AssetsPage() {
                 {totalPages > 1 && (
                   <div className="flex items-center justify-between border-t border-border px-4 py-3">
                     <span className="text-xs text-muted-foreground">
-                      Showing Page <strong className="font-semibold text-foreground">{currentPage}</strong> of <strong className="font-semibold text-foreground">{totalPages}</strong>
+                      Showing Page{" "}
+                      <strong className="font-semibold text-foreground">{currentPage}</strong> of{" "}
+                      <strong className="font-semibold text-foreground">{totalPages}</strong>
                     </span>
                     <div className="flex gap-1">
                       <Button
                         variant="outline"
                         size="sm"
                         disabled={currentPage === 1}
-                        onClick={() => setCurrentPage(c => Math.max(1, c - 1))}
+                        onClick={() => setCurrentPage((c) => Math.max(1, c - 1))}
                         className="h-8 border-border hover:bg-accent/60 cursor-pointer"
                       >
                         Previous
@@ -868,7 +1155,7 @@ function AssetsPage() {
                         variant="outline"
                         size="sm"
                         disabled={currentPage === totalPages}
-                        onClick={() => setCurrentPage(c => Math.min(totalPages, c + 1))}
+                        onClick={() => setCurrentPage((c) => Math.min(totalPages, c + 1))}
                         className="h-8 border-border hover:bg-accent/60 cursor-pointer"
                       >
                         Next
@@ -888,11 +1175,14 @@ function AssetsPage() {
                     <QrCode className="h-4 w-4 text-indigo-500" />
                     Mobile QR Scanner
                   </CardTitle>
-                  <CardDescription className="text-xs text-muted-foreground">Simulate scanning asset labels</CardDescription>
+                  <CardDescription className="text-xs text-muted-foreground">
+                    Simulate scanning asset labels
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <p className="text-[11px] text-muted-foreground leading-relaxed">
-                    Type or select an asset ID/Tag, then simulate scanning using a mobile device layout.
+                    Type or select an asset ID/Tag, then simulate scanning using a mobile device
+                    layout.
                   </p>
                   <div className="flex gap-2">
                     <Select value={scannedAssetTag} onValueChange={setScannedAssetTag}>
@@ -900,8 +1190,10 @@ function AssetsPage() {
                         <SelectValue placeholder="Select Asset" />
                       </SelectTrigger>
                       <SelectContent>
-                        {assets.map(a => (
-                          <SelectItem key={a.id} value={a.tag}>{a.tag} ({a.brand})</SelectItem>
+                        {assets.map((a) => (
+                          <SelectItem key={a.id} value={a.tag}>
+                            {a.tag} ({a.brand})
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -923,7 +1215,9 @@ function AssetsPage() {
                     <AlertCircle className="h-4 w-4 text-rose-500 animate-pulse" />
                     Alerts & Notifications
                   </CardTitle>
-                  <CardDescription className="text-xs text-muted-foreground">Asset events needing attention</CardDescription>
+                  <CardDescription className="text-xs text-muted-foreground">
+                    Asset events needing attention
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {notifications.length === 0 ? (
@@ -931,15 +1225,15 @@ function AssetsPage() {
                       All assets compliant with warranty and returns!
                     </div>
                   ) : (
-                    notifications.slice(0, 4).map(alert => (
+                    notifications.slice(0, 4).map((alert) => (
                       <div
                         key={alert.id}
                         className={`flex gap-2.5 rounded-lg border p-2.5 text-xs transition-colors ${
                           alert.type === "error"
                             ? "bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400"
                             : alert.type === "warning"
-                            ? "bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400"
-                            : "bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400"
+                              ? "bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400"
+                              : "bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400"
                         }`}
                       >
                         <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
@@ -969,7 +1263,9 @@ function AssetsPage() {
             <Card className="border-border bg-card/40 backdrop-blur-xl">
               <CardHeader>
                 <CardTitle className="text-sm font-bold">Category Allocation</CardTitle>
-                <CardDescription className="text-xs">Count of assets by category classification</CardDescription>
+                <CardDescription className="text-xs">
+                  Count of assets by category classification
+                </CardDescription>
               </CardHeader>
               <CardContent className="h-[250px] flex items-center justify-center">
                 <ResponsiveContainer width="100%" height="100%">
@@ -998,7 +1294,9 @@ function AssetsPage() {
             <Card className="border-border bg-card/40 backdrop-blur-xl">
               <CardHeader>
                 <CardTitle className="text-sm font-bold">Maintenance Repair Costs ($)</CardTitle>
-                <CardDescription className="text-xs">Accumulated service and parts expenditure by category</CardDescription>
+                <CardDescription className="text-xs">
+                  Accumulated service and parts expenditure by category
+                </CardDescription>
               </CardHeader>
               <CardContent className="h-[250px]">
                 <ResponsiveContainer width="100%" height="100%">
@@ -1018,7 +1316,9 @@ function AssetsPage() {
             <Card className="border-border bg-card/40 backdrop-blur-xl lg:col-span-2">
               <CardHeader>
                 <CardTitle className="text-sm font-bold">Asset Financial Summary</CardTitle>
-                <CardDescription className="text-xs">Capital expenditures and maintenance records per asset item</CardDescription>
+                <CardDescription className="text-xs">
+                  Capital expenditures and maintenance records per asset item
+                </CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 <Table className="text-xs border-collapse">
@@ -1034,18 +1334,33 @@ function AssetsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {assets.map(a => {
-                      const repCost = (a.maintenanceHistory || []).reduce((sum, r) => sum + r.cost, 0);
+                    {assets.map((a) => {
+                      const repCost = (a.maintenanceHistory || []).reduce(
+                        (sum, r) => sum + r.cost,
+                        0,
+                      );
                       const lifeCost = (a.purchaseCost || 0) + repCost;
                       return (
                         <TableRow key={a.id} className="border-t border-border hover:bg-accent/15">
-                          <TableCell className="px-4 py-2 font-medium">{a.tag} &bull; {a.name}</TableCell>
-                          <TableCell className="px-4 py-2 capitalize text-muted-foreground">{a.category}</TableCell>
+                          <TableCell className="px-4 py-2 font-medium">
+                            {a.tag} &bull; {a.name}
+                          </TableCell>
+                          <TableCell className="px-4 py-2 capitalize text-muted-foreground">
+                            {a.category}
+                          </TableCell>
                           <TableCell className="px-4 py-2">{a.assignedTo || "Available"}</TableCell>
-                          <TableCell className="px-4 py-2 text-muted-foreground">{a.purchaseDate}</TableCell>
-                          <TableCell className="px-4 py-2 text-right">${a.purchaseCost || 0}</TableCell>
-                          <TableCell className="px-4 py-2 text-right text-amber-500">${repCost}</TableCell>
-                          <TableCell className="px-4 py-2 text-right font-semibold">${lifeCost}</TableCell>
+                          <TableCell className="px-4 py-2 text-muted-foreground">
+                            {a.purchaseDate}
+                          </TableCell>
+                          <TableCell className="px-4 py-2 text-right">
+                            ${a.purchaseCost || 0}
+                          </TableCell>
+                          <TableCell className="px-4 py-2 text-right text-amber-500">
+                            ${repCost}
+                          </TableCell>
+                          <TableCell className="px-4 py-2 text-right font-semibold">
+                            ${lifeCost}
+                          </TableCell>
                         </TableRow>
                       );
                     })}
@@ -1061,26 +1376,50 @@ function AssetsPage() {
           ADD ASSET MODAL
          ---------------------------------------------------- */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-background border-border shadow-2xl">
+        <DialogContent
+          className="
+    w-[95vw]
+    max-w-[95vw]
+    sm:max-w-xl
+    md:max-w-2xl
+    lg:max-w-3xl
+    max-h-[90vh]
+    overflow-y-auto
+    bg-background
+    border-border
+    shadow-2xl
+    rounded-xl
+  "
+        >
           <DialogHeader>
             <DialogTitle className="font-display font-bold text-lg">Register New Asset</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleAddSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5 col-span-2">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="space-y-1.5 lg:col-span-2">
                 <Label className="text-xs font-semibold text-muted-foreground">Asset Name</Label>
-                <Input value={assetName} onChange={e => setAssetName(e.target.value)} placeholder="e.g. MacBook Pro M3" className="bg-background/50 border-border" />
+                <Input
+                  value={assetName}
+                  onChange={(e) => setAssetName(e.target.value)}
+                  placeholder="e.g. MacBook Pro M3"
+                  className="bg-background/50 border-border"
+                />
               </div>
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-muted-foreground">Category</Label>
-                <Select value={assetCategory} onValueChange={(val: AssetCategory) => setAssetCategory(val)}>
+                <Select
+                  value={assetCategory}
+                  onValueChange={(val: AssetCategory) => setAssetCategory(val)}
+                >
                   <SelectTrigger className="bg-background/50 border-border text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {CATEGORIES.map(c => (
-                      <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                    {CATEGORIES.map((c) => (
+                      <SelectItem key={c.value} value={c.value}>
+                        {c.label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -1088,65 +1427,158 @@ function AssetsPage() {
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-muted-foreground">Serial Number</Label>
-                <Input value={serial} onChange={e => setSerial(e.target.value)} placeholder="C02XJ192" className="bg-background/50 border-border text-xs" />
+                <Input
+                  value={serial}
+                  onChange={(e) => setSerial(e.target.value)}
+                  placeholder="C02XJ192"
+                  className="bg-background/50 border-border text-xs"
+                />
               </div>
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-muted-foreground">Brand</Label>
-                <Input value={brand} onChange={e => setBrand(e.target.value)} placeholder="e.g. Apple" className="bg-background/50 border-border text-xs" />
+                <Input
+                  value={brand}
+                  onChange={(e) => setBrand(e.target.value)}
+                  placeholder="e.g. Apple"
+                  className="bg-background/50 border-border text-xs"
+                />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-muted-foreground">Model Specification</Label>
-                <Input value={model} onChange={e => setModel(e.target.value)} placeholder="e.g. Pro 14 M3 16GB" className="bg-background/50 border-border text-xs" />
+                <Label className="text-xs font-semibold text-muted-foreground">
+                  Model Specification
+                </Label>
+                <Input
+                  value={model}
+                  onChange={(e) => setModel(e.target.value)}
+                  placeholder="e.g. Pro 14 M3 16GB"
+                  className="bg-background/50 border-border text-xs"
+                />
               </div>
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-muted-foreground">Vendor</Label>
-                <Input value={vendor} onChange={e => setVendor(e.target.value)} placeholder="e.g. Apple Authorized Reseller" className="bg-background/50 border-border text-xs" />
+                <Input
+                  value={vendor}
+                  onChange={(e) => setVendor(e.target.value)}
+                  placeholder="e.g. Apple Authorized Reseller"
+                  className="bg-background/50 border-border text-xs"
+                />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-muted-foreground">Purchase Cost ($)</Label>
-                <Input type="number" value={purchaseCost} onChange={e => setPurchaseCost(e.target.value)} className="bg-background/50 border-border text-xs" />
+                <Label className="text-xs font-semibold text-muted-foreground">
+                  Purchase Cost ($)
+                </Label>
+                <Input
+                  type="number"
+                  value={purchaseCost}
+                  onChange={(e) => setPurchaseCost(e.target.value)}
+                  className="bg-background/50 border-border text-xs"
+                />
               </div>
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-muted-foreground">Purchase Date</Label>
-                <Input type="date" value={purchaseDate} onChange={e => setPurchaseDate(e.target.value)} className="bg-background/50 border-border text-xs" />
+                <Input
+                  type="date"
+                  value={purchaseDate}
+                  onChange={(e) => setPurchaseDate(e.target.value)}
+                  className="bg-background/50 border-border text-xs"
+                />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-muted-foreground">Warranty Expiry</Label>
-                <Input type="date" value={warrantyUntil} onChange={e => setWarrantyUntil(e.target.value)} className="bg-background/50 border-border text-xs" />
+                <Label className="text-xs font-semibold text-muted-foreground">
+                  Warranty Expiry
+                </Label>
+                <Input
+                  type="date"
+                  value={warrantyUntil}
+                  onChange={(e) => setWarrantyUntil(e.target.value)}
+                  className="bg-background/50 border-border text-xs"
+                />
               </div>
 
-              <div className="space-y-1.5 col-span-2">
-                <Label className="text-xs font-semibold text-muted-foreground">Current Location / Room</Label>
-                <Input value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. Bangalore Floor 3 Store Room" className="bg-background/50 border-border text-xs" />
+              <div className="space-y-2 lg:col-span-2">
+                <Label className="text-xs font-semibold text-muted-foreground">
+                  Current Location / Room
+                </Label>
+                <Input
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="e.g. Bangalore Floor 3 Store Room"
+                  className="bg-background/50 border-border text-xs"
+                />
               </div>
 
-              <div className="space-y-1.5 col-span-2">
-                <Label className="text-xs font-semibold text-muted-foreground">Description Notes</Label>
-                <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Condition, initial checks, setup requirements..." className="min-h-[60px] bg-background/50 border-border text-xs" />
+              <div className="space-y-2 lg:col-span-2">
+                <Label className="text-xs font-semibold text-muted-foreground">
+                  Description Notes
+                </Label>
+                <Textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Condition, initial checks, setup requirements..."
+                  className="min-h-[60px] bg-background/50 border-border text-xs"
+                />
               </div>
 
               {/* Mock Asset Image upload */}
-              <div className="space-y-1.5 col-span-2">
-                <Label className="text-xs font-semibold text-muted-foreground">Asset Image Upload</Label>
-                <div className="flex items-center justify-center border border-dashed border-border bg-background/30 rounded-xl p-4 text-center text-[10px] text-muted-foreground">
-                  Click or Drag mockup photograph to upload (Optional)
-                </div>
+              <div className="space-y-2 lg:col-span-2">
+                <Label className="text-xs font-semibold text-muted-foreground">
+                  Asset Image Upload
+                </Label>
+
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files.length > 0) {
+                      setAssetImage(e.target.files[0]);
+                    }
+                  }}
+                />
+
+                {assetImage && (
+                  <>
+                    <p className="text-xs text-green-600">Selected File: {assetImage.name}</p>
+
+                    <div className="mt-3 space-y-2">
+                      <img
+                        src={URL.createObjectURL(assetImage)}
+                        alt="Asset Preview"
+                        className="w-full max-w-[220px] h-auto aspect-square object-cover rounded-lg border"
+                      />
+
+                      <Button type="button" variant="outline" onClick={() => setAssetImage(null)}>
+                        Remove Image
+                      </Button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
-            <DialogFooter className="pt-2 border-t border-border">
-              <Button type="button" variant="outline" onClick={() => setAddOpen(false)} className="h-9 border-border bg-transparent hover:bg-accent/60 cursor-pointer">
+            <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 pt-4 border-t border-border">
+              <Button
+                className="w-full sm:w-auto"
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setAssetImage(null);
+                  setAddOpen(false);
+                }}
+              >
                 Cancel
               </Button>
-              <Button type="submit" className="h-9 bg-gradient-brand text-brand-foreground hover:opacity-90 cursor-pointer">
-                Generate ID & Save
-              </Button>
+              <Button
+  type="submit"
+  className="w-full sm:w-auto h-9 bg-gradient-brand text-brand-foreground hover:opacity-90 cursor-pointer"
+>
+  Generate ID & Save
+</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -1156,26 +1588,55 @@ function AssetsPage() {
           EDIT ASSET MODAL
          ---------------------------------------------------- */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-autobg-background border-border shadow-2xl">
+       <DialogContent
+  className="
+    w-[95vw]
+    max-w-[95vw]
+    sm:max-w-xl
+    md:max-w-2xl
+    lg:max-w-3xl
+    max-h-[90vh]
+    overflow-y-auto
+    bg-background
+    border-border
+    shadow-2xl
+    rounded-xl
+  "
+>
           <DialogHeader>
-            <DialogTitle className="font-display font-bold text-lg">Edit Asset Specifications</DialogTitle>
+            <DialogTitle className="font-display font-bold text-lg">
+              Edit Asset Specifications
+            </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleEditSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5 col-span-2">
-                <Label className="text-xs font-semibold text-muted-foreground">Asset Name</Label>
-                <Input value={assetName} onChange={e => setAssetName(e.target.value)} className="bg-background/50 border-border" />
-              </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+  <div className="space-y-2 lg:col-span-2">
+    <Label className="text-xs font-semibold text-muted-foreground">
+      Asset Name
+    </Label>
+
+    <Input
+      value={assetName}
+      onChange={(e) => setAssetName(e.target.value)}
+      className="bg-background/50 border-border"
+    />
+  </div>
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-muted-foreground">Category</Label>
-                <Select value={assetCategory} onValueChange={(val: AssetCategory) => setAssetCategory(val)}>
+                <Select
+                  value={assetCategory}
+                  onValueChange={(val: AssetCategory) => setAssetCategory(val)}
+                >
                   <SelectTrigger className="bg-background/50 border-border text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {CATEGORIES.map(c => (
-                      <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                    {CATEGORIES.map((c) => (
+                      <SelectItem key={c.value} value={c.value}>
+                        {c.label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -1183,55 +1644,112 @@ function AssetsPage() {
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-muted-foreground">Serial Number</Label>
-                <Input value={serial} onChange={e => setSerial(e.target.value)} className="bg-background/50 border-border text-xs" />
+                <Input
+                  value={serial}
+                  onChange={(e) => setSerial(e.target.value)}
+                  className="bg-background/50 border-border text-xs"
+                />
               </div>
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-muted-foreground">Brand</Label>
-                <Input value={brand} onChange={e => setBrand(e.target.value)} className="bg-background/50 border-border text-xs" />
+                <Input
+                  value={brand}
+                  onChange={(e) => setBrand(e.target.value)}
+                  className="bg-background/50 border-border text-xs"
+                />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-muted-foreground">Model Specification</Label>
-                <Input value={model} onChange={e => setModel(e.target.value)} className="bg-background/50 border-border text-xs" />
+                <Label className="text-xs font-semibold text-muted-foreground">
+                  Model Specification
+                </Label>
+                <Input
+                  value={model}
+                  onChange={(e) => setModel(e.target.value)}
+                  className="bg-background/50 border-border text-xs"
+                />
               </div>
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-muted-foreground">Vendor</Label>
-                <Input value={vendor} onChange={e => setVendor(e.target.value)} className="bg-background/50 border-border text-xs" />
+                <Input
+                  value={vendor}
+                  onChange={(e) => setVendor(e.target.value)}
+                  className="bg-background/50 border-border text-xs"
+                />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-muted-foreground">Purchase Cost ($)</Label>
-                <Input type="number" value={purchaseCost} onChange={e => setPurchaseCost(e.target.value)} className="bg-background/50 border-border text-xs" />
+                <Label className="text-xs font-semibold text-muted-foreground">
+                  Purchase Cost ($)
+                </Label>
+                <Input
+                  type="number"
+                  value={purchaseCost}
+                  onChange={(e) => setPurchaseCost(e.target.value)}
+                  className="bg-background/50 border-border text-xs"
+                />
               </div>
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-muted-foreground">Purchase Date</Label>
-                <Input type="date" value={purchaseDate} onChange={e => setPurchaseDate(e.target.value)} className="bg-background/50 border-border text-xs" />
+                <Input
+                  type="date"
+                  value={purchaseDate}
+                  onChange={(e) => setPurchaseDate(e.target.value)}
+                  className="bg-background/50 border-border text-xs"
+                />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-muted-foreground">Warranty Expiry</Label>
-                <Input type="date" value={warrantyUntil} onChange={e => setWarrantyUntil(e.target.value)} className="bg-background/50 border-border text-xs" />
+                <Label className="text-xs font-semibold text-muted-foreground">
+                  Warranty Expiry
+                </Label>
+                <Input
+                  type="date"
+                  value={warrantyUntil}
+                  onChange={(e) => setWarrantyUntil(e.target.value)}
+                  className="bg-background/50 border-border text-xs"
+                />
               </div>
 
               <div className="space-y-1.5 col-span-2">
-                <Label className="text-xs font-semibold text-muted-foreground">Current Location / Room</Label>
-                <Input value={location} onChange={e => setLocation(e.target.value)} className="bg-background/50 border-border text-xs" />
+                <Label className="text-xs font-semibold text-muted-foreground">
+                  Current Location / Room
+                </Label>
+                <Input
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="bg-background/50 border-border text-xs"
+                />
               </div>
 
               <div className="space-y-1.5 col-span-2">
-                <Label className="text-xs font-semibold text-muted-foreground">Description Notes</Label>
-                <Textarea value={notes} onChange={e => setNotes(e.target.value)} className="min-h-[60px] bg-background/50 border-border text-xs" />
+                <Label className="text-xs font-semibold text-muted-foreground">
+                  Description Notes
+                </Label>
+                <Textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="min-h-[60px] bg-background/50 border-border text-xs"
+                />
               </div>
             </div>
 
-            <DialogFooter className="pt-2 border-t border-border">
-              <Button type="button" variant="outline" onClick={() => setEditOpen(false)} className="h-9 border-border bg-transparent hover:bg-accent/60 cursor-pointer">
+            <DialogFooter className="flex flex-col-reverse lg:flex-row gap-2 pt-4 border-t border-border">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditOpen(false)}
+                className="w-full lg:w-auto h-9 border-border bg-transparent hover:bg-accent/60 cursor-pointer"
+              >
                 Cancel
               </Button>
-              <Button type="submit" className="h-9 bg-gradient-brand text-brand-foreground hover:opacity-90 cursor-pointer">
+              <Button
+                type="submit"
+                className="w-full lg:w-auto h-9 bg-gradient-brand text-brand-foreground hover:opacity-90 cursor-pointer"
+              >
                 Save Changes
               </Button>
             </DialogFooter>
@@ -1245,38 +1763,77 @@ function AssetsPage() {
       <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
         <DialogContent className="sm:max-w-md bg-background border-border shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="font-display font-bold">Assign Asset: {targetAsset?.tag}</DialogTitle>
+            <DialogTitle className="font-display font-bold">
+              Assign Asset: {targetAsset?.tag}
+            </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleAssignSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground">Employee Assignee</Label>
+              <Label className="text-xs font-semibold text-muted-foreground">
+                Employee Assignee
+              </Label>
               <Select value={assignEmpId} onValueChange={setAssignEmpId}>
                 <SelectTrigger className="w-full bg-background/50 border-border">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {authWs.employees.map(emp => (
-                    <SelectItem key={emp.id} value={emp.fullName}>{emp.fullName} ({emp.employeeId})</SelectItem>
-                  ))}
+                  {employeesLoading ? (
+  <SelectItem value="loading" disabled>
+    Loading employees...
+  </SelectItem>
+) : (
+  employees
+  .filter((emp) => emp.status?.toLowerCase() === "active")
+  .map((emp) => (
+    <SelectItem
+      key={emp.id}
+      value={`${emp.first_name} ${emp.last_name}`}
+    >
+      {emp.first_name} {emp.last_name}
+    </SelectItem>
+))
+)}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground">Expected Return Date (Optional)</Label>
-              <Input type="date" value={assignReturnDate} onChange={e => setAssignReturnDate(e.target.value)} className="bg-background/50 border-border text-xs" />
+              <Label className="text-xs font-semibold text-muted-foreground">
+                Expected Return Date (Optional)
+              </Label>
+              <Input
+                type="date"
+                value={assignReturnDate}
+                onChange={(e) => setAssignReturnDate(e.target.value)}
+                className="bg-background/50 border-border text-xs"
+              />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground">Assignment Notes</Label>
-              <Textarea value={assignNotes} onChange={e => setAssignNotes(e.target.value)} placeholder="State check-in parameters, initial hardware checklist checks..." className="min-h-[70px] bg-background/50 border-border text-xs" />
+              <Label className="text-xs font-semibold text-muted-foreground">
+                Assignment Notes
+              </Label>
+              <Textarea
+                value={assignNotes}
+                onChange={(e) => setAssignNotes(e.target.value)}
+                placeholder="State check-in parameters, initial hardware checklist checks..."
+                className="min-h-[70px] bg-background/50 border-border text-xs"
+              />
             </div>
 
             <DialogFooter className="pt-2 border-t border-border">
-              <Button type="button" variant="outline" onClick={() => setAssignOpen(false)} className="h-9 border-border bg-transparent hover:bg-accent/60 cursor-pointer">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setAssignOpen(false)}
+                className="h-9 border-border bg-transparent hover:bg-accent/60 cursor-pointer"
+              >
                 Cancel
               </Button>
-              <Button type="submit" className="h-9 bg-indigo-600 text-white hover:bg-indigo-750 cursor-pointer">
+              <Button
+                type="submit"
+                className="h-9 bg-indigo-600 text-white hover:bg-indigo-750 cursor-pointer"
+              >
                 Assign Asset
               </Button>
             </DialogFooter>
@@ -1290,7 +1847,9 @@ function AssetsPage() {
       <Dialog open={transferOpen} onOpenChange={setTransferOpen}>
         <DialogContent className="sm:max-w-md bg-background border-border shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="font-display font-bold">Transfer Asset: {targetAsset?.tag}</DialogTitle>
+            <DialogTitle className="font-display font-bold">
+              Transfer Asset: {targetAsset?.tag}
+            </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleTransferSubmit} className="space-y-4">
             <div className="rounded-lg bg-indigo-500/5 border border-indigo-500/10 p-3 text-xs text-indigo-600 dark:text-indigo-400">
@@ -1298,29 +1857,50 @@ function AssetsPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground">New Employee Assignee</Label>
+              <Label className="text-xs font-semibold text-muted-foreground">
+                New Employee Assignee
+              </Label>
               <Select value={transferEmpId} onValueChange={setTransferEmpId}>
                 <SelectTrigger className="w-full bg-background/50 border-border">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {authWs.employees.filter(emp => emp.fullName !== targetAsset?.assignedTo).map(emp => (
-                    <SelectItem key={emp.id} value={emp.fullName}>{emp.fullName}</SelectItem>
-                  ))}
+                  {employees
+                    .filter((emp) => emp.fullName !== targetAsset?.assignedTo)
+                    .map((emp) => (
+                      <SelectItem key={emp.id} value={emp.fullName}>
+                        {emp.fullName}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground">Transfer Reason / Notes</Label>
-              <Textarea value={transferNotes} onChange={e => setTransferNotes(e.target.value)} placeholder="State justification or ticket reference..." className="min-h-[70px] bg-background/50 border-border text-xs" />
+              <Label className="text-xs font-semibold text-muted-foreground">
+                Transfer Reason / Notes
+              </Label>
+              <Textarea
+                value={transferNotes}
+                onChange={(e) => setTransferNotes(e.target.value)}
+                placeholder="State justification or ticket reference..."
+                className="min-h-[70px] bg-background/50 border-border text-xs"
+              />
             </div>
 
             <DialogFooter className="pt-2 border-t border-border">
-              <Button type="button" variant="outline" onClick={() => setTransferOpen(false)} className="h-9 border-border bg-transparent hover:bg-accent/60 cursor-pointer">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setTransferOpen(false)}
+                className="h-9 border-border bg-transparent hover:bg-accent/60 cursor-pointer"
+              >
                 Cancel
               </Button>
-              <Button type="submit" className="h-9 bg-indigo-600 text-white hover:bg-indigo-750 cursor-pointer">
+              <Button
+                type="submit"
+                className="h-9 bg-indigo-600 text-white hover:bg-indigo-750 cursor-pointer"
+              >
                 Transfer Asset
               </Button>
             </DialogFooter>
@@ -1334,29 +1914,60 @@ function AssetsPage() {
       <Dialog open={repairOpen} onOpenChange={setRepairOpen}>
         <DialogContent className="sm:max-w-md bg-background border-border shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="font-display font-bold">Log Repair Request: {targetAsset?.tag}</DialogTitle>
+            <DialogTitle className="font-display font-bold">
+              Log Repair Request: {targetAsset?.tag}
+            </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleRepairSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground">Service Vendor / Shop Name</Label>
-              <Input value={repairVendor} onChange={e => setRepairVendor(e.target.value)} placeholder="e.g. Dell Authorized Service Center" className="bg-background/50 border-border text-xs" />
+              <Label className="text-xs font-semibold text-muted-foreground">
+                Service Vendor / Shop Name
+              </Label>
+              <Input
+                value={repairVendor}
+                onChange={(e) => setRepairVendor(e.target.value)}
+                placeholder="e.g. Dell Authorized Service Center"
+                className="bg-background/50 border-border text-xs"
+              />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground">Estimated Repair Cost ($)</Label>
-              <Input type="number" value={repairCost} onChange={e => setRepairCost(e.target.value)} className="bg-background/50 border-border text-xs" />
+              <Label className="text-xs font-semibold text-muted-foreground">
+                Estimated Repair Cost ($)
+              </Label>
+              <Input
+                type="number"
+                value={repairCost}
+                onChange={(e) => setRepairCost(e.target.value)}
+                className="bg-background/50 border-border text-xs"
+              />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground">Fault Description / Service Notes</Label>
-              <Textarea value={repairNotes} onChange={e => setRepairNotes(e.target.value)} placeholder="e.g. Sticky keyboard keys, battery swelling, screen flickering..." className="min-h-[80px] bg-background/50 border-border text-xs" />
+              <Label className="text-xs font-semibold text-muted-foreground">
+                Fault Description / Service Notes
+              </Label>
+              <Textarea
+                value={repairNotes}
+                onChange={(e) => setRepairNotes(e.target.value)}
+                placeholder="e.g. Sticky keyboard keys, battery swelling, screen flickering..."
+                className="min-h-[80px] bg-background/50 border-border text-xs"
+              />
             </div>
 
             <DialogFooter className="pt-2 border-t border-border">
-              <Button type="button" variant="outline" onClick={() => setRepairOpen(false)} className="h-9 border-border bg-transparent hover:bg-accent/60 cursor-pointer">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setRepairOpen(false)}
+                className="h-9 border-border bg-transparent hover:bg-accent/60 cursor-pointer"
+              >
                 Cancel
               </Button>
-              <Button type="submit" className="h-9 bg-amber-600 text-white hover:bg-amber-700 cursor-pointer">
+              <Button
+                type="submit"
+                className="h-9 bg-amber-600 text-white hover:bg-amber-700 cursor-pointer"
+              >
                 Log to Maintenance
               </Button>
             </DialogFooter>
@@ -1370,16 +1981,29 @@ function AssetsPage() {
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent className="sm:max-w-sm bg-background border-border">
           <DialogHeader>
-            <DialogTitle className="font-display font-bold text-rose-500">Delete Asset Record</DialogTitle>
+            <DialogTitle className="font-display font-bold text-rose-500">
+              Delete Asset Record
+            </DialogTitle>
           </DialogHeader>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Are you sure you want to permanently erase the record for asset <strong className="font-semibold text-foreground">{targetAsset?.tag} ({targetAsset?.name})</strong>? This will clear all historical timelines.
+            Are you sure you want to permanently erase the record for asset{" "}
+            <strong className="font-semibold text-foreground">
+              {targetAsset?.tag} ({targetAsset?.name})
+            </strong>
+            ? This will clear all historical timelines.
           </p>
           <DialogFooter className="pt-2 border-t border-border gap-1">
-            <Button variant="outline" onClick={() => setDeleteOpen(false)} className="h-9 border-border bg-transparent hover:bg-accent/60 cursor-pointer">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteOpen(false)}
+              className="h-9 border-border bg-transparent hover:bg-accent/60 cursor-pointer"
+            >
               Cancel
             </Button>
-            <Button onClick={handleDeleteSubmit} className="h-9 bg-rose-600 text-white hover:bg-rose-700 cursor-pointer">
+            <Button
+              onClick={handleDeleteSubmit}
+              className="h-9 bg-rose-600 text-white hover:bg-rose-700 cursor-pointer"
+            >
               Delete Record
             </Button>
           </DialogFooter>
@@ -1392,28 +2016,44 @@ function AssetsPage() {
       <Dialog open={qrOpen} onOpenChange={setQrOpen}>
         <DialogContent className="sm:max-w-xs bg-background border-border text-center">
           <DialogHeader>
-            <DialogTitle className="font-display font-bold text-center">Asset QR Sticker Label</DialogTitle>
+            <DialogTitle className="font-display font-bold text-center">
+              Asset QR Sticker Label
+            </DialogTitle>
           </DialogHeader>
           {targetAsset && (
             <div className="space-y-4 pt-3 flex flex-col items-center">
               {/* Sticker frame */}
               <div className="rounded-xl border border-slate-300 bg-white p-4 shadow-md w-[220px] flex flex-col items-center select-none text-slate-800">
-                <div className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">AURIX HRMS ASSET</div>
+                <div className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">
+                  AURIX HRMS ASSET
+                </div>
                 <div className="font-mono text-sm font-extrabold text-slate-900 border-b border-slate-200 pb-1.5 w-full text-center">
                   {targetAsset.tag}
                 </div>
-                
+
                 {/* QR Canvas */}
                 <div className="my-3 p-1.5 border border-slate-100 bg-white rounded shadow-inner flex flex-col items-center justify-center">
                   {targetAsset.qrCodeData ? (
-                    <img src={targetAsset.qrCodeData} width={130} height={130} className="w-[130px] h-[130px]" alt="Asset QR Code" />
+                    <img
+                      src={targetAsset.qrCodeData}
+                      width={130}
+                      height={130}
+                      className="w-[130px] h-[130px]"
+                      alt="Asset QR Code"
+                    />
                   ) : (
-                    <div className="w-[130px] h-[130px] flex items-center justify-center bg-slate-50 text-[10px] text-slate-400">Generating QR...</div>
+                    <div className="w-[130px] h-[130px] flex items-center justify-center bg-slate-50 text-[10px] text-slate-400">
+                      Generating QR...
+                    </div>
                   )}
-                  <div className="font-mono text-[10px] text-slate-500 mt-1.5">{targetAsset.serial ?? targetAsset.id}</div>
+                  <div className="font-mono text-[10px] text-slate-500 mt-1.5">
+                    {targetAsset.serial ?? targetAsset.id}
+                  </div>
                 </div>
 
-                <div className="text-[10px] font-semibold text-slate-700 truncate max-w-full">{targetAsset.name}</div>
+                <div className="text-[10px] font-semibold text-slate-700 truncate max-w-full">
+                  {targetAsset.name}
+                </div>
                 <div className="text-[8px] text-slate-400 italic">Company: Aurix Talent Labs</div>
               </div>
 
@@ -1426,13 +2066,23 @@ function AssetsPage() {
                     // Fake update
                     const updated = {
                       ...targetAsset,
-                      timeline: [...(targetAsset.timeline || []), { id: newId("tl"), event: "Created" as const, performedBy: authWs.user?.fullName || "HR", timestamp: new Date().toISOString(), notes: "Regenerated unique QR signature check." }]
+                      timeline: [
+                        ...(targetAsset.timeline || []),
+                        {
+                          id: newId("tl"),
+                          event: "Created" as const,
+                          performedBy: authWs.user?.fullName || "HR",
+                          timestamp: new Date().toISOString(),
+                          notes: "Regenerated unique QR signature check.",
+                        },
+                      ],
                     };
                     editMutation.mutate({
                       id: targetAsset.id,
                       payload: {
-                        notes: (targetAsset.notes || "") + "\nRegenerated unique QR signature check."
-                      }
+                        notes:
+                          (targetAsset.notes || "") + "\nRegenerated unique QR signature check.",
+                      },
                     });
                     setQrOpen(false);
                   }}
@@ -1466,27 +2116,40 @@ function AssetsPage() {
           </DialogHeader>
           <div className="space-y-4 py-2">
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Simulate scanning a physical QR code label on a laptop/device using a mobile phone. Select an asset sticker from the checklist.
+              Simulate scanning a physical QR code label on a laptop/device using a mobile phone.
+              Select an asset sticker from the checklist.
             </p>
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground">Select Sticker to Scan</Label>
+              <Label className="text-xs font-semibold text-muted-foreground">
+                Select Sticker to Scan
+              </Label>
               <Select value={scannedAssetTag} onValueChange={setScannedAssetTag}>
                 <SelectTrigger className="w-full bg-background/50 border-border">
                   <SelectValue placeholder="Choose asset tag" />
                 </SelectTrigger>
                 <SelectContent>
-                  {assets.map(a => (
-                    <SelectItem key={a.id} value={a.tag}>{a.tag} &bull; {a.name}</SelectItem>
+                  {assets.map((a) => (
+                    <SelectItem key={a.id} value={a.tag}>
+                      {a.tag} &bull; {a.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setScanOpen(false)} className="h-9 border-border bg-transparent cursor-pointer">
+            <Button
+              variant="outline"
+              onClick={() => setScanOpen(false)}
+              className="h-9 border-border bg-transparent cursor-pointer"
+            >
               Cancel
             </Button>
-            <Button onClick={handleScanSimulation} disabled={!scannedAssetTag} className="h-9 bg-indigo-600 text-white hover:bg-indigo-750 cursor-pointer">
+            <Button
+              onClick={handleScanSimulation}
+              disabled={!scannedAssetTag}
+              className="h-9 bg-indigo-600 text-white hover:bg-indigo-750 cursor-pointer"
+            >
               Confirm Mock Scan
             </Button>
           </DialogFooter>
@@ -1496,29 +2159,39 @@ function AssetsPage() {
       {/* ----------------------------------------------------
           SLIDE-OUT ASSET DETAILS SHEET
          ---------------------------------------------------- */}
-      <Sheet open={!!detailAsset} onOpenChange={open => !open && setDetailAsset(null)}>
+      <Sheet open={!!detailAsset} onOpenChange={(open) => !open && setDetailAsset(null)}>
         <SheetContent className="sm:max-w-xl flex flex-col h-full bg-background border-l border-border p-0 shadow-2xl">
           {detailAsset && (
             <>
               <SheetHeader className="p-5 border-b border-border bg-muted/10 shrink-0 text-left">
                 <div className="flex items-center justify-between">
-                  <Badge variant="outline" className="text-[10px] uppercase font-bold text-muted-foreground border-border">
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] uppercase font-bold text-muted-foreground border-border"
+                  >
                     {detailAsset.category}
                   </Badge>
-                  {STATUSES.map(stat => {
+                  {STATUSES.map((stat) => {
                     if (stat.value !== detailAsset.status) return null;
                     return (
-                      <Badge key={stat.value} className={`${stat.bg} ${stat.color} border-none shadow-none text-xs font-bold capitalize`}>
+                      <Badge
+                        key={stat.value}
+                        className={`${stat.bg} ${stat.color} border-none shadow-none text-xs font-bold capitalize`}
+                      >
                         {stat.label}
                       </Badge>
                     );
                   })}
                 </div>
-                <SheetTitle className="font-display text-base font-bold text-foreground mt-2 truncate text-left" title={detailAsset.name}>
+                <SheetTitle
+                  className="font-display text-base font-bold text-foreground mt-2 truncate text-left"
+                  title={detailAsset.name}
+                >
                   {detailAsset.tag} &bull; {detailAsset.name}
                 </SheetTitle>
                 <SheetDescription className="text-xs text-muted-foreground text-left mt-0.5">
-                  Serial Number: {detailAsset.serial} &bull; Warranty Expiration: {detailAsset.warrantyUntil || "None"}
+                  Serial Number: {detailAsset.serial} &bull; Warranty Expiration:{" "}
+                  {detailAsset.warrantyUntil || "None"}
                 </SheetDescription>
               </SheetHeader>
 
@@ -1527,15 +2200,27 @@ function AssetsPage() {
                 <div className="space-y-6">
                   {/* QR Sticker Widget */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-muted-foreground">Asset QR Sticker Identification</Label>
+                    <Label className="text-xs font-semibold text-muted-foreground">
+                      Asset QR Sticker Identification
+                    </Label>
                     <div className="rounded-xl border border-border bg-muted/30 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                       <div className="rounded bg-white p-2 border border-slate-200 flex flex-col items-center justify-center">
                         {detailAsset.qrCodeData ? (
-                          <img src={detailAsset.qrCodeData} width={110} height={110} className="w-[110px] h-[110px]" alt="Asset QR Code" />
+                          <img
+                            src={detailAsset.qrCodeData}
+                            width={110}
+                            height={110}
+                            className="w-[110px] h-[110px]"
+                            alt="Asset QR Code"
+                          />
                         ) : (
-                          <div className="w-[110px] h-[110px] flex items-center justify-center bg-slate-50 text-[10px] text-slate-400">Generating QR...</div>
+                          <div className="w-[110px] h-[110px] flex items-center justify-center bg-slate-50 text-[10px] text-slate-400">
+                            Generating QR...
+                          </div>
                         )}
-                        <div className="font-mono text-[10px] text-slate-500 mt-1">{detailAsset.serial ?? detailAsset.id}</div>
+                        <div className="font-mono text-[10px] text-slate-500 mt-1">
+                          {detailAsset.serial ?? detailAsset.id}
+                        </div>
                       </div>
                       <div className="text-xs text-left space-y-2 flex-1">
                         <p className="font-semibold text-foreground">Scannable QR Label</p>
@@ -1546,7 +2231,10 @@ function AssetsPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => { setTargetAsset(detailAsset); setQrOpen(true); }}
+                            onClick={() => {
+                              setTargetAsset(detailAsset);
+                              setQrOpen(true);
+                            }}
                             className="h-8 text-[10px] border-border bg-transparent cursor-pointer"
                           >
                             Print Sticker
@@ -1558,13 +2246,22 @@ function AssetsPage() {
                               toast.success("Regenerating QR parameters...");
                               const updated = {
                                 ...detailAsset,
-                                timeline: [...(detailAsset.timeline || []), { id: newId("tl"), event: "Created" as const, performedBy: authWs.user?.fullName || "HR", timestamp: new Date().toISOString(), notes: "QR checksum regenerated." }]
+                                timeline: [
+                                  ...(detailAsset.timeline || []),
+                                  {
+                                    id: newId("tl"),
+                                    event: "Created" as const,
+                                    performedBy: authWs.user?.fullName || "HR",
+                                    timestamp: new Date().toISOString(),
+                                    notes: "QR checksum regenerated.",
+                                  },
+                                ],
                               };
                               editMutation.mutate({
                                 id: detailAsset.id,
                                 payload: {
-                                  notes: (detailAsset.notes || "") + "\nQR checksum regenerated."
-                                }
+                                  notes: (detailAsset.notes || "") + "\nQR checksum regenerated.",
+                                },
                               });
                               setDetailAsset(updated as any);
                             }}
@@ -1579,38 +2276,67 @@ function AssetsPage() {
 
                   {/* SPECIFICATION GRID */}
                   <div className="rounded-xl border border-border bg-card/40 p-4 space-y-3 text-left">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Hardware Specifications</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      Hardware Specifications
+                    </h4>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
                       <div>
-                        <span className="text-muted-foreground block text-[10px]">Brand / Manufacturer</span>
-                        <strong className="text-foreground mt-0.5 block">{detailAsset.brand || "—"}</strong>
+                        <span className="text-muted-foreground block text-[10px]">
+                          Brand / Manufacturer
+                        </span>
+                        <strong className="text-foreground mt-0.5 block">
+                          {detailAsset.brand || "—"}
+                        </strong>
                       </div>
                       <div>
-                        <span className="text-muted-foreground block text-[10px]">Model Specification</span>
-                        <strong className="text-foreground mt-0.5 block">{detailAsset.model || "—"}</strong>
+                        <span className="text-muted-foreground block text-[10px]">
+                          Model Specification
+                        </span>
+                        <strong className="text-foreground mt-0.5 block">
+                          {detailAsset.model || "—"}
+                        </strong>
                       </div>
                       <div>
-                        <span className="text-muted-foreground block text-[10px]">Purchase Cost</span>
-                        <strong className="text-foreground mt-0.5 block">${detailAsset.purchaseCost || 0}</strong>
+                        <span className="text-muted-foreground block text-[10px]">
+                          Purchase Cost
+                        </span>
+                        <strong className="text-foreground mt-0.5 block">
+                          ${detailAsset.purchaseCost || 0}
+                        </strong>
                       </div>
                       <div>
-                        <span className="text-muted-foreground block text-[10px]">Current Location Room</span>
-                        <strong className="text-foreground mt-0.5 block">{detailAsset.location || "General HQ"}</strong>
+                        <span className="text-muted-foreground block text-[10px]">
+                          Current Location Room
+                        </span>
+                        <strong className="text-foreground mt-0.5 block">
+                          {detailAsset.location || "General HQ"}
+                        </strong>
                       </div>
                       <div className="col-span-2">
                         <span className="text-muted-foreground block text-[10px]">Vendor Info</span>
-                        <strong className="text-foreground mt-0.5 block">{detailAsset.vendor}</strong>
+                        <strong className="text-foreground mt-0.5 block">
+                          {detailAsset.vendor}
+                        </strong>
                       </div>
                       <div className="col-span-2">
-                        <span className="text-muted-foreground block text-[10px]">Warranty Status</span>
+                        <span className="text-muted-foreground block text-[10px]">
+                          Warranty Status
+                        </span>
                         <strong className="text-foreground mt-0.5 block">
                           {detailAsset.warrantyUntil ? (
-                            new Date(detailAsset.warrantyUntil).getTime() < new Date("2026-06-28").getTime() ? (
-                              <span className="text-rose-500">Warranty Expired ({detailAsset.warrantyUntil})</span>
+                            new Date(detailAsset.warrantyUntil).getTime() <
+                            new Date("2026-06-28").getTime() ? (
+                              <span className="text-rose-500">
+                                Warranty Expired ({detailAsset.warrantyUntil})
+                              </span>
                             ) : (
-                              <span className="text-emerald-500">Warranty Active (Expires: {detailAsset.warrantyUntil})</span>
+                              <span className="text-emerald-500">
+                                Warranty Active (Expires: {detailAsset.warrantyUntil})
+                              </span>
                             )
-                          ) : "No Warranty Data"}
+                          ) : (
+                            "No Warranty Data"
+                          )}
                         </strong>
                       </div>
                     </div>
@@ -1624,33 +2350,53 @@ function AssetsPage() {
                         Current Assignment:
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-[11px] leading-relaxed pt-1">
-                        <p><strong>Employee:</strong> {detailAsset.assignedTo}</p>
-                        <p><strong>Dept:</strong> {authWs.employees.find(x => x.fullName === detailAsset.assignedTo)?.department || "Operations"}</p>
-                        <p className="col-span-2"><strong>Assigned At:</strong> {detailAsset.assignedAt ? new Date(detailAsset.assignedAt).toLocaleDateString() : "—"}</p>
+                        <p>
+                          <strong>Employee:</strong> {detailAsset.assignedTo}
+                        </p>
+                        <p>
+                          <strong>Dept:</strong>{" "}
+                          {employees.find((x) => x.fullName === detailAsset.assignedTo)
+                            ?.department || "Operations"}
+                        </p>
+                        <p className="col-span-2">
+                          <strong>Assigned At:</strong>{" "}
+                          {detailAsset.assignedAt
+                            ? new Date(detailAsset.assignedAt).toLocaleDateString()
+                            : "—"}
+                        </p>
                       </div>
                     </div>
                   )}
 
                   {/* TIMELINE EVENTS OF ASSET */}
                   <div className="space-y-2 text-left">
-                    <Label className="text-xs font-semibold text-muted-foreground">Asset Timeline Audit Logs</Label>
+                    <Label className="text-xs font-semibold text-muted-foreground">
+                      Asset Timeline Audit Logs
+                    </Label>
                     <div className="rounded-xl border border-border bg-card/40 p-4 space-y-3.5">
                       {(detailAsset.timeline || []).length === 0 ? (
-                        <p className="text-xs text-muted-foreground italic">No timelines logged for this asset.</p>
+                        <p className="text-xs text-muted-foreground italic">
+                          No timelines logged for this asset.
+                        </p>
                       ) : (
                         (detailAsset.timeline || []).map((tl, idx) => (
-                          <div key={tl.id} className={`flex gap-3 text-xs relative ${idx < (detailAsset.timeline || []).length - 1 ? 'before:absolute before:left-2 before:top-4 before:bottom-0 before:w-[1px] before:bg-border pb-3' : ''}`}>
-                            <span className={`grid h-4 w-4 place-items-center rounded-full shrink-0 ${
-                              tl.event === 'Created'
-                                ? 'bg-blue-500 text-white'
-                                : tl.event === 'Assigned'
-                                ? 'bg-indigo-500 text-white'
-                                : tl.event === 'Returned'
-                                ? 'bg-emerald-500 text-white'
-                                : tl.event === 'Repaired'
-                                ? 'bg-amber-500 text-white'
-                                : 'bg-rose-500 text-white'
-                            }`}>
+                          <div
+                            key={tl.id}
+                            className={`flex gap-3 text-xs relative ${idx < (detailAsset.timeline || []).length - 1 ? "before:absolute before:left-2 before:top-4 before:bottom-0 before:w-[1px] before:bg-border pb-3" : ""}`}
+                          >
+                            <span
+                              className={`grid h-4 w-4 place-items-center rounded-full shrink-0 ${
+                                tl.event === "Created"
+                                  ? "bg-blue-500 text-white"
+                                  : tl.event === "Assigned"
+                                    ? "bg-indigo-500 text-white"
+                                    : tl.event === "Returned"
+                                      ? "bg-emerald-500 text-white"
+                                      : tl.event === "Repaired"
+                                        ? "bg-amber-500 text-white"
+                                        : "bg-rose-500 text-white"
+                              }`}
+                            >
                               <Package className="h-2 w-2" />
                             </span>
                             <div>
@@ -1658,7 +2404,9 @@ function AssetsPage() {
                               <p className="text-[10px] text-muted-foreground mt-0.5">
                                 By {tl.performedBy} on {new Date(tl.timestamp).toLocaleString()}
                               </p>
-                              {tl.notes && <p className="text-[10px] text-foreground/80 mt-1">{tl.notes}</p>}
+                              {tl.notes && (
+                                <p className="text-[10px] text-foreground/80 mt-1">{tl.notes}</p>
+                              )}
                             </div>
                           </div>
                         ))
@@ -1668,7 +2416,9 @@ function AssetsPage() {
 
                   {/* ASSIGNMENT HISTORY LIST */}
                   <div className="space-y-2 text-left">
-                    <Label className="text-xs font-semibold text-muted-foreground">Assignment History Logs</Label>
+                    <Label className="text-xs font-semibold text-muted-foreground">
+                      Assignment History Logs
+                    </Label>
                     <div className="rounded-xl border border-border bg-card/40 p-0 overflow-hidden">
                       <Table className="text-[11px] border-collapse">
                         <TableHeader className="bg-muted/10 border-b border-border">
@@ -1682,19 +2432,30 @@ function AssetsPage() {
                         <TableBody>
                           {(detailAsset.assignmentHistory || []).length === 0 ? (
                             <TableRow>
-                              <TableCell colSpan={4} className="text-center py-4 text-muted-foreground italic">
+                              <TableCell
+                                colSpan={4}
+                                className="text-center py-4 text-muted-foreground italic"
+                              >
                                 No allocation logs recorded.
                               </TableCell>
                             </TableRow>
                           ) : (
-                            (detailAsset.assignmentHistory || []).map(hist => (
+                            (detailAsset.assignmentHistory || []).map((hist) => (
                               <TableRow key={hist.id} className="border-t border-border">
-                                <TableCell className="px-3 py-2 font-semibold">{hist.employee}</TableCell>
-                                <TableCell className="px-3 py-2 text-muted-foreground">{hist.department}</TableCell>
-                                <TableCell className="px-3 py-2 text-muted-foreground">{hist.assignDate}</TableCell>
+                                <TableCell className="px-3 py-2 font-semibold">
+                                  {hist.employee}
+                                </TableCell>
+                                <TableCell className="px-3 py-2 text-muted-foreground">
+                                  {hist.department}
+                                </TableCell>
+                                <TableCell className="px-3 py-2 text-muted-foreground">
+                                  {hist.assignDate}
+                                </TableCell>
                                 <TableCell className="px-3 py-2">
                                   {hist.actualReturnDate ? (
-                                    <span className="text-emerald-500">{hist.actualReturnDate}</span>
+                                    <span className="text-emerald-500">
+                                      {hist.actualReturnDate}
+                                    </span>
                                   ) : (
                                     <span className="text-amber-500 font-semibold">Active</span>
                                   )}
@@ -1709,7 +2470,9 @@ function AssetsPage() {
 
                   {/* MAINTENANCE LOGS LIST */}
                   <div className="space-y-2 text-left">
-                    <Label className="text-xs font-semibold text-muted-foreground">Maintenance Repair logs</Label>
+                    <Label className="text-xs font-semibold text-muted-foreground">
+                      Maintenance Repair logs
+                    </Label>
                     <div className="rounded-xl border border-border bg-card/40 p-0 overflow-hidden">
                       <Table className="text-[11px] border-collapse">
                         <TableHeader className="bg-muted/10 border-b border-border">
@@ -1723,17 +2486,29 @@ function AssetsPage() {
                         <TableBody>
                           {(detailAsset.maintenanceHistory || []).length === 0 ? (
                             <TableRow>
-                              <TableCell colSpan={4} className="text-center py-4 text-muted-foreground italic">
+                              <TableCell
+                                colSpan={4}
+                                className="text-center py-4 text-muted-foreground italic"
+                              >
                                 No maintenance history logs found.
                               </TableCell>
                             </TableRow>
                           ) : (
-                            (detailAsset.maintenanceHistory || []).map(mr => (
+                            (detailAsset.maintenanceHistory || []).map((mr) => (
                               <TableRow key={mr.id} className="border-t border-border">
-                                <TableCell className="px-3 py-2 font-mono">{mr.serviceDate}</TableCell>
-                                <TableCell className="px-3 py-2 text-muted-foreground">{mr.vendor}</TableCell>
-                                <TableCell className="px-3 py-2 text-right text-amber-500 font-semibold">${mr.cost}</TableCell>
-                                <TableCell className="px-3 py-2 text-muted-foreground truncate max-w-[120px]" title={mr.notes}>
+                                <TableCell className="px-3 py-2 font-mono">
+                                  {mr.serviceDate}
+                                </TableCell>
+                                <TableCell className="px-3 py-2 text-muted-foreground">
+                                  {mr.vendor}
+                                </TableCell>
+                                <TableCell className="px-3 py-2 text-right text-amber-500 font-semibold">
+                                  ${mr.cost}
+                                </TableCell>
+                                <TableCell
+                                  className="px-3 py-2 text-muted-foreground truncate max-w-[120px]"
+                                  title={mr.notes}
+                                >
                                   {mr.notes || "—"}
                                 </TableCell>
                               </TableRow>
@@ -1751,7 +2526,8 @@ function AssetsPage() {
                       Decommissioning & Auditing Protocols
                     </h5>
                     <p className="text-[10px] leading-relaxed text-muted-foreground">
-                      Asset tag tracks automatic check-ins linked directly with offboarding exit task structures. Supports mobile barcode scanner simulation natively.
+                      Asset tag tracks automatic check-ins linked directly with offboarding exit
+                      task structures. Supports mobile barcode scanner simulation natively.
                     </p>
                   </div>
                 </div>
@@ -1814,7 +2590,10 @@ function AssetsPage() {
                 )}
                 <Button
                   variant="outline"
-                  onClick={() => { setTargetAsset(detailAsset); setQrOpen(true); }}
+                  onClick={() => {
+                    setTargetAsset(detailAsset);
+                    setQrOpen(true);
+                  }}
                   className="h-9 text-xs border-border bg-transparent hover:bg-accent/60 cursor-pointer gap-1.5"
                 >
                   <QrIcon className="h-3.5 w-3.5" />
