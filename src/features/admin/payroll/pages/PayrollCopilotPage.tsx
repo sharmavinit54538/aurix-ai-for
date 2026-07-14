@@ -1,16 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport, type UIMessage } from "ai";
+import { DefaultChatTransport } from "ai";
 import { useEffect, useRef, useState } from "react";
-import { Bot, Send, Sparkles, User } from "lucide-react";
+import { Bot, Send, Sparkles } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-
-export const Route = createFileRoute("/dashboard/payroll/copilot")({
-  head: () => ({ meta: [{ title: "AI Payroll Copilot — Aurix" }] }),
-  component: PayrollCopilotPage,
-});
+import { CopilotMessageBubble } from "../components/CopilotMessageBubble";
 
 const SUGGESTIONS = [
   "Calculate net salary from gross 80,000 with standard deductions",
@@ -19,7 +14,7 @@ const SUGGESTIONS = [
   "Checklist to close this month's payroll",
 ];
 
-function PayrollCopilotPage() {
+export function PayrollCopilotPage() {
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -35,8 +30,13 @@ function PayrollCopilotPage() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, status]);
 
-  useEffect(() => { inputRef.current?.focus(); }, []);
-  useEffect(() => { if (status === "ready") inputRef.current?.focus(); }, [status]);
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    if (status === "ready") inputRef.current?.focus();
+  }, [status]);
 
   async function submit(text?: string) {
     const value = (text ?? input).trim();
@@ -57,7 +57,10 @@ function PayrollCopilotPage() {
           <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto p-4 sm:p-6">
             {messages.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center text-center">
-                <div className="mb-4 grid h-12 w-12 place-items-center rounded-xl text-brand-foreground shadow-glow" style={{ background: "var(--gradient-brand)" }}>
+                <div
+                  className="mb-4 grid h-12 w-12 place-items-center rounded-xl text-brand-foreground shadow-glow"
+                  style={{ background: "var(--gradient-brand)" }}
+                >
                   <Sparkles className="h-5 w-5" />
                 </div>
                 <h2 className="font-display text-lg font-semibold">How can I help with payroll today?</h2>
@@ -77,7 +80,7 @@ function PayrollCopilotPage() {
                 </div>
               </div>
             ) : (
-              messages.map((m) => <MessageBubble key={m.id} message={m} />)
+              messages.map((m) => <CopilotMessageBubble key={m.id} message={m} />)
             )}
             {status === "submitted" ? (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -92,7 +95,10 @@ function PayrollCopilotPage() {
           </div>
 
           <form
-            onSubmit={(e) => { e.preventDefault(); submit(); }}
+            onSubmit={(e) => {
+              e.preventDefault();
+              submit();
+            }}
             className="flex items-end gap-2 border-t border-border bg-background/40 p-3"
           >
             <Textarea
@@ -100,7 +106,10 @@ function PayrollCopilotPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); }
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  submit();
+                }
               }}
               placeholder="Ask the Payroll Copilot…"
               rows={1}
@@ -129,20 +138,5 @@ function PayrollCopilotPage() {
         </aside>
       </div>
     </>
-  );
-}
-
-function MessageBubble({ message }: { message: UIMessage }) {
-  const isUser = message.role === "user";
-  const text = message.parts.map((p) => (p.type === "text" ? p.text : "")).join("");
-  return (
-    <div className={`flex gap-3 ${isUser ? "flex-row-reverse" : ""}`}>
-      <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-full ${isUser ? "bg-foreground text-background" : "text-brand-foreground"}`} style={isUser ? undefined : { background: "var(--gradient-brand)" }}>
-        {isUser ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
-      </div>
-      <div className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm ${isUser ? "bg-foreground text-background" : "bg-accent/60 text-foreground"}`}>
-        {text || <span className="text-muted-foreground">…</span>}
-      </div>
-    </div>
   );
 }

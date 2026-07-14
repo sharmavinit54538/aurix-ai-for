@@ -16,7 +16,7 @@ Do **not** create `src/pages/` — that is a Next.js convention.
 
 | Folder | Purpose |
 |--------|---------|
-| `features/admin/` | HR/Admin management (employees, managers, departments, performance) |
+| `features/admin/` | HR/Admin management (employees, managers, departments, performance, payroll) |
 | `features/auth/` | Login, register, password reset, email verification |
 | `features/portal/` | Role-based user dashboards (employee self-service, manager team lead) |
 | `features/dashboard/` | Executive overview |
@@ -80,6 +80,8 @@ These routes are thin and load from `features/`:
 | `dashboard.departments.tsx` | `features/admin/departments/pages/DepartmentsPage.tsx` |
 | `dashboard.managers.tsx` | `features/admin/managers/pages/ManagersPage.tsx` |
 | `dashboard.performance.tsx` | `features/admin/performance/pages/PerformancePage.tsx` |
+| `dashboard.payroll.index.tsx` | `features/admin/payroll/pages/PayrollDashboardPage.tsx` |
+| `dashboard.payroll.$section.tsx` | `features/admin/payroll/payrollRoutes.ts` → `pages/Payroll*Page.tsx` |
 | `dashboard.employee.tsx` | `features/portal/employee/pages/EmployeePage.tsx` (self-service) |
 | `dashboard.manager.tsx` | `features/portal/manager/pages/ManagerPage.tsx` (team lead) |
 | `dashboard.attendance.holidays.tsx` | `features/attendance/pages/HolidaysPage.tsx` |
@@ -87,7 +89,7 @@ These routes are thin and load from `features/`:
 
 ## Routes that still contain UI inline
 
-Many older routes (recruitment, payroll, assets, documents, etc.) still have UI directly in `src/routes/`. When refactoring those, move UI to `features/{module}/pages/` and keep the route file thin.
+Many older routes (recruitment, assets, documents, etc.) still have UI directly in `src/routes/`. When refactoring those, move UI to `features/{module}/pages/` and keep the route file thin.
 
 ## Folder layout
 
