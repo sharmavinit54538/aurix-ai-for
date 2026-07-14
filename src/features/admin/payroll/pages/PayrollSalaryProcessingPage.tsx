@@ -14,6 +14,7 @@ import {
   Download,
   Eye,
   FileSpreadsheet,
+  Loader2,
   Lock,
   Minus,
   PlayCircle,
@@ -53,7 +54,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import {
   Select,
   SelectContent,
@@ -74,19 +83,14 @@ import {
   MONTHS,
   PAYROLL_TYPES,
   WORKFLOW_STEPS,
-  buildDepartmentPayroll,
-  buildIssueBreakdown,
-  buildPayrollDistribution,
-  buildSalaryComponents,
-  buildValidationIssues,
-  computeSummaryMetrics,
-  generatePayrollEmployees,
   type PayrollEmployeeRow,
   type PayrollRowStatus,
   type ValidationIssue,
   type ValidationStatus,
   type WorkflowStepId,
 } from "../data/salaryProcessingData";
+import { useSalaryProcessing } from "../hooks/useSalaryProcessing";
+import { ENTERPRISE_EMPLOYEE_COUNT } from "../services/salaryProcessingService";
 import { formatCurrency } from "../utils/formatCurrency";
 
 const PAGE_SIZE = 10;
@@ -111,13 +115,8 @@ type SortKey = keyof Pick<
 >;
 
 export function PayrollSalaryProcessingPage() {
-  const allRows = useMemo(() => generatePayrollEmployees(96), []);
-  const issues = useMemo(() => buildValidationIssues(allRows), [allRows]);
-  const summary = useMemo(() => computeSummaryMetrics(allRows), [allRows]);
+  const payroll = useSalaryProcessing();
 
-  const [month, setMonth] = useState("July");
-  const [year, setYear] = useState("2026");
-  const [payrollType, setPayrollType] = useState("Regular Monthly");
   const [search, setSearch] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -128,17 +127,17 @@ export function PayrollSalaryProcessingPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [issuesOpen, setIssuesOpen] = useState(true);
   const [lockModalOpen, setLockModalOpen] = useState(false);
-  const [currentStep] = useState<WorkflowStepId>("validate");
-  const [salaryRunGenerated, setSalaryRunGenerated] = useState(true);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [detailEmployee, setDetailEmployee] = useState<PayrollEmployeeRow | null>(null);
 
   const departments = useMemo(
-    () => [...new Set(allRows.map((row) => row.department))].sort(),
-    [allRows],
+    () => [...new Set(payroll.rows.map((row) => row.department))].sort(),
+    [payroll.rows],
   );
 
   const filteredRows = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return allRows
+    return payroll.rows
       .filter((row) => {
         if (departmentFilter !== "all" && row.department !== departmentFilter) return false;
         if (statusFilter !== "all" && row.validationStatus !== statusFilter) return false;
@@ -159,15 +158,10 @@ export function PayrollSalaryProcessingPage() {
             : Number(av) - Number(bv);
         return sortDir === "asc" ? cmp : -cmp;
       });
-  }, [allRows, departmentFilter, employeeFilter, search, sortDir, sortKey, statusFilter]);
+  }, [payroll.rows, departmentFilter, employeeFilter, search, sortDir, sortKey, statusFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
   const pageRows = filteredRows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
-  const deptChartData = useMemo(() => buildDepartmentPayroll(allRows), [allRows]);
-  const componentChartData = useMemo(() => buildSalaryComponents(allRows), [allRows]);
-  const distributionData = useMemo(() => buildPayrollDistribution(allRows), [allRows]);
-  const issueChartData = useMemo(() => buildIssueBreakdown(issues), [issues]);
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -195,7 +189,14 @@ export function PayrollSalaryProcessingPage() {
     });
   };
 
-  const completedSteps: WorkflowStepId[] = salaryRunGenerated ? ["generate"] : [];
+  const handleLockConfirm = () => {
+    payroll.lockPayroll();
+    setLockModalOpen(false);
+  };
+
+  const generateProgressPct = payroll.isGenerating
+    ? Math.round((payroll.generateProgress.processed / payroll.generateProgress.total) * 100)
+    : 0;
 
   return (
     <div className="pb-28">
@@ -204,7 +205,7 @@ export function PayrollSalaryProcessingPage() {
         description="Generate, validate, review, and finalize monthly payroll."
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <Select value={month} onValueChange={setMonth}>
+            <Select value={payroll.month} onValueChange={payroll.setMonth} disabled={payroll.isGenerating}>
               <SelectTrigger className="h-9 w-[130px] bg-background">
                 <SelectValue placeholder="Month" />
               </SelectTrigger>
@@ -216,7 +217,7 @@ export function PayrollSalaryProcessingPage() {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={year} onValueChange={setYear}>
+            <Select value={payroll.year} onValueChange={payroll.setYear} disabled={payroll.isGenerating}>
               <SelectTrigger className="h-9 w-[100px] bg-background">
                 <SelectValue placeholder="Year" />
               </SelectTrigger>
@@ -228,7 +229,7 @@ export function PayrollSalaryProcessingPage() {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={payrollType} onValueChange={setPayrollType}>
+            <Select value={payroll.payrollType} onValueChange={payroll.setPayrollType} disabled={payroll.isGenerating}>
               <SelectTrigger className="h-9 w-[160px] bg-background">
                 <SelectValue placeholder="Payroll type" />
               </SelectTrigger>
@@ -241,26 +242,55 @@ export function PayrollSalaryProcessingPage() {
               </SelectContent>
             </Select>
             <Button
-              onClick={() => setSalaryRunGenerated(true)}
+              onClick={() => void payroll.generateSalaryRun()}
+              disabled={payroll.isGenerating || payroll.isLocked}
               className="shadow-sm"
             >
-              <PlayCircle className="mr-2 h-4 w-4" />
-              Generate Salary Run
+              {payroll.isGenerating ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <PlayCircle className="mr-2 h-4 w-4" />
+              )}
+              {payroll.isGenerating ? "Generating…" : payroll.hasRun ? "Regenerate Run" : "Generate Salary Run"}
             </Button>
           </div>
         }
       />
 
-      <StatusSummaryCards summary={summary} />
+      {payroll.isGenerating ? (
+        <div className="mb-4 rounded-2xl border border-blue-500/20 bg-blue-500/5 p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium">Generating salary run…</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Processing {payroll.generateProgress.processed.toLocaleString()} of{" "}
+                {payroll.generateProgress.total.toLocaleString()} employees
+              </p>
+            </div>
+            <span className="text-sm font-semibold tabular-nums text-blue-700 dark:text-blue-400">
+              {generateProgressPct}%
+            </span>
+          </div>
+          <Progress value={generateProgressPct} className="mt-3 h-2" />
+        </div>
+      ) : null}
 
-      <PayrollWorkflow currentStep={currentStep} completedSteps={completedSteps} />
+      <StatusSummaryCards summary={payroll.summary} isGenerating={payroll.isGenerating} />
+
+      <PayrollWorkflow
+        currentStep={payroll.currentStep}
+        completedSteps={payroll.completedSteps}
+        cycleLabel={payroll.cycleLabel}
+      />
 
       <div className="mt-6 flex gap-4">
         <div className="min-w-0 flex-1 space-y-4">
           <EmployeeTableCard
             rows={pageRows}
             filteredCount={filteredRows.length}
-            totalCount={allRows.length}
+            totalCount={payroll.hasRun ? ENTERPRISE_EMPLOYEE_COUNT : 0}
+            hasRun={payroll.hasRun}
+            isGenerating={payroll.isGenerating}
             search={search}
             onSearchChange={(v) => {
               setSearch(v);
@@ -282,7 +312,7 @@ export function PayrollSalaryProcessingPage() {
               setPage(1);
             }}
             departments={departments}
-            allRows={allRows}
+            allRows={payroll.rows}
             selectedIds={selectedIds}
             onToggleSelectAll={toggleSelectAll}
             onToggleSelectRow={toggleSelectRow}
@@ -292,44 +322,104 @@ export function PayrollSalaryProcessingPage() {
             page={page}
             totalPages={totalPages}
             onPageChange={setPage}
+            onExport={payroll.exportExcel}
+            onViewDetails={setDetailEmployee}
+            onGenerate={() => void payroll.generateSalaryRun()}
+            isLocked={payroll.isLocked}
           />
 
-          <PayrollSummarySection
-            summary={summary}
-            deptChartData={deptChartData}
-            componentChartData={componentChartData}
-            distributionData={distributionData}
-            issueChartData={issueChartData}
-          />
+          {payroll.hasRun ? (
+            <PayrollSummarySection
+              summary={payroll.summary}
+              deptChartData={payroll.deptChartData}
+              componentChartData={payroll.componentChartData}
+              distributionData={payroll.distributionData}
+              issueChartData={payroll.issueChartData}
+            />
+          ) : null}
         </div>
 
         <ValidationIssuesPanel
           open={issuesOpen}
           onOpenChange={setIssuesOpen}
-          issues={issues}
+          issues={payroll.issues}
+          onResolve={payroll.resolveIssue}
+          isRevalidating={payroll.isRevalidating}
+          hasRun={payroll.hasRun}
+          isLocked={payroll.isLocked}
         />
       </div>
 
       <StickyActionBar
-        onLock={() => setLockModalOpen(true)}
+        cycleLabel={payroll.cycleLabel}
+        cycleStatusLabel={payroll.cycleStatusLabel}
         selectedCount={selectedIds.size}
+        hasRun={payroll.hasRun}
+        isGenerating={payroll.isGenerating}
+        isRevalidating={payroll.isRevalidating}
+        isLocked={payroll.isLocked}
+        cycleStatus={payroll.cycleStatus}
+        errorCount={payroll.errorCount}
+        hasUnsavedChanges={payroll.hasUnsavedChanges}
+        onSaveDraft={payroll.saveDraftToStorage}
+        onRevalidate={() => void payroll.revalidate()}
+        onPreview={() => setPreviewOpen(true)}
+        onExport={payroll.exportExcel}
+        onLock={() => setLockModalOpen(true)}
+        onSendForApproval={payroll.sendForApproval}
+        onCompleteApproval={payroll.completeApproval}
       />
 
-      {/* <LockPayrollDialog open={lockModalOpen} onOpenChange={setLockModalOpen} /> */}
+      <LockPayrollDialog
+        open={lockModalOpen}
+        onOpenChange={setLockModalOpen}
+        onConfirm={handleLockConfirm}
+        errorCount={payroll.errorCount}
+      />
+
+      <PeriodChangeDialog
+        open={!!payroll.periodChangePending}
+        onConfirm={payroll.confirmPeriodChange}
+        onCancel={payroll.cancelPeriodChange}
+      />
+
+      <PreviewPayrollDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        summary={payroll.summary}
+        cycleLabel={payroll.cycleLabel}
+        rowCount={payroll.rows.length}
+      />
+
+      <EmployeeDetailSheet
+        employee={detailEmployee}
+        onClose={() => setDetailEmployee(null)}
+      />
     </div>
   );
 }
 
 function StatusSummaryCards({
   summary,
+  isGenerating,
 }: {
-  summary: ReturnType<typeof computeSummaryMetrics>;
+  summary: {
+    totalEmployees: number;
+    employeesProcessed: number;
+    grossPayroll: number;
+    netPayroll: number;
+    totalDeductions: number;
+    validationErrors: number;
+    pendingReviews: number;
+    payrollStatus: string;
+  };
+  isGenerating?: boolean;
 }) {
   const cards = [
     {
       label: "Total Employees",
       value: summary.totalEmployees.toLocaleString(),
-      description: "Active headcount in cycle",
+      description: isGenerating ? "Processing in progress" : "Active headcount in cycle",
       icon: Users,
       trend: "+2.1%",
       trendUp: true,
@@ -439,15 +529,17 @@ function StatusSummaryCards({
 function PayrollWorkflow({
   currentStep,
   completedSteps,
+  cycleLabel,
 }: {
   currentStep: WorkflowStepId;
   completedSteps: WorkflowStepId[];
+  cycleLabel: string;
 }) {
   return (
     <div className="mt-6 rounded-2xl border border-border/80 bg-card p-5 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-sm font-semibold tracking-tight">Payroll Workflow</h2>
-        <span className="text-xs text-muted-foreground">Cycle: Jul 2026 · Regular Monthly</span>
+        <span className="text-xs text-muted-foreground">Cycle: {cycleLabel}</span>
       </div>
       <div className="flex flex-wrap items-center gap-1">
         {WORKFLOW_STEPS.map((step, index) => {
@@ -492,6 +584,8 @@ function EmployeeTableCard({
   rows,
   filteredCount,
   totalCount,
+  hasRun,
+  isGenerating,
   search,
   onSearchChange,
   departmentFilter,
@@ -511,10 +605,16 @@ function EmployeeTableCard({
   page,
   totalPages,
   onPageChange,
+  onExport,
+  onViewDetails,
+  onGenerate,
+  isLocked,
 }: {
   rows: PayrollEmployeeRow[];
   filteredCount: number;
   totalCount: number;
+  hasRun: boolean;
+  isGenerating: boolean;
   search: string;
   onSearchChange: (v: string) => void;
   departmentFilter: string;
@@ -534,6 +634,10 @@ function EmployeeTableCard({
   page: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  onExport: () => void;
+  onViewDetails: (row: PayrollEmployeeRow) => void;
+  onGenerate: () => void;
+  isLocked: boolean;
 }) {
   const allPageSelected = rows.length > 0 && rows.every((row) => selectedIds.has(row.id));
 
@@ -544,10 +648,12 @@ function EmployeeTableCard({
           <div>
             <h2 className="font-medium tracking-tight">Employee Payroll</h2>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Showing {filteredCount} of {totalCount.toLocaleString()} employees in this run
+              {hasRun
+                ? `Showing ${filteredCount} sample records · ${totalCount.toLocaleString()} employees in run`
+                : "No payroll run for this cycle yet"}
             </p>
           </div>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={onExport} disabled={!hasRun || isGenerating}>
             <Download className="mr-2 h-3.5 w-3.5" />
             Export
           </Button>
@@ -561,9 +667,10 @@ function EmployeeTableCard({
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               className="h-9 pl-8 bg-background"
+              disabled={!hasRun || isGenerating}
             />
           </div>
-          <Select value={departmentFilter} onValueChange={onDepartmentFilterChange}>
+          <Select value={departmentFilter} onValueChange={onDepartmentFilterChange} disabled={!hasRun || isGenerating}>
             <SelectTrigger className="h-9 w-[150px] bg-background">
               <SelectValue placeholder="Department" />
             </SelectTrigger>
@@ -576,7 +683,7 @@ function EmployeeTableCard({
               ))}
             </SelectContent>
           </Select>
-          <Select value={statusFilter} onValueChange={onStatusFilterChange}>
+          <Select value={statusFilter} onValueChange={onStatusFilterChange} disabled={!hasRun || isGenerating}>
             <SelectTrigger className="h-9 w-[140px] bg-background">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -587,7 +694,7 @@ function EmployeeTableCard({
               <SelectItem value="error">Error</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={employeeFilter} onValueChange={onEmployeeFilterChange}>
+          <Select value={employeeFilter} onValueChange={onEmployeeFilterChange} disabled={!hasRun || isGenerating}>
             <SelectTrigger className="h-9 w-[180px] bg-background">
               <SelectValue placeholder="Employee" />
             </SelectTrigger>
@@ -603,6 +710,22 @@ function EmployeeTableCard({
         </div>
       </div>
 
+      {!hasRun ? (
+        <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+          <div className="mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-muted/60">
+            <PlayCircle className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <h3 className="font-medium">No salary run generated</h3>
+          <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+            Select a payroll period and generate a salary run to calculate compensation for{" "}
+            {ENTERPRISE_EMPLOYEE_COUNT.toLocaleString()} employees.
+          </p>
+          <Button className="mt-4" onClick={onGenerate} disabled={isGenerating || isLocked}>
+            <PlayCircle className="mr-2 h-4 w-4" />
+            Generate Salary Run
+          </Button>
+        </div>
+      ) : (
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
@@ -658,7 +781,12 @@ function EmployeeTableCard({
                   <PayrollStatusBadge status={row.payrollStatus} />
                 </TableCell>
                 <TableCell className="px-3 text-right">
-                  <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => onViewDetails(row)}
+                  >
                     <Eye className="mr-1 h-3 w-3" />
                     View Details
                   </Button>
@@ -668,7 +796,9 @@ function EmployeeTableCard({
           </TableBody>
         </Table>
       </div>
+      )}
 
+      {hasRun ? (
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/80 px-4 py-3">
         <p className="text-xs text-muted-foreground">
           Page {page} of {totalPages} · {filteredCount} records
@@ -707,6 +837,7 @@ function EmployeeTableCard({
           </Button>
         </div>
       </div>
+      ) : null}
     </div>
   );
 }
@@ -794,10 +925,18 @@ function ValidationIssuesPanel({
   open,
   onOpenChange,
   issues,
+  onResolve,
+  isRevalidating,
+  hasRun,
+  isLocked,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   issues: ValidationIssue[];
+  onResolve: (issue: ValidationIssue) => void;
+  isRevalidating: boolean;
+  hasRun: boolean;
+  isLocked: boolean;
 }) {
   if (!open) {
     return (
@@ -825,7 +964,23 @@ function ValidationIssuesPanel({
         </div>
         <ScrollArea className="h-[calc(100vh-280px)]">
           <div className="space-y-2 p-3">
-            {issues.map((issue) => (
+            {!hasRun ? (
+              <p className="py-8 text-center text-xs text-muted-foreground">
+                Generate a salary run to see validation issues.
+              </p>
+            ) : isRevalidating ? (
+              <div className="flex items-center justify-center gap-2 py-8 text-xs text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Revalidating payroll…
+              </div>
+            ) : issues.length === 0 ? (
+              <div className="flex flex-col items-center py-8 text-center">
+                <CheckCircle2 className="mb-2 h-8 w-8 text-emerald-500" />
+                <p className="text-xs font-medium">All validations passed</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">No issues require attention.</p>
+              </div>
+            ) : (
+            issues.map((issue) => (
               <div
                 key={issue.id}
                 className="rounded-xl border border-border/60 bg-muted/20 p-3 transition-colors hover:bg-muted/40"
@@ -838,11 +993,18 @@ function ValidationIssuesPanel({
                   <SeverityBadge severity={issue.severity} />
                 </div>
                 <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">{issue.description}</p>
-                <Button variant="outline" size="sm" className="mt-2 h-7 w-full text-xs">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 h-7 w-full text-xs"
+                  onClick={() => onResolve(issue)}
+                  disabled={isLocked}
+                >
                   Resolve
                 </Button>
               </div>
-            ))}
+            ))
+            )}
           </div>
         </ScrollArea>
       </div>
@@ -870,11 +1032,19 @@ function PayrollSummarySection({
   distributionData,
   issueChartData,
 }: {
-  summary: ReturnType<typeof computeSummaryMetrics>;
-  deptChartData: ReturnType<typeof buildDepartmentPayroll>;
-  componentChartData: ReturnType<typeof buildSalaryComponents>;
-  distributionData: ReturnType<typeof buildPayrollDistribution>;
-  issueChartData: ReturnType<typeof buildIssueBreakdown>;
+  summary: {
+    grossPayroll: number;
+    bonusTotal: number;
+    totalDeductions: number;
+    employerContribution: number;
+    netPayroll: number;
+    averageSalary: number;
+    totalEmployees: number;
+  };
+  deptChartData: ReturnType<typeof import("../data/salaryProcessingData").buildDepartmentPayroll>;
+  componentChartData: ReturnType<typeof import("../data/salaryProcessingData").buildSalaryComponents>;
+  distributionData: ReturnType<typeof import("../data/salaryProcessingData").buildPayrollDistribution>;
+  issueChartData: ReturnType<typeof import("../data/salaryProcessingData").buildIssueBreakdown>;
 }) {
   const tooltipStyle = {
     background: "var(--card)",
@@ -992,44 +1162,95 @@ function ChartCard({ title, children }: { title: string; children: React.ReactNo
 }
 
 function StickyActionBar({
-  onLock,
+  cycleLabel,
+  cycleStatusLabel,
   selectedCount,
+  hasRun,
+  isGenerating,
+  isRevalidating,
+  isLocked,
+  cycleStatus,
+  errorCount,
+  hasUnsavedChanges,
+  onSaveDraft,
+  onRevalidate,
+  onPreview,
+  onExport,
+  onLock,
+  onSendForApproval,
+  onCompleteApproval,
 }: {
-  onLock: () => void;
+  cycleLabel: string;
+  cycleStatusLabel: string;
   selectedCount: number;
+  hasRun: boolean;
+  isGenerating: boolean;
+  isRevalidating: boolean;
+  isLocked: boolean;
+  cycleStatus: string;
+  errorCount: number;
+  hasUnsavedChanges: boolean;
+  onSaveDraft: () => void;
+  onRevalidate: () => void;
+  onPreview: () => void;
+  onExport: () => void;
+  onLock: () => void;
+  onSendForApproval: () => void;
+  onCompleteApproval: () => void;
 }) {
+  const canLock = hasRun && !isLocked && errorCount === 0 && (cycleStatus === "in_review" || cycleStatus === "validating");
+  const canSend = cycleStatus === "locked";
+  const canApprove = cycleStatus === "pending_approval";
+
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/80 bg-background/95 px-4 py-3 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] backdrop-blur-md">
       <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-muted-foreground">
           {selectedCount > 0 ? `${selectedCount} employee(s) selected · ` : null}
-          Jul 2026 payroll · Draft
+          {cycleLabel} · {cycleStatusLabel}
+          {hasUnsavedChanges ? " · Unsaved changes" : null}
         </p>
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={onSaveDraft} disabled={!hasRun || isGenerating}>
             <Save className="mr-2 h-3.5 w-3.5" />
             Save Draft
           </Button>
-          <Button variant="outline" size="sm">
-            <RefreshCw className="mr-2 h-3.5 w-3.5" />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onRevalidate}
+            disabled={!hasRun || isGenerating || isRevalidating || isLocked}
+          >
+            {isRevalidating ? (
+              <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <RefreshCw className="mr-2 h-3.5 w-3.5" />
+            )}
             Revalidate
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={onPreview} disabled={!hasRun || isGenerating}>
             <Eye className="mr-2 h-3.5 w-3.5" />
             Preview Payroll
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={onExport} disabled={!hasRun || isGenerating}>
             <FileSpreadsheet className="mr-2 h-3.5 w-3.5" />
             Export Excel
           </Button>
-          {/* <Button size="sm" onClick={onLock} className="shadow-sm">
+          <Button size="sm" onClick={onLock} disabled={!canLock} className="shadow-sm">
             <Lock className="mr-2 h-3.5 w-3.5" />
             Lock Payroll
-          </Button> */}
-          <Button variant="secondary" size="sm">
-            <Send className="mr-2 h-3.5 w-3.5" />
-            Send for Approval
           </Button>
+          {canApprove ? (
+            <Button size="sm" onClick={onCompleteApproval} className="shadow-sm">
+              <CheckCircle2 className="mr-2 h-3.5 w-3.5" />
+              Mark Approved
+            </Button>
+          ) : (
+            <Button variant="secondary" size="sm" onClick={onSendForApproval} disabled={!canSend}>
+              <Send className="mr-2 h-3.5 w-3.5" />
+              Send for Approval
+            </Button>
+          )}
         </div>
       </div>
     </div>
@@ -1039,9 +1260,13 @@ function StickyActionBar({
 function LockPayrollDialog({
   open,
   onOpenChange,
+  onConfirm,
+  errorCount,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+  errorCount: number;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -1054,18 +1279,157 @@ function LockPayrollDialog({
           <DialogDescription className="pt-2 text-sm leading-relaxed">
             Once payroll is locked, salary figures cannot be modified unless the payroll cycle is
             reopened by an authorized administrator.
+            {errorCount > 0 ? (
+              <span className="mt-2 block font-medium text-destructive">
+                {errorCount} validation error(s) must be resolved before locking.
+              </span>
+            ) : null}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={() => onOpenChange(false)}>
+          <Button onClick={onConfirm} disabled={errorCount > 0}>
             <Lock className="mr-2 h-4 w-4" />
             Lock Payroll
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function PeriodChangeDialog({
+  open,
+  onConfirm,
+  onCancel,
+}: {
+  open: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onCancel()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Change payroll period?</DialogTitle>
+          <DialogDescription>
+            You have unsaved changes in the current cycle. Switching periods will discard them unless
+            you save a draft first.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button variant="outline" onClick={onCancel}>
+            Stay on current period
+          </Button>
+          <Button onClick={onConfirm}>Switch period</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function PreviewPayrollDialog({
+  open,
+  onOpenChange,
+  summary,
+  cycleLabel,
+  rowCount,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  summary: {
+    grossPayroll: number;
+    netPayroll: number;
+    totalDeductions: number;
+    bonusTotal: number;
+    employerContribution: number;
+    totalEmployees: number;
+    validationErrors: number;
+  };
+  cycleLabel: string;
+  rowCount: number;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Payroll Preview</DialogTitle>
+          <DialogDescription>{cycleLabel}</DialogDescription>
+        </DialogHeader>
+        <div className="grid grid-cols-2 gap-3 py-2">
+          <SummaryStat label="Total Employees" value={summary.totalEmployees.toLocaleString()} />
+          <SummaryStat label="Sample Records" value={String(rowCount)} />
+          <SummaryStat label="Gross Payroll" value={formatCurrency(summary.grossPayroll)} />
+          <SummaryStat label="Net Payroll" value={formatCurrency(summary.netPayroll)} highlight />
+          <SummaryStat label="Deductions" value={formatCurrency(summary.totalDeductions)} />
+          <SummaryStat label="Bonus" value={formatCurrency(summary.bonusTotal)} />
+          <SummaryStat label="Employer Contribution" value={formatCurrency(summary.employerContribution)} />
+          <SummaryStat label="Validation Errors" value={String(summary.validationErrors)} />
+        </div>
+        <DialogFooter>
+          <Button onClick={() => onOpenChange(false)}>Close</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EmployeeDetailSheet({
+  employee,
+  onClose,
+}: {
+  employee: PayrollEmployeeRow | null;
+  onClose: () => void;
+}) {
+  return (
+    <Sheet open={!!employee} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent className="w-full sm:max-w-md">
+        {employee ? (
+          <>
+            <SheetHeader>
+              <SheetTitle>{employee.fullName}</SheetTitle>
+              <SheetDescription>
+                {employee.employeeId} · {employee.department}
+              </SheetDescription>
+            </SheetHeader>
+            <div className="mt-6 space-y-4">
+              <DetailRow label="Designation" value={employee.designation} />
+              <DetailRow label="Working Days" value={String(employee.workingDays)} />
+              <DetailRow label="Present Days" value={String(employee.presentDays)} />
+              <DetailRow label="Overtime Hours" value={String(employee.overtimeHours)} />
+              <DetailRow label="Bonus" value={formatCurrency(employee.bonus)} />
+              <DetailRow label="Deductions" value={formatCurrency(employee.deductions)} />
+              <DetailRow label="Gross Salary" value={formatCurrency(employee.grossSalary)} />
+              <DetailRow label="Net Salary" value={formatCurrency(employee.netSalary)} highlight />
+              <div className="flex gap-2 pt-2">
+                <ValidationBadge status={employee.validationStatus} />
+                <PayrollStatusBadge status={employee.payrollStatus} />
+              </div>
+            </div>
+          </>
+        ) : null}
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+function DetailRow({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: string;
+  highlight?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between border-b border-border/60 pb-2">
+      <span className="text-sm text-muted-foreground">{label}</span>
+      <span className={cn("text-sm font-medium tabular-nums", highlight && "text-blue-700 dark:text-blue-400")}>
+        {value}
+      </span>
+    </div>
   );
 }

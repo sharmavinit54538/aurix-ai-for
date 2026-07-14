@@ -118,9 +118,9 @@ function pick<T>(items: T[], seed: number, index: number) {
   return items[(seed + index) % items.length];
 }
 
-export function generatePayrollEmployees(count = 96): PayrollEmployeeRow[] {
+export function generatePayrollEmployees(count = 96, cycleKey = "default"): PayrollEmployeeRow[] {
   return Array.from({ length: count }, (_, index) => {
-    const seed = hashSeed(`payroll-${index}`);
+    const seed = hashSeed(`${cycleKey}-${index}`);
     const firstName = pick(FIRST_NAMES, seed, index);
     const lastName = pick(LAST_NAMES, seed, index + 3);
     const department = pick(DEPARTMENTS, seed, index + 7);
