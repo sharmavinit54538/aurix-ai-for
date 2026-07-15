@@ -23,7 +23,7 @@ import { getEmployeeStatusDetails } from "../utils/employeeStatus";
 
 interface EmployeesTableProps {
   employees: Employee[];
-  onEdit: (employee: Employee) => void;
+  onEdit: (id: string) => void;
   onResendInvite: (id: string) => void;
   onResetPassword: (id: string) => void;
   onDeactivate: (id: string) => void;
@@ -83,7 +83,7 @@ function EmployeeRow({
   onDelete,
 }: {
   employee: Employee;
-  onEdit: (employee: Employee) => void;
+  onEdit: (id: string) => void;
   onResendInvite: (id: string) => void;
   onResetPassword: (id: string) => void;
   onDeactivate: (id: string) => void;
@@ -135,7 +135,7 @@ function EmployeeRow({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 bg-card border border-border">
-            <DropdownMenuItem onClick={() => onEdit(employee)} className="cursor-pointer gap-2">
+            <DropdownMenuItem onClick={() => onEdit(employee.id)} className="cursor-pointer gap-2">
               <Eye className="h-4 w-4 text-muted-foreground" />
               <span>View / Edit Profile</span>
             </DropdownMenuItem>

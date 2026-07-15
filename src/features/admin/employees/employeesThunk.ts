@@ -1,19 +1,24 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { apiInstance } from "@/api";
 import { parseApiError, type ParsedError } from "@/api/utils";
+import { unwrapManagerApiRecord } from "@/features/admin/managers/utils";
 import type {
   CreateEmployeePayload,
   Employee,
+  EmployeeFormState,
   FetchEmployeesParams,
   UpdateEmployeePayload,
 } from "./employeesTypes";
+import { apiEmployeeToFormState } from "./utils/employeeForm";
 
 function mapEmployee(emp: Record<string, unknown>): Employee {
   return {
     id: String(emp.id ?? ""),
     employeeId: String(emp.employee_id ?? ""),
     fullName: `${emp.first_name ?? ""} ${emp.last_name ?? ""}`.trim(),
-    email: String(emp.personal_email ?? emp.company_email ?? ""),
+    personal_email: String(emp.personal_email ?? ""),
+    company_email: String(emp.company_email ?? ""),
+    email: String(emp.company_email ?? emp.personal_email ?? ""),
     phone: String(emp.phone ?? ""),
     department: String(emp.department ?? ""),
     designation: String(emp.designation ?? ""),
@@ -25,6 +30,29 @@ function mapEmployee(emp: Record<string, unknown>): Employee {
     activationTokenExpiresAt: emp.activation_token_expires_at as string | undefined,
   };
 }
+
+export interface EmployeeDetailPayload {
+  employee: Employee;
+  formState: EmployeeFormState;
+}
+
+export const fetchEmployeeById = createAsyncThunk<
+  EmployeeDetailPayload,
+  string,
+  { rejectValue: ParsedError }
+>("employees/fetchEmployeeById", async (id, thunkAPI) => {
+  try {
+    const response = await apiInstance.get(`/employees/${id}`);
+    const raw = (response.data?.data ?? response.data) as Record<string, unknown>;
+    const data = unwrapManagerApiRecord(raw);
+    return {
+      employee: mapEmployee(data),
+      formState: apiEmployeeToFormState(raw),
+    };
+  } catch (error) {
+    return thunkAPI.rejectWithValue(parseApiError(error, "Failed to load employee details"));
+  }
+});
 
 export const fetchEmployees = createAsyncThunk<
   {
@@ -92,7 +120,6 @@ export const createEmployee = createAsyncThunk<
   { rejectValue: ParsedError }
 >("employees/createEmployee", async (payload, thunkAPI) => {
   try {
-    console.log(payload);
     await apiInstance.post("/employees", payload);
   } catch (error) {
     return thunkAPI.rejectWithValue(parseApiError(error, "Failed to add employee"));

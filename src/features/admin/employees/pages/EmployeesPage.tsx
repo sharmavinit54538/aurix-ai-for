@@ -3,34 +3,57 @@ import { Download, Plus } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { fetchManagers } from "@/features/admin/managers/managersThunk";
+import { useManagersList } from "@/features/admin/managers/hooks/useManagersList";
 import {
   activateEmployee,
   createEmployee,
   deactivateEmployee,
   deleteEmployee,
+  fetchEmployeeById,
   fetchEmployees,
   resendEmployeeInvite,
   resetEmployeePassword,
   updateEmployee,
 } from "../employeesThunk";
-import type { Employee } from "../employeesTypes";
+import type { EmployeeFormState } from "../employeesTypes";
+import type { ParsedError } from "@/api/utils";
 import { toast } from "sonner";
 import { EmployeesFilters } from "../components/EmployeesFilters";
 import { EmployeesListContent } from "../components/EmployeesListContent";
 import { EmployeeFormDialog } from "../components/EmployeeFormDialog";
-import { createEmptyEmployee, exportEmployeesCsv } from "../utils/employeeStatus";
+import { exportEmployeesCsv } from "../utils/employeeStatus";
+import {
+  createEmptyEmployeeForm,
+  formToCreatePayload,
+  formToUpdatePayload,
+  validateEmployeeForm,
+} from "../utils/employeeForm";
+
+function getErrorMessage(payload: ParsedError | string | undefined, fallback: string): string {
+  if (!payload) return fallback;
+  if (typeof payload === "string") return payload;
+  return payload.message || fallback;
+}
 
 export function EmployeesPage() {
   const dispatch = useAppDispatch();
   const { employees, loading, submitting, error } = useAppSelector((state) => state.employees);
+  const managers = useManagersList();
   const [q, setQ] = useState("");
   const [dept, setDept] = useState<string>("all");
   const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState<Employee | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [draft, setDraft] = useState<EmployeeFormState | null>(null);
 
   useEffect(() => {
     dispatch(fetchEmployees({ search: q, department: dept }));
   }, [dispatch, q, dept]);
+
+  useEffect(() => {
+    dispatch(fetchManagers({ limit: 200 }));
+  }, [dispatch]);
 
   const departments = useMemo(
     () => Array.from(new Set(employees.map((e) => e.department).filter(Boolean))),
@@ -46,7 +69,7 @@ export function EmployeesPage() {
     if (resendEmployeeInvite.fulfilled.match(result)) {
       toast.success("Invitation email resent successfully");
     } else {
-      toast.error(result.payload ?? "Failed to resend invitation");
+      toast.error(getErrorMessage(result.payload, "Failed to resend invitation"));
     }
   }
 
@@ -59,7 +82,7 @@ export function EmployeesPage() {
       toast.success("Employee account deactivated successfully");
       refetch();
     } else {
-      toast.error(result.payload ?? "Failed to deactivate employee");
+      toast.error(getErrorMessage(result.payload, "Failed to deactivate employee"));
     }
   }
 
@@ -69,7 +92,7 @@ export function EmployeesPage() {
       toast.success("Employee account activated successfully");
       refetch();
     } else {
-      toast.error(result.payload ?? "Failed to activate employee");
+      toast.error(getErrorMessage(result.payload, "Failed to activate employee"));
     }
   }
 
@@ -81,76 +104,79 @@ export function EmployeesPage() {
     if (resetEmployeePassword.fulfilled.match(result)) {
       toast.success("Employee password reset email sent successfully");
     } else {
-      toast.error(result.payload ?? "Failed to reset password");
+      toast.error(getErrorMessage(result.payload, "Failed to reset password"));
     }
   }
 
   function openNew() {
-    setDraft(createEmptyEmployee());
+    setIsEditMode(false);
+    setDetailLoading(false);
+    setDraft(createEmptyEmployeeForm());
     setOpen(true);
   }
 
-  function openEdit(employee: Employee) {
-    setDraft(employee);
+  async function openEdit(id: string) {
+    setIsEditMode(true);
     setOpen(true);
+    setDraft(null);
+    setDetailLoading(true);
+
+    const result = await dispatch(fetchEmployeeById(id));
+    setDetailLoading(false);
+
+    if (fetchEmployeeById.fulfilled.match(result)) {
+      setDraft(result.payload.formState);
+      return;
+    }
+
+    toast.error(getErrorMessage(result.payload, "Failed to load employee details"));
+    setOpen(false);
+    setIsEditMode(false);
+    setDraft(null);
+  }
+
+  function handleFormOpenChange(nextOpen: boolean) {
+    setOpen(nextOpen);
+    if (!nextOpen) {
+      setIsEditMode(false);
+      setDetailLoading(false);
+      setDraft(null);
+    }
   }
 
   async function save() {
     if (!draft) return;
-    if (!draft.fullName || !draft.email) return toast.error("Name and email required");
 
-    const names = draft.fullName.trim().split(/\s+/);
-    const first_name = names[0] || "";
-    const last_name = names.slice(1).join(" ") || " ";
-    const isEdit = draft.id !== "";
+    const validation = validateEmployeeForm(draft);
+    if (!validation.valid) {
+      toast.error(validation.message ?? "Please fill in all required fields");
+      return;
+    }
 
-    if (isEdit) {
+    const isEdit = Boolean(draft.id);
+
+    if (isEdit && draft.id) {
       const result = await dispatch(
         updateEmployee({
           id: draft.id,
-          payload: {
-            first_name,
-            last_name,
-            personal_email: draft.email,
-            phone: draft.phone || undefined,
-            department: draft.department,
-            designation: draft.designation,
-            joining_date: draft.joiningDate || undefined,
-            shift: draft.shift,
-          },
+          payload: formToUpdatePayload(draft),
         }),
       );
       if (updateEmployee.fulfilled.match(result)) {
         toast.success("Employee updated successfully");
-        setOpen(false);
+        handleFormOpenChange(false);
         refetch();
       } else {
-        toast.error(result.payload ?? "Failed to update employee");
+        toast.error(getErrorMessage(result.payload, "Failed to update employee"));
       }
     } else {
-      const result = await dispatch(
-        createEmployee({
-          first_name,
-          last_name,
-          personal_email: draft.email,
-          company_email: draft.email,
-          phone: draft.phone || "9876543210",
-          department: draft.department || "Engineering",
-          designation: draft.designation || "Engineer",
-          joining_date: draft.joiningDate,
-          employee_id: draft.employeeId || `EMP-${Math.floor(100000 + Math.random() * 900000)}`,
-          employment_type: "FULL_TIME",
-          employment_status: "PROBATION",
-          role: "employee",
-          shift: draft.shift || "General",
-        }),
-      );
+      const result = await dispatch(createEmployee(formToCreatePayload(draft)));
       if (createEmployee.fulfilled.match(result)) {
         toast.success("Employee added successfully");
-        setOpen(false);
+        handleFormOpenChange(false);
         refetch();
       } else {
-        toast.error(result.payload ?? "Failed to add employee");
+        toast.error(getErrorMessage(result.payload, "Failed to add employee"));
       }
     }
   }
@@ -162,7 +188,7 @@ export function EmployeesPage() {
     if (deleteEmployee.fulfilled.match(result)) {
       toast.success("Employee removed successfully");
     } else {
-      toast.error(result.payload ?? "Failed to remove employee");
+      toast.error(getErrorMessage(result.payload, "Failed to remove employee"));
     }
   }
 
@@ -208,11 +234,14 @@ export function EmployeesPage() {
 
       <EmployeeFormDialog
         open={open}
-        onOpenChange={setOpen}
+        onOpenChange={handleFormOpenChange}
+        isEdit={isEditMode}
+        detailLoading={detailLoading}
         draft={draft}
         onDraftChange={setDraft}
         submitting={submitting}
         onSave={save}
+        managers={managers}
       />
     </>
   );

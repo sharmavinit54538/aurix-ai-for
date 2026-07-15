@@ -9,7 +9,7 @@ interface EmployeesListContentProps {
   employees: Employee[];
   onRetry: () => void;
   onAdd: () => void;
-  onEdit: (employee: Employee) => void;
+  onEdit: (id: string) => void;
   onResendInvite: (id: string) => void;
   onResetPassword: (id: string) => void;
   onDeactivate: (id: string) => void;

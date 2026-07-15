@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import type { ParsedError } from "@/api/utils";
 import type { EmployeesState } from "./employeesTypes";
 import {
   activateEmployee,
@@ -60,7 +61,11 @@ const employeesSlice = createSlice({
       })
       .addCase(fetchEmployees.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload ?? action.error.message ?? "Something went wrong";
+        const payload = action.payload as ParsedError | string | undefined;
+        state.error =
+          typeof payload === "string"
+            ? payload
+            : payload?.message ?? action.error.message ?? "Something went wrong";
       })
         .addCase(deleteEmployee.pending, (state) => {
         state.submitting = true;

@@ -46,17 +46,3 @@ export function exportEmployeesCsv(employees: Employee[]) {
   URL.revokeObjectURL(url);
 }
 
-export function createEmptyEmployee(): Employee {
-  return {
-    id: "",
-    employeeId: "",
-    fullName: "",
-    email: "",
-    phone: "",
-    department: "",
-    designation: "",
-    joiningDate: "",
-    managerName: "",
-    shift: "General",
-  };
-}
