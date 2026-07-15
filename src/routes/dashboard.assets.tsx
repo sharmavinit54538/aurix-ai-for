@@ -209,6 +209,7 @@ function AssetsPage() {
   });
 
   const assets: Asset[] = listData?.data?.items || [];
+  
   const apiStats = analyticsData?.data || {
     total_assets: 0,
     available_assets: 0,
@@ -1340,7 +1341,7 @@ function AssetsPage() {
                             ${a.purchaseCost || 0}
                           </TableCell>
                           <TableCell className="px-4 py-2 text-right text-amber-500">
-                            ${repCost}
+                            {JSON.stringify(a.maintenanceHistory)}
                           </TableCell>
                           <TableCell className="px-4 py-2 text-right font-semibold">
                             ${lifeCost}
