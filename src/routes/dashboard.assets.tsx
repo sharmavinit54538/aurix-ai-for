@@ -136,10 +136,7 @@ const COLORS = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#3b82f6"
 // MAIN COMPONENT
 // ----------------------------------------------------
 function AssetsPage() {
-   const {
-        data: employees = [],
-        isLoading: employeesLoading
-    } = useEmployees();
+  const { data: employees = [], isLoading: employeesLoading } = useEmployees();
 
   const authWs = useAurix(); // For employees list
   const navigate = useNavigate();
@@ -509,10 +506,8 @@ function AssetsPage() {
     setAssignNotes("");
     setAssignReturnDate("");
     if (employees.length > 0) {
-    setAssignEmpId(
-      `${employees[0].first_name} ${employees[0].last_name}`
-    );
-}
+      setAssignEmpId(`${employees[0].first_name} ${employees[0].last_name}`);
+    }
     setAssignOpen(true);
   };
 
@@ -520,14 +515,11 @@ function AssetsPage() {
     e.preventDefault();
     if (!targetAsset || !assignEmpId) return;
 
-   const emp =
-  employees.find(
-    x => `${x.first_name} ${x.last_name}` === assignEmpId
-  ) || {
-    first_name: assignEmpId,
-    last_name: "",
-    department: "General Operations",
-  };
+    const emp = employees.find((x) => `${x.first_name} ${x.last_name}` === assignEmpId) || {
+      first_name: assignEmpId,
+      last_name: "",
+      department: "General Operations",
+    };
 
     assignMutation.mutate({
       id: targetAsset.id,
@@ -547,39 +539,31 @@ function AssetsPage() {
 
   // 6. Transfer Asset
   const handleTransferOpen = (asset: Asset) => {
-
     setTargetAsset(asset);
 
     setTransferNotes("");
 
     if (employees.length > 0) {
-        setTransferEmpId(
-          `${employees[0].first_name} ${employees[0].last_name}`
-        );
+      setTransferEmpId(`${employees[0].first_name} ${employees[0].last_name}`);
     }
 
     setTransferOpen(true);
-};
+  };
 
   const handleTransferSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!targetAsset || !transferEmpId) return;
 
-   const emp =
-    employees.find(
-        x =>
-            `${x.first_name} ${x.last_name}` === transferEmpId
-    ) || {
-        first_name: transferEmpId,
-        last_name: "",
-        department: "General Operations",
+    const emp = employees.find((x) => `${x.first_name} ${x.last_name}` === transferEmpId) || {
+      first_name: transferEmpId,
+      last_name: "",
+      department: "General Operations",
     };
 
     transferMutation.mutate({
       id: targetAsset.id,
       payload: {
-        employee_name:
-`${emp.first_name} ${emp.last_name}`,
+        employee_name: `${emp.first_name} ${emp.last_name}`,
         department: emp.department,
         notes: transferNotes,
       },
@@ -1574,11 +1558,11 @@ function AssetsPage() {
                 Cancel
               </Button>
               <Button
-  type="submit"
-  className="w-full sm:w-auto h-9 bg-gradient-brand text-brand-foreground hover:opacity-90 cursor-pointer"
->
-  Generate ID & Save
-</Button>
+                type="submit"
+                className="w-full sm:w-auto h-9 bg-gradient-brand text-brand-foreground hover:opacity-90 cursor-pointer"
+              >
+                Generate ID & Save
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -1588,8 +1572,8 @@ function AssetsPage() {
           EDIT ASSET MODAL
          ---------------------------------------------------- */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-       <DialogContent
-  className="
+        <DialogContent
+          className="
     w-[95vw]
     max-w-[95vw]
     sm:max-w-xl
@@ -1602,7 +1586,7 @@ function AssetsPage() {
     shadow-2xl
     rounded-xl
   "
->
+        >
           <DialogHeader>
             <DialogTitle className="font-display font-bold text-lg">
               Edit Asset Specifications
@@ -1610,18 +1594,15 @@ function AssetsPage() {
           </DialogHeader>
           <form onSubmit={handleEditSubmit} className="space-y-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="space-y-2 lg:col-span-2">
+                <Label className="text-xs font-semibold text-muted-foreground">Asset Name</Label>
 
-  <div className="space-y-2 lg:col-span-2">
-    <Label className="text-xs font-semibold text-muted-foreground">
-      Asset Name
-    </Label>
-
-    <Input
-      value={assetName}
-      onChange={(e) => setAssetName(e.target.value)}
-      className="bg-background/50 border-border"
-    />
-  </div>
+                <Input
+                  value={assetName}
+                  onChange={(e) => setAssetName(e.target.value)}
+                  className="bg-background/50 border-border"
+                />
+              </div>
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-muted-foreground">Category</Label>
@@ -1778,21 +1759,18 @@ function AssetsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {employeesLoading ? (
-  <SelectItem value="loading" disabled>
-    Loading employees...
-  </SelectItem>
-) : (
-  employees
-  .filter((emp) => emp.status?.toLowerCase() === "active")
-  .map((emp) => (
-    <SelectItem
-      key={emp.id}
-      value={`${emp.first_name} ${emp.last_name}`}
-    >
-      {emp.first_name} {emp.last_name}
-    </SelectItem>
-))
-)}
+                    <SelectItem value="loading" disabled>
+                      Loading employees...
+                    </SelectItem>
+                  ) : (
+                    employees
+                      .filter((emp) => emp.status?.toLowerCase() === "active")
+                      .map((emp) => (
+                        <SelectItem key={emp.id} value={`${emp.first_name} ${emp.last_name}`}>
+                          {emp.first_name} {emp.last_name}
+                        </SelectItem>
+                      ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -1866,10 +1844,14 @@ function AssetsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {employees
-                    .filter((emp) => emp.fullName !== targetAsset?.assignedTo)
+                    .filter(
+                      (emp) =>
+                        emp.status?.toLowerCase() === "active" &&
+                        `${emp.first_name} ${emp.last_name}` !== targetAsset?.assignedTo,
+                    )
                     .map((emp) => (
-                      <SelectItem key={emp.id} value={emp.fullName}>
-                        {emp.fullName}
+                      <SelectItem key={emp.id} value={`${emp.first_name} ${emp.last_name}`}>
+                        {emp.first_name} {emp.last_name}
                       </SelectItem>
                     ))}
                 </SelectContent>
@@ -2355,7 +2337,9 @@ function AssetsPage() {
                         </p>
                         <p>
                           <strong>Dept:</strong>{" "}
-                          {employees.find((x) => x.fullName === detailAsset.assignedTo)
+                          {employees.find(
+  (x) => `${x.first_name} ${x.last_name}` === detailAsset.assignedTo
+)
                             ?.department || "Operations"}
                         </p>
                         <p className="col-span-2">
