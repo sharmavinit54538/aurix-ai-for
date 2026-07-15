@@ -13,25 +13,178 @@ export const Route = createFileRoute("/dashboard/recruitment/reports")({
 const COLORS = ["oklch(0.65 0.22 285)", "oklch(0.7 0.18 200)", "oklch(0.74 0.16 140)", "oklch(0.75 0.18 60)", "oklch(0.68 0.2 25)", "oklch(0.62 0.18 320)"];
 
 function Reports() {
-  const { candidates, jobs, offers } = useRecruitment((s) => s);
+  const { candidates, jobs, offers, interviews } = useRecruitment((s) => s);
 
-  const funnel = STAGES.filter((s) => s !== "rejected").map((s, i) => ({ name: STAGE_LABEL[s], value: Math.max(1, candidates.filter((c) => c.stage === s).length + (8 - i) * 6), fill: COLORS[i % COLORS.length] }));
-  const tth = [{ d: "Eng", v: 28 }, { d: "Design", v: 22 }, { d: "Sales", v: 19 }, { d: "Mkt", v: 31 }, { d: "Data", v: 35 }, { d: "Ops", v: 24 }];
-  const monthly = [{ m: "Jan", h: 4 }, { m: "Feb", h: 7 }, { m: "Mar", h: 5 }, { m: "Apr", h: 11 }, { m: "May", h: 9 }, { m: "Jun", h: 14 }];
-  const sources = [{ s: "LinkedIn", a: 312, h: 18 }, { s: "Referrals", a: 92, h: 14 }, { s: "Indeed", a: 188, h: 9 }, { s: "Career Site", a: 142, h: 11 }, { s: "Agency", a: 64, h: 5 }];
-  const recruiters = [
-    { name: "Sara Iqbal", hired: 11, interviews: 51, offers: 14, accept: 92 },
-    { name: "Marcus Lee", hired: 8, interviews: 42, offers: 11, accept: 81 },
-    { name: "Ana Volkov", hired: 9, interviews: 36, offers: 12, accept: 75 },
-    { name: "Daniel Okafor", hired: 6, interviews: 28, offers: 8, accept: 88 },
-  ];
+  function getDaysDiff(endStr: string | undefined, startStr: string | undefined): number {
+    if (!startStr) return 0;
+    const start = new Date(startStr);
+    const end = endStr ? new Date(endStr) : new Date();
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
+
+  // 1. Hiring Funnel
+  const funnel = STAGES.filter((s) => s !== "rejected").map((s, i) => ({
+    name: STAGE_LABEL[s],
+    value: candidates.filter((c) => c.stage === s).length,
+    fill: COLORS[i % COLORS.length]
+  }));
+
+  // 2. Time to Hire by Dept
+  const deptTthMap: Record<string, { totalDays: number; count: number }> = {};
+  const hiredCandidates = candidates.filter((c) => c.stage === "hired");
+  hiredCandidates.forEach((c) => {
+    const job = jobs.find((j) => j.id === c.jobId);
+    const dept = job?.department || "General";
+    const offer = offers.find((o) => o.candidateId === c.id);
+    const days = getDaysDiff(offer?.respondedAt || offer?.joiningDate || c.appliedAt, c.appliedAt) || 15;
+    
+    if (!deptTthMap[dept]) {
+      deptTthMap[dept] = { totalDays: 0, count: 0 };
+    }
+    deptTthMap[dept].totalDays += days;
+    deptTthMap[dept].count += 1;
+  });
+  
+  const tth = Object.entries(deptTthMap).map(([d, data]) => ({
+    d,
+    v: Math.round(data.totalDays / data.count)
+  }));
+  
+  if (tth.length === 0) {
+    const departments = Array.from(new Set(jobs.map((j) => j.department).filter(Boolean)));
+    if (departments.length > 0) {
+      departments.forEach((d) => tth.push({ d, v: 0 }));
+    } else {
+      tth.push({ d: "No Data", v: 0 });
+    }
+  }
+
+  // 3. Monthly Hiring Trends
+  const monthlyMap: Record<string, number> = {
+    Jan: 0, Feb: 0, Mar: 0, Apr: 0, May: 0, Jun: 0,
+    Jul: 0, Aug: 0, Sep: 0, Oct: 0, Nov: 0, Dec: 0
+  };
+  candidates.forEach((c) => {
+    if (c.stage === "hired") {
+      const dateStr = c.appliedAt || c.timeline?.find((t) => t.title.toLowerCase().includes("hired"))?.at;
+      if (dateStr) {
+        const monthName = new Date(dateStr).toLocaleString("en-US", { month: "short" });
+        if (monthName in monthlyMap) {
+          monthlyMap[monthName] += 1;
+        }
+      }
+    }
+  });
+  const monthsOrder = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const currentMonthIdx = new Date().getMonth();
+  const last6Months = [];
+  for (let i = 5; i >= 0; i--) {
+    const idx = (currentMonthIdx - i + 12) % 12;
+    const m = monthsOrder[idx];
+    last6Months.push({ m, h: monthlyMap[m] || 0 });
+  }
+  const monthly = last6Months;
+
+  // 4. Source ROI
+  const sourceMap: Record<string, { a: number; h: number }> = {};
+  candidates.forEach((c) => {
+    const src = c.source || "DIRECT";
+    if (!sourceMap[src]) {
+      sourceMap[src] = { a: 0, h: 0 };
+    }
+    sourceMap[src].a += 1;
+    if (c.stage === "hired") {
+      sourceMap[src].h += 1;
+    }
+  });
+  const sources = Object.entries(sourceMap).map(([s, val]) => ({
+    s,
+    a: val.a,
+    h: val.h
+  }));
+  if (sources.length === 0) {
+    sources.push({ s: "No Data", a: 0, h: 0 });
+  }
+
+  // 5. Recruiter Leaderboard
+  const recruiterMap: Record<string, { hired: number; interviews: number; offers: number; accept: number }> = {};
+  candidates.forEach((c) => {
+    const job = jobs.find((j) => j.id === c.jobId);
+    const recruiterName = job?.recruiter || "General Recruiter";
+    if (!recruiterMap[recruiterName]) {
+      recruiterMap[recruiterName] = { hired: 0, interviews: 0, offers: 0, accept: 0 };
+    }
+    if (c.stage === "hired") {
+      recruiterMap[recruiterName].hired += 1;
+    }
+    const offer = offers.find((o) => o.candidateId === c.id);
+    if (offer) {
+      recruiterMap[recruiterName].offers += 1;
+      if (offer.status === "accepted") {
+        recruiterMap[recruiterName].accept += 1;
+      }
+    }
+  });
+  interviews.forEach((iv) => {
+    const matchingJob = jobs.find((j) => j.title === iv.jobTitle);
+    const recruiterName = matchingJob?.recruiter || "General Recruiter";
+    if (!recruiterMap[recruiterName]) {
+      recruiterMap[recruiterName] = { hired: 0, interviews: 0, offers: 0, accept: 0 };
+    }
+    recruiterMap[recruiterName].interviews += 1;
+  });
+  const recruiters = Object.entries(recruiterMap).map(([name, val]) => ({
+    name,
+    hired: val.hired,
+    interviews: val.interviews,
+    offers: val.offers,
+    accept: val.offers > 0 ? Math.round((val.accept / val.offers) * 100) : 0
+  }));
+  if (recruiters.length === 0) {
+    recruiters.push({ name: "No Recruiter Data", hired: 0, interviews: 0, offers: 0, accept: 0 });
+  }
+
+  // 6. Stats Cards
+  let totalHiredDays = 0;
+  hiredCandidates.forEach((c) => {
+    const offer = offers.find((o) => o.candidateId === c.id);
+    totalHiredDays += getDaysDiff(offer?.respondedAt || offer?.joiningDate || c.appliedAt, c.appliedAt) || 15;
+  });
+  const avgTimeToHire = hiredCandidates.length > 0 ? Math.round(totalHiredDays / hiredCandidates.length) : 0;
+  const timeToHireStr = avgTimeToHire > 0 ? `${avgTimeToHire}d` : "—";
+
+  let totalFillDays = 0;
+  let fillCount = 0;
+  jobs.forEach((j) => {
+    if (j.status === "closed" || j.applicants > 0) {
+      const days = getDaysDiff(j.closingAt || new Date().toISOString(), j.publishedAt);
+      totalFillDays += days;
+      fillCount += 1;
+    }
+  });
+  const avgTimeToFill = fillCount > 0 ? Math.round(totalFillDays / fillCount) : 0;
+  const timeToFillStr = avgTimeToFill > 0 ? `${avgTimeToFill}d` : "—";
+
+  const hiredSalaries = hiredCandidates.map((c) => c.expectedSalary).filter(Boolean) as number[];
+  const avgHiredSalary = hiredSalaries.length > 0 ? Math.round(hiredSalaries.reduce((a, b) => a + b, 0) / hiredSalaries.length) : 0;
+  const costPerHireStr = avgHiredSalary > 0 ? `₹${(avgHiredSalary / 1000).toFixed(0)}k` : "—";
+
+  const offerAcceptanceVal = Math.round((offers.filter((o) => o.status === "accepted").length / Math.max(1, offers.length)) * 100) || 0;
+  const offerAcceptanceStr = offers.length > 0 ? `${offerAcceptanceVal}%` : "—";
+
+  const completedInterviews = interviews.filter((iv) => iv.status === "completed");
+  const positiveFeedback = completedInterviews.filter((iv) => (iv.rating || 0) >= 3.5);
+  const passRateVal = Math.round((positiveFeedback.length / Math.max(1, completedInterviews.length)) * 100) || 0;
+  const passRateStr = completedInterviews.length > 0 ? `${passRateVal}%` : "—";
+
   const stats = [
-    { k: "Time to Hire", v: "26d", d: "-3d vs last Q" },
-    { k: "Time to Fill", v: "38d", d: "-5d" },
-    { k: "Cost per Hire", v: "$4,210", d: "-8%" },
-    { k: "Offer Acceptance", v: `${Math.round((offers.filter((o) => o.status === "accepted").length / Math.max(1, offers.length)) * 100) || 84}%`, d: "+4pt" },
-    { k: "Interview Pass Rate", v: "37%", d: "+2pt" },
-    { k: "Active Jobs", v: jobs.filter((j) => j.status === "active").length, d: `${jobs.length} total` },
+    { k: "Time to Hire", v: timeToHireStr, d: hiredCandidates.length > 0 ? "Average hired days" : "No hired leads" },
+    { k: "Time to Fill", v: timeToFillStr, d: fillCount > 0 ? "Average job duration" : "No active fill data" },
+    { k: "Avg Sourcing CTC", v: costPerHireStr, d: hiredSalaries.length > 0 ? "Average profile package" : "No CTC stats" },
+    { k: "Offer Acceptance", v: offerAcceptanceStr, d: `${offers.length} offers total` },
+    { k: "Interview Success Rate", v: passRateStr, d: `${completedInterviews.length} feedback logs` },
+    { k: "Active Jobs", v: jobs.filter((j) => j.status === "active").length, d: `${jobs.length} total jobs` },
   ];
 
   return (

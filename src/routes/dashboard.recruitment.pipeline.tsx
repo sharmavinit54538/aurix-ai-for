@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { LayoutGrid } from "lucide-react";
+import { useState, useMemo } from "react";
+import { LayoutGrid, Filter, Search } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
 import { KanbanCard } from "@/components/recruitment/Bits";
 import { recruitment, useRecruitment } from "@/lib/recruitment/store";
 import { STAGES, STAGE_LABEL, type Stage } from "@/lib/recruitment/types";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard/recruitment/pipeline")({
   head: () => ({ meta: [{ title: "Pipeline — Recruitment" }] }),
@@ -13,16 +15,34 @@ export const Route = createFileRoute("/dashboard/recruitment/pipeline")({
 
 function Pipeline() {
   const candidates = useRecruitment((s) => s.candidates);
+  const jobs = useRecruitment((s) => s.jobs);
   const [dragging, setDragging] = useState<string | null>(null);
   const [over, setOver] = useState<Stage | null>(null);
+
+  const [selectedJobId, setSelectedJobId] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredCandidates = useMemo(() => {
+    return candidates.filter((c) => {
+      if (selectedJobId !== "all" && c.jobId !== selectedJobId) return false;
+      if (searchQuery && !c.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+      return true;
+    });
+  }, [candidates, selectedJobId, searchQuery]);
 
   function onDragStart(e: React.DragEvent, id: string) {
     e.dataTransfer.setData("text/plain", id);
     setDragging(id);
   }
+
   function onDrop(e: React.DragEvent, stage: Stage) {
     const id = e.dataTransfer.getData("text/plain");
-    if (id) recruitment.moveStage(id, stage);
+    if (id) {
+      const cand = candidates.find((c) => c.id === id);
+      const name = cand ? cand.name : "Candidate";
+      recruitment.moveStage(id, stage);
+      toast.success(`Moved ${name} to ${STAGE_LABEL[stage]}`);
+    }
     setDragging(null);
     setOver(null);
   }
@@ -32,13 +52,46 @@ function Pipeline() {
       <PageHeader
         title="Recruitment Pipeline"
         description="Drag candidates between stages to update their progress."
-        actions={<div className="inline-flex items-center gap-2 text-xs text-muted-foreground"><LayoutGrid className="h-4 w-4" />Kanban view</div>}
+        actions={
+          <div className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+            <LayoutGrid className="h-4 w-4" />Kanban view
+          </div>
+        }
       />
+
+      <div className="mb-6 flex flex-wrap items-center gap-3">
+        <div className="relative min-w-[240px] flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search candidates by name..."
+            className="h-9 pl-9 bg-card/40"
+          />
+        </div>
+        
+        <div className="inline-flex items-center gap-2 rounded-md border border-border bg-card/60 px-3 py-1">
+          <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="text-xs text-muted-foreground">Job Requisition:</span>
+          <select
+            value={selectedJobId}
+            onChange={(e) => setSelectedJobId(e.target.value)}
+            className="bg-transparent text-xs outline-none text-foreground cursor-pointer font-medium"
+          >
+            <option value="all" className="bg-background">All Jobs</option>
+            {jobs.map((j) => (
+              <option key={j.id} value={j.id} className="bg-background">
+                {j.title} ({j.department})
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       <div className="overflow-x-auto pb-4">
         <div className="flex gap-3" style={{ minWidth: STAGES.length * 280 }}>
           {STAGES.map((s) => {
-            const inStage = candidates.filter((c) => c.stage === s);
+            const inStage = filteredCandidates.filter((c) => c.stage === s);
             const isOver = over === s;
             return (
               <div

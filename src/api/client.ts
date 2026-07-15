@@ -39,6 +39,7 @@ function toApiError(error: unknown): ApiError {
 export interface RequestOptions {
   headers?: Record<string, string>;
   data?: unknown;
+  timeout?: number;
 }
 
 export async function apiRequest<T = unknown>(
@@ -51,6 +52,7 @@ export async function apiRequest<T = unknown>(
       url: normalizePath(path),
       data: options.data,
       headers: options.headers,
+      timeout: options.timeout,
     });
     return response.data;
   } catch (error) {

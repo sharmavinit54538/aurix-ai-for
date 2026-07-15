@@ -25,11 +25,16 @@ export function StageBadge({ stage }: { stage: Stage }) {
   );
 }
 
-export function ScoreRing({ value, label = "ATS", size = 56 }: { value: number; label?: string; size?: number }) {
+export function ScoreRing({ value, label = "ATS", size = 56 }: { value: number | null | undefined; label?: string; size?: number }) {
+  const hasScore = value !== null && value !== undefined;
+  const safeValue = hasScore ? value! : 0;
   const r = (size - 8) / 2;
   const c = 2 * Math.PI * r;
-  const offset = c - (value / 100) * c;
-  const color = value >= 85 ? "oklch(0.7 0.18 150)" : value >= 70 ? "oklch(0.74 0.16 80)" : "oklch(0.65 0.18 25)";
+  const offset = c - (safeValue / 100) * c;
+  const color = !hasScore
+    ? "oklch(0.55 0.03 240)"
+    : safeValue >= 85 ? "oklch(0.7 0.18 150)" : safeValue >= 70 ? "oklch(0.74 0.16 80)" : "oklch(0.65 0.18 25)";
+  const textSize = size < 50 ? "text-xs" : "text-sm";
   return (
     <div className="relative inline-grid place-items-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
@@ -39,13 +44,16 @@ export function ScoreRing({ value, label = "ATS", size = 56 }: { value: number; 
       </svg>
       <div className="absolute inset-0 grid place-items-center">
         <div className="text-center leading-none">
-          <div className="font-display text-sm font-semibold">{value}</div>
+          <div className={`font-display font-semibold ${textSize}`}>
+            {hasScore ? safeValue : "—"}
+          </div>
           <div className="text-[9px] uppercase tracking-wider text-muted-foreground">{label}</div>
         </div>
       </div>
     </div>
   );
 }
+
 
 export function JobCard({ job }: { job: Job }) {
   const tone = job.status === "active" ? "success" : job.status === "draft" ? "muted" : job.status === "closed" ? "danger" : "warning";
@@ -125,17 +133,21 @@ export function CandidateRow({ c, onClick }: { c: Candidate; onClick?: () => voi
 
 export function KanbanCard({ c, onDragStart }: { c: Candidate; onDragStart: (e: React.DragEvent, id: string) => void }) {
   return (
-    <Link
-      to="/dashboard/recruitment/candidates/$candidateId"
-      params={{ candidateId: c.id }}
+    <div
       draggable
       onDragStart={(e) => onDragStart(e, c.id)}
-      className="block cursor-grab rounded-xl border border-border bg-card p-3 shadow-sm transition-all hover:shadow-elegant active:cursor-grabbing"
+      className="cursor-grab rounded-xl border border-border bg-card p-3 shadow-sm transition-all hover:shadow-elegant active:cursor-grabbing hover:bg-accent/20"
     >
       <div className="flex items-center gap-2">
         <CandidateAvatar name={c.name} size={28} />
         <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-medium">{c.name}</div>
+          <Link
+            to="/dashboard/recruitment/candidates/$candidateId"
+            params={{ candidateId: c.id }}
+            className="truncate text-sm font-medium hover:underline block font-semibold text-foreground cursor-pointer"
+          >
+            {c.name}
+          </Link>
           <div className="truncate text-[10px] text-muted-foreground">{c.appliedPosition}</div>
         </div>
       </div>
@@ -143,10 +155,10 @@ export function KanbanCard({ c, onDragStart }: { c: Candidate; onDragStart: (e: 
         {c.skills.slice(0, 2).map((s) => <Badge key={s} variant="outline" className="text-[9px]">{s}</Badge>)}
       </div>
       <div className="mt-2 flex items-center justify-between text-[10px] text-muted-foreground">
-        <span className="inline-flex items-center gap-1"><Sparkles className="h-3 w-3" /> {c.jobMatch}% match</span>
-        <span className="inline-flex items-center gap-1"><Star className="h-3 w-3" /> {c.atsScore}</span>
+        <span className="inline-flex items-center gap-1"><Sparkles className="h-3 w-3" /> {c.jobMatch != null ? `${c.jobMatch}% match` : "—"}</span>
+        <span className="inline-flex items-center gap-1"><Star className="h-3 w-3" /> {c.atsScore ?? "—"}</span>
       </div>
-    </Link>
+    </div>
   );
 }
 

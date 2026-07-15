@@ -25,7 +25,7 @@ function Candidates() {
   const filtered = useMemo(() => {
     return candidates.filter((c) => {
       if (stage !== "all" && c.stage !== stage) return false;
-      if (c.atsScore < minScore) return false;
+      if ((c.atsScore ?? 0) < minScore) return false;
       if (q && !`${c.name} ${c.appliedPosition} ${c.skills.join(" ")} ${c.tags.join(" ")}`.toLowerCase().includes(q.toLowerCase())) return false;
       return true;
     });

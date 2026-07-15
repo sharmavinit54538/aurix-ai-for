@@ -34,29 +34,39 @@ function RecruitmentDashboard() {
   const rejected = candidates.filter((c) => c.stage === "rejected").length;
   const offersSent = offers.length;
   const offersAccepted = offers.filter((o) => o.status === "accepted").length;
-  const timeToHire = 24;
+  
+  // Dynamically compute average time to hire from hired candidates timeline events
+  const hiredCands = candidates.filter((c) => c.stage === "hired");
+  const timeToHire = hiredCands.length > 0 
+    ? Math.round(hiredCands.reduce((acc, c) => {
+        const appTime = new Date(c.appliedAt).getTime();
+        const hiredTimeline = c.timeline.find((t: any) => t.title.toLowerCase().includes("hired") || t.title.toLowerCase().includes("moved to hired"));
+        const hiredTime = hiredTimeline ? new Date(hiredTimeline.at).getTime() : new Date().getTime();
+        const diffDays = Math.max(1, Math.round((hiredTime - appTime) / (1000 * 60 * 60 * 24)));
+        return acc + diffDays;
+      }, 0) / hiredCands.length)
+    : 0;
 
   const kpis = [
-    { label: "Total Jobs", value: totalJobs, change: "+8", icon: Briefcase, accent: "from-violet-500/20 to-fuchsia-500/10" },
-    { label: "Active Jobs", value: activeJobs, change: "+3", icon: TrendingUp, accent: "from-emerald-500/20 to-teal-500/10" },
-    { label: "Draft Jobs", value: draftJobs, change: "—", icon: FileCheck2, accent: "from-sky-500/20 to-cyan-500/10" },
-    { label: "Closed Jobs", value: closedJobs, change: "-1", icon: XCircle, accent: "from-rose-500/15 to-red-500/10" },
-    { label: "Candidates", value: totalCandidates, change: "+42", icon: Users, accent: "from-indigo-500/20 to-violet-500/10" },
-    { label: "Shortlisted", value: shortlisted, change: "+12", icon: UserCheck, accent: "from-amber-500/20 to-orange-500/10" },
-    { label: "Interviews", value: interviewScheduled, change: "+5", icon: CalendarClock, accent: "from-cyan-500/20 to-sky-500/10" },
-    { label: "Selected", value: selected, change: "+2", icon: CheckCircle2, accent: "from-emerald-500/20 to-green-500/10" },
-    { label: "Rejected", value: rejected, change: "+6", icon: XCircle, accent: "from-rose-500/15 to-pink-500/10" },
-    { label: "Offers Sent", value: offersSent, change: "+3", icon: FileCheck2, accent: "from-fuchsia-500/20 to-purple-500/10" },
-    { label: "Offers Accepted", value: offersAccepted, change: "+1", icon: UserPlus, accent: "from-emerald-500/20 to-teal-500/10" },
-    { label: "Time to Hire", value: `${timeToHire}d`, change: "-3d", icon: Clock, accent: "from-amber-500/20 to-yellow-500/10" },
+    { label: "Total Jobs", value: totalJobs, icon: Briefcase, accent: "from-violet-500/20 to-fuchsia-500/10" },
+    { label: "Active Jobs", value: activeJobs, icon: TrendingUp, accent: "from-emerald-500/20 to-teal-500/10" },
+    { label: "Draft Jobs", value: draftJobs, icon: FileCheck2, accent: "from-sky-500/20 to-cyan-500/10" },
+    { label: "Closed Jobs", value: closedJobs, icon: XCircle, accent: "from-rose-500/15 to-red-500/10" },
+    { label: "Candidates", value: totalCandidates, icon: Users, accent: "from-indigo-500/20 to-violet-500/10" },
+    { label: "Shortlisted", value: shortlisted, icon: UserCheck, accent: "from-amber-500/20 to-orange-500/10" },
+    { label: "Interviews", value: interviewScheduled, icon: CalendarClock, accent: "from-cyan-500/20 to-sky-500/10" },
+    { label: "Selected", value: selected, icon: CheckCircle2, accent: "from-emerald-500/20 to-green-500/10" },
+    { label: "Rejected", value: rejected, icon: XCircle, accent: "from-rose-500/15 to-pink-500/10" },
+    { label: "Offers Sent", value: offersSent, icon: FileCheck2, accent: "from-fuchsia-500/20 to-purple-500/10" },
+    { label: "Offers Accepted", value: offersAccepted, icon: UserPlus, accent: "from-emerald-500/20 to-teal-500/10" },
+    { label: "Time to Hire", value: timeToHire > 0 ? `${timeToHire}d` : "—", icon: Clock, accent: "from-amber-500/20 to-yellow-500/10" },
   ];
 
-  // deterministic fallback: hash stage name to avoid Math.random() during SSR
+  // Completely dynamic funnel counting
   const funnel = STAGES.filter((s) => s !== "rejected").map((s) => {
-    const fallback = s.split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0) % 6 + 1;
     return {
       stage: STAGE_LABEL[s],
-      count: candidates.filter((c) => c.stage === s).length || fallback,
+      count: candidates.filter((c) => c.stage === s).length,
     };
   });
 
@@ -65,10 +75,38 @@ function RecruitmentDashboard() {
     jobs.reduce<Record<string, number>>((a, j) => ({ ...a, [j.department]: (a[j.department] || 0) + j.applicants }), {}),
   ).map(([name, value]) => ({ name, value }));
 
-  const monthlyHires = [
-    { m: "Jan", hires: 4, offers: 6 }, { m: "Feb", hires: 7, offers: 9 }, { m: "Mar", hires: 5, offers: 8 },
-    { m: "Apr", hires: 11, offers: 14 }, { m: "May", hires: 9, offers: 12 }, { m: "Jun", hires: 14, offers: 16 },
-  ];
+  // Dynamically compute monthly hires and offers over the last 6 months
+  const getHiringTrendData = () => {
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const data = [];
+    
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const mName = months[d.getMonth()];
+      const mNum = d.getMonth();
+      const yNum = d.getFullYear();
+      
+      const hiredCount = candidates.filter((c) => {
+        if (c.stage !== "hired") return false;
+        const appDate = new Date(c.appliedAt);
+        return appDate.getMonth() === mNum && appDate.getFullYear() === yNum;
+      }).length;
+      
+      const offersCount = offers.filter((o) => {
+        const oDate = new Date(o.sentAt || o.joiningDate);
+        return oDate.getMonth() === mNum && oDate.getFullYear() === yNum;
+      }).length;
+
+      data.push({
+        m: mName,
+        hires: hiredCount,
+        offers: offersCount
+      });
+    }
+    return data;
+  };
+  const monthlyHires = getHiringTrendData();
 
   const recent = candidates
     .flatMap((c) => c.timeline.map((t) => ({ ...t, who: c.name, jobTitle: c.appliedPosition })))
@@ -105,9 +143,6 @@ function RecruitmentDashboard() {
                 <div>
                   <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{k.label}</div>
                   <div className="mt-2 font-display text-2xl font-semibold tracking-tight">{k.value}</div>
-                  <div className="mt-1 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
-                    <ArrowUpRight className="h-3 w-3" />{k.change}
-                  </div>
                 </div>
                 <div className="grid h-9 w-9 place-items-center rounded-xl bg-background/60 shadow-sm">
                   <Icon className="h-4 w-4" />

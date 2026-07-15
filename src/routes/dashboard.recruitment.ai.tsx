@@ -23,29 +23,56 @@ function RecruitmentAI() {
   const ranked = useMemo(() => {
     const job = jobs.find((j) => j.id === jobId);
     if (!job) return [];
-    const set = new Set(job.skills.map((s) => s.toLowerCase()));
+    const skillSet = new Set(job.skills.map((s) => s.toLowerCase()));
+    
     return candidates
       .map((c) => {
-        const overlap = c.skills.filter((s) => set.has(s.toLowerCase())).length;
-        const match = Math.min(99, Math.round(45 + overlap * 9 + c.atsScore * 0.3));
-        return { c, overlap, match };
+        const overlap = c.skills.filter((s) => skillSet.has(s.toLowerCase())).length;
+        // Use DB stored score if this candidate applied for the selected job, else compute from skill overlap
+        const hasDbScore = c.jobId === jobId && c.atsScore != null;
+        const atsMatch = hasDbScore
+          ? c.atsScore!
+          : job.skills.length > 0
+            ? Math.round((overlap / job.skills.length) * 100)
+            : 0;
+        const skillMatch = hasDbScore && c.jobMatch != null
+          ? c.jobMatch
+          : job.skills.length > 0
+            ? Math.round((overlap / job.skills.length) * 100)
+            : 0;
+        return { c, overlap, match: skillMatch, atsMatch };
       })
-      .sort((a, b) => b.match - a.match)
+      .sort((a, b) => b.atsMatch - a.atsMatch)
       .slice(0, 8);
   }, [jobs, jobId, candidates]);
 
-  const aiQuestions = [
-    "Walk me through a system you scaled past a 10x traffic spike.",
-    "Describe a time you led a cross-functional initiative end-to-end.",
-    "How would you redesign our onboarding to improve activation by 20%?",
-    "Tell me about a hiring decision you regretted and what you learned.",
-  ];
+  const aiQuestions = useMemo(() => {
+    const job = jobs.find((j) => j.id === jobId);
+    if (!job) return [];
+    
+    return [
+      `Design a system or workflow that addresses key challenges in ${job.title}.`,
+      `How do you keep your skills up to date with technologies like ${job.skills.slice(0, 3).join(", ") || "modern industry frameworks"}?`,
+      `Describe a complex scenario where you successfully applied ${job.skills[0] || "problem solving"} to resolve a block.`,
+      `How do you collaborate with managers and team members to ship high-quality results?`
+    ];
+  }, [jobs, jobId]);
 
-  const recs = [
-    { c: ranked[0]?.c, reason: "Strongest skill overlap and highest ATS — fast-track to onsite." },
-    { c: ranked[1]?.c, reason: "High potential — pair with technical screen first." },
-    { c: ranked[2]?.c, reason: "Diverse pipeline candidate worth surfacing." },
-  ].filter((r) => r.c);
+  const recs = useMemo(() => {
+    return ranked
+      .map(({ c, match }) => {
+        let reason = "";
+        if (match >= 75) {
+          reason = `Excellent fit (${match}% Match). Strong match in core skills: ${c.skills.slice(0, 3).join(", ")}. Highly recommended for fast-track to technical interview.`;
+        } else if (match >= 50) {
+          reason = `Good potential (${match}% Match). Key skills present: ${c.skills.slice(0, 2).join(", ")}. Recommended for initial screening.`;
+        } else {
+          reason = `Moderate match (${match}% Match). Review candidate's background on ${c.skills.slice(0, 2).join(", ") || "experience"} before proceeding.`;
+        }
+        return { c, reason };
+      })
+      .slice(0, 3);
+  }, [ranked]);
 
   return (
     <>
@@ -70,9 +97,17 @@ function RecruitmentAI() {
             <div className="text-xs text-muted-foreground">AI-ranked shortlist for the selected role.</div>
           </div>
           <select value={jobId} onChange={(e) => setJobId(e.target.value)} className="h-9 rounded-md border border-input bg-background px-3 text-sm">
-            {jobs.map((j) => <option key={j.id} value={j.id}>{j.title}</option>)}
+            {jobs.map((j) => <option key={j.id} value={j.id}>{j.title} {j.skills.length > 0 ? `(${j.skills.length} skills)` : "(no skills)"}</option>)}
           </select>
         </div>
+
+        {/* Warn if selected job has no skills */}
+        {jobs.find(j => j.id === jobId)?.skills.length === 0 && (
+          <div className="mb-4 flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2.5 text-xs text-amber-600 dark:text-amber-400">
+            <span className="text-base">⚠️</span>
+            <span>This job has <strong>no skills defined</strong>. Scores will be 0% for all candidates. Edit the job to add required skills for accurate AI ranking.</span>
+          </div>
+        )}
 
         <ol className="space-y-2">
           {ranked.map((r, i) => (
@@ -83,11 +118,12 @@ function RecruitmentAI() {
                 <Link to="/dashboard/recruitment/candidates/$candidateId" params={{ candidateId: r.c.id }} className="text-sm font-medium hover:underline">{r.c.name}</Link>
                 <div className="text-xs text-muted-foreground">{r.c.currentRole} · {r.overlap} matching skills</div>
               </div>
+
               <div className="hidden w-40 sm:block">
                 <div className="mb-1 flex items-center justify-between text-[10px] text-muted-foreground"><span>Job Match</span><span>{r.match}%</span></div>
                 <Progress value={r.match} />
               </div>
-              <ScoreRing value={r.c.atsScore} />
+              <ScoreRing value={r.atsMatch} label="ATS" />
             </li>
           ))}
         </ol>

@@ -13,10 +13,10 @@ interface State {
 const STORAGE_KEY = "aurix.recruitment.v2";
 
 const initial: State = {
-  jobs: seedJobs,
-  candidates: seedCandidates,
-  interviews: seedInterviews,
-  offers: seedOffers,
+  jobs: [],
+  candidates: [],
+  interviews: [],
+  offers: [],
 };
 
 // ---------------------------------------------------------------------------
@@ -90,10 +90,11 @@ function mapCandidateToFrontend(c: any): Candidate {
     phone: c.phone,
     location: c.location,
     jobId: latestApp?.job_id || "",
+    applicationId: latestApp?.id || "",
     appliedPosition: latestApp?.job?.title || c.current_role || "Candidate",
     stage: (latestApp?.status?.toLowerCase() || (c.is_talent_pool ? "screening" : "applied")) as Stage,
-    atsScore: c.ats_score || 85,
-    jobMatch: c.job_match || 80,
+    atsScore: typeof c.ats_score === 'number' ? c.ats_score : null,
+    jobMatch: typeof c.job_match === 'number' ? c.job_match : null,
     source: c.source || "DIRECT",
     tags: c.tags || [],
     skills: c.skills || [],
@@ -114,6 +115,7 @@ function mapCandidateToFrontend(c: any): Candidate {
     documents: c.resume_path ? [{ name: c.resume_name || "Resume", type: "pdf" }] : [],
     timeline: timeline,
     appliedAt: latestApp?.created_at || c.created_at || new Date().toISOString(),
+    vendorId: c.vendor_id || "",
   };
 }
 
@@ -142,6 +144,7 @@ function mapInterviewToFrontend(iv: any): Interview {
 function mapOfferToFrontend(o: any): Offer {
   return {
     id: o.id,
+    applicationId: o.application_id || o.application?.id || "",
     candidateId: o.application?.candidate_id || "",
     candidateName: o.application?.candidate 
       ? `${o.application.candidate.first_name} ${o.application.candidate.last_name}` 
@@ -196,20 +199,65 @@ export async function refreshAll() {
   if (isLoading) return;
   isLoading = true;
   try {
-    const [jobsRes, candidatesRes, interviewsRes, offersRes] = await Promise.all([
-      api.get("/jobs").catch(() => ({ data: [] })),
-      api.get("/candidates").catch(() => ({ data: { items: [] } })),
-      api.get("/interviews").catch(() => ({ data: [] })),
-      api.get("/offers").catch(() => ({ data: { items: [] } })),
+    // Fetch all resources independently — a failure in one should NOT wipe others
+    const [jobsResult, candidatesResult, interviewsResult, offersResult] = await Promise.allSettled([
+      api.get("/jobs"),
+      api.get("/candidates"),
+      api.get("/interviews"),
+      api.get("/offers"),
     ]);
 
-    const jobs = (jobsRes?.data?.items || jobsRes?.data || []).map(mapJobToFrontend);
-    const candidates = (candidatesRes?.data?.items || candidatesRes?.data || []).map(mapCandidateToFrontend);
-    const interviews = (interviewsRes?.data || []).map(mapInterviewToFrontend);
-    const offers = (offersRes?.data?.items || offersRes?.data || []).map(mapOfferToFrontend);
+    const update: Partial<State> = {};
+    let anySuccess = false;
 
-    if (jobs.length > 0 || candidates.length > 0) {
-      set({ jobs, candidates, interviews, offers });
+    if (jobsResult.status === "fulfilled") {
+      const d = jobsResult.value;
+      const items = d?.data?.items || d?.data || [];
+      if (Array.isArray(items) && items.length >= 0) {
+        update.jobs = items.map(mapJobToFrontend);
+        anySuccess = true;
+      }
+    } else {
+      console.warn("Jobs API failed:", jobsResult.reason);
+    }
+
+    if (candidatesResult.status === "fulfilled") {
+      const d = candidatesResult.value;
+      const items = d?.data?.items || d?.data || [];
+      if (Array.isArray(items) && items.length >= 0) {
+        update.candidates = items.map(mapCandidateToFrontend);
+        anySuccess = true;
+      }
+    } else {
+      console.warn("Candidates API failed:", candidatesResult.reason);
+    }
+
+    if (interviewsResult.status === "fulfilled") {
+      const d = interviewsResult.value;
+      const items = d?.data || [];
+      if (Array.isArray(items) && items.length >= 0) {
+        update.interviews = items.map(mapInterviewToFrontend);
+        anySuccess = true;
+      }
+    } else {
+      console.warn("Interviews API failed:", interviewsResult.reason);
+    }
+
+    if (offersResult.status === "fulfilled") {
+      const d = offersResult.value;
+      const items = d?.data?.items || d?.data || [];
+      if (Array.isArray(items) && items.length >= 0) {
+        update.offers = items.map(mapOfferToFrontend);
+        anySuccess = true;
+      }
+    } else {
+      console.warn("Offers API failed:", offersResult.reason);
+    }
+
+    if (Object.keys(update).length > 0) {
+      set(update);
+    }
+    if (anySuccess) {
       hasLoaded = true;
     }
   } catch (err) {
@@ -347,8 +395,28 @@ export const recruitment = {
   },
 
   moveStage: async (id: string, stage: Stage) => {
+    // Optimistic local update
+    const current = [...state.candidates];
+    const cand = current.find((c) => c.applicationId === id || c.id === id);
+    if (cand) {
+      cand.stage = stage;
+      set({ candidates: current });
+    }
+
     try {
-      await api.patch(`/applications/${id}/stage`, { stage });
+      let targetId: string | null = null;
+      if (cand) {
+        targetId = cand.applicationId || (cand.id === id ? null : id);
+      } else {
+        targetId = id;
+      }
+
+      if (targetId) {
+        const isTargetUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetId);
+        if (isTargetUuid) {
+          await api.patch(`/applications/${targetId}/stage`, { stage });
+        }
+      }
       await refreshAll();
     } catch (err) {
       console.error("moveStage failed:", err);
@@ -365,14 +433,27 @@ export const recruitment = {
   },
 
   upsertInterview: async (iv: Interview) => {
+    // Optimistic local update
+    const current = [...state.interviews];
+    const idx = current.findIndex((item) => item.id === iv.id);
+    if (idx >= 0) {
+      current[idx] = iv;
+    } else {
+      current.push(iv);
+    }
+    set({ interviews: current });
+
     try {
-      const payload = {
-        interview_round_id: iv.id,
-        scores: {},
-        overall_recommendation: "HIRE",
-        feedback_notes: iv.feedback || "",
-      };
-      await api.post("/scorecards/submissions", payload);
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(iv.id);
+      if (isUuid) {
+        const payload = {
+          interview_round_id: iv.id,
+          scores: {},
+          overall_recommendation: iv.rating && iv.rating >= 3 ? "HIRE" : "NO_HIRE",
+          feedback_notes: iv.feedback || "",
+        };
+        await api.post("/scorecards/submissions", payload);
+      }
       await refreshAll();
     } catch (err) {
       console.error("upsertInterview failed:", err);
@@ -381,13 +462,15 @@ export const recruitment = {
 
   upsertOffer: async (o: Offer) => {
     try {
+      const appId = o.applicationId || o.candidateId;
+      const jDate = o.joiningDate.includes("T") ? o.joiningDate.split("T")[0] : o.joiningDate;
+      const expDate = new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0];
       const payload = {
         ctc: o.salary,
-        joining_date: o.joiningDate,
-        offer_expiry_date: new Date(Date.now() + 7 * 86400000).toISOString(),
-        status: o.status.toUpperCase(),
+        joining_date: jDate,
+        offer_expiry_date: expDate,
       };
-      await api.post(`/applications/${o.candidateId}/offer`, payload);
+      await api.post(`/applications/${appId}/offer`, payload);
       await refreshAll();
     } catch (err) {
       console.error("upsertOffer failed:", err);

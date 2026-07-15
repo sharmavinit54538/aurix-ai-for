@@ -6,7 +6,7 @@ import {
   Lock, Wand2, Pause, Play, AlertCircle, Building, Award, BookOpen, Heart,
   Calendar, DollarSign, CheckCircle2, XCircle, CalendarClock, FileCheck2, Clock,
   ArrowUpRight, Sparkles, TrendingUp, UserCheck, UserPlus, Plus, ChevronRight,
-  MoreHorizontal, MessageSquare, ShieldAlert
+  MoreHorizontal, MessageSquare, ShieldAlert, Printer
 } from "lucide-react";
 import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart,
@@ -22,6 +22,25 @@ import { recruitment, useRecruitment } from "@/lib/recruitment/store";
 import { CandidateAvatar, fmtDate, fmtMoney } from "@/components/recruitment/Bits";
 import { EmptyState } from "@/components/hrms/Shared";
 import type { Job, Candidate, OfferStatus, JobStatus } from "@/lib/recruitment/types";
+import { useAurix } from "@/lib/aurix-store";
+import { api } from "@/api/client";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const Route = createFileRoute("/dashboard/recruitment/jobs/$jobId")({
   head: () => ({ meta: [{ title: "Job Details & Distribution — Aurix" }] }),
@@ -31,18 +50,18 @@ export const Route = createFileRoute("/dashboard/recruitment/jobs/$jobId")({
 const CHART_COLORS = ["oklch(0.65 0.22 285)", "oklch(0.7 0.18 200)", "oklch(0.74 0.16 140)", "oklch(0.75 0.18 60)", "oklch(0.68 0.2 25)"];
 
 const INITIAL_DISTRIBUTION = [
-  { key: "linkedin", label: "LinkedIn Jobs", desc: "Reach active professionals worldwide", status: "Connected", sync: "2 hours ago", active: true },
-  { key: "indeed", label: "Indeed", desc: "The world's #1 job site", status: "Connected", sync: "4 hours ago", active: true },
-  { key: "naukri", label: "Naukri", desc: "India's largest employment platform", status: "Not Connected", sync: "Never", active: false },
-  { key: "foundit", label: "Foundit", desc: "Monster India newly upgraded board", status: "Not Connected", sync: "Never", active: false },
-  { key: "glassdoor", label: "Glassdoor", desc: "Employer branding & job distribution", status: "Connected", sync: "1 day ago", active: true },
-  { key: "wellfound", label: "Wellfound", desc: "Reach top startup talent", status: "Not Connected", sync: "Never", active: false },
-  { key: "monster", label: "Monster Jobs", desc: "Global premium candidate database", status: "Not Connected", sync: "Never", active: false },
-  { key: "ziprecruiter", label: "ZipRecruiter", desc: "Direct distribution to 100+ job boards", status: "Not Connected", sync: "Never", active: false },
-  { key: "google", label: "Google Jobs", desc: "Index directly in Google Search index", status: "Connected", sync: "1 hour ago", active: true },
-  { key: "shine", label: "Shine", desc: "India's premium resume database search", status: "Not Connected", sync: "Never", active: false },
-  { key: "career_page", label: "Company Career Page", desc: "Host on your custom career website", status: "Connected", sync: "Real-time", active: true },
-  { key: "referral", label: "Employee Referral Portal", desc: "Internal employee sourcing portal", status: "Connected", sync: "Real-time", active: true },
+  { key: "linkedin", label: "LinkedIn Jobs", desc: "Reach active professionals worldwide", status: "Connected", sync: "2 hours ago", active: true, url: "https://www.linkedin.com/jobs" },
+  { key: "indeed", label: "Indeed", desc: "The world's #1 job site", status: "Connected", sync: "4 hours ago", active: true, url: "https://www.indeed.com" },
+  { key: "naukri", label: "Naukri", desc: "India's largest employment platform", status: "Not Connected", sync: "Never", active: false, url: "https://www.naukri.com" },
+  { key: "foundit", label: "Foundit", desc: "Monster India newly upgraded board", status: "Not Connected", sync: "Never", active: false, url: "https://www.foundit.in" },
+  { key: "glassdoor", label: "Glassdoor", desc: "Employer branding & job distribution", status: "Connected", sync: "1 day ago", active: true, url: "https://www.glassdoor.com" },
+  { key: "wellfound", label: "Wellfound", desc: "Reach top startup talent", status: "Not Connected", sync: "Never", active: false, url: "https://wellfound.com" },
+  { key: "monster", label: "Monster Jobs", desc: "Global premium candidate database", status: "Not Connected", sync: "Never", active: false, url: "https://www.monster.com" },
+  { key: "ziprecruiter", label: "ZipRecruiter", desc: "Direct distribution to 100+ job boards", status: "Not Connected", sync: "Never", active: false, url: "https://www.ziprecruiter.com" },
+  { key: "google", label: "Google Jobs", desc: "Index directly in Google Search index", status: "Connected", sync: "1 hour ago", active: true, url: "https://google.com/search?q=jobs" },
+  { key: "shine", label: "Shine", desc: "India's premium resume database search", status: "Not Connected", sync: "Never", active: false, url: "https://www.shine.com" },
+  { key: "career_page", label: "Company Career Page", desc: "Host on your custom career website", status: "Connected", sync: "Real-time", active: true, url: "/careers" },
+  { key: "referral", label: "Employee Referral Portal", desc: "Internal employee sourcing portal", status: "Connected", sync: "Real-time", active: true, url: "/referrals" },
 ];
 
 function JobDetail() {
@@ -79,6 +98,90 @@ function JobDetail() {
 
   // Distribution settings list local state
   const [channels, setChannels] = useState(INITIAL_DISTRIBUTION);
+
+  const userRole = (useAurix().user?.role || "employee") as string;
+
+  // Modal show/hide states
+  const [showPublishModal, setShowPublishModal] = useState(false);
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [showCloseDialog, setShowCloseDialog] = useState(false);
+
+  // Publish Channels state
+  const [publishChannels, setPublishChannels] = useState<any[]>([]);
+  const [loadingChannels, setLoadingChannels] = useState(false);
+
+  // QR Modal state
+  const [qrData, setQrData] = useState<any>(null);
+  const [loadingQr, setLoadingQr] = useState(false);
+
+  // Export Applicants state
+  const [exportFormat, setExportFormat] = useState<"csv" | "excel" | "pdf">("csv");
+  const [exportFilter, setExportFilter] = useState("all");
+  const [exporting, setExporting] = useState(false);
+
+  // Duplicate Role states
+  const [dupTitle, setDupTitle] = useState("");
+  const [dupLocation, setDupLocation] = useState("");
+  const [dupVacancies, setDupVacancies] = useState(1);
+  const [dupMinSalary, setDupMinSalary] = useState("0");
+  const [dupMaxSalary, setDupMaxSalary] = useState("0");
+  const [duplicating, setDuplicating] = useState(false);
+
+  // Close Position state
+  const [closing, setClosing] = useState(false);
+  const [isCopyingLink, setIsCopyingLink] = useState(false);
+
+  const fetchPublishChannels = async () => {
+    setLoadingChannels(true);
+    try {
+      const res = await api.get<any>(`/jobs/${jobId}/publish`);
+      if (res.success && res.data) {
+        setPublishChannels(res.data);
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to load publish channels.");
+    } finally {
+      setLoadingChannels(false);
+    }
+  };
+
+  const handleFetchQr = async () => {
+    setLoadingQr(true);
+    try {
+      const res = await api.get<any>(`/jobs/${jobId}/qr`);
+      if (res) {
+        setQrData(res);
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to load QR code.");
+    } finally {
+      setLoadingQr(false);
+    }
+  };
+
+  useEffect(() => {
+    if (showPublishModal) {
+      fetchPublishChannels();
+    }
+  }, [showPublishModal]);
+
+  useEffect(() => {
+    if (showQrModal) {
+      handleFetchQr();
+    }
+  }, [showQrModal]);
+
+  useEffect(() => {
+    if (showDuplicateModal && job) {
+      setDupTitle(job.title + " (Copy)");
+      setDupLocation(job.location);
+      setDupVacancies(job.vacancies || 1);
+      setDupMinSalary(job.salaryMin ? String(job.salaryMin) : "0");
+      setDupMaxSalary(job.salaryMax ? String(job.salaryMax) : "0");
+    }
+  }, [showDuplicateModal, job]);
 
   useEffect(() => {
     let active = true;
@@ -151,67 +254,208 @@ function JobDetail() {
     }
   }
 
-  async function duplicate() {
-    try {
-      await recruitment.duplicateJob(job!.id);
-      navigate({ to: "/dashboard/recruitment/jobs" });
-    } catch (err: any) {
-      alert("Failed to duplicate job: " + (err.message || err));
-    }
-  }
 
-  async function togglePause() {
-    const nextStatus = (job!.status === "active" ? "draft" : "active") as JobStatus;
-    const updatedJob = { ...job!, status: nextStatus };
-    try {
-      await recruitment.upsertJob(updatedJob);
-      setJob(updatedJob);
-    } catch (err: any) {
-      alert("Failed to update status: " + (err.message || err));
-    }
-  }
 
-  async function closeJob() {
+  const handleToggleChannel = async (channelName: string, currentStatus: boolean) => {
     try {
-      await recruitment.archiveJob(job!.id);
-      setJob({ ...job!, status: "closed" as JobStatus });
+      const newStatus = !currentStatus;
+      const res = await api.post<any>(`/jobs/${jobId}/publish`, {
+        channel_name: channelName,
+        is_active: newStatus
+      });
+      if (res.success && res.data) {
+        setPublishChannels(prev => {
+          const updated = prev.map(c => c.channel_name === channelName ? res.data : c);
+          // check if at least one channel is active in the updated array
+          const anyActive = updated.some(c => c.is_active);
+          if (job) {
+            setJob({ ...job, status: (anyActive ? "published" : "draft") as JobStatus });
+          }
+          return updated;
+        });
+        toast.success(`${channelName.replace("_", " ").toUpperCase()} ${newStatus ? "published" : "unpublished"} successfully!`);
+      }
     } catch (err: any) {
-      alert("Failed to close job: " + (err.message || err));
+      toast.error(err.message || "Failed to update channel status.");
     }
-  }
+  };
 
-  async function remove() {
+  const handleCopySourcingLink = async () => {
+    setIsCopyingLink(true);
+    try {
+      const res = await api.get<any>(`/jobs/${jobId}/sourcing-link`);
+      if (res && res.url) {
+        await navigator.clipboard.writeText(res.url);
+        toast.success("Sourcing link copied successfully!");
+      } else {
+        throw new Error("No link found.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to retrieve sourcing link.");
+    } finally {
+      setIsCopyingLink(false);
+    }
+  };
+
+
+
+  const handlePrintQr = () => {
+    if (!qrData) return;
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Print QR Code - ${job?.title}</title>
+            <style>
+              body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; }
+              img { width: 300px; height: 300px; }
+              h1 { margin-bottom: 5px; }
+              p { color: #666; margin-top: 5px; }
+            </style>
+          </head>
+          <body>
+            <h1>${job?.title}</h1>
+            <img src="http://localhost:8001${qrData.qr_png_url}" onload="window.print(); window.close();" />
+            <p>Scan to apply</p>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+  };
+
+  const handleExportApplicants = async () => {
+    setExporting(true);
+    try {
+      const token = localStorage.getItem("access_token") || "";
+      const url = `http://localhost:8001/api/v1/jobs/${jobId}/applicants/export?format=${exportFormat}&filter=${exportFilter}`;
+      
+      const response = await fetch(url, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) throw new Error("Export failed.");
+      
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      
+      const ext = exportFormat === "excel" ? "xlsx" : exportFormat;
+      link.setAttribute("download", `job_${jobId}_applicants_${exportFilter}.${ext}`);
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+      
+      toast.success("Applicants exported successfully!");
+      setShowExportModal(false);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to export applicants.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+
+
+  const handleCreateDuplicate = async () => {
+    setDuplicating(true);
+    try {
+      const res = await api.post<any>(`/jobs/${jobId}/duplicate`, {
+        title: dupTitle,
+        location: dupLocation,
+        vacancies: dupVacancies,
+        min_salary: parseFloat(dupMinSalary) || 0,
+        max_salary: parseFloat(dupMaxSalary) || 0
+      });
+      if (res.success && res.data) {
+        toast.success("Job duplicated successfully!");
+        setShowDuplicateModal(false);
+        navigate({ to: `/dashboard/recruitment/jobs/${res.data.id}` });
+      } else {
+        throw new Error(res.message || "Duplication failed.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to duplicate job.");
+    } finally {
+      setDuplicating(false);
+    }
+  };
+
+  const handleSync = (key: string) => {
+    setChannels(prev => prev.map(c => c.key === key ? { ...c, sync: "Just now" } : c));
+  };
+
+  const handleTogglePlatform = (key: string) => {
+    setChannels(prev => prev.map(c => c.key === key ? { ...c, active: !c.active, status: c.active ? "Not Connected" : "Connected", sync: c.active ? "Never" : "Just now" } : c));
+  };
+
+  const handleConfirmCloseJob = async () => {
+    setClosing(true);
+    try {
+      const res = await api.post<any>(`/jobs/${jobId}/close`);
+      if (res.success) {
+        setJob(prev => prev ? { ...prev, status: "closed" as JobStatus } : null);
+        toast.success("Job closed successfully!");
+        setShowCloseDialog(false);
+      } else {
+        throw new Error(res.message || "Failed to close job.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to close job.");
+    } finally {
+      setClosing(false);
+    }
+  };
+
+  const togglePause = async () => {
+    if (!job) return;
+    const isPublished = job.status.toLowerCase() === "published";
+    try {
+      if (isPublished) {
+        const res = await api.post<any>(`/jobs/${jobId}/draft`);
+        if (res.success && res.data) {
+          setJob(res.data);
+          toast.success("Job paused and set to Draft.");
+        }
+      } else {
+        const res = await api.post<any>(`/jobs/${jobId}/publish`, {
+          channel_name: "career_site",
+          is_active: true
+        });
+        if (res.success) {
+          const data = await recruitment.getJob(jobId);
+          setJob(data);
+          toast.success("Job published on Career Site.");
+        }
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update job status.");
+    }
+  };
+
+  const remove = async () => {
+    if (!job) return;
     if (confirm("Delete this job? This cannot be undone.")) {
       try {
-        await recruitment.deleteJob(job!.id);
-        navigate({ to: "/dashboard/recruitment/jobs" });
+        const res = await api.delete<any>(`/jobs/${jobId}`);
+        if (res.success) {
+          toast.success("Job deleted successfully!");
+          navigate({ to: "/dashboard/recruitment/jobs" });
+        } else {
+          throw new Error(res.message || "Delete failed.");
+        }
       } catch (err: any) {
-        alert("Failed to delete job: " + (err.message || err));
+        toast.error(err.message || "Failed to delete job.");
       }
     }
-  }
+  };
 
-  // Handle distribution sync / toggle
-  function handleSync(key: string) {
-    setChannels(prev => prev.map(c => c.key === key ? { ...c, sync: "Just now" } : c));
-  }
-  function handleTogglePlatform(key: string) {
-    setChannels(prev => prev.map(c => c.key === key ? { ...c, active: !c.active, status: c.active ? "Not Connected" : "Connected", sync: c.active ? "Never" : "Just now" } : c));
-  }
-
-  // Handle Export CSV
-  function handleExportCsv() {
-    const headers = ["Name", "Email", "Phone", "Location", "Experience", "Stage", "ATS Score", "Applied At"];
-    const rows = applicants.map(c => [c.name, c.email, c.phone, c.location, c.yearsExperience, c.stage, c.atsScore, c.appliedAt]);
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `job_${jobId}_applicants.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
 
   // Copy helper
   function copyToClipboard(txt: string, label: string) {
@@ -297,17 +541,19 @@ function JobDetail() {
             ) : (
               <>
                 <Button variant="outline" size="sm" onClick={startEdit}><Pencil className="mr-1.5 h-4 w-4" />Edit</Button>
-                <Button variant="outline" size="sm" onClick={duplicate}><Copy className="mr-1.5 h-4 w-4" />Duplicate</Button>
+                <Button variant="outline" size="sm" onClick={() => setShowDuplicateModal(true)}><Copy className="mr-1.5 h-4 w-4" />Duplicate</Button>
                 <Button variant="outline" size="sm" onClick={togglePause}>
-                  {job.status === "active" ? <Pause className="mr-1.5 h-4 w-4" /> : <Play className="mr-1.5 h-4 w-4" />}
-                  {job.status === "active" ? "Pause" : "Activate"}
+                  {job.status.toLowerCase() === "published" ? <Pause className="mr-1.5 h-4 w-4" /> : <Play className="mr-1.5 h-4 w-4" />}
+                  {job.status.toLowerCase() === "published" ? "Pause" : "Activate"}
                 </Button>
-                {job.status !== "closed" && (
-                  <Button variant="outline" size="sm" onClick={closeJob}><Archive className="mr-1.5 h-4 w-4" />Close Job</Button>
+                {job.status.toLowerCase() !== "closed" && userRole !== "recruiter" && (
+                  <Button variant="outline" size="sm" onClick={() => setShowCloseDialog(true)}><Archive className="mr-1.5 h-4 w-4" />Close Job</Button>
                 )}
-                <Button variant="outline" size="sm" onClick={remove} className="text-destructive hover:bg-destructive/10 hover:text-destructive">
-                  <Trash2 className="mr-1.5 h-4 w-4" />Delete
-                </Button>
+                {userRole === "admin" && (
+                  <Button variant="outline" size="sm" onClick={remove} className="text-destructive hover:bg-destructive/10 hover:text-destructive">
+                    <Trash2 className="mr-1.5 h-4 w-4" />Delete
+                  </Button>
+                )}
               </>
             )}
           </div>
@@ -451,7 +697,7 @@ function JobDetail() {
                     <option value="hired">Hired</option>
                     <option value="rejected">Rejected</option>
                   </select>
-                  <Button variant="outline" size="sm" onClick={handleExportCsv} className="h-8 text-xs">
+                  <Button variant="outline" size="sm" onClick={() => { setExportFormat("csv"); setShowExportModal(true); }} className="h-8 text-xs">
                     <Download className="mr-1.5 h-3.5 w-3.5" />Export CSV
                   </Button>
                 </div>
@@ -560,7 +806,15 @@ function JobDetail() {
                   <div key={chan.key} className="flex flex-col justify-between rounded-xl border border-border bg-card/50 p-4">
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-semibold text-sm">{chan.label}</span>
+                        <a 
+                          href={chan.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="font-semibold text-sm hover:text-primary transition-colors inline-flex items-center gap-1"
+                        >
+                          {chan.label}
+                          <ExternalLink className="h-3 w-3 opacity-60 hover:opacity-100 transition-opacity" />
+                        </a>
                         <Badge variant="outline" className={`text-[10px] ${
                           chan.active ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500" : "border-border text-muted-foreground"
                         }`}>
@@ -577,6 +831,11 @@ function JobDetail() {
                       <div className="flex gap-2">
                         {chan.active ? (
                           <>
+                            <Button variant="outline" size="sm" asChild className="h-7 px-2 text-[10px]">
+                              <a href={chan.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1">
+                                <ExternalLink className="h-3 w-3" /> Visit
+                              </a>
+                            </Button>
                             <Button variant="outline" size="sm" onClick={() => handleSync(chan.key)} className="h-7 px-2 text-[10px]">
                               Sync
                             </Button>
@@ -790,26 +1049,27 @@ function JobDetail() {
             <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold block">Quick Actions</span>
             
             <div className="flex flex-col gap-2">
-              <Button size="sm" className="w-full text-xs justify-start" asChild>
-                <Link to="/dashboard/recruitment/jobs/$jobId/publish" params={{ jobId }}>
-                  <Globe className="mr-2 h-4 w-4" />Publish Channels
-                </Link>
+              <Button size="sm" variant="outline" className="w-full text-xs justify-start" onClick={() => setShowPublishModal(true)}>
+                <Globe className="mr-2 h-4 w-4" />Publish Channels
               </Button>
-              <Button size="sm" variant="outline" className="w-full text-xs justify-start" onClick={() => copyToClipboard(`https://careers.aurix.com/jobs/${jobId}`, "Public URL")}>
-                <Copy className="mr-2 h-4 w-4" />Copy Sourcing Link
+              <Button size="sm" variant="outline" className="w-full text-xs justify-start" onClick={handleCopySourcingLink} disabled={isCopyingLink}>
+                <Copy className="mr-2 h-4 w-4" />
+                {isCopyingLink ? "Fetching..." : "Copy Sourcing Link"}
               </Button>
-              <Button size="sm" variant="outline" className="w-full text-xs justify-start" onClick={() => setActiveTab("links")}>
-                <QrCode className="mr-2 h-4 w-4" />Generate QR Asset
+              <Button size="sm" variant="outline" className="w-full text-xs justify-start" onClick={() => setShowQrModal(true)}>
+                <QrCode className="mr-2 h-4 w-4" />Generate Job QR Code
               </Button>
-              <Button size="sm" variant="outline" className="w-full text-xs justify-start" onClick={handleExportCsv}>
+              <Button size="sm" variant="outline" className="w-full text-xs justify-start" onClick={() => setShowExportModal(true)}>
                 <Download className="mr-2 h-4 w-4" />Export Applicants
               </Button>
-              <Button size="sm" variant="outline" className="w-full text-xs justify-start" onClick={duplicate}>
+              <Button size="sm" variant="outline" className="w-full text-xs justify-start" onClick={() => setShowDuplicateModal(true)}>
                 <Copy className="mr-2 h-4 w-4" />Duplicate Role
               </Button>
-              <Button size="sm" variant="outline" className="w-full text-xs justify-start text-destructive hover:bg-destructive/15" onClick={closeJob}>
-                <Archive className="mr-2 h-4 w-4" />Close Position
-              </Button>
+              {userRole !== "recruiter" && (
+                <Button size="sm" variant="outline" className="w-full text-xs justify-start text-destructive hover:bg-destructive/15" onClick={() => setShowCloseDialog(true)}>
+                  <Archive className="mr-2 h-4 w-4" />Close Position
+                </Button>
+              )}
             </div>
           </div>
 
@@ -824,6 +1084,314 @@ function JobDetail() {
           </div>
         </aside>
       </div>
+
+      {/* Publish Channels Modal */}
+      <Dialog open={showPublishModal} onOpenChange={setShowPublishModal}>
+        <DialogContent className="max-w-md bg-card/90 backdrop-blur-xl border border-border">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Globe className="h-5 w-5 text-primary animate-pulse" />
+              Publish Channels
+            </DialogTitle>
+            <DialogDescription>
+              Control where your job posting is active. Generating a channel automatically registers a unique applicant-facing link.
+            </DialogDescription>
+          </DialogHeader>
+
+          {loadingChannels ? (
+            <div className="flex flex-col items-center justify-center p-8 space-y-2">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              <p className="text-xs text-muted-foreground">Fetching publish channels...</p>
+            </div>
+          ) : (
+            <div className="space-y-4 py-2">
+              {["career_site", "public_link", "internal_portal"].map((chanName) => {
+                const chanObj = publishChannels.find(c => c.channel_name === chanName) || {
+                  channel_name: chanName,
+                  is_active: false,
+                  published_at: null,
+                  last_updated: null,
+                  url: ""
+                };
+                
+                const label = chanName === "career_site" ? "Company Career Site" :
+                             chanName === "public_link" ? "Public Apply Link" :
+                             "Internal Hiring Portal";
+                             
+                const desc = chanName === "career_site" ? "Publish to public careers directory." :
+                             chanName === "public_link" ? "Create a shareable url for job boards." :
+                             "Internal portal for employee referrals.";
+
+                return (
+                  <div key={chanName} className="rounded-xl border border-border bg-background/50 p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-sm font-semibold text-foreground block">{label}</span>
+                        <span className="text-[11px] text-muted-foreground block">{desc}</span>
+                      </div>
+                      <Switch 
+                        checked={chanObj.is_active} 
+                        onCheckedChange={() => handleToggleChannel(chanName, chanObj.is_active)}
+                      />
+                    </div>
+                    {chanObj.is_active && (
+                      <div className="pt-2 border-t border-border/50 flex flex-col gap-1.5 text-xs text-muted-foreground">
+                        <div className="flex justify-between">
+                          <span>Status:</span>
+                          <span className="font-semibold text-emerald-500 flex items-center gap-1">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
+                            Active
+                          </span>
+                        </div>
+                        {chanObj.published_at && (
+                          <div className="flex justify-between">
+                            <span>Published At:</span>
+                            <span>{new Date(chanObj.published_at).toLocaleDateString()}</span>
+                          </div>
+                        )}
+                        {chanObj.url && (
+                          <div className="flex items-center justify-between gap-2 mt-1">
+                            <span className="truncate max-w-[200px] text-primary underline text-[10px]">
+                              {chanObj.url}
+                            </span>
+                            <div className="flex items-center gap-1">
+                              <Button 
+                                size="icon" 
+                                variant="ghost" 
+                                className="h-6 w-6 text-muted-foreground" 
+                                onClick={() => {
+                                  navigator.clipboard.writeText(chanObj.url);
+                                  toast.success("Link copied!");
+                                }}
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="h-6 text-[10px] px-2"
+                                asChild
+                              >
+                                <a href={chanObj.url} target="_blank" rel="noreferrer">Visit</a>
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <DialogFooter>
+            <Button size="sm" onClick={() => setShowPublishModal(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* QR Code Modal */}
+      <Dialog open={showQrModal} onOpenChange={setShowQrModal}>
+        <DialogContent className="max-w-sm bg-card/90 backdrop-blur-xl border border-border">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <QrCode className="h-5 w-5 text-primary" />
+              Generate Job QR Code
+            </DialogTitle>
+            <DialogDescription>
+              Generate printable and shareable QR codes linking directly to the job apply page.
+            </DialogDescription>
+          </DialogHeader>
+
+          {loadingQr ? (
+            <div className="flex flex-col items-center justify-center p-8 space-y-2">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              <p className="text-xs text-muted-foreground">Generating QR assets...</p>
+            </div>
+          ) : qrData ? (
+            <div className="flex flex-col items-center justify-center py-4 space-y-4">
+              <div className="rounded-2xl border border-border bg-white p-3 shadow-inner">
+                <img 
+                  src={`http://localhost:8001${qrData.qr_png_url}`} 
+                  alt="Job Apply QR Code" 
+                  className="w-48 h-48 rounded-lg"
+                />
+              </div>
+
+              <div className="w-full flex flex-col gap-2">
+                <div className="flex gap-2 w-full">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="flex-1 text-xs" 
+                    onClick={() => window.open(`http://localhost:8001${qrData.qr_png_url}`, "_blank")}
+                  >
+                    <Download className="mr-1.5 h-3.5 w-3.5" />PNG
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="flex-1 text-xs" 
+                    onClick={() => window.open(`http://localhost:8001${qrData.qr_svg_url}`, "_blank")}
+                  >
+                    <Download className="mr-1.5 h-3.5 w-3.5" />SVG
+                  </Button>
+                </div>
+
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="w-full text-xs" 
+                  onClick={() => {
+                    navigator.clipboard.writeText(qrData.apply_url);
+                    toast.success("Apply URL copied!");
+                  }}
+                >
+                  <Copy className="mr-1.5 h-3.5 w-3.5" />Copy Apply Link
+                </Button>
+
+                <Button 
+                  size="sm" 
+                  variant="default" 
+                  className="w-full text-xs" 
+                  onClick={handlePrintQr}
+                >
+                  <Printer className="mr-1.5 h-3.5 w-3.5" />Print QR Code
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center p-4 text-xs text-muted-foreground">
+              Failed to load QR asset.
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Export Applicants Modal */}
+      <Dialog open={showExportModal} onOpenChange={setShowExportModal}>
+        <DialogContent className="max-w-sm bg-card/90 backdrop-blur-xl border border-border">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Download className="h-5 w-5 text-primary" />
+              Export Applicants
+            </DialogTitle>
+            <DialogDescription>
+              Export candidate applications. Select your desired format and filtering criteria.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-3">
+            <div className="space-y-2">
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Format</Label>
+              <Select value={exportFormat} onValueChange={(val: any) => setExportFormat(val)}>
+                <SelectTrigger className="w-full bg-background/50">
+                  <SelectValue placeholder="Select format" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="csv">CSV Spreadsheet (.csv)</SelectItem>
+                  <SelectItem value="excel">Excel Document (.xlsx)</SelectItem>
+                  <SelectItem value="pdf">PDF Document (.pdf)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Pipeline Stage Filter</Label>
+              <Select value={exportFilter} onValueChange={(val: any) => setExportFilter(val)}>
+                <SelectTrigger className="w-full bg-background/50">
+                  <SelectValue placeholder="Select stage" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Applicants</SelectItem>
+                  <SelectItem value="shortlisted">Shortlisted Candidates</SelectItem>
+                  <SelectItem value="interviewed">Interviewed Candidates</SelectItem>
+                  <SelectItem value="rejected">Rejected Candidates</SelectItem>
+                  <SelectItem value="selected">Selected/Hired Candidates</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button size="sm" variant="outline" onClick={() => setShowExportModal(false)}>Cancel</Button>
+            <Button size="sm" onClick={handleExportApplicants} disabled={exporting}>
+              {exporting ? "Exporting..." : "Download Export"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Duplicate Role Modal */}
+      <Dialog open={showDuplicateModal} onOpenChange={setShowDuplicateModal}>
+        <DialogContent className="max-w-md bg-card/90 backdrop-blur-xl border border-border">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Copy className="h-5 w-5 text-primary" />
+              Duplicate Role
+            </DialogTitle>
+            <DialogDescription>
+              Copy settings and fields of this role to a new job posting. Edit fields to customize.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2">
+            <div className="space-y-1">
+              <Label className="text-xs font-semibold">Job Title</Label>
+              <Input value={dupTitle} onChange={(e) => setDupTitle(e.target.value)} placeholder="e.g. Frontend Developer" />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs font-semibold">Location</Label>
+              <Input value={dupLocation} onChange={(e) => setDupLocation(e.target.value)} placeholder="e.g. Bangalore, Jaipur, Remote" />
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              <div className="col-span-1 space-y-1">
+                <Label className="text-xs font-semibold">Openings</Label>
+                <Input type="number" min={1} value={dupVacancies} onChange={(e) => setDupVacancies(parseInt(e.target.value) || 1)} />
+              </div>
+              <div className="col-span-1 space-y-1">
+                <Label className="text-xs font-semibold">Min Salary</Label>
+                <Input type="number" value={dupMinSalary} onChange={(e) => setDupMinSalary(e.target.value)} />
+              </div>
+              <div className="col-span-1 space-y-1">
+                <Label className="text-xs font-semibold">Max Salary</Label>
+                <Input type="number" value={dupMaxSalary} onChange={(e) => setDupMaxSalary(e.target.value)} />
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button size="sm" variant="outline" onClick={() => setShowDuplicateModal(false)}>Cancel</Button>
+            <Button size="sm" onClick={handleCreateDuplicate} disabled={duplicating}>
+              {duplicating ? "Duplicating..." : "Create Duplicate"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Close Position Confirmation Dialog */}
+      <Dialog open={showCloseDialog} onOpenChange={setShowCloseDialog}>
+        <DialogContent className="max-w-sm bg-card/90 backdrop-blur-xl border border-border">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Archive className="h-5 w-5" />
+              Close Position?
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to close this position? This will deactivate all active publish channels and prevent any new applications.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="mt-4">
+            <Button size="sm" variant="outline" onClick={() => setShowCloseDialog(false)}>Cancel</Button>
+            <Button size="sm" variant="destructive" onClick={handleConfirmCloseJob} disabled={closing}>
+              {closing ? "Closing..." : "Close Position"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

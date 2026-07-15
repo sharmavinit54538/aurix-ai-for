@@ -82,6 +82,7 @@ import { Route as AuthForgotPasswordRouteImport } from './routes/_auth/forgot-pa
 import { Route as DashboardRecruitmentIndexRouteImport } from './routes/dashboard.recruitment.index'
 import { Route as DashboardPayrollIndexRouteImport } from './routes/dashboard.payroll.index'
 import { Route as DashboardAttendanceIndexRouteImport } from './routes/dashboard.attendance.index'
+import { Route as JobsApplyUkeyRouteImport } from './routes/jobs.apply.$ukey'
 import { Route as DashboardRecruitmentVendorsRouteImport } from './routes/dashboard.recruitment.vendors'
 import { Route as DashboardRecruitmentTemplatesRouteImport } from './routes/dashboard.recruitment.templates'
 import { Route as DashboardRecruitmentTalentPoolRouteImport } from './routes/dashboard.recruitment.talent-pool'
@@ -501,6 +502,11 @@ const DashboardAttendanceIndexRoute =
     path: '/',
     getParentRoute: () => DashboardAttendanceRoute,
   } as any)
+const JobsApplyUkeyRoute = JobsApplyUkeyRouteImport.update({
+  id: '/jobs/apply/$ukey',
+  path: '/jobs/apply/$ukey',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRecruitmentVendorsRoute =
   DashboardRecruitmentVendorsRouteImport.update({
     id: '/vendors',
@@ -904,6 +910,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/recruitment/talent-pool': typeof DashboardRecruitmentTalentPoolRoute
   '/dashboard/recruitment/templates': typeof DashboardRecruitmentTemplatesRoute
   '/dashboard/recruitment/vendors': typeof DashboardRecruitmentVendorsRoute
+  '/jobs/apply/$ukey': typeof JobsApplyUkeyRoute
   '/dashboard/attendance/': typeof DashboardAttendanceIndexRoute
   '/dashboard/payroll/': typeof DashboardPayrollIndexRoute
   '/dashboard/recruitment/': typeof DashboardRecruitmentIndexRoute
@@ -1021,6 +1028,7 @@ export interface FileRoutesByTo {
   '/dashboard/recruitment/talent-pool': typeof DashboardRecruitmentTalentPoolRoute
   '/dashboard/recruitment/templates': typeof DashboardRecruitmentTemplatesRoute
   '/dashboard/recruitment/vendors': typeof DashboardRecruitmentVendorsRoute
+  '/jobs/apply/$ukey': typeof JobsApplyUkeyRoute
   '/dashboard/attendance': typeof DashboardAttendanceIndexRoute
   '/dashboard/payroll': typeof DashboardPayrollIndexRoute
   '/dashboard/recruitment': typeof DashboardRecruitmentIndexRoute
@@ -1146,6 +1154,7 @@ export interface FileRoutesById {
   '/dashboard/recruitment/talent-pool': typeof DashboardRecruitmentTalentPoolRoute
   '/dashboard/recruitment/templates': typeof DashboardRecruitmentTemplatesRoute
   '/dashboard/recruitment/vendors': typeof DashboardRecruitmentVendorsRoute
+  '/jobs/apply/$ukey': typeof JobsApplyUkeyRoute
   '/dashboard/attendance/': typeof DashboardAttendanceIndexRoute
   '/dashboard/payroll/': typeof DashboardPayrollIndexRoute
   '/dashboard/recruitment/': typeof DashboardRecruitmentIndexRoute
@@ -1272,6 +1281,7 @@ export interface FileRouteTypes {
     | '/dashboard/recruitment/talent-pool'
     | '/dashboard/recruitment/templates'
     | '/dashboard/recruitment/vendors'
+    | '/jobs/apply/$ukey'
     | '/dashboard/attendance/'
     | '/dashboard/payroll/'
     | '/dashboard/recruitment/'
@@ -1389,6 +1399,7 @@ export interface FileRouteTypes {
     | '/dashboard/recruitment/talent-pool'
     | '/dashboard/recruitment/templates'
     | '/dashboard/recruitment/vendors'
+    | '/jobs/apply/$ukey'
     | '/dashboard/attendance'
     | '/dashboard/payroll'
     | '/dashboard/recruitment'
@@ -1513,6 +1524,7 @@ export interface FileRouteTypes {
     | '/dashboard/recruitment/talent-pool'
     | '/dashboard/recruitment/templates'
     | '/dashboard/recruitment/vendors'
+    | '/jobs/apply/$ukey'
     | '/dashboard/attendance/'
     | '/dashboard/payroll/'
     | '/dashboard/recruitment/'
@@ -1546,6 +1558,7 @@ export interface RootRouteChildren {
   AuthVerifyResetOtpRoute: typeof AuthVerifyResetOtpRoute
   ApiAiBrainRoute: typeof ApiAiBrainRoute
   ApiPayrollCopilotRoute: typeof ApiPayrollCopilotRoute
+  JobsApplyUkeyRoute: typeof JobsApplyUkeyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -2060,6 +2073,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/attendance/'
       preLoaderRoute: typeof DashboardAttendanceIndexRouteImport
       parentRoute: typeof DashboardAttendanceRoute
+    }
+    '/jobs/apply/$ukey': {
+      id: '/jobs/apply/$ukey'
+      path: '/jobs/apply/$ukey'
+      fullPath: '/jobs/apply/$ukey'
+      preLoaderRoute: typeof JobsApplyUkeyRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/dashboard/recruitment/vendors': {
       id: '/dashboard/recruitment/vendors'
@@ -2715,6 +2735,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthVerifyResetOtpRoute: AuthVerifyResetOtpRoute,
   ApiAiBrainRoute: ApiAiBrainRoute,
   ApiPayrollCopilotRoute: ApiPayrollCopilotRoute,
+  JobsApplyUkeyRoute: JobsApplyUkeyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -110,10 +110,11 @@ export interface Candidate {
   photoUrl?: string;
   location: string;
   jobId: ID;
+  applicationId?: ID;
   appliedPosition: string;
   stage: Stage;
-  atsScore: number;
-  jobMatch: number;
+  atsScore: number | null;
+  jobMatch: number | null;
   source: string;
   tags: string[];
   skills: string[];
@@ -122,6 +123,7 @@ export interface Candidate {
   currentRole?: string;
   expectedSalary?: number;
   noticeDays?: number;
+  vendorId?: ID;
   resumeName: string;
   summary: string;
   experience: CandidateExperience[];
@@ -158,6 +160,7 @@ export type OfferStatus = "draft" | "pending-approval" | "sent" | "accepted" | "
 
 export interface Offer {
   id: ID;
+  applicationId?: ID;
   candidateId: ID;
   candidateName: string;
   jobId: ID;

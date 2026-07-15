@@ -145,9 +145,9 @@ function simulate(tool: ToolKey, ctx: { job?: any; candidate?: any; input: strin
   const { job, candidate, input, candidates } = ctx;
   switch (tool) {
     case "rank":
-      return [...candidates].sort((a, b) => b.atsScore - a.atsScore).slice(0, 10).map((c) => `Match ${c.jobMatch}% · ${c.yearsExperience}y · ${c.skills.slice(0, 3).join(", ")}`).join("\n");
+      return [...candidates].sort((a, b) => (b.atsScore ?? 0) - (a.atsScore ?? 0)).slice(0, 10).map((c) => `Match ${c.jobMatch ?? "N/A"}% · ${c.yearsExperience}y · ${c.skills.slice(0, 3).join(", ")}`).join("\n");
     case "match":
-      return [...candidates].filter((c) => !input || JSON.stringify(c).toLowerCase().includes(input.toLowerCase())).sort((a, b) => b.jobMatch - a.jobMatch).slice(0, 10).map((c) => `${c.jobMatch}% fit · ${c.location} · ${c.currentRole ?? c.appliedPosition}`).join("\n");
+      return [...candidates].filter((c) => !input || JSON.stringify(c).toLowerCase().includes(input.toLowerCase())).sort((a, b) => (b.jobMatch ?? 0) - (a.jobMatch ?? 0)).slice(0, 10).map((c) => `${c.jobMatch ?? "N/A"}% fit · ${c.location} · ${c.currentRole ?? c.appliedPosition}`).join("\n");
     case "summarize":
       return `• ${candidate?.yearsExperience}+ years as ${candidate?.currentRole ?? "engineer"} at ${candidate?.currentCompany ?? "previous companies"}.\n• Core stack: ${candidate?.skills.slice(0, 5).join(", ")}.\n• Notable: ${candidate?.projects?.[0]?.name ?? "shipped production systems at scale"}.\n• Education: ${candidate?.education?.[0]?.degree ?? "BS Computer Science"}.\n• Strong fit signals for ${job?.title}; ${candidate?.noticeDays ?? 30}-day notice.`;
     case "feedback":

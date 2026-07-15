@@ -7,7 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { useRecruitment } from "@/lib/recruitment/store";
+import { useRecruitment, refreshAll } from "@/lib/recruitment/store";
+import { api } from "@/api/client";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard/recruitment/resume-intelligence")({
   head: () => ({ meta: [{ title: "Resume Intelligence — Recruitment" }] }),
@@ -18,6 +20,31 @@ function ResumeIntelligence() {
   const candidates = useRecruitment((s) => s.candidates);
   const [q, setQ] = useState("");
   const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    const toastId = toast.loading("Uploading and parsing resume with AI...");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("generate_embedding", "true");
+
+      await api.post("/resume-parser/upload-and-parse", formData);
+      toast.success("Resume parsed successfully and candidate added!", { id: toastId });
+      await refreshAll();
+    } catch (error: any) {
+      console.error("Resume parsing error:", error);
+      toast.error(error.message || "Failed to parse resume.", { id: toastId });
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  }
 
   const duplicates = useMemo(() => {
     const groups: Record<string, typeof candidates> = {};
@@ -38,8 +65,21 @@ function ResumeIntelligence() {
 
   return (
     <>
+      <input
+        type="file"
+        id="resume-upload-input"
+        className="hidden"
+        accept=".pdf,.docx,.doc,.txt"
+        onChange={handleFileUpload}
+        disabled={uploading}
+      />
       <PageHeader title="Resume Intelligence" description="Parsing, duplicate detection, skill extraction, OCR, and version history."
-        actions={<Button><Upload className="mr-2 h-4 w-4" />Upload Resumes</Button>} />
+        actions={
+          <Button onClick={() => document.getElementById("resume-upload-input")?.click()} disabled={uploading}>
+            <Upload className="mr-2 h-4 w-4" />
+            {uploading ? "Parsing..." : "Upload Resumes"}
+          </Button>
+        } />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         {[

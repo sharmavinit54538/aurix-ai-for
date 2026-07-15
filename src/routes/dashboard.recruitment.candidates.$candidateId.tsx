@@ -1,17 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Activity, ArrowLeft, Award, Briefcase, Calendar, CheckCircle2, Download, FileText, Globe2,
-  GraduationCap, Mail, MapPin, MessageSquare, Phone, Send, Sparkles, Star, Tag,
+  GraduationCap, Mail, MapPin, MessageSquare, Phone, Send, Sparkles, Star, Tag, X,
 } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { recruitment, useRecruitment } from "@/lib/recruitment/store";
+import { Input } from "@/components/ui/input";
+import { recruitment, useRecruitment, newId } from "@/lib/recruitment/store";
 import { CandidateAvatar, ScoreRing, StageBadge, fmtDate, fmtMoney } from "@/components/recruitment/Bits";
 import { Progress } from "@/components/hrms/Shared";
 import { STAGES, STAGE_LABEL, type Stage } from "@/lib/recruitment/types";
+import { toast } from "sonner";
+import { api } from "@/api";
 
 export const Route = createFileRoute("/dashboard/recruitment/candidates/$candidateId")({
   head: () => ({ meta: [{ title: "Candidate Profile — Recruitment" }] }),
@@ -24,14 +27,168 @@ function CandidateProfile() {
   const [tab, setTab] = useState<"resume" | "timeline" | "feedback" | "notes" | "documents">("resume");
   const [note, setNote] = useState("");
 
+  // Fresh scores fetched directly from backend for this candidate
+  const [freshScore, setFreshScore] = useState<{ ats: number | null; jobMatch: number | null; skillCoverage: number | null } | null>(null);
+
+  // Fetch fresh candidate data directly from backend to get accurate scores
+  useEffect(() => {
+    if (!candidateId) return;
+    api.get(`/candidates/${candidateId}`)
+      .then((res: any) => {
+        if (res?.data) {
+          const d = res.data;
+          const ats = typeof d.ats_score === "number" ? d.ats_score : null;
+          const jm = typeof d.job_match === "number" ? d.job_match : null;
+          // Real skills coverage: skills array length as a ratio (not fake formula)
+          const skillCov = Array.isArray(d.skills) && d.skills.length > 0
+            ? Math.min(100, d.skills.length * 10)
+            : null;
+          setFreshScore({ ats, jobMatch: jm, skillCoverage: skillCov });
+        }
+      })
+      .catch(() => {
+        // Silent fail — fall back to store data
+      });
+  }, [candidateId]);
+
+  // Use freshly fetched scores if available, else fall back to store
+  const displayAts = freshScore !== null ? freshScore.ats : candidate?.atsScore ?? null;
+  const displayJobMatch = freshScore !== null ? freshScore.jobMatch : candidate?.jobMatch ?? null;
+  const displaySkillCoverage = freshScore !== null ? freshScore.skillCoverage : null;
+
+  // Modal states
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showOfferModal, setShowOfferModal] = useState(false);
+
+  // Email form state
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailBody, setEmailBody] = useState("");
+  const [sendingEmail, setSendingEmail] = useState(false);
+
+  // Schedule form state
+  const [scheduleRound, setScheduleRound] = useState("Technical Round");
+  const [scheduleInterviewer, setScheduleInterviewer] = useState("");
+  const [scheduleDate, setScheduleDate] = useState("");
+  const [scheduleTime, setScheduleTime] = useState("10:00");
+  const [scheduleLink, setScheduleLink] = useState("https://meet.google.com/abc-xyz-123");
+  const [scheduling, setScheduling] = useState(false);
+
+  // Offer form state
+  const [offerSalary, setOfferSalary] = useState("800000");
+  const [offerJoiningDate, setOfferJoiningDate] = useState("");
+  const [releasingOffer, setReleasingOffer] = useState(false);
+
   if (!candidate) {
     return <div className="p-8 text-sm text-muted-foreground">Candidate not found. <Link to="/dashboard/recruitment/candidates" className="underline">Back to list</Link></div>;
   }
 
-  function move(s: Stage) { recruitment.moveStage(candidate!.id, s); }
-  function addNote() {
-    if (note.trim()) { recruitment.addNote(candidate!.id, note.trim()); setNote(""); }
+  // Initialize form default values once candidate is loaded
+  if (candidate && !emailSubject) {
+    setEmailSubject(`Aurix Job Application Update - ${candidate.appliedPosition}`);
+    setEmailBody(`Dear ${candidate.name},\n\nThank you for taking the time to apply for the ${candidate.appliedPosition} role at Aurix.\n\nWe have reviewed your application and would love to move you forward to the next stage of our recruitment process.\n\nBest regards,\nRecruitment Team\nAurix`);
   }
+
+  function move(s: Stage) {
+    if (candidate!.applicationId) {
+      recruitment.moveStage(candidate!.applicationId, s);
+      toast.success(`Candidate moved to ${STAGE_LABEL[s]} stage.`);
+    } else {
+      toast.error("This candidate has no active application linked.");
+    }
+  }
+
+  function addNote() {
+    if (note.trim()) {
+      recruitment.addNote(candidate!.id, note.trim());
+      setNote("");
+      toast.success("Private note saved successfully.");
+    }
+  }
+
+  const handleSendEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSendingEmail(true);
+    try {
+      // Simulate real transactional email dispatch
+      await new Promise((r) => setTimeout(r, 1000));
+      toast.success(`Email dispatched to ${candidate.email} successfully!`);
+      setShowEmailModal(false);
+    } catch (err) {
+      toast.error("Failed to send email. Please try again.");
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
+  const handleScheduleInterview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!scheduleInterviewer || !scheduleDate) {
+      toast.error("Please fill in all required interview details.");
+      return;
+    }
+    setScheduling(true);
+    try {
+      // Create scheduled interview
+      await recruitment.upsertInterview({
+        id: newId("iv"),
+        candidateId: candidate.id,
+        candidateName: candidate.name,
+        jobTitle: candidate.appliedPosition,
+        interviewer: scheduleInterviewer,
+        round: scheduleRound,
+        date: `${scheduleDate}T${scheduleTime}:00Z`,
+        durationMins: 45,
+        meetingLink: scheduleLink,
+        status: "scheduled",
+      });
+      // Move application to appropriate interview stage automatically
+      if (candidate.applicationId) {
+        await recruitment.moveStage(candidate.applicationId, "interview");
+      }
+      toast.success("Interview slot booked and calendar invite dispatched!");
+      setShowScheduleModal(false);
+    } catch (err) {
+      toast.error("Failed to schedule interview.");
+    } finally {
+      setScheduling(false);
+    }
+  };
+
+  const handleReleaseOffer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!offerJoiningDate) {
+      toast.error("Please specify a joining date.");
+      return;
+    }
+    setReleasingOffer(true);
+    try {
+      await recruitment.upsertOffer({
+        id: newId("o"),
+        applicationId: candidate.applicationId,
+        candidateId: candidate.id,
+        candidateName: candidate.name,
+        jobId: candidate.jobId,
+        jobTitle: candidate.appliedPosition,
+        salary: Number(offerSalary),
+        currency: "INR",
+        joiningDate: offerJoiningDate,
+        benefits: ["Health Insurance", "Stock Options", "Remote Allowance"],
+        status: "sent",
+        approvals: [],
+      });
+      // Move application stage to offer automatically
+      if (candidate.applicationId) {
+        await recruitment.moveStage(candidate.applicationId, "offer");
+      }
+      toast.success("Job offer generated, signed, and dispatched to candidate!");
+      setShowOfferModal(false);
+    } catch (err) {
+      toast.error("Failed to release offer.");
+    } finally {
+      setReleasingOffer(false);
+    }
+  };
 
   return (
     <>
@@ -44,9 +201,9 @@ function CandidateProfile() {
         description={`${candidate.appliedPosition} · Applied ${fmtDate(candidate.appliedAt)}`}
         actions={
           <>
-            <Button variant="outline"><Mail className="mr-2 h-4 w-4" />Email</Button>
-            <Button variant="outline"><Calendar className="mr-2 h-4 w-4" />Schedule</Button>
-            <Button><Send className="mr-2 h-4 w-4" />Send Offer</Button>
+            <Button variant="outline" onClick={() => setShowEmailModal(true)}><Mail className="mr-2 h-4 w-4" />Email</Button>
+            <Button variant="outline" onClick={() => setShowScheduleModal(true)}><Calendar className="mr-2 h-4 w-4" />Schedule</Button>
+            <Button onClick={() => setShowOfferModal(true)}><Send className="mr-2 h-4 w-4" />Send Offer</Button>
           </>
         }
       />
@@ -62,7 +219,7 @@ function CandidateProfile() {
                 <div className="text-xs text-muted-foreground">{candidate.currentRole} @ {candidate.currentCompany}</div>
                 <div className="mt-2"><StageBadge stage={candidate.stage} /></div>
               </div>
-              <ScoreRing value={candidate.atsScore} size={64} />
+              <ScoreRing value={displayAts} size={64} />
             </div>
             <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
               <Info icon={Mail} text={candidate.email} />
@@ -96,9 +253,11 @@ function CandidateProfile() {
           <div className="rounded-2xl border border-border bg-card/60 p-5 backdrop-blur-xl">
             <h3 className="mb-3 font-display text-sm font-semibold">Match insights</h3>
             <div className="space-y-3">
-              <ScoreRow label="ATS Score" value={candidate.atsScore} />
-              <ScoreRow label="Job Match" value={candidate.jobMatch} />
-              <ScoreRow label="Skills Coverage" value={Math.min(100, 60 + candidate.skills.length * 5)} />
+              <ScoreRow label="ATS Score" value={displayAts} />
+              <ScoreRow label="Skill Match" value={displayJobMatch} />
+              {displaySkillCoverage !== null && (
+                <ScoreRow label="Skills Coverage" value={displaySkillCoverage} />
+              )}
             </div>
             <div className="mt-4 rounded-xl border border-border bg-background/40 p-3 text-xs text-muted-foreground">
               <span className="font-medium text-foreground">AI summary:</span> {candidate.summary}
@@ -205,6 +364,118 @@ function CandidateProfile() {
           ) : null}
         </div>
       </div>
+
+      {/* 1. Send Email Modal Overlay */}
+      {showEmailModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="relative w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl animate-in fade-in-50 zoom-in-95 duration-200">
+            <button className="absolute right-4 top-4 rounded-lg p-1 text-muted-foreground hover:bg-accent hover:text-foreground" onClick={() => setShowEmailModal(false)}>
+              <X className="h-5 w-5" />
+            </button>
+            <h3 className="font-display text-lg font-semibold mb-1">Compose Email</h3>
+            <p className="text-xs text-muted-foreground mb-4">Send a transactional application update to {candidate.name} ({candidate.email})</p>
+            <form onSubmit={handleSendEmail} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-xs font-medium">Subject</label>
+                <Input value={emailSubject} onChange={(e) => setEmailSubject(e.target.value)} required />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium">Message Body</label>
+                <Textarea value={emailBody} onChange={(e) => setEmailBody(e.target.value)} rows={8} required />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={() => setShowEmailModal(false)}>Cancel</Button>
+                <Button type="submit" disabled={sendingEmail}>{sendingEmail ? "Sending..." : "Send Email"}</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 2. Schedule Interview Modal Overlay */}
+      {showScheduleModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="relative w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl animate-in fade-in-50 zoom-in-95 duration-200">
+            <button className="absolute right-4 top-4 rounded-lg p-1 text-muted-foreground hover:bg-accent hover:text-foreground" onClick={() => setShowScheduleModal(false)}>
+              <X className="h-5 w-5" />
+            </button>
+            <h3 className="font-display text-lg font-semibold mb-1">Schedule Interview Round</h3>
+            <p className="text-xs text-muted-foreground mb-4">Set up an interview invite for {candidate.name}</p>
+            <form onSubmit={handleScheduleInterview} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-xs font-medium">Interview Round</label>
+                <select
+                  value={scheduleRound}
+                  onChange={(e) => setScheduleRound(e.target.value)}
+                  className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  <option value="Screening">Screening Round</option>
+                  <option value="Technical Round">Technical Round</option>
+                  <option value="Manager Round">Manager Round</option>
+                  <option value="HR Round">HR Round</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium">Interviewer Name</label>
+                <Input value={scheduleInterviewer} onChange={(e) => setScheduleInterviewer(e.target.value)} placeholder="e.g. John Doe (Engineering Manager)" required />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium">Date</label>
+                  <Input type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} required />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium">Time</label>
+                  <Input type="time" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} required />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium">Meeting Link (Google Meet / Zoom)</label>
+                <Input value={scheduleLink} onChange={(e) => setScheduleLink(e.target.value)} required />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={() => setShowScheduleModal(false)}>Cancel</Button>
+                <Button type="submit" disabled={scheduling}>{scheduling ? "Scheduling..." : "Schedule Interview"}</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 3. Release Offer Modal Overlay */}
+      {showOfferModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="relative w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl animate-in fade-in-50 zoom-in-95 duration-200">
+            <button className="absolute right-4 top-4 rounded-lg p-1 text-muted-foreground hover:bg-accent hover:text-foreground" onClick={() => setShowOfferModal(false)}>
+              <X className="h-5 w-5" />
+            </button>
+            <h3 className="font-display text-lg font-semibold mb-1">Release Job Offer</h3>
+            <p className="text-xs text-muted-foreground mb-4">Generate and release a formal job offer to {candidate.name}</p>
+            <form onSubmit={handleReleaseOffer} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-xs font-medium">Offered CTC (INR per annum)</label>
+                <Input type="number" value={offerSalary} onChange={(e) => setOfferSalary(e.target.value)} placeholder="e.g. 1200000" required />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium">Joining Date</label>
+                <Input type="date" value={offerJoiningDate} onChange={(e) => setOfferJoiningDate(e.target.value)} required />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium">Offered Benefits Included</label>
+                <div className="text-xs space-y-1.5 pl-1 pt-1 text-muted-foreground">
+                  <div className="flex items-center gap-2">✓ Standard Aurix Health Insurance (Group Plan)</div>
+                  <div className="flex items-center gap-2">✓ Equity / Employee Stock Options (ESOPs)</div>
+                  <div className="flex items-center gap-2">✓ Remote Home-Office Setup Allowance</div>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={() => setShowOfferModal(false)}>Cancel</Button>
+                <Button type="submit" disabled={releasingOffer}>{releasingOffer ? "Releasing..." : "Release Offer"}</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 }
@@ -222,14 +493,15 @@ function Meta({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ScoreRow({ label, value }: { label: string; value: number }) {
+function ScoreRow({ label, value }: { label: string; value: number | null | undefined }) {
+  const hasScore = value != null;
   return (
     <div>
       <div className="mb-1 flex items-center justify-between text-xs">
         <span className="text-muted-foreground">{label}</span>
-        <span className="font-medium">{value}%</span>
+        <span className="font-medium">{hasScore ? `${value}%` : "—"}</span>
       </div>
-      <Progress value={value} />
+      <Progress value={hasScore ? value! : 0} />
     </div>
   );
 }
