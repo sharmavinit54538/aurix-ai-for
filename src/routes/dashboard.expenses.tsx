@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Plus, Receipt, CheckCircle2, XCircle, Wallet, Clock, Upload } from "lucide-react";
+import {
+  Plus, Receipt, CheckCircle2, XCircle, Wallet, Clock, Upload,
+  FilePlus2, HandCoins, Plane, History as HistoryIcon, LayoutDashboard
+} from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
 import { CsvButton, GlassCard, SearchBox, StatCard, StatusBadge } from "@/components/hrms/Shared";
 import { hrms, newId, useHrms } from "@/lib/hrms/store";
@@ -11,6 +14,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { useAurix } from "@/lib/aurix-store";
+import { toast } from "sonner";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export const Route = createFileRoute("/dashboard/expenses")({
   head: () => ({ meta: [{ title: "Expense Claims — Aurix" }] }),
@@ -36,6 +43,10 @@ function emptyExpense(): Expense {
 
 function ExpensesPage() {
   const expenses = useHrms((s) => s.expenses);
+  const ws = useAurix();
+  const userRole = ws.user?.role || "employee";
+  const [activeTab, setActiveTab] = useState(userRole === "employee" ? "submit" : "");
+
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<ExpenseStatus | "all">("all");
   const [open, setOpen] = useState(false);
@@ -71,6 +82,215 @@ function ExpensesPage() {
     hrms.upsertExpense({ ...draft, submittedAt: new Date().toISOString() });
     setOpen(false);
     setDraft(emptyExpense());
+  }
+
+  const employeeExpenseTabs = [
+    { id: "submit", label: "Submit Expense", icon: FilePlus2 },
+    { id: "reimbursements", label: "Reimbursements", icon: HandCoins },
+    { id: "travel-claims", label: "Travel Claims", icon: Plane },
+    { id: "history", label: "Expense History", icon: HistoryIcon },
+  ];
+
+  const myExpenses = useMemo(() => {
+    return expenses.filter(e => e.employee === ws.user?.fullName);
+  }, [expenses, ws.user?.fullName]);
+
+  const handleEmployeeSubmitExpense = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (draft.amount <= 0) {
+      toast.error("Please enter a valid amount.");
+      return;
+    }
+    hrms.upsertExpense({
+      ...draft,
+      employee: ws.user?.fullName || "Employee",
+      submittedAt: new Date().toISOString()
+    });
+    toast.success("Expense claim submitted successfully!");
+    setDraft(emptyExpense());
+    setActiveTab("history");
+  };
+
+  if (userRole === "employee") {
+    return (
+      <>
+        <PageHeader 
+          title="Expense & Reimbursements Portal" 
+          description="Log and claim business expenditures, travel claims, and view reimbursement statements."
+        />
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_1fr]">
+          <aside className="space-y-1">
+            {employeeExpenseTabs.map((t) => {
+              const Icon = t.icon;
+              const active = activeTab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveTab(t.id)}
+                  className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                    active 
+                      ? "bg-accent text-foreground" 
+                      : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {t.label}
+                </button>
+              );
+            })}
+          </aside>
+
+          <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-xl">
+            {activeTab === "submit" && (
+              <form onSubmit={handleEmployeeSubmitExpense} className="space-y-4 max-w-md text-xs">
+                <h3 className="text-base font-semibold border-b pb-2 font-display">Submit New Expense</h3>
+                
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase">Claim Category</Label>
+                  <select
+                    value={draft.category}
+                    onChange={(e) => setDraft({ ...draft, category: e.target.value as any })}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs"
+                  >
+                    {CATEGORIES.map(c => (
+                      <option key={c} value={c} className="capitalize">{c}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase">Claim Amount (INR)</Label>
+                  <Input
+                    type="number"
+                    required
+                    min="1"
+                    value={draft.amount === 0 ? "" : draft.amount}
+                    onChange={(e) => setDraft({ ...draft, amount: Number(e.target.value) })}
+                    className="bg-background/50 border"
+                    placeholder="e.g. 1500"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase">Expense Date</Label>
+                  <Input
+                    type="date"
+                    required
+                    value={draft.date}
+                    onChange={(e) => setDraft({ ...draft, date: e.target.value })}
+                    className="bg-background/50 border"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase">Description / Comments</Label>
+                  <Textarea
+                    required
+                    value={draft.description}
+                    onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+                    placeholder="Briefly explain the purpose of this expense..."
+                    className="bg-background/50 border min-h-[90px]"
+                  />
+                </div>
+
+                <Button type="submit">Submit Expense Request</Button>
+              </form>
+            )}
+
+            {activeTab === "reimbursements" && (
+              <div className="space-y-4">
+                <h3 className="text-base font-semibold border-b pb-2">Active Reimbursements</h3>
+                <div className="space-y-3">
+                  {myExpenses.filter(e => e.status !== "rejected" && e.status !== "paid").map((exp) => (
+                    <div key={exp.id} className="border bg-card/30 rounded-xl p-4 flex justify-between items-center text-xs">
+                      <div>
+                        <div className="font-semibold text-sm capitalize">{exp.category} Expense</div>
+                        <div className="text-muted-foreground mt-0.5">{exp.description}</div>
+                        <div className="text-[10px] text-muted-foreground mt-1">Submitted on: {exp.submittedAt ? exp.submittedAt.slice(0, 10) : exp.date}</div>
+                      </div>
+                      <div className="text-right space-y-1.5">
+                        <div className="font-bold text-indigo-400">₹{exp.amount.toLocaleString()}</div>
+                        <StatusBadge tone={STATUS_TONE[exp.status]} status={exp.status} />
+                      </div>
+                    </div>
+                  ))}
+                  {myExpenses.filter(e => e.status !== "rejected" && e.status !== "paid").length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground text-xs">
+                      No active pending reimbursements claims.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {activeTab === "travel-claims" && (
+              <div className="space-y-4">
+                <h3 className="text-base font-semibold border-b pb-2">Travel Allowances & Flights Claims</h3>
+                <div className="space-y-3">
+                  {myExpenses.filter(e => e.category === "travel").map((exp) => (
+                    <div key={exp.id} className="border bg-card/30 rounded-xl p-4 flex justify-between items-center text-xs">
+                      <div>
+                        <div className="font-semibold text-sm">Travel Claim - {exp.description}</div>
+                        <div className="text-muted-foreground mt-0.5">Date: {exp.date}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-indigo-400">₹{exp.amount.toLocaleString()}</div>
+                        <div className="text-[10px] text-muted-foreground mt-0.5 capitalize">{exp.status}</div>
+                      </div>
+                    </div>
+                  ))}
+                  {myExpenses.filter(e => e.category === "travel").length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground text-xs">
+                      No travel claims filed.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {activeTab === "history" && (
+              <div className="space-y-4">
+                <h3 className="text-base font-semibold border-b pb-2">Claims History Log</h3>
+                <Card className="border overflow-hidden">
+                  <Table className="text-xs">
+                    <TableHeader className="bg-muted/20">
+                      <TableRow>
+                        <TableHead className="pl-6 py-4">Submitted Date</TableHead>
+                        <TableHead className="py-4">Category</TableHead>
+                        <TableHead className="py-4">Description</TableHead>
+                        <TableHead className="py-4 text-right">Amount</TableHead>
+                        <TableHead className="pr-6 py-4">Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {myExpenses.map((exp) => (
+                        <TableRow key={exp.id} className="hover:bg-muted/5 transition-all">
+                          <TableCell className="pl-6 py-4 font-semibold">{exp.date}</TableCell>
+                          <TableCell className="py-4 capitalize">{exp.category}</TableCell>
+                          <TableCell className="py-4 text-muted-foreground">{exp.description}</TableCell>
+                          <TableCell className="py-4 text-right font-bold font-mono">₹{exp.amount.toLocaleString()}</TableCell>
+                          <TableCell className="pr-6 py-4">
+                            <StatusBadge tone={STATUS_TONE[exp.status]} status={exp.status} />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {myExpenses.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                            No past claims found.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </Card>
+              </div>
+            )}
+          </div>
+        </div>
+      </>
+    );
   }
 
   return (

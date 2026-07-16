@@ -77,24 +77,13 @@ const NAV_SECTIONS: NavSection[] = [
     // ── Admin / HR / Manager sections ────────────────────────
     items: [
       { to: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true, roles: ["admin", "hr"] },
-      { to: "/dashboard/manager", label: "Manager Dashboard", icon: UserCog, roles: ["manager"] },
+      { to: "/dashboard/manager", label: "Dashboard", icon: UserCog, roles: ["manager"] },
       { to: "/dashboard/ai-insights", label: "AI Insights", icon: Sparkles, roles: ["admin", "hr", "manager"] },
       { to: "/dashboard/employees", label: "Employees", icon: Users, roles: ["admin", "hr", "manager"] },
       { to: "/dashboard/hr", label: "HR Management", icon: UserCog, roles: ["admin", "hr"] },
       { to: "/dashboard/managers", label: "Managers", icon: UserPlus, roles: ["admin", "hr"] },
       { to: "/dashboard/departments", label: "Departments", icon: Building2, roles: ["admin", "hr"] },
-      {
-        label: "Attendance",
-        icon: CalendarDays,
-        basePath: "/dashboard/attendance",
-        roles: ["admin", "hr", "manager"],
-        children: [
-          { to: "/dashboard/attendance", label: "Attendance", icon: CalendarDays, exact: true },
-          { to: "/dashboard/attendance/shifts", label: "Shifts", icon: Clock },
-          { to: "/dashboard/attendance/rosters", label: "Rosters", icon: ScrollText },
-          { to: "/dashboard/attendance/holidays", label: "Holidays", icon: Palmtree },
-        ],
-      },
+      { to: "/dashboard/attendance", label: "Attendance", icon: CalendarDays, roles: ["admin", "hr", "manager"] },
       { to: "/dashboard/timesheets", label: "Timesheets", icon: Timer, roles: ["admin", "hr", "manager"] },
       { to: "/dashboard/leaves", label: "Leaves", icon: FileText, roles: ["admin", "hr", "manager"] },
       {
@@ -128,7 +117,7 @@ const NAV_SECTIONS: NavSection[] = [
         label: "Recruitment",
         icon: Briefcase,
         basePath: "/dashboard/recruitment",
-        roles: ["admin", "hr", "manager"],
+        roles: ["admin", "hr"],
         children: [
           { to: "/dashboard/recruitment", label: "Dashboard", icon: LayoutDashboard, exact: true },
           { to: "/dashboard/recruitment/requisitions", label: "Requisitions", icon: FileSignature },
@@ -176,573 +165,123 @@ const NAV_SECTIONS: NavSection[] = [
     title: "Attendance",
     roles: ["employee"],
     items: [
-      {
-        label: "Attendance",
-        icon: CalendarDays,
-        basePath: "/dashboard/attendance",
-        roles: ["employee"],
-        children: [
-          { to: "/dashboard/attendance", label: "Dashboard", icon: LayoutDashboard, exact: true },
-          { to: "/dashboard/attendance/checkin", label: "Check In / Check Out", icon: Fingerprint, badge: "New" },
-          { to: "/dashboard/attendance/history", label: "Attendance History", icon: History },
-          { to: "/dashboard/attendance/calendar", label: "Monthly Calendar", icon: CalendarRange },
-          { to: "/dashboard/attendance/shifts", label: "Shift Details", icon: Clock },
-          { to: "/dashboard/attendance/overtime", label: "Overtime", icon: Timer },
-          { to: "/dashboard/attendance/regularization", label: "Attendance Regularization", icon: FileEdit },
-          { to: "/dashboard/attendance/break-time", label: "Break Time", icon: Coffee },
-          { to: "/dashboard/attendance/reports", label: "Attendance Reports", icon: FileBarChart },
-        ],
-      },
+      { to: "/dashboard/attendance", label: "Attendance", icon: CalendarDays, roles: ["employee"] },
     ],
   },
   {
     title: "Timesheets",
     roles: ["employee"],
     items: [
-      {
-        label: "Timesheets",
-        icon: Timer,
-        basePath: "/dashboard/timesheets",
-        roles: ["employee"],
-        children: [
-          { to: "/dashboard/timesheets", label: "My Timesheets", icon: ListTodo, exact: true },
-          { to: "/dashboard/timesheets/daily", label: "Daily Timesheet", icon: CalendarDays },
-          { to: "/dashboard/timesheets/weekly", label: "Weekly Timesheet", icon: CalendarRange },
-          { to: "/dashboard/timesheets/project-hours", label: "Project Hours", icon: Briefcase },
-          { to: "/dashboard/timesheets/task-hours", label: "Task Hours", icon: ClipboardList },
-          { to: "/dashboard/timesheets/submit", label: "Submit Timesheet", icon: FilePlus2 },
-          { to: "/dashboard/timesheets/approval-status", label: "Approval Status", icon: CheckCircle2 },
-          { to: "/dashboard/timesheets/history", label: "History", icon: History },
-        ],
-      },
+      { to: "/dashboard/timesheets", label: "Timesheets", icon: Timer, roles: ["employee"] },
     ],
   },
   {
     title: "Leaves",
     roles: ["employee"],
     items: [
-      {
-        label: "Leaves",
-        icon: Palmtree,
-        basePath: "/dashboard/leaves",
-        roles: ["employee"],
-        count: 3,
-        children: [
-          { to: "/dashboard/leaves/apply", label: "Apply Leave", icon: FilePlus2 },
-          { to: "/dashboard/leaves/balance", label: "Leave Balance", icon: Wallet },
-          { to: "/dashboard/leaves/calendar", label: "Leave Calendar", icon: CalendarDays },
-          { to: "/dashboard/leaves/history", label: "Leave History", icon: History },
-          { to: "/dashboard/leaves/holidays", label: "Holiday Calendar", icon: CalendarCheck },
-          { to: "/dashboard/leaves/comp-off", label: "Comp Off", icon: Repeat },
-          { to: "/dashboard/leaves/wfh", label: "Work From Home", icon: Laptop },
-          { to: "/dashboard/leaves/approvals", label: "Leave Approvals", icon: CheckCircle2, count: 3 },
-        ],
-      },
+      { to: "/dashboard/leaves", label: "Leaves", icon: Palmtree, roles: ["employee"] },
     ],
   },
   {
     title: "Payroll",
     roles: ["employee"],
     items: [
-      {
-        label: "Payroll",
-        icon: CreditCard,
-        basePath: "/dashboard/payroll",
-        roles: ["employee"],
-        children: [
-          { to: "/dashboard/payroll/payslips", label: "Salary Slips", icon: FileText },
-          { to: "/dashboard/payroll/salary-structure", label: "Salary Structure", icon: LayoutDashboard },
-          { to: "/dashboard/payroll/history", label: "Payroll History", icon: History },
-          { to: "/dashboard/payroll/tax", label: "Tax Details", icon: Percent },
-          { to: "/dashboard/payroll/form16", label: "Form 16", icon: FileCheck },
-          { to: "/dashboard/payroll/reimbursements", label: "Reimbursements", icon: Receipt },
-          { to: "/dashboard/payroll/bonuses", label: "Bonuses", icon: Gift },
-          { to: "/dashboard/payroll/incentives", label: "Incentives", icon: TrendingUp },
-          { to: "/dashboard/payroll/bank-details", label: "Bank Details", icon: Landmark },
-          { to: "/dashboard/payroll/pf", label: "PF", icon: Coins },
-          { to: "/dashboard/payroll/esi", label: "ESI", icon: HeartHandshake },
-          { to: "/dashboard/payroll/tds", label: "TDS", icon: Building },
-        ],
-      },
+      { to: "/dashboard/payroll", label: "Payroll", icon: CreditCard, roles: ["employee"] },
     ],
   },
   {
     title: "Performance",
     roles: ["employee"],
     items: [
-      {
-        label: "Performance",
-        icon: Gauge,
-        basePath: "/dashboard/performance",
-        roles: ["employee"],
-        children: [
-          { to: "/dashboard/performance/goals", label: "My Goals", icon: Target },
-          { to: "/dashboard/performance/okrs", label: "OKRs", icon: CheckCircle2 },
-          { to: "/dashboard/performance/kpis", label: "KPIs", icon: LineChartIcon },
-          { to: "/dashboard/performance/self-review", label: "Self Review", icon: PenLine },
-          { to: "/dashboard/performance/feedback", label: "Manager Feedback", icon: MessageSquare },
-          { to: "/dashboard/performance/appraisals", label: "Appraisals", icon: Award },
-          { to: "/dashboard/performance/promotions", label: "Promotions", icon: TrendingUp },
-          { to: "/dashboard/performance/achievements", label: "Achievements", icon: Trophy },
-          { to: "/dashboard/performance/skills", label: "Skill Development", icon: GraduationCap },
-        ],
-      },
+      { to: "/dashboard/performance", label: "Performance", icon: Gauge, roles: ["employee"] },
     ],
   },
   {
     title: "Documents",
     roles: ["employee"],
     items: [
-      {
-        label: "Documents",
-        icon: Folder,
-        basePath: "/dashboard/documents",
-        roles: ["employee"],
-        children: [
-          { to: "/dashboard/documents", label: "My Documents", icon: FolderOpen, exact: true },
-          { to: "/dashboard/documents/offer-letter", label: "Offer Letter", icon: FileText },
-          { to: "/dashboard/documents/appointment-letter", label: "Appointment Letter", icon: FileSignature },
-          { to: "/dashboard/documents/salary-slips", label: "Salary Slips", icon: ScrollText },
-          { to: "/dashboard/documents/experience-letter", label: "Experience Letter", icon: FileCheck },
-          { to: "/dashboard/documents/policies", label: "Company Policies", icon: BookOpen },
-          { to: "/dashboard/documents/nda", label: "NDA", icon: Lock },
-          { to: "/dashboard/documents/tax-documents", label: "Tax Documents", icon: Percent },
-          { to: "/dashboard/documents/upload", label: "Upload Documents", icon: FilePlus2 },
-        ],
-      },
+      { to: "/dashboard/documents", label: "Documents", icon: Folder, roles: ["employee"] },
     ],
   },
   {
     title: "Assets",
     roles: ["employee"],
     items: [
-      {
-        label: "Assets",
-        icon: Package,
-        basePath: "/dashboard/assets",
-        roles: ["employee"],
-        children: [
-          { to: "/dashboard/assets", label: "My Assets", icon: Package, exact: true },
-          { to: "/dashboard/assets/assigned", label: "Assigned Assets", icon: Laptop },
-          { to: "/dashboard/assets/details", label: "Asset Details", icon: Info },
-          { to: "/dashboard/assets/warranty", label: "Asset Warranty", icon: ShieldCheck },
-          { to: "/dashboard/assets/return", label: "Return Asset", icon: Repeat },
-          { to: "/dashboard/assets/repair", label: "Repair Request", icon: Wrench },
-          { to: "/dashboard/assets/history", label: "Asset History", icon: History },
-        ],
-      },
+      { to: "/dashboard/assets", label: "Assets", icon: Package, roles: ["employee"] },
     ],
   },
   {
     title: "Expenses",
     roles: ["employee"],
     items: [
-      {
-        label: "Expenses",
-        icon: Receipt,
-        basePath: "/dashboard/expenses",
-        roles: ["employee"],
-        children: [
-          { to: "/dashboard/expenses/submit", label: "Submit Expense", icon: FilePlus2 },
-          { to: "/dashboard/expenses/reimbursements", label: "Reimbursements", icon: HandCoins },
-          { to: "/dashboard/expenses/travel-claims", label: "Travel Claims", icon: Plane },
-          { to: "/dashboard/expenses/history", label: "Expense History", icon: History },
-        ],
-      },
+      { to: "/dashboard/expenses", label: "Expenses", icon: Receipt, roles: ["employee"] },
     ],
   },
   {
     title: "Learning",
     roles: ["employee"],
     items: [
-      {
-        label: "Learning",
-        icon: GraduationCap,
-        basePath: "/dashboard/learning",
-        roles: ["employee"],
-        badge: "New",
-        children: [
-          { to: "/dashboard/learning/courses", label: "Courses", icon: BookOpen },
-          { to: "/dashboard/learning/programs", label: "Training Programs", icon: Zap },
-          { to: "/dashboard/learning/certifications", label: "Certifications", icon: BadgeCheck },
-          { to: "/dashboard/learning/assessments", label: "Assessments", icon: ClipboardCheck },
-          { to: "/dashboard/learning/progress", label: "Learning Progress", icon: TrendingUp },
-        ],
-      },
+      { to: "/dashboard/learning", label: "Learning", icon: GraduationCap, roles: ["employee"] },
     ],
   },
   {
     title: "Career",
     roles: ["employee"],
     items: [
-      {
-        label: "Career",
-        icon: Map,
-        basePath: "/dashboard/career",
-        roles: ["employee"],
-        children: [
-          { to: "/dashboard/career/openings", label: "Internal Job Openings", icon: Briefcase },
-          { to: "/dashboard/career/referrals", label: "Referral Program", icon: Gift },
-          { to: "/dashboard/career/growth", label: "Career Growth", icon: TrendingUp },
-          { to: "/dashboard/career/promotions", label: "Promotion History", icon: Award },
-        ],
-      },
+      { to: "/dashboard/career", label: "Career", icon: Map, roles: ["employee"] },
     ],
   },
   {
     title: "Communication",
     roles: ["employee"],
     items: [
-      {
-        label: "Communication",
-        icon: MessageCircle,
-        basePath: "/dashboard/communication",
-        roles: ["employee"],
-        count: 5,
-        children: [
-          { to: "/dashboard/communication/announcements", label: "Announcements", icon: Bell, count: 2 },
-          { to: "/dashboard/communication/notice-board", label: "Notice Board", icon: ScrollText },
-          { to: "/dashboard/communication/team-directory", label: "Team Directory", icon: Users },
-          { to: "/dashboard/communication/company-directory", label: "Company Directory", icon: Building2 },
-          { to: "/dashboard/communication/chat", label: "Chat", icon: MessageSquare, count: 3 },
-          { to: "/dashboard/communication/team-chat", label: "Team Chat", icon: MessageCircle },
-        ],
-      },
+      { to: "/dashboard/communication", label: "Communication", icon: MessageCircle, roles: ["employee"] },
     ],
   },
   {
     title: "Calendar",
     roles: ["employee"],
     items: [
-      {
-        label: "Calendar",
-        icon: CalendarDays,
-        basePath: "/dashboard/calendar",
-        roles: ["employee"],
-        children: [
-          { to: "/dashboard/calendar/company", label: "Company Calendar", icon: CalendarDays },
-          { to: "/dashboard/calendar/holidays", label: "Holidays", icon: Palmtree },
-          { to: "/dashboard/calendar/events", label: "Events", icon: Star },
-          { to: "/dashboard/calendar/meetings", label: "Meetings", icon: Video },
-        ],
-      },
+      { to: "/dashboard/calendar", label: "Calendar", icon: CalendarDays, roles: ["employee"] },
     ],
   },
   {
     title: "Rewards",
     roles: ["employee"],
     items: [
-      {
-        label: "Rewards",
-        icon: Trophy,
-        basePath: "/dashboard/rewards",
-        roles: ["employee"],
-        children: [
-          { to: "/dashboard/rewards", label: "Rewards", icon: Trophy, exact: true },
-          { to: "/dashboard/rewards/recognition", label: "Recognition", icon: Star },
-          { to: "/dashboard/rewards/badges", label: "Badges", icon: Medal },
-          { to: "/dashboard/rewards/achievements", label: "Achievements", icon: Award },
-        ],
-      },
+      { to: "/dashboard/rewards", label: "Rewards", icon: Trophy, roles: ["employee"] },
     ],
   },
   {
     title: "Help Center",
     roles: ["employee"],
     items: [
-      {
-        label: "Help Center",
-        icon: Headphones,
-        basePath: "/dashboard/help",
-        roles: ["employee"],
-        children: [
-          { to: "/dashboard/help/desk", label: "Help Desk", icon: Headphones },
-          { to: "/dashboard/help/raise-ticket", label: "Raise Ticket", icon: TicketCheck },
-          { to: "/dashboard/help/support", label: "Support Requests", icon: HeartHandshake },
-          { to: "/dashboard/help/faqs", label: "FAQs", icon: HelpCircle },
-        ],
-      },
+      { to: "/dashboard/help", label: "Help Center", icon: Headphones, roles: ["employee"] },
+    ],
+  },
+  {
+    title: "Exit",
+    roles: ["employee"],
+    items: [
+      { to: "/dashboard/exit", label: "Resignation / Exit", icon: LogOut, roles: ["employee"] },
     ],
   },
   {
     title: "Settings",
     roles: ["employee"],
     items: [
-      {
-        label: "Settings",
-        icon: Settings,
-        basePath: "/dashboard/settings",
-        roles: ["employee"],
-        children: [
-          { to: "/dashboard/settings/profile", label: "My Profile", icon: UserCheck },
-          { to: "/dashboard/settings/personal", label: "Personal Information", icon: UserCog },
-          { to: "/dashboard/settings/emergency-contacts", label: "Emergency Contacts", icon: AlertCircle },
-          { to: "/dashboard/settings/bank-details", label: "Bank Details", icon: Landmark },
-          { to: "/dashboard/settings/security", label: "Password & Security", icon: Lock },
-          { to: "/dashboard/settings/notifications", label: "Notification Settings", icon: Bell },
-          { to: "/dashboard/settings/language", label: "Language", icon: Languages },
-          { to: "/dashboard/settings/privacy", label: "Privacy Settings", icon: ShieldCheck },
-        ],
-      },
+      { to: "/dashboard/settings", label: "Settings", icon: Settings, roles: ["employee"] },
     ],
   },
 
   // ══════════════════════════════════════════════════════════════
-  // AI HUB — Admin / HR / Manager
+  // AI SUPPORT — All Roles
   // ══════════════════════════════════════════════════════════════
   {
-    title: "AI Hub",
-    roles: ["admin", "hr", "manager"],
+    title: "AI Support",
+    roles: ["admin", "hr", "manager", "employee"],
     items: [
-      {
-        label: "AI Hub",
-        icon: Star,
-        basePath: "/ai",
-        children: [
-          { to: "/ai", label: "Hub Dashboard", icon: LayoutDashboard, exact: true },
-          { to: "/ai/workforce-insights", label: "Workforce Insights", icon: Brain },
-          { to: "/ai/recruiter", label: "Recruiter", icon: Briefcase },
-          { to: "/ai/attendance-monitor", label: "Attendance Monitor", icon: Clock },
-          { to: "/ai/leave-assistant", label: "Leave Assistant", icon: FileText },
-          { to: "/ai/performance-coach", label: "Performance Coach", icon: Gauge },
-          { to: "/ai/payroll-insights", label: "Payroll Insights", icon: Banknote },
-          { to: "/ai/workforce-planning", label: "Workforce Planning", icon: Target },
-          { to: "/ai/employee-health", label: "Employee Health", icon: HeartPulse },
-          { to: "/ai/policy-assistant", label: "Policy Assistant", icon: BookOpen },
-          { to: "/ai/document-generator", label: "Document Generator", icon: FilePlus2 },
-          { to: "/ai/meeting-intelligence", label: "Meeting Intelligence", icon: Video },
-          { to: "/ai/compliance-monitor", label: "Compliance Monitor", icon: ShieldCheck },
-          { to: "/ai/chat-assistant", label: "Chat Assistant", icon: MessageSquare },
-          { to: "/ai/analytics-center", label: "Analytics Center", icon: LineChartIcon },
-        ],
-      },
-    ],
-  },
-
-  // ══════════════════════════════════════════════════════════════
-  // AI HUB — Employee
-  // ══════════════════════════════════════════════════════════════
-  {
-    title: "AI Hub",
-    roles: ["employee"],
-    items: [
-      { to: "/ai", label: "Hub Dashboard", icon: LayoutDashboard, exact: true, roles: ["employee"] },
-      {
-        label: "Chat Assistant",
-        icon: MessageSquare,
-        basePath: "/ai/chat",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/chat-assistant", label: "AI HR Chat", icon: Bot },
-          { to: "/ai/chat/qa", label: "AI Q&A", icon: HelpCircle },
-          { to: "/ai/chat/search", label: "AI Search", icon: Search },
-        ],
-      },
-      {
-        label: "Leave Assistant",
-        icon: Palmtree,
-        basePath: "/ai/leave",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/leave-assistant", label: "Leave Suggestions", icon: Lightbulb },
-          { to: "/ai/leave/balance-analysis", label: "Leave Balance Analysis", icon: BarChart3 },
-          { to: "/ai/leave/planner", label: "Leave Planner", icon: CalendarRange },
-        ],
-      },
-      {
-        label: "Attendance Assistant",
-        icon: Fingerprint,
-        basePath: "/ai/attendance",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/attendance-monitor", label: "Attendance Insights", icon: LineChartIcon },
-          { to: "/ai/attendance/missing-punch", label: "Missing Punch Detection", icon: AlertCircle },
-          { to: "/ai/attendance/late-arrival", label: "Late Arrival Analysis", icon: Clock3 },
-        ],
-      },
-      {
-        label: "Payroll Assistant",
-        icon: Banknote,
-        basePath: "/ai/payroll",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/payroll-insights", label: "Salary Explanation", icon: FileText },
-          { to: "/ai/payroll/tax-assistant", label: "Tax Assistant", icon: Percent },
-          { to: "/ai/payroll/payslip-summary", label: "Payslip Summary", icon: ScrollText },
-        ],
-      },
-      {
-        label: "Performance Coach",
-        icon: Gauge,
-        basePath: "/ai/performance",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/performance-coach", label: "Goal Planning", icon: Target },
-          { to: "/ai/performance/productivity", label: "Productivity Insights", icon: TrendingUp },
-          { to: "/ai/performance/career", label: "Career Suggestions", icon: Map },
-        ],
-      },
-      {
-        label: "Employee Health",
-        icon: HeartPulse,
-        basePath: "/ai/health",
-        roles: ["employee"],
-        badge: "New",
-        children: [
-          { to: "/ai/employee-health", label: "Wellness Score", icon: HeartPulse },
-          { to: "/ai/health/burnout", label: "Burnout Detection", icon: AlertCircle },
-          { to: "/ai/health/mood", label: "Mood Check", icon: HeartHandshake },
-          { to: "/ai/health/work-life", label: "Work-Life Balance", icon: Zap },
-        ],
-      },
-      {
-        label: "Learning Coach",
-        icon: GraduationCap,
-        basePath: "/ai/learning",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/learning/skill-gap", label: "Skill Gap Analysis", icon: TrendingDown },
-          { to: "/ai/learning/personalized", label: "Personalized Learning", icon: BookMarked },
-          { to: "/ai/learning/certifications", label: "Certification Recommendations", icon: BadgeCheck },
-        ],
-      },
-      {
-        label: "Policy Assistant",
-        icon: BookOpen,
-        basePath: "/ai/policy",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/policy-assistant", label: "Company Policies", icon: ScrollText },
-          { to: "/ai/policy/hr-faqs", label: "HR FAQs", icon: HelpCircle },
-          { to: "/ai/policy/compliance", label: "Compliance Help", icon: ShieldCheck },
-        ],
-      },
-      {
-        label: "Meeting Intelligence",
-        icon: Video,
-        basePath: "/ai/meetings",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/meeting-intelligence", label: "Meeting Notes", icon: PenLine },
-          { to: "/ai/meetings/summaries", label: "AI Summaries", icon: ScrollText },
-          { to: "/ai/meetings/action-items", label: "Action Items", icon: ClipboardCheck },
-          { to: "/ai/meetings/followups", label: "Follow-ups", icon: Bell },
-        ],
-      },
-      {
-        label: "Resume Builder",
-        icon: FileEdit,
-        basePath: "/ai/resume",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/resume/generator", label: "AI Resume Generator", icon: Sparkles },
-          { to: "/ai/resume/improve", label: "Resume Improvement", icon: TrendingUp },
-        ],
-      },
-      {
-        label: "Career Coach",
-        icon: Map,
-        basePath: "/ai/career",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/career/promotion-readiness", label: "Promotion Readiness", icon: TrendingUp },
-          { to: "/ai/career/roadmap", label: "Career Roadmap", icon: Map },
-          { to: "/ai/career/skills", label: "Skill Recommendations", icon: GraduationCap },
-        ],
-      },
-      {
-        label: "Email Writer",
-        icon: Mail,
-        basePath: "/ai/email",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/email/leave", label: "Leave Email", icon: Palmtree },
-          { to: "/ai/email/hr", label: "HR Email", icon: UserCog },
-          { to: "/ai/email/professional", label: "Professional Email", icon: Mail },
-        ],
-      },
-      {
-        label: "Document Assistant",
-        icon: Folder,
-        basePath: "/ai/documents",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/documents/summary", label: "Document Summary", icon: FileText },
-          { to: "/ai/documents/contract", label: "Contract Explanation", icon: FileSignature },
-          { to: "/ai/documents/policy-summary", label: "Policy Summary", icon: BookOpen },
-        ],
-      },
-      {
-        label: "Goal Planner",
-        icon: Target,
-        basePath: "/ai/goals",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/goals/okr-generator", label: "OKR Generator", icon: CheckCircle2 },
-          { to: "/ai/goals/weekly", label: "Weekly Goals", icon: CalendarRange },
-          { to: "/ai/goals/productivity", label: "Productivity Planner", icon: TrendingUp },
-        ],
-      },
-      {
-        label: "Task Assistant",
-        icon: ListTodo,
-        basePath: "/ai/tasks",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/tasks/my-tasks", label: "My Tasks", icon: ClipboardList },
-          { to: "/ai/tasks/prioritization", label: "AI Prioritization", icon: Zap },
-          { to: "/ai/tasks/reminders", label: "Smart Reminders", icon: Bell },
-        ],
-      },
-      {
-        label: "AI Translator",
-        icon: Languages,
-        basePath: "/ai/translator",
-        roles: ["employee"],
-        badge: "Beta",
-        children: [
-          { to: "/ai/translator/documents", label: "Translate Documents", icon: FileText },
-          { to: "/ai/translator/chat", label: "Translate Chat", icon: MessageSquare },
-        ],
-      },
-      {
-        label: "Voice Assistant",
-        icon: Mic,
-        basePath: "/ai/voice",
-        roles: ["employee"],
-        badge: "Beta",
-        children: [
-          { to: "/ai/voice/commands", label: "Voice Commands", icon: Mic },
-          { to: "/ai/voice/search", label: "Voice Search", icon: Search },
-        ],
-      },
-      {
-        label: "AI Insights",
-        icon: BrainCircuit,
-        basePath: "/ai/insights",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/insights/personalized", label: "Personalized Insights", icon: Sparkles },
-          { to: "/ai/insights/productivity", label: "Productivity Trends", icon: TrendingUp },
-          { to: "/ai/insights/attendance", label: "Attendance Analytics", icon: CalendarDays },
-          { to: "/ai/insights/performance", label: "Performance Analytics", icon: LineChartIcon },
-        ],
-      },
+      { to: "/ai/chat-assistant", label: "AI HR Assistant", icon: Sparkles },
     ],
   },
 
@@ -887,11 +426,6 @@ export function DashboardShell() {
         "/dashboard/hr",
         "/dashboard/managers",
         "/dashboard/departments",
-        "/dashboard/timesheets",
-        "/dashboard/payroll",
-        "/dashboard/performance",
-        "/dashboard/documents",
-        "/dashboard/assets",
         "/dashboard/recruitment",
         "/dashboard/reports",
         "/dashboard/hr-ops",
@@ -899,13 +433,12 @@ export function DashboardShell() {
         "/dashboard/visitors",
         "/dashboard/onboarding-checklist",
         "/dashboard/offboarding",
-        "/dashboard/exit",
         "/dashboard/roles",
         "/dashboard/audit-logs",
         "/dashboard/billing",
-        "/ai",
       ];
-      const isTryingToAccessAdminManager = adminManagerPaths.some((p) => pathname.startsWith(p));
+      const isTryingToAccessAdminManager = adminManagerPaths.some((p) => pathname.startsWith(p)) ||
+        (pathname.startsWith("/ai") && pathname !== "/ai/chat-assistant");
       if (isTryingToAccessAdminManager) {
         navigate({ to: "/dashboard/employee" });
       }
@@ -969,12 +502,12 @@ export function DashboardShell() {
           <nav className="flex-1 space-y-3 overflow-y-auto p-2">
             {visibleNav.map((section, sIdx) => (
               <div key={sIdx} className="space-y-0.5">
-                {section.title && !collapsed ? (
+                {section.title && !collapsed && role !== "employee" ? (
                   <div className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
                     {section.title}
                   </div>
                 ) : null}
-                {section.title && collapsed ? (
+                {section.title && collapsed && role !== "employee" ? (
                   <div className="mx-2 my-2 border-t border-border" />
                 ) : null}
                 {section.items.map((item) => {

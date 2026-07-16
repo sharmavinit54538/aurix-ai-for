@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Folder, Search, Upload, Wand2, Download, CheckCircle, Clock, XCircle, AlertTriangle,
   FileText, Shield, Trash2, Eye, FileSpreadsheet, RefreshCw, Info, Calendar,
-  ShieldCheck, User, AlertCircle
+  ShieldCheck, User, AlertCircle, FolderOpen, FileSignature, ScrollText, BookOpen,
+  Lock, Percent, FilePlus2, CheckCircle2
 } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { aurix, uid, useAurix, type HRDocument, type HRDocumentActivity } from "@/lib/aurix-store";
 import { toast } from "sonner";
+import { api, apiInstance } from "@/api";
 
 // ----------------------------------------------------
 // ROUTE DEFINITION
@@ -60,13 +62,56 @@ const DOCUMENT_TEMPLATES = [
   { id: "handbook", title: "Company Handbook Acknowledgment", category: "Company Documents", fields: ["Version Date", "Signee Designation"] },
 ];
 
+const mapBackendDocToFrontend = (d: any, categoryName: string): HRDocument => {
+  let status: "Pending" | "Verified" | "Rejected" = "Pending";
+  if (d.status === "APPROVED" || d.status === "Verified") status = "Verified";
+  if (d.status === "REJECTED" || d.status === "Rejected") status = "Rejected";
+
+  const sizeInMb = d.file_size ? `${(d.file_size / (1024 * 1024)).toFixed(1)} MB` : "1.0 MB";
+
+  return {
+    id: d.id,
+    name: d.file_name || d.title || "document.pdf",
+    employeeId: d.employee_id || undefined,
+    employeeName: d.employee_name || d.employeeName || (d.employee ? d.employee.fullName : "Company-wide"),
+    category: categoryName as any,
+    type: d.title || "Other Document",
+    uploadedBy: d.uploaded_by_name || "HR Admin",
+    uploadDate: d.created_at ? d.created_at.split("T")[0] : d.issue_date || new Date().toISOString().split("T")[0],
+    expiryDate: d.expiry_date || undefined,
+    status,
+    fileSize: sizeInMb,
+    fileType: (d.file_name || "").split(".").pop() || "pdf",
+    description: d.description || "",
+  };
+};
+
+const mapCompanyDocToFrontend = (d: any, categoryName: string): HRDocument => {
+  return {
+    id: d.id,
+    name: d.file_name || d.title || "document.pdf",
+    category: categoryName as any,
+    type: d.title || "Other Document",
+    uploadedBy: "HR Admin",
+    uploadDate: d.created_at ? d.created_at.split("T")[0] : new Date().toISOString().split("T")[0],
+    status: "Verified",
+    fileSize: d.file_size ? `${(d.file_size / (1024 * 1024)).toFixed(1)} MB` : "1.0 MB",
+    fileType: (d.file_name || "").split(".").pop() || "pdf",
+    description: d.description || "",
+  };
+};
+
 // ----------------------------------------------------
 // MAIN PAGE COMPONENT
 // ----------------------------------------------------
 function DocumentsPage() {
   const ws = useAurix();
-  const docs = ws.documents || [];
+  const [docs, setDocs] = useState<HRDocument[]>([]);
+  const [categories, setCategories] = useState<{ id: string; name: string; code: string; is_company: boolean }[]>([]);
+  const [loading, setLoading] = useState(true);
   const activities = ws.documentActivities || [];
+  const userRole = (ws.user?.role || "employee") as string;
+  const [activeTab, setActiveTab] = useState(userRole === "employee" ? "my-documents" : "");
 
   // Table Filters & Search
   const [q, setQ] = useState("");
@@ -108,6 +153,46 @@ function DocumentsPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedDraft, setGeneratedDraft] = useState<string | null>(null);
 
+  const loadDocuments = async () => {
+    setLoading(true);
+    try {
+      const catsRes = await api.get<any>("/documents/categories");
+      let catsList: any[] = [];
+      if (catsRes?.success && catsRes.data) {
+        catsList = catsRes.data;
+        setCategories(catsList);
+      }
+
+      const empDocsRes = await api.get<any>("/documents/employees");
+      let mappedEmpDocs: HRDocument[] = [];
+      if (empDocsRes?.success && empDocsRes.data) {
+        mappedEmpDocs = empDocsRes.data.map((d: any) => {
+          const cat = catsList.find((c: any) => c.id === d.category_id);
+          return mapBackendDocToFrontend(d, cat ? cat.name : "Employee Documents");
+        });
+      }
+
+      const compDocsRes = await api.get<any>("/documents/company");
+      let mappedCompDocs: HRDocument[] = [];
+      if (compDocsRes?.success && compDocsRes.data) {
+        mappedCompDocs = compDocsRes.data.map((d: any) => {
+          const cat = catsList.find((c: any) => c.id === d.category_id);
+          return mapCompanyDocToFrontend(d, cat ? cat.name : "Company Documents");
+        });
+      }
+
+      setDocs([...mappedEmpDocs, ...mappedCompDocs]);
+    } catch (err) {
+      console.error("Error loading documents", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadDocuments();
+  }, []);
+
   // Sync types dropdown when category changes in Upload modal
   const handleCategoryChange = (val: string) => {
     setUploadCategory(val);
@@ -115,12 +200,8 @@ function DocumentsPage() {
     if (types.length > 0) setUploadType(types[0]);
   };
 
-  // ----------------------------------------------------
-  // EVENT HANDLERS
-  // ----------------------------------------------------
-
   // 1. Upload Handler
-  const handleUploadSubmit = (e: React.FormEvent) => {
+  const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!uploadFileName) {
       toast.error("Please drag or select a mock file to upload.");
@@ -128,56 +209,55 @@ function DocumentsPage() {
     }
 
     setIsUploading(true);
+    try {
+      const formData = new FormData();
+      const blob = new Blob(["mock pdf content"], { type: "application/pdf" });
+      formData.append("file", blob, uploadFileName);
 
-    setTimeout(() => {
-      let empName = "Company-wide";
+      const selectedCat = categories.find(c => c.name === uploadCategory);
+      const catId = selectedCat ? selectedCat.id : (categories[0]?.id || "");
+
       if (uploadEmployee !== "company") {
-        const emp = ws.employees.find(x => x.id === uploadEmployee);
-        if (emp) empName = emp.fullName;
+        formData.append("employee_id", uploadEmployee);
+        formData.append("category_id", catId);
+        formData.append("title", uploadType);
+        if (uploadDesc) formData.append("description", uploadDesc);
+        if (uploadExpiry) formData.append("expiry_date", uploadExpiry);
+        formData.append("visibility", "PRIVATE");
+        formData.append("status_field", "PENDING");
+
+        const res = await api.post<any>("/documents/employees", formData, {
+          headers: { "Content-Type": "multipart/form-data" }
+        });
+        if (res?.success) {
+          toast.success("Employee document uploaded successfully!");
+        }
+      } else {
+        formData.append("category_id", catId);
+        formData.append("title", uploadType);
+        if (uploadDesc) formData.append("description", uploadDesc);
+        formData.append("visibility", "PUBLIC");
+
+        const res = await api.post<any>("/documents/company", formData, {
+          headers: { "Content-Type": "multipart/form-data" }
+        });
+        if (res?.success) {
+          toast.success("Company document uploaded successfully!");
+        }
       }
 
-      const newDocId = uid("doc");
-      const newDoc: HRDocument = {
-        id: newDocId,
-        name: uploadFileName,
-        employeeId: uploadEmployee === "company" ? undefined : uploadEmployee,
-        employeeName: empName,
-        category: uploadCategory as any,
-        type: uploadType,
-        uploadedBy: ws.user?.fullName || "HR Admin",
-        uploadDate: new Date().toISOString().split("T")[0],
-        expiryDate: uploadExpiry || undefined,
-        status: "Pending",
-        fileSize: uploadFileSize || "1.2 MB",
-        fileType: uploadFileName.split(".").pop() as any || "pdf",
-        description: uploadDesc,
-      };
-
-      const newActivity: HRDocumentActivity = {
-        id: uid("act"),
-        documentId: newDocId,
-        documentName: uploadFileName,
-        action: "Uploaded",
-        performedBy: ws.user?.fullName || "HR Admin",
-        timestamp: new Date().toISOString(),
-        details: `Uploaded ${uploadType} for ${empName}.`
-      };
-
-      aurix.set({
-        documents: [newDoc, ...docs],
-        documentActivities: [newActivity, ...activities]
-      });
-
-      toast.success("Document uploaded successfully!");
-      setIsUploading(false);
+      await loadDocuments();
       setUploadOpen(false);
-
-      // Reset fields
       setUploadFileName("");
       setUploadFileSize("");
       setUploadDesc("");
       setUploadExpiry("");
-    }, 1200);
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Failed to upload document.");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   // Drag and drop mock handler
@@ -301,33 +381,20 @@ Acknowledged and Signed electronically.`;
   };
 
   // 3. Verification Workflow Actions
-  const handleVerify = (doc: HRDocument) => {
-    const updatedDocs = docs.map(d => {
-      if (d.id === doc.id) return { ...d, status: "Verified" as const, rejectionReason: undefined };
-      return d;
-    });
-
-    const newActivity: HRDocumentActivity = {
-      id: uid("act"),
-      documentId: doc.id,
-      documentName: doc.name,
-      action: "Verified",
-      performedBy: ws.user?.fullName || "HR Admin",
-      timestamp: new Date().toISOString(),
-      details: `Verified ${doc.type} for ${doc.employeeName || "Company"}.`
-    };
-
-    aurix.set({
-      documents: updatedDocs,
-      documentActivities: [newActivity, ...activities]
-    });
-
-    // Update preview doc if open
-    if (previewDoc?.id === doc.id) {
-      setPreviewDoc({ ...doc, status: "Verified" as const, rejectionReason: undefined });
+  const handleVerify = async (doc: HRDocument) => {
+    try {
+      const res = await api.patch<any>(`/documents/${doc.id}/verify`, { comments: "Verified and approved" });
+      if (res?.success) {
+        toast.success(`Verified document: ${doc.name}`);
+        await loadDocuments();
+        if (previewDoc?.id === doc.id) {
+          setPreviewDoc({ ...doc, status: "Verified" as const, rejectionReason: undefined });
+        }
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Failed to verify document.");
     }
-
-    toast.success(`Verified document: ${doc.name}`);
   };
 
   const handleRejectPrompt = (doc: HRDocument) => {
@@ -336,69 +403,44 @@ Acknowledged and Signed electronically.`;
     setRejectOpen(true);
   };
 
-  const handleRejectSubmit = () => {
+  const handleRejectSubmit = async () => {
     if (!targetDoc) return;
     if (!rejectionReason.trim()) {
       toast.error("Please enter a rejection reason.");
       return;
     }
 
-    const updatedDocs = docs.map(d => {
-      if (d.id === targetDoc.id) return { ...d, status: "Rejected" as const, rejectionReason };
-      return d;
-    });
-
-    const newActivity: HRDocumentActivity = {
-      id: uid("act"),
-      documentId: targetDoc.id,
-      documentName: targetDoc.name,
-      action: "Rejected",
-      performedBy: ws.user?.fullName || "HR Admin",
-      timestamp: new Date().toISOString(),
-      details: `Rejected ${targetDoc.type}: ${rejectionReason}`
-    };
-
-    aurix.set({
-      documents: updatedDocs,
-      documentActivities: [newActivity, ...activities]
-    });
-
-    // Update preview doc if open
-    if (previewDoc?.id === targetDoc.id) {
-      setPreviewDoc({ ...targetDoc, status: "Rejected" as const, rejectionReason });
+    try {
+      const res = await api.patch<any>(`/documents/${targetDoc.id}/reject`, { comments: rejectionReason });
+      if (res?.success) {
+        toast.warning(`Document rejected: ${targetDoc.name}`);
+        await loadDocuments();
+        setRejectOpen(false);
+        setTargetDoc(null);
+        if (previewDoc?.id === targetDoc.id) {
+          setPreviewDoc({ ...targetDoc, status: "Rejected" as const, rejectionReason });
+        }
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Failed to reject document.");
     }
-
-    toast.warning(`Document rejected: ${targetDoc.name}`);
-    setRejectOpen(false);
-    setTargetDoc(null);
   };
 
-  const handleRequestReupload = (doc: HRDocument) => {
-    const updatedDocs = docs.map(d => {
-      if (d.id === doc.id) return { ...d, status: "Pending" as const, rejectionReason: "Re-upload requested. Please supply a clear copy." };
-      return d;
-    });
-
-    const newActivity: HRDocumentActivity = {
-      id: uid("act"),
-      documentId: doc.id,
-      documentName: doc.name,
-      action: "Updated",
-      performedBy: ws.user?.fullName || "HR Admin",
-      timestamp: new Date().toISOString(),
-      details: `Requested re-upload for ${doc.type}`
-    };
-
-    aurix.set({
-      documents: updatedDocs,
-      documentActivities: [newActivity, ...activities]
-    });
-
-    if (previewDoc?.id === doc.id) {
-      setPreviewDoc({ ...doc, status: "Pending" as const, rejectionReason: "Re-upload requested. Please supply a clear copy." });
+  const handleRequestReupload = async (doc: HRDocument) => {
+    try {
+      const res = await api.patch<any>(`/documents/${doc.id}/reject`, { comments: "Re-upload requested. Please supply a clear copy." });
+      if (res?.success) {
+        toast.info(`Requested re-upload for: ${doc.name}`);
+        await loadDocuments();
+        if (previewDoc?.id === doc.id) {
+          setPreviewDoc({ ...doc, status: "Pending" as const, rejectionReason: "Re-upload requested. Please supply a clear copy." });
+        }
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Failed to request re-upload.");
     }
-
-    toast.info(`Requested re-upload for: ${doc.name}`);
   };
 
   // 4. Delete Handler
@@ -407,56 +449,52 @@ Acknowledged and Signed electronically.`;
     setDeleteOpen(true);
   };
 
-  const handleDeleteSubmit = () => {
+  const handleDeleteSubmit = async () => {
     if (!targetDoc) return;
 
-    const filteredDocs = docs.filter(d => d.id !== targetDoc.id);
+    try {
+      const isCompany = targetDoc.category === "Company Documents";
+      const deletePath = isCompany
+        ? `/documents/company/${targetDoc.id}`
+        : `/documents/employees/${targetDoc.id}`;
 
-    const newActivity: HRDocumentActivity = {
-      id: uid("act"),
-      documentId: targetDoc.id,
-      documentName: targetDoc.name,
-      action: "Updated",
-      performedBy: ws.user?.fullName || "HR Admin",
-      timestamp: new Date().toISOString(),
-      details: `Deleted document: ${targetDoc.name}`
-    };
-
-    aurix.set({
-      documents: filteredDocs,
-      documentActivities: [newActivity, ...activities]
-    });
-
-    if (previewDoc?.id === targetDoc.id) {
-      setPreviewDoc(null);
+      const res = await api.delete<any>(deletePath);
+      if (res?.success) {
+        toast.error(`Deleted document: ${targetDoc.name}`);
+        await loadDocuments();
+        setDeleteOpen(false);
+        setTargetDoc(null);
+        if (previewDoc?.id === targetDoc.id) {
+          setPreviewDoc(null);
+        }
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Failed to delete document.");
     }
-
-    toast.error(`Deleted document: ${targetDoc.name}`);
-    setDeleteOpen(false);
-    setTargetDoc(null);
   };
 
-  // Mock Download
-  const handleDownload = (doc: HRDocument) => {
+  // Backend Download
+  const handleDownload = async (doc: HRDocument) => {
     toast.success(`Downloading ${doc.name}...`);
-    const newActivity: HRDocumentActivity = {
-      id: uid("act"),
-      documentId: doc.id,
-      documentName: doc.name,
-      action: "Downloaded",
-      performedBy: ws.user?.fullName || "HR Admin",
-      timestamp: new Date().toISOString(),
-      details: `Downloaded document ${doc.name}`
-    };
-    aurix.set({ documentActivities: [newActivity, ...activities] });
+    try {
+      const isCompany = doc.category === "Company Documents";
+      const downloadPath = isCompany
+        ? `/documents/company/${doc.id}/download`
+        : `/documents/employees/${doc.id}/download`;
 
-    const element = document.createElement("a");
-    const file = new Blob([`Aurix HR Vault. Document ID: ${doc.id}\nCategory: ${doc.category}\nName: ${doc.name}\nStatus: ${doc.status}`], {type: 'text/plain'});
-    element.href = URL.createObjectURL(file);
-    element.download = doc.name;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+      const response = await apiInstance.get<any>(downloadPath, { responseType: "blob" });
+      const blob = response.data instanceof Blob ? response.data : new Blob([JSON.stringify(response.data)], { type: "application/octet-stream" });
+      const element = document.createElement("a");
+      element.href = URL.createObjectURL(blob);
+      element.download = doc.name;
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+    } catch (err: any) {
+      console.error("Download failed", err);
+      toast.error("Failed to download document file.");
+    }
   };
 
   // ----------------------------------------------------
@@ -596,6 +634,298 @@ Acknowledged and Signed electronically.`;
       setSortOrder("desc");
     }
   };
+
+  const employeeDocTabs = [
+    { id: "my-documents", label: "My Documents", icon: FolderOpen },
+    { id: "offer-letter", label: "Offer Letter", icon: FileText },
+    { id: "appointment-letter", label: "Appointment Letter", icon: FileSignature },
+    { id: "salary-slips", label: "Salary Slips", icon: ScrollText },
+    { id: "experience-letter", label: "Experience Letter", icon: CheckCircle },
+    { id: "policies", label: "Company Policies", icon: BookOpen },
+    { id: "nda", label: "NDA", icon: Lock },
+    { id: "tax-documents", label: "Tax Documents", icon: Percent },
+    { id: "upload", label: "Upload Documents", icon: FilePlus2 },
+  ];
+
+  const myDocs = useMemo(() => {
+    return docs.filter(d => d.employeeId === ws.user?.id);
+  }, [docs, ws.user?.id]);
+
+  const handleEmployeeUpload = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!uploadDesc.trim()) {
+      toast.error("Please enter a document description.");
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      const blob = new Blob(["mock pdf content"], { type: "application/pdf" });
+      const fileName = `${uploadType} - ${ws.user?.fullName}.pdf`;
+      formData.append("file", blob, fileName);
+
+      const selectedCat = categories.find(c => c.name === "Employee Documents");
+      const catId = selectedCat ? selectedCat.id : (categories[0]?.id || "");
+
+      formData.append("employee_id", ws.user?.id || "");
+      formData.append("category_id", catId);
+      formData.append("title", uploadType);
+      formData.append("description", uploadDesc);
+      formData.append("visibility", "PRIVATE");
+      formData.append("status_field", "PENDING");
+
+      const res = await api.post<any>("/documents/employees", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      if (res?.success) {
+        toast.success("Document uploaded successfully and queued for HR review!");
+        await loadDocuments();
+        setUploadDesc("");
+        setUploadExpiry("");
+        setActiveTab("my-documents");
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Failed to upload document.");
+    }
+  };
+
+  const renderTabDocuments = (tabId: string, filterFn: (d: HRDocument) => boolean, emptyMessage: string) => {
+    const matchingDocs = docs.filter(filterFn);
+
+    return (
+      <div className="space-y-4">
+        <h3 className="text-base font-semibold border-b pb-2">
+          {employeeDocTabs.find(t => t.id === tabId)?.label || "Documents"}
+        </h3>
+        {matchingDocs.length > 0 ? (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {matchingDocs.map((doc) => (
+              <div key={doc.id} className="border bg-card/30 rounded-xl p-4 flex items-center justify-between text-xs hover:bg-muted/5 transition-all">
+                <div>
+                  <div className="font-semibold text-sm">{doc.name}</div>
+                  <div className="text-muted-foreground mt-0.5">
+                    Uploaded: {doc.uploadDate} | Size: {doc.fileSize}
+                  </div>
+                  {doc.description && (
+                    <div className="text-muted-foreground mt-1 italic">{doc.description}</div>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  {doc.status === "Verified" ? (
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      <CheckCircle className="h-3 w-3" /> Verified
+                    </Badge>
+                  ) : doc.status === "Rejected" ? (
+                    <Badge variant="destructive">Rejected</Badge>
+                  ) : (
+                    <Badge variant="outline">Pending</Badge>
+                  )}
+                  <Button size="sm" variant="outline" onClick={() => handleDownload(doc)}>
+                    <Download className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 border border-dashed rounded-xl text-muted-foreground text-sm">
+            {emptyMessage}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  if (userRole === "employee") {
+    return (
+      <>
+        <PageHeader
+          title="My Documents & Records"
+          description="Access your official employee documents, view corporate guidelines, and upload verification records."
+          actions={
+            <Button onClick={() => setActiveTab("upload")} className="gap-2 bg-indigo-600 hover:bg-indigo-500 text-white">
+              <Upload className="h-4 w-4" /> Upload Document
+            </Button>
+          }
+        />
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_1fr]">
+          <aside className="space-y-1">
+            {employeeDocTabs.map((t) => {
+              const Icon = t.icon;
+              const active = activeTab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveTab(t.id)}
+                  className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                    active 
+                      ? "bg-accent text-foreground" 
+                      : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {t.label}
+                </button>
+              );
+            })}
+          </aside>
+
+          <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-xl">
+            {activeTab === "my-documents" && (
+              <div className="space-y-4">
+                <h3 className="text-base font-semibold border-b pb-2">My Uploaded Documents</h3>
+                <Card className="border overflow-hidden">
+                  <Table className="text-xs">
+                    <TableHeader className="bg-muted/20">
+                      <TableRow>
+                        <TableHead className="pl-6 py-4">Document Type</TableHead>
+                        <TableHead className="py-4">Upload Date</TableHead>
+                        <TableHead className="py-4">Size</TableHead>
+                        <TableHead className="py-4">Status</TableHead>
+                        <TableHead className="pr-6 py-4"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {myDocs.map((doc) => (
+                        <TableRow key={doc.id} className="hover:bg-muted/5 transition-all">
+                          <TableCell className="pl-6 py-4 font-semibold">{doc.name}</TableCell>
+                          <TableCell className="py-4 text-muted-foreground">{doc.uploadDate}</TableCell>
+                          <TableCell className="py-4 text-muted-foreground">{doc.fileSize || "—"}</TableCell>
+                          <TableCell className="py-4">
+                            <Badge
+                              variant={doc.status === "Verified" ? "secondary" : doc.status === "Rejected" ? "destructive" : "outline"}
+                              className={`text-[10px] capitalize ${
+                                doc.status === "Pending" ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" : ""
+                              }`}
+                            >
+                              {doc.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="pr-6 py-4 text-right">
+                            <Button size="sm" variant="ghost" onClick={() => handleDownload(doc)}>Download</Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {myDocs.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                            No documents uploaded yet.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </Card>
+              </div>
+            )}
+
+            {activeTab === "offer-letter" && renderTabDocuments(
+              "offer-letter",
+              d => d.employeeId === ws.user?.id && (d.type.toLowerCase().includes("offer") || d.name.toLowerCase().includes("offer")),
+              "No offer letters found in your records."
+            )}
+
+            {activeTab === "appointment-letter" && renderTabDocuments(
+              "appointment-letter",
+              d => d.employeeId === ws.user?.id && (d.type.toLowerCase().includes("appointment") || d.name.toLowerCase().includes("appointment")),
+              "No appointment letters found in your records."
+            )}
+
+            {activeTab === "salary-slips" && renderTabDocuments(
+              "salary-slips",
+              d => d.employeeId === ws.user?.id && (d.type.toLowerCase().includes("salary") || d.type.toLowerCase().includes("slip") || d.type.toLowerCase().includes("payslip") || d.name.toLowerCase().includes("payslip") || d.name.toLowerCase().includes("salary")),
+              "No payslip documents found in your records."
+            )}
+
+            {activeTab === "experience-letter" && renderTabDocuments(
+              "experience-letter",
+              d => d.employeeId === ws.user?.id && (d.type.toLowerCase().includes("experience") || d.type.toLowerCase().includes("relieving") || d.name.toLowerCase().includes("experience") || d.name.toLowerCase().includes("relieving")),
+              "No experience or relieving certificates found in your records."
+            )}
+
+            {activeTab === "policies" && renderTabDocuments(
+              "policies",
+              d => d.category === "Company Documents",
+              "No company guidelines or handbooks published yet."
+            )}
+
+            {activeTab === "nda" && renderTabDocuments(
+              "nda",
+              d => d.employeeId === ws.user?.id && (d.type.toLowerCase().includes("nda") || d.type.toLowerCase().includes("disclosure") || d.name.toLowerCase().includes("nda") || d.name.toLowerCase().includes("disclosure")),
+              "No signed NDA agreements found in your records."
+            )}
+
+            {activeTab === "tax-documents" && renderTabDocuments(
+              "tax-documents",
+              d => d.employeeId === ws.user?.id && (d.type.toLowerCase().includes("tax") || d.type.toLowerCase().includes("12bb") || d.type.toLowerCase().includes("form 16") || d.name.toLowerCase().includes("tax") || d.name.toLowerCase().includes("12bb") || d.name.toLowerCase().includes("form 16")),
+              "No tax declarations or investment proofs found in your records."
+            )}
+
+            {activeTab === "upload" && (
+              <form onSubmit={handleEmployeeUpload} className="space-y-4 max-w-md">
+                <h3 className="text-base font-semibold border-b pb-2">Submit Document for Verification</h3>
+                
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase">Document Category</Label>
+                  <select
+                    value={uploadCategory}
+                    onChange={(e) => {
+                      setUploadCategory(e.target.value);
+                      const types = CATEGORY_TYPES[e.target.value] || [];
+                      if (types.length > 0) setUploadType(types[0]);
+                    }}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs"
+                  >
+                    {CATEGORIES.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase">Document Type</Label>
+                  <select
+                    value={uploadType}
+                    onChange={(e) => setUploadType(e.target.value)}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs"
+                  >
+                    {(CATEGORY_TYPES[uploadCategory] || []).map(t => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase">Expiry Date (If applicable)</Label>
+                  <Input
+                    type="date"
+                    value={uploadExpiry}
+                    onChange={(e) => setUploadExpiry(e.target.value)}
+                    className="bg-background/50 border"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase">Description / Notes</Label>
+                  <textarea
+                    required
+                    value={uploadDesc}
+                    onChange={(e) => setUploadDesc(e.target.value)}
+                    placeholder="Provide a name or description for this document..."
+                    className="w-full min-h-[90px] bg-background/50 border rounded-lg p-3 text-sm focus:ring-1"
+                  />
+                </div>
+
+                <Button type="submit">Submit to HR</Button>
+              </form>
+            )}
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <div className="space-y-6">

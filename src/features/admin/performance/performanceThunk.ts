@@ -19,25 +19,25 @@ import type {
 } from "./types";
 
 const emptyData: PerformanceData = {
-  reviews: [...SEED_REVIEWS],
-  goals: [...SEED_GOALS],
-  feedback360: [...SEED_FEEDBACK],
-  rewards: [...SEED_REWARDS],
-  courses: [...SEED_COURSES],
+  reviews: [],
+  goals: [],
+  feedback360: [],
+  rewards: [],
+  courses: [],
 };
 
 export const fetchPerformance = createAsyncThunk<PerformanceData, void, { rejectValue: string }>(
   "performance/fetchPerformance",
   async () => {
     return tryApi(async () => {
-      const response = await apiInstance.get("/performance");
+      const response = await apiInstance.get("../../v2/performance");
       const data = response.data?.data ?? response.data ?? {};
       return {
-        reviews: data.reviews ?? SEED_REVIEWS,
-        goals: data.goals ?? SEED_GOALS,
-        feedback360: data.feedback360 ?? SEED_FEEDBACK,
-        rewards: data.rewards ?? SEED_REWARDS,
-        courses: data.courses ?? SEED_COURSES,
+        reviews: data.reviews ?? [],
+        goals: data.goals ?? [],
+        feedback360: data.feedback360 ?? [],
+        rewards: data.rewards ?? [],
+        courses: data.courses ?? [],
       };
     }, emptyData);
   },
@@ -46,7 +46,7 @@ export const fetchPerformance = createAsyncThunk<PerformanceData, void, { reject
 export const createReview = createAsyncThunk<PerformanceReview, PerformanceReview>(
   "performance/createReview",
   async (review) => {
-    await tryApi(() => apiInstance.post("/performance/reviews", review), undefined);
+    await tryApi(() => apiInstance.post("../../v2/performance/reviews", review), undefined);
     return review;
   },
 );
@@ -54,20 +54,20 @@ export const createReview = createAsyncThunk<PerformanceReview, PerformanceRevie
 export const updateReview = createAsyncThunk<PerformanceReview, PerformanceReview>(
   "performance/updateReview",
   async (review) => {
-    await tryApi(() => apiInstance.put(`/performance/reviews/${review.id}`, review), undefined);
+    await tryApi(() => apiInstance.put(`../../v2/performance/reviews/${review.id}`, review), undefined);
     return review;
   },
 );
 
 export const deleteReview = createAsyncThunk<string, string>("performance/deleteReview", async (id) => {
-  await tryApi(() => apiInstance.delete(`/performance/reviews/${id}`), undefined);
+  await tryApi(() => apiInstance.delete(`../../v2/performance/reviews/${id}`), undefined);
   return id;
 });
 
 export const bulkDeleteReviews = createAsyncThunk<string[], string[]>(
   "performance/bulkDeleteReviews",
   async (ids) => {
-    await tryApi(() => apiInstance.post("/performance/reviews/bulk-delete", { ids }), undefined);
+    await tryApi(() => apiInstance.post("../../v2/performance/reviews/bulk-delete", { ids }), undefined);
     return ids;
   },
 );
@@ -76,30 +76,30 @@ export const bulkSetReviewStatus = createAsyncThunk<
   { ids: string[]; status: PerformanceReview["reviewStatus"] },
   { ids: string[]; status: PerformanceReview["reviewStatus"] }
 >("performance/bulkSetReviewStatus", async (payload) => {
-  await tryApi(() => apiInstance.patch("/performance/reviews/bulk-status", payload), undefined);
+  await tryApi(() => apiInstance.patch("../../v2/performance/reviews/bulk-status", payload), undefined);
   return payload;
 });
 
 export const importReviews = createAsyncThunk<PerformanceReview[], PerformanceReview[]>(
   "performance/importReviews",
   async (reviews) => {
-    await tryApi(() => apiInstance.post("/performance/reviews/import", { reviews }), undefined);
+    await tryApi(() => apiInstance.post("../../v2/performance/reviews/import", { reviews }), undefined);
     return reviews;
   },
 );
 
 export const createGoal = createAsyncThunk<Goal, Goal>("performance/createGoal", async (goal) => {
-  await tryApi(() => apiInstance.post("/performance/goals", goal), undefined);
+  await tryApi(() => apiInstance.post("../../v2/performance/goals", goal), undefined);
   return goal;
 });
 
 export const updateGoal = createAsyncThunk<Goal, Goal>("performance/updateGoal", async (goal) => {
-  await tryApi(() => apiInstance.put(`/performance/goals/${goal.id}`, goal), undefined);
+  await tryApi(() => apiInstance.put(`../../v2/performance/goals/${goal.id}`, goal), undefined);
   return goal;
 });
 
 export const deleteGoal = createAsyncThunk<string, string>("performance/deleteGoal", async (id) => {
-  await tryApi(() => apiInstance.delete(`/performance/goals/${id}`), undefined);
+  await tryApi(() => apiInstance.delete(`../../v2/performance/goals/${id}`), undefined);
   return id;
 });
 
@@ -124,25 +124,25 @@ export const assignGoal = createAsyncThunk<
     dueDate: payload.dueDate,
     createdAt: new Date().toISOString().split("T")[0],
   };
-  await tryApi(() => apiInstance.post("/performance/goals/assign", goal), undefined);
+  await tryApi(() => apiInstance.post("../../v2/performance/goals/assign", goal), undefined);
   return goal;
 });
 
 export const completeGoal = createAsyncThunk<string, string>("performance/completeGoal", async (id) => {
-  await tryApi(() => apiInstance.post(`/performance/goals/${id}/complete`), undefined);
+  await tryApi(() => apiInstance.post(`../../v2/performance/goals/${id}/complete`), undefined);
   return id;
 });
 
 export const addFeedback = createAsyncThunk<Feedback360, Feedback360>(
   "performance/addFeedback",
   async (feedback) => {
-    await tryApi(() => apiInstance.post("/performance/feedback", feedback), undefined);
+    await tryApi(() => apiInstance.post("../../v2/performance/feedback", feedback), undefined);
     return feedback;
   },
 );
 
 export const addReward = createAsyncThunk<Reward, Reward>("performance/addReward", async (reward) => {
-  await tryApi(() => apiInstance.post("/performance/rewards", reward), undefined);
+  await tryApi(() => apiInstance.post("../../v2/performance/rewards", reward), undefined);
   return reward;
 });
 
@@ -157,7 +157,7 @@ export const assignTraining = createAsyncThunk<
     status: "assigned",
     assignedDate: new Date().toISOString().split("T")[0],
   };
-  await tryApi(() => apiInstance.post("/performance/training/assign", course), undefined);
+  await tryApi(() => apiInstance.post("../../v2/performance/training/assign", course), undefined);
   return course;
 });
 
@@ -165,6 +165,6 @@ export const updateTrainingStatus = createAsyncThunk<
   { id: string; status: TrainingCourse["status"] },
   { id: string; status: TrainingCourse["status"] }
 >("performance/updateTrainingStatus", async ({ id, status }) => {
-  await tryApi(() => apiInstance.patch(`/performance/training/${id}`, { status }), undefined);
+  await tryApi(() => apiInstance.patch(`../../v2/performance/training/${id}`, { status }), undefined);
   return { id, status };
 });

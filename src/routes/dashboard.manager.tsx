@@ -9,11 +9,11 @@ const ManagerPage = lazyFeaturePage(
 export const Route = createFileRoute("/dashboard/manager")({
   head: () => ({
     meta: [
-      { title: "Manager Dashboard — Aurix HR" },
+      { title: "Dashboard — Aurix HR" },
       {
         name: "description",
         content:
-          "Aurix HR Manager Dashboard — manage your team's attendance, leave, performance, assets, recruitment and more from one place.",
+          "Aurix HR Dashboard — manage your team's attendance, leave, performance, assets, recruitment and more from one place.",
       },
     ],
   }),

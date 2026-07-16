@@ -4,7 +4,7 @@ import {
   Package, Search, Plus, Upload, Download, CheckCircle2, Clock, XCircle, Wrench,
   QrCode, Trash2, Edit, Printer, FileSpreadsheet, RefreshCw, Info, Calendar,
   User, Building2, MapPin, Tag, ShieldCheck, DollarSign, ExternalLink, QrCode as QrIcon,
-  AlertCircle
+  AlertCircle, Laptop, Repeat, History
 } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Input } from "@/components/ui/input";
@@ -70,6 +70,9 @@ function AssetsPage() {
   const authWs = useAurix(); // For employees list
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  const userRole = (authWs.user?.role || "employee") as string;
+  const [activeTab, setActiveTab] = useState(userRole === "employee" ? "my-assets" : "");
 
   // Search & Filter state
   const [q, setQ] = useState("");
@@ -574,6 +577,330 @@ function AssetsPage() {
   const repairCostChartData = useMemo(() => {
     return apiStats.repair_costs_by_category || [];
   }, [apiStats]);
+
+  const employeeAssetTabs = [
+    { id: "my-assets", label: "My Assets", icon: Package },
+    { id: "assigned", label: "Assigned Assets", icon: Laptop },
+    { id: "details", label: "Asset Details", icon: Info },
+    { id: "warranty", label: "Asset Warranty", icon: ShieldCheck },
+    { id: "return", label: "Return Asset", icon: Repeat },
+    { id: "repair", label: "Repair Request", icon: Wrench },
+    { id: "history", label: "Asset History", icon: History },
+  ];
+
+  const employeeAssignedAssets = useMemo(() => {
+    return assets.filter(a => a.assignedTo === authWs.user?.fullName);
+  }, [assets, authWs.user?.fullName]);
+
+  const [selectedAssetId, setSelectedAssetId] = useState<string>("");
+  const currentSelectedAsset = useMemo(() => {
+    return assets.find(a => a.id === selectedAssetId) || employeeAssignedAssets[0] || null;
+  }, [assets, selectedAssetId, employeeAssignedAssets]);
+
+  const [returnAssetId, setReturnAssetId] = useState("");
+  const [returnNotes, setReturnNotes] = useState("");
+
+  const handleReturnSubmitEmployee = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!returnAssetId) {
+      toast.error("Please select an asset to return.");
+      return;
+    }
+    toast.success("Return request submitted successfully to IT Operations!");
+    setReturnNotes("");
+  };
+
+  const handleRepairSubmitEmployee = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!repairNotes.trim()) {
+      toast.error("Please provide a description of the issue.");
+      return;
+    }
+    toast.success("IT Repair ticket logged successfully!");
+    setRepairNotes("");
+  };
+
+  if (userRole === "employee") {
+    return (
+      <>
+        <PageHeader 
+          title="My Hardware & Assets" 
+          description="View details of assigned equipment, track warranty status, request repairs, or return devices."
+        />
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_1fr]">
+          <aside className="space-y-1">
+            {employeeAssetTabs.map((t) => {
+              const Icon = t.icon;
+              const active = activeTab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveTab(t.id)}
+                  className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                    active 
+                      ? "bg-accent text-foreground" 
+                      : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {t.label}
+                </button>
+              );
+            })}
+          </aside>
+
+          <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-xl">
+            {activeTab === "my-assets" && (
+              <div className="space-y-6">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Card className="bg-background/40">
+                    <CardHeader className="pb-2">
+                      <CardDescription className="text-xs uppercase font-semibold">Assigned Devices</CardDescription>
+                      <CardTitle className="text-3xl font-bold mt-1 text-indigo-500">{employeeAssignedAssets.length} Active</CardTitle>
+                    </CardHeader>
+                  </Card>
+                  <Card className="bg-background/40">
+                    <CardHeader className="pb-2">
+                      <CardDescription className="text-xs uppercase font-semibold">Next Scheduled Maintenance</CardDescription>
+                      <CardTitle className="text-2xl font-bold mt-1 text-emerald-500">None Pending</CardTitle>
+                    </CardHeader>
+                  </Card>
+                </div>
+
+                <h3 className="text-base font-semibold border-b pb-2">Active Hardware Allocations</h3>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {employeeAssignedAssets.map((asset) => (
+                    <div key={asset.id} className="border border-border bg-card/30 rounded-xl p-4 flex justify-between items-start text-xs">
+                      <div>
+                        <div className="font-semibold text-sm">{asset.name}</div>
+                        <div className="text-muted-foreground mt-0.5">Tag: {asset.tag} | Brand: {asset.brand || "N/A"}</div>
+                        <div className="text-[10px] text-muted-foreground mt-1">Assigned At: {asset.assignedAt || "—"}</div>
+                      </div>
+                      <Badge variant="secondary" className="capitalize">{asset.status}</Badge>
+                    </div>
+                  ))}
+                  {employeeAssignedAssets.length === 0 && (
+                    <div className="sm:col-span-2 text-center py-8 text-muted-foreground">
+                      No assets are currently assigned to you.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {activeTab === "assigned" && (
+              <div className="space-y-4">
+                <h3 className="text-base font-semibold border-b pb-2">Assigned Asset Details</h3>
+                <Card className="border overflow-hidden">
+                  <Table className="text-xs">
+                    <TableHeader className="bg-muted/20">
+                      <TableRow>
+                        <TableHead className="pl-6 py-4">Asset Tag</TableHead>
+                        <TableHead className="py-4">Name</TableHead>
+                        <TableHead className="py-4">Category</TableHead>
+                        <TableHead className="py-4">Serial Number</TableHead>
+                        <TableHead className="pr-6 py-4"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {employeeAssignedAssets.map((asset) => (
+                        <TableRow key={asset.id} className="hover:bg-muted/5 transition-all">
+                          <TableCell className="pl-6 py-4 font-semibold">{asset.tag}</TableCell>
+                          <TableCell className="py-4">{asset.name}</TableCell>
+                          <TableCell className="py-4 capitalize">{asset.category}</TableCell>
+                          <TableCell className="py-4 font-mono text-muted-foreground">{asset.serial}</TableCell>
+                          <TableCell className="pr-6 py-4 text-right">
+                            <Button size="sm" variant="ghost" onClick={() => { setSelectedAssetId(asset.id); setActiveTab("details"); }}>View Specs</Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {employeeAssignedAssets.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                            No assets assigned.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </Card>
+              </div>
+            )}
+
+            {activeTab === "details" && (
+              <div className="space-y-6">
+                <h3 className="text-base font-semibold border-b pb-2">Hardware Specifications</h3>
+                
+                {currentSelectedAsset ? (
+                  <div className="grid gap-6 md:grid-cols-2 text-xs">
+                    <div className="space-y-4 border rounded-xl p-5 bg-background/40">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Device Name:</span>
+                        <span className="font-semibold">{currentSelectedAsset.name}</span>
+                      </div>
+                      <div className="flex justify-between border-t pt-2">
+                        <span className="text-muted-foreground">Category:</span>
+                        <span className="font-semibold capitalize">{currentSelectedAsset.category}</span>
+                      </div>
+                      <div className="flex justify-between border-t pt-2">
+                        <span className="text-muted-foreground">Brand / Model:</span>
+                        <span className="font-semibold">{currentSelectedAsset.brand || "—"} / {currentSelectedAsset.model || "—"}</span>
+                      </div>
+                      <div className="flex justify-between border-t pt-2">
+                        <span className="text-muted-foreground">Serial Number:</span>
+                        <span className="font-mono font-semibold">{currentSelectedAsset.serial}</span>
+                      </div>
+                      <div className="flex justify-between border-t pt-2">
+                        <span className="text-muted-foreground">Device Tag ID:</span>
+                        <span className="font-semibold">{currentSelectedAsset.tag}</span>
+                      </div>
+                      <div className="flex justify-between border-t pt-2">
+                        <span className="text-muted-foreground">Storage Location:</span>
+                        <span className="font-semibold">{currentSelectedAsset.location || "Office HQ"}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-center justify-center border rounded-xl p-5 bg-background/40">
+                      <span className="text-muted-foreground uppercase text-[10px] font-semibold mb-3">Asset QR Code</span>
+                      <div className="bg-white p-4 rounded-xl">
+                        <QrCode className="h-32 w-32 text-slate-800" />
+                      </div>
+                      <span className="text-[10px] text-muted-foreground mt-3 font-mono">{currentSelectedAsset.id}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground text-xs">
+                    Select an asset in the Assigned Assets tab to view detailed specs.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === "warranty" && (
+              <div className="space-y-4">
+                <h3 className="text-base font-semibold border-b pb-2">Warranty Coverage Logs</h3>
+                <Card className="border overflow-hidden">
+                  <Table className="text-xs">
+                    <TableHeader className="bg-muted/20">
+                      <TableRow>
+                        <TableHead className="pl-6 py-4">Asset Tag</TableHead>
+                        <TableHead className="py-4">Name</TableHead>
+                        <TableHead className="py-4">Purchase Date</TableHead>
+                        <TableHead className="py-4">Warranty Until</TableHead>
+                        <TableHead className="pr-6 py-4">Support Vendor</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {employeeAssignedAssets.map((asset) => (
+                        <TableRow key={asset.id} className="hover:bg-muted/5 transition-all">
+                          <TableCell className="pl-6 py-4 font-semibold">{asset.tag}</TableCell>
+                          <TableCell className="py-4">{asset.name}</TableCell>
+                          <TableCell className="py-4">{asset.purchaseDate}</TableCell>
+                          <TableCell className="py-4 text-emerald-500 font-semibold">{asset.warrantyUntil || "—"}</TableCell>
+                          <TableCell className="pr-6 py-4 text-muted-foreground">{asset.vendor || "Manufacturer Direct"}</TableCell>
+                        </TableRow>
+                      ))}
+                      {employeeAssignedAssets.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                            No assets assigned.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </Card>
+              </div>
+            )}
+
+            {activeTab === "return" && (
+              <div className="max-w-md space-y-4">
+                <h3 className="text-base font-semibold border-b pb-2">Return Scheduled Hardware</h3>
+                <form onSubmit={handleReturnSubmitEmployee} className="space-y-4 text-xs">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-muted-foreground uppercase">Select Device to Return</Label>
+                    <select
+                      value={returnAssetId}
+                      onChange={(e) => setReturnAssetId(e.target.value)}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs"
+                    >
+                      <option value="">-- Choose Asset --</option>
+                      {employeeAssignedAssets.map(a => (
+                        <option key={a.id} value={a.id}>{a.name} ({a.tag})</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-muted-foreground uppercase">Reason / Remarks for Return</Label>
+                    <textarea
+                      value={returnNotes}
+                      onChange={(e) => setReturnNotes(e.target.value)}
+                      placeholder="Describe the reason (e.g. Upgrade requested, leaving company, damaged)..."
+                      className="w-full min-h-[90px] bg-background/50 border rounded-lg p-3 text-sm focus:ring-1"
+                    />
+                  </div>
+
+                  <Button type="submit">Submit Return Request</Button>
+                </form>
+              </div>
+            )}
+
+            {activeTab === "repair" && (
+              <div className="max-w-md space-y-4">
+                <h3 className="text-base font-semibold border-b pb-2">Submit Repair Request</h3>
+                <form onSubmit={handleRepairSubmitEmployee} className="space-y-4 text-xs">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-muted-foreground uppercase">Select Malfunctioning Device</Label>
+                    <select
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs"
+                      required
+                    >
+                      {employeeAssignedAssets.map(a => (
+                        <option key={a.id} value={a.id}>{a.name} ({a.tag})</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-muted-foreground uppercase">Describe Issue / Error</Label>
+                    <textarea
+                      required
+                      value={repairNotes}
+                      onChange={(e) => setRepairNotes(e.target.value)}
+                      placeholder="Detailed description of the issue..."
+                      className="w-full min-h-[90px] bg-background/50 border rounded-lg p-3 text-sm focus:ring-1"
+                    />
+                  </div>
+
+                  <Button type="submit">Request IT Support</Button>
+                </form>
+              </div>
+            )}
+
+            {activeTab === "history" && (
+              <div className="space-y-6 max-w-lg">
+                <h3 className="text-base font-semibold border-b pb-2">Asset Allocation Timeline</h3>
+                <div className="relative pl-6 border-l-2 border-dashed border-border space-y-4 text-xs">
+                  {employeeAssignedAssets.map((asset) => (
+                    <div key={asset.id} className="relative">
+                      <div className="absolute -left-[31px] top-0 h-4 w-4 rounded-full bg-indigo-500 border border-background flex items-center justify-center text-[10px] text-white">✓</div>
+                      <div className="font-medium text-foreground">{asset.name} Assigned</div>
+                      <div className="text-[10px] text-muted-foreground">Serial: {asset.serial} | Assigned: {asset.assignedAt || "Recently"}</div>
+                    </div>
+                  ))}
+                  {employeeAssignedAssets.length === 0 && (
+                    <div className="text-muted-foreground">No historical allocations logged.</div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <div className="space-y-6">

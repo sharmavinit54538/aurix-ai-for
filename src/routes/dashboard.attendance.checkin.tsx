@@ -199,14 +199,8 @@ function MiniCalendar() {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDay = new Date(year, month, 1).getDay();
 
-  // Mock data
-  const statuses: Record<number, AttendanceDay["status"]> = {
-    1: "present", 2: "present", 3: "present", 4: "present", 5: "present",
-    7: "weekend", 8: "present", 9: "late", 10: "present", 11: "present", 12: "present",
-    14: "weekend", 15: "holiday", 16: "present", 17: "present", 18: "leave", 19: "present",
-    21: "weekend", 22: "halfday", 23: "present", 24: "present", 25: "present", 26: "present",
-    28: "weekend", 29: "today",
-  };
+  // No mock data — real attendance data to be loaded from API
+  const statuses: Record<number, AttendanceDay["status"]> = {};
 
   const COLOR: Record<string, string> = {
     present: "bg-emerald-500/20 text-emerald-600 dark:text-emerald-300",
@@ -263,17 +257,15 @@ function MiniCalendar() {
 
 // ── AI Insights Widget ─────────────────────────────────────────
 function AIInsights() {
-  const insights = [
-    { icon: TrendingUp, label: "Attendance Score", value: "94%", trend: "+2%", positive: true },
-    { icon: Clock, label: "Avg. Check-In", value: "09:02 AM", trend: "On time", positive: true },
-    { icon: Timer, label: "Avg. Work Hours", value: "8h 42m", trend: "+12m", positive: true },
-    { icon: Activity, label: "Punctuality Rank", value: "#3 / 48", trend: "Top 10%", positive: true },
-  ];
-
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-2">
-        {insights.map((item) => {
+        {[
+          { icon: TrendingUp, label: "Attendance Score", value: "—" },
+          { icon: Clock, label: "Avg. Check-In", value: "—" },
+          { icon: Timer, label: "Avg. Work Hours", value: "—" },
+          { icon: Activity, label: "Punctuality Rank", value: "—" },
+        ].map((item) => {
           const Icon = item.icon;
           return (
             <div key={item.label} className="rounded-xl border border-border bg-card/40 p-3">
@@ -282,7 +274,6 @@ function AIInsights() {
                 <span className="text-[10px] text-muted-foreground uppercase tracking-wide">{item.label}</span>
               </div>
               <div className="font-display text-lg font-semibold">{item.value}</div>
-              <div className={`text-[10px] font-medium ${item.positive ? "text-emerald-500" : "text-rose-500"}`}>{item.trend}</div>
             </div>
           );
         })}
@@ -292,32 +283,8 @@ function AIInsights() {
           <Sparkles className="h-4 w-4 shrink-0 text-violet-500 mt-0.5" />
           <div>
             <div className="text-xs font-semibold text-violet-600 dark:text-violet-300 mb-1">AI Recommendation</div>
-            <p className="text-xs text-muted-foreground">Your attendance is excellent this month! Try to maintain the same pattern next week — you're on track for the perfect attendance bonus.</p>
+            <p className="text-xs text-muted-foreground">Attendance insights will appear once you start logging your check-in and check-out activity.</p>
           </div>
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        <div className="rounded-xl border border-border bg-card/40 p-3">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Weekly Summary</div>
-          <div className="flex gap-1 mt-2">
-            {["P", "P", "P", "L", "P"].map((s, i) => (
-              <div key={i} className={`flex-1 h-8 rounded text-[9px] flex items-center justify-center font-bold ${
-                s === "P" ? "bg-emerald-500/20 text-emerald-600" : "bg-violet-500/20 text-violet-600"
-              }`}>{s}</div>
-            ))}
-          </div>
-          <div className="mt-1 text-[10px] text-muted-foreground text-center">Mon–Fri</div>
-        </div>
-        <div className="rounded-xl border border-border bg-card/40 p-3">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Monthly Score</div>
-          <div className="relative mt-2 h-8">
-            <div className="absolute inset-y-0 left-0 flex items-center">
-              <div className="h-2 rounded-full bg-muted w-full" style={{ width: "100%" }}>
-                <div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500" style={{ width: "94%" }} />
-              </div>
-            </div>
-          </div>
-          <div className="mt-2 text-center font-display text-xl font-bold">94<span className="text-sm text-muted-foreground">/100</span></div>
         </div>
       </div>
     </div>
@@ -343,16 +310,16 @@ function NotificationItem({ icon: Icon, title, desc, time, color }: {
 }
 
 // ── Recent History Table ───────────────────────────────────────
-const HISTORY_ROWS = [
-  { date: "Mon, 28 Jun", checkIn: "09:01 AM", breakDur: "32m", checkOut: "06:28 PM", hours: "8h 55m", ot: "—", status: "Present", location: "Office" },
-  { date: "Fri, 27 Jun", checkIn: "09:14 AM", breakDur: "35m", checkOut: "06:15 PM", hours: "8h 26m", ot: "—", status: "Present", location: "Office" },
-  { date: "Thu, 26 Jun", checkIn: "09:45 AM", breakDur: "30m", checkOut: "06:30 PM", hours: "8h 15m", ot: "—", status: "Late", location: "Office" },
-  { date: "Wed, 25 Jun", checkIn: "—", breakDur: "—", checkOut: "—", hours: "—", ot: "—", status: "Leave", location: "—" },
-  { date: "Tue, 24 Jun", checkIn: "08:58 AM", breakDur: "40m", checkOut: "06:55 PM", hours: "9h 17m", ot: "17m", status: "Present", location: "WFH" },
-  { date: "Mon, 23 Jun", checkIn: "09:03 AM", breakDur: "30m", checkOut: "06:22 PM", hours: "8h 49m", ot: "—", status: "Present", location: "Office" },
-];
+const HISTORY_ROWS: { date: string; checkIn: string; breakDur: string; checkOut: string; hours: string; ot: string; status: string; location: string }[] = [];
 
 function HistoryTable() {
+  if (HISTORY_ROWS.length === 0) {
+    return (
+      <div className="text-center py-8 border border-dashed rounded-xl text-muted-foreground text-sm bg-card/20">
+        No recent attendance history found.
+      </div>
+    );
+  }
   const STATUS_TONE: Record<string, string> = {
     Present: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
     Late: "bg-amber-500/15 text-amber-700 dark:text-amber-300",
@@ -393,7 +360,7 @@ function HistoryTable() {
 }
 
 // ── Main Page ─────────────────────────────────────────────────
-function CheckInPage() {
+export function CheckInPage() {
   const ws = useAurix();
   const user = ws.user;
 

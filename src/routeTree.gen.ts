@@ -31,6 +31,7 @@ import { Route as DashboardTimesheetsRouteImport } from './routes/dashboard.time
 import { Route as DashboardTimelineRouteImport } from './routes/dashboard.timeline'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard.settings'
 import { Route as DashboardRolesRouteImport } from './routes/dashboard.roles'
+import { Route as DashboardRewardsRouteImport } from './routes/dashboard.rewards'
 import { Route as DashboardReportsRouteImport } from './routes/dashboard.reports'
 import { Route as DashboardRecruitmentRouteImport } from './routes/dashboard.recruitment'
 import { Route as DashboardPerformanceRouteImport } from './routes/dashboard.performance'
@@ -40,8 +41,10 @@ import { Route as DashboardOffboardingRouteImport } from './routes/dashboard.off
 import { Route as DashboardManagersRouteImport } from './routes/dashboard.managers'
 import { Route as DashboardManagerRouteImport } from './routes/dashboard.manager'
 import { Route as DashboardLeavesRouteImport } from './routes/dashboard.leaves'
+import { Route as DashboardLearningRouteImport } from './routes/dashboard.learning'
 import { Route as DashboardHrOpsRouteImport } from './routes/dashboard.hr-ops'
 import { Route as DashboardHrRouteImport } from './routes/dashboard.hr'
+import { Route as DashboardHelpRouteImport } from './routes/dashboard.help'
 import { Route as DashboardExpensesRouteImport } from './routes/dashboard.expenses'
 import { Route as DashboardExitManagementRouteImport } from './routes/dashboard.exit-management'
 import { Route as DashboardExitRouteImport } from './routes/dashboard.exit'
@@ -49,6 +52,9 @@ import { Route as DashboardEmployeesRouteImport } from './routes/dashboard.emplo
 import { Route as DashboardEmployeeRouteImport } from './routes/dashboard.employee'
 import { Route as DashboardDocumentsRouteImport } from './routes/dashboard.documents'
 import { Route as DashboardDepartmentsRouteImport } from './routes/dashboard.departments'
+import { Route as DashboardCommunicationRouteImport } from './routes/dashboard.communication'
+import { Route as DashboardCareerRouteImport } from './routes/dashboard.career'
+import { Route as DashboardCalendarRouteImport } from './routes/dashboard.calendar'
 import { Route as DashboardBillingRouteImport } from './routes/dashboard.billing'
 import { Route as DashboardAuditLogsRouteImport } from './routes/dashboard.audit-logs'
 import { Route as DashboardAttendanceRouteImport } from './routes/dashboard.attendance'
@@ -242,6 +248,11 @@ const DashboardRolesRoute = DashboardRolesRouteImport.update({
   path: '/roles',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardRewardsRoute = DashboardRewardsRouteImport.update({
+  id: '/rewards',
+  path: '/rewards',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardReportsRoute = DashboardReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
@@ -288,6 +299,11 @@ const DashboardLeavesRoute = DashboardLeavesRouteImport.update({
   path: '/leaves',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardLearningRoute = DashboardLearningRouteImport.update({
+  id: '/learning',
+  path: '/learning',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardHrOpsRoute = DashboardHrOpsRouteImport.update({
   id: '/hr-ops',
   path: '/hr-ops',
@@ -296,6 +312,11 @@ const DashboardHrOpsRoute = DashboardHrOpsRouteImport.update({
 const DashboardHrRoute = DashboardHrRouteImport.update({
   id: '/hr',
   path: '/hr',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardHelpRoute = DashboardHelpRouteImport.update({
+  id: '/help',
+  path: '/help',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardExpensesRoute = DashboardExpensesRouteImport.update({
@@ -331,6 +352,21 @@ const DashboardDocumentsRoute = DashboardDocumentsRouteImport.update({
 const DashboardDepartmentsRoute = DashboardDepartmentsRouteImport.update({
   id: '/departments',
   path: '/departments',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardCommunicationRoute = DashboardCommunicationRouteImport.update({
+  id: '/communication',
+  path: '/communication',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardCareerRoute = DashboardCareerRouteImport.update({
+  id: '/career',
+  path: '/career',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardCalendarRoute = DashboardCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardBillingRoute = DashboardBillingRouteImport.update({
@@ -834,6 +870,9 @@ export interface FileRoutesByFullPath {
   '/dashboard/attendance': typeof DashboardAttendanceRouteWithChildren
   '/dashboard/audit-logs': typeof DashboardAuditLogsRoute
   '/dashboard/billing': typeof DashboardBillingRoute
+  '/dashboard/calendar': typeof DashboardCalendarRoute
+  '/dashboard/career': typeof DashboardCareerRoute
+  '/dashboard/communication': typeof DashboardCommunicationRoute
   '/dashboard/departments': typeof DashboardDepartmentsRoute
   '/dashboard/documents': typeof DashboardDocumentsRoute
   '/dashboard/employee': typeof DashboardEmployeeRoute
@@ -841,8 +880,10 @@ export interface FileRoutesByFullPath {
   '/dashboard/exit': typeof DashboardExitRoute
   '/dashboard/exit-management': typeof DashboardExitManagementRoute
   '/dashboard/expenses': typeof DashboardExpensesRoute
+  '/dashboard/help': typeof DashboardHelpRoute
   '/dashboard/hr': typeof DashboardHrRoute
   '/dashboard/hr-ops': typeof DashboardHrOpsRoute
+  '/dashboard/learning': typeof DashboardLearningRoute
   '/dashboard/leaves': typeof DashboardLeavesRoute
   '/dashboard/manager': typeof DashboardManagerRoute
   '/dashboard/managers': typeof DashboardManagersRoute
@@ -852,6 +893,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/performance': typeof DashboardPerformanceRoute
   '/dashboard/recruitment': typeof DashboardRecruitmentRouteWithChildren
   '/dashboard/reports': typeof DashboardReportsRoute
+  '/dashboard/rewards': typeof DashboardRewardsRoute
   '/dashboard/roles': typeof DashboardRolesRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/timeline': typeof DashboardTimelineRoute
@@ -954,6 +996,9 @@ export interface FileRoutesByTo {
   '/dashboard/assets': typeof DashboardAssetsRoute
   '/dashboard/audit-logs': typeof DashboardAuditLogsRoute
   '/dashboard/billing': typeof DashboardBillingRoute
+  '/dashboard/calendar': typeof DashboardCalendarRoute
+  '/dashboard/career': typeof DashboardCareerRoute
+  '/dashboard/communication': typeof DashboardCommunicationRoute
   '/dashboard/departments': typeof DashboardDepartmentsRoute
   '/dashboard/documents': typeof DashboardDocumentsRoute
   '/dashboard/employee': typeof DashboardEmployeeRoute
@@ -961,8 +1006,10 @@ export interface FileRoutesByTo {
   '/dashboard/exit': typeof DashboardExitRoute
   '/dashboard/exit-management': typeof DashboardExitManagementRoute
   '/dashboard/expenses': typeof DashboardExpensesRoute
+  '/dashboard/help': typeof DashboardHelpRoute
   '/dashboard/hr': typeof DashboardHrRoute
   '/dashboard/hr-ops': typeof DashboardHrOpsRoute
+  '/dashboard/learning': typeof DashboardLearningRoute
   '/dashboard/leaves': typeof DashboardLeavesRoute
   '/dashboard/manager': typeof DashboardManagerRoute
   '/dashboard/managers': typeof DashboardManagersRoute
@@ -970,6 +1017,7 @@ export interface FileRoutesByTo {
   '/dashboard/onboarding-checklist': typeof DashboardOnboardingChecklistRoute
   '/dashboard/performance': typeof DashboardPerformanceRoute
   '/dashboard/reports': typeof DashboardReportsRoute
+  '/dashboard/rewards': typeof DashboardRewardsRoute
   '/dashboard/roles': typeof DashboardRolesRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/timeline': typeof DashboardTimelineRoute
@@ -1076,6 +1124,9 @@ export interface FileRoutesById {
   '/dashboard/attendance': typeof DashboardAttendanceRouteWithChildren
   '/dashboard/audit-logs': typeof DashboardAuditLogsRoute
   '/dashboard/billing': typeof DashboardBillingRoute
+  '/dashboard/calendar': typeof DashboardCalendarRoute
+  '/dashboard/career': typeof DashboardCareerRoute
+  '/dashboard/communication': typeof DashboardCommunicationRoute
   '/dashboard/departments': typeof DashboardDepartmentsRoute
   '/dashboard/documents': typeof DashboardDocumentsRoute
   '/dashboard/employee': typeof DashboardEmployeeRoute
@@ -1083,8 +1134,10 @@ export interface FileRoutesById {
   '/dashboard/exit': typeof DashboardExitRoute
   '/dashboard/exit-management': typeof DashboardExitManagementRoute
   '/dashboard/expenses': typeof DashboardExpensesRoute
+  '/dashboard/help': typeof DashboardHelpRoute
   '/dashboard/hr': typeof DashboardHrRoute
   '/dashboard/hr-ops': typeof DashboardHrOpsRoute
+  '/dashboard/learning': typeof DashboardLearningRoute
   '/dashboard/leaves': typeof DashboardLeavesRoute
   '/dashboard/manager': typeof DashboardManagerRoute
   '/dashboard/managers': typeof DashboardManagersRoute
@@ -1094,6 +1147,7 @@ export interface FileRoutesById {
   '/dashboard/performance': typeof DashboardPerformanceRoute
   '/dashboard/recruitment': typeof DashboardRecruitmentRouteWithChildren
   '/dashboard/reports': typeof DashboardReportsRoute
+  '/dashboard/rewards': typeof DashboardRewardsRoute
   '/dashboard/roles': typeof DashboardRolesRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/timeline': typeof DashboardTimelineRoute
@@ -1202,6 +1256,9 @@ export interface FileRouteTypes {
     | '/dashboard/attendance'
     | '/dashboard/audit-logs'
     | '/dashboard/billing'
+    | '/dashboard/calendar'
+    | '/dashboard/career'
+    | '/dashboard/communication'
     | '/dashboard/departments'
     | '/dashboard/documents'
     | '/dashboard/employee'
@@ -1209,8 +1266,10 @@ export interface FileRouteTypes {
     | '/dashboard/exit'
     | '/dashboard/exit-management'
     | '/dashboard/expenses'
+    | '/dashboard/help'
     | '/dashboard/hr'
     | '/dashboard/hr-ops'
+    | '/dashboard/learning'
     | '/dashboard/leaves'
     | '/dashboard/manager'
     | '/dashboard/managers'
@@ -1220,6 +1279,7 @@ export interface FileRouteTypes {
     | '/dashboard/performance'
     | '/dashboard/recruitment'
     | '/dashboard/reports'
+    | '/dashboard/rewards'
     | '/dashboard/roles'
     | '/dashboard/settings'
     | '/dashboard/timeline'
@@ -1322,6 +1382,9 @@ export interface FileRouteTypes {
     | '/dashboard/assets'
     | '/dashboard/audit-logs'
     | '/dashboard/billing'
+    | '/dashboard/calendar'
+    | '/dashboard/career'
+    | '/dashboard/communication'
     | '/dashboard/departments'
     | '/dashboard/documents'
     | '/dashboard/employee'
@@ -1329,8 +1392,10 @@ export interface FileRouteTypes {
     | '/dashboard/exit'
     | '/dashboard/exit-management'
     | '/dashboard/expenses'
+    | '/dashboard/help'
     | '/dashboard/hr'
     | '/dashboard/hr-ops'
+    | '/dashboard/learning'
     | '/dashboard/leaves'
     | '/dashboard/manager'
     | '/dashboard/managers'
@@ -1338,6 +1403,7 @@ export interface FileRouteTypes {
     | '/dashboard/onboarding-checklist'
     | '/dashboard/performance'
     | '/dashboard/reports'
+    | '/dashboard/rewards'
     | '/dashboard/roles'
     | '/dashboard/settings'
     | '/dashboard/timeline'
@@ -1443,6 +1509,9 @@ export interface FileRouteTypes {
     | '/dashboard/attendance'
     | '/dashboard/audit-logs'
     | '/dashboard/billing'
+    | '/dashboard/calendar'
+    | '/dashboard/career'
+    | '/dashboard/communication'
     | '/dashboard/departments'
     | '/dashboard/documents'
     | '/dashboard/employee'
@@ -1450,8 +1519,10 @@ export interface FileRouteTypes {
     | '/dashboard/exit'
     | '/dashboard/exit-management'
     | '/dashboard/expenses'
+    | '/dashboard/help'
     | '/dashboard/hr'
     | '/dashboard/hr-ops'
+    | '/dashboard/learning'
     | '/dashboard/leaves'
     | '/dashboard/manager'
     | '/dashboard/managers'
@@ -1461,6 +1532,7 @@ export interface FileRouteTypes {
     | '/dashboard/performance'
     | '/dashboard/recruitment'
     | '/dashboard/reports'
+    | '/dashboard/rewards'
     | '/dashboard/roles'
     | '/dashboard/settings'
     | '/dashboard/timeline'
@@ -1704,6 +1776,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRolesRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/rewards': {
+      id: '/dashboard/rewards'
+      path: '/rewards'
+      fullPath: '/dashboard/rewards'
+      preLoaderRoute: typeof DashboardRewardsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/reports': {
       id: '/dashboard/reports'
       path: '/reports'
@@ -1767,6 +1846,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardLeavesRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/learning': {
+      id: '/dashboard/learning'
+      path: '/learning'
+      fullPath: '/dashboard/learning'
+      preLoaderRoute: typeof DashboardLearningRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/hr-ops': {
       id: '/dashboard/hr-ops'
       path: '/hr-ops'
@@ -1779,6 +1865,13 @@ declare module '@tanstack/react-router' {
       path: '/hr'
       fullPath: '/dashboard/hr'
       preLoaderRoute: typeof DashboardHrRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/help': {
+      id: '/dashboard/help'
+      path: '/help'
+      fullPath: '/dashboard/help'
+      preLoaderRoute: typeof DashboardHelpRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/expenses': {
@@ -1828,6 +1921,27 @@ declare module '@tanstack/react-router' {
       path: '/departments'
       fullPath: '/dashboard/departments'
       preLoaderRoute: typeof DashboardDepartmentsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/communication': {
+      id: '/dashboard/communication'
+      path: '/communication'
+      fullPath: '/dashboard/communication'
+      preLoaderRoute: typeof DashboardCommunicationRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/career': {
+      id: '/dashboard/career'
+      path: '/career'
+      fullPath: '/dashboard/career'
+      preLoaderRoute: typeof DashboardCareerRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/calendar': {
+      id: '/dashboard/calendar'
+      path: '/calendar'
+      fullPath: '/dashboard/calendar'
+      preLoaderRoute: typeof DashboardCalendarRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/billing': {
@@ -2628,6 +2742,9 @@ interface DashboardRouteChildren {
   DashboardAttendanceRoute: typeof DashboardAttendanceRouteWithChildren
   DashboardAuditLogsRoute: typeof DashboardAuditLogsRoute
   DashboardBillingRoute: typeof DashboardBillingRoute
+  DashboardCalendarRoute: typeof DashboardCalendarRoute
+  DashboardCareerRoute: typeof DashboardCareerRoute
+  DashboardCommunicationRoute: typeof DashboardCommunicationRoute
   DashboardDepartmentsRoute: typeof DashboardDepartmentsRoute
   DashboardDocumentsRoute: typeof DashboardDocumentsRoute
   DashboardEmployeeRoute: typeof DashboardEmployeeRoute
@@ -2635,8 +2752,10 @@ interface DashboardRouteChildren {
   DashboardExitRoute: typeof DashboardExitRoute
   DashboardExitManagementRoute: typeof DashboardExitManagementRoute
   DashboardExpensesRoute: typeof DashboardExpensesRoute
+  DashboardHelpRoute: typeof DashboardHelpRoute
   DashboardHrRoute: typeof DashboardHrRoute
   DashboardHrOpsRoute: typeof DashboardHrOpsRoute
+  DashboardLearningRoute: typeof DashboardLearningRoute
   DashboardLeavesRoute: typeof DashboardLeavesRoute
   DashboardManagerRoute: typeof DashboardManagerRoute
   DashboardManagersRoute: typeof DashboardManagersRoute
@@ -2646,6 +2765,7 @@ interface DashboardRouteChildren {
   DashboardPerformanceRoute: typeof DashboardPerformanceRoute
   DashboardRecruitmentRoute: typeof DashboardRecruitmentRouteWithChildren
   DashboardReportsRoute: typeof DashboardReportsRoute
+  DashboardRewardsRoute: typeof DashboardRewardsRoute
   DashboardRolesRoute: typeof DashboardRolesRoute
   DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardTimelineRoute: typeof DashboardTimelineRoute
@@ -2662,6 +2782,9 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAttendanceRoute: DashboardAttendanceRouteWithChildren,
   DashboardAuditLogsRoute: DashboardAuditLogsRoute,
   DashboardBillingRoute: DashboardBillingRoute,
+  DashboardCalendarRoute: DashboardCalendarRoute,
+  DashboardCareerRoute: DashboardCareerRoute,
+  DashboardCommunicationRoute: DashboardCommunicationRoute,
   DashboardDepartmentsRoute: DashboardDepartmentsRoute,
   DashboardDocumentsRoute: DashboardDocumentsRoute,
   DashboardEmployeeRoute: DashboardEmployeeRoute,
@@ -2669,8 +2792,10 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardExitRoute: DashboardExitRoute,
   DashboardExitManagementRoute: DashboardExitManagementRoute,
   DashboardExpensesRoute: DashboardExpensesRoute,
+  DashboardHelpRoute: DashboardHelpRoute,
   DashboardHrRoute: DashboardHrRoute,
   DashboardHrOpsRoute: DashboardHrOpsRoute,
+  DashboardLearningRoute: DashboardLearningRoute,
   DashboardLeavesRoute: DashboardLeavesRoute,
   DashboardManagerRoute: DashboardManagerRoute,
   DashboardManagersRoute: DashboardManagersRoute,
@@ -2680,6 +2805,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardPerformanceRoute: DashboardPerformanceRoute,
   DashboardRecruitmentRoute: DashboardRecruitmentRouteWithChildren,
   DashboardReportsRoute: DashboardReportsRoute,
+  DashboardRewardsRoute: DashboardRewardsRoute,
   DashboardRolesRoute: DashboardRolesRoute,
   DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardTimelineRoute: DashboardTimelineRoute,

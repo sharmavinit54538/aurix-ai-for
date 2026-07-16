@@ -5,34 +5,100 @@ import { AIHero } from "@/components/aurix/AIModule";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+import { useAurix } from "@/lib/aurix-store";
+
 export const Route = createFileRoute("/ai/chat-assistant")({
   head: () => ({ meta: [{ title: "AI Chat Assistant — Aurix" }] }),
   component: Page,
 });
 
 const SUGGESTIONS = [
-  { icon: Users, q: "Show employees at risk of leaving." },
-  { icon: BarChart3, q: "Who has the highest overtime this month?" },
-  { icon: FileText, q: "Generate attendance report." },
-  { icon: Banknote, q: "What's the projected payroll for next month?" },
+  { icon: FileText, q: "How many casual leaves do I have left?" },
+  { icon: Banknote, q: "Explain the deductions on my latest salary slip." },
+  { icon: Users, q: "Who is my department head (HOD)?" },
+  { icon: FileText, q: "How can I raise a hardware repair request?" },
 ];
 
 type Msg = { role: "user" | "ai"; text: string };
 
 function Page() {
+  const ws = useAurix();
+  const userName = ws.user?.fullName || "Employee";
   const [msgs, setMsgs] = useState<Msg[]>([
-    { role: "ai", text: "Hi 👋 I'm Aurix AI. Ask me about employees, payroll, attendance, reports or analytics." },
+    { role: "ai", text: `Hi ${userName} 👋 I'm your AI HR Assistant. Ask me about your leaves balance, payslips, assigned hardware specs, or raising support tickets.` },
   ]);
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs]);
+
+  function getSmartResponse(q: string): string {
+    const query = q.toLowerCase().trim();
+    
+    // Greeting/Polite closures
+    if (query === "hi" || query === "hello" || query === "hey" || query.startsWith("hi ") || query.startsWith("hello ") || query === "hii") {
+      return "Hello! How can I assist you today? Feel free to ask about your leaves, salary slips, assets, team info, or raising support tickets.";
+    }
+    if (query === "ok" || query === "okay" || query === "thanks" || query === "thank you" || query.includes("thank")) {
+      return "You're welcome! I'm here to help if you have any other questions.";
+    }
+    
+    if (query.includes("leave") || query.includes("holiday") || query.includes("vacation") || query.includes("sick")) {
+      return "You can check your Sick, Casual, and Vacation leave balances, apply for leave, or view the Holiday Calendar directly inside the **Leaves** tab in your sidebar.";
+    }
+    if (
+      query.includes("payroll") || 
+      query.includes("salary") || 
+      query.includes("slip") || 
+      query.includes("tax") || 
+      query.includes("download") || 
+      query.includes("payslip")
+    ) {
+      return "All your monthly salary slips, PF/ESI contributions, salary structures, and Form 16/Form 12BB tax declarations are available under the **Payroll** tab in the sidebar.";
+    }
+    if (
+      query.includes("hardware") || 
+      query.includes("asset") || 
+      query.includes("laptop") || 
+      query.includes("repair") || 
+      query.includes("specs") || 
+      query.includes("device") || 
+      query.includes("computer") || 
+      query.includes("system")
+    ) {
+      return "To view your active hardware assets, check device specifications, warranty coverage, request an IT support ticket, or submit a return form, head over to the **Assets** tab.";
+    }
+    if (
+      query.includes("hod") || 
+      query.includes("manager") || 
+      query.includes("team") || 
+      query.includes("directory") || 
+      query.includes("chat") || 
+      query.includes("colleague")
+    ) {
+      return "You can view your department colleagues and Company HOD contact details, or start direct and team chat feeds inside the **Communication** tab.";
+    }
+    if (
+      query.includes("ticket") || 
+      query.includes("support") || 
+      query.includes("help") || 
+      query.includes("faq") || 
+      query.includes("card") || 
+      query.includes("facilities") || 
+      query.includes("replace")
+    ) {
+      return "To raise a support ticket (IT, Facilities, or HR) or view common resolution FAQs, visit the **Help Center** tab in your sidebar.";
+    }
+    return `I queried your employee profile data and company policy guidelines. For specific operations, you can easily use the sidebar links for Leaves, Payroll, Assets, Communication, and the Help Center! Let me know if you want to know more about any of these.`;
+  }
 
   function ask(q: string) {
     if (!q.trim()) return;
+    const aiResponse = getSmartResponse(q);
     setMsgs((m) => [
       ...m,
       { role: "user", text: q },
-      { role: "ai", text: "Here's what I found for: \"" + q + "\". I queried the latest workforce data and prepared a summary with relevant insights and metrics for you to review." },
+      { role: "ai", text: aiResponse },
     ]);
     setInput("");
   }

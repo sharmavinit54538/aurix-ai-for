@@ -3,7 +3,9 @@ import { useState, useEffect, useMemo } from "react";
 import {
   Timer, Plus, Trash2, CheckCircle2, XCircle, Sparkles, Calendar,
   FileText, ChevronLeft, ChevronRight, Save, Send, AlertCircle, Clock,
-  ArrowRight, ShieldCheck, UserCheck, RefreshCw, BarChart2
+  ArrowRight, ShieldCheck, UserCheck, RefreshCw, BarChart2,
+  ListTodo, CalendarRange, Briefcase, ClipboardList, FilePlus2,
+  History as HistoryIcon
 } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Input } from "@/components/ui/input";
@@ -85,6 +87,16 @@ function TimesheetsPage() {
   const [selectedApproval, setSelectedApproval] = useState<PendingApproval | null>(null);
   const [rejectReasonOpen, setRejectReasonOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+
+  // Daily timesheet form state
+  const [dailyDate, setDailyDate] = useState("");
+  const [dailyProject, setDailyProject] = useState("proj_aurix_core");
+  const [dailyHours, setDailyHours] = useState("8");
+  const [dailyDesc, setDailyDesc] = useState("");
+  const [dailyLogs, setDailyLogs] = useState<any[]>([
+    { date: "2026-07-14", project: "Aurix AI Core Engine", hours: 8, desc: "API endpoint integrations for auth tokens" },
+    { date: "2026-07-13", project: "Enterprise Recruitment Bot", hours: 6, desc: "Testing resume scanner candidate forms" }
+  ]);
 
   // Helper local date string builder (YYYY-MM-DD)
   const getLocalDateString = (d: Date) => {
@@ -459,6 +471,478 @@ function TimesheetsPage() {
       toast.error(err.message || "Failed to reject timesheet");
     }
   };
+
+  const employeeTimesheetTabs = [
+    { id: "dashboard", label: "My Timesheets", icon: ListTodo },
+    { id: "daily", label: "Daily Timesheet", icon: Calendar },
+    { id: "weekly", label: "Weekly Timesheet", icon: CalendarRange },
+    { id: "projects", label: "Project Hours", icon: Briefcase },
+    { id: "tasks", label: "Task Hours", icon: ClipboardList },
+    { id: "submit", label: "Submit Timesheet", icon: FilePlus2 },
+    { id: "status", label: "Approval Status", icon: CheckCircle2 },
+    { id: "history", label: "History Logs", icon: HistoryIcon },
+  ];
+
+  const handleDailySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!dailyDate) {
+      toast.error("Please select a date.");
+      return;
+    }
+    const projName = AVAILABLE_PROJECTS.find(p => p.id === dailyProject)?.name || "Project";
+    const newLog = {
+      date: dailyDate,
+      project: projName,
+      hours: Number(dailyHours),
+      desc: dailyDesc
+    };
+    setDailyLogs([newLog, ...dailyLogs]);
+    toast.success("Daily hours logged successfully!");
+    setDailyDate("");
+    setDailyDesc("");
+  };
+
+  useEffect(() => {
+    if (userRole === "employee" && activeTab === "my-timesheet") {
+      setActiveTab("dashboard");
+    }
+  }, [userRole]);
+
+  if (userRole === "employee") {
+    return (
+      <>
+        <PageHeader 
+          title="Timesheets & Billing Portal" 
+          description="Log work hours, track project deliverables, and manage weekly approvals."
+          actions={
+            <Button
+              onClick={() => setAiAutofillOpen(true)}
+              disabled={timesheetStatus === "pending" || timesheetStatus === "approved"}
+              className="gap-2 bg-gradient-to-r from-pink-600 to-violet-600 hover:from-pink-500 hover:to-violet-500 text-white shadow-lg shadow-pink-500/20"
+            >
+              <Sparkles className="h-4 w-4 text-pink-200 animate-pulse" />
+              AI Copilot Autofill
+            </Button>
+          }
+        />
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_1fr]">
+          <aside className="space-y-1">
+            {employeeTimesheetTabs.map((t) => {
+              const Icon = t.icon;
+              const active = activeTab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveTab(t.id)}
+                  className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                    active 
+                      ? "bg-accent text-foreground" 
+                      : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {t.label}
+                </button>
+              );
+            })}
+          </aside>
+
+          <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-xl">
+            {activeTab === "dashboard" && (
+              <div className="space-y-6">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <Card className="bg-background/40">
+                    <CardHeader className="pb-2">
+                      <CardDescription className="text-xs uppercase font-semibold">Total Hours Logged</CardDescription>
+                      <CardTitle className="text-3xl font-bold mt-1 text-indigo-500">{totalHours} hrs</CardTitle>
+                    </CardHeader>
+                  </Card>
+                  <Card className="bg-background/40">
+                    <CardHeader className="pb-2">
+                      <CardDescription className="text-xs uppercase font-semibold">Billable Hours</CardDescription>
+                      <CardTitle className="text-3xl font-bold mt-1 text-emerald-500">{billableHours} hrs</CardTitle>
+                    </CardHeader>
+                  </Card>
+                  <Card className="bg-background/40">
+                    <CardHeader className="pb-2">
+                      <CardDescription className="text-xs uppercase font-semibold">Timesheet Status</CardDescription>
+                      <CardTitle className="text-2xl font-bold mt-1 capitalize">{timesheetStatus}</CardTitle>
+                    </CardHeader>
+                  </Card>
+                </div>
+
+                <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 p-4 flex gap-3 text-xs">
+                  <Sparkles className="h-5 w-5 text-violet-500 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-semibold text-violet-500 block mb-0.5">AI Copilot Tip</span>
+                    <p className="text-muted-foreground">You can use the **AI Copilot Autofill** at the top right to analyze your commits and slack activities to draft your timesheet in seconds.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "daily" && (
+              <div className="grid gap-6 md:grid-cols-2">
+                <form onSubmit={handleDailySubmit} className="space-y-4">
+                  <h3 className="text-base font-semibold border-b pb-2">Log Daily Work</h3>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-muted-foreground uppercase">Date</Label>
+                    <Input
+                      type="date"
+                      required
+                      value={dailyDate}
+                      onChange={(e) => setDailyDate(e.target.value)}
+                      className="bg-background/50 border"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-muted-foreground uppercase">Select Project</Label>
+                    <select
+                      value={dailyProject}
+                      onChange={(e) => setDailyProject(e.target.value)}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs"
+                    >
+                      {AVAILABLE_PROJECTS.map(p => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-muted-foreground uppercase">Hours Worked</Label>
+                    <Input
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      max="24"
+                      required
+                      value={dailyHours}
+                      onChange={(e) => setDailyHours(e.target.value)}
+                      className="bg-background/50 border"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-muted-foreground uppercase">Work Done Description</Label>
+                    <textarea
+                      required
+                      value={dailyDesc}
+                      onChange={(e) => setDailyDesc(e.target.value)}
+                      placeholder="Describe what tasks were done..."
+                      className="w-full min-h-[90px] bg-background/50 border rounded-lg p-3 text-sm focus:ring-1"
+                    />
+                  </div>
+
+                  <Button type="submit">Save Hours</Button>
+                </form>
+
+                <div className="space-y-4">
+                  <h3 className="text-base font-semibold border-b pb-2">Logged Hours list</h3>
+                  <div className="space-y-2 max-h-[350px] overflow-y-auto">
+                    {dailyLogs.map((log, i) => (
+                      <div key={i} className="border bg-card/30 rounded-xl p-3 flex items-center justify-between text-xs">
+                        <div>
+                          <div className="font-semibold">{log.desc}</div>
+                          <div className="text-[10px] text-muted-foreground mt-0.5">Project: {log.project} | Hours: {log.hours}h</div>
+                          <div className="text-[9px] text-muted-foreground mt-0.5">{log.date}</div>
+                        </div>
+                        <Badge variant="outline">Logged</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "weekly" && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b pb-2">
+                  <h3 className="text-base font-semibold">Weekly Hours Allocation Grid</h3>
+                  
+                  <div className="flex items-center gap-2 bg-muted/40 p-1 rounded-lg border border-border">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      onClick={() => setWeekOffset(prev => prev - 1)}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <span className="text-xs font-semibold px-2 min-w-[170px] text-center">
+                      {weekRangeLabel}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      disabled={weekOffset === 0}
+                      onClick={() => setWeekOffset(prev => prev + 1)}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto border rounded-xl bg-card/50">
+                  <Table className="min-w-[800px] text-xs">
+                    <TableHeader className="bg-muted/20">
+                      <TableRow>
+                        <TableHead className="w-[240px] pl-6 py-4">Project</TableHead>
+                        {dateHeaders.map((dh, i) => (
+                          <TableHead key={i} className="text-center w-[75px] py-4">
+                            <div>{dh.dayName}</div>
+                            <div className="font-semibold text-foreground mt-0.5">{dh.dateStr}</div>
+                          </TableHead>
+                        ))}
+                        <TableHead className="text-center w-[85px] py-4">Total</TableHead>
+                        <TableHead className="pl-4 py-4">Description / Deliverables</TableHead>
+                        <TableHead className="w-[60px] pr-6 text-center py-4"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {rows.map((row) => {
+                        const rowTotal = row.hours.reduce((a, b) => a + b, 0);
+                        return (
+                          <TableRow key={row.id} className="hover:bg-muted/5 transition-all">
+                            <TableCell className="pl-6 py-4">
+                              <Select
+                                value={row.projectId}
+                                onValueChange={(val) => handleProjectChange(row.id, val)}
+                                disabled={timesheetStatus === "pending" || timesheetStatus === "approved"}
+                              >
+                                <SelectTrigger className="w-full bg-background/50 border">
+                                  <SelectValue placeholder="Select project" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {AVAILABLE_PROJECTS.map((proj) => (
+                                    <SelectItem key={proj.id} value={proj.id}>
+                                      {proj.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+
+                            {row.hours.map((hoursVal, dayIdx) => (
+                              <TableCell key={dayIdx} className="p-2 py-4">
+                                <Input
+                                  type="number"
+                                  step="0.5"
+                                  min="0"
+                                  max="24"
+                                  className="h-9 w-[64px] mx-auto text-center tabular-nums bg-background/50 border"
+                                  value={hoursVal === 0 ? "" : hoursVal}
+                                  placeholder="0"
+                                  onChange={(e) => handleHoursChange(row.id, dayIdx, e.target.value)}
+                                  disabled={timesheetStatus === "pending" || timesheetStatus === "approved"}
+                                />
+                              </TableCell>
+                            ))}
+
+                            <TableCell className="text-center font-bold tabular-nums py-4">
+                              {rowTotal}h
+                            </TableCell>
+
+                            <TableCell className="pl-4 py-4">
+                              <Input
+                                value={row.description}
+                                placeholder="Describe work..."
+                                className="w-full bg-background/50 border"
+                                onChange={(e) => handleDescChange(row.id, e.target.value)}
+                                disabled={timesheetStatus === "pending" || timesheetStatus === "approved"}
+                              />
+                            </TableCell>
+
+                            <TableCell className="pr-6 text-center py-4">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 hover:text-rose-500"
+                                onClick={() => deleteRow(row.id)}
+                                disabled={timesheetStatus === "pending" || timesheetStatus === "approved"}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+
+                      <TableRow className="bg-muted/10 font-semibold border-b">
+                        <TableCell className="pl-6 py-4 font-bold text-foreground">Daily Totals</TableCell>
+                        {dailyTotals.map((tot, idx) => (
+                          <TableCell key={idx} className="text-center py-4 tabular-nums">
+                            <span className={tot > 24 ? "text-rose-500 font-bold" : "text-foreground"}>
+                              {tot}h
+                            </span>
+                          </TableCell>
+                        ))}
+                        <TableCell className="text-center font-bold text-indigo-500 py-4">
+                          {totalHours}h
+                        </TableCell>
+                        <TableCell className="pl-4 py-4 font-normal text-muted-foreground">
+                          {isDailyOverlogged ? (
+                            <span className="text-rose-500 font-semibold">24h Limit Exceeded</span>
+                          ) : (
+                            "Standard check passed"
+                          )}
+                        </TableCell>
+                        <TableCell className="pr-6 py-4"></TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "projects" && (
+              <div className="space-y-4">
+                <h3 className="text-base font-semibold border-b pb-2">Active Project Allocations</h3>
+                <div className="grid gap-3">
+                  {AVAILABLE_PROJECTS.map((proj) => {
+                    const hours = rows.filter(r => r.projectId === proj.id).reduce((sum, r) => sum + r.hours.reduce((a,b) => a+b,0), 0);
+                    return (
+                      <div key={proj.id} className="border bg-card/30 rounded-xl p-4 flex items-center justify-between text-xs">
+                        <div>
+                          <div className="font-semibold text-sm">{proj.name}</div>
+                          <div className="text-muted-foreground mt-0.5">Project ID: {proj.id}</div>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-sm font-bold text-indigo-400">{hours} Hours Logged</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {activeTab === "tasks" && (
+              <div className="space-y-4">
+                <h3 className="text-base font-semibold border-b pb-2">Task Activity Details</h3>
+                <div className="space-y-3">
+                  {rows.map((row) => {
+                    const projName = AVAILABLE_PROJECTS.find(p => p.id === row.projectId)?.name || "Project";
+                    return (
+                      <div key={row.id} className="border bg-card/30 rounded-xl p-4 text-xs space-y-1">
+                        <div className="flex justify-between font-semibold">
+                          <span>{projName}</span>
+                          <span className="text-indigo-400">{row.hours.reduce((a,b)=>a+b,0)} hours</span>
+                        </div>
+                        <div className="text-muted-foreground italic mt-1">
+                          {row.description || "No descriptions specified for this week's deliverables."}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {activeTab === "submit" && (
+              <div className="space-y-6 max-w-md">
+                <h3 className="text-base font-semibold border-b pb-2">Timesheet Action Portal</h3>
+                <div className="space-y-4 border rounded-xl p-5 bg-background/40">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Week Period:</span>
+                    <span className="font-semibold">{weekRangeLabel}</span>
+                  </div>
+                  <div className="flex justify-between text-xs border-t pt-2">
+                    <span className="text-muted-foreground">Total Logged Time:</span>
+                    <span className="font-bold text-indigo-500">{totalHours} Hours</span>
+                  </div>
+                  <div className="flex justify-between text-xs border-t pt-2">
+                    <span className="text-muted-foreground">Approval Status:</span>
+                    <Badge variant="outline" className="capitalize">{timesheetStatus}</Badge>
+                  </div>
+                  
+                  {timesheetStatus !== "pending" && timesheetStatus !== "approved" && (
+                    <div className="flex gap-2 pt-2">
+                      <Button variant="outline" className="flex-1" onClick={handleSaveDraft}>
+                        Save Draft
+                      </Button>
+                      <Button className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white" disabled={isDailyOverlogged || totalHours === 0} onClick={handleSubmitTimesheet}>
+                        Submit Timesheet
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {activeTab === "status" && (
+              <div className="space-y-6 max-w-md">
+                <h3 className="text-base font-semibold border-b pb-2">Approval Status Tracker</h3>
+                <div className="relative pl-6 border-l-2 border-dashed border-border space-y-4 text-xs">
+                  <div className="relative">
+                    <div className="absolute -left-[31px] top-0 h-4 w-4 rounded-full bg-emerald-500 border border-background flex items-center justify-center text-[10px] text-white">✓</div>
+                    <div className="font-medium text-foreground">Timesheet Saved / Drafted</div>
+                    <div className="text-[10px] text-muted-foreground">Logs successfully written to browser local storage.</div>
+                  </div>
+                  <div className="relative">
+                    <div className={`absolute -left-[31px] top-0 h-4 w-4 rounded-full border border-background flex items-center justify-center text-[10px] ${
+                      timesheetStatus === "pending" || timesheetStatus === "approved" ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground"
+                    }`}>{timesheetStatus === "pending" || timesheetStatus === "approved" ? "✓" : "⌛"}</div>
+                    <div className="font-medium text-foreground">Submit for Manager Review</div>
+                    <div className="text-[10px] text-muted-foreground">Waiting for manager approval confirmation.</div>
+                  </div>
+                  <div className="relative">
+                    <div className={`absolute -left-[31px] top-0 h-4 w-4 rounded-full border border-background flex items-center justify-center text-[10px] ${
+                      timesheetStatus === "approved" ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground"
+                    }`}>{timesheetStatus === "approved" ? "✓" : "⌛"}</div>
+                    <div className="font-medium text-foreground">Manager Approval Integration</div>
+                    <div className="text-[10px] text-muted-foreground">Approved logs synced to general payroll.</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "history" && (
+              <div className="space-y-4">
+                <h3 className="text-base font-semibold border-b pb-2">Historical Saved Logs</h3>
+                <Card className="border overflow-hidden">
+                  <Table className="text-xs">
+                    <TableHeader className="bg-muted/20">
+                      <TableRow>
+                        <TableHead className="pl-6 py-4">Week Range</TableHead>
+                        <TableHead className="py-4 text-center">Total Hours</TableHead>
+                        <TableHead className="py-4">Status</TableHead>
+                        <TableHead className="pr-6 py-4"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {historyRecords.map((rec: any, idx: number) => (
+                        <TableRow key={idx} className="hover:bg-muted/5 transition-all">
+                          <TableCell className="pl-6 py-4 font-semibold">{rec.weekRange}</TableCell>
+                          <TableCell className="py-4 text-center font-bold">{rec.totalHours} hrs</TableCell>
+                          <TableCell className="py-4">
+                            <Badge variant={rec.status === "approved" ? "secondary" : "outline"} className="capitalize">{rec.status}</Badge>
+                          </TableCell>
+                          <TableCell className="pr-6 py-4 text-right">
+                            <Button size="sm" variant="ghost">View Details</Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {historyRecords.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                            No history records logged.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </Card>
+              </div>
+            )}
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

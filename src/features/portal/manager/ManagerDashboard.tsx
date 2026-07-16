@@ -3,7 +3,8 @@
 // Production-ready manager view for team leads and managers.
 // ============================================================
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { api } from "@/api";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertTriangle,
@@ -49,27 +50,9 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  AI_TEAM_INSIGHTS,
-  ATTENDANCE_RECORDS,
-  ATTENDANCE_SUMMARY,
-  CANDIDATE_PIPELINE,
-  DEPT_DISTRIBUTION,
-  HIRING_REQUESTS,
-  LEAVE_REQUESTS,
-  LOW_PERFORMERS,
-  MANAGER_KPI,
   MANAGER_NOTIFICATIONS,
   MANAGER_REPORTS,
-  MANAGER_INTERVIEWS,
-  PERF_MONTHLY,
-  TEAM_ASSETS,
-  TEAM_ASSET_SUMMARY,
-  TEAM_GOALS,
-  TEAM_MEMBERS,
-  TOP_PERFORMERS,
-  WEEKLY_TEAM_ATTENDANCE,
   type EmployeeStatus,
-  type LeaveRequest,
 } from "./manager-data";
 
 // ── Animation helpers ─────────────────────────────────────────
@@ -185,7 +168,7 @@ function ManagerHeader({ greeting, userName, companyName }: { greeting: string; 
               {greeting}, {userName} 👋
             </h1>
             <p className="text-sm text-muted-foreground">
-              {companyName} · Manager Dashboard · Engineering Team
+              {companyName} · Dashboard · Engineering Team
             </p>
           </div>
         </div>
@@ -233,10 +216,17 @@ function ManagerHeader({ greeting, userName, companyName }: { greeting: string; 
 }
 
 // ── 2. KPI Cards ─────────────────────────────────────────────
-function KpiCards() {
+function KpiCards({ employeesCount, pendingCount }: { employeesCount: number; pendingCount: number }) {
+  const kpis = [
+    { id: "team", label: "Team Size", value: employeesCount, change: "+0 new this month", changeType: "neutral" as const, bgAccent: "bg-indigo-500/10", accent: "text-indigo-500" },
+    { id: "approvals", label: "Pending Approvals", value: pendingCount, change: `${pendingCount} action required`, changeType: pendingCount > 0 ? ("down" as const) : ("neutral" as const), bgAccent: "bg-amber-500/10", accent: "text-amber-500" },
+    { id: "present", label: "Present Today", value: 0, change: "0% presence rate", changeType: "neutral" as const, bgAccent: "bg-emerald-500/10", accent: "text-emerald-500" },
+    { id: "leave", label: "On Leave", value: 0, change: "No active leaves today", changeType: "neutral" as const, bgAccent: "bg-violet-500/10", accent: "text-violet-500" },
+  ];
+
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
-      {MANAGER_KPI.map((kpi, i) => (
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-4">
+      {kpis.map((kpi, i) => (
         <motion.div key={kpi.id} {...stagger(i)}>
           <Card className="cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-md">
             <div className={`mb-3 inline-flex items-center rounded-lg p-2 ${kpi.bgAccent}`}>
@@ -260,35 +250,6 @@ function KpiCards() {
               ) : null}
               {kpi.change}
             </div>
-            <div className="mt-2 h-8 w-full opacity-60">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={kpi.spark}>
-                  <Line
-                    type="monotone"
-                    dataKey="v"
-                    stroke={
-                      kpi.accent.includes("emerald")
-                        ? "#10b981"
-                        : kpi.accent.includes("indigo")
-                        ? "#6366f1"
-                        : kpi.accent.includes("amber")
-                        ? "#f59e0b"
-                        : kpi.accent.includes("teal")
-                        ? "#14b8a6"
-                        : kpi.accent.includes("rose")
-                        ? "#f43f5e"
-                        : kpi.accent.includes("violet")
-                        ? "#8b5cf6"
-                        : kpi.accent.includes("orange")
-                        ? "#f97316"
-                        : "#06b6d4"
-                    }
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
           </Card>
         </motion.div>
       ))}
@@ -297,9 +258,20 @@ function KpiCards() {
 }
 
 // ── 3. Team Overview ──────────────────────────────────────────
-function TeamOverview() {
-  const office = TEAM_MEMBERS.filter((m) => m.location === "office").length;
-  const remote = TEAM_MEMBERS.filter((m) => m.location === "remote").length;
+function TeamOverview({ members }: { members: any[] }) {
+  const office = members.filter((m) => m.location === "office").length;
+  const remote = members.filter((m) => m.location === "remote").length;
+  const total = members.length;
+  const officeRate = total > 0 ? (office / total) * 100 : 0;
+
+  // Calculate department split dynamically
+  const depts = members.map((m) => m.department);
+  const uniqueDepts = Array.from(new Set(depts));
+  const deptDistribution = uniqueDepts.map((d, i) => ({
+    name: d,
+    count: depts.filter((x) => x === d).length,
+    fill: ["#6366f1", "#8b5cf6", "#10b981", "#f59e0b", "#f43f5e", "#06b6d4"][i % 6],
+  }));
 
   return (
     <motion.div {...fadeUp}>
@@ -314,39 +286,46 @@ function TeamOverview() {
           <div className="lg:col-span-2">
             <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">Team Members</p>
             <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-              {TEAM_MEMBERS.map((m) => {
-                const cfg = STATUS_CONFIG[m.status];
-                return (
-                  <div
-                    key={m.id}
-                    className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-2.5 transition-colors hover:bg-accent/30"
-                  >
-                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-sm font-semibold text-white">
-                      {m.avatar}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">{m.name}</span>
-                        <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${cfg.class}`}>
-                          {cfg.label}
-                        </span>
+              {members.length === 0 ? (
+                <div className="flex flex-col items-center justify-center text-center py-12 text-muted-foreground text-sm border border-dashed rounded-xl bg-card/10">
+                  <Users className="h-8 w-8 mb-2 opacity-50" />
+                  <span>No team members assigned reporting to you.</span>
+                </div>
+              ) : (
+                members.map((m) => {
+                  const cfg = STATUS_CONFIG[m.status as EmployeeStatus] || STATUS_CONFIG.present;
+                  return (
+                    <div
+                      key={m.id}
+                      className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-2.5 transition-colors hover:bg-accent/30"
+                    >
+                      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-sm font-semibold text-white">
+                        {m.avatar}
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>{m.role}</span>
-                        <span>·</span>
-                        <span className="flex items-center gap-0.5">
-                          <MapPin className="h-2.5 w-2.5" />
-                          {m.location === "office" ? "Office" : "Remote"}
-                        </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">{m.name}</span>
+                          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${cfg.class}`}>
+                            {cfg.label}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span>{m.role}</span>
+                          <span>·</span>
+                          <span className="flex items-center gap-0.5">
+                            <MapPin className="h-2.5 w-2.5" />
+                            {m.location === "office" ? "Office" : "Remote"}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-semibold text-violet-500">{m.performanceScore}</div>
+                        <div className="text-[10px] text-muted-foreground">perf</div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-sm font-semibold text-violet-500">{m.performanceScore}</div>
-                      <div className="text-[10px] text-muted-foreground">perf</div>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           </div>
 
@@ -355,29 +334,35 @@ function TeamOverview() {
             {/* Dept distribution */}
             <div>
               <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">Department Split</p>
-              <div className="h-36">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={DEPT_DISTRIBUTION}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={32}
-                      outerRadius={56}
-                      dataKey="count"
-                      paddingAngle={4}
-                    >
-                      {DEPT_DISTRIBUTION.map((d, i) => (
-                        <Cell key={i} fill={d.fill} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 11 }}
-                    />
-                    <Legend iconSize={8} wrapperStyle={{ fontSize: 11 }} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
+              {deptDistribution.length === 0 ? (
+                <div className="text-center py-10 text-xs text-muted-foreground border border-dashed rounded-xl bg-card/10">
+                  No departments to display.
+                </div>
+              ) : (
+                <div className="h-36">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={deptDistribution}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={32}
+                        outerRadius={56}
+                        dataKey="count"
+                        paddingAngle={4}
+                      >
+                        {deptDistribution.map((d, i) => (
+                          <Cell key={i} fill={d.fill} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 11 }}
+                      />
+                      <Legend iconSize={8} wrapperStyle={{ fontSize: 11 }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             </div>
 
             {/* Remote vs Office */}
@@ -392,7 +377,7 @@ function TeamOverview() {
                   <div className="h-2 overflow-hidden rounded-full bg-muted">
                     <div
                       className="h-full rounded-full bg-indigo-500"
-                      style={{ width: `${(office / TEAM_MEMBERS.length) * 100}%` }}
+                      style={{ width: `${officeRate}%` }}
                     />
                   </div>
                 </div>
@@ -410,8 +395,21 @@ function TeamOverview() {
 }
 
 // ── 4. Attendance Center ──────────────────────────────────────
-function AttendanceCenter() {
-  const [selected, setSelected] = useState<string | null>(null);
+function AttendanceCenter({ members }: { members: any[] }) {
+  const summary = [
+    { label: "Present", count: 0, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+    { label: "Late", count: 0, color: "text-amber-500", bg: "bg-amber-500/10" },
+    { label: "On Leave", count: 0, color: "text-violet-500", bg: "bg-violet-500/10" },
+    { label: "Absent", count: members.length, color: "text-rose-500", bg: "bg-rose-500/10" },
+  ];
+
+  const weeklyData = [
+    { day: "Mon", present: 0, wfh: 0, late: 0, absent: members.length },
+    { day: "Tue", present: 0, wfh: 0, late: 0, absent: members.length },
+    { day: "Wed", present: 0, wfh: 0, late: 0, absent: members.length },
+    { day: "Thu", present: 0, wfh: 0, late: 0, absent: members.length },
+    { day: "Fri", present: 0, wfh: 0, late: 0, absent: members.length },
+  ];
 
   return (
     <motion.div {...fadeUp}>
@@ -420,7 +418,7 @@ function AttendanceCenter() {
 
         {/* Summary pills */}
         <div className="mb-4 flex flex-wrap gap-2">
-          {ATTENDANCE_SUMMARY.map((s) => (
+          {summary.map((s) => (
             <div
               key={s.label}
               className={`flex items-center gap-2 rounded-xl border px-4 py-2 ${s.bg} border-border`}
@@ -434,12 +432,12 @@ function AttendanceCenter() {
         {/* Weekly chart */}
         <div className="mb-4 h-48">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={WEEKLY_TEAM_ATTENDANCE} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+            <BarChart data={weeklyData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
               <CartesianGrid stroke="oklch(0.5 0.02 264 / 0.1)" vertical={false} />
               <XAxis dataKey="day" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
               <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
               <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
-              <Bar dataKey="present" name="Present" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} />
+              <Bar dataKey="present" name="Present" stackId="a" fill="#10b981" />
               <Bar dataKey="wfh" name="WFH" stackId="a" fill="#6366f1" />
               <Bar dataKey="late" name="Late" stackId="a" fill="#f59e0b" />
               <Bar dataKey="absent" name="Absent" stackId="a" fill="#f43f5e" radius={[4, 4, 0, 0]} />
@@ -453,53 +451,9 @@ function AttendanceCenter() {
           Attendance Actions Required
         </p>
         <div className="space-y-2">
-          {ATTENDANCE_RECORDS.filter((r) => r.status === "late" || r.status === "absent" || r.regularisationRequired).map((r) => (
-            <div
-              key={r.id}
-              className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-2.5"
-            >
-              <div
-                className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg text-xs font-semibold ${
-                  r.status === "absent"
-                    ? "bg-rose-500/10 text-rose-500"
-                    : r.status === "late"
-                    ? "bg-amber-500/10 text-amber-500"
-                    : "bg-blue-500/10 text-blue-500"
-                }`}
-              >
-                {r.name.split(" ").map((n) => n[0]).join("")}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">{r.name}</span>
-                  <Badge
-                    variant="outline"
-                    className={`text-[10px] capitalize ${
-                      r.status === "absent"
-                        ? "border-rose-200 text-rose-600"
-                        : r.status === "late"
-                        ? "border-amber-200 text-amber-600"
-                        : "border-blue-200 text-blue-600"
-                    }`}
-                  >
-                    {r.status}
-                  </Badge>
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {r.date} {r.checkIn ? `· Check-in: ${r.checkIn}` : "· No check-in recorded"}
-                  {r.overtime ? ` · OT: ${r.overtime}` : ""}
-                </div>
-              </div>
-              <div className="flex shrink-0 gap-1.5">
-                <button className="rounded-lg bg-emerald-500/10 px-2.5 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-500/20 transition-colors">
-                  Approve
-                </button>
-                <button className="rounded-lg bg-blue-500/10 px-2.5 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-500/20 transition-colors">
-                  Correct
-                </button>
-              </div>
-            </div>
-          ))}
+          <div className="py-8 text-center text-xs text-muted-foreground border border-dashed rounded-xl bg-card/10">
+            All clear! No attendance corrections or alerts.
+          </div>
         </div>
       </Card>
     </motion.div>
@@ -509,13 +463,13 @@ function AttendanceCenter() {
 // ── 5. Leave Center ───────────────────────────────────────────
 type LeaveTab = "Pending" | "Approved" | "Upcoming";
 
-function LeaveCenter() {
+function LeaveCenter({ requests }: { requests: any[] }) {
   const [tab, setTab] = useState<LeaveTab>("Pending");
 
-  const filtered: Record<LeaveTab, LeaveRequest[]> = {
-    Pending: LEAVE_REQUESTS.filter((l) => l.status === "pending"),
-    Approved: LEAVE_REQUESTS.filter((l) => l.status === "approved"),
-    Upcoming: LEAVE_REQUESTS.filter(
+  const filtered: Record<LeaveTab, any[]> = {
+    Pending: requests.filter((l) => l.status === "pending"),
+    Approved: requests.filter((l) => l.status === "approved"),
+    Upcoming: requests.filter(
       (l) => l.status === "approved" && new Date(l.from) > new Date()
     ),
   };
@@ -609,126 +563,14 @@ function LeaveCenter() {
 }
 
 // ── 6. Performance Center ─────────────────────────────────────
-const PRIORITY_COLORS = {
-  high: "text-rose-500",
-  medium: "text-amber-500",
-  low: "text-blue-500",
-};
-
 function PerformanceCenter() {
   return (
     <motion.div {...fadeUp}>
       <Card>
         <SectionHeader title="Performance Center" subtitle="Team KPIs, goals & reviews" link="/dashboard/performance" />
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          {/* Monthly performance trend */}
-          <div>
-            <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Team Score Trend
-            </p>
-            <div className="h-44">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={PERF_MONTHLY} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="perfGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.35} />
-                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid stroke="oklch(0.5 0.02 264 / 0.1)" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} domain={[70, 100]} />
-                  <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
-                  <Area type="monotone" dataKey="score" stroke="#8b5cf6" strokeWidth={2} fill="url(#perfGrad)" name="Score" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* Goal Progress */}
-          <div className="lg:col-span-2">
-            <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Team Goal Progress
-            </p>
-            <div className="space-y-3">
-              {TEAM_GOALS.map((g) => (
-                <div key={g.goal}>
-                  <div className="mb-1 flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="font-medium truncate">{g.goal}</span>
-                      <span className={`shrink-0 font-semibold text-[10px] uppercase ${PRIORITY_COLORS[g.priority]}`}>
-                        {g.priority}
-                      </span>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-2 ml-2">
-                      <span className="text-muted-foreground">{g.owner.split(" ")[0]}</span>
-                      <span className="font-semibold text-violet-500">{g.progress}%</span>
-                      <span className="text-muted-foreground">· {g.dueDate}</span>
-                    </div>
-                  </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-muted">
-                    <div
-                      className={`h-full rounded-full transition-all duration-700 ${
-                        g.progress >= 80 ? "bg-emerald-500" : g.progress >= 50 ? "bg-amber-500" : "bg-rose-500"
-                      }`}
-                      style={{ width: `${g.progress}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Top / Low Performers */}
-        <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div>
-            <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              🏆 Top Performers
-            </p>
-            <div className="space-y-2">
-              {TOP_PERFORMERS.map((p, i) => (
-                <div key={p.name} className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-2">
-                  <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-emerald-500/10 text-xs font-bold text-emerald-500">
-                    {i + 1}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm font-medium">{p.name}</div>
-                    <div className="text-xs text-muted-foreground">{p.role}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold text-emerald-500">{p.score}</div>
-                    <div className="text-[10px] text-emerald-500">{p.trend}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              ⚠️ Needs Attention
-            </p>
-            <div className="space-y-2">
-              {LOW_PERFORMERS.map((p) => (
-                <div key={p.name} className="rounded-xl border border-amber-200 bg-amber-500/5 px-3 py-2">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-sm font-medium">{p.name}</div>
-                      <div className="text-xs text-muted-foreground">{p.role}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-semibold text-amber-500">{p.score}</div>
-                      <div className="text-[10px] text-rose-500">{p.trend}</div>
-                    </div>
-                  </div>
-                  <div className="mt-1.5 flex items-center gap-1.5 text-xs text-amber-700">
-                    <Zap className="h-3 w-3" /> {p.action}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+        <div className="py-12 text-center text-sm text-muted-foreground border border-dashed rounded-xl bg-card/10">
+          <Target className="mx-auto mb-2 h-8 w-8 text-muted-foreground/60" />
+          No goals or KPIs configured for your team in the current cycle.
         </div>
       </Card>
     </motion.div>
@@ -737,98 +579,13 @@ function PerformanceCenter() {
 
 // ── 7. Recruitment ────────────────────────────────────────────
 function RecruitmentSection() {
-  const PRIORITY_BG: Record<string, string> = {
-    high: "bg-rose-500/10 text-rose-600",
-    medium: "bg-amber-500/10 text-amber-600",
-    low: "bg-blue-500/10 text-blue-600",
-  };
-
   return (
     <motion.div {...fadeUp}>
       <Card>
         <SectionHeader title="Recruitment" subtitle="Team hiring requests and pipeline" link="/dashboard/recruitment" />
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {/* Hiring requests */}
-          <div>
-            <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">Hiring Requests</p>
-            <div className="space-y-2">
-              {HIRING_REQUESTS.map((r) => (
-                <div key={r.id} className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-2.5">
-                  <Briefcase className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm font-medium">{r.role}</div>
-                    <div className="text-xs text-muted-foreground">{r.department} · Target: {r.targetDate}</div>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${PRIORITY_BG[r.priority]}`}>
-                      {r.priority}
-                    </span>
-                    <Badge
-                      variant={r.status === "interviewing" ? "default" : "secondary"}
-                      className="text-[10px] capitalize"
-                    >
-                      {r.status}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Candidate pipeline */}
-            <p className="mb-2 mt-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Candidate Pipeline
-            </p>
-            <div className="h-36">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={CANDIDATE_PIPELINE} layout="vertical" margin={{ left: 0, right: 16, top: 0, bottom: 0 }}>
-                  <CartesianGrid stroke="oklch(0.5 0.02 264 / 0.1)" horizontal={false} />
-                  <XAxis type="number" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                  <YAxis type="category" dataKey="stage" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={64} />
-                  <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
-                  <Bar dataKey="count" radius={[0, 6, 6, 0]} fill="#6366f1" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* Upcoming interviews */}
-          <div>
-            <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Upcoming Interviews
-            </p>
-            <div className="space-y-2">
-              {MANAGER_INTERVIEWS.map((iv) => (
-                <div key={iv.candidate} className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-3">
-                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-indigo-500/10">
-                    <CalendarDays className="h-4 w-4 text-indigo-500" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm font-medium">{iv.candidate}</div>
-                    <div className="text-xs text-muted-foreground">{iv.role} · {iv.type}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xs font-medium">{iv.time}</div>
-                    <Badge variant="outline" className="mt-0.5 text-[10px]">{iv.stage}</Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-4 flex gap-2">
-              <Link
-                to="/dashboard/recruitment/calendar"
-                className="flex-1 rounded-xl border border-border bg-background/50 py-2.5 text-center text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-              >
-                View Calendar
-              </Link>
-              <Link
-                to="/dashboard/recruitment/candidates"
-                className="flex-1 rounded-xl border border-border bg-background/50 py-2.5 text-center text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-              >
-                All Candidates
-              </Link>
-            </div>
-          </div>
+        <div className="py-12 text-center text-sm text-muted-foreground border border-dashed rounded-xl bg-card/10">
+          <Briefcase className="mx-auto mb-2 h-8 w-8 text-muted-foreground/60" />
+          No active hiring requisitions or scheduled interviews.
         </div>
       </Card>
     </motion.div>
@@ -837,47 +594,13 @@ function RecruitmentSection() {
 
 // ── 8. Assets Section ─────────────────────────────────────────
 function AssetsSection() {
-  const STATUS_COLORS: Record<string, string> = {
-    assigned: "bg-blue-500/10 text-blue-600",
-    "pending-return": "bg-amber-500/10 text-amber-600",
-    damaged: "bg-rose-500/10 text-rose-600",
-    returned: "bg-emerald-500/10 text-emerald-600",
-  };
-
   return (
     <motion.div {...fadeUp}>
       <Card>
         <SectionHeader title="Team Assets" subtitle="Asset inventory for your team" link="/dashboard/assets" />
-
-        {/* Summary */}
-        <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {TEAM_ASSET_SUMMARY.map((a) => (
-            <div key={a.label} className={`rounded-xl border border-border ${a.bg} p-3 text-center`}>
-              <div className={`font-display text-2xl font-bold ${a.color}`}>{a.count}</div>
-              <div className="mt-0.5 text-xs text-muted-foreground">{a.label}</div>
-            </div>
-          ))}
-        </div>
-
-        <div className="space-y-2">
-          {TEAM_ASSETS.map((a) => (
-            <div key={a.id} className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-2.5">
-              <Package className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <div className="min-w-0 flex-1">
-                <div className="text-sm font-medium">{a.name}</div>
-                <div className="text-xs text-muted-foreground">
-                  {a.assignedTo} · Tag: {a.tag} · Since: {a.since}
-                </div>
-              </div>
-              <span
-                className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-medium capitalize ${
-                  STATUS_COLORS[a.status] ?? "bg-muted text-muted-foreground"
-                }`}
-              >
-                {a.status.replace("-", " ")}
-              </span>
-            </div>
-          ))}
+        <div className="py-12 text-center text-sm text-muted-foreground border border-dashed rounded-xl bg-card/10">
+          <Package className="mx-auto mb-2 h-8 w-8 text-muted-foreground/60" />
+          No company assets currently assigned to your team members.
         </div>
       </Card>
     </motion.div>
@@ -885,44 +608,14 @@ function AssetsSection() {
 }
 
 // ── 9. AI Insights ────────────────────────────────────────────
-const LEVEL_BADGE: Record<string, string> = {
-  high: "border-emerald-200 text-emerald-600",
-  moderate: "border-amber-200 text-amber-600",
-  low: "border-rose-200 text-rose-600",
-  positive: "border-blue-200 text-blue-600",
-};
-
 function AIInsights() {
   return (
     <motion.div {...fadeUp}>
       <Card>
         <SectionHeader title="AI Insights" subtitle="AI-powered team intelligence" link="/ai/workforce-insights" />
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {AI_TEAM_INSIGHTS.map((insight, i) => (
-            <motion.div
-              key={insight.category}
-              {...stagger(i)}
-              className={`flex flex-col gap-3 rounded-xl bg-gradient-to-br ${insight.color} p-4`}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-white/80" />
-                  <span className="text-xs font-semibold text-white">{insight.category}</span>
-                </div>
-                <Badge variant="outline" className={`text-[10px] capitalize border ${LEVEL_BADGE[insight.level]} bg-white/10`}>
-                  {insight.level}
-                </Badge>
-              </div>
-              <div className="text-xs text-white/80 leading-relaxed">{insight.detail}</div>
-              <div className="mt-auto rounded-lg bg-black/20 px-3 py-2 text-[11px] text-white/90">
-                💡 {insight.recommendation}
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-white/60">AI Score</span>
-                <span className="font-display text-lg font-bold text-white">{insight.score}</span>
-              </div>
-            </motion.div>
-          ))}
+        <div className="py-12 text-center text-sm text-muted-foreground border border-dashed rounded-xl bg-card/10">
+          <Sparkles className="mx-auto mb-2 h-8 w-8 text-muted-foreground/60 animate-pulse" />
+          Awaiting workforce analytics data to generate team intelligence.
         </div>
       </Card>
     </motion.div>
@@ -1026,10 +719,57 @@ function ReportsSection() {
 export function ManagerDashboard() {
   const ws = useAurix();
   const firstName = ws.user?.fullName?.split(" ")[0] ?? "Manager";
+  const managerName = ws.user?.fullName || "";
   const companyName = ws.company?.name ?? "Aurix HR";
   const hour = new Date().getHours();
   const greeting =
     hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+
+  // Filter employees reporting to this manager
+  const teamMembers = ws.employees.filter((emp) => emp.managerName === managerName);
+  
+  const mappedMembers = teamMembers.map((e) => ({
+    id: e.id,
+    name: e.fullName,
+    role: e.designation || "Team Member",
+    department: e.department || "Engineering",
+    status: "present",
+    avatar: e.fullName.split(" ").map((n) => n[0]).join(""),
+    location: "office" as const,
+    performanceScore: 90,
+    joinDate: e.joiningDate || "—",
+  }));
+
+  const [leaveRequests, setLeaveRequests] = useState<any[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    async function loadPending() {
+      try {
+        const res = await api.get<any>("/leaves/pending");
+        if (res?.success && res.data && active) {
+          setLeaveRequests(res.data.map((l: any) => ({
+            id: l.id,
+            name: l.employee?.fullName || "Employee",
+            type: l.leave_type,
+            from: l.start_date,
+            to: l.end_date,
+            days: parseFloat(l.total_days),
+            reason: l.reason,
+            status: l.status.toLowerCase(),
+            requestedAt: new Date(l.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" }),
+            urgent: false
+          })));
+        }
+      } catch (err) {
+        console.error("Error loading pending leaves on dashboard", err);
+      }
+    }
+    loadPending();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -1037,20 +777,20 @@ export function ManagerDashboard() {
       <ManagerHeader greeting={greeting} userName={firstName} companyName={companyName} />
 
       {/* KPI Cards */}
-      <KpiCards />
+      <KpiCards employeesCount={mappedMembers.length} pendingCount={leaveRequests.filter(l => l.status === "pending").length} />
 
       {/* Team Overview + Notifications */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <TeamOverview />
+          <TeamOverview members={mappedMembers} />
         </div>
         <NotificationsSection />
       </div>
 
       {/* Attendance + Leave */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <AttendanceCenter />
-        <LeaveCenter />
+        <AttendanceCenter members={mappedMembers} />
+        <LeaveCenter requests={leaveRequests} />
       </div>
 
       {/* Performance */}
