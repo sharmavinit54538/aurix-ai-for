@@ -79,9 +79,7 @@ const NAV_SECTIONS: NavSection[] = [
       { to: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true, roles: ["admin", "hr"] },
       { to: "/dashboard/manager", label: "Manager Dashboard", icon: UserCog, roles: ["manager"] },
       { to: "/dashboard/ai-insights", label: "AI Insights", icon: Sparkles, roles: ["admin", "hr", "manager"] },
-      { to: "/dashboard/employees", label: "Employees", icon: Users, roles: ["admin", "hr", "manager"] },
-      { to: "/dashboard/hr", label: "HR Management", icon: UserCog, roles: ["admin", "hr"] },
-      { to: "/dashboard/managers", label: "Managers", icon: UserPlus, roles: ["admin", "hr"] },
+      { to: "/dashboard/people", label: "People", icon: Users, exact: true, roles: ["admin", "hr", "manager"] },
       { to: "/dashboard/departments", label: "Departments", icon: Building2, roles: ["admin", "hr"] },
       { to: "/dashboard/attendance", label: "Attendance", icon: CalendarDays, exact: true, roles: ["admin", "hr", "manager"] },
       { to: "/dashboard/timesheets", label: "Timesheets", icon: Timer, roles: ["admin", "hr", "manager"] },
@@ -1069,6 +1067,9 @@ export function PageHeader({ title, description, actions }: { title: string; des
     pathname.startsWith("/dashboard/attendance/") &&
     pathname !== "/dashboard/attendance" &&
     pathname !== "/dashboard/attendance/";
+  const isPeopleSubPage =
+    pathname.startsWith("/dashboard/employees") ||
+    pathname.startsWith("/dashboard/managers");
 
   return (
     <div className="mb-6 flex flex-col min-w-0 gap-2 text-left">
@@ -1102,6 +1103,17 @@ export function PageHeader({ title, description, actions }: { title: string; des
           >
             <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover/back:-translate-x-0.5" />
             Back to Attendance Hub
+          </Link>
+        </div>
+      )}
+      {isPeopleSubPage && (
+        <div className="mb-1 flex items-center">
+          <Link
+            to="/dashboard/people"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group/back"
+          >
+            <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover/back:-translate-x-0.5" />
+            Back to People Hub
           </Link>
         </div>
       )}

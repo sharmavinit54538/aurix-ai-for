@@ -1,82 +1,67 @@
 import React from "react";
-import { Building, Activity, Users, UserCheck, ShieldCheck, HelpCircle, Landmark, TrendingUp, TrendingDown } from "lucide-react";
+import { Building, Activity, Users, UserCheck, ShieldCheck, Landmark } from "lucide-react";
 import type { Department } from "../types";
 import { Card, CardContent } from "@/components/ui/card";
-import { useAurix } from "@/lib/aurix-store";
 
 interface DepartmentStatsCardsProps {
   departments: Department[];
 }
 
 export function DepartmentStatsCards({ departments }: DepartmentStatsCardsProps) {
-  const ws = useAurix();
-
   const totalDepartments = departments.length;
   const activeDepartments = departments.filter((d) => d.status === "active").length;
-  
-  // Total employees and managers from store
-  const totalEmployees = ws.employees.length || 0;
-  const totalManagers = ws.managers.length || 0;
-  
-  // Avg. Team Size
-  const avgTeamSize = totalManagers > 0 ? Math.round(totalEmployees / totalManagers) : 0;
-
-  // Open Positions
+  const inactiveDepartments = totalDepartments - activeDepartments;
+  const totalEmployees = departments.reduce((acc, d) => acc + (Number(d.currentEmployeeCount) || 0), 0);
+  const assignedManagers = new Set(
+    departments
+      .map((d) => d.departmentHeadId || d.departmentHeadName)
+      .filter((value): value is string => Boolean(value) && value !== "Unassigned" && value !== "None"),
+  ).size;
+  const avgTeamSize = totalDepartments > 0 ? Math.round(totalEmployees / totalDepartments) : 0;
   const openPositions = departments.reduce((acc, d) => acc + (d.openPositions || 0), 0);
+  const hiringDepartments = departments.filter((d) => (d.openPositions || 0) > 0).length;
 
   const stats = [
     {
       label: "Total Departments",
       value: totalDepartments,
       icon: Building,
-      trend: "+12%",
-      isPositive: true,
-      desc: "2 newly formed this quarter",
+      desc: `${activeDepartments} active`,
       color: "from-blue-500/20 to-indigo-500/20 text-blue-500 border-blue-500/20",
     },
     {
       label: "Active Departments",
       value: activeDepartments,
       icon: Activity,
-      trend: "100%",
-      isPositive: true,
-      desc: "All critical divisions operational",
+      desc: `${inactiveDepartments} inactive`,
       color: "from-emerald-500/20 to-teal-500/20 text-emerald-500 border-emerald-500/20",
     },
     {
       label: "Total Employees",
       value: totalEmployees,
       icon: Users,
-      trend: "+8.4%",
-      isPositive: true,
-      desc: "Net addition of +5 this month",
+      desc: totalDepartments > 0 ? "Across departments" : "No departments yet",
       color: "from-purple-500/20 to-pink-500/20 text-purple-500 border-purple-500/20",
     },
     {
       label: "Total Managers",
-      value: totalManagers,
+      value: assignedManagers,
       icon: UserCheck,
-      trend: "+15%",
-      isPositive: true,
-      desc: "People managers & leads in tree",
+      desc: "Assigned department heads",
       color: "from-amber-500/20 to-orange-500/20 text-amber-500 border-amber-500/20",
     },
     {
       label: "Average Team Size",
       value: avgTeamSize,
       icon: Landmark,
-      trend: "-2.1%",
-      isPositive: false,
-      desc: "Target: 8-12 reports per lead",
+      desc: totalEmployees > 0 ? "Employees per department" : "No employees assigned",
       color: "from-cyan-500/20 to-sky-500/20 text-cyan-500 border-cyan-500/20",
     },
     {
       label: "Open Positions",
       value: openPositions,
       icon: ShieldCheck,
-      trend: "+4 open",
-      isPositive: true,
-      desc: "Hiring across 4 departments",
+      desc: hiringDepartments > 0 ? `Across ${hiringDepartments} departments` : "No open positions",
       color: "from-rose-500/20 to-red-500/20 text-rose-500 border-rose-500/20",
     },
   ];
@@ -100,17 +85,7 @@ export function DepartmentStatsCards({ departments }: DepartmentStatsCardsProps)
               </div>
               <div className="mt-2">
                 <div className="text-2xl font-bold tracking-tight text-foreground">{stat.value}</div>
-                <div className="flex items-center gap-1 mt-1">
-                  {stat.isPositive ? (
-                    <TrendingUp className="h-3 w-3 text-emerald-500" />
-                  ) : (
-                    <TrendingDown className="h-3 w-3 text-rose-500" />
-                  )}
-                  <span className={`text-[10px] font-bold ${stat.isPositive ? "text-emerald-500" : "text-rose-500"}`}>
-                    {stat.trend}
-                  </span>
-                  <span className="text-[9px] text-muted-foreground truncate ml-1">{stat.desc}</span>
-                </div>
+                <div className="mt-1 truncate text-[10px] font-medium text-muted-foreground">{stat.desc}</div>
               </div>
             </CardContent>
           </Card>

@@ -1,6 +1,6 @@
 import type { Department, DepartmentFilters, SortField, SortDir } from "../types";
 
-// ─── Validators ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ Validators â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export interface ValidationResult {
   valid: boolean;
   errors: Record<string, string>;
@@ -18,8 +18,6 @@ export function validateDepartmentForm(
   else if (draft.code.trim().length < 2) errors.code = "Code must be at least 2 characters";
 
   if (!draft.office?.trim()) errors.office = "Office location is required";
-  if (!draft.departmentHeadId) errors.departmentHeadId = "Department Head is required";
-  if (!draft.reportingManagerName?.trim()) errors.reportingManagerName = "Reporting Manager is required";
 
   if (draft.budget !== undefined && draft.budget < 0) {
     errors.budget = "Budget must be a positive number";
@@ -47,7 +45,7 @@ export function validateDepartmentForm(
   return { valid: Object.keys(errors).length === 0, errors };
 }
 
-// ─── Filtering & Sorting ──────────────────────────────────────────────────────
+// â”€â”€â”€ Filtering & Sorting â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function applyFilters(
   departments: Department[],
   query: string,
@@ -122,12 +120,12 @@ export function applySorting(
   });
 }
 
-// ─── Pagination ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ Pagination â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function paginate<T>(items: T[], page: number, perPage: number): T[] {
   return items.slice((page - 1) * perPage, page * perPage);
 }
 
-// ─── CSV Builder ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ CSV Builder â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function buildCSV(departments: Department[]): string {
   const headers = [
     "Department Name", "Code", "Department Head", "Reporting To",
@@ -146,7 +144,7 @@ export function buildCSV(departments: Department[]): string {
   return [headers.join(","), ...rows].join("\n");
 }
 
-// ─── Formatted Helpers ────────────────────────────────────────────────────────
+// â”€â”€â”€ Formatted Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function fmtBudget(num: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -156,7 +154,7 @@ export function fmtBudget(num: number): string {
 }
 
 export function fmtDate(iso: string): string {
-  if (!iso) return "—";
+  if (!iso) return "â€”";
   const [y, m, d] = iso.split("T")[0].split("-");
   const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   return `${months[parseInt(m) - 1]} ${parseInt(d)}, ${y}`;

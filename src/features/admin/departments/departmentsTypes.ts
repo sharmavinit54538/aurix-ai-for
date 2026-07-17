@@ -6,4 +6,8 @@ export interface DepartmentsState {
   departments: Department[];
   loading: boolean;
   error: string | null;
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
 }

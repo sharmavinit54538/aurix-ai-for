@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
+import { apiInstance } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -70,12 +71,20 @@ import { OFFICES, STATUS_OPTIONS, EMPLOYEE_COUNT_RANGES, DEFAULT_FILTERS } from 
 import { applyFilters, applySorting, paginate, buildCSV } from "../utils";
 import { useAurix } from "@/lib/aurix-store";
 import { useManagersList } from "../../managers/hooks/useManagersList";
+import { useManagers } from "../../managers/hooks/useManagers";
 import { toast } from "sonner";
 
 export function DepartmentsPage() {
   const ws = useAurix();
   const {
     departments,
+    loading,
+    error,
+    total,
+    page,
+    limit,
+    pages,
+    fetchDepartments,
     createDepartment,
     updateDepartment,
     deleteDepartment,
@@ -114,6 +123,7 @@ export function DepartmentsPage() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [profileDept, setProfileDept] = useState<Department | null>(null); // For view details drawer
   const [importOpen, setImportOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Modals for Bulk Actions
   const [bulkAssignManagerOpen, setBulkAssignManagerOpen] = useState(false);
@@ -130,19 +140,123 @@ export function DepartmentsPage() {
 
   // Get managers for bulk actions
   const managers = useManagersList();
+  const { fetchManagers: fetchManagersList } = useManagers();
+
+  // Local state to hold all departments for statistics cards calculation
+  const [allDeptsForStats, setAllDeptsForStats] = useState<Department[]>([]);
+
+  const fetchStatsData = useCallback(async () => {
+    try {
+      const response = await apiInstance.get("/departments", { params: { limit: 100 } });
+      const items = response.data?.data?.items ?? [];
+      const mapped = items.map((item: any) => {
+        const openPositions = Number(item.open_positions ?? item.openPositions ?? item.open_positions_count ?? 0);
+        const hiringStatus = String(item.hiring_status ?? item.hiringStatus ?? "").toLowerCase();
+
+        return {
+          id: item.id,
+          name: item.department_name ?? "",
+          code: item.department_code ?? "",
+          description: item.description ?? "",
+          departmentHeadId: item.manager_id ?? null,
+          departmentHeadName: item.manager_name ?? (item.manager_details?.name ?? ""),
+          reportingManagerId: item.reporting_manager_id ?? null,
+          reportingManagerName: item.reporting_manager_name ?? "",
+          office: item.location ?? "",
+          budget: item.budget ?? 0,
+          costCenter: item.cost_center ?? "",
+          employeeCapacity: item.employee_capacity ?? 0,
+          currentEmployeeCount: item.employee_count ?? 0,
+          extensionNumber: "",
+          status: (item.status?.toLowerCase() === "active" ? "active" : "inactive") as any,
+          themeColor: item.theme_color ?? "#3b82f6",
+          iconName: item.icon_name ?? "Building2",
+          parentId: item.parent_department_id ?? null,
+          parentName: item.parent_department_name ?? "",
+          createdDate: item.created_at ? item.created_at.split("T")[0] : "",
+          employeeIds: [],
+          openPositions,
+          performanceScore: Number(item.performance_score ?? item.performanceScore ?? 0),
+          attendanceScore: Number(item.attendance_score ?? item.attendanceScore ?? 0),
+          hiringStatus: ["open", "paused", "closed"].includes(hiringStatus)
+            ? (hiringStatus as Department["hiringStatus"])
+            : openPositions > 0
+              ? "open"
+              : "closed",
+          recentActivity: Array.isArray(item.recent_activity ?? item.recentActivity)
+            ? (item.recent_activity ?? item.recentActivity)
+            : [],
+          documents: Array.isArray(item.documents) ? item.documents : [],
+        };
+      });
+      setAllDeptsForStats(mapped);
+    } catch (err) {
+      console.error("Failed to fetch stats", err);
+    }
+  }, []);
+
+  // Stable reload function that won't cause re-renders
+  const reloadDepartments = useCallback(() => {
+    fetchDepartments({
+      search: searchQuery || undefined,
+      status: filters.status,
+      page: currentPage,
+      limit: perPage,
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, filters.status, currentPage, perPage]);
+
+  // Fetch stats only once on mount
+  const statsLoaded = useRef(false);
+  useEffect(() => {
+    if (!statsLoaded.current) {
+      statsLoaded.current = true;
+      fetchStatsData();
+      fetchManagersList({ limit: 100 });
+    }
+  }, [fetchStatsData, fetchManagersList]);
+
+  // Load departments when search/filter/page changes
+  useEffect(() => {
+    reloadDepartments();
+  }, [reloadDepartments]);
 
   // Processed departments
   const processedDepartments = useMemo(() => {
-    const filtered = applyFilters(departments, searchQuery, filters);
-    return applySorting(filtered, sortField, sortDir);
-  }, [departments, searchQuery, filters, sortField, sortDir]);
+    let list = departments;
+
+    if (filters.office !== "all") {
+      list = list.filter((d) => d.office === filters.office);
+    }
+    if (filters.managerId !== "all") {
+      list = list.filter((d) => d.departmentHeadId === filters.managerId);
+    }
+    if (filters.employeeCountRange !== "all") {
+      list = list.filter((d) => {
+        const ec = d.currentEmployeeCount;
+        if (filters.employeeCountRange === "0-10") return ec >= 0 && ec <= 10;
+        if (filters.employeeCountRange === "11-30") return ec >= 11 && ec <= 30;
+        if (filters.employeeCountRange === "31-50") return ec >= 31 && ec <= 50;
+        if (filters.employeeCountRange === "50+") return ec > 50;
+        return true;
+      });
+    }
+    if (filters.createdDateFrom) {
+      list = list.filter((d) => d.createdDate >= filters.createdDateFrom);
+    }
+    if (filters.createdDateTo) {
+      list = list.filter((d) => d.createdDate <= filters.createdDateTo);
+    }
+
+    return applySorting(list, sortField, sortDir);
+  }, [departments, filters, sortField, sortDir]);
 
   // Paginated departments
   const paginatedDepartments = useMemo(() => {
-    return paginate(processedDepartments, currentPage, perPage);
-  }, [processedDepartments, currentPage, perPage]);
+    return processedDepartments;
+  }, [processedDepartments]);
 
-  const totalPages = Math.ceil(processedDepartments.length / perPage);
+  const totalPages = pages || 1;
 
   // Handlers
   const handleSort = (field: SortField) => {
@@ -197,11 +311,17 @@ export function DepartmentsPage() {
     }
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (deptToDelete) {
-      deleteDepartment(deptToDelete.id);
-      setSelectedIds((prev) => prev.filter((id) => id !== deptToDelete.id));
-      toast.success("Department Deleted Successfully");
+      const action = await deleteDepartment(deptToDelete.id);
+      if (deleteDepartment.fulfilled.match(action)) {
+        toast.success("Department Deleted Successfully");
+        setSelectedIds((prev) => prev.filter((id) => id !== deptToDelete.id));
+        reloadDepartments();
+      } else {
+        const errorMsg = action.payload || "Failed to delete department";
+        toast.error(errorMsg);
+      }
       setDeleteAlertOpen(false);
       setDeptToDelete(null);
     }
@@ -212,16 +332,29 @@ export function DepartmentsPage() {
     setProfileOpen(true);
   };
 
-  const handleSaveDepartment = (d: Department) => {
-    const exists = departments.some((dept) => dept.id === d.id);
-    if (exists) {
-      updateDepartment(d);
-      // Synchronize changes inside active view drawer if open
-      if (profileDept?.id === d.id) {
-        setProfileDept(d);
+  const handleSaveDepartment = async (d: Partial<Department>) => {
+    setIsSaving(true);
+    try {
+      const exists = departments.some((dept) => dept.id === d.id);
+      let action;
+      if (exists && d.id) {
+        action = await updateDepartment(d as any);
+      } else {
+        action = await createDepartment(d);
       }
-    } else {
-      createDepartment(d);
+
+      if (updateDepartment.fulfilled.match(action) || createDepartment.fulfilled.match(action)) {
+        toast.success(exists ? "Department Updated Successfully" : "Department Created Successfully");
+        setFormOpen(false);
+        reloadDepartments();
+      } else {
+        const errorMsg = action.payload || "Failed to save department";
+        toast.error(errorMsg);
+      }
+    } catch (err: any) {
+      toast.error(err.message || "An unexpected error occurred");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -244,10 +377,16 @@ export function DepartmentsPage() {
     }
   };
 
-  const handleConfirmBulkDelete = () => {
-    bulkDelete(selectedIds);
-    toast.success(`${selectedIds.length} Departments Deleted Successfully`);
-    setSelectedIds([]);
+  const handleConfirmBulkDelete = async () => {
+    const action = await bulkDelete(selectedIds);
+    if (bulkDelete.fulfilled.match(action)) {
+      toast.success(`${selectedIds.length} Departments Deleted Successfully`);
+      setSelectedIds([]);
+      reloadDepartments();
+    } else {
+      const errorMsg = action.payload || "Failed to bulk delete departments";
+      toast.error(errorMsg);
+    }
     setBulkDeleteAlertOpen(false);
   };
 
@@ -375,7 +514,7 @@ export function DepartmentsPage() {
         </head>
         <body>
           <h1>Departments Directory</h1>
-          <p>Generated on ${new Date().toLocaleDateString()} • Total Records: ${data.length}</p>
+          <p>Generated on ${new Date().toLocaleDateString()} ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ Total Records: ${data.length}</p>
           <table>
             <thead>
               <tr>
@@ -454,7 +593,7 @@ export function DepartmentsPage() {
         {/* Tab 1: Directory List */}
         <TabsContent value="directory" className="space-y-6 mt-0">
           {/* Stats Cards Section */}
-          <DepartmentStatsCards departments={departments} />
+          <DepartmentStatsCards departments={allDeptsForStats} />
 
           <div className="rounded-2xl border border-border/60 bg-card/40 p-5 shadow-sm backdrop-blur-xl space-y-4">
             {/* Search, Clear & Actions Header */}
@@ -706,7 +845,19 @@ export function DepartmentsPage() {
             )}
 
             {/* List Table and Empty states */}
-            {processedDepartments.length === 0 ? (
+            {loading ? (
+              <div className="space-y-4 py-6 text-left">
+                <div className="h-6 w-full rounded bg-muted/65 animate-pulse" />
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex gap-4">
+                    <div className="h-10 flex-1 rounded bg-muted/50 animate-pulse" />
+                    <div className="h-10 flex-1 rounded bg-muted/50 animate-pulse" />
+                    <div className="h-10 flex-1 rounded bg-muted/50 animate-pulse" />
+                    <div className="h-10 flex-1 rounded bg-muted/50 animate-pulse" />
+                  </div>
+                ))}
+              </div>
+            ) : processedDepartments.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border/80 bg-card/10 p-12 text-center flex flex-col items-center justify-center min-h-[300px]">
                 <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-muted/60 text-muted-foreground shadow-sm">
                   <Building className="h-6 w-6" />
@@ -825,8 +976,9 @@ export function DepartmentsPage() {
         open={formOpen}
         onOpenChange={setFormOpen}
         department={activeDept}
-        existingDepartments={departments}
+        existingDepartments={allDeptsForStats.length > 0 ? allDeptsForStats : departments}
         onSave={handleSaveDepartment}
+        isSaving={isSaving}
       />
 
       {/* View Details Drawer */}
@@ -846,7 +998,7 @@ export function DepartmentsPage() {
       <ImportDialog
         open={importOpen}
         onOpenChange={setImportOpen}
-        existingDepartments={departments}
+        existingDepartments={allDeptsForStats.length > 0 ? allDeptsForStats : departments}
         onImport={importDepartments}
       />
 

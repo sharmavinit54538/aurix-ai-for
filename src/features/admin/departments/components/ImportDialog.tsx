@@ -250,12 +250,10 @@ export function ImportDialog({
         createdDate: new Date().toISOString().split("T")[0],
         employeeIds: [],
         openPositions: 0,
-        performanceScore: 85,
-        attendanceScore: 92,
+        performanceScore: 0,
+        attendanceScore: 0,
         hiringStatus: "closed",
-        recentActivity: [
-          { id: `act_imp_${Date.now()}`, action: "Imported via CSV upload", timestamp: new Date().toISOString() },
-        ],
+        recentActivity: [],
         documents: [],
       };
     });
@@ -285,7 +283,7 @@ export function ImportDialog({
       <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto rounded-2xl border-border bg-card p-6 backdrop-blur-xl">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold flex items-center gap-2">
-            📂 Import Departments
+            ðŸ“‚ Import Departments
           </DialogTitle>
         </DialogHeader>
 
@@ -304,7 +302,7 @@ export function ImportDialog({
               onClick={downloadTemplate}
               className="text-xs font-semibold rounded-xl border-border bg-card hover:bg-muted"
             >
-              📥 Download CSV Template
+              ðŸ“¥ Download CSV Template
             </Button>
           </div>
 
@@ -341,7 +339,7 @@ export function ImportDialog({
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-foreground truncate max-w-[250px]">{file.name}</p>
-                    <p className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(1)} KB • {parsedRows.length} departments detected</p>
+                    <p className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(1)} KB â€¢ {parsedRows.length} departments detected</p>
                   </div>
                 </div>
                 <Button
