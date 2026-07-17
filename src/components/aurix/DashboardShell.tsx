@@ -83,18 +83,7 @@ const NAV_SECTIONS: NavSection[] = [
       { to: "/dashboard/hr", label: "HR Management", icon: UserCog, roles: ["admin", "hr"] },
       { to: "/dashboard/managers", label: "Managers", icon: UserPlus, roles: ["admin", "hr"] },
       { to: "/dashboard/departments", label: "Departments", icon: Building2, roles: ["admin", "hr"] },
-      {
-        label: "Attendance",
-        icon: CalendarDays,
-        basePath: "/dashboard/attendance",
-        roles: ["admin", "hr", "manager"],
-        children: [
-          { to: "/dashboard/attendance", label: "Attendance", icon: CalendarDays, exact: true },
-          { to: "/dashboard/attendance/shifts", label: "Shifts", icon: Clock },
-          { to: "/dashboard/attendance/rosters", label: "Rosters", icon: ScrollText },
-          { to: "/dashboard/attendance/holidays", label: "Holidays", icon: Palmtree },
-        ],
-      },
+      { to: "/dashboard/attendance", label: "Attendance", icon: CalendarDays, exact: true, roles: ["admin", "hr", "manager"] },
       { to: "/dashboard/timesheets", label: "Timesheets", icon: Timer, roles: ["admin", "hr", "manager"] },
       { to: "/dashboard/leaves", label: "Leaves", icon: FileText, roles: ["admin", "hr", "manager"] },
       { to: "/dashboard/payroll", label: "Payroll", icon: CreditCard, exact: true, roles: ["admin", "hr"] },
@@ -1076,6 +1065,10 @@ export function PageHeader({ title, description, actions }: { title: string; des
     pathname.startsWith("/dashboard/payroll/") &&
     pathname !== "/dashboard/payroll" &&
     pathname !== "/dashboard/payroll/";
+  const isAttendanceSubPage =
+    pathname.startsWith("/dashboard/attendance/") &&
+    pathname !== "/dashboard/attendance" &&
+    pathname !== "/dashboard/attendance/";
 
   return (
     <div className="mb-6 flex flex-col min-w-0 gap-2 text-left">
@@ -1098,6 +1091,17 @@ export function PageHeader({ title, description, actions }: { title: string; des
           >
             <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover/back:-translate-x-0.5" />
             Back to Payroll Hub
+          </Link>
+        </div>
+      )}
+      {isAttendanceSubPage && (
+        <div className="mb-1 flex items-center">
+          <Link
+            to="/dashboard/attendance"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group/back"
+          >
+            <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover/back:-translate-x-0.5" />
+            Back to Attendance Hub
           </Link>
         </div>
       )}
