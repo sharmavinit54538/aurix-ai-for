@@ -1,1 +1,0 @@
-# aurix-ai-for
