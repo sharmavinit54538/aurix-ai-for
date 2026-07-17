@@ -1,5 +1,6 @@
+import { Link, useRouterState } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { ArrowUpRight, ArrowDownRight, Download, Sparkles, type LucideIcon } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Download, Sparkles, ChevronLeft, type LucideIcon } from "lucide-react";
 import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, Line, LineChart,
   ResponsiveContainer, Tooltip, XAxis, YAxis,
@@ -60,47 +61,63 @@ export function AIHero({
   description: string;
   lastAnalysis?: string;
 }) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isSubPage = pathname.startsWith("/ai/") && pathname !== "/ai" && pathname !== "/ai/";
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className="relative mb-8 overflow-hidden rounded-3xl border border-border bg-card/60 p-6 backdrop-blur-xl sm:p-8"
-    >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full opacity-30 blur-3xl"
-        style={{ background: "var(--gradient-brand)" }}
-      />
-      <div className="relative flex flex-wrap items-start justify-between gap-6">
-        <div className="flex items-start gap-4">
-          <div
-            className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl text-brand-foreground shadow-glow"
-            style={{ background: "var(--gradient-brand)" }}
+    <div className="space-y-4 mb-8">
+      {isSubPage && (
+        <div className="flex items-center text-left">
+          <Link
+            to="/ai"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group/back"
           >
-            <Icon className="h-6 w-6" />
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="gap-1">
-                <Sparkles className="h-3 w-3" /> {eyebrow}
-              </Badge>
-              {lastAnalysis ? (
-                <span className="text-xs text-muted-foreground">Last analysis · {lastAnalysis}</span>
-              ) : null}
+            <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover/back:-translate-x-0.5" />
+            Back to AI Hub
+          </Link>
+        </div>
+      )}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="relative overflow-hidden rounded-3xl border border-border bg-card/60 p-6 backdrop-blur-xl sm:p-8"
+      >
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full opacity-30 blur-3xl"
+          style={{ background: "var(--gradient-brand)" }}
+        />
+        <div className="relative flex flex-wrap items-start justify-between gap-6">
+          <div className="flex items-start gap-4">
+            <div
+              className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl text-brand-foreground shadow-glow"
+              style={{ background: "var(--gradient-brand)" }}
+            >
+              <Icon className="h-6 w-6" />
             </div>
-            <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
-            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{description}</p>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="gap-1">
+                  <Sparkles className="h-3 w-3" /> {eyebrow}
+                </Badge>
+                {lastAnalysis ? (
+                  <span className="text-xs text-muted-foreground">Last analysis · {lastAnalysis}</span>
+                ) : null}
+              </div>
+              <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
+              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{description}</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="gap-1.5"><Download className="h-3.5 w-3.5" /> Export</Button>
+            <Button size="sm" className="gap-1.5 bg-gradient-brand text-brand-foreground hover:opacity-90">
+              <Sparkles className="h-3.5 w-3.5" /> Run AI Analysis
+            </Button>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="gap-1.5"><Download className="h-3.5 w-3.5" /> Export</Button>
-          <Button size="sm" className="gap-1.5 bg-gradient-brand text-brand-foreground hover:opacity-90">
-            <Sparkles className="h-3.5 w-3.5" /> Run AI Analysis
-          </Button>
-        </div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 }
 
