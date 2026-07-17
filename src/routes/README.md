@@ -16,98 +16,89 @@ Do **not** create `src/pages/` — that is a Next.js convention.
 
 | Folder | Purpose |
 |--------|---------|
-| `features/admin/` | HR/Admin management (employees, managers, departments, performance) |
+| `features/admin/` | HR/Admin management (employees, managers, departments, performance, **recruitment**) |
 | `features/auth/` | Login, register, password reset, email verification |
 | `features/portal/` | Role-based user dashboards (employee self-service, manager team lead) |
 | `features/dashboard/` | Executive overview |
 | `features/attendance/` | Attendance module |
 
-## File naming → URL
+### Admin module structure (same pattern for every module)
 
-Dots in filenames become path segments:
+```
+features/admin/{module}/
+├── components/       # UI pieces (tables, dialogs, cards)
+├── constants/        # Options, defaults, seed data
+├── hooks/            # React hooks (data + page logic)
+├── pages/            # Route-facing page components
+├── types/            # Domain TypeScript types
+├── utils/            # Helpers, formatters, validators
+├── {module}Slice.ts  # Redux slice (when using Redux)
+├── {module}Thunk.ts  # API thunks (when using Redux)
+└── store.ts          # recruitment only — local store (not Redux yet)
+```
+
+| Module | Path |
+|--------|------|
+| Employees | `features/admin/employees/` |
+| Managers | `features/admin/managers/` |
+| Departments | `features/admin/departments/` |
+| Performance | `features/admin/performance/` |
+| Recruitment | `features/admin/recruitment/` |
+
+## File naming → URL
 
 | Route file | URL |
 |------------|-----|
-| `_auth/login.tsx` | `/login` |
-| `_auth/register.tsx` | `/register` |
-| `_auth/forgot-password.tsx` | `/forgot-password` |
-| `_auth/reset-password.tsx` | `/reset-password` |
-| `_auth/verify-email.tsx` | `/verify-email` |
-| `_auth/verify-reset-otp.tsx` | `/verify-reset-otp` |
-| `dashboard.tsx` | `/dashboard` (layout shell) |
-| `dashboard.index.tsx` | `/dashboard/` |
 | `dashboard.employees.tsx` | `/dashboard/employees` |
-| `dashboard.recruitment.jobs.$jobId.tsx` | `/dashboard/recruitment/jobs/:jobId` |
-| `dashboard.attendance.holidays.tsx` | `/dashboard/attendance/holidays` |
-| `ai.brain.tsx` | `/ai/brain` |
-| `api/ai-brain.ts` | Server API route |
+| `dashboard/recruitment/talent-pool.tsx` | `/dashboard/recruitment/talent-pool` |
+| `dashboard/recruitment/jobs/$jobId.tsx` | `/dashboard/recruitment/jobs/:jobId` |
 
 `routeTree.gen.ts` is auto-generated — do not edit it.
 
 ## Standard route pattern
 
-Use `lazyFeaturePage` from `./_lib/lazyFeaturePage`:
-
 ```tsx
 import { createFileRoute } from "@tanstack/react-router";
-import { lazyFeaturePage } from "./_lib/lazyFeaturePage";
+import { lazyFeaturePage } from "@/routes/_lib/lazyFeaturePage";
 
-const EmployeesPage = lazyFeaturePage(
-  () => import("@/features/admin/employees/pages/EmployeesPage"),
-  "EmployeesPage",
+const TalentPoolPage = lazyFeaturePage(
+  () => import("@/features/admin/recruitment/pages/TalentPoolPage"),
+  "TalentPoolPage",
 );
 
-export const Route = createFileRoute("/dashboard/employees")({
-  head: () => ({ meta: [{ title: "Employees — Aurix" }] }),
-  component: EmployeesPage,
+export const Route = createFileRoute("/dashboard/recruitment/talent-pool")({
+  head: () => ({ meta: [{ title: "Talent Pool — Recruitment" }] }),
+  component: TalentPoolPage,
 });
 ```
 
-For default exports (e.g. attendance pages):
-
-```tsx
-const HolidaysPage = lazyFeaturePage(() => import("@/features/attendance/pages/HolidaysPage"));
-```
-
-## Feature modules with proper structure
-
-These routes are thin and load from `features/`:
+## Thin routes + feature pages
 
 | Route file | Feature page |
 |------------|--------------|
-| `dashboard.index.tsx` | `features/dashboard/pages/ExecutiveDashboardPage.tsx` |
 | `dashboard.employees.tsx` | `features/admin/employees/pages/EmployeesPage.tsx` |
-| `dashboard.departments.tsx` | `features/admin/departments/pages/DepartmentsPage.tsx` |
 | `dashboard.managers.tsx` | `features/admin/managers/pages/ManagersPage.tsx` |
-| `dashboard.performance.tsx` | `features/admin/performance/pages/PerformancePage.tsx` |
-| `dashboard.employee.tsx` | `features/portal/employee/pages/EmployeePage.tsx` (self-service) |
-| `dashboard.manager.tsx` | `features/portal/manager/pages/ManagerPage.tsx` (team lead) |
-| `dashboard.attendance.holidays.tsx` | `features/attendance/pages/HolidaysPage.tsx` |
-| `dashboard.attendance.rosters.tsx` | `features/attendance/pages/RostersPage.tsx` |
+| `dashboard/recruitment/*` | `features/admin/recruitment/pages/*Page.tsx` |
+
+Recruitment route files live under `routes/dashboard/recruitment/` (grouped, not flat in `routes/` root).
 
 ## Routes that still contain UI inline
 
-Many older routes (recruitment, payroll, assets, documents, etc.) still have UI directly in `src/routes/`. When refactoring those, move UI to `features/{module}/pages/` and keep the route file thin.
+Payroll, assets, documents, etc. still have UI in `src/routes/`. Refactor those into `features/` the same way.
 
 ## Folder layout
 
 ```
 src/routes/
-├── __root.tsx              # App shell, providers
-├── index.tsx               # Marketing home (/)
-├── _auth/                  # Auth routes (pathless group — URLs stay /login, /register, etc.)
-│   ├── login.tsx
-│   ├── register.tsx
-│   ├── forgot-password.tsx
-│   ├── reset-password.tsx
-│   ├── verify-email.tsx
-│   └── verify-reset-otp.tsx
-├── dashboard.tsx           # Dashboard layout
-├── dashboard.*.tsx         # Dashboard child routes
-├── ai.*.tsx                # AI module routes
-├── api/                    # Server handlers
+├── __root.tsx
+├── dashboard.tsx
+├── dashboard.employees.tsx
+├── dashboard/
+│   └── recruitment/          # recruitment URL wiring (thin files only)
+│       ├── index.tsx
+│       ├── talent-pool.tsx
+│       ├── candidates/
+│       └── jobs/
 └── _lib/
-    └── lazyFeaturePage.ts  # Shared lazy-load helper
+    └── lazyFeaturePage.ts
 ```
-
-`_lib/` is ignored by the router (underscore prefix) — helpers only, not routes.

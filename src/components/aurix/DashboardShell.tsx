@@ -2,7 +2,7 @@ import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-route
 import { useEffect, useMemo, useState } from "react";
 import {
   Activity, AlertCircle, Archive, Award, Banknote, BarChart3, Bell, BookOpen, Bot, Brain,
-  Briefcase, Building2, CalendarDays, CalendarCheck, CheckCircle2, ChevronsLeft, ChevronsRight,
+  Briefcase, Building2, CalendarDays, CalendarCheck, CheckCircle2, ChevronLeft, ChevronsLeft, ChevronsRight,
   ChevronDown, ClipboardCheck, Clock, CreditCard, Download, FileCheck, FileText, FilePlus2,
   FileSignature, Folder, FolderOpen, Gauge, Gift, Globe, HandCoins, HeartPulse, History,
   Info, Languages, LayoutDashboard, LineChart as LineChartIcon, Lock, LogOut, Mail, Medal,
@@ -124,41 +124,7 @@ const NAV_SECTIONS: NavSection[] = [
       { to: "/dashboard/performance", label: "Performance", icon: Gauge, roles: ["admin", "hr", "manager"] },
       { to: "/dashboard/documents", label: "Documents", icon: Folder, roles: ["admin", "hr", "manager"] },
       { to: "/dashboard/assets", label: "Assets", icon: Package, roles: ["admin", "hr", "manager"] },
-      {
-        label: "Recruitment",
-        icon: Briefcase,
-        basePath: "/dashboard/recruitment",
-        roles: ["admin", "hr", "manager"],
-        children: [
-          { to: "/dashboard/recruitment", label: "Dashboard", icon: LayoutDashboard, exact: true },
-          { to: "/dashboard/recruitment/requisitions", label: "Requisitions", icon: FileSignature },
-          { to: "/dashboard/recruitment/jobs", label: "All Jobs", icon: Briefcase },
-          { to: "/dashboard/recruitment/jobs/new", label: "Create Job", icon: FilePlus2 },
-          { to: "/dashboard/recruitment/candidates", label: "Candidates", icon: Users },
-          { to: "/dashboard/recruitment/talent-pool", label: "Talent Pool", icon: UserCheck },
-          { to: "/dashboard/recruitment/pipeline", label: "Pipeline", icon: Activity },
-          { to: "/dashboard/recruitment/interviews", label: "Interviews", icon: CalendarDays },
-          { to: "/dashboard/recruitment/calendar", label: "Interview Calendar", icon: CalendarDays },
-          { to: "/dashboard/recruitment/scorecards", label: "Scorecards", icon: ClipboardCheck },
-          { to: "/dashboard/recruitment/offers", label: "Offers", icon: FileText },
-          { to: "/dashboard/recruitment/onboarding", label: "Onboarding", icon: UserCheck },
-          { to: "/dashboard/recruitment/crm", label: "Candidate CRM", icon: MessageSquare },
-          { to: "/dashboard/recruitment/resume-intelligence", label: "Resume Intelligence", icon: ScanLine },
-          { to: "/dashboard/recruitment/templates", label: "Email Templates", icon: Mail },
-          { to: "/dashboard/recruitment/referrals", label: "Referrals", icon: Gift },
-          { to: "/dashboard/recruitment/vendors", label: "Vendors", icon: Building2 },
-          { to: "/dashboard/recruitment/career-site", label: "Career Site", icon: Globe },
-          { to: "/dashboard/recruitment/automation", label: "Automation", icon: Workflow },
-          { to: "/dashboard/recruitment/compliance", label: "Compliance", icon: ShieldCheck },
-          { to: "/dashboard/recruitment/search", label: "Global Search", icon: Search },
-          { to: "/dashboard/recruitment/notifications", label: "Notifications", icon: Bell },
-          { to: "/dashboard/recruitment/import-export", label: "Import / Export", icon: Download },
-          { to: "/dashboard/recruitment/reports", label: "Hiring Reports", icon: BarChart3 },
-          { to: "/dashboard/recruitment/analytics", label: "Analytics", icon: LineChartIcon },
-          { to: "/dashboard/recruitment/ai", label: "Recruitment AI", icon: Sparkles },
-          { to: "/dashboard/recruitment/copilot", label: "AI Copilot", icon: Bot },
-        ],
-      },
+      { to: "/dashboard/recruitment", label: "Recruitment", icon: Briefcase, exact: true, roles: ["admin", "hr", "manager"] },
       { to: "/dashboard/reports", label: "Reports", icon: BarChart3, roles: ["admin", "hr", "manager"] },
     ],
   },
@@ -1145,13 +1111,47 @@ function NavGroup({ item, pathname, collapsed }: { item: NavParent; pathname: st
 }
 
 export function PageHeader({ title, description, actions }: { title: string; description?: string; actions?: React.ReactNode }) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isRecruitmentSubPage =
+    pathname.startsWith("/dashboard/recruitment/") &&
+    pathname !== "/dashboard/recruitment" &&
+    pathname !== "/dashboard/recruitment/";
+  const isPayrollSubPage =
+    pathname.startsWith("/dashboard/payroll/") &&
+    pathname !== "/dashboard/payroll" &&
+    pathname !== "/dashboard/payroll/";
+
   return (
-    <div className="mb-6 flex min-w-0 flex-wrap items-end justify-between gap-4">
-      <div className="min-w-0 flex-1">
-        <h1 className="font-display text-2xl font-semibold tracking-tight">{title}</h1>
-        {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
+    <div className="mb-6 flex flex-col min-w-0 gap-2 text-left">
+      {isRecruitmentSubPage && (
+        <div className="mb-1 flex items-center">
+          <Link
+            to="/dashboard/recruitment"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group/back"
+          >
+            <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover/back:-translate-x-0.5" />
+            Back to Recruitment Hub
+          </Link>
+        </div>
+      )}
+      {isPayrollSubPage && (
+        <div className="mb-1 flex items-center">
+          <Link
+            to="/dashboard/payroll"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group/back"
+          >
+            <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover/back:-translate-x-0.5" />
+            Back to Payroll Hub
+          </Link>
+        </div>
+      )}
+      <div className="flex min-w-0 flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <h1 className="font-display text-2xl font-semibold tracking-tight">{title}</h1>
+          {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
+        </div>
+        {actions ? <div className="flex shrink-0 flex-wrap gap-2">{actions}</div> : null}
       </div>
-      {actions ? <div className="flex shrink-0 flex-wrap gap-2">{actions}</div> : null}
     </div>
   );
 }
