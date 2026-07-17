@@ -32,7 +32,7 @@ import { Route as DashboardTimelineRouteImport } from './routes/dashboard.timeli
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard.settings'
 import { Route as DashboardRolesRouteImport } from './routes/dashboard.roles'
 import { Route as DashboardReportsRouteImport } from './routes/dashboard.reports'
-import { Route as DashboardRecruitmentRouteImport } from './routes/dashboard.recruitment'
+import { Route as DashboardRecruitmentRouteImport } from './routes/dashboard/recruitment'
 import { Route as DashboardPerformanceRouteImport } from './routes/dashboard.performance'
 import { Route as DashboardPayrollRouteImport } from './routes/dashboard.payroll'
 import { Route as DashboardOnboardingChecklistRouteImport } from './routes/dashboard.onboarding-checklist'
@@ -79,33 +79,34 @@ import { Route as AuthResetPasswordRouteImport } from './routes/_auth/reset-pass
 import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AuthForgotPasswordRouteImport } from './routes/_auth/forgot-password'
-import { Route as DashboardRecruitmentIndexRouteImport } from './routes/dashboard.recruitment.index'
+import { Route as DashboardRecruitmentIndexRouteImport } from './routes/dashboard/recruitment/index'
 import { Route as DashboardPayrollIndexRouteImport } from './routes/dashboard.payroll.index'
 import { Route as DashboardAttendanceIndexRouteImport } from './routes/dashboard.attendance.index'
-import { Route as DashboardRecruitmentVendorsRouteImport } from './routes/dashboard.recruitment.vendors'
-import { Route as DashboardRecruitmentTemplatesRouteImport } from './routes/dashboard.recruitment.templates'
-import { Route as DashboardRecruitmentTalentPoolRouteImport } from './routes/dashboard.recruitment.talent-pool'
-import { Route as DashboardRecruitmentSearchRouteImport } from './routes/dashboard.recruitment.search'
-import { Route as DashboardRecruitmentScorecardsRouteImport } from './routes/dashboard.recruitment.scorecards'
-import { Route as DashboardRecruitmentResumeIntelligenceRouteImport } from './routes/dashboard.recruitment.resume-intelligence'
-import { Route as DashboardRecruitmentRequisitionsRouteImport } from './routes/dashboard.recruitment.requisitions'
-import { Route as DashboardRecruitmentReportsRouteImport } from './routes/dashboard.recruitment.reports'
-import { Route as DashboardRecruitmentReferralsRouteImport } from './routes/dashboard.recruitment.referrals'
-import { Route as DashboardRecruitmentPipelineRouteImport } from './routes/dashboard.recruitment.pipeline'
-import { Route as DashboardRecruitmentOnboardingRouteImport } from './routes/dashboard.recruitment.onboarding'
-import { Route as DashboardRecruitmentOffersRouteImport } from './routes/dashboard.recruitment.offers'
-import { Route as DashboardRecruitmentNotificationsRouteImport } from './routes/dashboard.recruitment.notifications'
-import { Route as DashboardRecruitmentInterviewsRouteImport } from './routes/dashboard.recruitment.interviews'
-import { Route as DashboardRecruitmentImportExportRouteImport } from './routes/dashboard.recruitment.import-export'
-import { Route as DashboardRecruitmentCrmRouteImport } from './routes/dashboard.recruitment.crm'
-import { Route as DashboardRecruitmentCopilotRouteImport } from './routes/dashboard.recruitment.copilot'
-import { Route as DashboardRecruitmentComplianceRouteImport } from './routes/dashboard.recruitment.compliance'
-import { Route as DashboardRecruitmentCareerSiteRouteImport } from './routes/dashboard.recruitment.career-site'
-import { Route as DashboardRecruitmentCandidatesRouteImport } from './routes/dashboard.recruitment.candidates'
-import { Route as DashboardRecruitmentCalendarRouteImport } from './routes/dashboard.recruitment.calendar'
-import { Route as DashboardRecruitmentAutomationRouteImport } from './routes/dashboard.recruitment.automation'
-import { Route as DashboardRecruitmentAnalyticsRouteImport } from './routes/dashboard.recruitment.analytics'
-import { Route as DashboardRecruitmentAiRouteImport } from './routes/dashboard.recruitment.ai'
+import { Route as JobsApplyUkeyRouteImport } from './routes/jobs.apply.$ukey'
+import { Route as DashboardRecruitmentVendorsRouteImport } from './routes/dashboard/recruitment/vendors'
+import { Route as DashboardRecruitmentTemplatesRouteImport } from './routes/dashboard/recruitment/templates'
+import { Route as DashboardRecruitmentTalentPoolRouteImport } from './routes/dashboard/recruitment/talent-pool'
+import { Route as DashboardRecruitmentSearchRouteImport } from './routes/dashboard/recruitment/search'
+import { Route as DashboardRecruitmentScorecardsRouteImport } from './routes/dashboard/recruitment/scorecards'
+import { Route as DashboardRecruitmentResumeIntelligenceRouteImport } from './routes/dashboard/recruitment/resume-intelligence'
+import { Route as DashboardRecruitmentRequisitionsRouteImport } from './routes/dashboard/recruitment/requisitions'
+import { Route as DashboardRecruitmentReportsRouteImport } from './routes/dashboard/recruitment/reports'
+import { Route as DashboardRecruitmentReferralsRouteImport } from './routes/dashboard/recruitment/referrals'
+import { Route as DashboardRecruitmentPipelineRouteImport } from './routes/dashboard/recruitment/pipeline'
+import { Route as DashboardRecruitmentOnboardingRouteImport } from './routes/dashboard/recruitment/onboarding'
+import { Route as DashboardRecruitmentOffersRouteImport } from './routes/dashboard/recruitment/offers'
+import { Route as DashboardRecruitmentNotificationsRouteImport } from './routes/dashboard/recruitment/notifications'
+import { Route as DashboardRecruitmentInterviewsRouteImport } from './routes/dashboard/recruitment/interviews'
+import { Route as DashboardRecruitmentImportExportRouteImport } from './routes/dashboard/recruitment/import-export'
+import { Route as DashboardRecruitmentCrmRouteImport } from './routes/dashboard/recruitment/crm'
+import { Route as DashboardRecruitmentCopilotRouteImport } from './routes/dashboard/recruitment/copilot'
+import { Route as DashboardRecruitmentComplianceRouteImport } from './routes/dashboard/recruitment/compliance'
+import { Route as DashboardRecruitmentCareerSiteRouteImport } from './routes/dashboard/recruitment/career-site'
+import { Route as DashboardRecruitmentCandidatesRouteImport } from './routes/dashboard/recruitment/candidates'
+import { Route as DashboardRecruitmentCalendarRouteImport } from './routes/dashboard/recruitment/calendar'
+import { Route as DashboardRecruitmentAutomationRouteImport } from './routes/dashboard/recruitment/automation'
+import { Route as DashboardRecruitmentAnalyticsRouteImport } from './routes/dashboard/recruitment/analytics'
+import { Route as DashboardRecruitmentAiRouteImport } from './routes/dashboard/recruitment/ai'
 import { Route as DashboardPayrollTaxRouteImport } from './routes/dashboard.payroll.tax'
 import { Route as DashboardPayrollSettingsRouteImport } from './routes/dashboard.payroll.settings'
 import { Route as DashboardPayrollSalaryStructureRouteImport } from './routes/dashboard.payroll.salary-structure'
@@ -125,12 +126,12 @@ import { Route as DashboardAttendanceShiftsRouteImport } from './routes/dashboar
 import { Route as DashboardAttendanceRostersRouteImport } from './routes/dashboard.attendance.rosters'
 import { Route as DashboardAttendanceHolidaysRouteImport } from './routes/dashboard.attendance.holidays'
 import { Route as DashboardAttendanceCheckinRouteImport } from './routes/dashboard.attendance.checkin'
-import { Route as DashboardRecruitmentJobsIndexRouteImport } from './routes/dashboard.recruitment.jobs.index'
-import { Route as DashboardRecruitmentCandidatesIndexRouteImport } from './routes/dashboard.recruitment.candidates.index'
-import { Route as DashboardRecruitmentJobsNewRouteImport } from './routes/dashboard.recruitment.jobs.new'
-import { Route as DashboardRecruitmentJobsJobIdRouteImport } from './routes/dashboard.recruitment.jobs.$jobId'
-import { Route as DashboardRecruitmentCandidatesCandidateIdRouteImport } from './routes/dashboard.recruitment.candidates.$candidateId'
-import { Route as DashboardRecruitmentJobsJobIdPublishRouteImport } from './routes/dashboard.recruitment.jobs.$jobId.publish'
+import { Route as DashboardRecruitmentJobsIndexRouteImport } from './routes/dashboard/recruitment/jobs/index'
+import { Route as DashboardRecruitmentCandidatesIndexRouteImport } from './routes/dashboard/recruitment/candidates/index'
+import { Route as DashboardRecruitmentJobsNewRouteImport } from './routes/dashboard/recruitment/jobs/new'
+import { Route as DashboardRecruitmentJobsJobIdRouteImport } from './routes/dashboard/recruitment/jobs/$jobId'
+import { Route as DashboardRecruitmentCandidatesCandidateIdRouteImport } from './routes/dashboard/recruitment/candidates/$candidateId'
+import { Route as DashboardRecruitmentJobsJobIdPublishRouteImport } from './routes/dashboard/recruitment/jobs/$jobId/publish'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -501,6 +502,11 @@ const DashboardAttendanceIndexRoute =
     path: '/',
     getParentRoute: () => DashboardAttendanceRoute,
   } as any)
+const JobsApplyUkeyRoute = JobsApplyUkeyRouteImport.update({
+  id: '/jobs/apply/$ukey',
+  path: '/jobs/apply/$ukey',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRecruitmentVendorsRoute =
   DashboardRecruitmentVendorsRouteImport.update({
     id: '/vendors',
@@ -904,6 +910,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/recruitment/talent-pool': typeof DashboardRecruitmentTalentPoolRoute
   '/dashboard/recruitment/templates': typeof DashboardRecruitmentTemplatesRoute
   '/dashboard/recruitment/vendors': typeof DashboardRecruitmentVendorsRoute
+  '/jobs/apply/$ukey': typeof JobsApplyUkeyRoute
   '/dashboard/attendance/': typeof DashboardAttendanceIndexRoute
   '/dashboard/payroll/': typeof DashboardPayrollIndexRoute
   '/dashboard/recruitment/': typeof DashboardRecruitmentIndexRoute
@@ -1021,6 +1028,7 @@ export interface FileRoutesByTo {
   '/dashboard/recruitment/talent-pool': typeof DashboardRecruitmentTalentPoolRoute
   '/dashboard/recruitment/templates': typeof DashboardRecruitmentTemplatesRoute
   '/dashboard/recruitment/vendors': typeof DashboardRecruitmentVendorsRoute
+  '/jobs/apply/$ukey': typeof JobsApplyUkeyRoute
   '/dashboard/attendance': typeof DashboardAttendanceIndexRoute
   '/dashboard/payroll': typeof DashboardPayrollIndexRoute
   '/dashboard/recruitment': typeof DashboardRecruitmentIndexRoute
@@ -1146,6 +1154,7 @@ export interface FileRoutesById {
   '/dashboard/recruitment/talent-pool': typeof DashboardRecruitmentTalentPoolRoute
   '/dashboard/recruitment/templates': typeof DashboardRecruitmentTemplatesRoute
   '/dashboard/recruitment/vendors': typeof DashboardRecruitmentVendorsRoute
+  '/jobs/apply/$ukey': typeof JobsApplyUkeyRoute
   '/dashboard/attendance/': typeof DashboardAttendanceIndexRoute
   '/dashboard/payroll/': typeof DashboardPayrollIndexRoute
   '/dashboard/recruitment/': typeof DashboardRecruitmentIndexRoute
@@ -1272,6 +1281,7 @@ export interface FileRouteTypes {
     | '/dashboard/recruitment/talent-pool'
     | '/dashboard/recruitment/templates'
     | '/dashboard/recruitment/vendors'
+    | '/jobs/apply/$ukey'
     | '/dashboard/attendance/'
     | '/dashboard/payroll/'
     | '/dashboard/recruitment/'
@@ -1389,6 +1399,7 @@ export interface FileRouteTypes {
     | '/dashboard/recruitment/talent-pool'
     | '/dashboard/recruitment/templates'
     | '/dashboard/recruitment/vendors'
+    | '/jobs/apply/$ukey'
     | '/dashboard/attendance'
     | '/dashboard/payroll'
     | '/dashboard/recruitment'
@@ -1513,6 +1524,7 @@ export interface FileRouteTypes {
     | '/dashboard/recruitment/talent-pool'
     | '/dashboard/recruitment/templates'
     | '/dashboard/recruitment/vendors'
+    | '/jobs/apply/$ukey'
     | '/dashboard/attendance/'
     | '/dashboard/payroll/'
     | '/dashboard/recruitment/'
@@ -1546,6 +1558,7 @@ export interface RootRouteChildren {
   AuthVerifyResetOtpRoute: typeof AuthVerifyResetOtpRoute
   ApiAiBrainRoute: typeof ApiAiBrainRoute
   ApiPayrollCopilotRoute: typeof ApiPayrollCopilotRoute
+  JobsApplyUkeyRoute: typeof JobsApplyUkeyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -2060,6 +2073,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/attendance/'
       preLoaderRoute: typeof DashboardAttendanceIndexRouteImport
       parentRoute: typeof DashboardAttendanceRoute
+    }
+    '/jobs/apply/$ukey': {
+      id: '/jobs/apply/$ukey'
+      path: '/jobs/apply/$ukey'
+      fullPath: '/jobs/apply/$ukey'
+      preLoaderRoute: typeof JobsApplyUkeyRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/dashboard/recruitment/vendors': {
       id: '/dashboard/recruitment/vendors'
@@ -2715,6 +2735,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthVerifyResetOtpRoute: AuthVerifyResetOtpRoute,
   ApiAiBrainRoute: ApiAiBrainRoute,
   ApiPayrollCopilotRoute: ApiPayrollCopilotRoute,
+  JobsApplyUkeyRoute: JobsApplyUkeyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
