@@ -35,7 +35,8 @@ export function AIInsightsPanel({ reviews, goals }: AIInsightsPanelProps) {
     // 2. Employees at Risk (rating <= 2.5 OR goals completion < 40%)
     const atRisk = reviews.filter((r) => {
       const g = goals.filter((gl) => gl.employeeId === r.employeeId);
-      const avgGoalProgress = g.length > 0 ? g.reduce((acc, gl) => acc + gl.progress, 0) / g.length : r.goalProgress;
+      const avgGoalProgress =
+        g.length > 0 ? g.reduce((acc, gl) => acc + gl.progress, 0) / g.length : r.goalProgress;
       return r.overallRating <= 2.5 || avgGoalProgress < 40;
     });
 
@@ -54,13 +55,14 @@ export function AIInsightsPanel({ reviews, goals }: AIInsightsPanelProps) {
 
         if (gaps.length > 0) {
           // Map to course
-          const course = gaps[0] === "Technical Skills"
-            ? "Advanced React & Scale Architectures"
-            : gaps[0] === "Communication Skillsets"
-            ? "Corporate Communications & Conflict Sync"
-            : gaps[0] === "Systems Leadership"
-            ? "Executive Presence & Team Management"
-            : "Agile Scopes & Velocity Frameworks";
+          const course =
+            gaps[0] === "Technical Skills"
+              ? "Advanced React & Scale Architectures"
+              : gaps[0] === "Communication Skillsets"
+                ? "Corporate Communications & Conflict Sync"
+                : gaps[0] === "Systems Leadership"
+                  ? "Executive Presence & Team Management"
+                  : "Agile Scopes & Velocity Frameworks";
           return { name: r.employeeName, course, gap: gaps[0] };
         }
         return null;
@@ -83,7 +85,9 @@ export function AIInsightsPanel({ reviews, goals }: AIInsightsPanelProps) {
 
     // 6. Attrition Risk Prediction (based on Low rating + Delayed goals)
     const attritionRisk = reviews.filter((r) => {
-      const delayedGoals = goals.filter((g) => g.employeeId === r.employeeId && g.status === "delayed").length;
+      const delayedGoals = goals.filter(
+        (g) => g.employeeId === r.employeeId && g.status === "delayed",
+      ).length;
       return r.overallRating <= 3 && delayedGoals > 0;
     });
 
@@ -97,6 +101,37 @@ export function AIInsightsPanel({ reviews, goals }: AIInsightsPanelProps) {
     };
   }, [reviews, goals]);
 
+  if (reviews.length === 0) {
+    return (
+      <div className="rounded-2xl border border-border/80 bg-card/40 p-5 shadow-sm space-y-4 backdrop-blur-xl">
+        <div className="flex items-center gap-2">
+          <div className="h-7 w-7 rounded-lg bg-brand/10 text-brand flex items-center justify-center flex-shrink-0">
+            <Sparkles className="h-4 w-4" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+              AI Talent Performance Insights
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Continuous machine learning analytics of company OKRs & rating indices.
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <Sparkles className="h-8 w-8 text-brand opacity-50 mb-2 animate-pulse" />
+          <p className="text-sm font-medium text-foreground mb-1">
+            No AI Talent Insights generated yet
+          </p>
+          <p className="text-xs text-muted-foreground max-w-md">
+            Once employee evaluations are completed and reviews are saved, the AI engine will
+            dynamically map top performers, promotion raises, and learning course recommendations
+            here.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (!insights) return null;
 
   return (
@@ -109,7 +144,9 @@ export function AIInsightsPanel({ reviews, goals }: AIInsightsPanelProps) {
           <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
             AI Talent Performance Insights
           </h3>
-          <p className="text-xs text-muted-foreground">Continuous machine learning analytics of company OKRs & rating indices.</p>
+          <p className="text-xs text-muted-foreground">
+            Continuous machine learning analytics of company OKRs & rating indices.
+          </p>
         </div>
       </div>
 
@@ -124,13 +161,23 @@ export function AIInsightsPanel({ reviews, goals }: AIInsightsPanelProps) {
           <CardContent className="p-4 pt-0">
             {insights.topPerformer ? (
               <div className="space-y-1.5 pt-2">
-                <p className="text-sm font-bold text-foreground">{insights.topPerformer.employeeName}</p>
-                <p className="text-[10px] text-muted-foreground">{insights.topPerformer.designation} • {insights.topPerformer.department}</p>
+                <p className="text-sm font-bold text-foreground">
+                  {insights.topPerformer.employeeName}
+                </p>
+                <p className="text-[10px] text-muted-foreground">
+                  {insights.topPerformer.designation} • {insights.topPerformer.department}
+                </p>
                 <div className="flex gap-1.5 mt-2">
-                  <Badge variant="outline" className="text-[9px] font-bold border-emerald-500/25 bg-emerald-500/5 text-emerald-500">
+                  <Badge
+                    variant="outline"
+                    className="text-[9px] font-bold border-emerald-500/25 bg-emerald-500/5 text-emerald-500"
+                  >
                     {insights.topPerformer.overallRating} ★ Rating
                   </Badge>
-                  <Badge variant="outline" className="text-[9px] font-bold border-brand/25 bg-brand/5 text-brand">
+                  <Badge
+                    variant="outline"
+                    className="text-[9px] font-bold border-brand/25 bg-brand/5 text-brand"
+                  >
                     {insights.topPerformer.kpiScore}% KPIs
                   </Badge>
                 </div>
@@ -153,15 +200,22 @@ export function AIInsightsPanel({ reviews, goals }: AIInsightsPanelProps) {
               <div className="space-y-2 pt-2">
                 {insights.promotions.slice(0, 2).map((p) => (
                   <div key={p.id} className="flex justify-between items-center text-xs">
-                    <span className="font-semibold text-foreground truncate max-w-[130px]">{p.employeeName}</span>
-                    <Badge variant="secondary" className="text-[9px] font-bold bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/10 border-none">
+                    <span className="font-semibold text-foreground truncate max-w-[130px]">
+                      {p.employeeName}
+                    </span>
+                    <Badge
+                      variant="secondary"
+                      className="text-[9px] font-bold bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/10 border-none"
+                    >
                       +{p.salaryIncrement}% raise recommended
                     </Badge>
                   </div>
                 ))}
               </div>
             ) : (
-              <span className="text-xs text-muted-foreground italic pt-2 block">No promotion candidates flagged</span>
+              <span className="text-xs text-muted-foreground italic pt-2 block">
+                No promotion candidates flagged
+              </span>
             )}
           </CardContent>
         </Card>
@@ -179,12 +233,16 @@ export function AIInsightsPanel({ reviews, goals }: AIInsightsPanelProps) {
                 {insights.trainingSuggestions.slice(0, 2).map((t, idx) => (
                   <div key={idx} className="text-xs min-w-0">
                     <p className="font-semibold text-foreground truncate">{t.name}</p>
-                    <p className="text-[9px] text-muted-foreground truncate">Suggest: {t.course} ({t.gap})</p>
+                    <p className="text-[9px] text-muted-foreground truncate">
+                      Suggest: {t.course} ({t.gap})
+                    </p>
                   </div>
                 ))}
               </div>
             ) : (
-              <span className="text-xs text-muted-foreground italic pt-2 block">No skill gaps identified recently</span>
+              <span className="text-xs text-muted-foreground italic pt-2 block">
+                No skill gaps identified recently
+              </span>
             )}
           </CardContent>
         </Card>
@@ -201,15 +259,22 @@ export function AIInsightsPanel({ reviews, goals }: AIInsightsPanelProps) {
               <div className="space-y-2 pt-2">
                 {insights.attritionRisk.slice(0, 2).map((a) => (
                   <div key={a.id} className="flex justify-between items-center text-xs">
-                    <span className="font-semibold text-foreground truncate max-w-[120px]">{a.employeeName}</span>
-                    <Badge variant="outline" className="text-[9px] font-bold bg-rose-500/10 text-rose-500 border-none">
+                    <span className="font-semibold text-foreground truncate max-w-[120px]">
+                      {a.employeeName}
+                    </span>
+                    <Badge
+                      variant="outline"
+                      className="text-[9px] font-bold bg-rose-500/10 text-rose-500 border-none"
+                    >
                       High attrition risk
                     </Badge>
                   </div>
                 ))}
               </div>
             ) : (
-              <span className="text-xs text-muted-foreground italic pt-2 block">No attrition flags triggered</span>
+              <span className="text-xs text-muted-foreground italic pt-2 block">
+                No attrition flags triggered
+              </span>
             )}
           </CardContent>
         </Card>
@@ -226,15 +291,22 @@ export function AIInsightsPanel({ reviews, goals }: AIInsightsPanelProps) {
               <div className="space-y-2 pt-2">
                 {insights.atRisk.slice(0, 2).map((r) => (
                   <div key={r.id} className="flex justify-between items-center text-xs">
-                    <span className="font-semibold text-foreground truncate max-w-[130px]">{r.employeeName}</span>
-                    <Badge variant="outline" className="text-[9px] font-bold bg-orange-500/10 text-orange-500 border-none">
+                    <span className="font-semibold text-foreground truncate max-w-[130px]">
+                      {r.employeeName}
+                    </span>
+                    <Badge
+                      variant="outline"
+                      className="text-[9px] font-bold bg-orange-500/10 text-orange-500 border-none"
+                    >
                       Rating {r.overallRating} ★
                     </Badge>
                   </div>
                 ))}
               </div>
             ) : (
-              <span className="text-xs text-muted-foreground italic pt-2 block">All employees meeting indices baseline</span>
+              <span className="text-xs text-muted-foreground italic pt-2 block">
+                All employees meeting indices baseline
+              </span>
             )}
           </CardContent>
         </Card>
@@ -250,14 +322,21 @@ export function AIInsightsPanel({ reviews, goals }: AIInsightsPanelProps) {
             {insights.deptSummary.length > 0 ? (
               <div className="grid grid-cols-2 gap-2 pt-2">
                 {insights.deptSummary.slice(0, 4).map((d, idx) => (
-                  <div key={idx} className="text-xs flex items-center justify-between border border-border/40 p-1.5 rounded-lg bg-muted/10">
-                    <span className="font-semibold text-muted-foreground truncate max-w-[70px]">{d.name}</span>
+                  <div
+                    key={idx}
+                    className="text-xs flex items-center justify-between border border-border/40 p-1.5 rounded-lg bg-muted/10"
+                  >
+                    <span className="font-semibold text-muted-foreground truncate max-w-[70px]">
+                      {d.name}
+                    </span>
                     <span className="font-bold text-foreground font-mono">{d.avgRating}★</span>
                   </div>
                 ))}
               </div>
             ) : (
-              <span className="text-xs text-muted-foreground italic pt-2 block">No summaries generated</span>
+              <span className="text-xs text-muted-foreground italic pt-2 block">
+                No summaries generated
+              </span>
             )}
           </CardContent>
         </Card>

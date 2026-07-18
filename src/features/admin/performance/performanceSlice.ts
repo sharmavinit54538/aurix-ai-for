@@ -1,11 +1,4 @@
 import { createSlice } from "@reduxjs/toolkit";
-import {
-  SEED_COURSES,
-  SEED_FEEDBACK,
-  SEED_GOALS,
-  SEED_REVIEWS,
-  SEED_REWARDS,
-} from "./constants";
 import type { PerformanceState } from "./performanceTypes";
 import {
   addFeedback,
@@ -27,11 +20,11 @@ import {
 } from "./performanceThunk";
 
 const initialState: PerformanceState = {
-  reviews: [...SEED_REVIEWS],
-  goals: [...SEED_GOALS],
-  feedback360: [...SEED_FEEDBACK],
-  rewards: [...SEED_REWARDS],
-  courses: [...SEED_COURSES],
+  reviews: [],
+  goals: [],
+  feedback360: [],
+  rewards: [],
+  courses: [],
   loading: false,
   error: null,
 };
@@ -71,9 +64,7 @@ const performanceSlice = createSlice({
         state.reviews = [action.payload, ...state.reviews];
       })
       .addCase(updateReview.fulfilled, (state, action) => {
-        state.reviews = state.reviews.map((r) =>
-          r.id === action.payload.id ? action.payload : r,
-        );
+        state.reviews = state.reviews.map((r) => (r.id === action.payload.id ? action.payload : r));
       })
       .addCase(deleteReview.fulfilled, (state, action) => {
         state.reviews = state.reviews.filter((r) => r.id !== action.payload);
@@ -104,9 +95,7 @@ const performanceSlice = createSlice({
       })
       .addCase(completeGoal.fulfilled, (state, action) => {
         state.goals = state.goals.map((g) =>
-          g.id === action.payload
-            ? { ...g, progress: 100, status: "completed" as const }
-            : g,
+          g.id === action.payload ? { ...g, progress: 100, status: "completed" as const } : g,
         );
       })
       .addCase(addFeedback.fulfilled, (state, action) => {
