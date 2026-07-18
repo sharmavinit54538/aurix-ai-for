@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -35,6 +35,7 @@ interface DepartmentFormDialogProps {
   department: Department | null; // null for add, Department for edit
   existingDepartments: Department[];
   onSave: (dept: Department) => void;
+  isSaving?: boolean;
 }
 
 export function DepartmentFormDialog({
@@ -43,6 +44,7 @@ export function DepartmentFormDialog({
   department,
   existingDepartments,
   onSave,
+  isSaving = false,
 }: DepartmentFormDialogProps) {
   const isEdit = !!department;
 
@@ -50,7 +52,7 @@ export function DepartmentFormDialog({
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [description, setDescription] = useState("");
-  const [departmentHeadId, setDepartmentHeadId] = useState("");
+  const [departmentHeadId, setDepartmentHeadId] = useState("none");
   const [reportingManagerId, setReportingManagerId] = useState("none");
   const [office, setOffice] = useState("");
   const [budget, setBudget] = useState("");
@@ -67,10 +69,45 @@ export function DepartmentFormDialog({
 
   const managers = useManagersList();
 
-  // Exclude current department from parent options on edit to prevent circular dependencies
-  const parentDeptOptions = existingDepartments.filter(
-    (d) => !department || d.id !== department.id
-  );
+  const managerOptions = useMemo(() => {
+    const options = managers.map((mgr) => ({
+      id: mgr.id,
+      fullName: mgr.fullName,
+      designation: mgr.designation || "Manager",
+    }));
+
+    const addCurrentOption = (
+      id: string | null | undefined,
+      fullName: string | null | undefined,
+      designation: string,
+    ) => {
+      if (!id || !fullName || fullName === "None" || fullName === "Unassigned") return;
+      if (!options.some((option) => option.id === id)) {
+        options.push({ id, fullName, designation });
+      }
+    };
+
+    addCurrentOption(department?.departmentHeadId, department?.departmentHeadName, "Current head");
+    addCurrentOption(department?.reportingManagerId, department?.reportingManagerName, "Current reporting manager");
+
+    return options;
+  }, [managers, department]);
+
+  // Exclude current department from parent options on edit to prevent circular dependencies.
+  const parentDeptOptions = useMemo(() => {
+    const options = existingDepartments.filter((d) => !department || d.id !== department.id);
+
+    if (
+      department?.parentId &&
+      department.parentName &&
+      department.parentName !== "None" &&
+      !options.some((d) => d.id === department.parentId)
+    ) {
+      options.push({ ...department, id: department.parentId, name: department.parentName, code: "Parent" });
+    }
+
+    return options;
+  }, [existingDepartments, department]);
 
   // Load / Reset form state
   useEffect(() => {
@@ -80,7 +117,7 @@ export function DepartmentFormDialog({
         setName(department.name);
         setCode(department.code);
         setDescription(department.description);
-        setDepartmentHeadId(department.departmentHeadId || "");
+        setDepartmentHeadId(department.departmentHeadId || "none");
         setReportingManagerId(department.reportingManagerId || "none");
         setOffice(department.office);
         setBudget(String(department.budget));
@@ -96,7 +133,7 @@ export function DepartmentFormDialog({
         setName("");
         setCode("");
         setDescription("");
-        setDepartmentHeadId(managers[0]?.id || "");
+        setDepartmentHeadId("none");
         setReportingManagerId("none");
         setOffice(OFFICES[0] || "");
         setBudget("");
@@ -115,8 +152,8 @@ export function DepartmentFormDialog({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const headManager = managers.find((m) => m.id === departmentHeadId);
-    const selectedReport = managers.find((m) => m.id === reportingManagerId);
+    const headManager = managerOptions.find((m) => m.id === departmentHeadId);
+    const selectedReport = managerOptions.find((m) => m.id === reportingManagerId);
     const parentDept = parentDeptOptions.find((d) => d.id === parentId);
 
     const draft: Partial<Department> = {
@@ -124,8 +161,8 @@ export function DepartmentFormDialog({
       name: name.trim(),
       code: code.trim().toUpperCase(),
       description: description.trim(),
-      departmentHeadId: departmentHeadId || null,
-      departmentHeadName: headManager?.fullName || "Unassigned",
+      departmentHeadId: departmentHeadId === "none" ? null : departmentHeadId,
+      departmentHeadName: departmentHeadId === "none" ? "Unassigned" : headManager?.fullName || "Unassigned",
       reportingManagerId: reportingManagerId === "none" ? null : reportingManagerId,
       reportingManagerName: reportingManagerId === "none" ? "None" : selectedReport?.fullName || "None",
       office,
@@ -155,8 +192,8 @@ export function DepartmentFormDialog({
       name: name.trim(),
       code: code.trim().toUpperCase(),
       description: description.trim(),
-      departmentHeadId: departmentHeadId || null,
-      departmentHeadName: headManager?.fullName || "Unassigned",
+      departmentHeadId: departmentHeadId === "none" ? null : departmentHeadId,
+      departmentHeadName: departmentHeadId === "none" ? "Unassigned" : headManager?.fullName || "Unassigned",
       reportingManagerId: reportingManagerId === "none" ? null : reportingManagerId,
       reportingManagerName: reportingManagerId === "none" ? "None" : selectedReport?.fullName || "None",
       office,
@@ -172,19 +209,15 @@ export function DepartmentFormDialog({
       parentName: parentId === "none" ? "None" : parentDept?.name || "None",
       createdDate: department?.createdDate || new Date().toISOString().split("T")[0],
       employeeIds: department?.employeeIds || [],
-      openPositions: department?.openPositions ?? (status === "hiring" ? 2 : 0),
-      performanceScore: department?.performanceScore ?? 85,
-      attendanceScore: department?.attendanceScore ?? 92,
-      hiringStatus: department?.hiringStatus ?? (status === "hiring" ? "open" : "closed"),
-      recentActivity: department?.recentActivity || [
-        { id: `act_${Date.now()}`, action: isEdit ? "Updated department specifications" : "Department created", timestamp: new Date().toISOString() },
-      ],
+      openPositions: department?.openPositions ?? 0,
+      performanceScore: department?.performanceScore ?? 0,
+      attendanceScore: department?.attendanceScore ?? 0,
+      hiringStatus: department?.hiringStatus ?? "closed",
+      recentActivity: department?.recentActivity || [],
       documents: department?.documents || [],
     };
 
     onSave(finalDept);
-    toast.success(isEdit ? "Department Updated Successfully" : "Department Created Successfully");
-    onOpenChange(false);
   };
 
   return (
@@ -192,7 +225,7 @@ export function DepartmentFormDialog({
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl border-border bg-card p-6 backdrop-blur-xl md:max-w-4xl">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
-            {isEdit ? "✏️ Edit Department" : "➕ Add Department"}
+            {isEdit ? "Edit Department" : "Add Department"}
           </DialogTitle>
         </DialogHeader>
 
@@ -249,17 +282,21 @@ export function DepartmentFormDialog({
             </h3>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <div className="space-y-2">
-                <Label htmlFor="departmentHead" className="after:content-['*'] after:text-rose-500 after:ml-0.5">Department Head</Label>
+                <Label htmlFor="departmentHead">Department Head</Label>
                 <Select value={departmentHeadId} onValueChange={(val) => setDepartmentHeadId(val)}>
                   <SelectTrigger id="departmentHead" className={errors.departmentHeadId ? "border-rose-500" : ""}>
                     <SelectValue placeholder="Select Department Head" />
                   </SelectTrigger>
                   <SelectContent>
-                    {managers.map((mgr) => (
+                    <SelectItem value="none">Unassigned</SelectItem>
+                    {managerOptions.map((mgr) => (
                       <SelectItem key={mgr.id} value={mgr.id}>
                         {mgr.fullName} ({mgr.designation || "Manager"})
                       </SelectItem>
                     ))}
+                    {managerOptions.length === 0 ? (
+                      <SelectItem value="no-managers" disabled>No managers found</SelectItem>
+                    ) : null}
                   </SelectContent>
                 </Select>
                 {errors.departmentHeadId && <p className="text-[10px] text-rose-500">{errors.departmentHeadId}</p>}
@@ -272,8 +309,8 @@ export function DepartmentFormDialog({
                     <SelectValue placeholder="Select Reporting Lead" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">None (C-Level / Board)</SelectItem>
-                    {managers.map((mgr) => (
+                    <SelectItem value="none">No reporting manager</SelectItem>
+                    {managerOptions.map((mgr) => (
                       <SelectItem key={mgr.id} value={mgr.id}>
                         {mgr.fullName} ({mgr.designation || "Manager"})
                       </SelectItem>
@@ -289,7 +326,7 @@ export function DepartmentFormDialog({
                     <SelectValue placeholder="None" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">None (Top Level Root)</SelectItem>
+                    <SelectItem value="none">Top-level department</SelectItem>
                     {parentDeptOptions.map((dept) => (
                       <SelectItem key={dept.id} value={dept.id}>
                         {dept.name} ({dept.code})
@@ -454,10 +491,11 @@ export function DepartmentFormDialog({
             </Button>
             <Button
               type="submit"
+              disabled={isSaving}
               className="rounded-xl bg-brand text-brand-foreground shadow-glow hover:bg-brand/90"
               style={{ background: isEdit ? undefined : `linear-gradient(135deg, ${themeColor}, ${themeColor}dd)` }}
             >
-              {isEdit ? "Save Changes" : "Create Department"}
+              {isSaving ? "Saving..." : isEdit ? "Save Changes" : "Create Department"}
             </Button>
           </DialogFooter>
         </form>

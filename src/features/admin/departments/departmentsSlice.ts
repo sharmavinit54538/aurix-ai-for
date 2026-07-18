@@ -1,5 +1,4 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { SEED_DEPARTMENTS } from "./constants";
 import type { DepartmentsState } from "./departmentsTypes";
 import {
   addEmployeeToDepartment,
@@ -17,9 +16,13 @@ import {
 import type { Department } from "./types";
 
 const initialState: DepartmentsState = {
-  departments: [...SEED_DEPARTMENTS],
+  departments: [],
   loading: false,
   error: null,
+  total: 0,
+  page: 1,
+  limit: 20,
+  pages: 1,
 };
 
 function updateEmployeeIds(
@@ -51,7 +54,11 @@ const departmentsSlice = createSlice({
       })
       .addCase(fetchDepartments.fulfilled, (state, action) => {
         state.loading = false;
-        state.departments = action.payload;
+        state.departments = action.payload.items;
+        state.total = action.payload.total;
+        state.page = action.payload.page;
+        state.limit = action.payload.limit;
+        state.pages = action.payload.pages;
       })
       .addCase(fetchDepartments.rejected, (state, action) => {
         state.loading = false;

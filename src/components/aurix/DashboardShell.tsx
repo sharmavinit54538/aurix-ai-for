@@ -79,48 +79,12 @@ const NAV_SECTIONS: NavSection[] = [
       { to: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true, roles: ["admin", "hr"] },
       { to: "/dashboard/manager", label: "Manager Dashboard", icon: UserCog, roles: ["manager"] },
       { to: "/dashboard/ai-insights", label: "AI Insights", icon: Sparkles, roles: ["admin", "hr", "manager"] },
-      { to: "/dashboard/employees", label: "Employees", icon: Users, roles: ["admin", "hr", "manager"] },
-      { to: "/dashboard/hr", label: "HR Management", icon: UserCog, roles: ["admin", "hr"] },
-      { to: "/dashboard/managers", label: "Managers", icon: UserPlus, roles: ["admin", "hr"] },
+      { to: "/dashboard/people", label: "People", icon: Users, exact: true, roles: ["admin", "hr", "manager"] },
       { to: "/dashboard/departments", label: "Departments", icon: Building2, roles: ["admin", "hr"] },
-      {
-        label: "Attendance",
-        icon: CalendarDays,
-        basePath: "/dashboard/attendance",
-        roles: ["admin", "hr", "manager"],
-        children: [
-          { to: "/dashboard/attendance", label: "Attendance", icon: CalendarDays, exact: true },
-          { to: "/dashboard/attendance/shifts", label: "Shifts", icon: Clock },
-          { to: "/dashboard/attendance/rosters", label: "Rosters", icon: ScrollText },
-          { to: "/dashboard/attendance/holidays", label: "Holidays", icon: Palmtree },
-        ],
-      },
+      { to: "/dashboard/attendance", label: "Attendance", icon: CalendarDays, exact: true, roles: ["admin", "hr", "manager"] },
       { to: "/dashboard/timesheets", label: "Timesheets", icon: Timer, roles: ["admin", "hr", "manager"] },
       { to: "/dashboard/leaves", label: "Leaves", icon: FileText, roles: ["admin", "hr", "manager"] },
-      {
-        label: "Payroll",
-        icon: CreditCard,
-        basePath: "/dashboard/payroll",
-        roles: ["admin", "hr"],
-        children: [
-          { to: "/dashboard/payroll", label: "Payroll Dashboard", icon: LayoutDashboard, exact: true },
-          { to: "/dashboard/payroll/copilot", label: "AI Payroll Copilot", icon: Sparkles },
-          { to: "/dashboard/payroll/salary-processing", label: "Salary Processing", icon: PlayCircle },
-          { to: "/dashboard/payroll/salary-structure", label: "Salary Structure", icon: LayoutDashboard },
-          { to: "/dashboard/payroll/payslips", label: "Payslips", icon: FileText },
-          { to: "/dashboard/payroll/reimbursements", label: "Reimbursements", icon: Receipt },
-          { to: "/dashboard/payroll/bonuses", label: "Bonuses & Incentives", icon: Gift },
-          { to: "/dashboard/payroll/deductions", label: "Deductions", icon: MinusCircle },
-          { to: "/dashboard/payroll/advances", label: "Advances & Loans", icon: HandCoins },
-          { to: "/dashboard/payroll/overtime", label: "Overtime Payments", icon: Timer },
-          { to: "/dashboard/payroll/tax", label: "Tax Management", icon: Percent },
-          { to: "/dashboard/payroll/approvals", label: "Payroll Approvals", icon: CheckCircle2 },
-          { to: "/dashboard/payroll/reports", label: "Payroll Reports", icon: BarChart3 },
-          { to: "/dashboard/payroll/bank-transfers", label: "Bank Transfers", icon: Banknote },
-          { to: "/dashboard/payroll/compliance", label: "Compliance", icon: ShieldCheck },
-          { to: "/dashboard/payroll/settings", label: "Payroll Settings", icon: Settings },
-        ],
-      },
+      { to: "/dashboard/payroll", label: "Payroll", icon: CreditCard, exact: true, roles: ["admin", "hr"] },
       { to: "/dashboard/performance", label: "Performance", icon: Gauge, roles: ["admin", "hr", "manager"] },
       { to: "/dashboard/documents", label: "Documents", icon: Folder, roles: ["admin", "hr", "manager"] },
       { to: "/dashboard/assets", label: "Assets", icon: Package, roles: ["admin", "hr", "manager"] },
@@ -460,28 +424,7 @@ const NAV_SECTIONS: NavSection[] = [
     title: "AI Hub",
     roles: ["admin", "hr", "manager"],
     items: [
-      {
-        label: "AI Hub",
-        icon: Star,
-        basePath: "/ai",
-        children: [
-          { to: "/ai", label: "Hub Dashboard", icon: LayoutDashboard, exact: true },
-          { to: "/ai/workforce-insights", label: "Workforce Insights", icon: Brain },
-          { to: "/ai/recruiter", label: "Recruiter", icon: Briefcase },
-          { to: "/ai/attendance-monitor", label: "Attendance Monitor", icon: Clock },
-          { to: "/ai/leave-assistant", label: "Leave Assistant", icon: FileText },
-          { to: "/ai/performance-coach", label: "Performance Coach", icon: Gauge },
-          { to: "/ai/payroll-insights", label: "Payroll Insights", icon: Banknote },
-          { to: "/ai/workforce-planning", label: "Workforce Planning", icon: Target },
-          { to: "/ai/employee-health", label: "Employee Health", icon: HeartPulse },
-          { to: "/ai/policy-assistant", label: "Policy Assistant", icon: BookOpen },
-          { to: "/ai/document-generator", label: "Document Generator", icon: FilePlus2 },
-          { to: "/ai/meeting-intelligence", label: "Meeting Intelligence", icon: Video },
-          { to: "/ai/compliance-monitor", label: "Compliance Monitor", icon: ShieldCheck },
-          { to: "/ai/chat-assistant", label: "Chat Assistant", icon: MessageSquare },
-          { to: "/ai/analytics-center", label: "Analytics Center", icon: LineChartIcon },
-        ],
-      },
+      { to: "/ai", label: "AI Hub", icon: Sparkles, exact: true },
     ],
   },
 
@@ -1120,6 +1063,13 @@ export function PageHeader({ title, description, actions }: { title: string; des
     pathname.startsWith("/dashboard/payroll/") &&
     pathname !== "/dashboard/payroll" &&
     pathname !== "/dashboard/payroll/";
+  const isAttendanceSubPage =
+    pathname.startsWith("/dashboard/attendance/") &&
+    pathname !== "/dashboard/attendance" &&
+    pathname !== "/dashboard/attendance/";
+  const isPeopleSubPage =
+    pathname.startsWith("/dashboard/employees") ||
+    pathname.startsWith("/dashboard/managers");
 
   return (
     <div className="mb-6 flex flex-col min-w-0 gap-2 text-left">
@@ -1142,6 +1092,28 @@ export function PageHeader({ title, description, actions }: { title: string; des
           >
             <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover/back:-translate-x-0.5" />
             Back to Payroll Hub
+          </Link>
+        </div>
+      )}
+      {isAttendanceSubPage && (
+        <div className="mb-1 flex items-center">
+          <Link
+            to="/dashboard/attendance"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group/back"
+          >
+            <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover/back:-translate-x-0.5" />
+            Back to Attendance Hub
+          </Link>
+        </div>
+      )}
+      {isPeopleSubPage && (
+        <div className="mb-1 flex items-center">
+          <Link
+            to="/dashboard/people"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group/back"
+          >
+            <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover/back:-translate-x-0.5" />
+            Back to People Hub
           </Link>
         </div>
       )}
