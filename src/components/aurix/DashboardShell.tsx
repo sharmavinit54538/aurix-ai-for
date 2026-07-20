@@ -8,11 +8,11 @@ import {
   Info, Languages, LayoutDashboard, LineChart as LineChartIcon, Lock, LogOut, Mail, Medal,
   Menu, MessageCircle, MessageSquare, Mic, MinusCircle, Moon, Package, Palmtree, Percent,
   PlayCircle, Plane, Receipt, ScanLine, ScrollText, Search, Settings, ShieldCheck, Sparkles,
-  Star, Sun, Target, Timer, TrendingUp, Trophy, UserCheck, UserCog, UserPlus, Users, Video,
+  Star, Sun, Target, Timer, TrendingUp, Trophy, User, UserCheck, UserCog, UserPlus, Users, Video,
   Wallet, Workflow, X, Zap, Clock3, ListTodo, CalendarRange, FileBarChart, Lightbulb,
   ClipboardList, BadgeCheck, Headphones, HelpCircle, TicketCheck, Map, Laptop, Printer,
   Repeat, Wrench, TrendingDown, BrainCircuit, Fingerprint, Coffee, HeartHandshake, GraduationCap,
-  BookMarked, PenLine, FileEdit, Landmark, Coins, Building, Hash,
+  BookMarked, PenLine, FileEdit, Landmark, Coins, Building, Hash, Sliders, Shield, Layers, PackageCheck,
 } from "lucide-react";
 import { aurix, useAurix, type Role } from "@/lib/aurix-store";
 import { useAuthReady } from "@/lib/auth-bootstrap";
@@ -20,32 +20,27 @@ import { AuthLoadingScreen } from "@/features/auth/components/AuthLoadingScreen"
 import { hasValidAccessToken, setTokens } from "@/api";
 import { Input } from "@/components/ui/input";
 import { useTheme } from "@/components/site/ThemeProvider";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { fetchSidebarPermissions } from "@/store/sidebar/sidebarActions";
+import {
+  selectExpandedSections,
+  selectUserPermissions,
+  filterNavTree,
+} from "@/store/sidebar/sidebarSelectors";
+import {
+  setActiveRoute,
+  setSectionExpand,
+  toggleSectionExpand,
+} from "@/store/sidebar/sidebarSlice";
+import type {
+  BadgeKind,
+  SidebarNavItem,
+  SidebarNavLeaf,
+  SidebarNavParent,
+  SidebarNavSection,
+} from "@/store/sidebar/sidebarTypes";
 
-// ── Badge type ─────────────────────────────────────────────────
-type BadgeKind = "New" | "AI" | "Beta" | "Hot";
-
-type NavLeaf = {
-  to: string;
-  label: string;
-  icon: any;
-  exact?: boolean;
-  roles?: string[];
-  badge?: BadgeKind;
-  count?: number;
-};
-type NavParent = {
-  label: string;
-  icon: any;
-  basePath: string;
-  children: NavLeaf[];
-  roles?: string[];
-  badge?: BadgeKind;
-  count?: number;
-};
-type NavItem = NavLeaf | NavParent;
-type NavSection = { title?: string; items: NavItem[]; roles?: string[] };
-
-const isParent = (i: NavItem): i is NavParent => "children" in i;
+const isParent = (i: SidebarNavItem): i is SidebarNavParent => "children" in i;
 
 // ── Badge color map ────────────────────────────────────────────
 const BADGE_STYLES: Record<BadgeKind, string> = {
@@ -71,650 +66,71 @@ function NavCount({ count }: { count: number }) {
   );
 }
 
-// ── All nav sections ───────────────────────────────────────────
-const NAV_SECTIONS: NavSection[] = [
+// ── Enterprise HRMS Nav Sections ────────────────────────────────
+const NAV_SECTIONS: SidebarNavSection[] = [
   {
-    // ── Admin / HR / Manager sections ────────────────────────
-    items: [
-      { to: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true, roles: ["admin", "hr"] },
-      { to: "/dashboard/manager", label: "Manager Dashboard", icon: UserCog, roles: ["manager"] },
-      { to: "/dashboard/ai-insights", label: "AI Insights", icon: Sparkles, roles: ["admin", "hr", "manager"] },
-      { to: "/dashboard/people", label: "People", icon: Users, exact: true, roles: ["admin", "hr", "manager"] },
-      { to: "/dashboard/departments", label: "Departments", icon: Building2, roles: ["admin", "hr"] },
-      { to: "/dashboard/attendance", label: "Attendance", icon: CalendarDays, exact: true, roles: ["admin", "hr", "manager"] },
-      { to: "/dashboard/timesheets", label: "Timesheets", icon: Timer, roles: ["admin", "hr", "manager"] },
-      { to: "/dashboard/leaves", label: "Leaves", icon: FileText, roles: ["admin", "hr", "manager"] },
-      { to: "/dashboard/payroll", label: "Payroll", icon: CreditCard, exact: true, roles: ["admin", "hr"] },
-      { to: "/dashboard/performance", label: "Performance", icon: Gauge, roles: ["admin", "hr", "manager"] },
-      { to: "/dashboard/documents", label: "Documents", icon: Folder, roles: ["admin", "hr", "manager"] },
-      { to: "/dashboard/assets", label: "Assets", icon: Package, roles: ["admin", "hr", "manager"] },
-      { to: "/dashboard/recruitment", label: "Recruitment", icon: Briefcase, exact: true, roles: ["admin", "hr", "manager"] },
-      { to: "/dashboard/reports", label: "Reports", icon: BarChart3, roles: ["admin", "hr", "manager"] },
-    ],
-  },
-
-  // ══════════════════════════════════════════════════════════════
-  // EMPLOYEE-ONLY SECTIONS
-  // ══════════════════════════════════════════════════════════════
-  {
-    roles: ["employee"],
-    items: [
-      { to: "/dashboard/employee", label: "My Dashboard", icon: LayoutDashboard, exact: true, roles: ["employee"] },
-    ],
-  },
-  {
-    title: "Attendance",
-    roles: ["employee"],
     items: [
       {
-        label: "Attendance",
-        icon: CalendarDays,
-        basePath: "/dashboard/attendance",
-        roles: ["employee"],
-        children: [
-          { to: "/dashboard/attendance", label: "Dashboard", icon: LayoutDashboard, exact: true },
-          { to: "/dashboard/attendance/checkin", label: "Check In / Check Out", icon: Fingerprint, badge: "New" },
-          { to: "/dashboard/attendance/history", label: "Attendance History", icon: History },
-          { to: "/dashboard/attendance/calendar", label: "Monthly Calendar", icon: CalendarRange },
-          { to: "/dashboard/attendance/shifts", label: "Shift Details", icon: Clock },
-          { to: "/dashboard/attendance/overtime", label: "Overtime", icon: Timer },
-          { to: "/dashboard/attendance/regularization", label: "Attendance Regularization", icon: FileEdit },
-          { to: "/dashboard/attendance/break-time", label: "Break Time", icon: Coffee },
-          { to: "/dashboard/attendance/reports", label: "Attendance Reports", icon: FileBarChart },
-        ],
+        to: "/dashboard",
+        label: "Overview",
+        icon: LayoutDashboard,
+        exact: true,
+        permission: "overview.view",
       },
-    ],
-  },
-  {
-    title: "Timesheets",
-    roles: ["employee"],
-    items: [
       {
-        label: "Timesheets",
-        icon: Timer,
-        basePath: "/dashboard/timesheets",
-        roles: ["employee"],
-        children: [
-          { to: "/dashboard/timesheets", label: "My Timesheets", icon: ListTodo, exact: true },
-          { to: "/dashboard/timesheets/daily", label: "Daily Timesheet", icon: CalendarDays },
-          { to: "/dashboard/timesheets/weekly", label: "Weekly Timesheet", icon: CalendarRange },
-          { to: "/dashboard/timesheets/project-hours", label: "Project Hours", icon: Briefcase },
-          { to: "/dashboard/timesheets/task-hours", label: "Task Hours", icon: ClipboardList },
-          { to: "/dashboard/timesheets/submit", label: "Submit Timesheet", icon: FilePlus2 },
-          { to: "/dashboard/timesheets/approval-status", label: "Approval Status", icon: CheckCircle2 },
-          { to: "/dashboard/timesheets/history", label: "History", icon: History },
-        ],
+        to: "/dashboard/workforce",
+        label: "Workforce",
+        icon: Users,
+        permission: "workforce.view",
       },
-    ],
-  },
-  {
-    title: "Leaves",
-    roles: ["employee"],
-    items: [
       {
-        label: "Leaves",
-        icon: Palmtree,
-        basePath: "/dashboard/leaves",
-        roles: ["employee"],
-        count: 3,
-        children: [
-          { to: "/dashboard/leaves/apply", label: "Apply Leave", icon: FilePlus2 },
-          { to: "/dashboard/leaves/balance", label: "Leave Balance", icon: Wallet },
-          { to: "/dashboard/leaves/calendar", label: "Leave Calendar", icon: CalendarDays },
-          { to: "/dashboard/leaves/history", label: "Leave History", icon: History },
-          { to: "/dashboard/leaves/holidays", label: "Holiday Calendar", icon: CalendarCheck },
-          { to: "/dashboard/leaves/comp-off", label: "Comp Off", icon: Repeat },
-          { to: "/dashboard/leaves/wfh", label: "Work From Home", icon: Laptop },
-          { to: "/dashboard/leaves/approvals", label: "Leave Approvals", icon: CheckCircle2, count: 3 },
-        ],
+        to: "/dashboard/talent",
+        label: "Talent Management",
+        icon: Briefcase,
+        permission: "talent.view",
+        roles: ["admin", "hr", "manager"],
       },
-    ],
-  },
-  {
-    title: "Payroll",
-    roles: ["employee"],
-    items: [
       {
+        to: "/dashboard/payroll",
         label: "Payroll",
         icon: CreditCard,
-        basePath: "/dashboard/payroll",
-        roles: ["employee"],
-        children: [
-          { to: "/dashboard/payroll/payslips", label: "Salary Slips", icon: FileText },
-          { to: "/dashboard/payroll/salary-structure", label: "Salary Structure", icon: LayoutDashboard },
-          { to: "/dashboard/payroll/history", label: "Payroll History", icon: History },
-          { to: "/dashboard/payroll/tax", label: "Tax Details", icon: Percent },
-          { to: "/dashboard/payroll/form16", label: "Form 16", icon: FileCheck },
-          { to: "/dashboard/payroll/reimbursements", label: "Reimbursements", icon: Receipt },
-          { to: "/dashboard/payroll/bonuses", label: "Bonuses", icon: Gift },
-          { to: "/dashboard/payroll/incentives", label: "Incentives", icon: TrendingUp },
-          { to: "/dashboard/payroll/bank-details", label: "Bank Details", icon: Landmark },
-          { to: "/dashboard/payroll/pf", label: "PF", icon: Coins },
-          { to: "/dashboard/payroll/esi", label: "ESI", icon: HeartHandshake },
-          { to: "/dashboard/payroll/tds", label: "TDS", icon: Building },
-        ],
+        permission: "payroll.view",
       },
-    ],
-  },
-  {
-    title: "Performance",
-    roles: ["employee"],
-    items: [
       {
-        label: "Performance",
-        icon: Gauge,
-        basePath: "/dashboard/performance",
-        roles: ["employee"],
-        children: [
-          { to: "/dashboard/performance/goals", label: "My Goals", icon: Target },
-          { to: "/dashboard/performance/okrs", label: "OKRs", icon: CheckCircle2 },
-          { to: "/dashboard/performance/kpis", label: "KPIs", icon: LineChartIcon },
-          { to: "/dashboard/performance/self-review", label: "Self Review", icon: PenLine },
-          { to: "/dashboard/performance/feedback", label: "Manager Feedback", icon: MessageSquare },
-          { to: "/dashboard/performance/appraisals", label: "Appraisals", icon: Award },
-          { to: "/dashboard/performance/promotions", label: "Promotions", icon: TrendingUp },
-          { to: "/dashboard/performance/achievements", label: "Achievements", icon: Trophy },
-          { to: "/dashboard/performance/skills", label: "Skill Development", icon: GraduationCap },
-        ],
+        to: "/dashboard/hr-operations",
+        label: "HR Operations",
+        icon: Activity,
+        permission: "hrops.view",
+        roles: ["admin", "hr", "manager"],
       },
-    ],
-  },
-  {
-    title: "Documents",
-    roles: ["employee"],
-    items: [
       {
-        label: "Documents",
+        to: "/dashboard/resources",
+        label: "Resources",
         icon: Folder,
-        basePath: "/dashboard/documents",
-        roles: ["employee"],
-        children: [
-          { to: "/dashboard/documents", label: "My Documents", icon: FolderOpen, exact: true },
-          { to: "/dashboard/documents/offer-letter", label: "Offer Letter", icon: FileText },
-          { to: "/dashboard/documents/appointment-letter", label: "Appointment Letter", icon: FileSignature },
-          { to: "/dashboard/documents/salary-slips", label: "Salary Slips", icon: ScrollText },
-          { to: "/dashboard/documents/experience-letter", label: "Experience Letter", icon: FileCheck },
-          { to: "/dashboard/documents/policies", label: "Company Policies", icon: BookOpen },
-          { to: "/dashboard/documents/nda", label: "NDA", icon: Lock },
-          { to: "/dashboard/documents/tax-documents", label: "Tax Documents", icon: Percent },
-          { to: "/dashboard/documents/upload", label: "Upload Documents", icon: FilePlus2 },
-        ],
+        permission: "resources.view",
       },
-    ],
-  },
-  {
-    title: "Assets",
-    roles: ["employee"],
-    items: [
       {
-        label: "Assets",
-        icon: Package,
-        basePath: "/dashboard/assets",
-        roles: ["employee"],
-        children: [
-          { to: "/dashboard/assets", label: "My Assets", icon: Package, exact: true },
-          { to: "/dashboard/assets/assigned", label: "Assigned Assets", icon: Laptop },
-          { to: "/dashboard/assets/details", label: "Asset Details", icon: Info },
-          { to: "/dashboard/assets/warranty", label: "Asset Warranty", icon: ShieldCheck },
-          { to: "/dashboard/assets/return", label: "Return Asset", icon: Repeat },
-          { to: "/dashboard/assets/repair", label: "Repair Request", icon: Wrench },
-          { to: "/dashboard/assets/history", label: "Asset History", icon: History },
-        ],
+        to: "/dashboard/analytics",
+        label: "Analytics",
+        icon: BarChart3,
+        permission: "analytics.view",
+        roles: ["admin", "hr", "manager"],
       },
-    ],
-  },
-  {
-    title: "Expenses",
-    roles: ["employee"],
-    items: [
       {
-        label: "Expenses",
-        icon: Receipt,
-        basePath: "/dashboard/expenses",
-        roles: ["employee"],
-        children: [
-          { to: "/dashboard/expenses/submit", label: "Submit Expense", icon: FilePlus2 },
-          { to: "/dashboard/expenses/reimbursements", label: "Reimbursements", icon: HandCoins },
-          { to: "/dashboard/expenses/travel-claims", label: "Travel Claims", icon: Plane },
-          { to: "/dashboard/expenses/history", label: "Expense History", icon: History },
-        ],
+        to: "/dashboard/ai-hub",
+        label: "AI Hub",
+        icon: Brain,
+        permission: "ai.view",
       },
-    ],
-  },
-  {
-    title: "Learning",
-    roles: ["employee"],
-    items: [
       {
-        label: "Learning",
-        icon: GraduationCap,
-        basePath: "/dashboard/learning",
-        roles: ["employee"],
-        badge: "New",
-        children: [
-          { to: "/dashboard/learning/courses", label: "Courses", icon: BookOpen },
-          { to: "/dashboard/learning/programs", label: "Training Programs", icon: Zap },
-          { to: "/dashboard/learning/certifications", label: "Certifications", icon: BadgeCheck },
-          { to: "/dashboard/learning/assessments", label: "Assessments", icon: ClipboardCheck },
-          { to: "/dashboard/learning/progress", label: "Learning Progress", icon: TrendingUp },
-        ],
-      },
-    ],
-  },
-  {
-    title: "Career",
-    roles: ["employee"],
-    items: [
-      {
-        label: "Career",
-        icon: Map,
-        basePath: "/dashboard/career",
-        roles: ["employee"],
-        children: [
-          { to: "/dashboard/career/openings", label: "Internal Job Openings", icon: Briefcase },
-          { to: "/dashboard/career/referrals", label: "Referral Program", icon: Gift },
-          { to: "/dashboard/career/growth", label: "Career Growth", icon: TrendingUp },
-          { to: "/dashboard/career/promotions", label: "Promotion History", icon: Award },
-        ],
-      },
-    ],
-  },
-  {
-    title: "Communication",
-    roles: ["employee"],
-    items: [
-      {
-        label: "Communication",
-        icon: MessageCircle,
-        basePath: "/dashboard/communication",
-        roles: ["employee"],
-        count: 5,
-        children: [
-          { to: "/dashboard/communication/announcements", label: "Announcements", icon: Bell, count: 2 },
-          { to: "/dashboard/communication/notice-board", label: "Notice Board", icon: ScrollText },
-          { to: "/dashboard/communication/team-directory", label: "Team Directory", icon: Users },
-          { to: "/dashboard/communication/company-directory", label: "Company Directory", icon: Building2 },
-          { to: "/dashboard/communication/chat", label: "Chat", icon: MessageSquare, count: 3 },
-          { to: "/dashboard/communication/team-chat", label: "Team Chat", icon: MessageCircle },
-        ],
-      },
-    ],
-  },
-  {
-    title: "Calendar",
-    roles: ["employee"],
-    items: [
-      {
-        label: "Calendar",
-        icon: CalendarDays,
-        basePath: "/dashboard/calendar",
-        roles: ["employee"],
-        children: [
-          { to: "/dashboard/calendar/company", label: "Company Calendar", icon: CalendarDays },
-          { to: "/dashboard/calendar/holidays", label: "Holidays", icon: Palmtree },
-          { to: "/dashboard/calendar/events", label: "Events", icon: Star },
-          { to: "/dashboard/calendar/meetings", label: "Meetings", icon: Video },
-        ],
-      },
-    ],
-  },
-  {
-    title: "Rewards",
-    roles: ["employee"],
-    items: [
-      {
-        label: "Rewards",
-        icon: Trophy,
-        basePath: "/dashboard/rewards",
-        roles: ["employee"],
-        children: [
-          { to: "/dashboard/rewards", label: "Rewards", icon: Trophy, exact: true },
-          { to: "/dashboard/rewards/recognition", label: "Recognition", icon: Star },
-          { to: "/dashboard/rewards/badges", label: "Badges", icon: Medal },
-          { to: "/dashboard/rewards/achievements", label: "Achievements", icon: Award },
-        ],
-      },
-    ],
-  },
-  {
-    title: "Help Center",
-    roles: ["employee"],
-    items: [
-      {
-        label: "Help Center",
-        icon: Headphones,
-        basePath: "/dashboard/help",
-        roles: ["employee"],
-        children: [
-          { to: "/dashboard/help/desk", label: "Help Desk", icon: Headphones },
-          { to: "/dashboard/help/raise-ticket", label: "Raise Ticket", icon: TicketCheck },
-          { to: "/dashboard/help/support", label: "Support Requests", icon: HeartHandshake },
-          { to: "/dashboard/help/faqs", label: "FAQs", icon: HelpCircle },
-        ],
-      },
-    ],
-  },
-  {
-    title: "Settings",
-    roles: ["employee"],
-    items: [
-      {
+        to: "/dashboard/settings",
         label: "Settings",
         icon: Settings,
-        basePath: "/dashboard/settings",
-        roles: ["employee"],
-        children: [
-          { to: "/dashboard/settings/profile", label: "My Profile", icon: UserCheck },
-          { to: "/dashboard/settings/personal", label: "Personal Information", icon: UserCog },
-          { to: "/dashboard/settings/emergency-contacts", label: "Emergency Contacts", icon: AlertCircle },
-          { to: "/dashboard/settings/bank-details", label: "Bank Details", icon: Landmark },
-          { to: "/dashboard/settings/security", label: "Password & Security", icon: Lock },
-          { to: "/dashboard/settings/notifications", label: "Notification Settings", icon: Bell },
-          { to: "/dashboard/settings/language", label: "Language", icon: Languages },
-          { to: "/dashboard/settings/privacy", label: "Privacy Settings", icon: ShieldCheck },
-        ],
+        permission: "settings.view",
       },
-    ],
-  },
-
-  // ══════════════════════════════════════════════════════════════
-  // AI HUB — Admin / HR / Manager
-  // ══════════════════════════════════════════════════════════════
-  {
-    title: "AI Hub",
-    roles: ["admin", "hr", "manager"],
-    items: [
-      { to: "/ai", label: "AI Hub", icon: Sparkles, exact: true },
-    ],
-  },
-
-  // ══════════════════════════════════════════════════════════════
-  // AI HUB — Employee
-  // ══════════════════════════════════════════════════════════════
-  {
-    title: "AI Hub",
-    roles: ["employee"],
-    items: [
-      { to: "/ai", label: "Hub Dashboard", icon: LayoutDashboard, exact: true, roles: ["employee"] },
-      {
-        label: "Chat Assistant",
-        icon: MessageSquare,
-        basePath: "/ai/chat",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/chat-assistant", label: "AI HR Chat", icon: Bot },
-          { to: "/ai/chat/qa", label: "AI Q&A", icon: HelpCircle },
-          { to: "/ai/chat/search", label: "AI Search", icon: Search },
-        ],
-      },
-      {
-        label: "Leave Assistant",
-        icon: Palmtree,
-        basePath: "/ai/leave",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/leave-assistant", label: "Leave Suggestions", icon: Lightbulb },
-          { to: "/ai/leave/balance-analysis", label: "Leave Balance Analysis", icon: BarChart3 },
-          { to: "/ai/leave/planner", label: "Leave Planner", icon: CalendarRange },
-        ],
-      },
-      {
-        label: "Attendance Assistant",
-        icon: Fingerprint,
-        basePath: "/ai/attendance",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/attendance-monitor", label: "Attendance Insights", icon: LineChartIcon },
-          { to: "/ai/attendance/missing-punch", label: "Missing Punch Detection", icon: AlertCircle },
-          { to: "/ai/attendance/late-arrival", label: "Late Arrival Analysis", icon: Clock3 },
-        ],
-      },
-      {
-        label: "Payroll Assistant",
-        icon: Banknote,
-        basePath: "/ai/payroll",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/payroll-insights", label: "Salary Explanation", icon: FileText },
-          { to: "/ai/payroll/tax-assistant", label: "Tax Assistant", icon: Percent },
-          { to: "/ai/payroll/payslip-summary", label: "Payslip Summary", icon: ScrollText },
-        ],
-      },
-      {
-        label: "Performance Coach",
-        icon: Gauge,
-        basePath: "/ai/performance",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/performance-coach", label: "Goal Planning", icon: Target },
-          { to: "/ai/performance/productivity", label: "Productivity Insights", icon: TrendingUp },
-          { to: "/ai/performance/career", label: "Career Suggestions", icon: Map },
-        ],
-      },
-      {
-        label: "Employee Health",
-        icon: HeartPulse,
-        basePath: "/ai/health",
-        roles: ["employee"],
-        badge: "New",
-        children: [
-          { to: "/ai/employee-health", label: "Wellness Score", icon: HeartPulse },
-          { to: "/ai/health/burnout", label: "Burnout Detection", icon: AlertCircle },
-          { to: "/ai/health/mood", label: "Mood Check", icon: HeartHandshake },
-          { to: "/ai/health/work-life", label: "Work-Life Balance", icon: Zap },
-        ],
-      },
-      {
-        label: "Learning Coach",
-        icon: GraduationCap,
-        basePath: "/ai/learning",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/learning/skill-gap", label: "Skill Gap Analysis", icon: TrendingDown },
-          { to: "/ai/learning/personalized", label: "Personalized Learning", icon: BookMarked },
-          { to: "/ai/learning/certifications", label: "Certification Recommendations", icon: BadgeCheck },
-        ],
-      },
-      {
-        label: "Policy Assistant",
-        icon: BookOpen,
-        basePath: "/ai/policy",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/policy-assistant", label: "Company Policies", icon: ScrollText },
-          { to: "/ai/policy/hr-faqs", label: "HR FAQs", icon: HelpCircle },
-          { to: "/ai/policy/compliance", label: "Compliance Help", icon: ShieldCheck },
-        ],
-      },
-      {
-        label: "Meeting Intelligence",
-        icon: Video,
-        basePath: "/ai/meetings",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/meeting-intelligence", label: "Meeting Notes", icon: PenLine },
-          { to: "/ai/meetings/summaries", label: "AI Summaries", icon: ScrollText },
-          { to: "/ai/meetings/action-items", label: "Action Items", icon: ClipboardCheck },
-          { to: "/ai/meetings/followups", label: "Follow-ups", icon: Bell },
-        ],
-      },
-      {
-        label: "Resume Builder",
-        icon: FileEdit,
-        basePath: "/ai/resume",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/resume/generator", label: "AI Resume Generator", icon: Sparkles },
-          { to: "/ai/resume/improve", label: "Resume Improvement", icon: TrendingUp },
-        ],
-      },
-      {
-        label: "Career Coach",
-        icon: Map,
-        basePath: "/ai/career",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/career/promotion-readiness", label: "Promotion Readiness", icon: TrendingUp },
-          { to: "/ai/career/roadmap", label: "Career Roadmap", icon: Map },
-          { to: "/ai/career/skills", label: "Skill Recommendations", icon: GraduationCap },
-        ],
-      },
-      {
-        label: "Email Writer",
-        icon: Mail,
-        basePath: "/ai/email",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/email/leave", label: "Leave Email", icon: Palmtree },
-          { to: "/ai/email/hr", label: "HR Email", icon: UserCog },
-          { to: "/ai/email/professional", label: "Professional Email", icon: Mail },
-        ],
-      },
-      {
-        label: "Document Assistant",
-        icon: Folder,
-        basePath: "/ai/documents",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/documents/summary", label: "Document Summary", icon: FileText },
-          { to: "/ai/documents/contract", label: "Contract Explanation", icon: FileSignature },
-          { to: "/ai/documents/policy-summary", label: "Policy Summary", icon: BookOpen },
-        ],
-      },
-      {
-        label: "Goal Planner",
-        icon: Target,
-        basePath: "/ai/goals",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/goals/okr-generator", label: "OKR Generator", icon: CheckCircle2 },
-          { to: "/ai/goals/weekly", label: "Weekly Goals", icon: CalendarRange },
-          { to: "/ai/goals/productivity", label: "Productivity Planner", icon: TrendingUp },
-        ],
-      },
-      {
-        label: "Task Assistant",
-        icon: ListTodo,
-        basePath: "/ai/tasks",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/tasks/my-tasks", label: "My Tasks", icon: ClipboardList },
-          { to: "/ai/tasks/prioritization", label: "AI Prioritization", icon: Zap },
-          { to: "/ai/tasks/reminders", label: "Smart Reminders", icon: Bell },
-        ],
-      },
-      {
-        label: "AI Translator",
-        icon: Languages,
-        basePath: "/ai/translator",
-        roles: ["employee"],
-        badge: "Beta",
-        children: [
-          { to: "/ai/translator/documents", label: "Translate Documents", icon: FileText },
-          { to: "/ai/translator/chat", label: "Translate Chat", icon: MessageSquare },
-        ],
-      },
-      {
-        label: "Voice Assistant",
-        icon: Mic,
-        basePath: "/ai/voice",
-        roles: ["employee"],
-        badge: "Beta",
-        children: [
-          { to: "/ai/voice/commands", label: "Voice Commands", icon: Mic },
-          { to: "/ai/voice/search", label: "Voice Search", icon: Search },
-        ],
-      },
-      {
-        label: "AI Insights",
-        icon: BrainCircuit,
-        basePath: "/ai/insights",
-        roles: ["employee"],
-        badge: "AI",
-        children: [
-          { to: "/ai/insights/personalized", label: "Personalized Insights", icon: Sparkles },
-          { to: "/ai/insights/productivity", label: "Productivity Trends", icon: TrendingUp },
-          { to: "/ai/insights/attendance", label: "Attendance Analytics", icon: CalendarDays },
-          { to: "/ai/insights/performance", label: "Performance Analytics", icon: LineChartIcon },
-        ],
-      },
-    ],
-  },
-
-  // ══════════════════════════════════════════════════════════════
-  // HR Operations
-  // ══════════════════════════════════════════════════════════════
-  {
-    title: "HR Operations",
-    roles: ["admin", "hr", "manager"],
-    items: [
-      { to: "/dashboard/hr-ops", label: "HR Ops Dashboard", icon: LayoutDashboard, roles: ["admin", "hr"] },
-      { to: "/dashboard/timeline", label: "Employee Timeline", icon: Activity, roles: ["admin", "hr"] },
-      { to: "/dashboard/assets", label: "Asset Management", icon: Package },
-      { to: "/dashboard/visitors", label: "Visitor Management", icon: Users, roles: ["admin", "hr"] },
-      { to: "/dashboard/expenses", label: "Expense Claims", icon: Receipt },
-      { to: "/dashboard/travel", label: "Travel Requests", icon: Plane },
-      { to: "/dashboard/onboarding-checklist", label: "Onboarding Checklist", icon: UserCheck },
-      { to: "/dashboard/offboarding", label: "Offboarding", icon: Archive, roles: ["admin", "hr"] },
-      { to: "/dashboard/exit", label: "Exit Management", icon: LogOut, roles: ["admin", "hr"] },
-    ],
-  },
-
-  // ══════════════════════════════════════════════════════════════
-  // Administration
-  // ══════════════════════════════════════════════════════════════
-  {
-    title: "Administration",
-    roles: ["admin", "hr"],
-    items: [
-      { to: "/dashboard/roles", label: "Roles & Permissions", icon: ShieldCheck, roles: ["admin"] },
-      { to: "/dashboard/audit-logs", label: "Audit Logs", icon: ScrollText, roles: ["admin"] },
-      { to: "/dashboard/billing", label: "Billing", icon: CreditCard, roles: ["admin"] },
-      { to: "/dashboard/settings", label: "Settings", icon: Settings },
     ],
   },
 ];
-
-// ── Role-based nav filter ─────────────────────────────────────
-function filterNavForRole(sections: NavSection[], role: Role): NavSection[] {
-  const allowed = (roles?: string[]) => !roles || roles.includes(role as string);
-
-  return sections
-    .filter((s) => allowed(s.roles))
-    .map((section) => ({
-      ...section,
-      items: section.items
-        .filter((item) => allowed(item.roles))
-        .map((item) => {
-          if (isParent(item)) {
-            return {
-              ...item,
-              children: item.children.filter((c) => allowed(c.roles)),
-            };
-          }
-          return item;
-        })
-        .filter((item) => {
-          if (isParent(item)) return item.children.length > 0;
-          return true;
-        }),
-    }))
-    .filter((s) => s.items.length > 0);
-}
 
 // ── Demo Mode Banner ──────────────────────────────────────────
 function DemoBanner({ role, onDismiss }: { role: Role; onDismiss: () => void }) {
@@ -731,7 +147,7 @@ function DemoBanner({ role, onDismiss }: { role: Role; onDismiss: () => void }) 
       <button
         onClick={onDismiss}
         aria-label="Dismiss demo banner"
-        className="shrink-0 rounded-md p-1 text-amber-600 hover:bg-amber-500/20 dark:text-amber-400"
+        className="shrink-0 rounded-md p-1 text-amber-600 hover:bg-amber-500/20 dark:text-amber-400 cursor-pointer"
       >
         <X className="h-3.5 w-3.5" />
       </button>
@@ -743,14 +159,31 @@ export function DashboardShell() {
   const ws = useAurix();
   const authReady = useAuthReady();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [demoDismissed, setDemoDismissed] = useState(false);
+
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { theme, toggle: toggleTheme } = useTheme();
 
   const role = (ws.user?.role ?? "admin") as string;
   const isDemo = Boolean(ws.isDemoUser) && !demoDismissed;
+
+  const userPermissions = useAppSelector(selectUserPermissions);
+
+  // Fetch backend sidebar permissions when auth is ready
+  useEffect(() => {
+    if (authReady && ws.user) {
+      dispatch(fetchSidebarPermissions(role));
+    }
+  }, [authReady, ws.user, role, dispatch]);
+
+  // Update active route in Redux
+  useEffect(() => {
+    dispatch(setActiveRoute(pathname));
+  }, [pathname, dispatch]);
 
   // ── Auth & Role guard ────────────────────────────────────────
   useEffect(() => {
@@ -792,27 +225,16 @@ export function DashboardShell() {
     // Employees cannot access Admin/Manager pages
     if (role === "employee") {
       const adminManagerPaths = [
-        "/dashboard/employees",
-        "/dashboard/hr",
-        "/dashboard/managers",
-        "/dashboard/departments",
-        "/dashboard/timesheets",
-        "/dashboard/payroll",
-        "/dashboard/performance",
-        "/dashboard/documents",
-        "/dashboard/assets",
-        "/dashboard/recruitment",
-        "/dashboard/reports",
-        "/dashboard/hr-ops",
-        "/dashboard/timeline",
-        "/dashboard/visitors",
-        "/dashboard/onboarding-checklist",
-        "/dashboard/offboarding",
-        "/dashboard/exit",
-        "/dashboard/roles",
-        "/dashboard/audit-logs",
-        "/dashboard/billing",
-        "/ai",
+        "/dashboard/workforce/people",
+        "/dashboard/workforce/departments",
+        "/dashboard/talent",
+        "/dashboard/hr-operations",
+        "/dashboard/analytics",
+        "/dashboard/settings/roles-permissions",
+        "/dashboard/settings/company",
+        "/dashboard/settings/audit-logs",
+        "/dashboard/settings/billing",
+        "/dashboard/settings/integrations",
       ];
       const isTryingToAccessAdminManager = adminManagerPaths.some((p) => pathname.startsWith(p));
       if (isTryingToAccessAdminManager) {
@@ -823,7 +245,10 @@ export function DashboardShell() {
 
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
-  const visibleNav = useMemo(() => filterNavForRole(NAV_SECTIONS, role as any), [role]);
+  const visibleNav = useMemo(
+    () => filterNavTree(NAV_SECTIONS, role, userPermissions),
+    [role, userPermissions]
+  );
 
   if (!authReady || ws.isRestoring || !ws.user) {
     return <AuthLoadingScreen />;
@@ -837,7 +262,6 @@ export function DashboardShell() {
 
   const initials = ws.user.fullName?.split(" ").map((p) => p[0]).slice(0, 2).join("") || "A";
 
-  // ── Sidebar home link per role ──────────────────────────────
   const homeLink =
     role === "manager"
       ? "/dashboard/manager"
@@ -870,14 +294,14 @@ export function DashboardShell() {
               </span>
               {!collapsed ? <span className="font-display text-lg font-semibold tracking-tight">Aurix</span> : null}
             </Link>
-            <button onClick={() => setCollapsed((c) => !c)} className="hidden rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground lg:inline-flex" aria-label="Toggle sidebar">
+            <button onClick={() => setCollapsed((c) => !c)} className="hidden rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground lg:inline-flex cursor-pointer" aria-label="Toggle sidebar">
               {collapsed ? <ChevronsRight className="h-4 w-4" /> : <ChevronsLeft className="h-4 w-4" />}
             </button>
           </div>
 
-          <nav className="flex-1 space-y-3 overflow-y-auto p-2">
+          <nav className="flex-1 space-y-2 overflow-y-auto p-2">
             {visibleNav.map((section, sIdx) => (
-              <div key={sIdx} className="space-y-0.5">
+              <div key={section.id || sIdx} className="space-y-0.5">
                 {section.title && !collapsed ? (
                   <div className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
                     {section.title}
@@ -890,7 +314,7 @@ export function DashboardShell() {
                   if (isParent(item)) {
                     return (
                       <NavGroup
-                        key={item.basePath}
+                        key={item.id}
                         item={item}
                         pathname={pathname}
                         collapsed={collapsed}
@@ -904,7 +328,7 @@ export function DashboardShell() {
                       key={item.to}
                       to={item.to as any}
                       className={`group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                        active ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+                        active ? "bg-accent text-foreground font-semibold" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
                       }`}
                     >
                       {active ? <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r bg-foreground" /> : null}
@@ -933,7 +357,7 @@ export function DashboardShell() {
                 </div>
               ) : null}
               {!collapsed ? (
-                <button onClick={logout} className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" aria-label="Sign out">
+                <button onClick={logout} className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive cursor-pointer" aria-label="Sign out">
                   <LogOut className="h-4 w-4" />
                 </button>
               ) : null}
@@ -946,7 +370,7 @@ export function DashboardShell() {
         <div className="flex min-h-screen min-w-0 flex-1 flex-col overflow-x-hidden">
           {/* Topbar */}
           <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/70 px-4 backdrop-blur-xl sm:px-6">
-            <button onClick={() => setMobileOpen(true)} className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground lg:hidden" aria-label="Open menu">
+            <button onClick={() => setMobileOpen(true)} className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground lg:hidden cursor-pointer" aria-label="Open menu">
               <Menu className="h-5 w-5" />
             </button>
             <div className="relative max-w-md flex-1">
@@ -955,12 +379,12 @@ export function DashboardShell() {
             </div>
             <button
               onClick={toggleTheme}
-              className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground"
+              className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer"
               aria-label="Toggle theme"
             >
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
-            <button className="relative rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground" aria-label="Notifications">
+            <button className="relative rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer" aria-label="Notifications">
               <Bell className="h-4 w-4" />
               <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-destructive" />
             </button>
@@ -979,10 +403,27 @@ export function DashboardShell() {
   );
 }
 
-function NavGroup({ item, pathname, collapsed }: { item: NavParent; pathname: string; collapsed: boolean }) {
+function NavGroup({
+  item,
+  pathname,
+  collapsed,
+}: {
+  item: SidebarNavParent;
+  pathname: string;
+  collapsed: boolean;
+}) {
+  const dispatch = useAppDispatch();
+  const expandedSections = useAppSelector(selectExpandedSections);
+  const isExpanded = Boolean(expandedSections[item.id]);
+
   const isActive = pathname === item.basePath || pathname.startsWith(item.basePath + "/");
-  const [open, setOpen] = useState(isActive);
-  useEffect(() => { if (isActive) setOpen(true); }, [isActive]);
+
+  useEffect(() => {
+    if (isActive && !isExpanded) {
+      dispatch(setSectionExpand({ sectionKey: item.id, expanded: true }));
+    }
+  }, [isActive, item.id, isExpanded, dispatch]);
+
   const Icon = item.icon;
 
   if (collapsed) {
@@ -990,7 +431,7 @@ function NavGroup({ item, pathname, collapsed }: { item: NavParent; pathname: st
       <Link
         to={item.basePath as any}
         className={`group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-          isActive ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+          isActive ? "bg-accent text-foreground font-semibold" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
         }`}
         aria-label={item.label}
       >
@@ -1004,13 +445,15 @@ function NavGroup({ item, pathname, collapsed }: { item: NavParent; pathname: st
     <div>
       <div
         className={`group relative flex w-full items-center rounded-lg text-sm font-medium transition-colors ${
-          isActive ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+          isActive ? "bg-accent text-foreground font-semibold" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
         }`}
       >
         {isActive ? <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r bg-foreground" /> : null}
         <Link
           to={item.basePath as any}
-          onClick={() => setOpen(true)}
+          onClick={() => {
+            dispatch(toggleSectionExpand(item.id));
+          }}
           className="flex flex-1 items-center gap-3 rounded-lg px-3 py-2"
         >
           <Icon className="h-4 w-4 shrink-0" />
@@ -1018,17 +461,9 @@ function NavGroup({ item, pathname, collapsed }: { item: NavParent; pathname: st
           {item.badge && !item.count && <NavBadge kind={item.badge} />}
           {item.count !== undefined && !item.badge && <NavCount count={item.count} />}
         </Link>
-        <button
-          type="button"
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen((o) => !o); }}
-          aria-label={open ? "Collapse" : "Expand"}
-          className="mr-1 rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
-        >
-          <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`} />
-        </button>
       </div>
-      {open ? (
-        <div className="ml-4 mt-1 space-y-0.5 border-l border-border pl-2">
+      {isExpanded ? (
+        <div className="ml-4 mt-1 space-y-0.5 border-l border-border pl-2 transition-all duration-200">
           {item.children.map((child) => {
             const childActive = child.exact ? pathname === child.to : pathname === child.to || pathname.startsWith(child.to + "/");
             const ChildIcon = child.icon;

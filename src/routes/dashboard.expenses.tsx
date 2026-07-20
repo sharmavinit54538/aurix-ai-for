@@ -34,7 +34,7 @@ function emptyExpense(): Expense {
   };
 }
 
-function ExpensesPage() {
+export function ExpensesPage() {
   const expenses = useHrms((s) => s.expenses);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<ExpenseStatus | "all">("all");

@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/ai/document-generator")({
   head: () => ({ meta: [{ title: "AI Document Generator — Aurix" }] }),
-  component: Page,
+  component: () => <Page />,
 });
 
 const TEMPLATES = [
@@ -94,3 +94,6 @@ HR Team — Aurix Inc.`
     </div>
   );
 }
+
+export { Page as DocumentGeneratorPage };
+

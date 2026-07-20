@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/ai/chat-assistant")({
   head: () => ({ meta: [{ title: "AI Chat Assistant — Aurix" }] }),
-  component: Page,
+  component: () => <Page />,
 });
 
 const SUGGESTIONS = [
@@ -76,3 +76,6 @@ function Page() {
     </div>
   );
 }
+
+export { Page as ChatAssistantPage };
+

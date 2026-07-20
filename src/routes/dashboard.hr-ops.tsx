@@ -28,7 +28,7 @@ const QUICK_LINKS = [
 
 const COLORS = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#06b6d4", "#8b5cf6"];
 
-function HrOpsPage() {
+export function HrOpsPage() {
   const s = useHrms((x) => x);
 
   const expenseStatus = useMemo(() => {

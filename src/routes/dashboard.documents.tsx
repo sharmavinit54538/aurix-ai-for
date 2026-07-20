@@ -63,7 +63,7 @@ const DOCUMENT_TEMPLATES = [
 // ----------------------------------------------------
 // MAIN PAGE COMPONENT
 // ----------------------------------------------------
-function DocumentsPage() {
+export function DocumentsPage() {
   const ws = useAurix();
   const docs = ws.documents || [];
   const activities = ws.documentActivities || [];

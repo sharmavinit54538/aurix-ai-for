@@ -49,7 +49,7 @@ function emptyAsset(): Asset {
   };
 }
 
-function AssetManagementPage() {
+export function AssetManagementPage() {
   const assets = useHrms((s) => s.assets);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<AssetStatus | "all">("all");
@@ -249,8 +249,8 @@ function AssetManagementPage() {
           <DialogHeader><DialogTitle>Asset QR / Barcode</DialogTitle></DialogHeader>
           {qrFor ? (
             <div className="flex flex-col items-center gap-3">
-              {qrFor.qrCodeData ? (
-                <img src={qrFor.qrCodeData} width={160} height={160} className="w-[160px] h-[160px]" alt="Asset QR Code" />
+              {(qrFor as any).qrCodeData ? (
+                <img src={(qrFor as any).qrCodeData} width={160} height={160} className="w-[160px] h-[160px]" alt="Asset QR Code" />
               ) : (
                 <div className="w-[160px] h-[160px] flex items-center justify-center bg-slate-50 text-[10px] text-slate-400">Generating QR...</div>
               )}

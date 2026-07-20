@@ -85,7 +85,7 @@ const COLORS = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
 // ----------------------------------------------------
 // MAIN MODULE COMPONENT
 // ----------------------------------------------------
-function ExitManagementPage() {
+export function ExitManagementPage() {
   const exits = useHrms((s) => s.exits);
   const authWs = useAurix(); // Fetch active employees and HR profiles
 

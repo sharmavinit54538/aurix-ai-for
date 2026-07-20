@@ -59,7 +59,7 @@ export const ATTENDANCE_MODULES_LIST: AttendanceModuleDef[] = [
 
 type ViewMode = "modules" | "analytics";
 
-function AttendancePage() {
+export function AttendancePage() {
   const [viewMode, setViewMode] = useState<ViewMode>("modules");
   const ws = useAurix();
   const today = "Thursday, June 25, 2026";

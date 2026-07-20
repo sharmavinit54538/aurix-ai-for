@@ -66,7 +66,7 @@ const COLORS = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#3b82f6"
 // ----------------------------------------------------
 // MAIN COMPONENT
 // ----------------------------------------------------
-function AssetsPage() {
+export function AssetsPage() {
   const authWs = useAurix(); // For employees list
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -127,13 +127,13 @@ function AssetsPage() {
       if (q) params.set("search", q);
       if (statusFilter && statusFilter !== "all") params.set("status", statusFilter);
       params.set("limit", "100");
-      return api.get(`assets?${params.toString()}`);
+      return api.get<any>(`assets?${params.toString()}`);
     }
   });
 
-  const { data: analyticsData } = useQuery({
+  const { data: analyticsData } = useQuery<any>({
     queryKey: ["assets-analytics"],
-    queryFn: () => api.get("assets/analytics")
+    queryFn: () => api.get<any>("assets/analytics")
   });
 
   const assets: Asset[] = listData?.data?.items || [];
@@ -198,7 +198,7 @@ function AssetsPage() {
 
   const editMutation = useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: any }) => api.put(`assets/${id}`, payload),
-    onSuccess: (res) => {
+    onSuccess: (res: any) => {
       queryClient.invalidateQueries({ queryKey: ["assets"] });
       queryClient.invalidateQueries({ queryKey: ["assets-analytics"] });
       toast.success("Asset specifications updated successfully.");
@@ -228,7 +228,7 @@ function AssetsPage() {
 
   const assignMutation = useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: any }) => api.post(`assets/${id}/assign`, payload),
-    onSuccess: (res) => {
+    onSuccess: (res: any) => {
       queryClient.invalidateQueries({ queryKey: ["assets"] });
       queryClient.invalidateQueries({ queryKey: ["assets-analytics"] });
       toast.success(`Asset assigned successfully!`);
@@ -242,7 +242,7 @@ function AssetsPage() {
 
   const returnMutation = useMutation({
     mutationFn: (id: string) => api.post(`assets/${id}/return`),
-    onSuccess: (res) => {
+    onSuccess: (res: any) => {
       queryClient.invalidateQueries({ queryKey: ["assets"] });
       queryClient.invalidateQueries({ queryKey: ["assets-analytics"] });
       toast.success(`Asset returned and checked back in.`);
@@ -255,7 +255,7 @@ function AssetsPage() {
 
   const transferMutation = useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: any }) => api.post(`assets/${id}/transfer`, payload),
-    onSuccess: (res) => {
+    onSuccess: (res: any) => {
       queryClient.invalidateQueries({ queryKey: ["assets"] });
       queryClient.invalidateQueries({ queryKey: ["assets-analytics"] });
       toast.success(`Transferred asset successfully!`);
@@ -269,7 +269,7 @@ function AssetsPage() {
 
   const lostMutation = useMutation({
     mutationFn: (id: string) => api.post(`assets/${id}/lost`),
-    onSuccess: (res) => {
+    onSuccess: (res: any) => {
       queryClient.invalidateQueries({ queryKey: ["assets"] });
       queryClient.invalidateQueries({ queryKey: ["assets-analytics"] });
       toast.warning(`Asset has been flagged as lost.`);
@@ -282,7 +282,7 @@ function AssetsPage() {
 
   const retiredMutation = useMutation({
     mutationFn: (id: string) => api.post(`assets/${id}/retired`),
-    onSuccess: (res) => {
+    onSuccess: (res: any) => {
       queryClient.invalidateQueries({ queryKey: ["assets"] });
       queryClient.invalidateQueries({ queryKey: ["assets-analytics"] });
       toast.info(`Asset decommissioned and retired.`);
@@ -295,7 +295,7 @@ function AssetsPage() {
 
   const repairMutation = useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: any }) => api.post(`assets/${id}/maintenance`, payload),
-    onSuccess: (res) => {
+    onSuccess: (res: any) => {
       queryClient.invalidateQueries({ queryKey: ["assets"] });
       queryClient.invalidateQueries({ queryKey: ["assets-analytics"] });
       toast.info(`Asset status set to Under Repair`);
@@ -1405,8 +1405,8 @@ function AssetsPage() {
                 
                 {/* QR Canvas */}
                 <div className="my-3 p-1.5 border border-slate-100 bg-white rounded shadow-inner flex flex-col items-center justify-center">
-                  {targetAsset.qrCodeData ? (
-                    <img src={targetAsset.qrCodeData} width={130} height={130} className="w-[130px] h-[130px]" alt="Asset QR Code" />
+                  {(targetAsset as any).qrCodeData ? (
+                    <img src={(targetAsset as any).qrCodeData} width={130} height={130} className="w-[130px] h-[130px]" alt="Asset QR Code" />
                   ) : (
                     <div className="w-[130px] h-[130px] flex items-center justify-center bg-slate-50 text-[10px] text-slate-400">Generating QR...</div>
                   )}
@@ -1530,8 +1530,8 @@ function AssetsPage() {
                     <Label className="text-xs font-semibold text-muted-foreground">Asset QR Sticker Identification</Label>
                     <div className="rounded-xl border border-border bg-muted/30 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                       <div className="rounded bg-white p-2 border border-slate-200 flex flex-col items-center justify-center">
-                        {detailAsset.qrCodeData ? (
-                          <img src={detailAsset.qrCodeData} width={110} height={110} className="w-[110px] h-[110px]" alt="Asset QR Code" />
+                        {(detailAsset as any).qrCodeData ? (
+                          <img src={(detailAsset as any).qrCodeData} width={110} height={110} className="w-[110px] h-[110px]" alt="Asset QR Code" />
                         ) : (
                           <div className="w-[110px] h-[110px] flex items-center justify-center bg-slate-50 text-[10px] text-slate-400">Generating QR...</div>
                         )}

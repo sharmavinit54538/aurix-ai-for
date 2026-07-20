@@ -38,7 +38,7 @@ function newCase(): OnboardingCase {
   };
 }
 
-function OnboardingPage() {
+export function OnboardingPage() {
   const cases = useHrms((s) => s.onboarding);
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<OnboardingCase>(newCase());
