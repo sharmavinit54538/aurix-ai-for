@@ -27,21 +27,21 @@ export function DepartmentAnalytics({ departments }: DepartmentAnalyticsProps) {
   const mounted = useMounted();
   // 1. Data mapping for Headcount Distribution (Pie Chart)
   const headcountData = departments.map((d) => ({
-    name: d.code,
+    name: d.department_code,
     value: d.currentEmployeeCount,
     color: d.themeColor,
   }));
 
   // 2. Data mapping for Budgets (Bar Chart)
   const budgetData = departments.map((d) => ({
-    name: d.code,
+    name: d.department_code,
     budget: d.budget,
     color: d.themeColor,
   }));
 
   // 3. Data mapping for Hiring Capacity & Positions (Bar Chart)
   const hiringData = departments.map((d) => ({
-    name: d.code,
+    name: d.department_code,
     current: d.currentEmployeeCount,
     capacity: d.employeeCapacity,
     positions: d.openPositions,
@@ -49,7 +49,7 @@ export function DepartmentAnalytics({ departments }: DepartmentAnalyticsProps) {
 
   // 4. Data mapping for Efficiency Indicators (Line Chart)
   const metricsData = departments.map((d) => ({
-    name: d.code,
+    name: d.department_code,
     performance: d.performanceScore,
     attendance: d.attendanceScore,
   }));

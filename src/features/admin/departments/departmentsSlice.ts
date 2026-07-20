@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { DepartmentsState } from "./departmentsTypes";
 import {
   addEmployeeToDepartment,
@@ -7,6 +7,7 @@ import {
   bulkSetDepartmentStatus,
   createDepartment,
   deleteDepartment,
+  fetchDepartmentById,
   fetchDepartments,
   importDepartments,
   removeEmployeeFromDepartment,
@@ -14,6 +15,7 @@ import {
   updateDepartment,
 } from "./departmentsThunk";
 import type { Department } from "./types";
+import { mergeDepartmentRecord } from "./utils/departmentTheme";
 
 const initialState: DepartmentsState = {
   departments: [],
@@ -23,6 +25,9 @@ const initialState: DepartmentsState = {
   page: 1,
   limit: 20,
   pages: 1,
+  selectedDepartment: null,
+  selectedDepartmentLoading: false,
+  selectedDepartmentError: null,
 };
 
 function updateEmployeeIds(
@@ -45,6 +50,14 @@ const departmentsSlice = createSlice({
       state.departments = [];
       state.error = null;
     },
+    clearSelectedDepartment(state) {
+      state.selectedDepartment = null;
+      state.selectedDepartmentLoading = false;
+      state.selectedDepartmentError = null;
+    },
+    setSelectedDepartment(state, action: PayloadAction<Department | null>) {
+      state.selectedDepartment = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -64,13 +77,32 @@ const departmentsSlice = createSlice({
         state.loading = false;
         state.error = action.payload ?? "Failed to load departments";
       })
+      .addCase(fetchDepartmentById.pending, (state) => {
+        state.selectedDepartmentLoading = true;
+        state.selectedDepartmentError = null;
+      })
+      .addCase(fetchDepartmentById.fulfilled, (state, action) => {
+        state.selectedDepartmentLoading = false;
+        state.selectedDepartment = mergeDepartmentRecord(
+          state.selectedDepartment,
+          action.payload,
+        );
+      })
+      .addCase(fetchDepartmentById.rejected, (state, action) => {
+        state.selectedDepartmentLoading = false;
+        state.selectedDepartmentError = action.payload ?? "Failed to load department details";
+      })
       .addCase(createDepartment.fulfilled, (state, action) => {
+        console.log("action.payload", action.payload, "state.departments", state.departments);
         state.departments = [action.payload, ...state.departments];
       })
       .addCase(updateDepartment.fulfilled, (state, action) => {
         state.departments = state.departments.map((d) =>
           d.id === action.payload.id ? action.payload : d,
         );
+        if (state.selectedDepartment?.id === action.payload.id) {
+          state.selectedDepartment = action.payload;
+        }
       })
       .addCase(deleteDepartment.fulfilled, (state, action) => {
         state.departments = state.departments.filter((d) => d.id !== action.payload);
@@ -137,5 +169,5 @@ const departmentsSlice = createSlice({
   },
 });
 
-export const { clearDepartments } = departmentsSlice.actions;
+export const { clearDepartments, clearSelectedDepartment, setSelectedDepartment } = departmentsSlice.actions;
 export default departmentsSlice.reducer;

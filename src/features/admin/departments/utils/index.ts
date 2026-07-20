@@ -14,8 +14,10 @@ export function validateDepartmentForm(
   const errors: Record<string, string> = {};
 
   if (!draft.name?.trim()) errors.name = "Department name is required";
-  if (!draft.code?.trim()) errors.code = "Department code is required";
-  else if (draft.code.trim().length < 2) errors.code = "Code must be at least 2 characters";
+
+  if (!draft.departmentHeadId) {
+    errors.departmentHeadId = "Department head is required";
+  }
 
   if (!draft.office?.trim()) errors.office = "Office location is required";
 
@@ -35,13 +37,6 @@ export function validateDepartmentForm(
     if (dup) errors.name = "Department name already exists";
   }
 
-  if (draft.code) {
-    const dup = existingDepartments.find(
-      (d) => d.code.toUpperCase() === draft.code!.toUpperCase() && (!isEdit || d.id !== draft.id)
-    );
-    if (dup) errors.code = "Department code already exists";
-  }
-
   return { valid: Object.keys(errors).length === 0, errors };
 }
 
@@ -58,7 +53,6 @@ export function applyFilters(
     if (q) {
       const match =
         d.name.toLowerCase().includes(q) ||
-        d.code.toLowerCase().includes(q) ||
         d.departmentHeadName.toLowerCase().includes(q) ||
         d.reportingManagerName.toLowerCase().includes(q) ||
         d.office.toLowerCase().includes(q);
@@ -102,7 +96,6 @@ export function applySorting(
 
     switch (field) {
       case "name": va = a.name; vb = b.name; break;
-      case "code": va = a.code; vb = b.code; break;
       case "departmentHeadName": va = a.departmentHeadName; vb = b.departmentHeadName; break;
       case "currentEmployeeCount": va = a.currentEmployeeCount; vb = b.currentEmployeeCount; break;
       case "openPositions": va = a.openPositions; vb = b.openPositions; break;
@@ -134,8 +127,8 @@ export function buildCSV(departments: Department[]): string {
   ];
   const rows = departments.map((d) =>
     [
-      d.name, d.code, d.departmentHeadName, d.reportingManagerName,
-      d.office, d.budget, d.costCenter, d.employeeCapacity,
+      d.name, d.department_code, d.departmentHeadName, d.reportingManagerName,
+      d.office, d.budget, d.cost_center, d.employeeCapacity,
       d.currentEmployeeCount, d.openPositions, d.status, d.createdDate,
     ]
       .map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`)

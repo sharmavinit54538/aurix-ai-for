@@ -20,7 +20,7 @@ export function DepartmentHierarchy({ departments, onView }: DepartmentHierarchy
       map[d.id] = {
         id: d.id,
         name: d.name,
-        code: d.code,
+        department_code: d.department_code,
         headName: d.departmentHeadName,
         themeColor: d.themeColor,
         iconName: d.iconName,
@@ -141,7 +141,7 @@ function TreeNode({ node, departments, onView, depth }: TreeNodeProps) {
             </div>
             <div className="flex items-center gap-1.5 flex-shrink-0">
               <Badge variant="secondary" className="text-[9px] font-semibold tracking-wider font-mono">
-                {node.code}
+                {node?.department_code}
               </Badge>
               {dept && (
                 <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">

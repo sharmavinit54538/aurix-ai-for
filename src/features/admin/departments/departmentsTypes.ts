@@ -10,4 +10,7 @@ export interface DepartmentsState {
   page: number;
   limit: number;
   pages: number;
+  selectedDepartment: Department | null;
+  selectedDepartmentLoading: boolean;
+  selectedDepartmentError: string | null;
 }

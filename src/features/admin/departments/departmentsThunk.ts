@@ -3,60 +3,115 @@ import { apiInstance } from "@/api";
 import { tryApi } from "@/api/utils";
 import { aurix } from "@/lib/aurix-store";
 import type { Department } from "./types";
+import {
+  mergeDepartmentRecord,
+  normalizeIconName,
+  normalizeThemeColor,
+  unwrapDepartmentApiRecord,
+} from "./utils/departmentTheme";
 
-function mapBackendToFrontend(d: any): Department {
-  const openPositions = Number(d.open_positions ?? d.openPositions ?? d.open_positions_count ?? 0);
-  const hiringStatus = String(d.hiring_status ?? d.hiringStatus ?? "").toLowerCase();
+function readScalar(value: unknown): string {
+  if (value == null) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  return "";
+}
+
+export function mapBackendToFrontend(d: any): Department {
+  const data = unwrapDepartmentApiRecord(d);
+  const manager = data.manager_details ?? data.manager ?? data.department_head;
+  let departmentHeadId =
+    data.manager_id != null
+      ? String(data.manager_id)
+      : data.departmentHeadId != null
+        ? String(data.departmentHeadId)
+        : null;
+  let departmentHeadName =
+    readScalar(data.manager_name ?? data.departmentHeadName) ||
+    readScalar((manager as Record<string, unknown> | undefined)?.name) ||
+    readScalar((manager as Record<string, unknown> | undefined)?.full_name) ||
+    "Unassigned";
+
+  if (manager && typeof manager === "object") {
+    const mgr = manager as Record<string, unknown>;
+    if (mgr.id != null) departmentHeadId = String(mgr.id);
+    const mgrName = readScalar(mgr.full_name ?? mgr.fullName ?? mgr.name);
+    if (mgrName) departmentHeadName = mgrName;
+  }
+
+  const openPositions = Number(data.open_positions ?? data.openPositions ?? data.open_positions_count ?? 0);
+  const hiringStatus = String(data.hiring_status ?? data.hiringStatus ?? "").toLowerCase();
+  const rawStatus = String(data.status ?? "active").toLowerCase();
 
   return {
-    id: d.id,
-    name: d.department_name ?? d.name ?? "",
-    code: d.department_code ?? d.code ?? "",
-    description: d.description ?? "",
-    departmentHeadId: d.manager_id ?? d.departmentHeadId ?? null,
-    departmentHeadName: d.manager_name ?? d.departmentHeadName ?? (d.manager_details?.name ?? "Unassigned"),
-    reportingManagerId: d.reporting_manager_id ?? d.reportingManagerId ?? null,
-    reportingManagerName: d.reporting_manager_name ?? d.reportingManagerName ?? "None",
-    office: d.location ?? d.office ?? "",
-    budget: d.budget ?? 50000,
-    costCenter: d.cost_center ?? d.costCenter ?? "",
-    employeeCapacity: d.employee_capacity ?? d.employeeCapacity ?? 30,
-    currentEmployeeCount: d.employee_count ?? d.currentEmployeeCount ?? 0,
-    extensionNumber: "",
-    status: ((d.status ?? d.status)?.toLowerCase() === "active" ? "active" : "inactive") as any,
-    themeColor: d.theme_color ?? d.themeColor ?? "#3b82f6",
-    iconName: d.icon_name ?? d.iconName ?? "Building2",
-    parentId: d.parent_department_id ?? d.parentId ?? null,
-    parentName: d.parent_department_name ?? d.parentName ?? "None",
-    createdDate: d.created_at ? d.created_at.split("T")[0] : (d.createdDate ?? ""),
-    employeeIds: [],
+    id: String(data.id ?? ""),
+    name: readScalar(data.department_name ?? data.dept_name ?? data.title ?? data.name),
+    description: readScalar(data.description),
+    department_code: readScalar(data.department_code ?? data.code),
+    cost_center: readScalar(data.cost_center ?? data.costCenter),
+    departmentHeadId,
+    departmentHeadName,
+    reportingManagerId:
+      data.reporting_manager_id != null
+        ? String(data.reporting_manager_id)
+        : data.reportingManagerId != null
+          ? String(data.reportingManagerId)
+          : null,
+    reportingManagerName: readScalar(data.reporting_manager_name ?? data.reportingManagerName) || "None",
+    office: readScalar(data.location ?? data.office),
+    budget: Number(data.budget ?? 0),
+    employeeCapacity: Number(data.employee_capacity ?? data.employeeCapacity ?? 30),
+    currentEmployeeCount: Number(data.employee_count ?? data.currentEmployeeCount ?? 0),
+    extensionNumber: readScalar(data.extension_number ?? data.extensionNumber),
+    status: (rawStatus === "active" ? "active" : "inactive") as Department["status"],
+    themeColor: normalizeThemeColor(readScalar(data.theme_color ?? data.themeColor) || undefined),
+    iconName: normalizeIconName(readScalar(data.icon_name ?? data.iconName) || undefined),
+    parentId:
+      data.parent_department_id != null
+        ? String(data.parent_department_id)
+        : data.parentId != null
+          ? String(data.parentId)
+          : null,
+    parentName: readScalar(data.parent_department_name ?? data.parentName) || "None",
+    createdDate: data.created_at ? String(data.created_at).split("T")[0] : readScalar(data.createdDate),
+    employeeIds: Array.isArray(data.employee_ids ?? data.employeeIds)
+      ? ((data.employee_ids ?? data.employeeIds) as unknown[]).map(String)
+      : [],
     openPositions,
-    performanceScore: Number(d.performance_score ?? d.performanceScore ?? 85),
-    attendanceScore: Number(d.attendance_score ?? d.attendanceScore ?? 92),
+    performanceScore: Number(data.performance_score ?? data.performanceScore ?? 85),
+    attendanceScore: Number(data.attendance_score ?? data.attendanceScore ?? 92),
     hiringStatus: ["open", "paused", "closed"].includes(hiringStatus)
       ? (hiringStatus as Department["hiringStatus"])
       : openPositions > 0
         ? "open"
         : "closed",
-    recentActivity: Array.isArray(d.recent_activity ?? d.recentActivity)
-      ? (d.recent_activity ?? d.recentActivity)
+    recentActivity: Array.isArray(data.recent_activity ?? data.recentActivity)
+      ? ((data.recent_activity ?? data.recentActivity) as Department["recentActivity"])
       : [],
-    documents: Array.isArray(d.documents) ? d.documents : [],
+    documents: Array.isArray(data.documents) ? data.documents : [],
   };
 }
 
-const mapFrontendToBackend = (d: Partial<Department>) => {
-  return {
-    department_name: d.name?.trim(),
-    description: d.description?.trim() || "No description provided",
-    manager_id: d.departmentHeadId || null,
-    parent_department_id: d.parentId || null,
-    branch_id: null,
-    location: d.office?.trim() || "Headquarters",
-    cost_center: d.costCenter?.trim() || null,
-    status: (d.status ?? "active").toUpperCase(),
-  };
-};
+export function mapFrontendToBackend(department: Partial<Department>): Record<string, unknown> {
+  const payload: Record<string, unknown> = {};
+
+  if (department.name != null) payload.department_name = department.name;
+  if (department.description != null) payload.description = department.description;
+  if (department.department_code != null) payload.department_code = department.department_code;
+  if (department.cost_center != null) payload.cost_center = department.cost_center;
+  if (department.departmentHeadId != null) payload.manager_id = department.departmentHeadId;
+  if (department.reportingManagerId != null) payload.reporting_manager_id = department.reportingManagerId;
+  if (department.office != null) payload.location = department.office;
+  if (department.budget != null) payload.budget = department.budget;
+  if (department.employeeCapacity != null) payload.employee_capacity = department.employeeCapacity;
+  if (department.extensionNumber != null) payload.extension_number = department.extensionNumber;
+  if (department.status != null) payload.status = department.status.toUpperCase();
+  if (department.themeColor != null) payload.theme_color = department.themeColor;
+  if (department.iconName != null) payload.icon_name = department.iconName;
+  if (department.parentId != null) payload.parent_department_id = department.parentId;
+
+  return payload;
+}
 
 function syncWithEmployees(departments: Department[]): Department[] {
   const workspace = aurix.get();
@@ -101,7 +156,7 @@ export const fetchDepartments = createAsyncThunk<
       
       const items = data.items ?? [];
       const mappedItems = items.map((item: any) => mapBackendToFrontend(item));
-      
+
       return {
         items: syncWithEmployees(mappedItems),
         total: data.total ?? 0,
@@ -116,6 +171,23 @@ export const fetchDepartments = createAsyncThunk<
   },
 );
 
+export const fetchDepartmentById = createAsyncThunk<Department, string, { rejectValue: string }>(
+  "departments/fetchDepartmentById",
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await apiInstance.get(`/departments/${id}`);
+      const body = response.data?.data ?? response.data;
+      const raw = unwrapDepartmentApiRecord(body);
+      const mapped = mapBackendToFrontend(raw);
+      const [synced] = syncWithEmployees([mapped]);
+      return synced;
+    } catch (error: any) {
+      const msg = error.response?.data?.message || error.message || "Failed to load department details";
+      return rejectWithValue(msg);
+    }
+  },
+);
+
 export const createDepartment = createAsyncThunk<Department, Partial<Department>, { rejectValue: string }>(
   "departments/createDepartment",
   async (department, { rejectWithValue }) => {
@@ -123,7 +195,12 @@ export const createDepartment = createAsyncThunk<Department, Partial<Department>
       const payload = mapFrontendToBackend(department);
       const response = await apiInstance.post("/departments", payload);
       const data = response.data?.data;
-      return mapBackendToFrontend(data);
+      const mapped = mapBackendToFrontend(data);
+      return {
+        ...mapped,
+        themeColor: normalizeThemeColor(department.themeColor ?? mapped.themeColor),
+        iconName: normalizeIconName(department.iconName ?? mapped.iconName),
+      };
     } catch (error: any) {
       const msg = error.response?.data?.message || error.message || "Failed to create department";
       return rejectWithValue(msg);
@@ -138,7 +215,12 @@ export const updateDepartment = createAsyncThunk<Department, Partial<Department>
       const payload = mapFrontendToBackend(department);
       const response = await apiInstance.put(`/departments/${department.id}`, payload);
       const data = response.data?.data;
-      return mapBackendToFrontend(data);
+      const mapped = mapBackendToFrontend(data);
+      return {
+        ...mapped,
+        themeColor: normalizeThemeColor(department.themeColor ?? mapped.themeColor),
+        iconName: normalizeIconName(department.iconName ?? mapped.iconName),
+      };
     } catch (error: any) {
       const msg = error.response?.data?.message || error.message || "Failed to update department";
       return rejectWithValue(msg);
