@@ -46,7 +46,7 @@ function emptyTravel(): TravelRequest {
   };
 }
 
-function TravelPage() {
+export function TravelPage() {
   const travel = useHrms((s) => s.travel);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<TravelStatus | "all">("all");
