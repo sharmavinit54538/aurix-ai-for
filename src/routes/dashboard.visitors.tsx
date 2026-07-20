@@ -40,7 +40,7 @@ function emptyVisitor(): Visitor {
   };
 }
 
-function VisitorsPage() {
+export function VisitorsPage() {
   const visitors = useHrms((s) => s.visitors);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<VisitorStatus | "all">("all");

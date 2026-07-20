@@ -148,7 +148,7 @@ export const AI_MODULES_LIST: AIModuleDef[] = [
 // ----------------------------------------------------
 // MAIN DASHBOARD COMPONENT
 // ----------------------------------------------------
-function AIHubDashboard() {
+export function AIHubDashboard() {
   return (
     <div className="space-y-6">
       {/* HEADER SECTION */}

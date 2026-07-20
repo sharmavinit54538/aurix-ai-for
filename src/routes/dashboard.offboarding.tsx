@@ -21,7 +21,7 @@ function downloadBundle(employee: string, docs: { name: string }[]) {
   URL.revokeObjectURL(url);
 }
 
-function OffboardingPage() {
+export function OffboardingPage() {
   const cases = useHrms((s) => s.offboarding);
   const total = cases.length;
   const done = cases.filter((c) => c.status === "completed").length;

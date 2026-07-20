@@ -3,7 +3,7 @@ import { aurix } from "@/lib/aurix-store";
 import { isAccessTokenExpired } from "./token-utils";
 import { getTokens, setTokens } from "./tokens";
 
-export const BASE_URL = (import.meta.env.VITE_API_URL as string).replace(/\/$/, "") + "/api/v1";
+export const BASE_URL = ((import.meta.env.VITE_API_URL as string) || "http://localhost:8001").trim().replace(/\/$/, "") + "/api/v1";
 
 const apiInstance = axios.create({
   baseURL: BASE_URL,

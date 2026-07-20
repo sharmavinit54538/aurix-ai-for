@@ -12,7 +12,7 @@ export const Route = createFileRoute("/dashboard/reports")({
 
 const COLORS = ["oklch(0.6 0.2 285)", "oklch(0.7 0.18 320)", "oklch(0.65 0.16 200)", "oklch(0.75 0.15 90)", "oklch(0.55 0.18 25)"];
 
-function ReportsPage() {
+export function ReportsPage() {
   const ws = useAurix();
   const byDept = Object.entries(
     ws.employees.reduce<Record<string, number>>((acc, e) => { const k = e.department || "Unassigned"; acc[k] = (acc[k] || 0) + 1; return acc; }, {}),

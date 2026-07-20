@@ -49,7 +49,7 @@ const AVAILABLE_PROJECTS = [
   { id: "proj_client_x", name: "Acme Corp Web Portal" },
 ];
 
-function TimesheetsPage() {
+export function TimesheetsPage() {
   const ws = useAurix();
   const userRole = ws.user?.role || "employee";
   

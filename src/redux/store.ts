@@ -4,6 +4,10 @@ import employeesReducer from "@/features/admin/employees/employeesSlice";
 import managersReducer from "@/features/admin/managers/managersSlice";
 import performanceReducer from "@/features/admin/performance/performanceSlice";
 import recruitmentReducer from "@/features/admin/recruitment/recruitmentSlice";
+import aiInsightsReducer from "@/store/aiInsights/aiInsightsSlice";
+import settingsReducer from "@/store/settings/settingsSlice";
+import sidebarReducer from "@/store/sidebar/sidebarSlice";
+import employeeHierarchyReducer from "@/store/employeeHierarchy/employeeHierarchySlice";
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +16,10 @@ export const store = configureStore({
     managers: managersReducer,
     performance: performanceReducer,
     recruitment: recruitmentReducer,
+    aiInsights: aiInsightsReducer,
+    settings: settingsReducer,
+    sidebar: sidebarReducer,
+    employeeHierarchy: employeeHierarchyReducer,
   },
 });
 

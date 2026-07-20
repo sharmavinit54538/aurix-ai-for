@@ -33,7 +33,7 @@ const KIND_META: Record<TimelineEventKind, { icon: any; tone: "success" | "warni
 
 const ALL_KINDS = Object.keys(KIND_META) as TimelineEventKind[];
 
-function TimelinePage() {
+export function TimelinePage() {
   const events = useHrms((s) => s.timeline);
   const ready = useDelayedReady(150);
   const [query, setQuery] = useState("");

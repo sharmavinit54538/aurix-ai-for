@@ -46,7 +46,7 @@ interface LeaveRequest {
 
 const LEAVE_TYPES = ["Sick Leave", "Casual Leave", "Vacation Leave"];
 
-function LeavesPage() {
+export function LeavesPage() {
   const ws = useAurix();
   const userRole = ws.user?.role || "employee"; // "admin", "manager", "employee"
   const employeesList = ws.employees || [];
