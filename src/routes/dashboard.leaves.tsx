@@ -1,9 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute ,Link} from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import {
   FileText, Check, X, Calendar, Sparkles, Plus, AlertCircle,
   TrendingUp, Clock, CheckCircle2, XCircle, Info, RefreshCw, Briefcase,
-  HelpCircle, ShieldCheck, Users, Search, UserCheck
+  HelpCircle, ShieldCheck, Users, Search, UserCheck, ChevronLeft
 } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Badge } from "@/components/ui/badge";
@@ -59,7 +59,7 @@ export function LeavesPage() {
   const [balances, setBalances] = useState<LeaveBalance[]>([]);
   // History of logged-in employee
   const [history, setHistory] = useState<LeaveRequest[]>([]);
-  
+
   // Pending approvals (visible to Admin/Manager)
   const [approvals, setApprovals] = useState<LeaveRequest[]>([]);
 
@@ -171,7 +171,7 @@ export function LeavesPage() {
   // Filter employees list for admin
   const filteredEmployees = useMemo(() => {
     if (!adminSearch) return employeesList;
-    return employeesList.filter(e => 
+    return employeesList.filter(e =>
       e.fullName.toLowerCase().includes(adminSearch.toLowerCase()) ||
       e.employeeId.toLowerCase().includes(adminSearch.toLowerCase()) ||
       (e.department || "").toLowerCase().includes(adminSearch.toLowerCase())
@@ -208,7 +208,7 @@ export function LeavesPage() {
       toast.error("Please provide a valid reason (min 5 characters).");
       return;
     }
-    
+
     setLoading(true);
     try {
       const payload = {
@@ -218,7 +218,7 @@ export function LeavesPage() {
         total_days: calculatedDays,
         reason: reason
       };
-      
+
       const res = await api.post<any>("/leaves/apply", payload);
       if (res?.success) {
         toast.success("Leave request submitted successfully!");
@@ -257,9 +257,9 @@ export function LeavesPage() {
     }
     try {
       const id = targetLeave?.id;
-      const res = await api.post<any>(`/leaves/${id}/review`, { 
-        status: "REJECTED", 
-        rejection_reason: rejectionReason 
+      const res = await api.post<any>(`/leaves/${id}/review`, {
+        status: "REJECTED",
+        rejection_reason: rejectionReason
       });
       if (res?.success) {
         toast.info("Leave request sent back.");
@@ -275,20 +275,27 @@ export function LeavesPage() {
 
   return (
     <>
-      <PageHeader 
+      <Link
+        to="/dashboard/workforce"
+        className="mb-2 inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground cursor-pointer group/back"
+      >
+        <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover/back:-translate-x-0.5" />
+        Back to Workforce Hub
+      </Link>
+      <PageHeader
         title={
-          userRole === "admin" 
-            ? "Enterprise Leave Dashboard" 
-            : userRole === "manager" 
-            ? "Team Leaves & Approvals" 
-            : "My Leave Applications"
-        } 
+          userRole === "admin"
+            ? "Enterprise Leave Dashboard"
+            : userRole === "manager"
+              ? "Team Leaves & Approvals"
+              : "My Leave Applications"
+        }
         description={
           userRole === "admin"
             ? "Track organizational leaves, adjust balances, and approve time-off requests company-wide."
             : userRole === "manager"
-            ? "Approve your team's leaves and manage your own time-off records."
-            : "Submit leave requests, view active balances, and track approvals history."
+              ? "Approve your team's leaves and manage your own time-off records."
+              : "Submit leave requests, view active balances, and track approvals history."
         }
         actions={
           <div className="flex gap-2">
@@ -307,22 +314,20 @@ export function LeavesPage() {
         <div className="mb-6 flex border-b border-border bg-muted/20 p-1 rounded-xl max-w-md">
           <button
             onClick={() => setActiveTab("my-leaves")}
-            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
-              activeTab === "my-leaves"
+            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${activeTab === "my-leaves"
                 ? "bg-background text-foreground shadow"
                 : "text-muted-foreground hover:text-foreground"
-            }`}
+              }`}
           >
             My Leaves
           </button>
-          
+
           <button
             onClick={() => setActiveTab("approvals")}
-            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
-              activeTab === "approvals"
+            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${activeTab === "approvals"
                 ? "bg-background text-foreground shadow"
                 : "text-muted-foreground hover:text-foreground"
-            }`}
+              }`}
           >
             Review Requests
             {approvals.length > 0 && (
@@ -335,11 +340,10 @@ export function LeavesPage() {
           {userRole === "admin" && (
             <button
               onClick={() => setActiveTab("employee-balances")}
-              className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
-                activeTab === "employee-balances"
+              className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${activeTab === "employee-balances"
                   ? "bg-background text-foreground shadow"
                   : "text-muted-foreground hover:text-foreground"
-              }`}
+                }`}
             >
               All Balances
             </button>
@@ -361,12 +365,12 @@ export function LeavesPage() {
             {/* Balance Cards Deck */}
             <div className="grid gap-4 sm:grid-cols-3">
               {balances.map((b) => {
-                const color = b.leave_type.includes("Sick") 
+                const color = b.leave_type.includes("Sick")
                   ? "from-amber-500/10 to-orange-500/5 text-orange-500 border-orange-500/20"
                   : b.leave_type.includes("Casual")
-                  ? "from-sky-500/10 to-blue-500/5 text-sky-500 border-sky-500/20"
-                  : "from-emerald-500/10 to-teal-500/5 text-emerald-500 border-emerald-500/20";
-                
+                    ? "from-sky-500/10 to-blue-500/5 text-sky-500 border-sky-500/20"
+                    : "from-emerald-500/10 to-teal-500/5 text-emerald-500 border-emerald-500/20";
+
                 return (
                   <Card key={b.leave_type} className={`border bg-gradient-to-br backdrop-blur-xl transition-all duration-300 hover:shadow-md ${color}`}>
                     <CardHeader className="pb-2">
@@ -419,9 +423,8 @@ export function LeavesPage() {
                         <TableCell className="py-4">
                           <Badge
                             variant={rec.status === "approved" ? "secondary" : rec.status === "rejected" ? "destructive" : "outline"}
-                            className={`text-xs capitalize ${
-                              rec.status === "pending" ? "bg-amber-500/15 text-amber-500 border border-amber-500/30" : ""
-                            }`}
+                            className={`text-xs capitalize ${rec.status === "pending" ? "bg-amber-500/15 text-amber-500 border border-amber-500/30" : ""
+                              }`}
                           >
                             {rec.status}
                           </Badge>
@@ -579,11 +582,10 @@ export function LeavesPage() {
                   </TableHeader>
                   <TableBody>
                     {filteredEmployees.map((emp) => (
-                      <TableRow 
-                        key={emp.id} 
-                        className={`border-b border-border/80 hover:bg-muted/5 transition-all cursor-pointer ${
-                          selectedAdminEmp?.id === emp.id ? "bg-indigo-500/5 hover:bg-indigo-500/5 border-l-2 border-l-indigo-500" : ""
-                        }`}
+                      <TableRow
+                        key={emp.id}
+                        className={`border-b border-border/80 hover:bg-muted/5 transition-all cursor-pointer ${selectedAdminEmp?.id === emp.id ? "bg-indigo-500/5 hover:bg-indigo-500/5 border-l-2 border-l-indigo-500" : ""
+                          }`}
                         onClick={() => handleViewEmployeeBalances(emp)}
                       >
                         <TableCell className="pl-6 py-4 font-mono text-xs">{emp.employeeId}</TableCell>

@@ -1,9 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute,Link } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import {
   Timer, Plus, Trash2, CheckCircle2, XCircle, Sparkles, Calendar,
   FileText, ChevronLeft, ChevronRight, Save, Send, AlertCircle, Clock,
-  ArrowRight, ShieldCheck, UserCheck, RefreshCw, BarChart2
+  ArrowRight, ShieldCheck, UserCheck, RefreshCw, BarChart2,
 } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Input } from "@/components/ui/input";
@@ -52,10 +52,10 @@ const AVAILABLE_PROJECTS = [
 export function TimesheetsPage() {
   const ws = useAurix();
   const userRole = ws.user?.role || "employee";
-  
+
   // Tabs: 'my-timesheet' | 'approvals' | 'history'
   const [activeTab, setActiveTab] = useState<string>("my-timesheet");
-  
+
   // Date Navigation (0 = current week, -1 = last week, etc.)
   const [weekOffset, setWeekOffset] = useState<number>(0);
 
@@ -66,7 +66,7 @@ export function TimesheetsPage() {
 
   // Timesheet status
   const [timesheetStatus, setTimesheetStatus] = useState<"draft" | "pending" | "approved" | "rejected">("draft");
-  
+
   // Page Loading indicator
   const [loading, setLoading] = useState(false);
 
@@ -204,10 +204,10 @@ export function TimesheetsPage() {
         setHistoryRecords(res.data.map((t: any) => ({
           id: t.id,
           weekRange: formatDateRange(new Date(t.week_start_date)),
-          totalHours: t.entries.reduce((sum: number, e: any) => sum + 
+          totalHours: t.entries.reduce((sum: number, e: any) => sum +
             (parseFloat(e.monday_hours) + parseFloat(e.tuesday_hours) + parseFloat(e.wednesday_hours) +
-             parseFloat(e.thursday_hours) + parseFloat(e.friday_hours) + parseFloat(e.saturday_hours) +
-             parseFloat(e.sunday_hours)), 0),
+              parseFloat(e.thursday_hours) + parseFloat(e.friday_hours) + parseFloat(e.saturday_hours) +
+              parseFloat(e.sunday_hours)), 0),
           status: t.status.toLowerCase(),
           submittedOn: t.submitted_at ? new Date(t.submitted_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—",
           approvedBy: t.approved_by_id ? "Manager" : "—",
@@ -229,16 +229,16 @@ export function TimesheetsPage() {
           employeeName: t.employee?.fullName || "Employee",
           department: t.employee?.department || "Operations",
           weekRange: formatDateRange(new Date(t.week_start_date)),
-          totalHours: t.entries.reduce((sum: number, e: any) => sum + 
+          totalHours: t.entries.reduce((sum: number, e: any) => sum +
             (parseFloat(e.monday_hours) + parseFloat(e.tuesday_hours) + parseFloat(e.wednesday_hours) +
-             parseFloat(e.thursday_hours) + parseFloat(e.friday_hours) + parseFloat(e.saturday_hours) +
-             parseFloat(e.sunday_hours)), 0),
+              parseFloat(e.thursday_hours) + parseFloat(e.friday_hours) + parseFloat(e.saturday_hours) +
+              parseFloat(e.sunday_hours)), 0),
           status: t.status.toLowerCase(),
           details: t.entries.map((e: any) => ({
             project: AVAILABLE_PROJECTS.find(p => p.id === e.project_id)?.name || e.project_id,
             hours: parseFloat(e.monday_hours) + parseFloat(e.tuesday_hours) + parseFloat(e.wednesday_hours) +
-                   parseFloat(e.thursday_hours) + parseFloat(e.friday_hours) + parseFloat(e.saturday_hours) +
-                   parseFloat(e.sunday_hours),
+              parseFloat(e.thursday_hours) + parseFloat(e.friday_hours) + parseFloat(e.saturday_hours) +
+              parseFloat(e.sunday_hours),
             desc: e.description
           }))
         })));
@@ -322,7 +322,7 @@ export function TimesheetsPage() {
         sunday_hours: r.hours[6],
         description: r.description
       }));
-      
+
       const res = await api.post<any>(`/timesheets/weekly?week_start_date=${formattedDate}`, entries);
       if (res?.success) {
         setTimesheetStatus("draft");
@@ -357,7 +357,7 @@ export function TimesheetsPage() {
         sunday_hours: r.hours[6],
         description: r.description
       }));
-      
+
       // Save entries first
       await api.post(`/timesheets/weekly?week_start_date=${formattedDate}`, entries);
       // Submit
@@ -401,7 +401,7 @@ export function TimesheetsPage() {
       setAiLoading(false);
       setAiAutofillOpen(false);
       setTimesheetStatus("draft");
-      
+
       // Auto-save entries to database draft
       try {
         const formattedDate = getLocalDateString(startOfWeekDate);
@@ -462,13 +462,20 @@ export function TimesheetsPage() {
 
   return (
     <>
-      <PageHeader 
-        title="Timesheets" 
+      <Link 
+        to="/dashboard/workforce"
+        className="mb-2 inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground cursor-pointer group/back"
+      >
+        <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover/back:-translate-x-0.5" />
+        Back to Workforce Hub
+      </Link>
+      <PageHeader
+        title="Timesheets"
         description="Log your daily work hours, categorize by projects, and track approval processes."
         actions={
           <div className="flex gap-2">
             {userRole !== "admin" && userRole !== "manager" && (
-              <Button 
+              <Button
                 variant="outline"
                 className="gap-2 border-dashed border-indigo-500/50 hover:bg-indigo-500/10 text-indigo-400"
                 onClick={() => {
@@ -480,7 +487,7 @@ export function TimesheetsPage() {
                 {activeTab === "approvals" ? "Show Employee Grid" : "Simulate Manager Approvals"}
               </Button>
             )}
-            
+
             <Button
               onClick={() => setAiAutofillOpen(true)}
               disabled={timesheetStatus === "pending" || timesheetStatus === "approved"}
@@ -497,22 +504,20 @@ export function TimesheetsPage() {
       <div className="mb-6 flex border-b border-border bg-muted/20 p-1 rounded-xl max-w-md">
         <button
           onClick={() => setActiveTab("my-timesheet")}
-          className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
-            activeTab === "my-timesheet"
+          className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${activeTab === "my-timesheet"
               ? "bg-background text-foreground shadow"
               : "text-muted-foreground hover:text-foreground"
-          }`}
+            }`}
         >
           My Timesheet
         </button>
         {(userRole === "admin" || userRole === "manager" || activeTab === "approvals") && (
           <button
             onClick={() => setActiveTab("approvals")}
-            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
-              activeTab === "approvals"
+            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${activeTab === "approvals"
                 ? "bg-background text-foreground shadow"
                 : "text-muted-foreground hover:text-foreground"
-            }`}
+              }`}
           >
             Team Approvals
             {approvals.filter(a => a.status === "pending").length > 0 && (
@@ -524,11 +529,10 @@ export function TimesheetsPage() {
         )}
         <button
           onClick={() => setActiveTab("history")}
-          className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
-            activeTab === "history"
+          className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${activeTab === "history"
               ? "bg-background text-foreground shadow"
               : "text-muted-foreground hover:text-foreground"
-          }`}
+            }`}
         >
           History Logs
         </button>
@@ -605,14 +609,13 @@ export function TimesheetsPage() {
                         timesheetStatus === "approved"
                           ? "secondary"
                           : timesheetStatus === "rejected"
-                          ? "destructive"
-                          : timesheetStatus === "pending"
-                          ? "outline"
-                          : "default"
+                            ? "destructive"
+                            : timesheetStatus === "pending"
+                              ? "outline"
+                              : "default"
                       }
-                      className={`text-xs px-2 py-0.5 ${
-                        timesheetStatus === "pending" ? "bg-amber-500/15 text-amber-500 border border-amber-500/30" : ""
-                      }`}
+                      className={`text-xs px-2 py-0.5 ${timesheetStatus === "pending" ? "bg-amber-500/15 text-amber-500 border border-amber-500/30" : ""
+                        }`}
                     >
                       {timesheetStatus === "pending" ? "Pending Approval" : timesheetStatus}
                     </Badge>
@@ -639,7 +642,7 @@ export function TimesheetsPage() {
                   </CardTitle>
                   <CardDescription>Select project and add log details for each day.</CardDescription>
                 </div>
-                
+
                 {/* Week Selector */}
                 <div className="flex items-center gap-2 bg-muted/40 p-1 rounded-lg border border-border">
                   <Button
@@ -968,9 +971,8 @@ export function TimesheetsPage() {
                       <TableCell className="py-4">
                         <Badge
                           variant={rec.status === "approved" ? "secondary" : rec.status === "rejected" ? "destructive" : "outline"}
-                          className={`text-xs ${
-                            rec.status === "pending" ? "bg-amber-500/15 text-amber-500 border border-amber-500/30" : ""
-                          }`}
+                          className={`text-xs ${rec.status === "pending" ? "bg-amber-500/15 text-amber-500 border border-amber-500/30" : ""
+                            }`}
                         >
                           {rec.status === "pending" ? "Pending Approval" : rec.status}
                         </Badge>

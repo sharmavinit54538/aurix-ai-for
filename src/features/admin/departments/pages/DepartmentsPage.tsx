@@ -1,4 +1,4 @@
-import { Plus, Upload, Building, BarChart, Network } from "lucide-react";
+import { Plus, Upload, Building, BarChart, Network, Link, ChevronLeft } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,12 +11,21 @@ import { DepartmentsDirectoryTab } from "../components/DepartmentsDirectoryTab";
 // import { DepartmentsBulkDialogs } from "../components/DepartmentsBulkDialogs";
 import { DepartmentsDeleteDialogs } from "../components/DepartmentsDeleteDialogs";
 import { useDepartmentsPage } from "../hooks/useDepartmentsPage";
+import { Link as TanstackLink } from "@tanstack/react-router";
+
 
 export function DepartmentsPage() {
   const page = useDepartmentsPage();
 
   return (
     <div className="space-y-6">
+      <TanstackLink
+        to="/dashboard/workforce"
+        className="mb-2 inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground cursor-pointer group/back"
+      >
+        <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover/back:-translate-x-0.5" />
+        Back to Workforce Hub
+      </TanstackLink>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <PageHeader
           title="Departments Manager"

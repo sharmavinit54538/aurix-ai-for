@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect, useRef } from "react";
 import {
   AlertCircle, Award, BarChart3, Bell, Bookmark, BookOpen, Brain, Briefcase,
@@ -13,6 +13,14 @@ import { useAurix } from "@/lib/aurix-store";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { GlassCard, StatCard } from "@/components/hrms/Shared";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 // ── Route ─────────────────────────────────────────────────────
 export const Route = createFileRoute("/dashboard/attendance/checkin")({
@@ -544,13 +552,25 @@ function CheckInPage() {
       {/* ── Page Header ── */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <nav className="mb-1 flex items-center gap-1 text-xs text-muted-foreground">
-            <span>Dashboard</span>
-            <ChevronRight className="h-3 w-3" />
-            <span>Attendance</span>
-            <ChevronRight className="h-3 w-3" />
-            <span className="text-foreground font-medium">Check In</span>
-          </nav>
+          <Breadcrumb className="mb-1">
+            <BreadcrumbList className="text-xs">
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/dashboard/workforce">Workforce</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/dashboard/workforce/attendance">Attendance</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage className="font-medium">Check In</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
           <h1 className="font-display text-2xl font-semibold tracking-tight">Check In / Check Out</h1>
           <p className="mt-1 text-sm text-muted-foreground">{nowDateStr()}</p>
         </div>

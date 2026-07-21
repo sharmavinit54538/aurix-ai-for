@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import {
-  CalendarDays, Check, Clock, X, RefreshCw, Fingerprint, ScrollText, Palmtree
+  CalendarDays, Check, Clock, X, RefreshCw, Fingerprint, ScrollText, Palmtree,
+  ChevronLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -90,6 +91,13 @@ export function AttendancePage() {
   return (
     <div className="space-y-6">
       {/* HEADER SECTION */}
+      <Link
+        to="/dashboard/workforce"
+        className="mb-2 inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground cursor-pointer group/back"
+      >
+        <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover/back:-translate-x-0.5" />
+        Back to Workforce Hub
+      </Link>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
@@ -103,6 +111,7 @@ export function AttendancePage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
+
           <div className="flex items-center bg-card/65 border border-border/80 p-0.5 rounded-lg">
             <Button
               variant={viewMode === "modules" ? "secondary" : "ghost"}
