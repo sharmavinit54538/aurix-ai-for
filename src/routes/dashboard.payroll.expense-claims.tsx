@@ -1,12 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { lazyFeaturePage } from "@/routes/_lib/lazyFeaturePage";
+import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
 
-const ExpensesPage = lazyFeaturePage(
-  () => import("./dashboard.expenses") as any,
-  "ExpensesPage"
-);
+const ExpensesPage = lazyFeaturePage(() => import("@/pages/ExpensesPage"));
 
 export const Route = createFileRoute("/dashboard/payroll/expense-claims")({
-  head: () => ({ meta: [{ title: "Expense Claims — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Expenses — Aurix" }] }),
   component: ExpensesPage,
 });

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { aurix } from "@/lib/aurix-store";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { selectCompanySettings, selectSettingsLoading, selectSettingsSubmitting } from "@/store/settings/settingsSelectors";
 import { fetchCompanySettings, updateCompanySettings } from "@/store/settings/settingsThunk";
@@ -54,7 +55,16 @@ function CompanySettingsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await dispatch(updateCompanySettings(form)).unwrap();
+      const res = await dispatch(updateCompanySettings(form)).unwrap();
+      if (res?.name) {
+        const currentWs = aurix.get();
+        aurix.set({
+          company: {
+            id: res.id || currentWs.company?.id || "",
+            name: res.name,
+          },
+        });
+      }
       toast.success("Company profile updated successfully!");
     } catch {
       toast.error("Failed to update company profile");

@@ -60,7 +60,8 @@ const employeesSlice = createSlice({
       })
       .addCase(fetchEmployees.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload ?? action.error.message ?? "Something went wrong";
+        const err = action.payload;
+        state.error = typeof err === "string" ? err : err?.message ?? action.error.message ?? "Something went wrong";
       })
         .addCase(deleteEmployee.pending, (state) => {
         state.submitting = true;

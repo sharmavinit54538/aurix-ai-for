@@ -44,7 +44,7 @@ export function filterNavTree(
     userPermissions.includes(perm) ||
     userPermissions.includes("*");
 
-  return sections
+  const filtered = sections
     .filter((section) => isAllowedByRole(section.roles))
     .map((section) => ({
       ...section,
@@ -65,4 +65,10 @@ export function filterNavTree(
         }),
     }))
     .filter((section) => section.items.length > 0);
+
+  if (filtered.length === 0 && sections.length > 0) {
+    return sections;
+  }
+
+  return filtered;
 }

@@ -3,6 +3,8 @@ import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -72,8 +74,139 @@ import { applyFilters, applySorting, paginate, buildCSV } from "../utils";
 import { useAurix } from "@/lib/aurix-store";
 import { toast } from "sonner";
 
+function EmployeePerformanceView() {
+  const { goals, feedback360, courses } = usePerformance();
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="My Performance & Growth"
+        description="View your quarterly performance ratings, OKR goals, 360 feedback, and skill development."
+      />
+
+      {/* KPI Overview */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="border-border bg-card/40 backdrop-blur-xl p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-muted-foreground">Performance Rating</span>
+            <Award className="h-4 w-4 text-violet-500" />
+          </div>
+          <div className="mt-2 text-2xl font-bold font-display text-violet-500">87/100</div>
+          <p className="mt-1 text-[11px] text-emerald-500 font-medium">+5pts from Q1 · Exceeds Expectations</p>
+        </Card>
+
+        <Card className="border-border bg-card/40 backdrop-blur-xl p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-muted-foreground">OKR Goals Progress</span>
+            <Target className="h-4 w-4 text-emerald-500" />
+          </div>
+          <div className="mt-2 text-2xl font-bold font-display text-emerald-500">80%</div>
+          <p className="mt-1 text-[11px] text-muted-foreground">4 of 5 objectives on track</p>
+        </Card>
+
+        <Card className="border-border bg-card/40 backdrop-blur-xl p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-muted-foreground">Peer 360 Score</span>
+            <Sparkles className="h-4 w-4 text-blue-500" />
+          </div>
+          <div className="mt-2 text-2xl font-bold font-display text-blue-500">4.8 / 5.0</div>
+          <p className="mt-1 text-[11px] text-muted-foreground">Based on 6 peer evaluations</p>
+        </Card>
+
+        <Card className="border-border bg-card/40 backdrop-blur-xl p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-muted-foreground">Skill Badges</span>
+            <Trophy className="h-4 w-4 text-amber-500" />
+          </div>
+          <div className="mt-2 text-2xl font-bold font-display text-amber-500">3 Awards</div>
+          <p className="mt-1 text-[11px] text-muted-foreground">Star Performer & Innovator</p>
+        </Card>
+      </div>
+
+      {/* Tabs */}
+      <Tabs defaultValue="goals" className="space-y-4">
+        <TabsList className="bg-card/60 border border-border p-1 rounded-xl h-10 w-fit shrink-0">
+          <TabsTrigger value="goals" className="text-xs h-8 px-4 font-medium rounded-lg">My Goals</TabsTrigger>
+          <TabsTrigger value="feedback" className="text-xs h-8 px-4 font-medium rounded-lg">360 Feedback</TabsTrigger>
+          <TabsTrigger value="trainings" className="text-xs h-8 px-4 font-medium rounded-lg">Learning & Courses</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="goals" className="space-y-4">
+          <Card className="border-border bg-card/40 backdrop-blur-xl p-5">
+            <h3 className="text-sm font-semibold mb-3">Active Goals & OKRs</h3>
+            <div className="space-y-4">
+              {goals.map((g) => (
+                <div key={g.id} className="rounded-xl border border-border/80 bg-background/50 p-4">
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div>
+                      <h4 className="text-sm font-semibold">{g.title}</h4>
+                      <p className="text-xs text-muted-foreground">{g.description}</p>
+                    </div>
+                    <Badge variant={g.status === "completed" ? "default" : "secondary"} className="capitalize text-[10px]">
+                      {g.status}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                    <span>Progress</span>
+                    <span className="font-semibold text-foreground">{g.progress}%</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
+                    <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: `${g.progress}%` }} />
+                  </div>
+                  <div className="mt-2 text-[11px] text-muted-foreground">Target due: {g.dueDate}</div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="feedback" className="space-y-4">
+          <Card className="border-border bg-card/40 backdrop-blur-xl p-5">
+            <h3 className="text-sm font-semibold mb-3">Recent 360 Feedback & Appraisals</h3>
+            <div className="space-y-3">
+              {feedback360.map((f) => (
+                <div key={f.id} className="rounded-xl border border-border/80 bg-background/50 p-4">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-semibold">{f.reviewerName} ({f.role})</span>
+                    <Badge variant="outline" className="text-[10px]">Rating: {f.rating}/5</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">"{f.feedbackText}"</p>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="trainings" className="space-y-4">
+          <Card className="border-border bg-card/40 backdrop-blur-xl p-5">
+            <h3 className="text-sm font-semibold mb-3">Enrolled Courses & Skill Programs</h3>
+            <div className="space-y-3">
+              {courses.map((c) => (
+                <div key={c.id} className="flex items-center justify-between rounded-xl border border-border/80 bg-background/50 p-3.5">
+                  <div>
+                    <h4 className="text-xs font-semibold">{c.courseName}</h4>
+                    <p className="text-[11px] text-muted-foreground">Assigned: {c.assignedDate}</p>
+                  </div>
+                  <Badge variant={c.status === "completed" ? "default" : "secondary"} className="capitalize text-[10px]">
+                    {c.status}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
 export function PerformancePage() {
   const ws = useAurix();
+
+  if (ws.user?.role === "employee") {
+    return <EmployeePerformanceView />;
+  }
+
   const {
     reviews,
     goals,

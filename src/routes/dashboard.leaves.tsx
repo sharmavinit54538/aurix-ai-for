@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
 export const Route = createFileRoute("/dashboard/leaves")({
-  head: () => ({ meta: [{ title: "Leaves — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Leave Management — Aurix" }] }),
   component: LeavesPage,
 });
 

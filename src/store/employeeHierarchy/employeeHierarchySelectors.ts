@@ -106,7 +106,7 @@ function matchesFilterAndSearch(
     node.reporting_to === filters.reportingManagerId ||
     node.id === filters.reportingManagerId;
 
-  return matchesSearch && matchesDept && matchesDesig && matchesLoc && matchesType && matchesMgr;
+  return Boolean(matchesSearch && matchesDept && matchesDesig && matchesLoc && matchesType && matchesMgr);
 }
 
 function filterNodeTree(

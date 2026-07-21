@@ -63,14 +63,14 @@ export function ManagersTable({
     return selectedIds.length > 0 && selectedIds.length < managers.length;
   }, [managers, selectedIds]);
 
-  const statusColors: Record<Manager["status"], string> = {
+  const statusColors: Partial<Record<Manager["status"], string>> = {
     active: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
     probation: "bg-amber-500/10 text-amber-500 border-amber-500/20",
     inactive: "bg-rose-500/10 text-rose-500 border-rose-500/20",
     on_leave: "bg-blue-500/10 text-blue-500 border-blue-500/20",
   };
 
-  const statusLabels: Record<Manager["status"], string> = {
+  const statusLabels: Partial<Record<Manager["status"], string>> = {
     active: "Active",
     probation: "Probation",
     inactive: "Inactive",

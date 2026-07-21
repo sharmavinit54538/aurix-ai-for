@@ -36,7 +36,7 @@ function mapAuthUser(data: AuthUserPayload) {
     },
     company: {
       id: companyId,
-      name: data.company_name || data.name,
+      name: data.company_name || ws.company?.name || "Workspace",
     },
   };
 }
@@ -51,7 +51,10 @@ export function persistAuthSession(
 
 export function getPostLoginRoute(user: AuthUserPayload): string {
   if (!user.is_verified) return "/verify-email";
-  if (!user.onboarding_completed) return "/onboarding";
+  if (!user.onboarding_completed) {
+    if (user.role === "admin") return "/onboarding";
+    return "/employee-onboarding";
+  }
   if (user.role === "manager") return "/dashboard/manager";
   if (user.role === "employee") return "/dashboard/employee";
   return "/dashboard";

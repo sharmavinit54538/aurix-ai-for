@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { EmployeeHierarchyView } from "@/features/admin/employees/components/EmployeeHierarchyView";
 
 export const Route = createFileRoute("/dashboard/people/")({
-  head: () => ({ meta: [{ title: "People & Org Chart — Aurix" }] }),
+  head: () => ({ meta: [{ title: "People Hub — Aurix" }] }),
   component: PeopleHubPage,
 });
 

@@ -60,14 +60,14 @@ export function useDepartments() {
       dispatch(bulkSetDepartmentStatus({ ids, status })),
     bulkAssignManager: (ids: string[], managerId: string, managerName: string) =>
       dispatch(bulkAssignDepartmentManager({ ids, managerId, managerName })),
-    importDepartments: (file: File) => dispatch(importDepartments(file)),
+    importDepartments: (depts: Department[]) => dispatch(importDepartments(depts)),
     addEmployeeToDept: (deptId: string, employeeId: string) =>
       dispatch(addEmployeeToDepartment({ deptId, employeeId })),
     removeEmployeeFromDept: (deptId: string, employeeId: string) =>
       dispatch(removeEmployeeFromDepartment({ deptId, employeeId })),
     transferEmployees: (fromDeptId: string, toDeptId: string) =>
       dispatch(transferDepartmentEmployees({ fromDeptId, toDeptId })),
-    promoteEmployee: (deptId: string, employeeId: string, newRole: string) =>
-      dispatch(promoteDepartmentEmployee({ deptId, employeeId, newRole })),
+    promoteEmployee: (_deptId: string, employeeId: string, newRole: string) =>
+      dispatch(promoteDepartmentEmployee({ employeeId, newDesignation: newRole })),
   };
 }

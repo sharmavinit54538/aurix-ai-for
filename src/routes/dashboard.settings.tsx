@@ -3,6 +3,7 @@ import {
   Bell, Building2, CreditCard, Layers, ScrollText, Shield, ShieldCheck, Sliders, User,
 } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
+import { useAurix } from "@/lib/aurix-store";
 
 export const Route = createFileRoute("/dashboard/settings")({
   head: () => ({ meta: [{ title: "Settings — Aurix" }] }),
@@ -22,16 +23,30 @@ const SETTINGS_NAV = [
 ] as const;
 
 function SettingsLayout() {
+  const ws = useAurix();
+  const role = ws.user?.role ?? "admin";
+  const isEmployee = role === "employee";
+
+  const visibleSettingsNav = isEmployee
+    ? SETTINGS_NAV.filter((item) =>
+        ["/dashboard/settings/profile", "/dashboard/settings/notifications", "/dashboard/settings/security"].includes(item.to)
+      )
+    : SETTINGS_NAV;
+
   return (
     <>
       <PageHeader
-        title="Settings"
-        description="Manage workspace configurations, access control, billing, security, and profile."
+        title={isEmployee ? "My Profile & Preferences" : "Settings"}
+        description={
+          isEmployee
+            ? "Manage your personal profile, security credentials, and notification preferences."
+            : "Manage workspace configurations, access control, billing, security, and profile."
+        }
       />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_1fr]">
         <aside className="space-y-1">
-          {SETTINGS_NAV.map((item) => {
+          {visibleSettingsNav.map((item) => {
             const Icon = item.icon;
             return (
               <Link

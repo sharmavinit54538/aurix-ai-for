@@ -1,10 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { lazyFeaturePage } from "@/routes/_lib/lazyFeaturePage";
+import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
 
-const AIInsightsPage = lazyFeaturePage(
-  () => import("./dashboard.ai-insights") as any,
-  "AIInsightsPage"
-);
+const AIInsightsPage = lazyFeaturePage(() => import("@/pages/AIInsightsPage"));
 
 export const Route = createFileRoute("/dashboard/analytics/ai-insights")({
   head: () => ({ meta: [{ title: "AI Insights — Aurix" }] }),

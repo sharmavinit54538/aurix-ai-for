@@ -11,14 +11,15 @@ import { toast } from "sonner";
 export function ResetPasswordPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { email: searchEmail, resetToken: searchResetToken } = useSearch({ strict: false }) as {
+  const { email: searchEmail, resetToken: searchResetToken, token: searchToken } = useSearch({ strict: false }) as {
     email?: string;
     resetToken?: string;
+    token?: string;
   };
 
   const state = location.state as { email?: string; resetToken?: string } | undefined;
   const email = searchEmail || state?.email || "";
-  const resetToken = searchResetToken || state?.resetToken || "";
+  const resetToken = searchResetToken || searchToken || state?.resetToken || "";
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -27,11 +28,11 @@ export function ResetPasswordPage() {
   const [validationError, setValidationError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!email || !resetToken) {
-      toast.error("Invalid reset session. Please request OTP again.");
+    if (!resetToken) {
+      toast.error("Invalid reset session. Please request password reset again.");
       navigate({ to: "/forgot-password" });
     }
-  }, [email, resetToken, navigate]);
+  }, [resetToken, navigate]);
 
   const validatePassword = () => {
     if (password.length < 8) {
@@ -68,11 +69,11 @@ export function ResetPasswordPage() {
     setLoading(true);
 
     try {
-      const res = await api.post("auth/reset-password", {
-        email,
-        resetToken,
-        new_password: password,
-      });
+      const res = (await api.post("auth/reset-password", {
+        token: resetToken,
+        password: password,
+        confirm_password: confirmPassword,
+      })) as any;
 
       if (res.success) {
         toast.success("Password updated successfully.");
