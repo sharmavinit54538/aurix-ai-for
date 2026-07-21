@@ -313,14 +313,14 @@ export function DepartmentsPage() {
 
   const handleConfirmDelete = async () => {
     if (deptToDelete) {
-      const action = await deleteDepartment(deptToDelete.id);
-      if (deleteDepartment.fulfilled.match(action)) {
+      const action = (await deleteDepartment(deptToDelete.id)) as any;
+      if (action.meta?.requestStatus === "fulfilled") {
         toast.success("Department Deleted Successfully");
         setSelectedIds((prev) => prev.filter((id) => id !== deptToDelete.id));
         reloadDepartments();
       } else {
         const errorMsg = action.payload || "Failed to delete department";
-        toast.error(errorMsg);
+        toast.error(typeof errorMsg === "string" ? errorMsg : "Failed to delete department");
       }
       setDeleteAlertOpen(false);
       setDeptToDelete(null);
@@ -336,20 +336,20 @@ export function DepartmentsPage() {
     setIsSaving(true);
     try {
       const exists = departments.some((dept) => dept.id === d.id);
-      let action;
+      let action: any;
       if (exists && d.id) {
         action = await updateDepartment(d as any);
       } else {
         action = await createDepartment(d);
       }
 
-      if (updateDepartment.fulfilled.match(action) || createDepartment.fulfilled.match(action)) {
+      if (action.meta?.requestStatus === "fulfilled") {
         toast.success(exists ? "Department Updated Successfully" : "Department Created Successfully");
         setFormOpen(false);
         reloadDepartments();
       } else {
         const errorMsg = action.payload || "Failed to save department";
-        toast.error(errorMsg);
+        toast.error(typeof errorMsg === "string" ? errorMsg : "Failed to save department");
       }
     } catch (err: any) {
       toast.error(err.message || "An unexpected error occurred");
@@ -378,8 +378,8 @@ export function DepartmentsPage() {
   };
 
   const handleConfirmBulkDelete = async () => {
-    const action = await bulkDelete(selectedIds);
-    if (bulkDelete.fulfilled.match(action)) {
+    const action = (await bulkDelete(selectedIds)) as any;
+    if (action.meta?.requestStatus === "fulfilled") {
       toast.success(`${selectedIds.length} Departments Deleted Successfully`);
       setSelectedIds([]);
       reloadDepartments();
@@ -990,7 +990,9 @@ export function DepartmentsPage() {
         onAddEmployee={addEmployeeToDept}
         onRemoveEmployee={removeEmployeeFromDept}
         onTransferEmployee={onTransferEmployee}
-        onPromoteEmployee={promoteEmployee}
+        onPromoteEmployee={(empId, newDesignation) => {
+          if (profileDept) promoteEmployee(profileDept.id, empId, newDesignation);
+        }}
         onUpdateDepartment={handleSaveDepartment}
       />
 

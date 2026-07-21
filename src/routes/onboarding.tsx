@@ -176,7 +176,7 @@ function OnboardingPage() {
       return;
     }
     if (!ws.user.emailVerified) {
-      navigate({ to: "/verify-email" });
+      navigate({ to: "/verify-email" as any });
       return;
     }
     if (ws.user.onboardingComplete) {

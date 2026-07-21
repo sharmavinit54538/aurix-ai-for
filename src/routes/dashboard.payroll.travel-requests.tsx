@@ -1,10 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { lazyFeaturePage } from "@/routes/_lib/lazyFeaturePage";
+import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
 
-const TravelPage = lazyFeaturePage(
-  () => import("./dashboard.travel") as any,
-  "TravelPage"
-);
+const TravelPage = lazyFeaturePage(() => import("@/pages/TravelPage"));
 
 export const Route = createFileRoute("/dashboard/payroll/travel-requests")({
   head: () => ({ meta: [{ title: "Travel Requests — Aurix" }] }),

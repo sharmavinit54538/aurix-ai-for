@@ -19,11 +19,11 @@ import type {
 } from "./types";
 
 const emptyData: PerformanceData = {
-  reviews: [...SEED_REVIEWS],
-  goals: [...SEED_GOALS],
-  feedback360: [...SEED_FEEDBACK],
-  rewards: [...SEED_REWARDS],
-  courses: [...SEED_COURSES],
+  reviews: [],
+  goals: [],
+  feedback360: [],
+  rewards: [],
+  courses: [],
 };
 
 export const fetchPerformance = createAsyncThunk<PerformanceData, void, { rejectValue: string }>(
@@ -33,11 +33,11 @@ export const fetchPerformance = createAsyncThunk<PerformanceData, void, { reject
       const response = await apiInstance.get("/performance");
       const data = response.data?.data ?? response.data ?? {};
       return {
-        reviews: data.reviews ?? SEED_REVIEWS,
-        goals: data.goals ?? SEED_GOALS,
-        feedback360: data.feedback360 ?? SEED_FEEDBACK,
-        rewards: data.rewards ?? SEED_REWARDS,
-        courses: data.courses ?? SEED_COURSES,
+        reviews: Array.isArray(data.reviews) ? data.reviews : [],
+        goals: Array.isArray(data.goals) ? data.goals : [],
+        feedback360: Array.isArray(data.feedback360) ? data.feedback360 : [],
+        rewards: Array.isArray(data.rewards) ? data.rewards : [],
+        courses: Array.isArray(data.courses) ? data.courses : [],
       };
     }, emptyData);
   },

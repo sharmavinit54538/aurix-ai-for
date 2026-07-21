@@ -86,7 +86,7 @@ export function RegisterPage() {
         password: form.password,
         company_name: form.companyName,
       };
-      const res = await api.post("auth/register", payload);
+      const res = (await api.post("auth/register", payload)) as any;
 console.log("Register response:", res);
       if (res.success) {
         aurix.set({
@@ -108,7 +108,7 @@ console.log("Register response:", res);
         });
 
         toast.success(res.message || "Registration successful!");
-        navigate({ to: "/verify-email" });
+        navigate({ to: "/verify-email" as any });
       } else {
         toast.error(res.message || "Registration failed");
       }

@@ -1,12 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { lazyFeaturePage } from "@/routes/_lib/lazyFeaturePage";
+import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
 
-const DocumentGeneratorPage = lazyFeaturePage(
-  () => import("./ai.document-generator") as any,
-  "DocumentGeneratorPage"
-);
+const DocumentGeneratorPage = lazyFeaturePage(() => import("@/pages/DocumentGeneratorPage"));
 
 export const Route = createFileRoute("/dashboard/ai-hub/document-generator")({
-  head: () => ({ meta: [{ title: "AI Document Generator — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Document Generator — Aurix" }] }),
   component: DocumentGeneratorPage,
 });

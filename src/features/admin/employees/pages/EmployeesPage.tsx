@@ -37,6 +37,12 @@ export function EmployeesPage() {
     [employees],
   );
 
+  function getErrMsg(payload: any, fallback: string): string {
+    if (!payload) return fallback;
+    if (typeof payload === "string") return payload;
+    return payload.message || fallback;
+  }
+
   function refetch() {
     dispatch(fetchEmployees({ search: q, department: dept }));
   }
@@ -46,7 +52,7 @@ export function EmployeesPage() {
     if (resendEmployeeInvite.fulfilled.match(result)) {
       toast.success("Invitation email resent successfully");
     } else {
-      toast.error(result.payload ?? "Failed to resend invitation");
+      toast.error(getErrMsg(result.payload, "Failed to resend invitation"));
     }
   }
 
@@ -59,7 +65,7 @@ export function EmployeesPage() {
       toast.success("Employee account deactivated successfully");
       refetch();
     } else {
-      toast.error(result.payload ?? "Failed to deactivate employee");
+      toast.error(getErrMsg(result.payload, "Failed to deactivate employee"));
     }
   }
 
@@ -69,7 +75,7 @@ export function EmployeesPage() {
       toast.success("Employee account activated successfully");
       refetch();
     } else {
-      toast.error(result.payload ?? "Failed to activate employee");
+      toast.error(getErrMsg(result.payload, "Failed to activate employee"));
     }
   }
 
@@ -81,7 +87,7 @@ export function EmployeesPage() {
     if (resetEmployeePassword.fulfilled.match(result)) {
       toast.success("Employee password reset email sent successfully");
     } else {
-      toast.error(result.payload ?? "Failed to reset password");
+      toast.error(getErrMsg(result.payload, "Failed to reset password"));
     }
   }
 
@@ -125,7 +131,7 @@ export function EmployeesPage() {
         setOpen(false);
         refetch();
       } else {
-        toast.error(result.payload ?? "Failed to update employee");
+        toast.error(getErrMsg(result.payload, "Failed to update employee"));
       }
     } else {
       const result = await dispatch(
@@ -150,7 +156,7 @@ export function EmployeesPage() {
         setOpen(false);
         refetch();
       } else {
-        toast.error(result.payload ?? "Failed to add employee");
+        toast.error(getErrMsg(result.payload, "Failed to add employee"));
       }
     }
   }
@@ -162,7 +168,7 @@ export function EmployeesPage() {
     if (deleteEmployee.fulfilled.match(result)) {
       toast.success("Employee removed successfully");
     } else {
-      toast.error(result.payload ?? "Failed to remove employee");
+      toast.error(getErrMsg(result.payload, "Failed to remove employee"));
     }
   }
 

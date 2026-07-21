@@ -99,14 +99,14 @@ export function ManagersToolbar({
                   Modify Status
                 </DropdownMenuLabel>
                 <DropdownMenuItem
-                  onClick={() => onBulkStatusChange(ManagerStatus.ACTIVE)}
+                  onClick={() => onBulkStatusChange("active")}
                   className="flex cursor-pointer items-center gap-1.5 py-1.5 text-xs"
                 >
                   <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
                   Activate Managers
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => onBulkStatusChange(ManagerStatus.INACTIVE)}
+                  onClick={() => onBulkStatusChange("inactive")}
                   className="flex cursor-pointer items-center gap-1.5 py-1.5 text-xs"
                 >
                   <XCircle className="h-3.5 w-3.5 text-rose-500" />

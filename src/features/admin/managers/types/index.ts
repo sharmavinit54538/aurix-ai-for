@@ -1,6 +1,6 @@
 // ─── Manager Types ───────────────────────────────────────────────────────────
 
-export type ManagerStatus = "PROBATION" | "CONFIRMED" | "NOTICE_PERIOD";
+export type ManagerStatus = "PROBATION" | "CONFIRMED" | "NOTICE_PERIOD" | "active" | "probation" | "inactive" | "on_leave";
 export type EmploymentType = "full_time" | "part_time" | "contract" | "intern";
 export type ManagerRole = "team_lead" | "senior_manager" | "department_head" | "vp" | "director" | "c_level";
 export type Gender = "male" | "female" | "other" | "prefer_not_to_say";
@@ -40,8 +40,8 @@ export interface Manager {
   workLocation: "on_site" | "remote" | "hybrid";
   joiningDate: string;
   employmentType: EmploymentType;
-  bloodGroup: string;
-  maritalStatus: string;
+  bloodGroup?: string;
+  maritalStatus?: string;
   shift: string;
   salary?: number;
   status: ManagerStatus;

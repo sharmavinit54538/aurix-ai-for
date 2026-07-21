@@ -1,9 +1,9 @@
 import { lazy, type ComponentType, type LazyExoticComponent } from "react";
 
 /**
- * Lazy-load a page from `src/features/.../pages/`.
- * Use named export: lazyFeaturePage(() => import("..."), "PageName")
+ * Lazy-load a page from `src/features/.../pages/` or `src/pages/`.
  * Use default export: lazyFeaturePage(() => import("..."))
+ * Use named export: lazyFeaturePage(() => import("..."), "PageName")
  */
 export function lazyFeaturePage(
   loader: () => Promise<{ default: ComponentType }>,

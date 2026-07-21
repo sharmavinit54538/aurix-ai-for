@@ -232,7 +232,8 @@ export function ImportDialog({
       const firstName = d.firstName || "Imported";
       const lastName = d.lastName || "User";
       const office = OFFICES.includes(d.office || "") ? (d.office as string) : OFFICES[0];
-      const department = DEPARTMENTS.includes(d.department || "") ? (d.department as string) : DEPARTMENTS[0];
+      const deptObj = DEPARTMENTS.find((opt) => opt.value === d.department);
+      const department = deptObj ? deptObj.value : DEPARTMENTS[0].value;
 
       return {
         id: `mgr_imported_${Math.random().toString(36).substr(2, 9)}`,

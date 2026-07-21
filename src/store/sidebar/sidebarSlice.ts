@@ -5,13 +5,15 @@ import { fetchSidebarPermissions } from "./sidebarActions";
 const STORAGE_KEY = "AURIX_SIDEBAR_EXPANDED";
 
 function loadExpandedState(): Record<string, boolean> {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      return JSON.parse(saved);
+  if (typeof window !== "undefined") {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch {
+      // Ignore storage parse errors
     }
-  } catch {
-    // Ignore storage parse errors
   }
   // Default expanded sections
   return {
@@ -27,6 +29,7 @@ function loadExpandedState(): Record<string, boolean> {
 }
 
 function saveExpandedState(expandedState: Record<string, boolean>) {
+  if (typeof window === "undefined") return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(expandedState));
   } catch {

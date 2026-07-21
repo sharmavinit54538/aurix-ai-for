@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { lazyFeaturePage } from "./_lib/lazyFeaturePage";
+import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
 
 const HolidaysPage = lazyFeaturePage(() => import("@/features/attendance/pages/HolidaysPage"));
 

@@ -49,6 +49,7 @@ export function RecruitmentCRMPage() {
   const [search, setSearch]   = useState("");
   const [activeId, setActiveId] = useState(candidates[0]?.id ?? "");
   const [watchSet, setWatchSet] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
     try { return new Set(JSON.parse(localStorage.getItem("crm.watch") ?? "[]")); }
     catch { return new Set(); }
   });
