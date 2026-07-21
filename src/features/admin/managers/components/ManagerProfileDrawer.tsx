@@ -28,7 +28,7 @@ import {
 import { fmtDate, avatarHue } from "../utils";
 import { Loader } from "@/components/aurix/Loader";
 
-const STATUS_STYLES: Record<Manager["status"], string> = {
+const STATUS_STYLES: Partial<Record<Manager["status"], string>> = {
   PROBATION: "bg-amber-500/10 text-amber-500 border-amber-500/20",
   CONFIRMED: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
   NOTICE_PERIOD: "bg-rose-500/10 text-rose-500 border-rose-500/20",

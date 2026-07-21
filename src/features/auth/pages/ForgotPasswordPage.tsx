@@ -25,12 +25,12 @@ export function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      const res = await api.post("auth/forgot-password", { email });
+      const res = (await api.post("auth/forgot-password", { email })) as any;
       if (res.success) {
         toast.success(res.message || "OTP sent successfully.");
         navigate({
-          to: "/verify-reset-otp",
-          search: { email },
+          to: "/verify-reset-otp" as any,
+          search: { email } as any,
           state: { email } as Record<string, string>,
         });
       } else {

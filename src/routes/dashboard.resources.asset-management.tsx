@@ -1,10 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { lazyFeaturePage } from "@/routes/_lib/lazyFeaturePage";
+import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
 
-const AssetManagementPage = lazyFeaturePage(
-  () => import("./dashboard.asset-management") as any,
-  "AssetManagementPage"
-);
+const AssetManagementPage = lazyFeaturePage(() => import("@/pages/AssetManagementPage"));
 
 export const Route = createFileRoute("/dashboard/resources/asset-management")({
   head: () => ({ meta: [{ title: "Asset Management — Aurix" }] }),

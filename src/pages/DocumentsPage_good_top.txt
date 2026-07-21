@@ -1,0 +1,529 @@
+﻿import { createFileRoute, useRouterState } from "@tanstack/react-router";
+import { useState, useMemo } from "react";
+import {
+  Folder, Search, Upload, Wand2, Download, CheckCircle, Clock, XCircle, AlertTriangle,
+  FileText, Shield, Trash2, Eye, FileSpreadsheet, RefreshCw, Info, Calendar,
+  ShieldCheck, User, AlertCircle
+} from "lucide-react";
+import { PageHeader } from "@/components/aurix/DashboardShell";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { aurix, uid, useAurix, type HRDocument, type HRDocumentActivity } from "@/lib/aurix-store";
+import { toast } from "sonner";
+
+
+
+
+// ----------------------------------------------------
+// DOCUMENT CONSTANTS
+// ----------------------------------------------------
+const CATEGORIES = [
+  "Employee Documents",
+  "Education",
+  "Employment",
+  "Company Documents",
+] as const;
+
+const CATEGORY_TYPES: Record<string, string[]> = {
+  "Employee Documents": ["Aadhaar Card", "PAN Card", "Passport", "Driving Licence", "Voter ID", "Resume", "Photograph"],
+  "Education": ["10th Certificate", "12th Certificate", "Graduation", "Post Graduation", "Certifications"],
+  "Employment": ["Offer Letter", "Appointment Letter", "Experience Letter", "Relieving Letter", "Salary Slip"],
+  "Company Documents": ["HR Policy", "NDA", "Employment Agreement", "Code of Conduct", "Company Handbook"],
+};
+
+const STATS_CARDS = [
+  { key: "total", title: "Total Documents", color: "text-blue-500", bg: "bg-blue-500/10" },
+  { key: "verified", title: "Verified Documents", color: "text-emerald-500", bg: "bg-emerald-500/10" },
+  { key: "pending", title: "Pending Verification", color: "text-amber-500", bg: "bg-amber-500/10" },
+  { key: "rejected", title: "Rejected Documents", color: "text-rose-500", bg: "bg-rose-500/10" },
+  { key: "expiring", title: "Expiring Soon", color: "text-purple-500", bg: "bg-purple-500/10" },
+];
+
+const DOCUMENT_TEMPLATES = [
+  { id: "offer", title: "Offer Letter", category: "Employment", fields: ["Role", "Salary (LPA)", "Start Date"] },
+  { id: "nda", title: "Non-Disclosure Agreement (NDA)", category: "Company Documents", fields: ["Witness Name", "Duration (Years)"] },
+  { id: "relieving", title: "Relieving Letter", category: "Employment", fields: ["Last Working Day", "Reason for Leaving"] },
+  { id: "handbook", title: "Company Handbook Acknowledgment", category: "Company Documents", fields: ["Version Date", "Signee Designation"] },
+];
+
+// ----------------------------------------------------
+// MAIN PAGE COMPONENT
+// ----------------------------------------------------
+export function DocumentsPage() {
+  const ws = useAurix();
+  const docs = ws.documents || [];
+  const activities = ws.documentActivities || [];
+
+  // Table Filters & Search
+  const [q, setQ] = useState("");
+  const [activeFilter, setActiveFilter] = useState<string>("all");
+  const [sortField, setSortField] = useState<keyof HRDocument>("uploadDate");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
+  // Selected document for Preview
+  const [previewDoc, setPreviewDoc] = useState<HRDocument | null>(null);
+
+  // Modals state
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [generateOpen, setGenerateOpen] = useState(false);
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
+  // Edit / Action state
+  const [targetDoc, setTargetDoc] = useState<HRDocument | null>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
+
+  // Upload Form State
+  const [uploadEmployee, setUploadEmployee] = useState<string>("company");
+  const [uploadCategory, setUploadCategory] = useState<string>("Employee Documents");
+  const [uploadType, setUploadType] = useState<string>("Aadhaar Card");
+  const [uploadExpiry, setUploadExpiry] = useState("");
+  const [uploadDesc, setUploadDesc] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadFileName, setUploadFileName] = useState("");
+  const [uploadFileSize, setUploadFileSize] = useState("");
+
+  // Generator Form State
+  const [genTemplateId, setGenTemplateId] = useState("offer");
+  const [genEmployee, setGenEmployee] = useState<string>("");
+  const [genFields, setGenFields] = useState<Record<string, string>>({});
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedDraft, setGeneratedDraft] = useState<string | null>(null);
+
+  // Sync types dropdown when category changes in Upload modal
+  const handleCategoryChange = (val: string) => {
+    setUploadCategory(val);
+    const types = CATEGORY_TYPES[val] || [];
+    if (types.length > 0) setUploadType(types[0]);
+  };
+
+  // ----------------------------------------------------
+  // EVENT HANDLERS
+  // ----------------------------------------------------
+
+  // 1. Upload Handler
+  const handleUploadSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!uploadFileName) {
+      toast.error("Please drag or select a mock file to upload.");
+      return;
+    }
+
+    setIsUploading(true);
+
+    setTimeout(() => {
+      let empName = "Company-wide";
+      if (uploadEmployee !== "company") {
+        const emp = ws.employees.find(x => x.id === uploadEmployee);
+        if (emp) empName = emp.fullName;
+      }
+
+      const newDocId = uid("doc");
+      const newDoc: HRDocument = {
+        id: newDocId,
+        name: uploadFileName,
+        employeeId: uploadEmployee === "company" ? undefined : uploadEmployee,
+        employeeName: empName,
+        category: uploadCategory as any,
+        type: uploadType,
+        uploadedBy: ws.user?.fullName || "HR Admin",
+        uploadDate: new Date().toISOString().split("T")[0],
+        expiryDate: uploadExpiry || undefined,
+        status: "Pending",
+        fileSize: uploadFileSize || "1.2 MB",
+        fileType: uploadFileName.split(".").pop() as any || "pdf",
+        description: uploadDesc,
+      };
+
+      const newActivity: HRDocumentActivity = {
+        id: uid("act"),
+        documentId: newDocId,
+        documentName: uploadFileName,
+        action: "Uploaded",
+        performedBy: ws.user?.fullName || "HR Admin",
+        timestamp: new Date().toISOString(),
+        details: `Uploaded ${uploadType} for ${empName}.`
+      };
+
+      aurix.set({
+        documents: [newDoc, ...docs],
+        documentActivities: [newActivity, ...activities]
+      });
+
+      toast.success("Document uploaded successfully!");
+      setIsUploading(false);
+      setUploadOpen(false);
+
+      // Reset fields
+      setUploadFileName("");
+      setUploadFileSize("");
+      setUploadDesc("");
+      setUploadExpiry("");
+    }, 1200);
+  };
+
+  // Drag and drop mock handler
+  const handleMockFileDrop = () => {
+    const randomNames = ["Aadhaar_Front_Back.jpg", "Degree_Certificate.pdf", "Payslip_May_2026.pdf", "NDA_Final_Signed.pdf"];
+    const randomSizes = ["950 KB", "2.4 MB", "420 KB", "1.1 MB"];
+    const randIndex = Math.floor(Math.random() * randomNames.length);
+
+    setUploadFileName(randomNames[randIndex]);
+    setUploadFileSize(randomSizes[randIndex]);
+    toast.info(`Mock file selected: ${randomNames[randIndex]}`);
+  };
+
+  // 2. Generate Handler
+  const handleGenerateAI = () => {
+    setIsGenerating(true);
+    setGeneratedDraft(null);
+
+    setTimeout(() => {
+      const template = DOCUMENT_TEMPLATES.find(x => x.id === genTemplateId);
+      const emp = ws.employees.find(x => x.id === genEmployee);
+      const recipient = emp ? emp.fullName : "Valued Professional";
+
+      let text = `AURIX TALENT LABS â€” OFFICIAL LETTER
+Date: ${new Date().toISOString().split("T")[0]}
+Recipient: ${recipient}
+
+`;
+      if (genTemplateId === "offer") {
+        text += `Dear ${recipient},
+
+We are pleased to offer you the position of ${genFields["Role"] || "Frontend Architect"} at Aurix Talent Labs.
+Your initial annual compensation package will be INR ${genFields["Salary (LPA)"] || "12.5"} Lakhs per annum, subject to standard deductions.
+Your employment will commence on ${genFields["Start Date"] || "2026-07-15"}.
+
+This offer is contingent upon successful verification of your educational certifications and previous employment documents.
+
+Best Regards,
+People Ops Team
+Aurix Talent Labs`;
+      } else if (genTemplateId === "nda") {
+        text += `NON-DISCLOSURE AGREEMENT (NDA)
+
+This Agreement is entered into by and between Aurix Talent Labs and ${recipient}, with witness ${genFields["Witness Name"] || "Priya Nair"}.
+Both parties agree to hold confidential information in strict confidence for a duration of ${genFields["Duration (Years)"] || "3"} years from signing.
+Information shared includes all software source code, corporate records, and recruiting workflows.
+
+Signed by:
+Aurix Representative
+And Recipient: ${recipient}`;
+      } else if (genTemplateId === "relieving") {
+        text += `RELIEVING & EXPERIENCE CERTIFICATE
+
+This is to certify that ${recipient} was employed with Aurix Talent Labs.
+Their last working day was ${genFields["Last Working Day"] || "2026-06-15"}.
+Reason for release: ${genFields["Reason for Leaving"] || "Resignation (Personal growth)"}.
+
+During their tenure, they demonstrated professional competence and sincere dedication. We wish them success in their future endeavors.
+
+Signed,
+Priya Nair, People Ops Partner`;
+      } else {
+        text += `COMPANY HANDBOOK ACKNOWLEDGMENT
+Version: ${genFields["Version Date"] || "2026-01-01"}
+
+I, ${recipient}, holding the designation of ${genFields["Signee Designation"] || "Team Lead"},
+acknowledge that I have received, read, and understood the policies stated in the Aurix Company Handbook v4.0.
+
+Acknowledged and Signed electronically.`;
+      }
+
+      setGeneratedDraft(text);
+      setIsGenerating(false);
+      toast.success("Document draft generated with AI!");
+    }, 1500);
+  };
+
+  const handleSaveGenerated = () => {
+    if (!generatedDraft) return;
+
+    const template = DOCUMENT_TEMPLATES.find(x => x.id === genTemplateId)!;
+    const emp = ws.employees.find(x => x.id === genEmployee);
+    const empName = emp ? emp.fullName : "Company-wide";
+
+    const fileName = `${template.title.replace(/\s+/g, "_")}_${empName.replace(/\s+/g, "_")}.pdf`;
+
+    const newDocId = uid("doc");
+    const newDoc: HRDocument = {
+      id: newDocId,
+      name: fileName,
+      employeeId: genEmployee || undefined,
+      employeeName: empName,
+      category: template.category as any,
+      type: template.title.split(" (")[0],
+      uploadedBy: "AI Generator",
+      uploadDate: new Date().toISOString().split("T")[0],
+      status: "Verified", // AI templates generated by HR are verified instantly
+      fileSize: "140 KB",
+      fileType: "pdf",
+      description: `Generated AI Template for ${empName}`,
+    };
+
+    const newActivity: HRDocumentActivity = {
+      id: uid("act"),
+      documentId: newDocId,
+      documentName: fileName,
+      action: "Uploaded",
+      performedBy: ws.user?.fullName || "HR Admin",
+      timestamp: new Date().toISOString(),
+      details: `Generated AI ${template.title} for ${empName}.`
+    };
+
+    aurix.set({
+      documents: [newDoc, ...docs],
+      documentActivities: [newActivity, ...activities]
+    });
+
+    toast.success("Generated document saved to Vault!");
+    setGenerateOpen(false);
+    setGeneratedDraft(null);
+  };
+
+  // 3. Verification Workflow Actions
+  const handleVerify = (doc: HRDocument) => {
+    const updatedDocs = docs.map(d => {
+      if (d.id === doc.id) return { ...d, status: "Verified" as const, rejectionReason: undefined };
+      return d;
+    });
+
+    const newActivity: HRDocumentActivity = {
+      id: uid("act"),
+      documentId: doc.id,
+      documentName: doc.name,
+      action: "Verified",
+      performedBy: ws.user?.fullName || "HR Admin",
+      timestamp: new Date().toISOString(),
+      details: `Verified ${doc.type} for ${doc.employeeName || "Company"}.`
+    };
+
+    aurix.set({
+      documents: updatedDocs,
+      documentActivities: [newActivity, ...activities]
+    });
+
+    // Update preview doc if open
+    if (previewDoc?.id === doc.id) {
+      setPreviewDoc({ ...doc, status: "Verified" as const, rejectionReason: undefined });
+    }
+
+    toast.success(`Verified document: ${doc.name}`);
+  };
+
+  const handleRejectPrompt = (doc: HRDocument) => {
+    setTargetDoc(doc);
+    setRejectionReason("");
+    setRejectOpen(true);
+  };
+
+  const handleRejectSubmit = () => {
+    if (!targetDoc) return;
+    if (!rejectionReason.trim()) {
+      toast.error("Please enter a rejection reason.");
+      return;
+    }
+
+    const updatedDocs = docs.map(d => {
+      if (d.id === targetDoc.id) return { ...d, status: "Rejected" as const, rejectionReason };
+      return d;
+    });
+
+    const newActivity: HRDocumentActivity = {
+      id: uid("act"),
+      documentId: targetDoc.id,
+      documentName: targetDoc.name,
+      action: "Rejected",
+      performedBy: ws.user?.fullName || "HR Admin",
+      timestamp: new Date().toISOString(),
+      details: `Rejected ${targetDoc.type}: ${rejectionReason}`
+    };
+
+    aurix.set({
+      documents: updatedDocs,
+      documentActivities: [newActivity, ...activities]
+    });
+
+    // Update preview doc if open
+    if (previewDoc?.id === targetDoc.id) {
+      setPreviewDoc({ ...targetDoc, status: "Rejected" as const, rejectionReason });
+    }
+
+    toast.warning(`Document rejected: ${targetDoc.name}`);
+    setRejectOpen(false);
+    setTargetDoc(null);
+  };
+
+  const handleRequestReupload = (doc: HRDocument) => {
+    const updatedDocs = docs.map(d => {
+      if (d.id === doc.id) return { ...d, status: "Pending" as const, rejectionReason: "Re-upload requested. Please supply a clear copy." };
+      return d;
+    });
+
+    const newActivity: HRDocumentActivity = {
+      id: uid("act"),
+      documentId: doc.id,
+      documentName: doc.name,
+      action: "Updated",
+      performedBy: ws.user?.fullName || "HR Admin",
+      timestamp: new Date().toISOString(),
+      details: `Requested re-upload for ${doc.type}`
+    };
+
+    aurix.set({
+      documents: updatedDocs,
+      documentActivities: [newActivity, ...activities]
+    });
+
+    if (previewDoc?.id === doc.id) {
+      setPreviewDoc({ ...doc, status: "Pending" as const, rejectionReason: "Re-upload requested. Please supply a clear copy." });
+    }
+
+    toast.info(`Requested re-upload for: ${doc.name}`);
+  };
+
+  // 4. Delete Handler
+  const handleDeletePrompt = (doc: HRDocument) => {
+    setTargetDoc(doc);
+    setDeleteOpen(true);
+  };
+
+  const handleDeleteSubmit = () => {
+    if (!targetDoc) return;
+
+    const filteredDocs = docs.filter(d => d.id !== targetDoc.id);
+
+    const newActivity: HRDocumentActivity = {
+      id: uid("act"),
+      documentId: targetDoc.id,
+      documentName: targetDoc.name,
+      action: "Updated",
+      performedBy: ws.user?.fullName || "HR Admin",
+      timestamp: new Date().toISOString(),
+      details: `Deleted document: ${targetDoc.name}`
+    };
+
+    aurix.set({
+      documents: filteredDocs,
+      documentActivities: [newActivity, ...activities]
+    });
+
+    if (previewDoc?.id === targetDoc.id) {
+      setPreviewDoc(null);
+    }
+
+    toast.error(`Deleted document: ${targetDoc.name}`);
+    setDeleteOpen(false);
+    setTargetDoc(null);
+  };
+
+  // Mock Download
+  const handleDownload = (doc: HRDocument) => {
+    toast.success(`Downloading ${doc.name}...`);
+    const newActivity: HRDocumentActivity = {
+      id: uid("act"),
+      documentId: doc.id,
+      documentName: doc.name,
+      action: "Downloaded",
+      performedBy: ws.user?.fullName || "HR Admin",
+      timestamp: new Date().toISOString(),
+      details: `Downloaded document ${doc.name}`
+    };
+    aurix.set({ documentActivities: [newActivity, ...activities] });
+
+    const element = document.createElement("a");
+    const file = new Blob([`Aurix HR Vault. Document ID: ${doc.id}\nCategory: ${doc.category}\nName: ${doc.name}\nStatus: ${doc.status}`], {type: 'text/plain'});
+    element.href = URL.createObjectURL(file);
+    element.download = doc.name;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  };
+
+  // ----------------------------------------------------
+  // COMPUTED CALCULATIONS (STATS / FILTERS)
+  // ----------------------------------------------------
+
+  // Stats Card data
+  const stats = useMemo(() => {
+    const total = docs.length;
+    const verified = docs.filter(d => d.status === "Verified").length;
+    const pending = docs.filter(d => d.status === "Pending").length;
+    const rejected = docs.filter(d => d.status === "Rejected").length;
+
+    // Check expiring (expiry within 30 days of 2026-06-28)
+    const mockNow = new Date("2026-06-28").getTime();
+    const thirtyDaysLimit = mockNow + 30 * 24 * 60 * 60 * 1000;
+    const expiring = docs.filter(d => {
+      if (!d.expiryDate) return false;
+      const t = new Date(d.expiryDate).getTime();
+      return t >= mockNow && t <= thirtyDaysLimit;
+    }).length;
+
+    return { total, verified, pending, rejected, expiring };
+  }, [docs]);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isEmployee = ws.user?.role === "employee" || pathname.startsWith("/dashboard/employee");
+
+  // System Notifications Alerts
+  const notifications = useMemo(() => {
+    const alerts: { id: string; type: "warning" | "info" | "error"; message: string; doc?: HRDocument }[] = [];
+
+    // Expiring soon alert
+    const mockNow = new Date("2026-06-28").getTime();
+    const thirtyDaysLimit = mockNow + 30 * 24 * 60 * 60 * 1000;
+    docs.forEach(d => {
+      if (d.expiryDate) {
+        const t = new Date(d.expiryDate).getTime();
+        if (t >= mockNow && t <= thirtyDaysLimit) {
+          alerts.push({
+            id: `exp_${d.id}`,
+            type: "warning",
+            message: `${d.employeeName || "Company"}'s ${d.type} is expiring soon on ${d.expiryDate}.`,
+            doc: d,
+          });
+        }
+      }
+    });
+
+    // Pending review alert for admin
+    if (!isEmployee) {
+      const pendingDocs = docs.filter(d => d.status === "Pending");
+      if (pendingDocs.length > 0) {
+        alerts.push({
+          id: "alert_pending",
+          type: "info",
+          message: `You have ${pendingDocs.length} documents awaiting review and verification.`,
+        });
+      }
+    }
+
+    return alerts;
+  }, [docs, isEmployee]);
+
+  // Table Filtering & Searching
+  const filteredDocs = useMemo(() => {
+    return docs.filter(d => {
+      if (isEmployee) {
+        const userFullName = (ws.user?.fullName || "").toLowerCase();
+        const userId = (ws.user?.id || "").toLowerCase();
+        const isMyDoc =
+          d.category === "Company Documents" ||
+          (d.employeeName && d.employeeName.toLowerCase().includes(userFullName)) ||
+          d.employeeId === userId;
+        if (!isMyDoc) return false;
+      }

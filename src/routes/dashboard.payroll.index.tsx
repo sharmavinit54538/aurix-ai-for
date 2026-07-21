@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
 import {
   CreditCard, Sparkles, PlayCircle, LayoutGrid, FileText,
   Receipt, Gift, MinusCircle, HandCoins, Timer, Percent, CheckCircle2,
@@ -15,7 +15,7 @@ export const Route = createFileRoute("/dashboard/payroll/")({
   component: PayrollDashboardPage,
 });
 
-export interface PayrollModuleDef {
+interface PayrollModuleDef {
   id: string;
   title: string;
   description: string;
@@ -24,7 +24,7 @@ export interface PayrollModuleDef {
   color: string;
 }
 
-export const PAYROLL_MODULES_LIST: PayrollModuleDef[] = [
+const PAYROLL_MODULES_LIST: PayrollModuleDef[] = [
   {
     id: "copilot",
     title: "AI Payroll Copilot",
@@ -153,9 +153,22 @@ function fmt(n: number) {
 
 type ViewMode = "modules" | "analytics";
 
+
 function PayrollDashboardPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("modules");
   const ws = useAurix();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (ws.user?.role === "employee") {
+      navigate({ to: "/dashboard/payroll/payslips" as any });
+    }
+  }, [ws.user?.role, navigate]);
+
+  if (ws.user?.role === "employee") {
+    return null;
+  }
+
   const total = ws.employees.reduce((s, e) => s + 4500 + ((e.id.length * 137) % 6000), 0);
 
   return (

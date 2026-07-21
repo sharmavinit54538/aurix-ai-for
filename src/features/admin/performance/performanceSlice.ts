@@ -27,11 +27,11 @@ import {
 } from "./performanceThunk";
 
 const initialState: PerformanceState = {
-  reviews: [...SEED_REVIEWS],
-  goals: [...SEED_GOALS],
-  feedback360: [...SEED_FEEDBACK],
-  rewards: [...SEED_REWARDS],
-  courses: [...SEED_COURSES],
+  reviews: [],
+  goals: [],
+  feedback360: [],
+  rewards: [],
+  courses: [],
   loading: false,
   error: null,
 };

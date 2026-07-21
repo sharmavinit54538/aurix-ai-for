@@ -132,6 +132,127 @@ const NAV_SECTIONS: SidebarNavSection[] = [
   },
 ];
 
+const EMPLOYEE_NAV_SECTIONS: SidebarNavSection[] = [
+  {
+    items: [
+      {
+        to: "/dashboard/employee",
+        label: "My Portal",
+        icon: User,
+        exact: true,
+      },
+      {
+        to: "/dashboard/attendance",
+        label: "Attendance",
+        icon: Clock,
+      },
+      {
+        to: "/dashboard/leaves",
+        label: "Leaves",
+        icon: CalendarDays,
+      },
+      {
+        to: "/dashboard/timesheets",
+        label: "Timesheets",
+        icon: Timer,
+      },
+      {
+        to: "/dashboard/expenses",
+        label: "Expense Claims",
+        icon: Receipt,
+      },
+      {
+        to: "/dashboard/payroll",
+        label: "Payslips & Salary",
+        icon: Wallet,
+      },
+      {
+        to: "/dashboard/documents",
+        label: "My Documents",
+        icon: FileText,
+      },
+      {
+        to: "/dashboard/assets",
+        label: "My Assets",
+        icon: Package,
+      },
+      {
+        to: "/dashboard/performance",
+        label: "Performance",
+        icon: Target,
+      },
+      {
+        to: "/dashboard/settings/profile",
+        label: "My Settings",
+        icon: Settings,
+      },
+    ],
+  },
+];
+
+const MANAGER_NAV_SECTIONS: SidebarNavSection[] = [
+  {
+    items: [
+      {
+        to: "/dashboard/manager",
+        label: "Manager Portal",
+        icon: LayoutDashboard,
+        exact: true,
+      },
+      {
+        to: "/dashboard/workforce",
+        label: "My Team",
+        icon: Users,
+      },
+      {
+        to: "/dashboard/attendance",
+        label: "Attendance",
+        icon: Clock,
+      },
+      {
+        to: "/dashboard/leaves",
+        label: "Leave Approvals",
+        icon: CalendarDays,
+      },
+      {
+        to: "/dashboard/timesheets",
+        label: "Timesheets",
+        icon: Timer,
+      },
+      {
+        to: "/dashboard/expenses",
+        label: "Expense Claims",
+        icon: Receipt,
+      },
+      {
+        to: "/dashboard/talent",
+        label: "Recruitment",
+        icon: Briefcase,
+      },
+      {
+        to: "/dashboard/performance",
+        label: "Performance",
+        icon: Target,
+      },
+      {
+        to: "/dashboard/reports",
+        label: "Reports",
+        icon: BarChart3,
+      },
+      {
+        to: "/dashboard/ai-hub",
+        label: "AI Assistant",
+        icon: Brain,
+      },
+      {
+        to: "/dashboard/settings",
+        label: "Settings",
+        icon: Settings,
+      },
+    ],
+  },
+];
+
 // ── Demo Mode Banner ──────────────────────────────────────────
 function DemoBanner({ role, onDismiss }: { role: Role; onDismiss: () => void }) {
   const roleLabel = role === "manager" ? "Manager" : "Employee";
@@ -195,7 +316,7 @@ export function DashboardShell() {
     }
     if (!ws.user) return;
     if (!ws.user.emailVerified) {
-      navigate({ to: "/verify-email" });
+      navigate({ to: "/verify-email" as any });
       return;
     }
     if (!ws.user.onboardingComplete) {
@@ -245,10 +366,16 @@ export function DashboardShell() {
 
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
-  const visibleNav = useMemo(
-    () => filterNavTree(NAV_SECTIONS, role, userPermissions),
-    [role, userPermissions]
-  );
+  const visibleNav = useMemo(() => {
+    const normalizedRole = (role || "").toLowerCase();
+    if (normalizedRole === "employee" || pathname.startsWith("/dashboard/employee")) {
+      return filterNavTree(EMPLOYEE_NAV_SECTIONS, role, userPermissions);
+    }
+    if (normalizedRole === "manager" || pathname.startsWith("/dashboard/manager")) {
+      return filterNavTree(MANAGER_NAV_SECTIONS, role, userPermissions);
+    }
+    return filterNavTree(NAV_SECTIONS, role, userPermissions);
+  }, [role, pathname, userPermissions]);
 
   if (!authReady || ws.isRestoring || !ws.user) {
     return <AuthLoadingScreen />;

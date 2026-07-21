@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { aurix } from "@/lib/aurix-store";
 import type { SettingsState } from "./settingsTypes";
 import {
   createRole,
@@ -83,9 +84,21 @@ export const settingsSlice = createSlice({
     builder
       .addCase(fetchCompanySettings.fulfilled, (state, action) => {
         state.companySettings = action.payload;
+        if (action.payload?.name) {
+          const currentWs = aurix.get();
+          if (currentWs?.company) {
+            aurix.set({ company: { ...currentWs.company, name: action.payload.name } });
+          }
+        }
       })
       .addCase(updateCompanySettings.fulfilled, (state, action) => {
         state.companySettings = action.payload;
+        if (action.payload?.name) {
+          const currentWs = aurix.get();
+          if (currentWs?.company) {
+            aurix.set({ company: { ...currentWs.company, name: action.payload.name } });
+          }
+        }
       });
 
     // Roles & Permissions

@@ -1,12 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { lazyFeaturePage } from "@/routes/_lib/lazyFeaturePage";
+import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
 
-const ChatAssistantPage = lazyFeaturePage(
-  () => import("./ai.chat-assistant") as any,
-  "ChatAssistantPage"
-);
+const ChatAssistantPage = lazyFeaturePage(() => import("@/pages/ChatAssistantPage"));
 
 export const Route = createFileRoute("/dashboard/ai-hub/assistant")({
-  head: () => ({ meta: [{ title: "AI Assistant — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Chat Assistant — Aurix" }] }),
   component: ChatAssistantPage,
 });

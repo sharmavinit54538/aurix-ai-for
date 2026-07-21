@@ -25,6 +25,7 @@ import { EmptyState } from "@/components/hrms/Shared";
 import type { Job, Candidate, OfferStatus, JobStatus } from "@/features/admin/recruitment/types";
 import { useAurix } from "@/lib/aurix-store";
 import { api } from "@/api/client";
+import { getTokens } from "@/api/tokens";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -324,7 +325,7 @@ export function JobDetailPage() {
   const handleExportApplicants = async () => {
     setExporting(true);
     try {
-      const token = localStorage.getItem("access_token") || "";
+      const token = getTokens()?.accessToken || "";
       const url = `http://localhost:8001/api/v1/jobs/${jobId}/applicants/export?format=${exportFormat}&filter=${exportFilter}`;
       
       const response = await fetch(url, {
