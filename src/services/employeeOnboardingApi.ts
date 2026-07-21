@@ -1,5 +1,7 @@
 import apiInstance from "@/api/apiInstance";
+import { api } from "@/api";
 import { normalizeScalarString } from "@/features/admin/recruitment/utils/onboardingDisplay";
+import { getFileUrl } from "@/lib/utils";
 
 export type OnboardingStatus =
   | "PENDING"
@@ -366,10 +368,6 @@ export const adminOnboardingApi = {
   },
 };
 
-export default adminOnboardingApi;
-import { api } from "@/api";
-import { getFileUrl } from "@/lib/utils";
-
 export interface PersonalInfoInput {
   first_name: string;
   middle_name?: string;
@@ -559,15 +557,4 @@ export const employeeOnboardingApi = {
     api.delete<ApiResponse<any>>(`employee-onboarding/step/8/document/${docId}`),
 };
 
-export const adminOnboardingApi = {
-  listProgress: (filters: { department?: string; location?: string; status?: string; search?: string } = {}) => {
-    const query = new URLSearchParams(filters as any).toString();
-    return api.get<any>(`admin/employee-onboarding?${query}`);
-  },
-
-  getDetails: (employeeId: string) =>
-    api.get<any>(`admin/employee-onboarding/${employeeId}`),
-
-  verifyDocument: (employeeId: string, docId: string, status: "VERIFIED" | "REJECTED", comments?: string) =>
-    api.put<any>(`admin/employee-onboarding/${employeeId}/document/${docId}/verify`, { status, comments }),
-};
+export default adminOnboardingApi;
