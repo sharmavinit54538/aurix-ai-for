@@ -108,6 +108,15 @@ export function getErrorMessage(error: unknown, fallback: string): string {
   return parseApiError(error, fallback).message;
 }
 
+export function getRejectMessage(payload: unknown, fallback: string): string {
+  if (payload && typeof payload === "object" && "message" in payload) {
+    const message = (payload as ParsedError).message;
+    if (typeof message === "string" && message.trim()) return message;
+  }
+  if (typeof payload === "string" && payload.trim()) return payload;
+  return fallback;
+}
+
 export async function tryApi<T>(call: () => Promise<T>, fallback: T): Promise<T> {
   try {
     return await call();

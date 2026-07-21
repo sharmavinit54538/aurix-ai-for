@@ -1,7 +1,10 @@
+import { useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { clearSelectedDepartment, setSelectedDepartment } from "../departmentsSlice";
 import type { Department } from "../types";
 import {
   fetchDepartments,
+  fetchDepartmentById,
   createDepartment,
   updateDepartment,
   deleteDepartment,
@@ -19,6 +22,21 @@ export function useDepartments() {
   const dispatch = useAppDispatch();
   const state = useAppSelector((state) => state.departments);
 
+  const fetchDepartmentByIdAction = useCallback(
+    (id: string) => dispatch(fetchDepartmentById(id)),
+    [dispatch],
+  );
+
+  const clearSelectedDepartmentAction = useCallback(
+    () => dispatch(clearSelectedDepartment()),
+    [dispatch],
+  );
+
+  const setSelectedDepartmentAction = useCallback(
+    (department: Department | null) => dispatch(setSelectedDepartment(department)),
+    [dispatch],
+  );
+
   return {
     departments: state.departments,
     loading: state.loading,
@@ -27,7 +45,13 @@ export function useDepartments() {
     page: state.page || 1,
     limit: state.limit || 20,
     pages: state.pages || 1,
+    selectedDepartment: state.selectedDepartment,
+    selectedDepartmentLoading: state.selectedDepartmentLoading,
+    selectedDepartmentError: state.selectedDepartmentError,
     fetchDepartments: (params?: any) => dispatch(fetchDepartments(params)),
+    fetchDepartmentById: fetchDepartmentByIdAction,
+    clearSelectedDepartment: clearSelectedDepartmentAction,
+    setSelectedDepartment: setSelectedDepartmentAction,
     createDepartment: (dept: Partial<Department>) => dispatch(createDepartment(dept)),
     updateDepartment: (dept: Partial<Department> & { id: string }) => dispatch(updateDepartment(dept)),
     deleteDepartment: (id: string) => dispatch(deleteDepartment(id)),

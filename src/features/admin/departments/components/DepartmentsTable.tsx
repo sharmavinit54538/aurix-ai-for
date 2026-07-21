@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import {
   Table,
   TableBody,
@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
+// import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,9 +36,9 @@ import * as LucideIcons from "lucide-react";
 
 interface DepartmentsTableProps {
   departments: Department[];
-  selectedIds: string[];
-  onSelectAll: (checked: boolean) => void;
-  onSelectRow: (id: string, checked: boolean) => void;
+  // selectedIds: string[];
+  // onSelectAll: (checked: boolean) => void;
+  // onSelectRow: (id: string, checked: boolean) => void;
   onView: (dept: Department) => void;
   onEdit: (dept: Department) => void;
   onDelete: (dept: Department) => void;
@@ -49,9 +49,9 @@ interface DepartmentsTableProps {
 
 export function DepartmentsTable({
   departments,
-  selectedIds,
-  onSelectAll,
-  onSelectRow,
+  // selectedIds,
+  // onSelectAll,
+  // onSelectRow,
   onView,
   onEdit,
   onDelete,
@@ -59,13 +59,15 @@ export function DepartmentsTable({
   sortDir,
   onSort,
 }: DepartmentsTableProps) {
-  const allSelected = useMemo(() => {
-    return departments.length > 0 && selectedIds.length === departments.length;
-  }, [departments, selectedIds]);
-
-  const isSomeSelected = useMemo(() => {
-    return selectedIds.length > 0 && selectedIds.length < departments.length;
-  }, [departments, selectedIds]);
+  console.log("departments", departments);
+  // Bulk select disabled
+  // const allSelected = useMemo(() => {
+  //   return departments.length > 0 && selectedIds.length === departments.length;
+  // }, [departments, selectedIds]);
+  //
+  // const isSomeSelected = useMemo(() => {
+  //   return selectedIds.length > 0 && selectedIds.length < departments.length;
+  // }, [departments, selectedIds]);
 
   const SortHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => {
     return (
@@ -87,14 +89,15 @@ export function DepartmentsTable({
         <Table className="relative">
           <TableHeader className="bg-muted/10 border-b border-border/60 sticky top-0 bg-background/95 backdrop-blur z-10">
             <TableRow>
-              <TableHead className="w-[50px] pl-4">
+              {/* Bulk select disabled */}
+              {/* <TableHead className="w-[50px] pl-4">
                 <Checkbox
                   checked={allSelected ? true : isSomeSelected ? "indeterminate" : false}
                   onCheckedChange={(checked) => onSelectAll(!!checked)}
                   aria-label="Select all departments"
                   className="cursor-pointer"
                 />
-              </TableHead>
+              </TableHead> */}
               <TableHead className="min-w-[220px]">
                 <SortHeader field="name">Department Name</SortHeader>
               </TableHead>
@@ -130,22 +133,19 @@ export function DepartmentsTable({
           </TableHeader>
           <TableBody>
             {departments.map((d) => {
-              const isSelected = selectedIds.includes(d.id);
+              // const isSelected = selectedIds.includes(d.id);
               const statusOpt = STATUS_OPTIONS.find((s) => s.value === d.status);
-              
               // Load Lucide icon
               const IconComponent = (LucideIcons as any)[d.iconName] || Building2;
 
               return (
                 <TableRow
                   key={d.id}
-                  className={`group/row border-b border-border/50 transition-colors hover:bg-muted/15 cursor-pointer ${
-                    isSelected ? "bg-muted/10" : ""
-                  }`}
+                  className="group/row border-b border-border/50 transition-colors hover:bg-muted/15 cursor-pointer"
                   onClick={() => onView(d)}
                 >
-                  {/* Checkbox */}
-                  <TableCell
+                  {/* Bulk select disabled */}
+                  {/* <TableCell
                     className="pl-4 py-3"
                     onClick={(e) => e.stopPropagation()}
                   >
@@ -155,7 +155,7 @@ export function DepartmentsTable({
                       aria-label={`Select ${d.name}`}
                       className="cursor-pointer"
                     />
-                  </TableCell>
+                  </TableCell> */}
 
                   {/* Icon + Department Name */}
                   <TableCell className="py-3 font-medium text-foreground">
@@ -173,7 +173,7 @@ export function DepartmentsTable({
                           {d.name}
                         </div>
                         <div className="text-[10px] text-muted-foreground truncate">
-                          CC ID: {d.costCenter || "—"}
+                          CC ID: {d.cost_center || "—"}
                         </div>
                       </div>
                     </div>
@@ -181,7 +181,7 @@ export function DepartmentsTable({
 
                   {/* Code */}
                   <TableCell className="py-3 text-xs font-mono font-bold text-muted-foreground">
-                    {d.code}
+                    {d.department_code}
                   </TableCell>
 
                   {/* Department Head */}

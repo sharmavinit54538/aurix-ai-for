@@ -18,15 +18,15 @@ export interface DepartmentDocument {
 export interface Department {
   id: string;
   name: string;
-  code: string;
   description: string;
+  department_code: string;
+  cost_center: string;
   departmentHeadId: string | null;
   departmentHeadName: string;
   reportingManagerId: string | null;
   reportingManagerName: string;
   office: string;
   budget: number;
-  costCenter: string;
   employeeCapacity: number;
   currentEmployeeCount: number;
   extensionNumber: string;
@@ -60,7 +60,7 @@ export type SortDir = "asc" | "desc";
 export interface HierarchyNode {
   id: string;
   name: string;
-  code: string;
+  department_code: string;
   headName: string;
   themeColor: string;
   iconName: string;
@@ -74,7 +74,6 @@ export interface ImportDepartmentRow {
   departmentHeadName?: string;
   office?: string;
   budget?: string;
-  costCenter?: string;
   employeeCapacity?: string;
   status?: string;
   parentId?: string;

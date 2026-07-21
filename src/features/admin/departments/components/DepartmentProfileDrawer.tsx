@@ -157,7 +157,10 @@ export function DepartmentProfileDrawer({
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="w-full sm:max-w-md md:max-w-xl border-l border-border bg-card/95 backdrop-blur-xl p-0 shadow-2xl flex flex-col h-full z-40">
+        <SheetContent
+          className="w-full sm:max-w-md md:max-w-xl border-l border-border bg-card p-0 shadow-2xl flex flex-col h-full"
+          overlayClassName="bg-black/30 backdrop-blur-sm"
+        >
           <SheetHeader className="p-6 border-b border-border/60">
             <div className="flex items-center gap-4">
               <div
@@ -172,13 +175,13 @@ export function DepartmentProfileDrawer({
                 <SheetTitle className="text-xl font-bold truncate text-foreground flex items-center gap-2">
                   {department.name}
                 </SheetTitle>
-                <p className="text-xs font-mono font-medium text-muted-foreground">Code: {department.code}</p>
+                <p className="text-xs font-mono font-medium text-muted-foreground">Code: {department.department_code}</p>
                 <div className="flex flex-wrap items-center gap-2 mt-1.5">
                   <Badge variant="outline" className={`px-2 py-0.5 text-xs font-semibold ${statusColors[department.status]}`}>
                     {statusLabels[department.status]}
                   </Badge>
                   <Badge variant="secondary" className="px-2 py-0.5 text-xs font-medium">
-                    CC ID: {department.costCenter}
+                    CC ID: {department.cost_center}
                   </Badge>
                 </div>
               </div>

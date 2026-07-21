@@ -25,6 +25,12 @@ import {
   STATUS_OPTIONS,
 } from "../constants";
 import { validateDepartmentForm } from "../utils";
+import {
+  getDepartmentIconOptions,
+  normalizeIconName,
+  normalizeThemeColor,
+  themeColorsMatch,
+} from "../utils/departmentTheme";
 import { useManagersList } from "../../managers/hooks/useManagersList";
 import { toast } from "sonner";
 import * as LucideIcons from "lucide-react";
@@ -32,7 +38,9 @@ import * as LucideIcons from "lucide-react";
 interface DepartmentFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  department: Department | null; // null for add, Department for edit
+  department: Department | null;
+  isEditMode?: boolean;
+  isLoading?: boolean;
   existingDepartments: Department[];
   onSave: (dept: Department) => void;
   isSaving?: boolean;
@@ -42,26 +50,28 @@ export function DepartmentFormDialog({
   open,
   onOpenChange,
   department,
+  isEditMode = false,
+  isLoading = false,
   existingDepartments,
   onSave,
   isSaving = false,
 }: DepartmentFormDialogProps) {
-  const isEdit = !!department;
+  const isEdit = isEditMode;
+  const hasSeedData = Boolean(department?.id && department?.name?.trim());
+  const showFormLoader = isEdit && isLoading && !hasSeedData;
 
   // Form State
-  const [name, setName] = useState("");
-  const [code, setCode] = useState("");
+  const [name, setName] = useState(""); 
   const [description, setDescription] = useState("");
-  const [departmentHeadId, setDepartmentHeadId] = useState("none");
+  const [departmentHeadId, setDepartmentHeadId] = useState("");
   const [reportingManagerId, setReportingManagerId] = useState("none");
   const [office, setOffice] = useState("");
   const [budget, setBudget] = useState("");
-  const [costCenter, setCostCenter] = useState("");
   const [employeeCapacity, setEmployeeCapacity] = useState("");
   const [currentEmployeeCount, setCurrentEmployeeCount] = useState("0");
   const [extensionNumber, setExtensionNumber] = useState("");
   const [status, setStatus] = useState<Department["status"]>("active");
-  const [themeColor, setThemeColor] = useState("#3b82f6");
+  const [themeColor, setThemeColor] = useState("");
   const [iconName, setIconName] = useState("Code2");
   const [parentId, setParentId] = useState("none");
 
@@ -103,7 +113,7 @@ export function DepartmentFormDialog({
       department.parentName !== "None" &&
       !options.some((d) => d.id === department.parentId)
     ) {
-      options.push({ ...department, id: department.parentId, name: department.parentName, code: "Parent" });
+      options.push({ ...department, id: department.parentId, name: department.parentName });
     }
 
     return options;
@@ -111,33 +121,30 @@ export function DepartmentFormDialog({
 
   // Load / Reset form state
   useEffect(() => {
-    if (open) {
-      setErrors({});
-      if (department) {
-        setName(department.name);
-        setCode(department.code);
-        setDescription(department.description);
-        setDepartmentHeadId(department.departmentHeadId || "none");
-        setReportingManagerId(department.reportingManagerId || "none");
-        setOffice(department.office);
-        setBudget(String(department.budget));
-        setCostCenter(department.costCenter);
-        setEmployeeCapacity(String(department.employeeCapacity));
-        setCurrentEmployeeCount(String(department.currentEmployeeCount));
-        setExtensionNumber(department.extensionNumber);
-        setStatus(department.status);
-        setThemeColor(department.themeColor);
-        setIconName(department.iconName);
-        setParentId(department.parentId || "none");
-      } else {
+    if (!open || showFormLoader) return;
+
+    setErrors({});
+    if (isEdit && department) {
+      setName(department.name);
+      setDescription(department.description);
+      setDepartmentHeadId(department.departmentHeadId || "");
+      setReportingManagerId(department.reportingManagerId || "none");
+      setOffice(department.office);
+      setBudget(String(department.budget));
+      setEmployeeCapacity(String(department.employeeCapacity));
+      setCurrentEmployeeCount(String(department.currentEmployeeCount));
+      setExtensionNumber(department.extensionNumber);
+      setStatus(department.status);
+      setThemeColor(normalizeThemeColor(department.themeColor));
+      setIconName(normalizeIconName(department.iconName));
+      setParentId(department.parentId || "none");
+    } else if (!isEdit) {
         setName("");
-        setCode("");
         setDescription("");
-        setDepartmentHeadId("none");
+        setDepartmentHeadId("");
         setReportingManagerId("none");
         setOffice(OFFICES[0] || "");
         setBudget("");
-        setCostCenter("CC-");
         setEmployeeCapacity("30");
         setCurrentEmployeeCount("0");
         setExtensionNumber("");
@@ -146,8 +153,15 @@ export function DepartmentFormDialog({
         setIconName(DEPARTMENT_ICONS[0]?.name || "Code2");
         setParentId("none");
       }
-    }
-  }, [open, department, managers]);
+  }, [open, department, isEdit, showFormLoader]);
+
+  const iconOptions = useMemo(
+    () => getDepartmentIconOptions(department?.iconName),
+    [department?.iconName],
+  );
+
+  const selectedIcon = iconOptions.find((di) => di.name === iconName);
+  const SelectedIconComponent = (LucideIcons as any)[iconName] || LucideIcons.HelpCircle;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,25 +169,27 @@ export function DepartmentFormDialog({
     const headManager = managerOptions.find((m) => m.id === departmentHeadId);
     const selectedReport = managerOptions.find((m) => m.id === reportingManagerId);
     const parentDept = parentDeptOptions.find((d) => d.id === parentId);
+    const resolvedHeadId = departmentHeadId || null;
+
+    const resolvedThemeColor = normalizeThemeColor(themeColor);
+    const resolvedIconName = normalizeIconName(iconName);
 
     const draft: Partial<Department> = {
       id: department?.id,
       name: name.trim(),
-      code: code.trim().toUpperCase(),
       description: description.trim(),
-      departmentHeadId: departmentHeadId === "none" ? null : departmentHeadId,
-      departmentHeadName: departmentHeadId === "none" ? "Unassigned" : headManager?.fullName || "Unassigned",
+      departmentHeadId: resolvedHeadId,
+      departmentHeadName: headManager?.fullName || "",
       reportingManagerId: reportingManagerId === "none" ? null : reportingManagerId,
       reportingManagerName: reportingManagerId === "none" ? "None" : selectedReport?.fullName || "None",
       office,
       budget: budget ? parseFloat(budget) : 0,
-      costCenter: costCenter.trim(),
       employeeCapacity: employeeCapacity ? parseInt(employeeCapacity) : 30,
       currentEmployeeCount: parseInt(currentEmployeeCount) || 0,
       extensionNumber: extensionNumber.trim(),
       status,
-      themeColor,
-      iconName,
+      themeColor: resolvedThemeColor,
+      iconName: resolvedIconName,
       parentId: parentId === "none" ? null : parentId,
       parentName: parentId === "none" ? "None" : parentDept?.name || "None",
     };
@@ -190,21 +206,21 @@ export function DepartmentFormDialog({
     const finalDept: Department = {
       id: department?.id || `dept_${Math.random().toString(36).substr(2, 9)}`,
       name: name.trim(),
-      code: code.trim().toUpperCase(),
       description: description.trim(),
-      departmentHeadId: departmentHeadId === "none" ? null : departmentHeadId,
-      departmentHeadName: departmentHeadId === "none" ? "Unassigned" : headManager?.fullName || "Unassigned",
+      department_code: department?.department_code ?? "",
+      cost_center: department?.cost_center ?? "",
+      departmentHeadId: resolvedHeadId,
+      departmentHeadName: headManager?.fullName || "",
       reportingManagerId: reportingManagerId === "none" ? null : reportingManagerId,
       reportingManagerName: reportingManagerId === "none" ? "None" : selectedReport?.fullName || "None",
       office,
       budget: budget ? parseFloat(budget) : 0,
-      costCenter: costCenter.trim(),
       employeeCapacity: employeeCapacity ? parseInt(employeeCapacity) : 30,
       currentEmployeeCount: department?.currentEmployeeCount ?? (parseInt(currentEmployeeCount) || 0),
       extensionNumber: extensionNumber.trim(),
       status,
-      themeColor,
-      iconName,
+      themeColor: resolvedThemeColor,
+      iconName: resolvedIconName,
       parentId: parentId === "none" ? null : parentId,
       parentName: parentId === "none" ? "None" : parentDept?.name || "None",
       createdDate: department?.createdDate || new Date().toISOString().split("T")[0],
@@ -222,13 +238,24 @@ export function DepartmentFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl border-border bg-card p-6 backdrop-blur-xl md:max-w-4xl">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl border-border bg-card p-6 backdrop-blur-xl md:max-w-4xl"
+      overlayClassName="bg-black/60 backdrop-blur-sm"
+      onPointerDownOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
             {isEdit ? "Edit Department" : "Add Department"}
           </DialogTitle>
         </DialogHeader>
 
+        {showFormLoader ? (
+          <div className="flex min-h-[320px] items-center justify-center py-12">
+            <div className="space-y-3 text-center">
+              <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+              <p className="text-sm text-muted-foreground">Loading department details...</p>
+            </div>
+          </div>
+        ) : (
         <form onSubmit={handleSubmit} className="space-y-6 py-4">
           {/* Section 1: Basic Information */}
           <div className="space-y-4">
@@ -248,7 +275,7 @@ export function DepartmentFormDialog({
                 {errors.name && <p className="text-[10px] text-rose-500">{errors.name}</p>}
               </div>
 
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label htmlFor="code" className="after:content-['*'] after:text-rose-500 after:ml-0.5">Department Code</Label>
                 <Input
                   id="code"
@@ -258,7 +285,7 @@ export function DepartmentFormDialog({
                   className={errors.code ? "border-rose-500" : ""}
                 />
                 {errors.code && <p className="text-[10px] text-rose-500">{errors.code}</p>}
-              </div>
+              </div> */}
 
               <div className="space-y-2 md:col-span-3">
                 <Label htmlFor="description">Description / Purpose</Label>
@@ -282,20 +309,23 @@ export function DepartmentFormDialog({
             </h3>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <div className="space-y-2">
-                <Label htmlFor="departmentHead">Department Head</Label>
-                <Select value={departmentHeadId} onValueChange={(val) => setDepartmentHeadId(val)}>
+                <Label htmlFor="departmentHead" className="after:content-['*'] after:text-rose-500 after:ml-0.5">
+                  Department Head
+                </Label>
+                <Select value={departmentHeadId || undefined} onValueChange={setDepartmentHeadId}>
                   <SelectTrigger id="departmentHead" className={errors.departmentHeadId ? "border-rose-500" : ""}>
                     <SelectValue placeholder="Select Department Head" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Unassigned</SelectItem>
                     {managerOptions.map((mgr) => (
                       <SelectItem key={mgr.id} value={mgr.id}>
                         {mgr.fullName} ({mgr.designation || "Manager"})
                       </SelectItem>
                     ))}
                     {managerOptions.length === 0 ? (
-                      <SelectItem value="no-managers" disabled>No managers found</SelectItem>
+                      <SelectItem value="no-managers" disabled>
+                        No managers found
+                      </SelectItem>
                     ) : null}
                   </SelectContent>
                 </Select>
@@ -329,7 +359,7 @@ export function DepartmentFormDialog({
                     <SelectItem value="none">Top-level department</SelectItem>
                     {parentDeptOptions.map((dept) => (
                       <SelectItem key={dept.id} value={dept.id}>
-                        {dept.name} ({dept.code})
+                        {dept.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -373,16 +403,6 @@ export function DepartmentFormDialog({
                   className={errors.budget ? "border-rose-500" : ""}
                 />
                 {errors.budget && <p className="text-[10px] text-rose-500">{errors.budget}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="costCenter">Cost Center ID</Label>
-                <Input
-                  id="costCenter"
-                  value={costCenter}
-                  onChange={(e) => setCostCenter(e.target.value)}
-                  placeholder="e.g. CC-TECH-100"
-                />
               </div>
 
               <div className="space-y-2">
@@ -444,7 +464,9 @@ export function DepartmentFormDialog({
                       type="button"
                       onClick={() => setThemeColor(tc.hex)}
                       className={`h-8 w-8 rounded-full border-2 transition-all duration-200 cursor-pointer ${
-                        themeColor === tc.hex ? "border-foreground scale-110 shadow-md" : "border-transparent opacity-80 hover:opacity-100 hover:scale-105"
+                        themeColorsMatch(themeColor, tc.hex)
+                          ? "border-foreground scale-110 shadow-md"
+                          : "border-transparent opacity-80 hover:opacity-100 hover:scale-105"
                       }`}
                       style={{ backgroundColor: tc.hex }}
                       title={tc.label}
@@ -456,13 +478,17 @@ export function DepartmentFormDialog({
               {/* Icon Picker List */}
               <div className="space-y-2">
                 <Label htmlFor="iconPicker">Department Icon Picker</Label>
-                <Select value={iconName} onValueChange={(val) => setIconName(val)}>
+                <Select value={iconName} onValueChange={setIconName}>
                   <SelectTrigger id="iconPicker" className="h-10">
-                    <SelectValue placeholder="Select Department Icon" />
+                    <SelectValue placeholder="Select Department Icon">
+                      <div className="flex items-center gap-2">
+                        <SelectedIconComponent className="h-4 w-4 text-muted-foreground" />
+                        <span>{selectedIcon?.label ?? iconName}</span>
+                      </div>
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    {DEPARTMENT_ICONS.map((di) => {
-                      // Dynamically retrieve lucide icon component
+                    {iconOptions.map((di) => {
                       const IconComponent = (LucideIcons as any)[di.name] || LucideIcons.HelpCircle;
                       return (
                         <SelectItem key={di.name} value={di.name}>
@@ -499,6 +525,7 @@ export function DepartmentFormDialog({
             </Button>
           </DialogFooter>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   );
