@@ -406,15 +406,16 @@ export function DashboardShell() {
         />
       )}
 
-      <div className="flex min-w-0 flex-1">
-        {/* Sidebar */}
+      <div className="relative flex min-w-0 flex-1">
+        {/* Sidebar — fixed to viewport; main content scrolls independently */}
         <aside
-          className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r border-border bg-card/60 backdrop-blur-xl transition-all duration-200 lg:static lg:translate-x-0 ${
-            collapsed ? "lg:w-[68px]" : "lg:w-64"
-          } w-64 ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}
-          style={isDemo ? { top: "36px" } : undefined}
+          className={`fixed left-0 z-40 flex flex-col border-r border-border bg-card/60 backdrop-blur-xl transition-[width,transform] duration-200 ${
+            isDemo ? "top-9 bottom-0" : "inset-y-0"
+          } ${collapsed ? "w-[68px]" : "w-64"} ${
+            mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          }`}
         >
-          <div className="flex h-16 items-center justify-between border-b border-border px-4">
+          <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-4">
             <Link to={homeLink as any} className="flex items-center gap-2">
               <span className="grid h-8 w-8 place-items-center rounded-lg text-brand-foreground shadow-glow" style={{ background: "var(--gradient-brand)" }}>
                 <Sparkles className="h-4 w-4" />
@@ -474,7 +475,7 @@ export function DashboardShell() {
             ))}
           </nav>
 
-          <div className="border-t border-border p-3">
+          <div className="shrink-0 border-t border-border p-3">
             <div className={`flex items-center gap-3 ${collapsed ? "justify-center" : ""}`}>
               <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-foreground text-sm font-semibold text-background">{initials}</div>
               {!collapsed ? (
@@ -484,7 +485,7 @@ export function DashboardShell() {
                 </div>
               ) : null}
               {!collapsed ? (
-                <button onClick={logout} className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive cursor-pointer" aria-label="Sign out">
+                <button onClick={logout} className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive cursor-pointer" aria-label="Sign out">
                   <LogOut className="h-4 w-4" />
                 </button>
               ) : null}
@@ -494,7 +495,11 @@ export function DashboardShell() {
 
         {mobileOpen ? <div onClick={() => setMobileOpen(false)} className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm lg:hidden" /> : null}
 
-        <div className="flex min-h-screen min-w-0 flex-1 flex-col overflow-x-hidden">
+        <div
+          className={`flex min-h-screen min-w-0 flex-1 flex-col overflow-x-hidden transition-[margin] duration-200 ${
+            collapsed ? "lg:ml-[68px]" : "lg:ml-64"
+          }`}
+        >
           {/* Topbar */}
           <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/70 px-4 backdrop-blur-xl sm:px-6">
             <button onClick={() => setMobileOpen(true)} className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground lg:hidden cursor-pointer" aria-label="Open menu">
