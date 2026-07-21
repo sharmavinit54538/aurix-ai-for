@@ -35,6 +35,7 @@ import {
   formatStatusLabel,
   getDocumentUrl,
   humanizeFieldKey,
+  isAttachmentUrlField,
   isImageUrl,
   resolveMediaUrl,
   statusBadgeClass,
@@ -134,6 +135,33 @@ function DetailSection({
   );
 }
 
+function AttachmentFieldActions({ value }: { value: unknown }) {
+  const url = resolveMediaUrl(typeof value === "string" ? value : null);
+  if (!url) return null;
+
+  return (
+    <div className="sm:col-span-2">
+      <dd className="flex flex-wrap items-center gap-2">
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => window.open(url, "_blank", "noopener,noreferrer")}
+        >
+          <Eye className="mr-1.5 h-3.5 w-3.5" />
+          Preview Document
+        </Button>
+        <Button type="button" size="sm" variant="outline" asChild>
+          <a href={url} download target="_blank" rel="noopener noreferrer">
+            <Download className="mr-1.5 h-3.5 w-3.5" />
+            Download
+          </a>
+        </Button>
+      </dd>
+    </div>
+  );
+}
+
 function RecordListSection({
   title,
   items,
@@ -149,18 +177,38 @@ function RecordListSection({
         {title}
       </h3>
       <div className="space-y-3">
-        {items.map((item, index) => (
-          <div key={index} className="rounded-lg border border-border/70 bg-background/40 p-3">
-            <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {Object.entries(item).map(([key, value]) => (
-                <div key={key}>
-                  <dt className="text-[11px] text-muted-foreground">{humanizeFieldKey(key)}</dt>
-                  <dd className="mt-0.5 text-sm">{formatFieldValue(value)}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-        ))}
+        {items.map((item, index) => {
+          const attachmentEntries = Object.entries(item).filter(
+            ([key, value]) =>
+              isAttachmentUrlField(key) &&
+              value !== null &&
+              value !== undefined &&
+              value !== "",
+          );
+          const regularEntries = Object.entries(item).filter(
+            ([key, value]) =>
+              !isAttachmentUrlField(key) &&
+              value !== null &&
+              value !== undefined &&
+              value !== "",
+          );
+
+          return (
+            <div key={index} className="rounded-lg border border-border/70 bg-background/40 p-3">
+              <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {regularEntries.map(([key, value]) => (
+                  <div key={key}>
+                    <dt className="text-[11px] text-muted-foreground">{humanizeFieldKey(key)}</dt>
+                    <dd className="mt-0.5 text-sm">{formatFieldValue(value)}</dd>
+                  </div>
+                ))}
+                {attachmentEntries.map(([key, value]) => (
+                  <AttachmentFieldActions key={key} value={value} />
+                ))}
+              </dl>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
