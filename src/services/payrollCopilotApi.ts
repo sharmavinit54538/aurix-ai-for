@@ -17,20 +17,22 @@ export const payrollCopilotApi = {
     try {
       const res: any = await api.post("payroll/copilot/chat", {
         prompt,
+        message: prompt,
         history: history.map((m) => ({ role: m.role, content: m.content })),
       });
 
-      if (res.data?.content || res.data?.reply) {
+      const responseData = res.data || res;
+      if (responseData?.content || responseData?.reply || responseData?.response) {
         return {
-          id: res.data.id || `msg-${Date.now()}`,
+          id: responseData.id || `msg-${Date.now()}`,
           role: "assistant",
-          content: res.data.content || res.data.reply,
-          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-          metadata: res.data.metadata,
+          content: responseData.content || responseData.reply || responseData.response,
+          timestamp: responseData.timestamp || new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          metadata: responseData.metadata,
         };
       }
-    } catch {
-      // Intelligent fallback logic when backend server is running in local mode
+    } catch (err) {
+      console.warn("Payroll Copilot API network notice, using local engine fallback:", err);
     }
 
     // Engine fallback for instant accurate responses
