@@ -1,0 +1,117 @@
+/* ==========================================================================
+   Aurix AI — Enterprise Payroll Deductions & Recovery Management CSS
+   Theme: Luxury Dark Navy (#070B17), Soft Glass Elevation (#121A2F)
+   ========================================================================== */
+
+:root {
+  --ded-bg: #070B17;
+  --ded-card: #121A2F;
+  --ded-card-hover: #1A2440;
+  --ded-border: rgba(255, 255, 255, 0.06);
+  --ded-border-hover: rgba(79, 124, 255, 0.3);
+  --ded-primary: #4F7CFF;
+  --ded-success: #10B981;
+  --ded-warning: #F59E0B;
+  --ded-danger: #EF4444;
+  --ded-text-main: #F1F5F9;
+  --ded-text-muted: #94A3B8;
+}
+
+/* Page Base */
+.deductions-container {
+  background-color: var(--ded-bg);
+  min-height: 100vh;
+  color: var(--ded-text-main);
+  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
+}
+
+/* Workday High-Density Cards */
+.ded-card {
+  background-color: var(--ded-card);
+  border: 1px solid var(--ded-border);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ded-card:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* KPI Summary Cards Animation */
+.kpi-ded-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.kpi-ded-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--ded-primary), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.kpi-ded-card:hover::before {
+  opacity: 1;
+}
+
+/* Sticky Data Table */
+.ded-table-wrapper {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid var(--ded-border);
+  background-color: var(--ded-card);
+}
+
+.ded-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.82rem;
+}
+
+.ded-table th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #0E1527;
+  color: var(--ded-text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.70rem;
+  letter-spacing: 0.05em;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--ded-border);
+  white-space: nowrap;
+}
+
+.ded-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  color: var(--ded-text-main);
+  vertical-align: middle;
+}
+
+.ded-table tr:hover td {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Payroll Impact Waterfall Diagram Node */
+.waterfall-node {
+  background: rgba(18, 26, 47, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 12px;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.waterfall-node:hover {
+  border-color: rgba(79, 124, 255, 0.4);
+  transform: translateY(-1px);
+}
