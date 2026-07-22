@@ -1,148 +1,319 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport, type UIMessage } from "ai";
 import { useEffect, useRef, useState } from "react";
-import { Bot, Send, Sparkles, User } from "lucide-react";
+import {
+  Bot,
+  Send,
+  Sparkles,
+  User,
+  Trash2,
+  Copy,
+  Check,
+  RefreshCw,
+  Table as TableIcon,
+  Calculator,
+  ShieldCheck,
+  FileText,
+  Clock,
+  Zap,
+} from "lucide-react";
+import { toast } from "sonner";
 import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  payrollCopilotApi,
+  CopilotMessage,
+} from "@/services/payrollCopilotApi";
 
 export const Route = createFileRoute("/dashboard/payroll/copilot")({
-  head: () => ({ meta: [{ title: "AI Payroll Copilot — Aurix" }] }),
+  head: () => ({ meta: [{ title: "AI Payroll Copilot — Aurix AI" }] }),
   component: PayrollCopilotPage,
 });
 
 const SUGGESTIONS = [
   "Calculate net salary from gross 80,000 with standard deductions",
-  "Explain TDS slabs for FY 2025-26",
-  "Draft a payslip email to an employee",
+  "Explain TDS tax slabs for FY 2026-27 under New Tax Regime",
+  "Draft a payslip disbursement email to an employee",
   "Checklist to close this month's payroll",
 ];
 
 function PayrollCopilotPage() {
+  const [messages, setMessages] = useState<CopilotMessage[]>([]);
   const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const { messages, sendMessage, status, error } = useChat({
-    id: "payroll-copilot",
-    transport: new DefaultChatTransport({ api: "/api/payroll-copilot" }),
-  });
-
-  const isLoading = status === "submitted" || status === "streaming";
+  // Load chat history on mount
+  useEffect(() => {
+    async function loadHistory() {
+      const history = await payrollCopilotApi.getHistory();
+      if (history.length > 0) {
+        setMessages(history);
+      }
+    }
+    loadHistory();
+  }, []);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, status]);
+  }, [messages, isLoading]);
 
-  useEffect(() => { inputRef.current?.focus(); }, []);
-  useEffect(() => { if (status === "ready") inputRef.current?.focus(); }, [status]);
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
 
-  async function submit(text?: string) {
-    const value = (text ?? input).trim();
-    if (!value || isLoading) return;
-    setInput("");
-    await sendMessage({ text: value });
-  }
+  const handleSend = async (textToSend?: string) => {
+    const query = (textToSend ?? input).trim();
+    if (!query || isLoading) return;
+
+    const userMessage: CopilotMessage = {
+      id: `user-${Date.now()}`,
+      role: "user",
+      content: query,
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    if (!textToSend) setInput("");
+    setIsLoading(true);
+
+    try {
+      const reply = await payrollCopilotApi.sendMessage(query, [...messages, userMessage]);
+      setMessages((prev) => [...prev, reply]);
+    } catch {
+      toast.error("Failed to connect to AI Payroll Copilot engine.");
+    } finally {
+      setIsLoading(false);
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  };
+
+  const handleClear = async () => {
+    await payrollCopilotApi.clearHistory();
+    setMessages([]);
+    toast.info("Cleared Copilot chat session.");
+  };
+
+  const handleCopy = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    toast.success("Copied message to clipboard!");
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
   return (
     <>
-      <PageHeader
-        title="AI Payroll Copilot"
-        description="Ask anything about salaries, tax, compliance, deductions and payroll workflows."
-      />
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2">
+        <PageHeader
+          title="AI Payroll Copilot & Compliance Assistant"
+          description="Ask anything about salaries, statutory tax slabs, PF/ESI deductions, compliance, payslips, and payroll closing workflows."
+        />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_280px]">
-        <div className="flex h-[calc(100vh-220px)] flex-col overflow-hidden rounded-2xl border border-border bg-card/60 backdrop-blur-xl">
-          <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto p-4 sm:p-6">
+        {messages.length > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleClear}
+            className="h-8 gap-1.5 border-white/10 bg-white/[0.03] text-xs text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 self-start sm:self-auto"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Clear Session
+          </Button>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_300px]">
+        {/* ── Main Chat Interface ── */}
+        <div className="flex h-[calc(100vh-210px)] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0d1526]/80 backdrop-blur-xl shadow-2xl">
+          {/* Scrollable Messages Area */}
+          <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto p-4 sm:p-6 sp-table-scroll">
             {messages.length === 0 ? (
-              <div className="flex h-full flex-col items-center justify-center text-center">
-                <div className="mb-4 grid h-12 w-12 place-items-center rounded-xl text-brand-foreground shadow-glow" style={{ background: "var(--gradient-brand)" }}>
-                  <Sparkles className="h-5 w-5" />
+              <div className="flex h-full flex-col items-center justify-center text-center p-4">
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-500/20 to-blue-600/20 text-indigo-400 shadow-lg shadow-indigo-500/20">
+                  <Sparkles className="h-7 w-7" />
                 </div>
-                <h2 className="font-display text-lg font-semibold">How can I help with payroll today?</h2>
-                <p className="mt-1 max-w-md text-sm text-muted-foreground">
-                  I can compute salaries, explain compliance, draft messages, and walk you through any payroll task.
+                <h2 className="text-lg font-bold text-white tracking-tight">
+                  How can I assist with your payroll today?
+                </h2>
+                <p className="mt-1.5 max-w-md text-xs text-slate-400 leading-relaxed">
+                  I calculate exact gross-to-net take-home salaries, explain tax regulations (PF, ESI, TDS), draft payslip emails, and audit month-end workflows.
                 </p>
-                <div className="mt-6 grid w-full max-w-xl grid-cols-1 gap-2 sm:grid-cols-2">
-                  {SUGGESTIONS.map((s) => (
+
+                {/* Quick Suggestion Cards */}
+                <div className="mt-6 grid w-full max-w-2xl grid-cols-1 gap-2.5 sm:grid-cols-2">
+                  {SUGGESTIONS.map((suggestion) => (
                     <button
-                      key={s}
-                      onClick={() => submit(s)}
-                      className="rounded-lg border border-border bg-background/40 px-3 py-2 text-left text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+                      key={suggestion}
+                      type="button"
+                      onClick={() => handleSend(suggestion)}
+                      className="group flex flex-col justify-between rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 text-left transition-all duration-200 hover:border-indigo-500/40 hover:bg-indigo-500/[0.06]"
                     >
-                      {s}
+                      <span className="text-xs font-medium text-slate-300 group-hover:text-white leading-snug">
+                        {suggestion}
+                      </span>
+                      <span className="mt-2 text-[10px] font-semibold text-indigo-400 opacity-80 group-hover:opacity-100 flex items-center gap-1">
+                        <Zap className="h-3 w-3" /> Execute query
+                      </span>
                     </button>
                   ))}
                 </div>
               </div>
             ) : (
-              messages.map((m) => <MessageBubble key={m.id} message={m} />)
+              messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
+                >
+                  {/* Avatar */}
+                  <div
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border text-xs font-bold ${
+                      msg.role === "user"
+                        ? "border-indigo-500/30 bg-indigo-600 text-white"
+                        : "border-purple-500/30 bg-purple-500/20 text-purple-300"
+                    }`}
+                  >
+                    {msg.role === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+                  </div>
+
+                  {/* Message Bubble */}
+                  <div className="max-w-[85%] space-y-2">
+                    <div
+                      className={`relative rounded-2xl p-4 text-xs leading-relaxed shadow-lg ${
+                        msg.role === "user"
+                          ? "bg-indigo-600/90 text-white rounded-tr-none"
+                          : "bg-[#121a2f] text-slate-200 border border-white/[0.08] rounded-tl-none"
+                      }`}
+                    >
+                      {/* Copy Action for AI Messages */}
+                      {msg.role === "assistant" && (
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(msg.content, msg.id)}
+                          className="absolute right-2.5 top-2.5 rounded-lg p-1 text-slate-400 hover:bg-white/10 hover:text-white"
+                          title="Copy text"
+                        >
+                          {copiedId === msg.id ? (
+                            <Check className="h-3.5 w-3.5 text-emerald-400" />
+                          ) : (
+                            <Copy className="h-3.5 w-3.5" />
+                          )}
+                        </button>
+                      )}
+
+                      <div className="whitespace-pre-wrap">{msg.content}</div>
+
+                      {/* Optional Data Table Rendering */}
+                      {msg.metadata?.tableData && (
+                        <div className="mt-3 overflow-x-auto rounded-lg border border-white/10 bg-black/20 p-2">
+                          <table className="w-full text-left text-[11px]">
+                            <thead>
+                              <tr className="border-b border-white/10 font-bold text-indigo-300">
+                                {msg.metadata.tableData.headers.map((h, i) => (
+                                  <th key={i} className="p-1.5">{h}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/5">
+                              {msg.metadata.tableData.rows.map((row, idx) => (
+                                <tr key={idx} className="hover:bg-white/5">
+                                  {row.map((cell, cIdx) => (
+                                    <td key={cIdx} className="p-1.5 font-mono text-slate-300">{cell}</td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+
+                      <div className="mt-1.5 flex items-center justify-between text-[10px] opacity-60">
+                        <span>{msg.timestamp}</span>
+                        {msg.role === "assistant" && <span>Aurix Copilot</span>}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
             )}
-            {status === "submitted" ? (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Bot className="h-4 w-4" /> Thinking…
+
+            {/* Loading Indicator */}
+            {isLoading && (
+              <div className="flex items-center gap-2.5 text-xs text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 p-3 rounded-2xl max-w-xs">
+                <RefreshCw className="h-4 w-4 animate-spin text-indigo-400" />
+                <span>Aurix Copilot is computing response...</span>
               </div>
-            ) : null}
-            {error ? (
-              <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-                {error.message || "Something went wrong. Please try again."}
-              </div>
-            ) : null}
+            )}
           </div>
 
+          {/* ── Input Box ── */}
           <form
-            onSubmit={(e) => { e.preventDefault(); submit(); }}
-            className="flex items-end gap-2 border-t border-border bg-background/40 p-3"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSend();
+            }}
+            className="flex items-end gap-2 border-t border-white/[0.08] bg-[#121a2f] p-3"
           >
             <Textarea
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); }
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
               }}
-              placeholder="Ask the Payroll Copilot…"
+              placeholder="Ask anything about salary calculations, tax slabs, PF, ESI, or compliance..."
               rows={1}
-              className="min-h-[44px] max-h-40 flex-1 resize-none"
+              className="min-h-[44px] max-h-36 flex-1 resize-none rounded-xl border-white/10 bg-white/[0.03] text-xs text-white placeholder:text-slate-500 focus:border-indigo-500/50"
             />
-            <Button type="submit" disabled={isLoading || !input.trim()}>
-              <Send className="mr-2 h-4 w-4" /> Send
+
+            <Button
+              type="submit"
+              disabled={isLoading || !input.trim()}
+              className="h-11 border border-indigo-500/40 bg-indigo-600 px-4 text-xs font-semibold text-white shadow-lg shadow-indigo-500/25 hover:bg-indigo-500 disabled:opacity-40"
+            >
+              <Send className="mr-1.5 h-3.5 w-3.5" /> Send
             </Button>
           </form>
         </div>
 
-        <aside className="space-y-3">
-          <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl">
-            <h3 className="mb-2 font-medium">What I can do</h3>
-            <ul className="space-y-1.5 text-sm text-muted-foreground">
-              <li>• Salary & net-pay calculations</li>
-              <li>• Tax (TDS, PF, ESI) guidance</li>
-              <li>• Compliance & filing checklists</li>
-              <li>• Draft payslip / approval emails</li>
-              <li>• Explain deductions, bonuses, overtime</li>
+        {/* ── Sidebar Context & Capabilities ── */}
+        <aside className="space-y-4">
+          <div className="sp-card p-4 space-y-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+              <Zap className="h-4 w-4 text-indigo-400" />
+              Copilot Capabilities
+            </h3>
+            <ul className="space-y-2 text-xs text-slate-400">
+              <li className="flex items-start gap-2">
+                <Calculator className="h-4 w-4 text-indigo-400 flex-shrink-0 mt-0.5" />
+                <span><strong>Gross-to-Net Math</strong>: Auto computes Basic, HRA, EPF (12%), ESI (0.75%), PT & TDS.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <ShieldCheck className="h-4 w-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+                <span><strong>Statutory Tax Rules</strong>: Code on Wages 2026, New Tax Regime slabs & Sec 87A rebates.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <FileText className="h-4 w-4 text-cyan-400 flex-shrink-0 mt-0.5" />
+                <span><strong>HR Templates</strong>: Generates email advice for payslip releases, salary revisions & tax forms.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Clock className="h-4 w-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                <span><strong>Month-End Audit</strong>: Reconciles biometric attendance, LOP days & NEFT bank advice batches.</span>
+              </li>
             </ul>
           </div>
-          <div className="rounded-2xl border border-dashed border-border bg-card/40 p-4 text-xs text-muted-foreground">
-            Responses are AI-generated. Verify figures before processing real payroll.
+
+          <div className="rounded-2xl border border-dashed border-indigo-500/20 bg-indigo-500/[0.03] p-4 text-[11px] text-slate-400 leading-relaxed">
+            <div className="font-semibold text-indigo-300 mb-1">Aurix Financial Engine</div>
+            All salary calculations follow Indian Statutory Rules (Income Tax Act 1961, EPF Act 1952, ESI Act 1948). Verify custom company policies prior to disbursal.
           </div>
         </aside>
       </div>
     </>
-  );
-}
-
-function MessageBubble({ message }: { message: UIMessage }) {
-  const isUser = message.role === "user";
-  const text = message.parts.map((p) => (p.type === "text" ? p.text : "")).join("");
-  return (
-    <div className={`flex gap-3 ${isUser ? "flex-row-reverse" : ""}`}>
-      <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-full ${isUser ? "bg-foreground text-background" : "text-brand-foreground"}`} style={isUser ? undefined : { background: "var(--gradient-brand)" }}>
-        {isUser ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
-      </div>
-      <div className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm ${isUser ? "bg-foreground text-background" : "bg-accent/60 text-foreground"}`}>
-        {text || <span className="text-muted-foreground">…</span>}
-      </div>
-    </div>
   );
 }

@@ -14,12 +14,7 @@ export const ApprovalWorkflowTracker: React.FC<ApprovalWorkflowTrackerProps> = (
   structure,
   onApproveDecision,
 }) => {
-  const steps: ApprovalStep[] = structure.approvalWorkflow || [
-    { role: "HR Manager", name: "Rohan Varma", status: "APPROVED", timestamp: "2026-03-10 10:15 AM", comments: "Structure reviewed & compliant with wage rules." },
-    { role: "Payroll Admin", name: "Sunita Menon", status: "APPROVED", timestamp: "2026-03-11 02:45 PM", comments: "Statutory PF/ESI formulas verified." },
-    { role: "Finance Manager", name: "Karan Johar", status: "APPROVED", timestamp: "2026-03-12 04:30 PM", comments: "Budget allocation approved within FY27 ceiling." },
-    { role: "CFO", name: "Ananya Roy", status: "APPROVED", timestamp: "2026-03-15 11:00 AM", comments: "Approved for publishing company-wide." },
-  ];
+  const steps: ApprovalStep[] = structure.approvalWorkflow || [];
 
   return (
     <div className="salary-card p-5 space-y-5 bg-slate-900/80 border border-white/10">
