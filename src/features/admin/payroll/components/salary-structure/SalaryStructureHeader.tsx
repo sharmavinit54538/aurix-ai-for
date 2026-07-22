@@ -63,15 +63,15 @@ export const SalaryStructureHeader: React.FC<SalaryStructureHeaderProps> = ({
         className="hidden"
       />
 
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         {/* Left Side: Title & Subtitle */}
-        <div className="space-y-1.5">
+        <div className="min-w-0 flex-1 space-y-1.5">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/25 text-blue-400">
+            <div className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/25 text-blue-400 shrink-0">
               <Layers className="w-6 h-6" />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-slate-100 flex items-center gap-3">
+            <div className="min-w-0">
+              <h1 className="text-2xl font-bold tracking-tight text-slate-100 flex flex-wrap items-center gap-2 sm:gap-3">
                 Salary Structure
                 <span className="env-badge">
                   <Zap className="w-3 h-3 text-emerald-400 fill-emerald-400" />
@@ -85,13 +85,25 @@ export const SalaryStructureHeader: React.FC<SalaryStructureHeaderProps> = ({
           </div>
         </div>
 
-        {/* Right Side: Quick Header Actions */}
-        <div className="flex items-center flex-wrap gap-2.5">
+        {/* Right Side: Quick Header Actions — keep all buttons on one row */}
+        <div className="flex w-full shrink-0 items-center justify-start gap-2 overflow-x-auto pb-1 xl:w-auto xl:justify-end xl:overflow-visible xl:pb-0">
+          <Button
+            type="button"
+            size="sm"
+            onClick={onCreateClick}
+            className="h-9 shrink-0 gap-2 border border-blue-400/30 bg-blue-600 text-xs font-medium text-white shadow-lg shadow-blue-600/25 hover:bg-blue-500"
+          >
+            <Plus className="w-4 h-4" />
+            Create Structure
+          </Button>
+
+          <div className="mx-1 hidden h-6 w-px shrink-0 bg-white/10 sm:block" />
+
           <Button
             variant="outline"
             size="sm"
             onClick={() => fileInputRef.current?.click()}
-            className="border-white/10 bg-slate-900/60 hover:bg-slate-800 text-slate-300 gap-1.5 text-xs h-9"
+            className="h-9 shrink-0 gap-1.5 border-white/10 bg-slate-900/60 text-xs text-slate-300 hover:bg-slate-800"
           >
             <Upload className="w-3.5 h-3.5 text-slate-400" />
             Import
@@ -101,7 +113,7 @@ export const SalaryStructureHeader: React.FC<SalaryStructureHeaderProps> = ({
             variant="outline"
             size="sm"
             onClick={onExportClick}
-            className="border-white/10 bg-slate-900/60 hover:bg-slate-800 text-slate-300 gap-1.5 text-xs h-9"
+            className="h-9 shrink-0 gap-1.5 border-white/10 bg-slate-900/60 text-xs text-slate-300 hover:bg-slate-800"
           >
             <Download className="w-3.5 h-3.5 text-slate-400" />
             Export
@@ -111,7 +123,7 @@ export const SalaryStructureHeader: React.FC<SalaryStructureHeaderProps> = ({
             variant="outline"
             size="sm"
             onClick={onCloneClick}
-            className="border-white/10 bg-slate-900/60 hover:bg-slate-800 text-slate-300 gap-1.5 text-xs h-9"
+            className="h-9 shrink-0 gap-1.5 border-white/10 bg-slate-900/60 text-xs text-slate-300 hover:bg-slate-800"
           >
             <Copy className="w-3.5 h-3.5 text-slate-400" />
             Clone
@@ -121,29 +133,21 @@ export const SalaryStructureHeader: React.FC<SalaryStructureHeaderProps> = ({
             variant="outline"
             size="sm"
             onClick={onCompareClick}
-            className="border-white/10 bg-slate-900/60 hover:bg-slate-800 text-slate-300 gap-1.5 text-xs h-9"
+            className="h-9 shrink-0 gap-1.5 border-white/10 bg-slate-900/60 text-xs text-slate-300 hover:bg-slate-800"
           >
             <GitCompare className="w-3.5 h-3.5 text-purple-400" />
-            Compare Versions
+            <span className="hidden md:inline">Compare Versions</span>
+            <span className="md:hidden">Compare</span>
           </Button>
 
           <Button
             variant="outline"
             size="sm"
             onClick={onAuditLogsClick}
-            className="border-white/10 bg-slate-900/60 hover:bg-slate-800 text-slate-300 gap-1.5 text-xs h-9"
+            className="h-9 shrink-0 gap-1.5 border-white/10 bg-slate-900/60 text-xs text-slate-300 hover:bg-slate-800"
           >
             <History className="w-3.5 h-3.5 text-amber-400" />
             Audit Logs
-          </Button>
-
-          <Button
-            size="sm"
-            onClick={onCreateClick}
-            className="bg-blue-600 hover:bg-blue-500 text-white font-medium gap-2 text-xs h-9 shadow-lg shadow-blue-600/25 border border-blue-400/30"
-          >
-            <Plus className="w-4 h-4" />
-            Create Structure
           </Button>
         </div>
       </div>

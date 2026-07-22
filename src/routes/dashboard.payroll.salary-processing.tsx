@@ -46,6 +46,7 @@ function SalaryProcessingPage() {
     queryFn: () => salaryProcessingApi.getSalaryRecords(),
   });
 
+  const salaryRecords = Array.isArray(salaryData) ? salaryData : [];
   const { data: heroMetrics } = useQuery({
     queryKey: ["salaryHeroMetrics"],
     queryFn: () => salaryProcessingApi.getHeroMetrics(),
@@ -187,9 +188,10 @@ function SalaryProcessingPage() {
 
   // Computed Totals for Selection Bar
   const totalSelectedCost = useMemo(() => {
-    return salaryData?.filter((emp) => selectedIds.includes(emp.id))
+    return salaryRecords
+      .filter((emp) => selectedIds.includes(emp.id))
       .reduce((acc, emp) => acc + emp.netSalary, 0);
-  }, [salaryData, selectedIds]);
+  }, [salaryRecords, selectedIds]);
 
   // Handlers
   const handleToggleSelect = (id: string) => {
@@ -199,10 +201,10 @@ function SalaryProcessingPage() {
   };
 
   const handleToggleSelectAll = () => {
-    if (selectedIds.length === salaryData.length) {
+    if (selectedIds.length === salaryRecords.length) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(salaryData.map((d) => d.id));
+      setSelectedIds(salaryRecords.map((d) => d.id));
     }
   };
 
@@ -287,7 +289,7 @@ function SalaryProcessingPage() {
 
       {/* 9. Enterprise Data Grid Table */}
       <SalaryProcessingTable
-        data={salaryData}
+        data={salaryRecords}
         selectedIds={selectedIds}
         onToggleSelect={handleToggleSelect}
         onToggleSelectAll={handleToggleSelectAll}

@@ -154,28 +154,52 @@ function SalaryStructurePage() {
   };
 
   const handleSaveWizard = async (payload: Partial<SalaryStructure>) => {
-    if (selectedStructure) {
-      await salaryStructureApi.updateStructure(selectedStructure.id, payload);
-    } else {
-      await salaryStructureApi.createStructure(payload);
+    try {
+      if (selectedStructure) {
+        await salaryStructureApi.updateStructure(selectedStructure.id, payload);
+        toast.success("Salary structure updated.");
+      } else {
+        await salaryStructureApi.createStructure(payload);
+        toast.success("Salary structure created.");
+      }
+      setWizardOpen(false);
+      await loadData();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to save salary structure.";
+      toast.error(message);
+      throw error;
     }
-    loadData();
   };
 
   const handleAssignSubmit = async (structureId: string, assignment: any) => {
-    await salaryStructureApi.assignStructure(structureId, assignment);
-    loadData();
+    try {
+      const result = await salaryStructureApi.assignStructure(structureId, assignment);
+      toast.success(`Assigned structure to ${result.totalAssigned} employees.`);
+      setAssignDrawerOpen(false);
+      await loadData();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to assign salary structure.");
+    }
   };
 
   const handleRollback = async (structureId: string, versionId: string) => {
-    await salaryStructureApi.rollbackVersion(structureId, versionId);
-    loadData();
+    try {
+      await salaryStructureApi.rollbackVersion(structureId, versionId);
+      toast.success("Salary structure version rolled back.");
+      await loadData();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to rollback version.");
+    }
   };
 
   const handleApprovalDecision = async (id: string, role: string, decision: "APPROVE" | "REJECT") => {
-    await salaryStructureApi.approveStructure(id, role, decision);
-    toast.success(`Recorded ${decision} for role ${role}`);
-    loadData();
+    try {
+      await salaryStructureApi.approveStructure(id, role, decision);
+      toast.success(`Recorded ${decision} for role ${role}`);
+      await loadData();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to record approval decision.");
+    }
   };
 
   const handleExport = () => {
@@ -203,7 +227,13 @@ function SalaryStructurePage() {
         onAuditLogsClick={() => setActiveTab("audit_logs")}
         onExportClick={handleExport}
         onImportSuccess={handleImportSuccess}
-        onCloneClick={() => handleClone(structures[0])}
+        onCloneClick={() => {
+          if (structures[0]) {
+            void handleClone(structures[0]);
+          } else {
+            toast.info("Create a salary structure before cloning.");
+          }
+        }}
       />
 
       {/* KPI Cards */}
@@ -261,6 +291,7 @@ function SalaryStructurePage() {
           {(activeTab === "overview" || activeTab === "templates") && (
             <SalaryStructureTable
               data={structures}
+              onCreateClick={handleCreateNew}
               onView={handleView}
               onEdit={handleEdit}
               onClone={handleClone}
@@ -297,7 +328,14 @@ function SalaryStructurePage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {auditLogs.map((log) => (
+                    {auditLogs.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-8 text-center text-slate-400">
+                          No audit logs available.
+                        </td>
+                      </tr>
+                    ) : (
+                      auditLogs.map((log) => (
                       <tr key={log.id}>
                         <td className="font-mono text-slate-400">{log.timestamp}</td>
                         <td className="font-semibold text-blue-300">{log.structureName}</td>
@@ -312,7 +350,8 @@ function SalaryStructurePage() {
                         <td className="text-slate-300">{log.details}</td>
                         <td className="font-mono text-slate-500">{log.ipAddress}</td>
                       </tr>
-                    ))}
+                    ))
+                    )}
                   </tbody>
                 </table>
               </div>

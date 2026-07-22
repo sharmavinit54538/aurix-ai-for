@@ -1,92 +1,8 @@
 import { api } from "@/api";
-import type { ApiResponse } from "@/api/types";
 import { EmployeeSalaryDetail } from "@/features/admin/payroll/components/salary-processing/SalaryDetailDrawer";
 import { AIInsightItem } from "@/features/admin/payroll/components/salary-processing/AIPayrollInsights";
 import { ValidationErrorItem } from "@/features/admin/payroll/components/salary-processing/ValidationPanel";
 import { ApprovalStep } from "@/features/admin/payroll/components/salary-processing/ApprovalWorkflowTracker";
-
-function unwrapApiData<T>(res: unknown): T | undefined {
-  if (res === null || res === undefined) return undefined;
-  if (typeof res !== "object") return res as T;
-
-  const body = res as Record<string, unknown>;
-  if ("data" in body && body.data !== undefined && body.data !== null) {
-    return body.data as T;
-  }
-
-  return res as T;
-}
-
-function unwrapArrayPayload<T>(res: unknown): T[] {
-  if (Array.isArray(res)) return res;
-
-  const data = unwrapApiData<unknown>(res);
-  if (Array.isArray(data)) return data;
-
-  if (data && typeof data === "object") {
-    const obj = data as Record<string, unknown>;
-    for (const key of ["records", "items", "results", "employees", "salary_records"]) {
-      if (Array.isArray(obj[key])) return obj[key] as T[];
-    }
-  }
-
-  return [];
-}
-
-function readNumber(value: unknown, fallback = 0): number {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : fallback;
-}
-
-function readString(value: unknown, fallback = ""): string {
-  if (value === null || value === undefined) return fallback;
-  return String(value);
-}
-
-function mapSalaryRecord(raw: Record<string, unknown>): EmployeeSalaryDetail {
-  const status = readString(raw.status, "PENDING").toUpperCase();
-
-  return {
-    id: readString(raw.id ?? raw.employee_id ?? raw.employeeId),
-    employeeCode: readString(raw.employeeCode ?? raw.employee_code),
-    name: readString(raw.name ?? raw.full_name ?? raw.fullName),
-    designation: readString(raw.designation),
-    department: readString(raw.department),
-    location: readString(raw.location ?? raw.work_location),
-    avatarUrl: readString(raw.avatarUrl ?? raw.avatar_url) || undefined,
-    ctc: readNumber(raw.ctc),
-    grossSalary: readNumber(raw.grossSalary ?? raw.gross_salary),
-    basic: readNumber(raw.basic),
-    hra: readNumber(raw.hra),
-    specialAllowance: readNumber(raw.specialAllowance ?? raw.special_allowance),
-    otherAllowances: readNumber(raw.otherAllowances ?? raw.other_allowances),
-    bonus: readNumber(raw.bonus),
-    overtimePay: readNumber(raw.overtimePay ?? raw.overtime_pay),
-    pfDeduction: readNumber(raw.pfDeduction ?? raw.pf_deduction),
-    esiDeduction: readNumber(raw.esiDeduction ?? raw.esi_deduction),
-    ptDeduction: readNumber(raw.ptDeduction ?? raw.pt_deduction),
-    tdsDeduction: readNumber(raw.tdsDeduction ?? raw.tds_deduction),
-    otherDeductions: readNumber(raw.otherDeductions ?? raw.other_deductions),
-    totalDeductions: readNumber(raw.totalDeductions ?? raw.total_deductions),
-    netSalary: readNumber(raw.netSalary ?? raw.net_salary),
-    workingDays: readNumber(raw.workingDays ?? raw.working_days),
-    paidDays: readNumber(raw.paidDays ?? raw.paid_days),
-    lopDays: readNumber(raw.lopDays ?? raw.lop_days),
-    overtimeHours: readNumber(raw.overtimeHours ?? raw.overtime_hours),
-    prevMonthNet: readNumber(raw.prevMonthNet ?? raw.prev_month_net),
-    bankName: readString(raw.bankName ?? raw.bank_name),
-    accountNumber: readString(raw.accountNumber ?? raw.account_number),
-    ifscCode: readString(raw.ifscCode ?? raw.ifsc_code),
-    panNumber: readString(raw.panNumber ?? raw.pan_number),
-    status:
-      status === "CALCULATED" ||
-      status === "VALIDATED" ||
-      status === "HOLD" ||
-      status === "PENDING"
-        ? status
-        : "PENDING",
-  };
-}
 
 export interface SalaryProcessingHeroMetrics {
   month: string;
@@ -146,6 +62,83 @@ export interface SalaryProcessingQueryParams {
   limit?: number;
 }
 
+function readNumber(value: unknown, fallback = 0): number {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return fallback;
+}
+
+function readString(value: unknown, fallback = ""): string {
+  return typeof value === "string" ? value : fallback;
+}
+
+function extractListPayload(res: unknown): unknown[] {
+  if (Array.isArray(res)) return res;
+  if (!res || typeof res !== "object") return [];
+
+  const root = res as Record<string, unknown>;
+  const nested = root.data;
+
+  if (Array.isArray(nested)) return nested;
+  if (nested && typeof nested === "object") {
+    const dataObj = nested as Record<string, unknown>;
+    for (const key of ["items", "records", "rows", "employees", "data", "results"]) {
+      if (Array.isArray(dataObj[key])) return dataObj[key] as unknown[];
+    }
+  }
+
+  for (const key of ["items", "records", "rows", "employees", "results"]) {
+    if (Array.isArray(root[key])) return root[key] as unknown[];
+  }
+
+  return [];
+}
+
+function mapSalaryRecord(raw: unknown): EmployeeSalaryDetail | null {
+  if (!raw || typeof raw !== "object") return null;
+  const item = raw as Record<string, unknown>;
+  const id = readString(item.id ?? item.employee_id ?? item.employeeId);
+  if (!id) return null;
+
+  return {
+    id,
+    employeeCode: readString(item.employeeCode ?? item.employee_code),
+    name: readString(item.name ?? item.full_name ?? item.employee_name, "Employee"),
+    designation: readString(item.designation),
+    department: readString(item.department),
+    location: readString(item.location ?? item.work_location),
+    avatarUrl: readString(item.avatarUrl ?? item.avatar_url) || undefined,
+    ctc: readNumber(item.ctc),
+    grossSalary: readNumber(item.grossSalary ?? item.gross_salary),
+    basic: readNumber(item.basic ?? item.basic_salary),
+    hra: readNumber(item.hra),
+    specialAllowance: readNumber(item.specialAllowance ?? item.special_allowance),
+    otherAllowances: readNumber(item.otherAllowances ?? item.other_allowances),
+    bonus: readNumber(item.bonus),
+    overtimePay: readNumber(item.overtimePay ?? item.overtime_pay),
+    pfDeduction: readNumber(item.pfDeduction ?? item.pf_deduction),
+    esiDeduction: readNumber(item.esiDeduction ?? item.esi_deduction),
+    ptDeduction: readNumber(item.ptDeduction ?? item.pt_deduction),
+    tdsDeduction: readNumber(item.tdsDeduction ?? item.tds_deduction),
+    otherDeductions: readNumber(item.otherDeductions ?? item.other_deductions),
+    totalDeductions: readNumber(item.totalDeductions ?? item.total_deductions),
+    netSalary: readNumber(item.netSalary ?? item.net_salary),
+    workingDays: readNumber(item.workingDays ?? item.working_days),
+    paidDays: readNumber(item.paidDays ?? item.paid_days),
+    lopDays: readNumber(item.lopDays ?? item.lop_days),
+    overtimeHours: readNumber(item.overtimeHours ?? item.overtime_hours),
+    prevMonthNet: readNumber(item.prevMonthNet ?? item.prev_month_net),
+    bankName: readString(item.bankName ?? item.bank_name),
+    accountNumber: readString(item.accountNumber ?? item.account_number),
+    ifscCode: readString(item.ifscCode ?? item.ifsc_code),
+    panNumber: readString(item.panNumber ?? item.pan_number),
+    status: (readString(item.status, "PENDING") as EmployeeSalaryDetail["status"]) || "PENDING",
+  };
+}
+
 export const salaryProcessingApi = {
   getSalaryRecords: async (params?: SalaryProcessingQueryParams): Promise<EmployeeSalaryDetail[]> => {
     const query = new URLSearchParams();
@@ -158,119 +151,99 @@ export const salaryProcessingApi = {
     if (params?.limit) query.set("limit", params.limit.toString());
 
     const qs = query.toString();
-    const res = await api.get<ApiResponse<unknown> | unknown>(
-      `payroll/salary-processing${qs ? `?${qs}` : ""}`,
-    );
-    return unwrapArrayPayload<Record<string, unknown>>(res).map(mapSalaryRecord);
+    const res = await api.get(`payroll/salary-processing${qs ? `?${qs}` : ""}`);
+    return extractListPayload(res)
+      .map(mapSalaryRecord)
+      .filter((record): record is EmployeeSalaryDetail => Boolean(record));
   },
 
   getHeroMetrics: async (): Promise<SalaryProcessingHeroMetrics> => {
-    const res = await api.get<ApiResponse<SalaryProcessingHeroMetrics> | SalaryProcessingHeroMetrics>(
-      "payroll/salary-processing/hero",
-    );
-    return unwrapApiData<SalaryProcessingHeroMetrics>(res) as SalaryProcessingHeroMetrics;
+    const res: any = await api.get("payroll/salary-processing/hero");
+    return res.data?.data || res.data;
   },
 
   getHealthKPIs: async (): Promise<PayrollHealthMetrics> => {
-    const res = await api.get<ApiResponse<PayrollHealthMetrics> | PayrollHealthMetrics>(
-      "payroll/salary-processing/kpis",
-    );
-    return unwrapApiData<PayrollHealthMetrics>(res) as PayrollHealthMetrics;
+    const res: any = await api.get("payroll/salary-processing/kpis");
+    return res.data?.data || res.data;
   },
 
   getApprovalWorkflow: async (): Promise<ApprovalStep[]> => {
-    const res = await api.get<ApiResponse<unknown> | unknown>(
-      "payroll/salary-processing/approval-workflow",
-    );
-    return unwrapArrayPayload<ApprovalStep>(res);
+    const res = await api.get("payroll/salary-processing/approval-workflow");
+    return extractListPayload(res) as ApprovalStep[];
   },
 
   getAIPayrollInsights: async (): Promise<AIInsightItem[]> => {
-    const res = await api.get<ApiResponse<unknown> | unknown>("payroll/salary-processing/ai-insights");
-    return unwrapArrayPayload<AIInsightItem>(res);
+    const res = await api.get("payroll/salary-processing/ai-insights");
+    return extractListPayload(res) as AIInsightItem[];
   },
 
   getValidationExceptions: async (): Promise<ValidationErrorItem[]> => {
-    const res = await api.get<ApiResponse<unknown> | unknown>("payroll/salary-processing/validations");
-    return unwrapArrayPayload<ValidationErrorItem>(res);
+    const res = await api.get("payroll/salary-processing/validations");
+    return extractListPayload(res) as ValidationErrorItem[];
   },
 
   getAnalyticsData: async (): Promise<SalaryProcessingAnalyticsData> => {
-    const res = await api.get<ApiResponse<SalaryProcessingAnalyticsData> | SalaryProcessingAnalyticsData>(
-      "payroll/salary-processing/analytics",
-    );
-    return unwrapApiData<SalaryProcessingAnalyticsData>(res) as SalaryProcessingAnalyticsData;
+    const res: any = await api.get("payroll/salary-processing/analytics");
+    return res.data?.data || res.data;
   },
 
   runCalculation: async () => {
-    const res = await api.post<ApiResponse<unknown> | unknown>("payroll/salary-processing/run", {});
-    return unwrapApiData(res);
+    const res: any = await api.post("payroll/salary-processing/run", {});
+    return res.data?.data || res.data;
   },
 
   approveCycle: async () => {
-    const res = await api.post<ApiResponse<unknown> | unknown>("payroll/salary-processing/approve", {});
-    return unwrapApiData(res);
+    const res: any = await api.post("payroll/salary-processing/approve", {});
+    return res.data?.data || res.data;
   },
 
   rollbackCycle: async () => {
-    const res = await api.post<ApiResponse<unknown> | unknown>("payroll/salary-processing/rollback", {});
-    return unwrapApiData(res);
+    const res: any = await api.post("payroll/salary-processing/rollback", {});
+    return res.data?.data || res.data;
   },
 
   recalculateRow: async (id: string) => {
-    const res = await api.post<ApiResponse<unknown> | unknown>(
-      `payroll/salary-processing/recalculate/${id}`,
-      {},
-    );
-    return unwrapApiData(res);
+    const res: any = await api.post(`payroll/salary-processing/recalculate/${id}`, {});
+    return res.data?.data || res.data;
   },
 
   resolveException: async (id: string) => {
-    const res = await api.post<ApiResponse<unknown> | unknown>(
-      `payroll/salary-processing/resolve-exception/${id}`,
-      {},
-    );
-    return unwrapApiData(res);
+    const res: any = await api.post(`payroll/salary-processing/resolve-exception/${id}`, {});
+    return res.data?.data || res.data;
   },
 
   autoFixExceptions: async () => {
-    const res = await api.post<ApiResponse<unknown> | unknown>("payroll/salary-processing/auto-fix", {});
-    return unwrapApiData(res);
+    const res: any = await api.post("payroll/salary-processing/auto-fix", {});
+    return res.data?.data || res.data;
   },
 
   processBatchPayout: async (ids: string[]) => {
-    const res = await api.post<ApiResponse<unknown> | unknown>("payroll/salary-processing/batch-payout", {
-      ids,
-    });
-    return unwrapApiData(res);
+    const res: any = await api.post("payroll/salary-processing/batch-payout", { ids });
+    return res.data?.data || res.data;
   },
 
   approveBatchSalary: async (ids: string[]) => {
-    const res = await api.post<ApiResponse<unknown> | unknown>("payroll/salary-processing/batch-approve", {
-      ids,
-    });
-    return unwrapApiData(res);
+    const res: any = await api.post("payroll/salary-processing/batch-approve", { ids });
+    return res.data?.data || res.data;
   },
 
   recalculateBatch: async (ids: string[]) => {
-    const res = await api.post<ApiResponse<unknown> | unknown>("payroll/salary-processing/batch-recalculate", {
-      ids,
-    });
-    return unwrapApiData(res);
+    const res: any = await api.post("payroll/salary-processing/batch-recalculate", { ids });
+    return res.data?.data || res.data;
   },
 
   generatePayslips: async () => {
-    const res = await api.post<ApiResponse<unknown> | unknown>("payroll/salary-processing/payslips", {});
-    return unwrapApiData(res);
+    const res: any = await api.post("payroll/salary-processing/payslips", {});
+    return res.data?.data || res.data;
   },
 
   initiateBankTransferBatch: async () => {
-    const res = await api.post<ApiResponse<unknown> | unknown>("payroll/salary-processing/bank-transfer", {});
-    return unwrapApiData(res);
+    const res: any = await api.post("payroll/salary-processing/bank-transfer", {});
+    return res.data?.data || res.data;
   },
 
   exportPayrollSummary: async () => {
-    const res = await api.post<ApiResponse<unknown> | unknown>("payroll/salary-processing/export", {});
-    return unwrapApiData(res);
+    const res: any = await api.post("payroll/salary-processing/export", {});
+    return res.data?.data || res.data;
   },
 };
