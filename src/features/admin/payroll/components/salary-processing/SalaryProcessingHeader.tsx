@@ -55,10 +55,12 @@ export const SalaryProcessingHeader: React.FC<SalaryProcessingHeaderProps> = ({
         <button
           type="button"
           onClick={onBack}
-          className="group inline-flex items-center gap-[6px] rounded-md px-2 py-1 text-sm font-medium text-slate-400 transition-colors duration-200 hover:bg-white/5 hover:text-white"
+          className="group/back inline-flex items-center gap-2 rounded-xl border border-white/10 bg-slate-900/60 hover:bg-slate-800/80 hover:border-indigo-500/40 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white shadow-xs backdrop-blur-md transition-all duration-200 hover:shadow-md hover:shadow-indigo-500/10 cursor-pointer"
         >
-          <ArrowLeft className="h-4 w-4 text-slate-400 transition-colors duration-200 group-hover:text-white" />
-          <span>Back to Payroll</span>
+          <span className="flex h-5 w-5 items-center justify-center rounded-lg bg-white/5 border border-white/10 group-hover/back:border-indigo-500/40 group-hover/back:bg-indigo-500/20 text-slate-400 group-hover/back:text-indigo-300 transition-all duration-200">
+            <ArrowLeft className="h-3.5 w-3.5 transition-transform duration-200 group-hover/back:-translate-x-0.5" />
+          </span>
+          <span>Back to Payroll Hub</span>
         </button>
       </div>
 
