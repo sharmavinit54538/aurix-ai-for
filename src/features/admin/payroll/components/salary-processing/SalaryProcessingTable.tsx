@@ -59,12 +59,13 @@ export const SalaryProcessingTable: React.FC<SalaryProcessingTableProps> = ({
 
   // Filtered & Sorted Data
   const filteredData = useMemo(() => {
-    return data
+    const rows = Array.isArray(data) ? data : [];
+    return rows
       .filter((emp) => {
         const matchesSearch =
-          emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          emp.employeeCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          emp.department.toLowerCase().includes(searchQuery.toLowerCase());
+          (emp.name ?? "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (emp.employeeCode ?? "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (emp.department ?? "").toLowerCase().includes(searchQuery.toLowerCase());
         const matchesDept = selectedDept === "ALL" || emp.department === selectedDept;
         const matchesStatus = selectedStatus === "ALL" || emp.status === selectedStatus;
         return matchesSearch && matchesDept && matchesStatus;

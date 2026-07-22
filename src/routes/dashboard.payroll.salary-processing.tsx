@@ -187,8 +187,7 @@ function SalaryProcessingPage() {
 
   // Computed Totals for Selection Bar
   const totalSelectedCost = useMemo(() => {
-    return salaryData
-      .filter((emp) => selectedIds.includes(emp.id))
+    return salaryData?.filter((emp) => selectedIds.includes(emp.id))
       .reduce((acc, emp) => acc + emp.netSalary, 0);
   }, [salaryData, selectedIds]);
 
