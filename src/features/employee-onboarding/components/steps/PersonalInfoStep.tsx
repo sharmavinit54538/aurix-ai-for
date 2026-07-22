@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Input } from "@/components/ui/button"; // Wait, make sure Input is from input, not button!
+import { Input } from "@/components/ui/input"; // Wait, make sure Input is from input, not button!
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

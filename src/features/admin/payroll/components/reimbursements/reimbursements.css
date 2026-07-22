@@ -1,0 +1,131 @@
+/* ==========================================================================
+   Aurix AI — Enterprise Expense & Reimbursements Management CSS
+   Theme: Luxury Dark Navy (#070B17), Soft Glass Elevation (#121A2F)
+   ========================================================================== */
+
+:root {
+  --reimb-bg: #070B17;
+  --reimb-card: #121A2F;
+  --reimb-card-hover: #1A2440;
+  --reimb-border: rgba(255, 255, 255, 0.06);
+  --reimb-border-hover: rgba(79, 124, 255, 0.3);
+  --reimb-primary: #4F7CFF;
+  --reimb-success: #10B981;
+  --reimb-warning: #F59E0B;
+  --reimb-danger: #EF4444;
+  --reimb-text-main: #F1F5F9;
+  --reimb-text-muted: #94A3B8;
+}
+
+/* Page Base */
+.reimbursements-container {
+  background-color: var(--reimb-bg);
+  min-height: 100vh;
+  color: var(--reimb-text-main);
+  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
+}
+
+/* Workday High-Density Cards */
+.reimb-card {
+  background-color: var(--reimb-card);
+  border: 1px solid var(--reimb-border);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reimb-card:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* KPI Summary Cards Animation */
+.kpi-reimb-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.kpi-reimb-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--reimb-primary), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.kpi-reimb-card:hover::before {
+  opacity: 1;
+}
+
+/* Sticky Data Table */
+.reimb-table-wrapper {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid var(--reimb-border);
+  background-color: var(--reimb-card);
+}
+
+.reimb-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.82rem;
+}
+
+.reimb-table th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #0E1527;
+  color: var(--reimb-text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.70rem;
+  letter-spacing: 0.05em;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--reimb-border);
+  white-space: nowrap;
+}
+
+.reimb-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  color: var(--reimb-text-main);
+  vertical-align: middle;
+}
+
+.reimb-table tr:hover td {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Category Badge Pills */
+.category-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Receipt Upload Box */
+.receipt-upload-box {
+  border: 2px dashed rgba(79, 124, 255, 0.3);
+  background: rgba(79, 124, 255, 0.03);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.receipt-upload-box:hover {
+  border-color: var(--reimb-primary);
+  background: rgba(79, 124, 255, 0.08);
+}

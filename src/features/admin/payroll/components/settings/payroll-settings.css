@@ -1,0 +1,335 @@
+/* ============================================================
+   PAYROLL SETTINGS — ENTERPRISE DESIGN SYSTEM CSS
+   Premium animations, micro-interactions, and visual polish
+   ============================================================ */
+
+/* ─── Custom Scrollbar ─── */
+.settings-sidebar-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.settings-sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.settings-sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.2);
+  border-radius: 999px;
+}
+.settings-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.4);
+}
+
+/* ─── Glow Ring Animation ─── */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(99, 102, 241, 0.15), 0 0 20px rgba(99, 102, 241, 0.05); }
+  50% { box-shadow: 0 0 16px rgba(99, 102, 241, 0.3), 0 0 40px rgba(99, 102, 241, 0.1); }
+}
+.glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+/* ─── Shimmer Loading ─── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer-loading {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.03) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+/* ─── Icon Spin Slow ─── */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
+
+/* ─── Card Hover Lift ─── */
+.card-hover-lift {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.3s ease,
+              border-color 0.3s ease;
+}
+.card-hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15),
+              0 4px 12px rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.12) !important;
+}
+
+/* ─── Sidebar Active Glow Bar ─── */
+.sidebar-active-glow {
+  position: relative;
+}
+.sidebar-active-glow::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  border-radius: 0 999px 999px 0;
+  background: linear-gradient(180deg, #818cf8, #6366f1);
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.5);
+}
+
+/* ─── Premium Input Focus ─── */
+.premium-input {
+  transition: border-color 0.2s ease,
+              box-shadow 0.2s ease,
+              background-color 0.2s ease;
+}
+.premium-input:focus {
+  border-color: rgba(99, 102, 241, 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1),
+              0 1px 3px rgba(0, 0, 0, 0.08) !important;
+  background-color: rgba(15, 23, 42, 0.6) !important;
+}
+.premium-input:hover:not(:focus):not(:disabled) {
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+/* ─── Premium Select Trigger ─── */
+.premium-select {
+  transition: border-color 0.2s ease,
+              box-shadow 0.2s ease;
+}
+.premium-select:focus,
+.premium-select[data-state="open"] {
+  border-color: rgba(99, 102, 241, 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1),
+              0 1px 3px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* ─── Premium Switch (iOS Style — Large) ─── */
+.premium-switch {
+  width: 48px !important;
+  height: 28px !important;
+  border-radius: 999px !important;
+  border: none !important;
+  background-color: rgba(51, 65, 85, 0.6) !important;
+  transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.3s ease !important;
+  padding: 0 !important;
+}
+.premium-switch[data-state="checked"] {
+  background-color: rgba(99, 102, 241, 0.85) !important;
+  box-shadow: 0 0 16px rgba(99, 102, 241, 0.4),
+              0 0 6px rgba(99, 102, 241, 0.25);
+}
+.premium-switch > span {
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 50% !important;
+  background: white !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25),
+              0 0 0 1px rgba(0, 0, 0, 0.04) !important;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+.premium-switch[data-state="checked"] > span {
+  transform: translateX(22px) !important;
+}
+.premium-switch[data-state="unchecked"] > span {
+  transform: translateX(3px) !important;
+}
+
+/* ─── Config Card ─── */
+.config-card {
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s ease,
+              box-shadow 0.3s ease;
+}
+.config-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.2), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.config-card:hover::before {
+  opacity: 1;
+}
+.config-card:hover {
+  border-color: rgba(99, 102, 241, 0.15);
+}
+
+/* ─── Section Enter Animation ─── */
+@keyframes section-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.section-enter {
+  animation: section-fade-in 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* ─── Save Bar Slide Animation ─── */
+@keyframes save-bar-slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.save-bar-enter {
+  animation: save-bar-slide-up 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ─── Floating Label ─── */
+.floating-label-group {
+  position: relative;
+}
+.floating-label {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  color: rgba(148, 163, 184, 0.7);
+  pointer-events: none;
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.floating-label-group input:focus + .floating-label,
+.floating-label-group input:not(:placeholder-shown) + .floating-label {
+  top: 6px;
+  transform: translateY(0);
+  font-size: 10px;
+  color: rgba(129, 140, 248, 0.8);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ─── Ripple Effect ─── */
+@keyframes ripple {
+  to {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+.btn-ripple {
+  position: relative;
+  overflow: hidden;
+}
+.btn-ripple::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 60%);
+  transform: scale(0);
+  opacity: 1;
+  border-radius: inherit;
+}
+.btn-ripple:active::after {
+  animation: ripple 0.5s ease-out;
+}
+
+/* ─── Badge Glow ─── */
+.badge-glow {
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.2);
+}
+
+/* ─── Unsaved Dot Pulse ─── */
+@keyframes dot-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 0.5; }
+}
+.unsaved-dot {
+  animation: dot-pulse 1.5s ease-in-out infinite;
+}
+
+/* ─── Audit Timeline Line ─── */
+.audit-timeline-item {
+  position: relative;
+  padding-left: 24px;
+}
+.audit-timeline-item::before {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 24px;
+  bottom: -12px;
+  width: 1px;
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.3), transparent);
+}
+.audit-timeline-item:last-child::before {
+  display: none;
+}
+.audit-timeline-item::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 8px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #6366f1;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.4);
+}
+
+/* ─── Context Panel ─── */
+.context-panel {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* ─── Keyboard Shortcut Badge ─── */
+.kbd-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+  color: rgba(148, 163, 184, 0.7);
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(71, 85, 105, 0.3);
+  border-radius: 4px;
+  line-height: 1;
+}
+
+/* ─── Search Input ─── */
+.search-settings-input {
+  transition: width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              border-color 0.2s ease,
+              box-shadow 0.2s ease;
+}
+.search-settings-input:focus {
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.08);
+}
+
+/* ─── Responsive Adjustments ─── */
+@media (max-width: 1280px) {
+  .settings-context-panel {
+    display: none;
+  }
+}
+@media (max-width: 1024px) {
+  .settings-sidebar-sticky {
+    position: static !important;
+  }
+}

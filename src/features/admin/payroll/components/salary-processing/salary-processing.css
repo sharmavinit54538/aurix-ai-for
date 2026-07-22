@@ -1,0 +1,174 @@
+/* ============================================================
+   SALARY PROCESSING COMMAND CENTER — DESIGN SYSTEM CSS
+   Ultra-premium Fortune 500 Enterprise Payroll Styling
+   ============================================================ */
+
+/* ─── Deep Navy Theme Variables ─── */
+.sp-command-center {
+  --sp-bg: #070b17;
+  --sp-card-bg: #121a2f;
+  --sp-card-hover: #18233d;
+  --sp-border: rgba(255, 255, 255, 0.06);
+  --sp-border-hover: rgba(79, 124, 255, 0.25);
+  --sp-primary: #4f7cff;
+  --sp-success: #10b981;
+  --sp-warning: #f59e0b;
+  --sp-danger: #ef4444;
+}
+
+/* ─── Ambient Glow Blobs ─── */
+.sp-glow-bg-indigo {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(79, 124, 255, 0.08) 0%, rgba(79, 124, 255, 0) 70%);
+  filter: blur(60px);
+}
+
+.sp-glow-bg-emerald {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.06) 0%, rgba(16, 185, 129, 0) 70%);
+  filter: blur(60px);
+}
+
+.sp-glow-bg-purple {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.06) 0%, rgba(168, 85, 247, 0) 70%);
+  filter: blur(60px);
+}
+
+/* ─── Card Base Styling ─── */
+.sp-card {
+  background-color: #121a2f;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              border-color 0.25s ease,
+              box-shadow 0.25s ease;
+}
+
+.sp-card-hover:hover {
+  transform: translateY(-2px);
+  border-color: rgba(79, 124, 255, 0.2);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25),
+              0 4px 12px rgba(79, 124, 255, 0.05);
+}
+
+/* ─── Progress Ring Animation ─── */
+@keyframes sp-ring-dash {
+  from {
+    stroke-dashoffset: 283;
+  }
+  to {
+    stroke-dashoffset: 56;
+  }
+}
+
+.sp-ring-circle {
+  transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─── Step Pulse Indicator ─── */
+@keyframes sp-pulse-ring {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(79, 124, 255, 0.5);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 8px rgba(79, 124, 255, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(79, 124, 255, 0);
+  }
+}
+
+.sp-pulse-active {
+  animation: sp-pulse-ring 2s infinite;
+}
+
+/* ─── Table Styling ─── */
+.sp-table-scroll::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+.sp-table-scroll::-webkit-scrollbar-track {
+  background: rgba(18, 26, 47, 0.5);
+}
+.sp-table-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+}
+.sp-table-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(79, 124, 255, 0.4);
+}
+
+/* ─── Drawer Glass Overlay ─── */
+.sp-drawer-backdrop {
+  background: rgba(7, 11, 23, 0.8);
+  backdrop-filter: blur(12px);
+}
+
+/* ─── Shimmer Skeletons ─── */
+@keyframes sp-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.sp-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.02) 25%,
+    rgba(255, 255, 255, 0.07) 50%,
+    rgba(255, 255, 255, 0.02) 75%
+  );
+  background-size: 200% 100%;
+  animation: sp-shimmer 2s ease-in-out infinite;
+}
+
+/* ─── Custom Inputs ─── */
+.sp-input {
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #f1f5f9;
+  transition: all 0.2s ease;
+}
+.sp-input:focus {
+  border-color: rgba(79, 124, 255, 0.5);
+  box-shadow: 0 0 0 3px rgba(79, 124, 255, 0.12);
+  outline: none;
+}
+.sp-input::placeholder {
+  color: #64748b;
+}
+
+/* ─── Badges ─── */
+.sp-badge-indigo {
+  background: rgba(79, 124, 255, 0.12);
+  color: #818cf8;
+  border: 1px solid rgba(79, 124, 255, 0.25);
+}
+.sp-badge-emerald {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+.sp-badge-amber {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+.sp-badge-rose {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}

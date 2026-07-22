@@ -1,0 +1,116 @@
+/* ==========================================================================
+   Aurix AI — Enterprise Salary Advances & Recovery Management CSS
+   Theme: Luxury Dark Navy (#070B17), Soft Glass Elevation (#121A2F)
+   ========================================================================== */
+
+:root {
+  --adv-bg: #070B17;
+  --adv-card: #121A2F;
+  --adv-card-hover: #1A2440;
+  --adv-border: rgba(255, 255, 255, 0.06);
+  --adv-border-hover: rgba(79, 124, 255, 0.3);
+  --adv-primary: #4F7CFF;
+  --adv-success: #10B981;
+  --adv-warning: #F59E0B;
+  --adv-danger: #EF4444;
+  --adv-text-main: #F1F5F9;
+  --adv-text-muted: #94A3B8;
+}
+
+/* Page Base */
+.advances-container {
+  background-color: var(--adv-bg);
+  min-height: 100vh;
+  color: var(--adv-text-main);
+  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
+}
+
+/* Workday High-Density Cards */
+.adv-card {
+  background-color: var(--adv-card);
+  border: 1px solid var(--adv-border);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.adv-card:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* KPI Summary Cards Animation */
+.kpi-adv-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.kpi-adv-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--adv-primary), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.kpi-adv-card:hover::before {
+  opacity: 1;
+}
+
+/* Sticky Data Table */
+.adv-table-wrapper {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid var(--adv-border);
+  background-color: var(--adv-card);
+}
+
+.adv-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.82rem;
+}
+
+.adv-table th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #0E1527;
+  color: var(--adv-text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.70rem;
+  letter-spacing: 0.05em;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--adv-border);
+  white-space: nowrap;
+}
+
+.adv-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  color: var(--adv-text-main);
+  vertical-align: middle;
+}
+
+.adv-table tr:hover td {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Progress bar inside table cell */
+.recovery-progress-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.recovery-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10B981, #3B82F6);
+  transition: width 0.4s ease;
+}

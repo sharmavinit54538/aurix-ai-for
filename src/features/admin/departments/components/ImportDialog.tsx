@@ -183,7 +183,7 @@ export function ImportDialog({
         }
         if (draft.code) {
           const dupLocal = rows.find((r) => r.data.code?.toUpperCase() === draft.code?.toUpperCase());
-          const dupDb = existingDepartments.find((d) => d.code.toUpperCase() === draft.code!.toUpperCase());
+          const dupDb = existingDepartments.find((d) => (d.code || d.department_code || "").toUpperCase() === draft.code!.toUpperCase());
           if (dupLocal || dupDb) {
             rowErrors.push(`Duplicate Code: ${draft.code}`);
           }
@@ -230,6 +230,7 @@ export function ImportDialog({
       return {
         id: `dept_imported_${Math.random().toString(36).substr(2, 9)}`,
         name: d.name || "Imported Department",
+        department_code: (d.code || "IMP").toUpperCase(),
         code: (d.code || "IMP").toUpperCase(),
         description: d.description || "Uploaded via batch importer",
         departmentHeadId: null,
@@ -238,6 +239,7 @@ export function ImportDialog({
         reportingManagerName: d.reportingManagerName || "None",
         office,
         budget: d.budget || 0,
+        cost_center: d.costCenter || `CC-IMP-${idx + 1}`,
         costCenter: d.costCenter || `CC-IMP-${idx + 1}`,
         employeeCapacity: d.employeeCapacity || 30,
         currentEmployeeCount: 0,

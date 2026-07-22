@@ -20,7 +20,9 @@ export interface Department {
   name: string;
   description: string;
   department_code: string;
+  code?: string;
   cost_center: string;
+  costCenter?: string;
   departmentHeadId: string | null;
   departmentHeadName: string;
   reportingManagerId: string | null;

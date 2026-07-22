@@ -1,0 +1,111 @@
+/* ==========================================================================
+   Aurix AI — Enterprise Overtime & Workforce Time Management CSS
+   Theme: Luxury Dark Navy (#070B17), Soft Glass Elevation (#121A2F)
+   ========================================================================== */
+
+:root {
+  --ot-bg: #070B17;
+  --ot-card: #121A2F;
+  --ot-card-hover: #1A2440;
+  --ot-border: rgba(255, 255, 255, 0.06);
+  --ot-border-hover: rgba(79, 124, 255, 0.3);
+  --ot-primary: #4F7CFF;
+  --ot-success: #10B981;
+  --ot-warning: #F59E0B;
+  --ot-danger: #EF4444;
+  --ot-text-main: #F1F5F9;
+  --ot-text-muted: #94A3B8;
+}
+
+/* Page Base */
+.overtime-container {
+  background-color: var(--ot-bg);
+  min-height: 100vh;
+  color: var(--ot-text-main);
+  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
+}
+
+/* Workday High-Density Cards */
+.ot-card {
+  background-color: var(--ot-card);
+  border: 1px solid var(--ot-border);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ot-card:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* KPI Summary Cards Animation */
+.kpi-ot-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.kpi-ot-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--ot-primary), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.kpi-ot-card:hover::before {
+  opacity: 1;
+}
+
+/* Sticky Data Table */
+.ot-table-wrapper {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid var(--ot-border);
+  background-color: var(--ot-card);
+}
+
+.ot-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.82rem;
+}
+
+.ot-table th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #0E1527;
+  color: var(--ot-text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.70rem;
+  letter-spacing: 0.05em;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--ot-border);
+  white-space: nowrap;
+}
+
+.ot-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  color: var(--ot-text-main);
+  vertical-align: middle;
+}
+
+.ot-table tr:hover td {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Multiplier Badges */
+.multiplier-pill {
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+}
