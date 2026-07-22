@@ -41,7 +41,12 @@ export const AICompensationInsights: React.FC<AICompensationInsightsProps> = ({ 
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-        {insights.map((item) => (
+        {insights.length === 0 ? (
+          <div className="col-span-full rounded-xl border border-dashed border-white/10 bg-slate-950/40 p-6 text-center text-xs text-slate-400">
+            No AI compensation insights available from the backend yet.
+          </div>
+        ) : (
+          insights.map((item) => (
           <div key={item.id} className="p-4 rounded-xl bg-slate-950/60 border border-white/5 space-y-2.5 hover:border-blue-500/30 transition-all">
             <div className="flex items-start justify-between">
               <h4 className="text-xs font-semibold text-white flex items-center gap-2">
@@ -69,7 +74,8 @@ export const AICompensationInsights: React.FC<AICompensationInsightsProps> = ({ 
               </Button>
             </div>
           </div>
-        ))}
+        ))
+        )}
       </div>
     </div>
   );

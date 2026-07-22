@@ -5,11 +5,8 @@ import {
   ChevronLeft,
   Check,
   Sparkles,
-  AlertCircle,
   ShieldCheck,
-  Calculator,
   Save,
-  Send,
   Plus,
   Trash2,
 } from "lucide-react";
@@ -18,11 +15,39 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { SalaryStructure, SalaryComponent } from "./salaryStructureTypes";
+import { SalaryStructure, SalaryComponent, ComponentType } from "./salaryStructureTypes";
 import { VisualFormulaBuilder } from "./VisualFormulaBuilder";
+
+function todayIsoDate(): string {
+  return new Date().toISOString().split("T")[0];
+}
+
+function normalizeComponent(
+  component: Partial<SalaryComponent>,
+  type: ComponentType,
+): SalaryComponent {
+  const code = component.code?.trim() || "CUSTOM";
+  return {
+    id: component.id || `${code}-${Date.now()}`,
+    code,
+    name: component.name?.trim() || code,
+    type,
+    category: (component.category || code) as SalaryComponent["category"],
+    calculationType: component.calculationType || "FIXED",
+    value: component.value ?? 0,
+    baseComponentCode: component.baseComponentCode,
+    formulaExpression: component.formulaExpression,
+    conditionExpression: component.conditionExpression,
+    isTaxable: component.isTaxable ?? type === "EARNING",
+    isStatutory: component.isStatutory ?? false,
+    isFlexible: component.isFlexible ?? false,
+    frequency: component.frequency || "MONTHLY",
+    description: component.description,
+  };
+}
 
 interface SalaryStructureWizardDrawerProps {
   open: boolean;
@@ -44,74 +69,86 @@ export const SalaryStructureWizardDrawer: React.FC<SalaryStructureWizardDrawerPr
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [description, setDescription] = useState("");
-  const [salaryGrade, setSalaryGrade] = useState("L5 - Principal Architect");
-  const [salaryBand, setSalaryBand] = useState("Band 4 (Senior Management)");
-  const [department, setDepartment] = useState("Engineering");
-  const [designation, setDesignation] = useState("Principal Software Engineer");
-  const [location, setLocation] = useState("Global");
+  const [salaryGrade, setSalaryGrade] = useState("");
+  const [salaryBand, setSalaryBand] = useState("");
+  const [department, setDepartment] = useState("");
+  const [designation, setDesignation] = useState("");
+  const [location, setLocation] = useState("");
   const [employmentType, setEmploymentType] = useState<SalaryStructure["employmentType"]>("FULL_TIME");
-  const [annualCtc, setAnnualCtc] = useState(3600000);
-  const [effectiveFrom, setEffectiveFrom] = useState("2026-04-01");
+  const [annualCtc, setAnnualCtc] = useState(0);
+  const [effectiveFrom, setEffectiveFrom] = useState(todayIsoDate());
   const [version, setVersion] = useState("v1.0");
   const [status, setStatus] = useState<SalaryStructure["status"]>("DRAFT");
 
-  // Step Component Arrays
-  const [earnings, setEarnings] = useState<Partial<SalaryComponent>[]>([
-    { id: "e1", code: "BASIC", name: "Basic Pay", calculationType: "PERCENTAGE", value: 50, baseComponentCode: "CTC" },
-    { id: "e2", code: "HRA", name: "House Rent Allowance (HRA)", calculationType: "PERCENTAGE", value: 50, baseComponentCode: "BASIC" },
-    { id: "e3", code: "SPECIAL_ALLOWANCE", name: "Special Allowance", calculationType: "FORMULA", value: 0, formulaExpression: "CTC - (BASIC + HRA)" },
-    { id: "e4", code: "PERFORMANCE_BONUS", name: "Performance Bonus", calculationType: "PERCENTAGE", value: 10, baseComponentCode: "BASIC" },
-  ]);
+  const [earnings, setEarnings] = useState<Partial<SalaryComponent>[]>([]);
+  const [deductions, setDeductions] = useState<Partial<SalaryComponent>[]>([]);
+  const [employerContributions, setEmployerContributions] = useState<Partial<SalaryComponent>[]>([]);
+  const [benefits, setBenefits] = useState<Partial<SalaryComponent>[]>([]);
 
-  const [deductions, setDeductions] = useState<Partial<SalaryComponent>[]>([
-    { id: "d1", code: "PF", name: "Employee EPF", calculationType: "FORMULA", value: 12, formulaExpression: "MIN(BASIC, 15000) * 0.12" },
-    { id: "d2", code: "PROFESSIONAL_TAX", name: "Professional Tax (PT)", calculationType: "CONDITIONAL", value: 200 },
-    { id: "d3", code: "INCOME_TAX", name: "TDS Tax Deduction", calculationType: "FORMULA", value: 0 },
-  ]);
+  const resetCreateForm = () => {
+    setCurrentStep(1);
+    setName("");
+    setCode("");
+    setDescription("");
+    setSalaryGrade("");
+    setSalaryBand("");
+    setDepartment("");
+    setDesignation("");
+    setLocation("");
+    setEmploymentType("FULL_TIME");
+    setAnnualCtc(0);
+    setEffectiveFrom(todayIsoDate());
+    setVersion("v1.0");
+    setStatus("DRAFT");
+    setEarnings([]);
+    setDeductions([]);
+    setEmployerContributions([]);
+    setBenefits([]);
+  };
 
-  const [employerContributions, setEmployerContributions] = useState<Partial<SalaryComponent>[]>([
-    { id: "er1", code: "EMPLOYER_PF", name: "Employer EPF", calculationType: "FORMULA", value: 12, formulaExpression: "MIN(BASIC, 15000) * 0.12" },
-    { id: "er2", code: "GRATUITY", name: "Gratuity Accrual", calculationType: "PERCENTAGE", value: 4.81, baseComponentCode: "BASIC" },
-  ]);
+  const loadStructureForm = (item: SalaryStructure) => {
+    setCurrentStep(1);
+    setName(item.name);
+    setCode(item.code);
+    setDescription(item.description);
+    setSalaryGrade(item.salaryGrade);
+    setSalaryBand(item.salaryBand);
+    setDepartment(item.department);
+    setDesignation(item.designation);
+    setLocation(item.location);
+    setEmploymentType(item.employmentType);
+    setAnnualCtc(item.annualCtc);
+    setEffectiveFrom(item.effectiveFrom || todayIsoDate());
+    setVersion(item.version);
+    setStatus(item.status);
 
-  const [benefits, setBenefits] = useState<Partial<SalaryComponent>[]>([
-    { id: "b1", code: "HEALTH_INSURANCE", name: "Group Mediclaim", calculationType: "FIXED", value: 1500 },
-    { id: "b2", code: "STOCK_OPTIONS", name: "Executive ESOPs", calculationType: "FIXED", value: 10000 },
-  ]);
+    const components = item.components || [];
+    setEarnings(components.filter((component) => component.type === "EARNING"));
+    setDeductions(components.filter((component) => component.type === "DEDUCTION"));
+    setEmployerContributions(
+      components.filter((component) => component.type === "EMPLOYER_CONTRIBUTION"),
+    );
+    setBenefits(components.filter((component) => component.type === "BENEFIT"));
+  };
 
-  // Sync state when structure changes
+  // Sync state when drawer opens
   useEffect(() => {
+    if (!open) return;
     if (structure) {
-      setName(structure.name);
-      setCode(structure.code);
-      setDescription(structure.description);
-      setSalaryGrade(structure.salaryGrade);
-      setSalaryBand(structure.salaryBand);
-      setDepartment(structure.department);
-      setDesignation(structure.designation);
-      setLocation(structure.location);
-      setEmploymentType(structure.employmentType);
-      setAnnualCtc(structure.annualCtc);
-      setEffectiveFrom(structure.effectiveFrom);
-      setVersion(structure.version);
-      setStatus(structure.status);
+      loadStructureForm(structure);
     } else {
-      setName("Global Engineering Compensation Template");
-      setCode(`ENG-${Date.now().toString().slice(-4)}`);
-      setDescription("Enterprise compensation structure for senior technology leadership.");
-      setAnnualCtc(3600000);
-      setCurrentStep(1);
+      resetCreateForm();
     }
   }, [structure, open]);
 
   const steps = [
-    { num: 1, title: "General Info" },
-    { num: 2, title: "Earnings" },
-    { num: 3, title: "Deductions" },
-    { num: 4, title: "Employer Costs" },
-    { num: 5, title: "Benefits & Perks" },
-    { num: 6, title: "Assignment Scope" },
-    { num: 7, title: "Review & Publish" },
+    { num: 1, title: "General Info", short: "General" },
+    { num: 2, title: "Earnings", short: "Earnings" },
+    { num: 3, title: "Deductions", short: "Deductions" },
+    { num: 4, title: "Employer Costs", short: "Employer" },
+    { num: 5, title: "Benefits", short: "Benefits" },
+    { num: 6, title: "Assignment", short: "Assign" },
+    { num: 7, title: "Review", short: "Review" },
   ];
 
   const handleNext = () => {
@@ -127,12 +164,32 @@ export const SalaryStructureWizardDrawer: React.FC<SalaryStructureWizardDrawerPr
   };
 
   const handleFormSubmit = async () => {
+    if (!name.trim()) {
+      toast.error("Please enter a structure name.");
+      setCurrentStep(1);
+      return;
+    }
+    if (!annualCtc || annualCtc <= 0) {
+      toast.error("Please enter a valid annual CTC.");
+      setCurrentStep(1);
+      return;
+    }
+
+    const components: SalaryComponent[] = [
+      ...earnings.map((component) => normalizeComponent(component, "EARNING")),
+      ...deductions.map((component) => normalizeComponent(component, "DEDUCTION")),
+      ...employerContributions.map((component) =>
+        normalizeComponent(component, "EMPLOYER_CONTRIBUTION"),
+      ),
+      ...benefits.map((component) => normalizeComponent(component, "BENEFIT")),
+    ];
+
     setSaving(true);
     try {
       await onSave({
-        name,
-        code,
-        description,
+        name: name.trim(),
+        code: code.trim() || `STR-${Date.now().toString().slice(-6)}`,
+        description: description.trim(),
         salaryGrade,
         salaryBand,
         department,
@@ -140,14 +197,20 @@ export const SalaryStructureWizardDrawer: React.FC<SalaryStructureWizardDrawerPr
         location,
         employmentType,
         annualCtc,
+        monthlyCtc,
+        grossSalaryMonthly: estGross,
+        netSalaryMonthly: estNet,
+        employerCostMonthly: Math.round(monthlyCtc * 0.08),
+        grossSalaryFormula: "BASIC + HRA + SPECIAL_ALLOWANCE",
+        netSalaryFormula: "GROSS_SALARY - (PF + ESI + PT + TDS)",
+        currency: "INR",
         effectiveFrom,
         version,
         status,
+        components,
       });
-      toast.success(`Salary Structure template '${name}' saved successfully!`);
-      onClose();
     } catch {
-      toast.error("Failed to save structure.");
+      // Parent handler shows the error toast.
     } finally {
       setSaving(false);
     }
@@ -160,41 +223,53 @@ export const SalaryStructureWizardDrawer: React.FC<SalaryStructureWizardDrawerPr
 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent side="right" className="w-full sm:max-w-4xl bg-[#070B17] border-l border-white/10 text-white p-0 flex flex-col h-full">
-        {/* Header */}
-        <div className="p-5 border-b border-white/10 flex items-center justify-between bg-slate-900/90">
-          <div>
-            <SheetTitle className="text-lg font-bold text-white flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-blue-400" />
-              {structure ? `Edit Structure: ${structure.code}` : "Create Enterprise Salary Structure"}
+      <SheetContent
+        side="right"
+        className="flex h-full w-full flex-col border-l border-white/10 bg-[#070B17] p-0 text-white sm:max-w-4xl [&>button]:hidden"
+      >
+        <div className="flex items-start justify-between gap-4 border-b border-white/10 bg-slate-900/90 p-5">
+          <div className="min-w-0 flex-1">
+            <SheetTitle className="flex items-center gap-2 text-base font-bold text-white sm:text-lg">
+              <Sparkles className="h-5 w-5 shrink-0 text-blue-400" />
+              <span className="truncate">
+                {structure ? `Edit Structure: ${structure.code}` : "Create Salary Structure"}
+              </span>
             </SheetTitle>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Multi-step compensation wizard for statutory compliance, formulas, and assignment.
+            <p className="mt-1 text-xs text-slate-400">
+              Step {currentStep} of {steps.length} · Configure compensation template and components.
             </p>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose} className="text-slate-400 hover:text-white">
-            <X className="w-5 h-5" />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="h-8 w-8 shrink-0 text-slate-400 hover:bg-white/5 hover:text-white"
+            aria-label="Close"
+          >
+            <X className="h-4 w-4" />
           </Button>
         </div>
 
-        {/* Wizard Step Progress Tracker */}
-        <div className="px-5 py-3 border-b border-white/10 bg-slate-950/60 overflow-x-auto">
-          <div className="flex items-center gap-2 min-w-max">
+        <div className="border-b border-white/10 bg-slate-950/60 px-4 py-3 sm:px-5">
+          <div className="wizard-steps-track">
             {steps.map((s) => {
               const isActive = currentStep === s.num;
               const isDone = currentStep > s.num;
 
               return (
-                <div
+                <button
                   key={s.num}
+                  type="button"
                   onClick={() => setCurrentStep(s.num)}
-                  className={`wizard-step-item cursor-pointer ${isActive ? "active" : isDone ? "completed" : ""}`}
+                  className={`wizard-step-item ${isActive ? "active" : isDone ? "completed" : ""}`}
                 >
-                  <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border">
-                    {isDone ? <Check className="w-3 h-3" /> : s.num}
+                  <span className="wizard-step-badge">
+                    {isDone ? <Check className="h-3 w-3" /> : s.num}
                   </span>
-                  <span>{s.title}</span>
-                </div>
+                  <span className="hidden sm:inline">{s.title}</span>
+                  <span className="sm:hidden">{s.short}</span>
+                </button>
               );
             })}
           </div>
@@ -223,6 +298,7 @@ export const SalaryStructureWizardDrawer: React.FC<SalaryStructureWizardDrawerPr
                   <Input
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
+                    placeholder="Auto-generated if left blank"
                     className="bg-slate-900 border-white/10 text-xs text-blue-300 font-mono"
                   />
                 </div>
@@ -231,17 +307,18 @@ export const SalaryStructureWizardDrawer: React.FC<SalaryStructureWizardDrawerPr
                   <label className="text-xs font-medium text-slate-300">Annual Base CTC (₹)</label>
                   <Input
                     type="number"
-                    value={annualCtc}
-                    onChange={(e) => setAnnualCtc(Number(e.target.value))}
+                    value={annualCtc || ""}
+                    onChange={(e) => setAnnualCtc(Number(e.target.value) || 0)}
+                    placeholder="Enter annual CTC"
                     className="bg-slate-900 border-white/10 text-xs text-emerald-400 font-mono font-bold"
                   />
                 </div>
 
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-slate-300">Salary Grade</label>
-                  <Select value={salaryGrade} onValueChange={setSalaryGrade}>
+                  <Select value={salaryGrade || undefined} onValueChange={setSalaryGrade}>
                     <SelectTrigger className="bg-slate-900 border-white/10 text-xs text-white">
-                      <SelectValue />
+                      <SelectValue placeholder="Select salary grade" />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-900 border-white/10 text-xs text-white">
                       <SelectItem value="L5 - Principal Architect">L5 - Principal Architect</SelectItem>
@@ -254,9 +331,9 @@ export const SalaryStructureWizardDrawer: React.FC<SalaryStructureWizardDrawerPr
 
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-slate-300">Salary Band</label>
-                  <Select value={salaryBand} onValueChange={setSalaryBand}>
+                  <Select value={salaryBand || undefined} onValueChange={setSalaryBand}>
                     <SelectTrigger className="bg-slate-900 border-white/10 text-xs text-white">
-                      <SelectValue />
+                      <SelectValue placeholder="Select salary band" />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-900 border-white/10 text-xs text-white">
                       <SelectItem value="Band 4 (Senior Management)">Band 4 (Senior Management)</SelectItem>
@@ -290,6 +367,7 @@ export const SalaryStructureWizardDrawer: React.FC<SalaryStructureWizardDrawerPr
                   <Textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Describe the compensation template scope and policy notes."
                     rows={3}
                     className="bg-slate-900 border-white/10 text-xs text-white"
                   />
@@ -322,7 +400,12 @@ export const SalaryStructureWizardDrawer: React.FC<SalaryStructureWizardDrawerPr
               </div>
 
               <div className="space-y-3">
-                {earnings.map((comp, idx) => (
+                {earnings.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-white/10 bg-slate-950/40 p-6 text-center text-xs text-slate-400">
+                    No earning components yet. Click &quot;Add Component&quot; to define Basic, HRA, and allowances.
+                  </div>
+                ) : (
+                earnings.map((comp, idx) => (
                   <div key={comp.id || idx} className="p-4 rounded-xl bg-slate-900/60 border border-white/10 space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="font-semibold text-xs text-blue-300 flex items-center gap-2">
@@ -389,7 +472,8 @@ export const SalaryStructureWizardDrawer: React.FC<SalaryStructureWizardDrawerPr
                       </div>
                     </div>
                   </div>
-                ))}
+                ))
+                )}
               </div>
 
               {/* Embedded Formula Editor */}
@@ -469,9 +553,9 @@ export const SalaryStructureWizardDrawer: React.FC<SalaryStructureWizardDrawerPr
               <div className="space-y-3">
                 <div>
                   <label className="text-xs font-medium text-slate-300">Target Department</label>
-                  <Select value={department} onValueChange={setDepartment}>
+                  <Select value={department || undefined} onValueChange={setDepartment}>
                     <SelectTrigger className="bg-slate-900 border-white/10 text-xs text-white">
-                      <SelectValue />
+                      <SelectValue placeholder="Select department" />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-900 border-white/10 text-xs text-white">
                       <SelectItem value="Engineering">Engineering</SelectItem>
@@ -485,9 +569,9 @@ export const SalaryStructureWizardDrawer: React.FC<SalaryStructureWizardDrawerPr
 
                 <div>
                   <label className="text-xs font-medium text-slate-300">Target Location</label>
-                  <Select value={location} onValueChange={setLocation}>
+                  <Select value={location || undefined} onValueChange={setLocation}>
                     <SelectTrigger className="bg-slate-900 border-white/10 text-xs text-white">
-                      <SelectValue />
+                      <SelectValue placeholder="Select location" />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-900 border-white/10 text-xs text-white">
                       <SelectItem value="Global">Global / All India</SelectItem>
@@ -535,31 +619,42 @@ export const SalaryStructureWizardDrawer: React.FC<SalaryStructureWizardDrawerPr
           )}
         </div>
 
-        {/* Drawer Footer Actions */}
-        <div className="p-4 border-t border-white/10 bg-slate-900 flex items-center justify-between">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-t border-white/10 bg-slate-900 p-4">
           <Button
+            type="button"
             variant="outline"
             size="sm"
             onClick={handlePrev}
             disabled={currentStep === 1}
             className="border-white/10 bg-slate-950 text-slate-300 text-xs gap-1"
           >
-            <ChevronLeft className="w-4 h-4" /> Back
+            <ChevronLeft className="h-4 w-4" /> Back
           </Button>
+
+          <span className="hidden text-[11px] text-slate-500 sm:inline">
+            {steps[currentStep - 1]?.title}
+          </span>
 
           <div className="flex items-center gap-2">
             {currentStep < 7 ? (
-              <Button size="sm" onClick={handleNext} className="bg-blue-600 hover:bg-blue-500 text-white text-xs gap-1">
-                Next <ChevronRight className="w-4 h-4" />
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleNext}
+                className="bg-blue-600 hover:bg-blue-500 text-white text-xs gap-1"
+              >
+                Next <ChevronRight className="h-4 w-4" />
               </Button>
             ) : (
               <Button
+                type="button"
                 size="sm"
-                onClick={handleFormSubmit}
+                onClick={() => void handleFormSubmit()}
                 disabled={saving}
                 className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs gap-1.5 shadow-lg shadow-emerald-600/25"
               >
-                <Save className="w-4 h-4" /> {saving ? "Saving..." : "Save & Publish Structure"}
+                <Save className="h-4 w-4" />
+                {saving ? "Saving..." : structure ? "Save Changes" : "Create Structure"}
               </Button>
             )}
           </div>

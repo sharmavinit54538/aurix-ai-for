@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ShieldAlert,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +31,7 @@ import { SalaryStructure } from "./salaryStructureTypes";
 
 interface SalaryStructureTableProps {
   data: SalaryStructure[];
+  onCreateClick?: () => void;
   onView: (structure: SalaryStructure) => void;
   onEdit: (structure: SalaryStructure) => void;
   onClone: (structure: SalaryStructure) => void;
@@ -42,6 +44,7 @@ interface SalaryStructureTableProps {
 
 export const SalaryStructureTable: React.FC<SalaryStructureTableProps> = ({
   data,
+  onCreateClick,
   onView,
   onEdit,
   onClone,
@@ -110,6 +113,17 @@ export const SalaryStructureTable: React.FC<SalaryStructureTableProps> = ({
         <p className="text-xs text-slate-400 mt-1 max-w-md">
           No salary structure templates match your filter criteria or search query. Try clearing filters or create a new template.
         </p>
+        {onCreateClick ? (
+          <Button
+            type="button"
+            size="sm"
+            onClick={onCreateClick}
+            className="mt-4 gap-2 border border-blue-400/30 bg-blue-600 font-medium text-white shadow-lg shadow-blue-600/25 hover:bg-blue-500"
+          >
+            <Plus className="h-4 w-4" />
+            Create Structure
+          </Button>
+        ) : null}
       </div>
     );
   }
