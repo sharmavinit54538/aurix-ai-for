@@ -62,6 +62,7 @@ import { Route as DashboardAssetsRouteImport } from './routes/dashboard.assets'
 import { Route as DashboardAssetManagementRouteImport } from './routes/dashboard.asset-management'
 import { Route as DashboardAiInsightsRouteImport } from './routes/dashboard.ai-insights'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
+import { Route as AssetInfoIdRouteImport } from './routes/asset-info.$id'
 import { Route as ApiPayrollCopilotRouteImport } from './routes/api/payroll-copilot'
 import { Route as ApiAiBrainRouteImport } from './routes/api/ai-brain'
 import { Route as AiWorkforcePlanningRouteImport } from './routes/ai.workforce-planning'
@@ -398,6 +399,11 @@ const BlogSlugRoute = BlogSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
   getParentRoute: () => BlogRoute,
+} as any)
+const AssetInfoIdRoute = AssetInfoIdRouteImport.update({
+  id: '/asset-info/$id',
+  path: '/asset-info/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPayrollCopilotRoute = ApiPayrollCopilotRouteImport.update({
   id: '/api/payroll-copilot',
@@ -827,6 +833,7 @@ export interface FileRoutesByFullPath {
   '/ai/workforce-planning': typeof AiWorkforcePlanningRoute
   '/api/ai-brain': typeof ApiAiBrainRoute
   '/api/payroll-copilot': typeof ApiPayrollCopilotRoute
+  '/asset-info/$id': typeof AssetInfoIdRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/dashboard/ai-insights': typeof DashboardAiInsightsRoute
   '/dashboard/asset-management': typeof DashboardAssetManagementRoute
@@ -948,6 +955,7 @@ export interface FileRoutesByTo {
   '/ai/workforce-planning': typeof AiWorkforcePlanningRoute
   '/api/ai-brain': typeof ApiAiBrainRoute
   '/api/payroll-copilot': typeof ApiPayrollCopilotRoute
+  '/asset-info/$id': typeof AssetInfoIdRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/dashboard/ai-insights': typeof DashboardAiInsightsRoute
   '/dashboard/asset-management': typeof DashboardAssetManagementRoute
@@ -1069,6 +1077,7 @@ export interface FileRoutesById {
   '/ai/workforce-planning': typeof AiWorkforcePlanningRoute
   '/api/ai-brain': typeof ApiAiBrainRoute
   '/api/payroll-copilot': typeof ApiPayrollCopilotRoute
+  '/asset-info/$id': typeof AssetInfoIdRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/dashboard/ai-insights': typeof DashboardAiInsightsRoute
   '/dashboard/asset-management': typeof DashboardAssetManagementRoute
@@ -1195,6 +1204,7 @@ export interface FileRouteTypes {
     | '/ai/workforce-planning'
     | '/api/ai-brain'
     | '/api/payroll-copilot'
+    | '/asset-info/$id'
     | '/blog/$slug'
     | '/dashboard/ai-insights'
     | '/dashboard/asset-management'
@@ -1316,6 +1326,7 @@ export interface FileRouteTypes {
     | '/ai/workforce-planning'
     | '/api/ai-brain'
     | '/api/payroll-copilot'
+    | '/asset-info/$id'
     | '/blog/$slug'
     | '/dashboard/ai-insights'
     | '/dashboard/asset-management'
@@ -1436,6 +1447,7 @@ export interface FileRouteTypes {
     | '/ai/workforce-planning'
     | '/api/ai-brain'
     | '/api/payroll-copilot'
+    | '/asset-info/$id'
     | '/blog/$slug'
     | '/dashboard/ai-insights'
     | '/dashboard/asset-management'
@@ -1546,6 +1558,7 @@ export interface RootRouteChildren {
   VerifyResetOtpRoute: typeof VerifyResetOtpRoute
   ApiAiBrainRoute: typeof ApiAiBrainRoute
   ApiPayrollCopilotRoute: typeof ApiPayrollCopilotRoute
+  AssetInfoIdRoute: typeof AssetInfoIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1920,6 +1933,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/blog/$slug'
       preLoaderRoute: typeof BlogSlugRouteImport
       parentRoute: typeof BlogRoute
+    }
+    '/asset-info/$id': {
+      id: '/asset-info/$id'
+      path: '/asset-info/$id'
+      fullPath: '/asset-info/$id'
+      preLoaderRoute: typeof AssetInfoIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/payroll-copilot': {
       id: '/api/payroll-copilot'
@@ -2715,6 +2735,7 @@ const rootRouteChildren: RootRouteChildren = {
   VerifyResetOtpRoute: VerifyResetOtpRoute,
   ApiAiBrainRoute: ApiAiBrainRoute,
   ApiPayrollCopilotRoute: ApiPayrollCopilotRoute,
+  AssetInfoIdRoute: AssetInfoIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
