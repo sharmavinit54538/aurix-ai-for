@@ -10,21 +10,14 @@ export interface ApprovalStep {
   comments?: string;
 }
 
-const DEFAULT_WORKFLOW: ApprovalStep[] = [
-  { id: "1", role: "HR Review", actor: "Sarah Jenkins (HR Director)", status: "APPROVED", timestamp: "2026-07-28 10:30 AM", comments: "Attendance & leave balances verified" },
-  { id: "2", role: "Payroll Admin", actor: "Alex Vance (Lead Payroll Admin)", status: "APPROVED", timestamp: "2026-07-28 02:15 PM", comments: "PF, ESI & TDS tax slabs recalculated" },
-  { id: "3", role: "Finance Review", actor: "Marcus Chen (Finance Lead)", status: "IN_PROGRESS", timestamp: "Active Now", comments: "Verifying budget variance & bank balance" },
-  { id: "4", role: "CFO Sign-off", actor: "Elena Rostova (CFO)", status: "PENDING" },
-  { id: "5", role: "CEO Approval", actor: "David Kim (CEO)", status: "PENDING" },
-  { id: "6", role: "Final Disbursal", actor: "System Gateway", status: "PENDING" },
-];
-
 interface ApprovalWorkflowTrackerProps {
   workflow?: ApprovalStep[];
+  isLoading?: boolean;
 }
 
 export const ApprovalWorkflowTracker: React.FC<ApprovalWorkflowTrackerProps> = ({
-  workflow = DEFAULT_WORKFLOW,
+  workflow = [],
+  isLoading = false,
 }) => {
   return (
     <div className="sp-card p-5">

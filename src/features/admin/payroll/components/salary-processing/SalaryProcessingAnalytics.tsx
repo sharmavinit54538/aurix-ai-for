@@ -13,32 +13,25 @@ import {
   CartesianGrid,
 } from "recharts";
 
-const COST_TREND_DATA = [
-  { month: "Feb", cost: 38.2, employees: 230 },
-  { month: "Mar", cost: 39.5, employees: 235 },
-  { month: "Apr", cost: 40.1, employees: 240 },
-  { month: "May", cost: 41.0, employees: 242 },
-  { month: "Jun", cost: 41.8, employees: 245 },
-  { month: "Jul", cost: 42.8, employees: 248 },
-];
+import {
+  CostTrendPoint,
+  DeptCostPoint,
+  ComponentBreakdownPoint,
+  SalaryProcessingAnalyticsData,
+} from "@/services/salaryProcessingApi";
 
-const DEPT_COST_DATA = [
-  { dept: "Engineering", cost: 18.5, count: 92 },
-  { dept: "Sales", cost: 9.2, count: 54 },
-  { dept: "Product", cost: 6.8, count: 35 },
-  { dept: "Operations", cost: 4.5, count: 42 },
-  { dept: "HR & Finance", cost: 3.8, count: 25 },
-];
+interface SalaryProcessingAnalyticsProps {
+  analyticsData?: SalaryProcessingAnalyticsData;
+  isLoading?: boolean;
+}
 
-const COMPONENT_BREAKDOWN = [
-  { name: "Basic Salary", value: 50, color: "#4f7cff" },
-  { name: "HRA", value: 25, color: "#a855f7" },
-  { name: "Special Allowance", value: 15, color: "#06b6d4" },
-  { name: "PF & Statutory", value: 7, color: "#10b981" },
-  { name: "TDS Tax", value: 3, color: "#f59e0b" },
-];
-
-export const SalaryProcessingAnalytics: React.FC = () => {
+export const SalaryProcessingAnalytics: React.FC<SalaryProcessingAnalyticsProps> = ({
+  analyticsData,
+  isLoading = false,
+}) => {
+  const costTrend = analyticsData?.costTrend || [];
+  const deptCost = analyticsData?.deptCost || [];
+  const componentBreakdown = analyticsData?.componentBreakdown || [];
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
       {/* 1. Monthly Payroll Cost Trend */}
@@ -55,7 +48,7 @@ export const SalaryProcessingAnalytics: React.FC = () => {
 
         <div className="h-48 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={COST_TREND_DATA} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <BarChart data={costTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
               <XAxis dataKey="month" tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} />
               <YAxis tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} />
@@ -77,12 +70,12 @@ export const SalaryProcessingAnalytics: React.FC = () => {
               Department Cost Allocation
             </h3>
           </div>
-          <span className="text-[10px] text-slate-400">5 Departments</span>
+          <span className="text-[10px] text-slate-400">{deptCost.length} Departments</span>
         </div>
 
         <div className="h-48 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={DEPT_COST_DATA} layout="vertical" margin={{ top: 5, right: 10, left: 20, bottom: 0 }}>
+            <BarChart data={deptCost} layout="vertical" margin={{ top: 5, right: 10, left: 20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
               <XAxis type="number" tick={{ fill: "#64748b", fontSize: 10 }} axisLine={false} />
               <YAxis dataKey="dept" type="category" tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={false} />
@@ -111,8 +104,8 @@ export const SalaryProcessingAnalytics: React.FC = () => {
           <div className="h-44 w-44 flex-shrink-0">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={COMPONENT_BREAKDOWN} innerRadius={40} outerRadius={65} paddingAngle={4} dataKey="value">
-                  {COMPONENT_BREAKDOWN.map((entry, index) => (
+                <Pie data={componentBreakdown} innerRadius={40} outerRadius={65} paddingAngle={4} dataKey="value">
+                  {componentBreakdown.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
@@ -124,7 +117,7 @@ export const SalaryProcessingAnalytics: React.FC = () => {
           </div>
 
           <div className="space-y-1.5 min-w-0 flex-1">
-            {COMPONENT_BREAKDOWN.map((item) => (
+            {componentBreakdown.map((item) => (
               <div key={item.name} className="flex items-center justify-between text-[11px]">
                 <div className="flex items-center gap-1.5 truncate">
                   <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />

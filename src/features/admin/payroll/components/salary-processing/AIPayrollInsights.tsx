@@ -12,52 +12,15 @@ export interface AIInsightItem {
   severity: "HIGH" | "MEDIUM" | "LOW";
 }
 
-const DEFAULT_INSIGHTS: AIInsightItem[] = [
-  {
-    id: "1",
-    type: "ANOMALY",
-    title: "Engineering Overtime Spike (+42%)",
-    description: "14 DevOps engineers logged 120+ OT hours this cycle due to datacenter migration.",
-    impact: "+₹1,84,000 OT cost variance",
-    actionText: "Review OT Logs",
-    severity: "HIGH",
-  },
-  {
-    id: "2",
-    type: "WARNING",
-    title: "Missing PAN / Bank Details (2 Employees)",
-    description: "Rahul Sharma (EMP-104) and Priya Verma (EMP-189) lack verified IFSC routing codes.",
-    impact: "Disbursement payout block",
-    actionText: "Resolve Block",
-    severity: "HIGH",
-  },
-  {
-    id: "3",
-    type: "OPTIMIZATION",
-    title: "Tax Regime Exemption Opportunity",
-    description: "28 employees can save an average of ₹14,200 annually by switching to the New Tax Regime.",
-    impact: "Employee tax savings",
-    actionText: "Send Notification",
-    severity: "MEDIUM",
-  },
-  {
-    id: "4",
-    type: "FORECAST",
-    title: "Q3 Payroll Budget Alignment",
-    description: "July cycle is tracking 1.8% below maximum quarterly allocated budget.",
-    impact: "₹78,000 under budget",
-    actionText: "View Forecast",
-    severity: "LOW",
-  },
-];
-
 interface AIPayrollInsightsProps {
   insights?: AIInsightItem[];
+  isLoading?: boolean;
   onActionClick?: (item: AIInsightItem) => void;
 }
 
 export const AIPayrollInsights: React.FC<AIPayrollInsightsProps> = ({
-  insights = DEFAULT_INSIGHTS,
+  insights = [],
+  isLoading = false,
   onActionClick,
 }) => {
   return (

@@ -12,53 +12,16 @@ export interface ValidationErrorItem {
   severity: "CRITICAL" | "WARNING";
 }
 
-const DEFAULT_VALIDATION_ERRORS: ValidationErrorItem[] = [
-  {
-    id: "v1",
-    category: "MISSING_BANK",
-    employeeName: "Rahul Sharma",
-    employeeCode: "EMP-104",
-    department: "Engineering",
-    description: "Invalid IFSC code (HDFC000000) provided for NEFT salary transfer",
-    severity: "CRITICAL",
-  },
-  {
-    id: "v2",
-    category: "MISSING_PAN",
-    employeeName: "Priya Verma",
-    employeeCode: "EMP-189",
-    department: "Design",
-    description: "PAN card not updated in profile; requires 20% higher TDS deduction under Sec 206AA",
-    severity: "CRITICAL",
-  },
-  {
-    id: "v3",
-    category: "ATTENDANCE_MISMATCH",
-    employeeName: "Karan Patel",
-    employeeCode: "EMP-072",
-    department: "Sales",
-    description: "3 days absent marked without approved leave or LOP deduction flag",
-    severity: "WARNING",
-  },
-  {
-    id: "v4",
-    category: "INVALID_PF",
-    employeeName: "Ananya Roy",
-    employeeCode: "EMP-215",
-    department: "Product",
-    description: "PF UAN not linked with Aadhaar; EPF transfer may bounce",
-    severity: "WARNING",
-  },
-];
-
 interface ValidationPanelProps {
   errors?: ValidationErrorItem[];
+  isLoading?: boolean;
   onResolve?: (id: string) => void;
   onRunAutoFix?: () => void;
 }
 
 export const ValidationPanel: React.FC<ValidationPanelProps> = ({
-  errors = DEFAULT_VALIDATION_ERRORS,
+  errors = [],
+  isLoading = false,
   onResolve,
   onRunAutoFix,
 }) => {
