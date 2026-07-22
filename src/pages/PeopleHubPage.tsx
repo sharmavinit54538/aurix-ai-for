@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Users, UserPlus, Network, ListFilter } from "lucide-react";
+import { Users, UserPlus, Network, ListFilter, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmployeeHierarchyView } from "@/features/admin/employees/components/EmployeeHierarchyView";
 
@@ -40,6 +40,13 @@ export function PeopleHubPage() {
   return (
     <div className="space-y-6">
       {/* HEADER SECTION */}
+      <Link
+            to="/dashboard/workforce"
+            className="mb-2 inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground cursor-pointer group/back"
+          >
+            <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover/back:-translate-x-0.5" />
+            Back to Workforce Hub
+          </Link> 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between text-left">
         <div>
           <div className="flex items-center gap-2">
@@ -52,7 +59,6 @@ export function PeopleHubPage() {
             Manage your company workforce profiles, corporate hierarchies, and direct reporting structures.
           </p>
         </div>
-
         {/* TAB SWITCHER */}
         <div className="flex items-center rounded-lg border border-border/80 bg-card/65 p-0.5">
           <Button

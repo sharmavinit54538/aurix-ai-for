@@ -4,6 +4,14 @@ export function humanizeFieldKey(key: string): string {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
+export function isAttachmentUrlField(key: string): boolean {
+  return key.endsWith("_url");
+}
+
+export function attachmentFieldLabel(key: string): string {
+  return humanizeFieldKey(key.replace(/_url$/i, ""));
+}
+
 export function formatFieldValue(value: unknown): string {
   if (value === null || value === undefined || value === "") return "—";
   if (typeof value === "boolean") return value ? "Yes" : "No";
