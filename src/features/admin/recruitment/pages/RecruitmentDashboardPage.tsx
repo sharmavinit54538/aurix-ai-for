@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Briefcase, RefreshCw } from "lucide-react";
+import { Briefcase, ChevronLeft, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { Loader } from "@/components/aurix/Loader";
 import { Button } from "@/components/ui/button";
@@ -106,44 +106,53 @@ function RecruitmentHubHeader({
   onRefresh?: () => void;
 }) {
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <div className="flex items-center gap-2">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-brand text-brand-foreground shadow-glow">
-            <Briefcase className="h-5 w-5" />
-          </span>
-          <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">Recruitment Hub</h1>
+    <>
+      <Link
+        to="/dashboard/talent"
+        className="mb-2 inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground cursor-pointer group/back"
+      >
+        <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover/back:-translate-x-0.5" />
+        Back to Talent Hub
+      </Link>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-brand text-brand-foreground shadow-glow">
+              <Briefcase className="h-5 w-5" />
+            </span>
+            <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">Recruitment Hub</h1>
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground text-left">
+            Manage your hiring pipelines, coordinate schedules, raise requisitions, and review metrics.
+          </p>
         </div>
-        <p className="mt-1 text-xs text-muted-foreground text-left">
-          Manage your hiring pipelines, coordinate schedules, raise requisitions, and review metrics.
-        </p>
-      </div>
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center bg-card/65 border border-border/80 p-0.5 rounded-lg">
-          <Button
-            variant={viewMode === "modules" ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => onViewModeChange("modules")}
-            className="text-xs h-7 px-3 font-semibold rounded-md cursor-pointer"
-          >
-            Recruitment Hub
-          </Button>
-          <Button
-            variant={viewMode === "analytics" ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => onViewModeChange("analytics")}
-            className="text-xs h-7 px-3 font-semibold rounded-md cursor-pointer"
-          >
-            Hiring Metrics
-          </Button>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center bg-card/65 border border-border/80 p-0.5 rounded-lg">
+            <Button
+              variant={viewMode === "modules" ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => onViewModeChange("modules")}
+              className="text-xs h-7 px-3 font-semibold rounded-md cursor-pointer"
+            >
+              Recruitment Hub
+            </Button>
+            <Button
+              variant={viewMode === "analytics" ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => onViewModeChange("analytics")}
+              className="text-xs h-7 px-3 font-semibold rounded-md cursor-pointer"
+            >
+              Hiring Metrics
+            </Button>
+          </div>
+          {onRefresh ? (
+            <Button variant="outline" size="sm" onClick={onRefresh}>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Refresh
+            </Button>
+          ) : null}
         </div>
-        {onRefresh ? (
-          <Button variant="outline" size="sm" onClick={onRefresh}>
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Refresh
-          </Button>
-        ) : null}
       </div>
-    </div>
+    </>
   );
 }

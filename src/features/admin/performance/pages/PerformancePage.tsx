@@ -39,7 +39,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  ChevronLeft,
   ChevronRight,
   Plus,
   Search,
@@ -57,8 +56,9 @@ import {
   Sparkles,
   HelpCircle,
   Activity,
-  Award,
+  Award,  
   BookOpen,
+  ChevronLeft,
 } from "lucide-react";
 import { usePerformance } from "../hooks/usePerformance";
 import { PerformanceStatsCards } from "../components/PerformanceStatsCards";
@@ -73,6 +73,8 @@ import { REVIEW_STATUS_OPTIONS, DEFAULT_FILTERS } from "../constants";
 import { applyFilters, applySorting, paginate, buildCSV } from "../utils";
 import { useAurix } from "@/lib/aurix-store";
 import { toast } from "sonner";
+import { Link } from "@tanstack/react-router";
+
 
 function EmployeePerformanceView() {
   const { goals, feedback360, courses } = usePerformance();
@@ -83,7 +85,6 @@ function EmployeePerformanceView() {
         title="My Performance & Growth"
         description="View your quarterly performance ratings, OKR goals, 360 feedback, and skill development."
       />
-
       {/* KPI Overview */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="border-border bg-card/40 backdrop-blur-xl p-4">
@@ -520,6 +521,13 @@ export function PerformancePage() {
 
   return (
     <div className="space-y-6">
+      <Link
+        to="/dashboard/talent"
+        className="mb-2 inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground cursor-pointer group/back"
+      >
+        <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover/back:-translate-x-0.5" />
+        Back to Talent Hub
+      </Link>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <PageHeader
           title="Performance Management"
@@ -588,9 +596,8 @@ export function PerformancePage() {
                   variant="outline"
                   size="sm"
                   onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                  className={`rounded-xl border-border/80 h-9 gap-1.5 text-xs font-medium cursor-pointer ${
-                    showAdvancedFilters ? "bg-muted text-foreground" : "bg-background/40 hover:bg-muted/40"
-                  }`}
+                  className={`rounded-xl border-border/80 h-9 gap-1.5 text-xs font-medium cursor-pointer ${showAdvancedFilters ? "bg-muted text-foreground" : "bg-background/40 hover:bg-muted/40"
+                    }`}
                 >
                   <Filter className="h-3.5 w-3.5" />
                   Filters
@@ -913,9 +920,8 @@ export function PerformancePage() {
                           variant={currentPage === pNum ? "default" : "outline"}
                           size="icon"
                           onClick={() => setCurrentPage(pNum)}
-                          className={`h-8 w-8 rounded-lg text-xs font-semibold cursor-pointer ${
-                            currentPage === pNum ? "bg-brand text-brand-foreground shadow-glow hover:bg-brand/90" : "border-border/80 bg-background/50 hover:bg-muted"
-                          }`}
+                          className={`h-8 w-8 rounded-lg text-xs font-semibold cursor-pointer ${currentPage === pNum ? "bg-brand text-brand-foreground shadow-glow hover:bg-brand/90" : "border-border/80 bg-background/50 hover:bg-muted"
+                            }`}
                         >
                           {pNum}
                         </Button>
