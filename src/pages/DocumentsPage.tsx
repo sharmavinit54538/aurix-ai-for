@@ -1,5 +1,5 @@
-﻿import { createFileRoute, useRouterState } from "@tanstack/react-router";
-import { useState, useMemo } from "react";
+import { createFileRoute, useRouterState } from "@tanstack/react-router";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import {
   Folder, Search, Upload, Wand2, Download, CheckCircle, Clock, XCircle, AlertTriangle,
   FileText, Shield, Trash2, Eye, FileSpreadsheet, RefreshCw, Info, Calendar,
@@ -19,9 +19,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { aurix, uid, useAurix, type HRDocument, type HRDocumentActivity } from "@/lib/aurix-store";
 import { toast } from "sonner";
-
-
-
+import { apiInstance } from "@/api";
 
 // ----------------------------------------------------
 // DOCUMENT CONSTANTS
@@ -60,8 +58,84 @@ const DOCUMENT_TEMPLATES = [
 // ----------------------------------------------------
 export function DocumentsPage() {
   const ws = useAurix();
-  const docs = ws.documents || [];
+  const [liveDocs, setLiveDocs] = useState<HRDocument[]>([]);
+  const docs = liveDocs.length > 0 ? liveDocs : (ws.documents || []);
   const activities = ws.documentActivities || [];
+
+  const [loadingLive, setLoadingLive] = useState(false);
+  const [employeesList, setEmployeesList] = useState<Array<{ id: string; fullName: string }>>([]);
+
+  const fetchLiveDocumentsData = useCallback(async () => {
+    setLoadingLive(true);
+    try {
+      const [docsRes, empsRes] = await Promise.allSettled([
+        apiInstance.get("/documents/employees", { params: { limit: 100 } }),
+        apiInstance.get("/employees", { params: { limit: 100 } }),
+      ]);
+
+      let liveEmps: Array<{ id: string; fullName: string }> = [];
+      if (empsRes.status === "fulfilled" && empsRes.value.data?.data) {
+        const empItems = empsRes.value.data.data.items ?? empsRes.value.data.data ?? [];
+        liveEmps = empItems.map((e: any) => ({
+          id: e.id,
+          fullName: [e.first_name, e.last_name].filter(Boolean).join(" ").trim() || e.full_name || e.employee_id || "Employee",
+        }));
+        setEmployeesList(liveEmps);
+      }
+
+      if (docsRes.status === "fulfilled" && docsRes.value.data?.data) {
+        const rawDocs = docsRes.value.data.data;
+        if (Array.isArray(rawDocs) && rawDocs.length > 0) {
+          const mapped: HRDocument[] = rawDocs.map((d: any) => {
+            const empName = d.employee
+              ? [d.employee.first_name, d.employee.last_name].filter(Boolean).join(" ").trim()
+              : (liveEmps.find((e) => e.id === d.employee_id)?.fullName || "Vinit Sharma");
+
+            const rawCategory = d.category?.name || d.document_type || "Employee Documents";
+            let category: HRDocument["category"] = "Employee Documents";
+            if (rawCategory.includes("Education") || rawCategory.includes("EDU") || rawCategory.includes("DEGREE") || rawCategory.includes("MARKSHEET")) {
+              category = "Education";
+            } else if (rawCategory.includes("Employment") || rawCategory.includes("OFFER") || rawCategory.includes("EXP") || rawCategory.includes("SALARY") || rawCategory.includes("RELIEVING")) {
+              category = "Employment";
+            } else if (rawCategory.includes("Company") || rawCategory.includes("POLICY") || rawCategory.includes("NDA")) {
+              category = "Company Documents";
+            }
+
+            const rawType = d.document_type || d.title || "General Document";
+            const cleanType = rawType.replace(/^Onboarding Document:\s*/i, "").replace(/_/g, " ");
+
+            return {
+              id: d.id,
+              name: d.title || cleanType || "Employee Document",
+              employeeId: d.employee_id,
+              employeeName: empName,
+              category,
+              type: cleanType,
+              uploadedBy: "HR Admin",
+              uploadDate: d.created_at ? d.created_at.split("T")[0] : "2026-07-21",
+              expiryDate: d.expiry_date || undefined,
+              status: d.is_verified ? "Verified" : (d.status === "REJECTED" ? "Rejected" : "Pending"),
+              fileSize: d.file_size ? `${(d.file_size / 1024).toFixed(1)} KB` : "1.2 MB",
+              fileType: ((d.document_url || d.file_path || "pdf").split(".").pop() || "pdf").toLowerCase() as any,
+              description: d.description || `Uploaded ${cleanType} for ${empName}`,
+              fileUrl: d.document_url || d.file_path,
+            };
+          });
+
+          setLiveDocs(mapped);
+          aurix.set({ documents: mapped });
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load live employee documents:", err);
+    } finally {
+      setLoadingLive(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchLiveDocumentsData();
+  }, [fetchLiveDocumentsData]);
 
   // Table Filters & Search
   const [q, setQ] = useState("");
@@ -431,7 +505,7 @@ Acknowledged and Signed electronically.`;
     setTargetDoc(null);
   };
 
-  // Mock Download
+  // Download & View File Handler
   const handleDownload = (doc: HRDocument) => {
     toast.success(`Downloading ${doc.name}...`);
     const newActivity: HRDocumentActivity = {
@@ -444,6 +518,12 @@ Acknowledged and Signed electronically.`;
       details: `Downloaded document ${doc.name}`
     };
     aurix.set({ documentActivities: [newActivity, ...activities] });
+
+    if (doc.fileUrl) {
+      const targetUrl = doc.fileUrl.startsWith("http") ? doc.fileUrl : `http://127.0.0.1:8001${doc.fileUrl}`;
+      window.open(targetUrl, "_blank");
+      return;
+    }
 
     const element = document.createElement("a");
     const file = new Blob([`Aurix HR Vault. Document ID: ${doc.id}\nCategory: ${doc.category}\nName: ${doc.name}\nStatus: ${doc.status}`], {type: 'text/plain'});
@@ -810,7 +890,9 @@ Acknowledged and Signed electronically.`;
                   <SelectTrigger className="w-full bg-background/50 border-border"><SelectValue /></SelectTrigger>
                   <SelectContent className="max-h-[200px]">
                     <SelectItem value="company">Company-wide (No specific employee)</SelectItem>
-                    {ws.employees.map(emp => (<SelectItem key={emp.id} value={emp.id}>{emp.fullName} ({emp.employeeId})</SelectItem>))}
+                    {employeesList.length > 0
+                      ? employeesList.map(emp => (<SelectItem key={emp.id} value={emp.id}>{emp.fullName}</SelectItem>))
+                      : ws.employees.map(emp => (<SelectItem key={emp.id} value={emp.id}>{emp.fullName} ({emp.employeeId})</SelectItem>))}
                   </SelectContent>
                 </Select>
               </div>
@@ -996,92 +1078,67 @@ Acknowledged and Signed electronically.`;
                   {/* CANVAS GRAPHICAL VISUAL MOCKUP PREVIEW */}
                   <div className="space-y-1.5">
                     <Label className="text-xs font-semibold text-muted-foreground">Inline Verification View</Label>
-                    <div className="overflow-hidden rounded-2xl border border-border bg-muted/40 aspect-[4/3] relative flex items-center justify-center p-4">
-                      {previewDoc.type === "Aadhaar Card" ? (
-                        <div className="w-[320px] aspect-[8.5/5.5] bg-sky-50 dark:bg-sky-950/20 border border-sky-300/40 rounded-xl shadow-md p-3 relative flex flex-col justify-between select-none">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <p className="text-[7px] font-bold text-sky-800 dark:text-sky-400 uppercase leading-none">Government of India</p>
-                              <p className="text-[5px] text-sky-600/80 leading-none">Unique Identification Authority of India</p>
-                            </div>
-                            <span className="h-5 w-5 bg-sky-200 dark:bg-sky-800 rounded-full opacity-60" />
-                          </div>
-                          <div className="flex gap-2.5 my-2">
-                            <div className="w-12 h-14 bg-sky-200 dark:bg-sky-900 border border-sky-400/20 rounded flex items-center justify-center shrink-0"><User className="h-6 w-6 text-sky-600 dark:text-sky-400" /></div>
-                            <div className="text-[6px] space-y-1 text-sky-900 dark:text-sky-200 text-left">
-                              <p><strong className="font-semibold text-[8px]">{previewDoc.employeeName || "Jordan Lee"}</strong></p>
-                              <p>DOB: 12/04/1996</p>
-                              <p>Gender: Male</p>
-                              <p className="mt-1 leading-relaxed text-[5px] opacity-75 text-left">Address: 12th Cross Rd, Indiranagar, Bangalore, 560038</p>
-                            </div>
-                          </div>
-                          <div className="border-t border-sky-400/20 pt-1.5 flex justify-between items-center">
-                            <span className="font-mono text-xs font-bold text-sky-900 dark:text-sky-100 tracking-wider">1984 0122 1042</span>
-                            <span className="text-[5px] uppercase font-bold text-sky-800 dark:text-sky-400 bg-sky-100 dark:bg-sky-900/50 px-1 py-0.5 rounded">Mera Aadhaar</span>
-                          </div>
-                        </div>
-                      ) : previewDoc.type === "PAN Card" ? (
-                        <div className="w-[320px] aspect-[8.5/5.5] bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-950/20 dark:to-emerald-950/20 border border-emerald-400/30 rounded-xl shadow-md p-3 relative flex flex-col justify-between select-none">
-                          <div className="flex justify-between items-center border-b border-emerald-500/20 pb-1.5">
-                            <span className="text-[6px] uppercase font-bold text-emerald-800 dark:text-emerald-400 leading-none">Income Tax Department</span>
-                            <span className="text-[6px] text-emerald-600 font-medium leading-none">GOVT OF INDIA</span>
-                          </div>
-                          <div className="flex gap-3 my-2.5">
-                            <div className="w-10 h-12 bg-emerald-100 dark:bg-emerald-900/50 border border-emerald-500/20 rounded flex items-center justify-center shrink-0"><User className="h-6 w-6 text-emerald-600" /></div>
-                            <div className="text-[6px] space-y-1 text-emerald-900 dark:text-emerald-100 text-left">
-                              <p>Name: <strong className="font-semibold">{previewDoc.employeeName || "Jordan Lee"}</strong></p>
-                              <p>Father's Name: K. M. Lee</p>
-                              <p>Date of Birth: 12/04/1996</p>
-                              <p className="mt-1 font-mono text-[9px] font-bold text-emerald-900 dark:text-emerald-100 tracking-wide">ABCDE1042F</p>
+                    <div className="overflow-hidden rounded-2xl border border-border bg-card/60 min-h-[440px] relative flex flex-col items-center justify-center p-1">
+                      {previewDoc.fileUrl ? (
+                        ["jpg", "jpeg", "png", "webp", "gif", "svg"].includes((previewDoc.fileType || "").toLowerCase()) ? (
+                          <div className="w-full h-full min-h-[420px] relative flex flex-col items-center justify-center overflow-hidden rounded-xl bg-black/40 p-2">
+                            <img
+                              src={previewDoc.fileUrl}
+                              alt={previewDoc.name}
+                              className="w-full max-h-[480px] object-contain rounded-lg shadow-lg"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = `http://127.0.0.1:8001${previewDoc.fileUrl}`;
+                              }}
+                            />
+                            <div className="mt-2 flex items-center gap-2">
+                              <a
+                                href={previewDoc.fileUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1.5 bg-background/80 hover:bg-accent text-foreground text-xs font-semibold px-3 py-1.5 rounded-lg border border-border cursor-pointer"
+                              >
+                                <Eye className="h-3.5 w-3.5" /> Fullscreen View
+                              </a>
                             </div>
                           </div>
-                          <div className="flex justify-between items-center text-[5px]">
-                            <span className="italic border-b border-emerald-900/40 text-emerald-900 dark:text-emerald-100 font-mono">{previewDoc.employeeName?.split(" ")[0] || "Jordan"}</span>
-                            <span className="h-4 w-4 bg-yellow-400/40 dark:bg-yellow-500/20 rounded-full" />
-                          </div>
-                        </div>
-                      ) : previewDoc.type === "Passport" ? (
-                        <div className="w-[320px] aspect-[8.5/5.5] bg-slate-900 text-slate-100 border border-slate-700 rounded-xl shadow-md p-3 relative flex flex-col justify-between select-none">
-                          <div className="flex justify-between items-start border-b border-slate-700 pb-1">
-                            <span className="text-[6px] uppercase font-bold tracking-widest text-slate-400">Republic of India</span>
-                            <span className="text-[6px] uppercase font-bold text-slate-400">PASSPORT</span>
-                          </div>
-                          <div className="flex gap-3.5 my-2">
-                            <div className="w-12 h-14 bg-slate-800 border border-slate-700 rounded flex items-center justify-center shrink-0"><User className="h-6 w-6 text-slate-400" /></div>
-                            <div className="text-[6px] space-y-0.5 text-slate-300 text-left">
-                              <p>Surname: <strong className="font-semibold text-slate-100 uppercase">{previewDoc.employeeName?.split(" ").pop() || "LEE"}</strong></p>
-                              <p>Given Names: <strong className="font-semibold text-slate-100">{previewDoc.employeeName?.split(" ")[0] || "JORDAN"}</strong></p>
-                              <p>Nationality: Indian</p>
-                              <p>Passport No: <span className="font-mono font-bold text-yellow-400">Z3210452</span></p>
-                              <p>Expiry: {previewDoc.expiryDate || "2030-01-01"}</p>
+                        ) : (
+                          <div className="w-full h-[520px] relative flex flex-col items-center justify-center overflow-hidden rounded-xl bg-background border border-border shadow-inner">
+                            <object
+                              data={previewDoc.fileUrl}
+                              type="application/pdf"
+                              className="w-full h-full rounded-xl"
+                            >
+                              <iframe
+                                src={previewDoc.fileUrl}
+                                className="w-full h-full rounded-xl border-0"
+                                title={previewDoc.name}
+                              >
+                                <embed
+                                  src={previewDoc.fileUrl}
+                                  type="application/pdf"
+                                  className="w-full h-full rounded-xl"
+                                />
+                              </iframe>
+                            </object>
+                            <div className="absolute top-2 right-2 flex items-center gap-1.5 bg-background/90 backdrop-blur-md border border-border p-1 rounded-lg shadow-md z-10">
+                              <a
+                                href={previewDoc.fileUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 text-[11px] font-semibold text-foreground px-2 py-1 hover:bg-accent rounded cursor-pointer"
+                              >
+                                <Eye className="h-3 w-3" /> Pop-out
+                              </a>
                             </div>
                           </div>
-                          <div className="flex justify-between items-center text-[4px] font-mono text-slate-500 tracking-wider">P&lt;IND&lt;&lt;JORDAN&lt;LEE&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;</div>
-                        </div>
-                      ) : (previewDoc.category === "Company Documents" || previewDoc.type === "Resume" || previewDoc.type === "Offer Letter" || previewDoc.type === "Relieving Letter") ? (
-                        <div className="w-[300px] h-[200px] bg-white text-slate-800 border border-slate-300 rounded shadow-md p-4 relative flex flex-col justify-between overflow-hidden select-none">
-                          <div className="border-b border-slate-300 pb-2">
-                            <p className="text-[7px] font-bold text-slate-900 tracking-wide flex items-center gap-1"><ShieldCheck className="h-2.5 w-2.5 text-indigo-600" />AURIX TALENT LABS</p>
-                            <p className="text-[5px] text-slate-400 leading-none">Internal Compliance & Human Resources Vault</p>
-                          </div>
-                          <div className="my-2 text-left space-y-1.5">
-                            <p className="text-[8px] font-bold text-slate-900 underline truncate">{previewDoc.name}</p>
-                            <p className="text-[5px] text-slate-500 leading-relaxed max-w-full">This document stands as an official record of Aurix HR Talent Labs. Details contained herein are confidential under corporate NDAs and data processing regulations.</p>
-                            <p className="text-[5px] text-slate-600 italic">Category: {previewDoc.category} &bull; Type: {previewDoc.type}</p>
-                          </div>
-                          <div className="border-t border-slate-200 pt-2 flex justify-between items-center text-[5px] text-slate-400">
-                            <span>Verification Hash: SHA-256</span>
-                            <span className="h-3 w-10 bg-indigo-500/10 rounded flex items-center justify-center font-bold text-indigo-600 text-[4px]">SECURE DOC</span>
-                          </div>
-                        </div>
+                        )
                       ) : (
-                        <div className="w-[300px] aspect-[4/3] bg-card border border-border rounded flex flex-col items-center justify-center p-4">
-                          <FileText className="h-10 w-10 text-muted-foreground/60 mb-2" />
-                          <p className="text-xs font-semibold text-foreground text-center truncate w-full">{previewDoc.name}</p>
-                          <p className="text-[10px] text-muted-foreground/80 mt-1">Generic binary layout view</p>
+                        <div className="w-full h-[400px] flex flex-col items-center justify-center p-6 bg-card/90 text-center gap-3">
+                          <FileText className="h-12 w-12 text-primary" />
+                          <p className="text-sm font-bold text-foreground">{previewDoc.name}</p>
+                          <p className="text-xs text-muted-foreground">{previewDoc.type} &bull; {previewDoc.fileSize}</p>
                         </div>
                       )}
-                      <span className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm text-white px-2 py-0.5 rounded text-[10px] font-semibold uppercase">{previewDoc.fileType}</span>
                     </div>
                   </div>
 
