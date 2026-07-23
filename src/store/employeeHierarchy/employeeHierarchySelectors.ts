@@ -83,28 +83,66 @@ export const selectAvailableManagers = createSelector(
       }))
 );
 
+function norm(str: string | null | undefined): string {
+  return (str || "").trim().toLowerCase();
+}
+
+function normType(str: string | null | undefined): string {
+  return (str || "").trim().toLowerCase().replace(/[-_]/g, " ");
+}
+
 function matchesFilterAndSearch(
   node: BackendHierarchyNode,
   search: string,
   filters: any
 ): boolean {
-  const fullName = `${node.first_name} ${node.last_name}`.toLowerCase();
-  const matchesSearch =
-    !search ||
-    fullName.includes(search) ||
-    (node.employee_id && node.employee_id.toLowerCase().includes(search)) ||
-    (node.department && node.department.toLowerCase().includes(search)) ||
-    (node.designation && node.designation.toLowerCase().includes(search));
+  const fullName = `${node.first_name || ""} ${node.last_name || ""}`.trim().toLowerCase();
+  const searchLower = norm(search);
+  const empId = norm(node.employee_id);
+  const dept = norm(node.department);
+  const desig = norm(node.designation);
+  const email = norm((node as any).email);
+  const role = norm(node.role);
+  const branch = norm(node.branch || (node as any).location);
 
-  const matchesDept = filters.department === "all" || node.department === filters.department;
-  const matchesDesig = filters.designation === "all" || node.designation === filters.designation;
-  const matchesLoc = filters.location === "all" || node.branch === filters.location;
+  const matchesSearch =
+    !searchLower ||
+    fullName.includes(searchLower) ||
+    empId.includes(searchLower) ||
+    dept.includes(searchLower) ||
+    desig.includes(searchLower) ||
+    email.includes(searchLower) ||
+    role.includes(searchLower) ||
+    branch.includes(searchLower);
+
+  const matchesDept =
+    !filters.department ||
+    filters.department === "all" ||
+    norm(node.department) === norm(filters.department);
+
+  const matchesDesig =
+    !filters.designation ||
+    filters.designation === "all" ||
+    norm(node.designation) === norm(filters.designation);
+
+  const nodeLoc = norm(node.branch || (node as any).location);
+  const filterLoc = norm(filters.location);
+  const matchesLoc =
+    !filters.location ||
+    filters.location === "all" ||
+    nodeLoc === filterLoc;
+
   const matchesType =
-    filters.employmentType === "all" || node.employment_type === filters.employmentType;
+    !filters.employmentType ||
+    filters.employmentType === "all" ||
+    normType(node.employment_type) === normType(filters.employmentType);
+
   const matchesMgr =
+    !filters.reportingManagerId ||
     filters.reportingManagerId === "all" ||
     node.reporting_to === filters.reportingManagerId ||
-    node.id === filters.reportingManagerId;
+    node.id === filters.reportingManagerId ||
+    norm(node.reporting_manager_name) === norm(filters.reportingManagerId);
 
   return Boolean(matchesSearch && matchesDept && matchesDesig && matchesLoc && matchesType && matchesMgr);
 }

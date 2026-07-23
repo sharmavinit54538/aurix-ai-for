@@ -52,6 +52,7 @@ import {
   YAxis,
 } from "recharts";
 import { useAurix } from "@/lib/aurix-store";
+import { useExecutiveDashboardData } from "./hooks/useExecutiveDashboardData";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -232,10 +233,11 @@ function QuickActions() {
 }
 
 // ── 3. KPI Cards ─────────────────────────────────────────────
-function KpiCards() {
+function KpiCards({ cards }: { cards?: ReturnType<typeof useExecutiveDashboardData>["kpiCards"] }) {
+  const items = cards && cards.length > 0 ? cards : KPI_CARDS;
   return (
     <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-      {KPI_CARDS.map((kpi, i) => (
+      {items.map((kpi, i) => (
         <motion.div key={kpi.id} {...stagger(i)}>
           <Link to={kpi.link as any}>
             <Card className="group relative overflow-hidden transition-all hover:shadow-md hover:-translate-y-0.5 cursor-pointer">
@@ -541,7 +543,13 @@ function AttendanceAnalytics() {
 }
 
 // ── 7. Payroll Overview ───────────────────────────────────────
-function PayrollOverview() {
+function PayrollOverview({ data }: { data?: ReturnType<typeof useExecutiveDashboardData>["payrollOverview"] }) {
+  const statusItems = data?.payrollStatus && data.payrollStatus.length > 0 ? data.payrollStatus : PAYROLL_STATUS;
+  const totalCostText = data?.totalCostFormatted ?? "₹0.0L";
+  const chartData = data?.monthlySalaryCostChart && data.monthlySalaryCostChart.length > 0
+    ? data.monthlySalaryCostChart
+    : MONTHLY_PAYROLL;
+
   return (
     <motion.div {...fadeUp}>
       <Card>
@@ -550,7 +558,7 @@ function PayrollOverview() {
           {/* Status cards */}
           <div className="space-y-3">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Payroll Status</p>
-            {PAYROLL_STATUS.map((s) => (
+            {statusItems.map((s) => (
               <div
                 key={s.label}
                 className="flex items-center justify-between rounded-xl border border-border bg-background/50 px-4 py-3"
@@ -564,7 +572,7 @@ function PayrollOverview() {
             ))}
             <div className="rounded-xl border border-border bg-background/50 px-4 py-3">
               <div className="text-xs text-muted-foreground">Total Cost This Month</div>
-              <div className="mt-1 font-display text-2xl font-bold text-emerald-500">₹42.8L</div>
+              <div className="mt-1 font-display text-2xl font-bold text-emerald-500">{totalCostText}</div>
             </div>
           </div>
 
@@ -573,7 +581,7 @@ function PayrollOverview() {
             <p className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Monthly Salary Cost (Lakhs ₹)</p>
             <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={MONTHLY_PAYROLL} margin={{ top: 6, right: 8, left: -16, bottom: 0 }}>
+                <BarChart data={chartData} margin={{ top: 6, right: 8, left: -16, bottom: 0 }}>
                   <defs>
                     <linearGradient id="payGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#10b981" stopOpacity={0.9} />
@@ -582,12 +590,12 @@ function PayrollOverview() {
                   </defs>
                   <CartesianGrid stroke="oklch(0.5 0.02 264 / 0.1)" vertical={false} />
                   <XAxis dataKey="month" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} domain={[35, 45]} />
+                  <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
                   <Tooltip
                     contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }}
                     formatter={(v) => [`₹${v}L`, "Payroll"]}
                   />
-                  <Bar dataKey="amount" radius={[6, 6, 0, 0]} fill="url(#payGrad)" />
+                  <Bar dataKey="cost" radius={[6, 6, 0, 0]} fill="url(#payGrad)" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -1170,6 +1178,7 @@ function ScoreWidgets() {
 // ── Main Executive Dashboard ──────────────────────────────────
 export function ExecutiveDashboard() {
   const ws = useAurix();
+  const live = useExecutiveDashboardData();
   const firstName = ws.user?.fullName?.split(" ")[0] ?? "there";
   const companyName = ws.company?.name ?? "Your Workspace";
 
@@ -1205,8 +1214,15 @@ export function ExecutiveDashboard() {
           <div className="flex items-center gap-3">
             <LiveClock />
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="gap-1.5 text-xs">
-                <RefreshCw className="h-3.5 w-3.5" /> Refresh
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={() => live.refetch()}
+                disabled={live.loading}
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${live.loading ? "animate-spin" : ""}`} />{" "}
+                {live.loading ? "Syncing..." : "Refresh"}
               </Button>
               <Button variant="outline" size="sm" className="gap-1.5 text-xs">
                 <Download className="h-3.5 w-3.5" /> Export
@@ -1220,7 +1236,7 @@ export function ExecutiveDashboard() {
       <QuickActions />
 
       {/* KPI Command Cards */}
-      <KpiCards />
+      <KpiCards cards={live.kpiCards} />
 
       {/* Approvals + Activity Feed */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -1244,7 +1260,7 @@ export function ExecutiveDashboard() {
 
       {/* Payroll + Onboarding + Exit */}
       <div className="grid grid-cols-1 gap-6">
-        <PayrollOverview />
+        <PayrollOverview data={live.payrollOverview} />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

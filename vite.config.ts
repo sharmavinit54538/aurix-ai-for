@@ -7,6 +7,16 @@ import path from "path";
 export default defineConfig({
   server: {
     port: 8080,
+    proxy: {
+      "/uploads": {
+        target: "http://127.0.0.1:8001",
+        changeOrigin: true,
+      },
+      "/api": {
+        target: "http://127.0.0.1:8001",
+        changeOrigin: true,
+      },
+    },
   },
   resolve: {
     tsconfigPaths: true,
