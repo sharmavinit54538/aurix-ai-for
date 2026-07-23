@@ -42,6 +42,12 @@ export const employeeHierarchySlice = createSlice({
   reducers: {
     setSearchKeyword(state, action: PayloadAction<string>) {
       state.searchKeyword = action.payload;
+      if (action.payload && action.payload.trim().length > 0 && state.hierarchy) {
+        const allIds = getAllNodeIds(state.hierarchy);
+        allIds.forEach((id) => {
+          state.expandedNodes[id] = true;
+        });
+      }
     },
     setFilters(state, action: PayloadAction<Partial<HierarchyFilterState>>) {
       state.filters = { ...state.filters, ...action.payload };
