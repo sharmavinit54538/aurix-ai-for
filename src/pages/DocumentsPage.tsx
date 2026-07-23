@@ -63,7 +63,24 @@ export function DocumentsPage() {
   const activities = ws.documentActivities || [];
 
   const [loadingLive, setLoadingLive] = useState(false);
-  const [employeesList, setEmployeesList] = useState<Array<{ id: string; fullName: string }>>([]);
+  const [employeesList, setEmployeesList] = useState<Array<{
+    id: string;
+    fullName: string;
+    employeeId: string;
+    department: string;
+    designation: string;
+    location: string;
+    joiningDate: string;
+    email: string;
+    phone: string;
+    panNumber: string;
+    fatherName: string;
+  }>>([]);
+
+  // Generator Form State
+  const [genTemplateId, setGenTemplateId] = useState("offer");
+  const [genEmployee, setGenEmployee] = useState<string>("general");
+  const [genFields, setGenFields] = useState<Record<string, string>>({});
 
   const fetchLiveDocumentsData = useCallback(async () => {
     setLoadingLive(true);
@@ -73,12 +90,33 @@ export function DocumentsPage() {
         apiInstance.get("/employees", { params: { limit: 100 } }),
       ]);
 
-      let liveEmps: Array<{ id: string; fullName: string }> = [];
+      let liveEmps: Array<{
+        id: string;
+        fullName: string;
+        employeeId: string;
+        department: string;
+        designation: string;
+        location: string;
+        joiningDate: string;
+        email: string;
+        phone: string;
+        panNumber: string;
+        fatherName: string;
+      }> = [];
       if (empsRes.status === "fulfilled" && empsRes.value.data?.data) {
         const empItems = empsRes.value.data.data.items ?? empsRes.value.data.data ?? [];
         liveEmps = empItems.map((e: any) => ({
           id: e.id,
-          fullName: [e.first_name, e.last_name].filter(Boolean).join(" ").trim() || e.full_name || e.employee_id || "Employee",
+          fullName: [e.first_name, e.last_name].filter(Boolean).join(" ").trim() || e.full_name || e.employee_id || "Vinit Sharma",
+          employeeId: e.employee_id || "EMP-190996",
+          department: e.department || "Developer",
+          designation: e.designation || "Senior Software Architect",
+          location: e.work_location || "Hyderabad, Telangana",
+          joiningDate: e.joining_date || "2026-08-01",
+          email: e.company_email || e.personal_email || "aurix@gmail.com",
+          phone: e.phone || "8976499879",
+          panNumber: e.pan_number || "QYPPS7378N",
+          fatherName: e.father_name || "Dinesh Kumar Sharma",
         }));
         setEmployeesList(liveEmps);
       }
@@ -126,12 +164,16 @@ export function DocumentsPage() {
           aurix.set({ documents: mapped });
         }
       }
+
+      if (liveEmps.length > 0 && !genEmployee) {
+        setGenEmployee(liveEmps[0].id);
+      }
     } catch (err) {
       console.error("Failed to load live employee documents:", err);
     } finally {
       setLoadingLive(false);
     }
-  }, []);
+  }, [genEmployee]);
 
   useEffect(() => {
     fetchLiveDocumentsData();
@@ -171,9 +213,6 @@ export function DocumentsPage() {
   const [uploadFileSize, setUploadFileSize] = useState("");
 
   // Generator Form State
-  const [genTemplateId, setGenTemplateId] = useState("offer");
-  const [genEmployee, setGenEmployee] = useState<string>("");
-  const [genFields, setGenFields] = useState<Record<string, string>>({});
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedDraft, setGeneratedDraft] = useState<string | null>(null);
 
@@ -260,6 +299,35 @@ export function DocumentsPage() {
     toast.info(`Mock file selected: ${randomNames[randIndex]}`);
   };
 
+  const autoFillTemplateFields = (templateId: string, targetEmpId?: string) => {
+    const activeEmps = employeesList.length > 0 ? employeesList : ws.employees;
+    const selectedEmpObj = activeEmps.find(x => x.id === (targetEmpId || genEmployee));
+    const empName = selectedEmpObj ? selectedEmpObj.fullName : "Vinit Sharma";
+
+    if (templateId === "offer") {
+      setGenFields({
+        "Role": "Senior Software Architect",
+        "Salary (LPA)": "18.5",
+        "Start Date": new Date(Date.now() + 14*24*3600*1000).toISOString().split("T")[0],
+      });
+    } else if (templateId === "nda") {
+      setGenFields({
+        "Witness Name": "Priya Nair (Legal Ops)",
+        "Duration (Years)": "3",
+      });
+    } else if (templateId === "relieving") {
+      setGenFields({
+        "Last Working Day": new Date(Date.now() + 30*24*3600*1000).toISOString().split("T")[0],
+        "Reason for Leaving": "Career Advancement & Higher Education",
+      });
+    } else {
+      setGenFields({
+        "Version Date": "2026-01-01",
+        "Signee Designation": "Lead Architect",
+      });
+    }
+  };
+
   // 2. Generate Handler
   const handleGenerateAI = () => {
     setIsGenerating(true);
@@ -267,53 +335,55 @@ export function DocumentsPage() {
 
     setTimeout(() => {
       const template = DOCUMENT_TEMPLATES.find(x => x.id === genTemplateId);
-      const emp = ws.employees.find(x => x.id === genEmployee);
-      const recipient = emp ? emp.fullName : "Valued Professional";
+      const activeEmps = employeesList.length > 0 ? employeesList : ws.employees;
+      const emp = activeEmps.find(x => x.id === genEmployee);
+      const recipient = emp ? emp.fullName : (genEmployee === "general" ? "Vinit Sharma" : (activeEmps[0]?.fullName || "Vinit Sharma"));
 
-      let text = `AURIX TALENT LABS â€” OFFICIAL LETTER
+      let text = `AURIX TALENT LABS — OFFICIAL HR LETTER
 Date: ${new Date().toISOString().split("T")[0]}
 Recipient: ${recipient}
+Ref No: ATL-DOC-${Math.floor(100000 + Math.random() * 900000)}
 
 `;
       if (genTemplateId === "offer") {
         text += `Dear ${recipient},
 
-We are pleased to offer you the position of ${genFields["Role"] || "Frontend Architect"} at Aurix Talent Labs.
-Your initial annual compensation package will be INR ${genFields["Salary (LPA)"] || "12.5"} Lakhs per annum, subject to standard deductions.
-Your employment will commence on ${genFields["Start Date"] || "2026-07-15"}.
+We are pleased to offer you the position of ${genFields["Role"] || "Senior Software Architect"} at Aurix Talent Labs.
+Your initial annual compensation package will be INR ${genFields["Salary (LPA)"] || "18.5"} Lakhs per annum, subject to standard statutory deductions.
+Your employment will commence on ${genFields["Start Date"] || "2026-08-01"}.
 
-This offer is contingent upon successful verification of your educational certifications and previous employment documents.
+This offer is contingent upon successful verification of your educational certifications, background check, and previous employment documents.
 
 Best Regards,
-People Ops Team
+People Ops & HR Executive Team
 Aurix Talent Labs`;
       } else if (genTemplateId === "nda") {
         text += `NON-DISCLOSURE AGREEMENT (NDA)
 
-This Agreement is entered into by and between Aurix Talent Labs and ${recipient}, with witness ${genFields["Witness Name"] || "Priya Nair"}.
-Both parties agree to hold confidential information in strict confidence for a duration of ${genFields["Duration (Years)"] || "3"} years from signing.
-Information shared includes all software source code, corporate records, and recruiting workflows.
+This Confidentiality Agreement is entered into by and between Aurix Talent Labs and ${recipient}, with witness ${genFields["Witness Name"] || "Priya Nair (Legal Lead)"}.
+Both parties agree to hold all proprietary corporate information in strict confidence for a duration of ${genFields["Duration (Years)"] || "3"} years from signing.
+Information covered includes software source code, corporate financials, client records, and AI models.
 
 Signed by:
-Aurix Representative
+Aurix Corporate Legal Representative
 And Recipient: ${recipient}`;
       } else if (genTemplateId === "relieving") {
         text += `RELIEVING & EXPERIENCE CERTIFICATE
 
 This is to certify that ${recipient} was employed with Aurix Talent Labs.
-Their last working day was ${genFields["Last Working Day"] || "2026-06-15"}.
-Reason for release: ${genFields["Reason for Leaving"] || "Resignation (Personal growth)"}.
+Their last working day was ${genFields["Last Working Day"] || "2026-08-31"}.
+Reason for release: ${genFields["Reason for Leaving"] || "Resignation (Career Advancement)"}.
 
-During their tenure, they demonstrated professional competence and sincere dedication. We wish them success in their future endeavors.
+During their tenure, they demonstrated professional competence, leadership, and sincere dedication. We wish them grand success in their future endeavors.
 
 Signed,
-Priya Nair, People Ops Partner`;
+Priya Nair, People Ops Lead Partner`;
       } else {
         text += `COMPANY HANDBOOK ACKNOWLEDGMENT
 Version: ${genFields["Version Date"] || "2026-01-01"}
 
-I, ${recipient}, holding the designation of ${genFields["Signee Designation"] || "Team Lead"},
-acknowledge that I have received, read, and understood the policies stated in the Aurix Company Handbook v4.0.
+I, ${recipient}, holding the designation of ${genFields["Signee Designation"] || "Lead Architect"},
+acknowledge that I have received, read, and understood all policies stated in the Aurix Corporate Handbook v4.0.
 
 Acknowledged and Signed electronically.`;
       }
@@ -321,7 +391,7 @@ Acknowledged and Signed electronically.`;
       setGeneratedDraft(text);
       setIsGenerating(false);
       toast.success("Document draft generated with AI!");
-    }, 1500);
+    }, 1200);
   };
 
   const handleSaveGenerated = () => {
@@ -955,69 +1025,734 @@ Acknowledged and Signed electronically.`;
 
       {/* AI DOCUMENT GENERATOR MODAL */}
       <Dialog open={generateOpen} onOpenChange={setGenerateOpen}>
-        <DialogContent className="sm:max-w-2xl bg-background border-border shadow-2xl p-0">
-          <div className="grid grid-cols-1 md:grid-cols-5 h-[580px] divide-y md:divide-y-0 md:divide-x divide-border">
-            <div className="md:col-span-2 p-5 flex flex-col justify-between h-full bg-muted/10">
+        <DialogContent className="sm:max-w-4xl bg-background border-border shadow-2xl p-0">
+          <div className="grid grid-cols-1 md:grid-cols-5 h-[680px] divide-y md:divide-y-0 md:divide-x divide-border">
+            <div className="md:col-span-2 p-5 flex flex-col justify-between h-full bg-card/40">
               <div className="space-y-4">
                 <div>
                   <h3 className="font-display text-base font-bold flex items-center gap-1.5"><Wand2 className="h-4 w-4 text-indigo-500 animate-pulse" />AI Letter Generator</h3>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Generate compliant contracts and documents.</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">Generate compliant contracts & HR documents.</p>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-muted-foreground">Document Template</Label>
-                  <Select value={genTemplateId} onValueChange={val => { setGenTemplateId(val); setGenFields({}); setGeneratedDraft(null); }}>
-                    <SelectTrigger className="h-8 bg-background/70 border-border text-xs"><SelectValue /></SelectTrigger>
+                  <Select value={genTemplateId} onValueChange={val => { setGenTemplateId(val); autoFillTemplateFields(val); setGeneratedDraft(null); }}>
+                    <SelectTrigger className="h-8 bg-background border-border text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>{DOCUMENT_TEMPLATES.map(t => (<SelectItem key={t.id} value={t.id}>{t.title}</SelectItem>))}</SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-muted-foreground">For Employee</Label>
-                  <Select value={genEmployee} onValueChange={setGenEmployee}>
-                    <SelectTrigger className="h-8 bg-background/70 border-border text-xs"><SelectValue placeholder="Select Employee" /></SelectTrigger>
-                    <SelectContent>{ws.employees.map(emp => (<SelectItem key={emp.id} value={emp.id}>{emp.fullName}</SelectItem>))}</SelectContent>
+                  <Select value={genEmployee || "general"} onValueChange={val => { setGenEmployee(val); autoFillTemplateFields(genTemplateId, val); }}>
+                    <SelectTrigger className="h-8 bg-background border-border text-xs"><SelectValue placeholder="Select Employee" /></SelectTrigger>
+                    <SelectContent className="max-h-[200px]">
+                      <SelectItem value="general">Vinit Sharma (General Employee)</SelectItem>
+                      {(employeesList.length > 0 ? employeesList : ws.employees).map(emp => (
+                        <SelectItem key={emp.id} value={emp.id}>{emp.fullName}</SelectItem>
+                      ))}
+                    </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-3 pt-2">
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Template Parameters</div>
+                <div className="space-y-2.5 pt-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Parameters</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => autoFillTemplateFields(genTemplateId)}
+                      className="h-6 text-[10px] text-indigo-500 hover:text-indigo-600 hover:bg-indigo-500/10 px-2 cursor-pointer"
+                    >
+                      ✨ Auto-Fill Defaults
+                    </Button>
+                  </div>
                   {DOCUMENT_TEMPLATES.find(x => x.id === genTemplateId)?.fields.map(field => (
                     <div key={field} className="space-y-1">
                       <Label className="text-[11px] text-foreground/80">{field}</Label>
-                      <Input value={genFields[field] || ""} onChange={e => setGenFields({ ...genFields, [field]: e.target.value })} className="h-8 bg-background/50 border-border text-xs" />
+                      <Input
+                        value={genFields[field] || ""}
+                        onChange={e => setGenFields({ ...genFields, [field]: e.target.value })}
+                        placeholder={`e.g. Enter ${field.toLowerCase()}`}
+                        className="h-8 bg-background border-border text-xs"
+                      />
                     </div>
                   ))}
                 </div>
               </div>
-              <div className="pt-4 border-t border-border flex flex-col gap-2">
-                <Button onClick={handleGenerateAI} disabled={isGenerating || !genEmployee} className="w-full h-9 bg-gradient-brand text-brand-foreground hover:opacity-90 font-medium text-xs gap-1.5 cursor-pointer"><Wand2 className="h-3.5 w-3.5" />{isGenerating ? "Drafting with AI..." : "Generate Draft"}</Button>
+              <div className="pt-3 border-t border-border flex flex-col gap-2">
+                <Button onClick={handleGenerateAI} disabled={isGenerating} className="w-full h-9 bg-gradient-brand text-brand-foreground hover:opacity-90 font-medium text-xs gap-1.5 cursor-pointer"><Wand2 className="h-3.5 w-3.5" />{isGenerating ? "Drafting with AI..." : "Generate Enterprise Document"}</Button>
                 <Button variant="ghost" onClick={() => setGenerateOpen(false)} className="h-8 text-xs text-muted-foreground hover:bg-accent/40 cursor-pointer">Cancel</Button>
               </div>
             </div>
-            <div className="md:col-span-3 p-5 flex flex-col justify-between h-full">
+            <div className="md:col-span-3 p-5 flex flex-col justify-between h-full bg-background overflow-hidden">
               <div className="flex-1 flex flex-col min-h-0">
                 <div className="flex items-center justify-between pb-3 border-b border-border">
-                  <span className="text-xs font-bold text-foreground">Document Draft Preview</span>
-                  <Badge variant="outline" className="text-[9px] border-indigo-500/20 text-indigo-500 bg-indigo-500/5">Ready to Save</Badge>
+                  <span className="text-xs font-bold text-foreground flex items-center gap-1.5"><FileText className="h-3.5 w-3.5 text-primary" />Official HR Document Preview</span>
+                  <Badge variant="outline" className="text-[9px] border-emerald-500/20 text-emerald-500 bg-emerald-500/5">Fortune 500 Layout</Badge>
                 </div>
-                <div className="flex-1 overflow-auto bg-muted/20 border border-border rounded-xl p-4 mt-3 font-mono text-[11px] leading-relaxed whitespace-pre-wrap">
+                <div className="flex-1 overflow-auto p-1 mt-3">
                   {isGenerating ? (
-                    <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground gap-2">
-                      <RefreshCw className="h-5 w-5 animate-spin text-indigo-500" />
-                      <p className="font-semibold">AI Assistant drafting letter...</p>
-                      <p className="text-[10px] text-muted-foreground/85">Formatting with official templates & clauses</p>
+                    <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground gap-2 bg-muted/20 border border-border rounded-xl p-8">
+                      <RefreshCw className="h-7 w-7 animate-spin text-indigo-500 mb-1" />
+                      <p className="font-semibold text-foreground text-xs">AI Assistant drafting official contract...</p>
+                      <p className="text-[10px] text-muted-foreground">Injecting clauses, candidate parameters & legal formatting</p>
                     </div>
-                  ) : generatedDraft ? (generatedDraft) : (
-                    <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
-                      <Wand2 className="h-6 w-6 text-muted-foreground/50 mb-2" />
-                      <p className="font-semibold">No Draft Available</p>
-                      <p className="text-[10px]">Select an employee, configure parameters, and generate the contract.</p>
+                  ) : generatedDraft ? (
+                    genTemplateId === "relieving" ? (
+                      <div className="bg-white text-slate-900 shadow-2xl border border-slate-200 rounded-xl p-6 sm:p-8 relative overflow-hidden font-sans text-left space-y-5 select-none">
+                        {/* WATERMARK */}
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] rotate-[-30deg] select-none">
+                          <span className="text-5xl font-extrabold uppercase tracking-widest text-slate-900">OFFICIAL RELIEVING CERTIFICATE</span>
+                        </div>
+
+                        {/* 1. CORPORATE HEADER */}
+                        <div className="flex flex-col sm:flex-row justify-between items-start border-b-2 border-slate-900 pb-4 gap-4">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <div className="h-8 w-8 rounded-lg bg-indigo-950 flex items-center justify-center text-white font-bold text-sm">A</div>
+                              <div>
+                                <h2 className="text-xs sm:text-sm font-extrabold tracking-wider text-slate-900 uppercase">AURIX TALENT LABS PRIVATE LIMITED</h2>
+                                <p className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider">AI-Powered HR Technology Company</p>
+                              </div>
+                            </div>
+                            <div className="text-[9px] text-slate-600 leading-relaxed pt-1 space-y-0.5">
+                              <p><strong>Registered Office:</strong> Plot No. 42, HITEC City, Hyderabad, Telangana - 500081, India</p>
+                              <p>www.aurixtalentlabs.com &bull; hr@aurixtalentlabs.com &bull; +91-40-69201100</p>
+                              <p className="text-[8px] text-slate-400">CIN: U72900TG2024PTC184910 &bull; GSTIN: 36AAACA0000A1Z5</p>
+                            </div>
+                          </div>
+                          <div className="text-right space-y-1 shrink-0">
+                            <span className="inline-block bg-indigo-950 text-white text-[9px] font-bold px-2.5 py-1 rounded tracking-wider uppercase">RELIEVING LETTER</span>
+                            <p className="text-[10px] font-mono font-bold text-slate-800 pt-0.5">Ref No: RL-2026-000001</p>
+                            <p className="text-[9px] text-slate-500">Issue Date: {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                            <span className="inline-block text-[8px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded uppercase">OFFICIAL & VERIFIED</span>
+                          </div>
+                        </div>
+
+                        {/* 2. EMPLOYEE DETAILS GRID */}
+                        {(() => {
+                          const selEmp = employeesList.find(x => x.id === genEmployee);
+                          return (
+                            <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 space-y-2">
+                              <h3 className="text-[9px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200 pb-1">EMPLOYEE SEPARATION RECORD</h3>
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-[11px]">
+                                <div>
+                                  <span className="text-[9px] text-slate-500 block">Employee Name</span>
+                                  <strong className="text-slate-900 font-bold">{selEmp?.fullName || "Vinit Sharma"}</strong>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-slate-500 block">Employee ID</span>
+                                  <strong className="text-slate-900 font-mono font-bold">{selEmp?.employeeId || "EMP-190996"}</strong>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-slate-500 block">Designation</span>
+                                  <strong className="text-indigo-950 font-bold">{genFields["Role"] || selEmp?.designation || "Senior Software Architect"}</strong>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-slate-500 block">Department</span>
+                                  <strong className="text-slate-900 font-bold">{selEmp?.department || "Developer"}</strong>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-slate-500 block">Reporting Manager</span>
+                                  <strong className="text-slate-900 font-bold">Director of Engineering</strong>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-slate-500 block">Office Location</span>
+                                  <strong className="text-slate-900 font-bold">{selEmp?.location || "Hyderabad, Telangana"}</strong>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-slate-500 block">Date of Joining</span>
+                                  <strong className="text-slate-900 font-bold">{selEmp?.joiningDate || "2026-07-21"}</strong>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-slate-500 block">Last Working Day</span>
+                                  <strong className="text-rose-700 font-bold">{genFields["Last Working Day"] || "2026-08-31"}</strong>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+                        {/* 3. LETTER BODY */}
+                        {(() => {
+                          const selEmp = employeesList.find(x => x.id === genEmployee);
+                          const empFirstName = (selEmp?.fullName || "Vinit Sharma").split(' ')[0];
+                          return (
+                            <div className="space-y-2.5 text-[11px] leading-relaxed text-slate-800">
+                              <p className="font-bold text-slate-900">Dear Mr. {empFirstName},</p>
+                              <p>
+                                This is to certify that you were employed with <strong>Aurix Talent Labs Private Limited</strong> as a <strong>{genFields["Role"] || selEmp?.designation || "Senior Software Architect"}</strong> in the <strong>{selEmp?.department || "Developer"}</strong> department from <strong>{selEmp?.joiningDate || "2026-07-21"}</strong> to <strong>{genFields["Last Working Day"] || "2026-08-31"}</strong>.
+                              </p>
+                              <p>
+                                During your tenure, you successfully fulfilled your assigned responsibilities and contributed to various engineering initiatives with high professionalism, technical competence, and dedication.
+                              </p>
+                              <p>
+                                We confirm that all company assets assigned to you have been returned and all applicable exit formalities have been completed successfully. Reason for separation: <em>{genFields["Reason for Leaving"] || "Resignation (Career Advancement)"}</em>.
+                              </p>
+                              <p>
+                                Accordingly, you are hereby formally relieved from your duties and services at Aurix Talent Labs Private Limited effective from the close of business hours on <strong>{genFields["Last Working Day"] || "2026-08-31"}</strong>.
+                              </p>
+                              <p>
+                                We sincerely appreciate your valuable contributions during your employment with us and extend our best wishes for your continued success, professional growth, and prosperity in all future endeavors.
+                              </p>
+                            </div>
+                          );
+                        })()}
+
+                        {/* 4. EXIT CLEARANCE STATUS */}
+                        <div className="rounded-lg border border-emerald-200 bg-emerald-50/40 p-3 space-y-1.5">
+                          <h4 className="text-[9px] font-bold text-emerald-900 uppercase tracking-wider flex items-center gap-1">✔ ORGANIZATIONAL EXIT CLEARANCE STATUS</h4>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[9px] text-slate-700">
+                            <p>• HR Clearance Completed</p>
+                            <p>• IT & Hardware Clearance Completed</p>
+                            <p>• Finance & Payroll Clearance Completed</p>
+                            <p>• Asset Return Verified</p>
+                            <p>• Knowledge Transfer Completed</p>
+                            <p>• Exit Documentation Verified</p>
+                          </div>
+                        </div>
+
+                        {/* 5. CERTIFICATION CLAUSE */}
+                        <div className="text-[9px] text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-200 italic leading-relaxed">
+                          "This letter is issued upon completion of all organizational exit formalities and serves as an official confirmation that the employee has been formally relieved from the services of the Company."
+                        </div>
+
+                        {/* 6. AUTHORIZED SIGNATORY & HR SEAL */}
+                        <div className="border-t-2 border-slate-200 pt-3 flex justify-between items-end">
+                          <div className="space-y-2">
+                            <p className="text-[9px] font-bold text-slate-900 uppercase">HUMAN RESOURCES DEPARTMENT</p>
+                            <p className="text-[9px] text-slate-500">Aurix Talent Labs Private Limited</p>
+                          </div>
+                          <div className="text-right space-y-1">
+                            <div className="inline-block rounded-lg border border-indigo-200 bg-indigo-50/60 p-2.5 text-right">
+                              <p className="text-[8px] font-bold text-indigo-900 uppercase tracking-wider">OFFICIALLY SIGNED & E-ISSUED</p>
+                              <p className="text-[9px] font-semibold text-slate-800">Priya Nair</p>
+                              <p className="text-[8px] text-slate-500">Lead People Operations Partner</p>
+                              <p className="text-[7px] text-slate-400 font-mono">Aurix Talent Labs Pvt Ltd</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 7. FOOTER */}
+                        <div className="border-t border-slate-200 pt-2 flex justify-between items-center text-[8px] text-slate-400">
+                          <span>AURIX TALENT LABS PRIVATE LIMITED</span>
+                          <span className="italic">Confidential &bull; Official HR Document &bull; Document ID: RL-2026-000001</span>
+                          <span>Page 1 of 1</span>
+                        </div>
+                      </div>
+                    ) : genTemplateId === "nda" ? (
+                      <div className="bg-white text-slate-900 shadow-2xl border border-slate-200 rounded-xl p-6 sm:p-8 relative overflow-hidden font-sans text-left space-y-5 select-none">
+                        {/* WATERMARK */}
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] rotate-[-30deg] select-none">
+                          <span className="text-5xl font-extrabold uppercase tracking-widest text-slate-900">CONFIDENTIAL & PROPRIETARY</span>
+                        </div>
+
+                        {/* 1. CORPORATE HEADER */}
+                        <div className="flex flex-col sm:flex-row justify-between items-start border-b-2 border-slate-900 pb-4 gap-4">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <div className="h-8 w-8 rounded-lg bg-indigo-950 flex items-center justify-center text-white font-bold text-sm">A</div>
+                              <div>
+                                <h2 className="text-xs sm:text-sm font-extrabold tracking-wider text-slate-900 uppercase">AURIX TALENT LABS PRIVATE LIMITED</h2>
+                                <p className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider">AI-Powered HR Technology Company</p>
+                              </div>
+                            </div>
+                            <div className="text-[9px] text-slate-600 leading-relaxed pt-1 space-y-0.5">
+                              <p><strong>Registered Office:</strong> Plot No. 42, HITEC City, Hyderabad, Telangana - 500081, India</p>
+                              <p>www.aurixtalentlabs.com &bull; legal@aurixtalentlabs.com &bull; +91-40-69201100</p>
+                              <p className="text-[8px] text-slate-400">CIN: U72900TG2024PTC184910 &bull; GSTIN: 36AAACA0000A1Z5</p>
+                            </div>
+                          </div>
+                          <div className="text-right space-y-1 shrink-0">
+                            <span className="inline-block bg-indigo-950 text-white text-[9px] font-bold px-2.5 py-1 rounded tracking-wider uppercase">NON-DISCLOSURE AGREEMENT (NDA)</span>
+                            <p className="text-[10px] font-mono font-bold text-slate-800 pt-0.5">Doc No: NDA-2026-000001</p>
+                            <p className="text-[9px] text-slate-500">Effective Date: {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                            <span className="inline-block text-[8px] font-bold text-rose-600 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded uppercase">LEGALLY BINDING</span>
+                          </div>
+                        </div>
+
+                        {/* 2. AGREEMENT PARTIES & EMPLOYEE DETAILS */}
+                        {(() => {
+                          const selEmp = employeesList.find(x => x.id === genEmployee);
+                          return (
+                            <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 space-y-2">
+                              <h3 className="text-[9px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200 pb-1">PARTIES TO THIS AGREEMENT</h3>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px]">
+                                <div className="bg-white p-2.5 rounded-lg border border-slate-200 space-y-0.5">
+                                  <span className="text-[9px] font-bold text-indigo-950 uppercase tracking-wider">DISCLOSING PARTY</span>
+                                  <p className="font-bold text-slate-900">Aurix Talent Labs Private Limited</p>
+                                  <p className="text-[10px] text-slate-500">Corporate HQ: HITEC City, Hyderabad, Telangana</p>
+                                </div>
+                                <div className="bg-white p-2.5 rounded-lg border border-slate-200 space-y-0.5">
+                                  <span className="text-[9px] font-bold text-indigo-950 uppercase tracking-wider">RECEIVING PARTY (EMPLOYEE)</span>
+                                  <p className="font-bold text-slate-900">{selEmp?.fullName || "Vinit Sharma"}</p>
+                                  <p className="text-[10px] text-slate-500">ID: {selEmp?.employeeId || "EMP-190996"} &bull; {genFields["Role"] || selEmp?.designation || "Senior Software Architect"}</p>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px] pt-1">
+                                <div><span className="text-slate-400 block">Department</span><strong className="text-slate-800">{selEmp?.department || "Developer"}</strong></div>
+                                <div><span className="text-slate-400 block">Work Location</span><strong className="text-slate-800">{selEmp?.location || "Hyderabad, Telangana"}</strong></div>
+                                <div><span className="text-slate-400 block">Email Address</span><strong className="text-slate-800">{selEmp?.email || "aurix@gmail.com"}</strong></div>
+                                <div><span className="text-slate-400 block">Legal Witness</span><strong className="text-slate-800">{genFields["Witness Name"] || "Priya Nair (Legal Lead)"}</strong></div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+                        {/* 3. PURPOSE */}
+                        {(() => {
+                          const selEmp = employeesList.find(x => x.id === genEmployee);
+                          return (
+                            <div className="space-y-1 text-[11px] leading-relaxed text-slate-800">
+                              <h4 className="text-[10px] font-bold text-slate-900 uppercase tracking-wider">1. PURPOSE & INTENT</h4>
+                              <p>
+                                This Proprietary Non-Disclosure Agreement ("Agreement") is executed between <strong>Aurix Talent Labs Private Limited</strong> ("Disclosing Party") and <strong>{selEmp?.fullName || "Vinit Sharma"}</strong> ("Receiving Party") to safeguard confidential, proprietary, and technical assets accessed during employment, research, product engineering, customer interaction, and corporate operations.
+                              </p>
+                            </div>
+                          );
+                        })()}
+
+                        {/* 4. DEFINITION OF CONFIDENTIAL INFORMATION */}
+                        <div className="space-y-1.5 text-[11px]">
+                          <h4 className="text-[10px] font-bold text-slate-900 uppercase tracking-wider">2. SCOPE OF CONFIDENTIAL INFORMATION</h4>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-[10px] text-slate-700">
+                            <p>• Source Code & Repositories</p>
+                            <p>• AI & ML Model Architectures</p>
+                            <p>• APIs & Cloud Token Secrets</p>
+                            <p>• Customer & Candidate Databases</p>
+                            <p>• Financial Records & Pricing</p>
+                            <p>• Product Roadmaps & Research</p>
+                            <p>• Infrastructure & Security Credentials</p>
+                            <p>• Trade Secrets & Algorithms</p>
+                            <p>• Internal Corporate Workflows</p>
+                          </div>
+                        </div>
+
+                        {/* 5. EMPLOYEE OBLIGATIONS & RESTRICTIONS */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[10px]">
+                          <div className="rounded-lg border border-emerald-200 bg-emerald-50/40 p-2.5 space-y-1">
+                            <h4 className="font-bold text-emerald-900 uppercase tracking-wider">✔ MANDATORY OBLIGATIONS</h4>
+                            <div className="space-y-0.5 text-slate-700">
+                              <p>• Maintain absolute confidentiality of corporate IP.</p>
+                              <p>• Use confidential materials solely for authorized duties.</p>
+                              <p>• Secure access credentials, passwords & MFA keys.</p>
+                              <p>• Promptly report any security breach or data loss.</p>
+                            </div>
+                          </div>
+                          <div className="rounded-lg border border-rose-200 bg-rose-50/40 p-2.5 space-y-1">
+                            <h4 className="font-bold text-rose-900 uppercase tracking-wider">🚫 PROHIBITED RESTRICTIONS</h4>
+                            <div className="space-y-0.5 text-slate-700">
+                              <p>• No external or unauthorized data sharing.</p>
+                              <p>• No uploading code to personal cloud storage.</p>
+                              <p>• No reverse engineering or code replication.</p>
+                              <p>• No public disclosure of unannounced products.</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 6. INTELLECTUAL PROPERTY & ASSET RETURN */}
+                        <div className="space-y-1 text-[10px] text-slate-700 leading-relaxed bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                          <p><strong>3. INTELLECTUAL PROPERTY RIGHTS:</strong> All inventions, software source code, algorithms, designs, AI models, and documentation created during employment remain the sole and exclusive property of Aurix Talent Labs Private Limited under the Work-For-Hire doctrine.</p>
+                          <p><strong>4. RETURN OF COMPANY ASSETS:</strong> Upon termination or resignation, the employee shall immediately return all laptops, storage drives, security access badges, digital keys, and source code repositories.</p>
+                          <p><strong>5. TERM & ENFORCEABILITY:</strong> This NDA is effective immediately and remains binding during employment and for a period of <strong>{genFields["Duration (Years)"] || "3"} years</strong> post-offboarding.</p>
+                        </div>
+
+                        {/* 7. GOVERNING LAW & JURISDICTION */}
+                        <div className="text-[9px] text-slate-500 border-t border-slate-200 pt-2 flex justify-between items-center">
+                          <span>Governing Law: Republic of India (IT Act, 2000 & Contract Act, 1872)</span>
+                          <span>Jurisdiction: Courts of Hyderabad, Telangana</span>
+                        </div>
+
+                        {/* 8. ACCEPTANCE & SIGNATURE BLOCK */}
+                        {(() => {
+                          const selEmp = employeesList.find(x => x.id === genEmployee);
+                          return (
+                            <div className="border-t-2 border-slate-200 pt-3 grid grid-cols-2 gap-4 items-end">
+                              <div className="space-y-3">
+                                <div className="border-b border-slate-400 pb-0.5 max-w-[180px]">
+                                  <p className="font-serif italic text-slate-400 text-[10px]">{selEmp?.fullName || "Vinit Sharma"}</p>
+                                </div>
+                                <div className="text-[9px] text-slate-600">
+                                  <p className="font-bold text-slate-900">Receiving Party Acceptance Signature</p>
+                                  <p>Date: _____ / _____ / 2026</p>
+                                </div>
+                              </div>
+                              <div className="text-right space-y-1">
+                                <div className="inline-block rounded-lg border border-indigo-200 bg-indigo-50/60 p-2 text-right">
+                                  <p className="text-[8px] font-bold text-indigo-900 uppercase tracking-wider">OFFICIALLY SIGNED & EXECUTED</p>
+                                  <p className="text-[9px] font-semibold text-slate-800">{genFields["Witness Name"] || "Priya Nair (Legal Lead)"}</p>
+                                  <p className="text-[8px] text-slate-500">Corporate Legal Counsel</p>
+                                  <p className="text-[7px] text-slate-400 font-mono">Aurix Talent Labs Pvt Ltd</p>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+                        {/* 9. FOOTER */}
+                        <div className="border-t border-slate-200 pt-2 flex justify-between items-center text-[8px] text-slate-400">
+                          <span>AURIX TALENT LABS PRIVATE LIMITED</span>
+                          <span className="italic">Electronically generated & legally valid under Information Technology Act, 2000 (India).</span>
+                          <span>Page 1 of 1</span>
+                        </div>
+                      </div>
+                    ) : genTemplateId === "handbook" ? (
+                      <div className="bg-white text-slate-900 shadow-2xl border border-slate-200 rounded-xl p-6 sm:p-8 relative overflow-hidden font-sans text-left space-y-5 select-none">
+                        {/* WATERMARK */}
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] rotate-[-30deg] select-none">
+                          <span className="text-5xl font-extrabold uppercase tracking-widest text-slate-900">OFFICIAL HR POLICY ACKNOWLEDGMENT</span>
+                        </div>
+
+                        {/* 1. CORPORATE HEADER */}
+                        <div className="flex flex-col sm:flex-row justify-between items-start border-b-2 border-slate-900 pb-4 gap-4">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <div className="h-8 w-8 rounded-lg bg-indigo-950 flex items-center justify-center text-white font-bold text-sm">A</div>
+                              <div>
+                                <h2 className="text-xs sm:text-sm font-extrabold tracking-wider text-slate-900 uppercase">AURIX TALENT LABS PRIVATE LIMITED</h2>
+                                <p className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider">AI-Powered HR Technology Company</p>
+                              </div>
+                            </div>
+                            <div className="text-[9px] text-slate-600 leading-relaxed pt-1 space-y-0.5">
+                              <p><strong>Registered Office:</strong> Plot No. 42, HITEC City, Hyderabad, Telangana - 500081, India</p>
+                              <p>www.aurixtalentlabs.com &bull; hr@aurixtalentlabs.com &bull; +91-40-69201100</p>
+                              <p className="text-[8px] text-slate-400">CIN: U72900TG2024PTC184910 &bull; GSTIN: 36AAACA0000A1Z5</p>
+                            </div>
+                          </div>
+                          <div className="text-right space-y-1 shrink-0">
+                            <span className="inline-block bg-indigo-950 text-white text-[9px] font-bold px-2.5 py-1 rounded tracking-wider uppercase">COMPANY HANDBOOK ACKNOWLEDGMENT</span>
+                            <p className="text-[10px] font-mono font-bold text-slate-800 pt-0.5">Doc No: CHA-2026-000001</p>
+                            <p className="text-[9px] text-slate-500">Issue Date: {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                            <span className="inline-block text-[8px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded uppercase">OFFICIAL & COMPLIANT</span>
+                          </div>
+                        </div>
+
+                        {/* 2. EMPLOYEE INFORMATION GRID */}
+                        {(() => {
+                          const selEmp = employeesList.find(x => x.id === genEmployee);
+                          return (
+                            <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 space-y-2">
+                              <h3 className="text-[9px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200 pb-1">EMPLOYEE COMPLIANCE PROFILE</h3>
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-[11px]">
+                                <div>
+                                  <span className="text-[9px] text-slate-500 block">Employee Name</span>
+                                  <strong className="text-slate-900 font-bold">{selEmp?.fullName || "Vinit Sharma"}</strong>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-slate-500 block">Employee ID</span>
+                                  <strong className="text-slate-900 font-mono font-bold">{selEmp?.employeeId || "EMP-190996"}</strong>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-slate-500 block">Designation</span>
+                                  <strong className="text-indigo-950 font-bold">{genFields["Signee Designation"] || selEmp?.designation || "Senior Software Architect"}</strong>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-slate-500 block">Department</span>
+                                  <strong className="text-slate-900 font-bold">{selEmp?.department || "Developer"}</strong>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-slate-500 block">Business Unit</span>
+                                  <strong className="text-slate-900 font-bold">Engineering & Product</strong>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-slate-500 block">Office Location</span>
+                                  <strong className="text-slate-900 font-bold">{selEmp?.location || "Hyderabad, Telangana"}</strong>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-slate-500 block">Joining Date</span>
+                                  <strong className="text-slate-900 font-bold">{selEmp?.joiningDate || "2026-07-21"}</strong>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-slate-500 block">Policy Version</span>
+                                  <strong className="text-emerald-700 font-bold">v4.0 ({genFields["Version Date"] || "2026-01-01"})</strong>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+                        {/* 3. ACKNOWLEDGMENT DECLARATIONS */}
+                        <div className="space-y-2 text-[11px] leading-relaxed text-slate-800">
+                          <h4 className="text-[10px] font-bold text-slate-900 uppercase tracking-wider">1. ACKNOWLEDGMENT & AGREEMENT</h4>
+                          <p>
+                            I acknowledge that I have received, accessed, and thoroughly reviewed the official <strong>Company Handbook v4.0</strong> issued by <strong>Aurix Talent Labs Private Limited</strong>.
+                          </p>
+                          <p>
+                            I understand that the handbook contains vital policies regarding code of conduct, acceptable asset usage, workplace ethics, information security, leave rules, anti-harassment standards, and employment guidelines. I agree to comply with all current and future corporate policies throughout my tenure.
+                          </p>
+                        </div>
+
+                        {/* 4. CONFIRMED POLICY CHECKLIST GRID */}
+                        <div className="space-y-1.5">
+                          <h4 className="text-[10px] font-bold text-slate-900 uppercase tracking-wider">2. CONFIRMED POLICY MODULES & COMPLIANCE CHECKLIST</h4>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 bg-slate-50 p-3 rounded-lg border border-slate-200 text-[10px] text-slate-800">
+                            <p className="flex items-center gap-1 font-semibold text-emerald-800">☑ Code of Conduct & Ethics</p>
+                            <p className="flex items-center gap-1 font-semibold text-emerald-800">☑ Information Security Policy</p>
+                            <p className="flex items-center gap-1 font-semibold text-emerald-800">☑ Data Privacy & Asset Usage</p>
+                            <p className="flex items-center gap-1 font-semibold text-emerald-800">☑ Anti-Harassment (POSH)</p>
+                            <p className="flex items-center gap-1 font-semibold text-emerald-800">☑ Attendance & Leave Rules</p>
+                            <p className="flex items-center gap-1 font-semibold text-emerald-800">☑ Remote Work & IT Security</p>
+                            <p className="flex items-center gap-1 font-semibold text-emerald-800">☑ IP & Invention Ownership</p>
+                            <p className="flex items-center gap-1 font-semibold text-emerald-800">☑ Password & Access Control</p>
+                            <p className="flex items-center gap-1 font-semibold text-emerald-800">☑ Disciplinary & Exit Policy</p>
+                          </div>
+                        </div>
+
+                        {/* 5. EMPLOYEE DECLARATION */}
+                        <div className="text-[10px] text-slate-700 bg-slate-50 p-2.5 rounded-lg border border-slate-200 leading-relaxed space-y-1">
+                          <p><strong>EMPLOYEE DECLARATION:</strong> I understand that this Handbook serves as a guide to corporate standards and does not constitute a guaranteed employment contract. I acknowledge my responsibility to stay updated as policies evolve.</p>
+                        </div>
+
+                        {/* 6. AUTHORIZED SIGNATORY & HR SEAL */}
+                        <div className="border-t-2 border-slate-200 pt-3 grid grid-cols-2 gap-4 items-end">
+                          <div className="space-y-3">
+                            <div className="border-b border-slate-400 pb-0.5 max-w-[180px]">
+                              <p className="font-serif italic text-slate-400 text-[10px]">{((employeesList.length > 0 ? employeesList : ws.employees).find(x => x.id === genEmployee)?.fullName) || "Vinit Sharma"}</p>
+                            </div>
+                            <div className="text-[9px] text-slate-600">
+                              <p className="font-bold text-slate-900">Employee Electronic Signature</p>
+                              <p>Date: {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                            </div>
+                          </div>
+                          <div className="text-right space-y-1">
+                            <div className="inline-block rounded-lg border border-indigo-200 bg-indigo-50/60 p-2.5 text-right">
+                              <p className="text-[8px] font-bold text-indigo-900 uppercase tracking-wider">OFFICIALLY REGISTERED & VERIFIED</p>
+                              <p className="text-[9px] font-semibold text-slate-800">Priya Nair</p>
+                              <p className="text-[8px] text-slate-500">Lead People Operations Partner</p>
+                              <p className="text-[7px] text-slate-400 font-mono">Aurix Talent Labs Pvt Ltd</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 7. FOOTER */}
+                        <div className="border-t border-slate-200 pt-2 flex justify-between items-center text-[8px] text-slate-400">
+                          <span>AURIX TALENT LABS PRIVATE LIMITED</span>
+                          <span className="italic">Confidential &bull; Official HR Policy Document &bull; Document ID: CHA-2026-000001</span>
+                          <span>Page 1 of 1</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-white text-slate-900 shadow-2xl border border-slate-200 rounded-xl p-6 sm:p-8 relative overflow-hidden font-sans text-left space-y-6 select-none">
+                        {/* WATERMARK */}
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] rotate-[-30deg] select-none">
+                          <span className="text-5xl font-extrabold uppercase tracking-widest text-slate-900">AURIX TALENT LABS</span>
+                        </div>
+
+                        {/* 1. CORPORATE HEADER */}
+                        <div className="flex flex-col sm:flex-row justify-between items-start border-b-2 border-slate-900 pb-4 gap-4">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <div className="h-8 w-8 rounded-lg bg-indigo-950 flex items-center justify-center text-white font-bold text-sm">A</div>
+                              <div>
+                                <h2 className="text-xs sm:text-sm font-extrabold tracking-wider text-slate-900 uppercase">AURIX TALENT LABS PRIVATE LIMITED</h2>
+                                <p className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider">AI-Powered HR Technology Company</p>
+                              </div>
+                            </div>
+                            <div className="text-[9px] text-slate-600 leading-relaxed pt-1 space-y-0.5">
+                              <p><strong>Registered Office:</strong> Plot No. 42, HITEC City, Hyderabad, Telangana - 500081, India</p>
+                              <p>www.aurixtalentlabs.com &bull; careers@aurixtalentlabs.com &bull; +91-40-69201100</p>
+                              <p className="text-[8px] text-slate-400">CIN: U72900TG2024PTC184910 &bull; GSTIN: 36AAACA0000A1Z5</p>
+                            </div>
+                          </div>
+                          <div className="text-right space-y-1 shrink-0">
+                            <span className="inline-block bg-indigo-950 text-white text-[9px] font-bold px-2 py-0.5 rounded tracking-wider uppercase">EMPLOYMENT OFFER LETTER</span>
+                            <p className="text-[10px] font-mono font-bold text-slate-800 pt-0.5">Ref: ATL-2026-000128</p>
+                            <p className="text-[9px] text-slate-500">Issue Date: {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                            <span className="inline-block text-[8px] font-bold text-rose-600 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded uppercase">STRICTLY CONFIDENTIAL</span>
+                          </div>
+                        </div>
+
+                        {/* 2. RECIPIENT DETAILS GRID */}
+                        {(() => {
+                          const selEmp = employeesList.find(x => x.id === genEmployee);
+                          return (
+                            <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 space-y-2">
+                              <h3 className="text-[9px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200 pb-1">CANDIDATE & APPOINTMENT DETAILS</h3>
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-[11px]">
+                                <div>
+                                  <span className="text-[9px] text-slate-500 block">Candidate Name</span>
+                                  <strong className="text-slate-900 font-bold">{selEmp?.fullName || "Vinit Sharma"}</strong>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-slate-500 block">Candidate ID</span>
+                                  <strong className="text-slate-900 font-mono font-bold">{selEmp?.employeeId || "EMP-190996"}</strong>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-slate-500 block">Position Offered</span>
+                                  <strong className="text-indigo-950 font-bold">{genFields["Role"] || selEmp?.designation || "Senior Software Architect"}</strong>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-slate-500 block">Department</span>
+                                  <strong className="text-slate-900 font-bold">{selEmp?.department || "Developer"}</strong>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-slate-500 block">Reporting Manager</span>
+                                  <strong className="text-slate-900 font-bold">Director of Engineering</strong>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-slate-500 block">Work Location</span>
+                                  <strong className="text-slate-900 font-bold">{selEmp?.location || "Hyderabad, Telangana"}</strong>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-slate-500 block">Employment Type</span>
+                                  <strong className="text-slate-900 font-bold">Full-Time</strong>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] text-slate-500 block">Joining Date</span>
+                                  <strong className="text-emerald-700 font-bold">{genFields["Start Date"] || selEmp?.joiningDate || "2026-08-01"}</strong>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+                        {/* 3. SALUTATION & BODY */}
+                        <div className="space-y-2 text-[11px] leading-relaxed text-slate-800">
+                          <p className="font-bold text-slate-900">Dear Mr. {(((employeesList.length > 0 ? employeesList : ws.employees).find(x => x.id === genEmployee)?.fullName) || "Vinit Sharma").split(' ')[0]},</p>
+                          <p>
+                            We are delighted to formally offer you the position of <strong>{genFields["Role"] || "Senior Software Architect"}</strong> at <strong>Aurix Talent Labs Private Limited</strong>. After evaluating your technical accomplishments and leadership profile, we are confident that your experience will play a crucial role in building our next-generation enterprise AI HR platform.
+                          </p>
+                          <p>
+                            Your appointment is subject to the terms and conditions outlined in this offer letter and corporate governance policies.
+                          </p>
+                        </div>
+
+                        {/* 4. COMPENSATION STRUCTURE TABLE */}
+                        <div className="space-y-1.5">
+                          <h3 className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">COMPENSATION STRUCTURE (ANNUAL BREAKDOWN)</h3>
+                          <div className="border border-slate-200 rounded-lg overflow-hidden text-[11px]">
+                            <table className="w-full text-left border-collapse">
+                              <thead>
+                                <tr className="bg-slate-900 text-white text-[9px] uppercase tracking-wider font-bold">
+                                  <th className="p-2 pl-3">Component</th>
+                                  <th className="p-2 text-right">Monthly (INR)</th>
+                                  <th className="p-2 text-right pr-3">Annual (INR)</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100 text-slate-700">
+                                <tr className="bg-slate-50/50">
+                                  <td className="p-1.5 pl-3 font-semibold">Basic Salary</td>
+                                  <td className="p-1.5 text-right">₹ 61,666</td>
+                                  <td className="p-1.5 text-right pr-3 font-semibold">₹ 7,40,000</td>
+                                </tr>
+                                <tr>
+                                  <td className="p-1.5 pl-3 font-semibold">House Rent Allowance (HRA)</td>
+                                  <td className="p-1.5 text-right">₹ 30,833</td>
+                                  <td className="p-1.5 text-right pr-3 font-semibold">₹ 3,70,000</td>
+                                </tr>
+                                <tr className="bg-slate-50/50">
+                                  <td className="p-1.5 pl-3 font-semibold">Special & Performance Allowance</td>
+                                  <td className="p-1.5 text-right">₹ 35,000</td>
+                                  <td className="p-1.5 text-right pr-3 font-semibold">₹ 4,20,000</td>
+                                </tr>
+                                <tr>
+                                  <td className="p-1.5 pl-3 font-semibold">Annual Performance Bonus</td>
+                                  <td className="p-1.5 text-right">₹ 15,416</td>
+                                  <td className="p-1.5 text-right pr-3 font-semibold">₹ 1,85,000</td>
+                                </tr>
+                                <tr className="bg-slate-50/50">
+                                  <td className="p-1.5 pl-3 font-semibold">Employer PF Contribution</td>
+                                  <td className="p-1.5 text-right">₹ 7,083</td>
+                                  <td className="p-1.5 text-right pr-3 font-semibold">₹ 85,000</td>
+                                </tr>
+                                <tr>
+                                  <td className="p-1.5 pl-3 font-semibold">Medical Insurance & Benefits</td>
+                                  <td className="p-1.5 text-right">₹ 4,166</td>
+                                  <td className="p-1.5 text-right pr-3 font-semibold">₹ 50,000</td>
+                                </tr>
+                                <tr className="bg-slate-900 text-white font-bold text-[11px]">
+                                  <td className="p-2 pl-3">Total Annual CTC (Cost to Company)</td>
+                                  <td className="p-2 text-right">₹ 1,54,166 / mo</td>
+                                  <td className="p-2 text-right pr-3 text-emerald-400">₹ {genFields["Salary (LPA)"] || "18.5"} Lakhs (INR 18,50,000)</td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+
+                        {/* 5. BENEFITS GRID & CONDITIONS */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                          <div className="rounded-lg border border-emerald-200 bg-emerald-50/30 p-2.5 space-y-1">
+                            <h4 className="text-[9px] font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1">✔ Employee Benefits & Perks</h4>
+                            <div className="grid grid-cols-2 gap-0.5 text-[9px] text-slate-700">
+                              <p>• Medical Insurance (₹5L)</p>
+                              <p>• 24 Annual Paid Leaves</p>
+                              <p>• Flexible Hybrid Work</p>
+                              <p>• L&D Allowance</p>
+                              <p>• Wellness Perks</p>
+                              <p>• ESOP Eligibility</p>
+                            </div>
+                          </div>
+                          <div className="rounded-lg border border-slate-200 bg-slate-50 p-2.5 space-y-1">
+                            <h4 className="text-[9px] font-bold text-slate-700 uppercase tracking-wider">📌 Pre-Employment Conditions</h4>
+                            <div className="text-[9px] text-slate-600 space-y-0.5">
+                              <p>• Background Verification & References Check</p>
+                              <p>• Educational Degree & Certification Validation</p>
+                              <p>• Identity Verification (Aadhaar & PAN)</p>
+                              <p>• Signed IP & Confidentiality Agreement</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 6. ACCEPTANCE & SIGNATORY BLOCK */}
+                        <div className="border-t-2 border-slate-200 pt-3 grid grid-cols-2 gap-4 items-end">
+                          <div className="space-y-3">
+                            <div className="border-b border-slate-400 pb-0.5 max-w-[180px]">
+                              <p className="font-serif italic text-slate-400 text-[10px]">{((employeesList.length > 0 ? employeesList : ws.employees).find(x => x.id === genEmployee)?.fullName) || "Vinit Sharma"}</p>
+                            </div>
+                            <div className="text-[9px] text-slate-600">
+                              <p className="font-bold text-slate-900">Candidate Acceptance Signature</p>
+                              <p>Date: _____ / _____ / 2026</p>
+                            </div>
+                          </div>
+                          <div className="text-right space-y-1">
+                            <div className="inline-block rounded-lg border border-indigo-200 bg-indigo-50/60 p-2 text-right">
+                              <p className="text-[8px] font-bold text-indigo-900 uppercase tracking-wider">OFFICIALLY VERIFIED & E-SIGNED</p>
+                              <p className="text-[9px] font-semibold text-slate-800">Priya Nair</p>
+                              <p className="text-[8px] text-slate-500">Lead Talent Acquisition Partner</p>
+                              <p className="text-[7px] text-slate-400 font-mono">Aurix Talent Labs Pvt Ltd</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 7. FOOTER */}
+                        <div className="border-t border-slate-200 pt-2 flex justify-between items-center text-[8px] text-slate-400">
+                          <span>AURIX TALENT LABS PRIVATE LIMITED</span>
+                          <span className="italic">This document is system-generated and legally binding upon electronic acceptance.</span>
+                          <span>Page 1 of 1</span>
+                        </div>
+                      </div>
+                    )
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground py-10 bg-card/20 rounded-xl border border-border">
+                      <div className="h-12 w-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 mb-2">
+                        <Wand2 className="h-6 w-6" />
+                      </div>
+                      <p className="font-bold text-foreground text-xs">No Draft Generated Yet</p>
+                      <p className="text-[10px] text-muted-foreground max-w-xs mt-1">Select an employee or template, fill parameters, and click <strong>Generate Enterprise Document</strong>.</p>
+                      <Button
+                        onClick={() => { autoFillTemplateFields(genTemplateId); handleGenerateAI(); }}
+                        className="mt-4 h-8 bg-gradient-brand text-brand-foreground text-xs gap-1.5 cursor-pointer"
+                      >
+                        <Wand2 className="h-3 w-3" /> Quick Demo Generate
+                      </Button>
                     </div>
                   )}
                 </div>
               </div>
               {generatedDraft && (
-                <div className="pt-3 border-t border-border flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setGeneratedDraft(null)} className="h-9 text-xs border-border bg-transparent cursor-pointer">Clear Draft</Button>
-                  <Button onClick={handleSaveGenerated} className="h-9 text-xs bg-emerald-600 text-white hover:bg-emerald-700 gap-1.5 cursor-pointer"><CheckCircle className="h-3.5 w-3.5" />Save & Verify Document</Button>
+                <div className="pt-3 border-t border-border flex items-center justify-between">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => { navigator.clipboard.writeText(generatedDraft); toast.success("Draft text copied to clipboard!"); }}
+                    className="h-8 text-xs border-border cursor-pointer"
+                  >
+                    Copy Draft Text
+                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => setGeneratedDraft(null)} className="h-8 text-xs border-border bg-transparent cursor-pointer">Clear</Button>
+                    <Button onClick={handleSaveGenerated} className="h-8 text-xs bg-emerald-600 text-white hover:bg-emerald-700 gap-1.5 cursor-pointer"><CheckCircle className="h-3.5 w-3.5" />Save & Save to Vault</Button>
+                  </div>
                 </div>
               )}
             </div>
