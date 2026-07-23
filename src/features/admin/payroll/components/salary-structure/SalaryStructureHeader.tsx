@@ -7,7 +7,6 @@ import {
   Copy,
   GitCompare,
   History,
-  ShieldCheck,
   Building2,
   Calendar,
   Zap,
@@ -16,6 +15,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 interface SalaryStructureHeaderProps {
+  financialYear?: string;
+  companyName?: string;
   onCreateClick: () => void;
   onCompareClick: () => void;
   onAuditLogsClick: () => void;
@@ -25,6 +26,8 @@ interface SalaryStructureHeaderProps {
 }
 
 export const SalaryStructureHeader: React.FC<SalaryStructureHeaderProps> = ({
+  financialYear,
+  companyName,
   onCreateClick,
   onCompareClick,
   onAuditLogsClick,
@@ -153,34 +156,27 @@ export const SalaryStructureHeader: React.FC<SalaryStructureHeaderProps> = ({
       </div>
 
       {/* Metadata Bar */}
-      <div className="flex flex-wrap items-center gap-4 pt-2 text-xs text-slate-400 bg-slate-950/40 p-3 rounded-lg border border-white/5">
-        <div className="flex items-center gap-1.5 font-medium text-slate-300">
-          <Calendar className="w-3.5 h-3.5 text-blue-400" />
-          <span>Financial Year:</span>
-          <span className="text-white font-semibold">FY 2026-2027</span>
+      {(financialYear || companyName) && (
+        <div className="flex flex-wrap items-center gap-4 pt-2 text-xs text-slate-400 bg-slate-950/40 p-3 rounded-lg border border-white/5">
+          {financialYear && (
+            <>
+              <div className="flex items-center gap-1.5 font-medium text-slate-300">
+                <Calendar className="w-3.5 h-3.5 text-blue-400" />
+                <span>Financial Year:</span>
+                <span className="text-white font-semibold">{financialYear}</span>
+              </div>
+              {companyName && <div className="h-3 w-[1px] bg-white/10" />}
+            </>
+          )}
+          {companyName && (
+            <div className="flex items-center gap-1.5">
+              <Building2 className="w-3.5 h-3.5 text-purple-400" />
+              <span>Company:</span>
+              <span className="text-slate-200 font-medium">{companyName}</span>
+            </div>
+          )}
         </div>
-        <div className="h-3 w-[1px] bg-white/10" />
-        <div className="flex items-center gap-1.5">
-          <Building2 className="w-3.5 h-3.5 text-purple-400" />
-          <span>Company:</span>
-          <span className="text-slate-200 font-medium">Aurix Enterprise Corp</span>
-        </div>
-        <div className="h-3 w-[1px] bg-white/10" />
-        <div className="flex items-center gap-1.5">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Statutory Engine:</span>
-          <span className="text-emerald-400 font-medium">Verified Code on Wages 2026</span>
-        </div>
-        <div className="h-3 w-[1px] bg-white/10" />
-        <div className="flex items-center gap-1.5">
-          <span>Active Version:</span>
-          <span className="text-blue-400 font-mono font-semibold">v2.4.0</span>
-        </div>
-        <div className="ml-auto flex items-center gap-1.5 text-slate-500 text-[11px]">
-          <span>Last Updated:</span>
-          <span className="text-slate-400">Today at 19:50 IST</span>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

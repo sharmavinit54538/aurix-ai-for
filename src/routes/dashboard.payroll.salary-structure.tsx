@@ -19,9 +19,11 @@ import { RightContextPanel } from "@/features/admin/payroll/components/salary-st
 import { SalaryStructureAnalytics } from "@/features/admin/payroll/components/salary-structure/SalaryStructureAnalytics";
 
 import { salaryStructureApi } from "@/services/salaryStructureApi";
+import { payrollSettingsApi } from "@/services/payrollSettingsApi";
 import {
   SalaryStructure,
   SalaryStructureFilters as FilterType,
+  SalaryStructurePageMeta,
   SalaryStructureSummaryKPIs,
   SidebarTabId,
   SalaryStructureAuditLog,
@@ -71,6 +73,10 @@ function SalaryStructurePage() {
   const [assignDrawerOpen, setAssignDrawerOpen] = useState(false);
   const [auditLogs, setAuditLogs] = useState<SalaryStructureAuditLog[]>([]);
   const [aiInsights, setAiInsights] = useState<SalaryStructureAIInsight[]>([]);
+  const [pageMeta, setPageMeta] = useState<SalaryStructurePageMeta>({
+    companyName: "",
+    financialYear: "",
+  });
 
   // Load Data
   const loadData = async () => {
@@ -79,6 +85,21 @@ function SalaryStructurePage() {
       const res = await salaryStructureApi.getStructures(filters);
       setStructures(res.items);
       setKpis(res.kpis);
+
+      let companyName = res.meta.companyName;
+      if (!companyName) {
+        try {
+          const settings = await payrollSettingsApi.getSettings();
+          companyName = settings.company_name || "";
+        } catch {
+          // Keep API meta fallback empty when settings are unavailable.
+        }
+      }
+
+      setPageMeta({
+        companyName,
+        financialYear: res.meta.financialYear,
+      });
 
       const logs = await salaryStructureApi.getAuditLogs();
       setAuditLogs(logs);
@@ -222,6 +243,8 @@ function SalaryStructurePage() {
     <div className="salary-structure-container p-6 space-y-6">
       {/* Header */}
       <SalaryStructureHeader
+        financialYear={pageMeta.financialYear}
+        companyName={pageMeta.companyName}
         onCreateClick={handleCreateNew}
         onCompareClick={() => handleCompare()}
         onAuditLogsClick={() => setActiveTab("audit_logs")}

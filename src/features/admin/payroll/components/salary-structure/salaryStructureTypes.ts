@@ -114,6 +114,11 @@ export interface SalaryStructure {
   isLocked?: boolean;
 }
 
+export interface SalaryStructurePageMeta {
+  companyName: string;
+  financialYear: string;
+}
+
 export interface SalaryStructureSummaryKPIs {
   totalStructures: number;
   activeStructures: number;

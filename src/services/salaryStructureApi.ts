@@ -7,6 +7,7 @@ import {
   SalaryStructureAIInsight,
   SalaryStructureAuditLog,
   SalaryStructureFilters,
+  SalaryStructurePageMeta,
   SalaryStructureSummaryKPIs,
   StructureVersion,
 } from "@/features/admin/payroll/components/salary-structure/salaryStructureTypes";
@@ -245,6 +246,74 @@ function mapAIInsight(raw: unknown): SalaryStructureAIInsight | null {
   };
 }
 
+function formatFinancialYearLabel(value: string): string {
+  const labels: Record<string, string> = {
+    "FY26-27": "FY 2026-2027",
+    "FY25-26": "FY 2025-2026",
+    "FY24-25": "FY 2024-2025",
+  };
+  return labels[value] || value;
+}
+
+function readNestedString(
+  sources: Array<Record<string, unknown> | null | undefined>,
+  keys: string[],
+): string {
+  for (const source of sources) {
+    if (!source) continue;
+    for (const key of keys) {
+      const value = source[key];
+      if (typeof value === "string" && value.trim()) return value.trim();
+    }
+  }
+  return "";
+}
+
+function mapPageMeta(
+  raw: unknown,
+  fallbackFinancialYear?: string,
+): SalaryStructurePageMeta {
+  const root = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  const context =
+    root.context && typeof root.context === "object"
+      ? (root.context as Record<string, unknown>)
+      : undefined;
+  const meta =
+    root.meta && typeof root.meta === "object" ? (root.meta as Record<string, unknown>) : undefined;
+  const companyObj =
+    (root.company && typeof root.company === "object"
+      ? (root.company as Record<string, unknown>)
+      : undefined) ||
+    (context?.company && typeof context.company === "object"
+      ? (context.company as Record<string, unknown>)
+      : undefined) ||
+    (meta?.company && typeof meta.company === "object"
+      ? (meta.company as Record<string, unknown>)
+      : undefined);
+
+  const companyName =
+    readNestedString([root, context, meta, companyObj], [
+      "company_name",
+      "companyName",
+      "name",
+    ]) || "";
+
+  const financialYearRaw =
+    readNestedString([root, context, meta], [
+      "financial_year_label",
+      "financialYearLabel",
+      "financial_year",
+      "financialYear",
+      "active_financial_year",
+      "activeFinancialYear",
+    ]) || fallbackFinancialYear || "";
+
+  return {
+    companyName,
+    financialYear: formatFinancialYearLabel(financialYearRaw),
+  };
+}
+
 function mapKPIs(raw: unknown, fallbackItems: SalaryStructure[]): SalaryStructureSummaryKPIs {
   if (!raw || typeof raw !== "object") {
     return salaryStructureApi.computeKPIs(fallbackItems);
@@ -279,6 +348,7 @@ export const salaryStructureApi = {
     items: SalaryStructure[];
     total: number;
     kpis: SalaryStructureSummaryKPIs;
+    meta: SalaryStructurePageMeta;
   }> => {
     const qs = buildStructureQuery(params);
     const res = await api.get(`payroll/salary-structures${qs ? `?${qs}` : ""}`);
@@ -291,6 +361,7 @@ export const salaryStructureApi = {
       items,
       total: readNumber(payload?.total, items.length),
       kpis: mapKPIs(payload?.kpis, items),
+      meta: mapPageMeta(payload, params.financialYear),
     };
   },
 

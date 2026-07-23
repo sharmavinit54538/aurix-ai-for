@@ -32,7 +32,6 @@ export const Route = createFileRoute("/dashboard/payroll/salary-processing")({
 function SalaryProcessingPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-
   // Active Stage State
   const [currentStage, setCurrentStage] = useState<PayrollStageId>("finance_review");
 
