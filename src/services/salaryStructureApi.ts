@@ -159,12 +159,10 @@ function mapSalaryStructure(raw: unknown): SalaryStructure | null {
     .map(mapStructureVersion)
     .filter((version): version is StructureVersion => Boolean(version));
 
-  const approvalWorkflow = (Array.isArray(item.approvalWorkflow ?? item.approval_workflow)
-    ? (item.approvalWorkflow ?? item.approval_workflow)
-    : []
-  )
+  const rawWorkflow = (item.approvalWorkflow ?? item.approval_workflow) as unknown[] | undefined;
+  const approvalWorkflow = (Array.isArray(rawWorkflow) ? rawWorkflow : [])
     .map(mapApprovalStep)
-    .filter((step): step is ApprovalStep => Boolean(step));
+    .filter((step: unknown): step is ApprovalStep => Boolean(step));
 
   const complianceWarnings = Array.isArray(item.complianceWarnings ?? item.compliance_warnings)
     ? ((item.complianceWarnings ?? item.compliance_warnings) as unknown[]).map((warning) => readString(warning)).filter(Boolean)
