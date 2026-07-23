@@ -22,6 +22,11 @@ export function useDepartments() {
   const dispatch = useAppDispatch();
   const state = useAppSelector((state) => state.departments);
 
+  const fetchDepartmentsAction = useCallback(
+    (params?: any) => dispatch(fetchDepartments(params)),
+    [dispatch],
+  );
+
   const fetchDepartmentByIdAction = useCallback(
     (id: string) => dispatch(fetchDepartmentById(id)),
     [dispatch],
@@ -37,6 +42,67 @@ export function useDepartments() {
     [dispatch],
   );
 
+  const createDepartmentAction = useCallback(
+    (dept: Partial<Department>) => dispatch(createDepartment(dept)),
+    [dispatch],
+  );
+
+  const updateDepartmentAction = useCallback(
+    (dept: Partial<Department> & { id: string }) => dispatch(updateDepartment(dept)),
+    [dispatch],
+  );
+
+  const deleteDepartmentAction = useCallback(
+    (id: string) => dispatch(deleteDepartment(id)),
+    [dispatch],
+  );
+
+  const bulkDeleteAction = useCallback(
+    (ids: string[]) => dispatch(bulkDeleteDepartments(ids)),
+    [dispatch],
+  );
+
+  const bulkSetStatusAction = useCallback(
+    (ids: string[], status: Department["status"]) =>
+      dispatch(bulkSetDepartmentStatus({ ids, status })),
+    [dispatch],
+  );
+
+  const bulkAssignManagerAction = useCallback(
+    (ids: string[], managerId: string, managerName: string) =>
+      dispatch(bulkAssignDepartmentManager({ ids, managerId, managerName })),
+    [dispatch],
+  );
+
+  const importDepartmentsAction = useCallback(
+    (depts: Department[]) => dispatch(importDepartments(depts)),
+    [dispatch],
+  );
+
+  const addEmployeeToDeptAction = useCallback(
+    (deptId: string, employeeId: string) =>
+      dispatch(addEmployeeToDepartment({ deptId, employeeId })),
+    [dispatch],
+  );
+
+  const removeEmployeeFromDeptAction = useCallback(
+    (deptId: string, employeeId: string) =>
+      dispatch(removeEmployeeFromDepartment({ deptId, employeeId })),
+    [dispatch],
+  );
+
+  const transferEmployeesAction = useCallback(
+    (fromDeptId: string, toDeptId: string) =>
+      dispatch(transferDepartmentEmployees({ fromDeptId, toDeptId })),
+    [dispatch],
+  );
+
+  const promoteEmployeeAction = useCallback(
+    (_deptId: string, employeeId: string, newRole: string) =>
+      dispatch(promoteDepartmentEmployee({ employeeId, newDesignation: newRole })),
+    [dispatch],
+  );
+
   return {
     departments: state.departments,
     loading: state.loading,
@@ -48,26 +114,20 @@ export function useDepartments() {
     selectedDepartment: state.selectedDepartment,
     selectedDepartmentLoading: state.selectedDepartmentLoading,
     selectedDepartmentError: state.selectedDepartmentError,
-    fetchDepartments: (params?: any) => dispatch(fetchDepartments(params)),
+    fetchDepartments: fetchDepartmentsAction,
     fetchDepartmentById: fetchDepartmentByIdAction,
     clearSelectedDepartment: clearSelectedDepartmentAction,
     setSelectedDepartment: setSelectedDepartmentAction,
-    createDepartment: (dept: Partial<Department>) => dispatch(createDepartment(dept)),
-    updateDepartment: (dept: Partial<Department> & { id: string }) => dispatch(updateDepartment(dept)),
-    deleteDepartment: (id: string) => dispatch(deleteDepartment(id)),
-    bulkDelete: (ids: string[]) => dispatch(bulkDeleteDepartments(ids)),
-    bulkSetStatus: (ids: string[], status: Department["status"]) =>
-      dispatch(bulkSetDepartmentStatus({ ids, status })),
-    bulkAssignManager: (ids: string[], managerId: string, managerName: string) =>
-      dispatch(bulkAssignDepartmentManager({ ids, managerId, managerName })),
-    importDepartments: (depts: Department[]) => dispatch(importDepartments(depts)),
-    addEmployeeToDept: (deptId: string, employeeId: string) =>
-      dispatch(addEmployeeToDepartment({ deptId, employeeId })),
-    removeEmployeeFromDept: (deptId: string, employeeId: string) =>
-      dispatch(removeEmployeeFromDepartment({ deptId, employeeId })),
-    transferEmployees: (fromDeptId: string, toDeptId: string) =>
-      dispatch(transferDepartmentEmployees({ fromDeptId, toDeptId })),
-    promoteEmployee: (_deptId: string, employeeId: string, newRole: string) =>
-      dispatch(promoteDepartmentEmployee({ employeeId, newDesignation: newRole })),
+    createDepartment: createDepartmentAction,
+    updateDepartment: updateDepartmentAction,
+    deleteDepartment: deleteDepartmentAction,
+    bulkDelete: bulkDeleteAction,
+    bulkSetStatus: bulkSetStatusAction,
+    bulkAssignManager: bulkAssignManagerAction,
+    importDepartments: importDepartmentsAction,
+    addEmployeeToDept: addEmployeeToDeptAction,
+    removeEmployeeFromDept: removeEmployeeFromDeptAction,
+    transferEmployees: transferEmployeesAction,
+    promoteEmployee: promoteEmployeeAction,
   };
 }

@@ -105,39 +105,72 @@ export function useDepartmentsPage() {
 
   const reloadDepartments = useCallback(() => {
     fetchDepartments({
-      search: searchQuery || undefined,
-      status: filters.status,
-      page: currentPage,
-      limit: perPage,
+      page: 1,
+      limit: 500,
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, filters.status, currentPage, perPage]);
+  }, [fetchDepartments]);
 
-  const statsLoaded = useRef(false);
+  const initialLoaded = useRef(false);
   useEffect(() => {
-    if (!statsLoaded.current) {
-      statsLoaded.current = true;
+    if (!initialLoaded.current) {
+      initialLoaded.current = true;
       fetchStatsData();
       fetchManagersList({ limit: 100 });
+      reloadDepartments();
     }
-  }, [fetchStatsData, fetchManagersList]);
-
-  useEffect(() => {
-    reloadDepartments();
-  }, [reloadDepartments]);
+  }, [fetchStatsData, fetchManagersList, reloadDepartments]);
 
   const processedDepartments = useMemo(() => {
-    let list = departments;
+    let list = departments && departments.length > 0 ? departments : allDeptsForStats;
 
-    if (filters.office !== "all") {
-      list = list.filter((d) => d.office === filters.office);
-    }
-    if (filters.managerId !== "all") {
-      list = list.filter((d) => d.departmentHeadId === filters.managerId);
-    }
-    if (filters.employeeCountRange !== "all") {
+    // Search query filter
+    if (searchQuery && searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
       list = list.filter((d) => {
-        const ec = d.currentEmployeeCount;
+        const name = (d.name || "").toLowerCase();
+        const code = (d.department_code || d.code || "").toLowerCase();
+        const head = (d.departmentHeadName || "").toLowerCase();
+        const mgr = (d.reportingManagerName || "").toLowerCase();
+        const office = (d.office || "").toLowerCase();
+        const costCenter = (d.cost_center || d.costCenter || "").toLowerCase();
+        return (
+          name.includes(q) ||
+          code.includes(q) ||
+          head.includes(q) ||
+          mgr.includes(q) ||
+          office.includes(q) ||
+          costCenter.includes(q)
+        );
+      });
+    }
+
+    // Status filter
+    if (filters.status && filters.status !== "all") {
+      const targetStatus = filters.status.toLowerCase();
+      list = list.filter((d) => (d.status || "").toLowerCase() === targetStatus);
+    }
+
+    // Office Location filter
+    if (filters.office && filters.office !== "all") {
+      const targetOffice = filters.office.trim().toLowerCase();
+      list = list.filter((d) => (d.office || "").trim().toLowerCase().includes(targetOffice));
+    }
+
+    // Department Head / Manager filter
+    if (filters.managerId && filters.managerId !== "all") {
+      const targetMgr = filters.managerId;
+      list = list.filter(
+        (d) =>
+          d.departmentHeadId === targetMgr ||
+          d.reportingManagerId === targetMgr ||
+          (d.departmentHeadName || "").toLowerCase().includes(targetMgr.toLowerCase())
+      );
+    }
+
+    // Employee Count Range filter
+    if (filters.employeeCountRange && filters.employeeCountRange !== "all") {
+      list = list.filter((d) => {
+        const ec = d.currentEmployeeCount || 0;
         if (filters.employeeCountRange === "0-10") return ec >= 0 && ec <= 10;
         if (filters.employeeCountRange === "11-30") return ec >= 11 && ec <= 30;
         if (filters.employeeCountRange === "31-50") return ec >= 31 && ec <= 50;
@@ -145,17 +178,33 @@ export function useDepartmentsPage() {
         return true;
       });
     }
+
+    // Created Date From filter
     if (filters.createdDateFrom) {
-      list = list.filter((d) => d.createdDate >= filters.createdDateFrom);
+      const fromTime = new Date(filters.createdDateFrom).getTime();
+      list = list.filter((d) => {
+        if (!d.createdDate) return false;
+        const dTime = new Date(d.createdDate).getTime();
+        return !isNaN(dTime) && dTime >= fromTime;
+      });
     }
+
+    // Created Date To filter
     if (filters.createdDateTo) {
-      list = list.filter((d) => d.createdDate <= filters.createdDateTo);
+      const toTime = new Date(filters.createdDateTo).getTime() + 86400000;
+      list = list.filter((d) => {
+        if (!d.createdDate) return false;
+        const dTime = new Date(d.createdDate).getTime();
+        return !isNaN(dTime) && dTime <= toTime;
+      });
     }
 
     return applySorting(list, sortField, sortDir);
-  }, [departments, filters, sortField, sortDir]);
+  }, [departments, allDeptsForStats, searchQuery, filters, sortField, sortDir]);
 
-  const paginatedDepartments = processedDepartments;
+  const start = (currentPage - 1) * perPage;
+  const paginatedDepartments = processedDepartments.slice(start, start + perPage);
+
   const totalPages = Math.max(1, Math.ceil(processedDepartments.length / perPage) || 1);
   const existingDepartments = allDeptsForStats.length > 0 ? allDeptsForStats : departments;
 

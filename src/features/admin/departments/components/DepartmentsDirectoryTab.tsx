@@ -282,7 +282,7 @@ export function DepartmentsDirectoryTab({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Locations</SelectItem>
-                  {OFFICES.map((off) => (
+                  {Array.from(new Set([...OFFICES, ...allDeptsForStats.map(d => d.office), ...departments.map(d => d.office)].filter(Boolean))).sort().map((off) => (
                     <SelectItem key={off} value={off}>
                       {off}
                     </SelectItem>
