@@ -1,7 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Building2, RefreshCw, Save } from "lucide-react";
 import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,21 +19,37 @@ export const Route = createFileRoute("/dashboard/settings/company")({
   component: CompanySettingsPage,
 });
 
+const schema = z.object({
+  name: z.string().min(1, "Company name is required"),
+  email: z.string().email("Invalid email format").optional().or(z.literal("")),
+  phone: z.string().optional(),
+  website: z.string().url("Invalid URL").optional().or(z.literal("")),
+  city: z.string().optional(),
+  country: z.string().optional(),
+  taxId: z.string().optional(),
+  registrationNumber: z.string().optional(),
+});
+
+type FormValues = z.infer<typeof schema>;
+
 function CompanySettingsPage() {
   const dispatch = useAppDispatch();
   const company = useAppSelector(selectCompanySettings);
   const loading = useAppSelector(selectSettingsLoading);
   const submitting = useAppSelector(selectSettingsSubmitting);
 
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    website: "",
-    city: "",
-    country: "",
-    taxId: "",
-    registrationNumber: "",
+  const { register, handleSubmit, reset, formState: { errors, isDirty } } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      website: "",
+      city: "",
+      country: "",
+      taxId: "",
+      registrationNumber: "",
+    }
   });
 
   useEffect(() => {
@@ -39,7 +58,7 @@ function CompanySettingsPage() {
 
   useEffect(() => {
     if (company) {
-      setForm({
+      reset({
         name: company.name || "",
         email: company.email || "",
         phone: company.phone || "",
@@ -50,12 +69,11 @@ function CompanySettingsPage() {
         registrationNumber: company.registrationNumber || "",
       });
     }
-  }, [company]);
+  }, [company, reset]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: FormValues) => {
     try {
-      const res = await dispatch(updateCompanySettings(form)).unwrap();
+      const res = await dispatch(updateCompanySettings(data)).unwrap();
       if (res?.name) {
         const currentWs = aurix.get();
         aurix.set({
@@ -66,6 +84,7 @@ function CompanySettingsPage() {
         });
       }
       toast.success("Company profile updated successfully!");
+      reset(data);
     } catch {
       toast.error("Failed to update company profile");
     }
@@ -85,7 +104,7 @@ function CompanySettingsPage() {
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-xl">
+    <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-xl relative overflow-hidden">
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold tracking-tight">Company Profile & Details</h2>
@@ -94,88 +113,99 @@ function CompanySettingsPage() {
         <Building2 className="h-5 w-5 text-muted-foreground" />
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Company Name</Label>
             <Input
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              {...register("name")}
               placeholder="Aurix AI Technologies Pvt Ltd"
+              aria-invalid={!!errors.name}
             />
+            {errors.name && <p className="text-[10px] text-destructive">{errors.name.message}</p>}
           </div>
 
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Official Contact Email</Label>
             <Input
               type="email"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              {...register("email")}
               placeholder="contact@aurix.ai"
+              aria-invalid={!!errors.email}
             />
+            {errors.email && <p className="text-[10px] text-destructive">{errors.email.message}</p>}
           </div>
 
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Phone Number</Label>
             <Input
-              value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              {...register("phone")}
               placeholder="+91 98765 43210"
+              aria-invalid={!!errors.phone}
             />
+            {errors.phone && <p className="text-[10px] text-destructive">{errors.phone.message}</p>}
           </div>
 
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Website</Label>
             <Input
-              value={form.website}
-              onChange={(e) => setForm({ ...form, website: e.target.value })}
+              {...register("website")}
               placeholder="https://aurix.ai"
+              aria-invalid={!!errors.website}
             />
+            {errors.website && <p className="text-[10px] text-destructive">{errors.website.message}</p>}
           </div>
 
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">City</Label>
             <Input
-              value={form.city}
-              onChange={(e) => setForm({ ...form, city: e.target.value })}
+              {...register("city")}
               placeholder="Bengaluru"
+              aria-invalid={!!errors.city}
             />
+            {errors.city && <p className="text-[10px] text-destructive">{errors.city.message}</p>}
           </div>
 
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Country</Label>
             <Input
-              value={form.country}
-              onChange={(e) => setForm({ ...form, country: e.target.value })}
+              {...register("country")}
               placeholder="India"
+              aria-invalid={!!errors.country}
             />
+            {errors.country && <p className="text-[10px] text-destructive">{errors.country.message}</p>}
           </div>
 
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Tax Identification / GSTIN</Label>
             <Input
-              value={form.taxId}
-              onChange={(e) => setForm({ ...form, taxId: e.target.value })}
+              {...register("taxId")}
               placeholder="29ABCDE1234F1Z5"
+              aria-invalid={!!errors.taxId}
             />
+            {errors.taxId && <p className="text-[10px] text-destructive">{errors.taxId.message}</p>}
           </div>
 
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Company Registration Number / CIN</Label>
             <Input
-              value={form.registrationNumber}
-              onChange={(e) => setForm({ ...form, registrationNumber: e.target.value })}
+              {...register("registrationNumber")}
               placeholder="CIN-U72200KA2024PTC123456"
+              aria-invalid={!!errors.registrationNumber}
             />
+            {errors.registrationNumber && <p className="text-[10px] text-destructive">{errors.registrationNumber.message}</p>}
           </div>
         </div>
 
-        <div className="flex justify-end pt-2">
-          <Button type="submit" disabled={submitting}>
-            {submitting ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-            Save Company Profile
-          </Button>
-        </div>
+        {isDirty && (
+          <div className="flex justify-end gap-2 pt-4 border-t border-border">
+            <Button type="button" variant="outline" onClick={() => reset()}>Cancel</Button>
+            <Button type="submit" disabled={submitting}>
+              {submitting ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              Save Company Profile
+            </Button>
+          </div>
+        )}
       </form>
     </div>
   );
