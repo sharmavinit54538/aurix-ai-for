@@ -28,10 +28,31 @@ function Index() {
 
     if (!workspace.user && !hasValidAccessToken()) {
       navigate({ to: "/login", replace: true });
+    } else if (workspace.user) {
+      if (workspace.user.role === "manager") {
+        navigate({ to: "/dashboard/manager", replace: true });
+      } else if (workspace.user.role === "employee") {
+        navigate({ to: "/dashboard/employee", replace: true });
+      } else {
+        navigate({ to: "/dashboard", replace: true });
+      }
     } else {
-      navigate({ to: "/dashboard/recruitment", replace: true });
+      navigate({ to: "/dashboard", replace: true });
     }
   }, [authReady, navigate]);
+
+  if (!authReady) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <span className="grid h-10 w-10 place-items-center rounded-xl text-brand-foreground shadow-glow animate-pulse" style={{ background: "var(--gradient-brand)" }}>
+            <Sparkles className="h-5 w-5" />
+          </span>
+          <p className="text-sm text-muted-foreground animate-pulse">Loading workspace...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="grid min-h-screen place-items-center bg-background text-foreground">

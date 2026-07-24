@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { rememberStore } from "@/lib/aurix-store";
-import { getPostLoginRoute, persistAuthSession } from "@/lib/auth-bootstrap";
+import { getPostLoginRoute, persistAuthSession, useAuthReady } from "@/lib/auth-bootstrap";
 import { api } from "@/api";
 import { getErrorMessage } from "@/api/utils";
 import { toast } from "sonner";
@@ -25,6 +25,7 @@ function formatLoginError(message: string) {
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const authReady = useAuthReady();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
@@ -33,12 +34,28 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (!authReady) return;
+    const workspace = aurix.get();
+    if (workspace.user) {
+      navigate({ to: getPostLoginRoute(workspace.user as any), replace: true });
+    }
+  }, [authReady, navigate]);
+
+  useEffect(() => {
     const savedEmail = rememberStore.get();
     if (savedEmail) {
       setEmail(savedEmail);
       setRemember(true);
     }
   }, []);
+
+  if (!authReady || aurix.get().user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-foreground" style={{ color: "var(--gradient-brand)" }} />
+      </div>
+    );
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();

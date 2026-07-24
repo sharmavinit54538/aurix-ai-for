@@ -83,6 +83,7 @@ export interface HRDocument {
   fileType: 'pdf' | 'jpg' | 'png' | 'docx';
   description?: string;
   rejectionReason?: string;
+  fileUrl?: string;
 }
 
 export interface HRDocumentActivity {

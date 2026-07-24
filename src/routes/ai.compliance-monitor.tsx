@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  ShieldCheck, Scale, FileWarning, AlertTriangle, ClipboardCheck,
+  ShieldCheck, Scale, FileWarning, AlertTriangle, ClipboardCheck, Loader2
 } from "lucide-react";
+import { useEffect } from "react";
 import { AIModulePage } from "@/components/aurix/AIModule";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { fetchComplianceReport } from "@/store/compliance/complianceThunk";
 
 export const Route = createFileRoute("/ai/compliance-monitor")({
   head: () => ({ meta: [{ title: "AI Compliance Monitor — Aurix" }] }),
@@ -10,6 +13,27 @@ export const Route = createFileRoute("/ai/compliance-monitor")({
 });
 
 function Page() {
+  const dispatch = useAppDispatch();
+  const { data, loading, error } = useAppSelector((state) => state.compliance.report);
+
+  useEffect(() => {
+    dispatch(fetchComplianceReport());
+  }, [dispatch]);
+
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-foreground" />
+      </div>
+    );
+  }
+
+  // Fallback mock data if backend fails or returns empty
+  const complianceScore = data?.complianceScore ?? 96;
+  const openRisks = data?.openRisks ?? 4;
+  const missingDocs = data?.missingDocs ?? 11;
+  const auditReadiness = data?.auditReadiness ?? "92%";
+
   return (
     <AIModulePage
       icon={ShieldCheck}
@@ -18,10 +42,10 @@ function Page() {
       description="Monitor labor law compliance, missing documents, risk and audit readiness."
       lastAnalysis="4 hr ago"
       kpis={[
-        { label: "Compliance Score", value: 96, trend: 1.2, icon: ShieldCheck },
-        { label: "Open Risks", value: 4, trend: -33.0, icon: AlertTriangle, invert: true },
-        { label: "Missing Docs", value: 11, trend: -20.0, icon: FileWarning, invert: true },
-        { label: "Audit Readiness", value: "92%", trend: 3.4, icon: ClipboardCheck },
+        { label: "Compliance Score", value: complianceScore, trend: 1.2, icon: ShieldCheck },
+        { label: "Open Risks", value: openRisks, trend: -33.0, icon: AlertTriangle, invert: true },
+        { label: "Missing Docs", value: missingDocs, trend: -20.0, icon: FileWarning, invert: true },
+        { label: "Audit Readiness", value: auditReadiness, trend: 3.4, icon: ClipboardCheck },
       ]}
       charts={[
         {

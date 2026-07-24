@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  Video, ListChecks, Users, Sparkles, MessageSquare, ClipboardList,
+  Video, ListChecks, Users, Sparkles, MessageSquare, ClipboardList, Loader2
 } from "lucide-react";
+import { useEffect } from "react";
 import { AIModulePage } from "@/components/aurix/AIModule";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { fetchMeetingIntelligence } from "@/store/aiBrain/aiBrainThunk";
 
 export const Route = createFileRoute("/ai/meeting-intelligence")({
   head: () => ({ meta: [{ title: "AI Meeting Intelligence — Aurix" }] }),
@@ -10,6 +13,27 @@ export const Route = createFileRoute("/ai/meeting-intelligence")({
 });
 
 function Page() {
+  const dispatch = useAppDispatch();
+  const { data, loading, error } = useAppSelector((state) => state.aiBrain.meeting);
+
+  useEffect(() => {
+    dispatch(fetchMeetingIntelligence({}));
+  }, [dispatch]);
+
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-foreground" />
+      </div>
+    );
+  }
+
+  // Fallback mock data if backend fails or returns empty
+  const meetingsAnalyzed = data?.meetingsAnalyzed ?? 142;
+  const actionItems = data?.actionItems ?? 312;
+  const followUps = data?.followUps ?? 88;
+  const avgDuration = data?.avgDuration ?? "38m";
+
   return (
     <AIModulePage
       icon={Video}
@@ -18,10 +42,10 @@ function Page() {
       description="Auto-generate summaries, action items and follow-ups from your team meetings."
       lastAnalysis="1 hr ago"
       kpis={[
-        { label: "Meetings analyzed", value: 142, trend: 18.0, icon: Video },
-        { label: "Action items", value: 312, trend: 22.0, icon: ListChecks },
-        { label: "Follow-ups", value: 88, trend: -5.0, icon: ClipboardList, invert: true },
-        { label: "Avg duration", value: "38m", trend: -8.0, icon: Sparkles, invert: true },
+        { label: "Meetings analyzed", value: meetingsAnalyzed, trend: 18.0, icon: Video },
+        { label: "Action items", value: actionItems, trend: 22.0, icon: ListChecks },
+        { label: "Follow-ups", value: followUps, trend: -5.0, icon: ClipboardList, invert: true },
+        { label: "Avg duration", value: avgDuration, trend: -8.0, icon: Sparkles, invert: true },
       ]}
       charts={[
         {

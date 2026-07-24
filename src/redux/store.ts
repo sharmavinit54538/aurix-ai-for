@@ -8,6 +8,8 @@ import aiInsightsReducer from "@/store/aiInsights/aiInsightsSlice";
 import settingsReducer from "@/store/settings/settingsSlice";
 import sidebarReducer from "@/store/sidebar/sidebarSlice";
 import employeeHierarchyReducer from "@/store/employeeHierarchy/employeeHierarchySlice";
+import aiBrainReducer from "@/store/aiBrain/aiBrainSlice";
+import complianceReducer from "@/store/compliance/complianceSlice";
 
 export const store = configureStore({
   reducer: {
@@ -20,6 +22,8 @@ export const store = configureStore({
     settings: settingsReducer,
     sidebar: sidebarReducer,
     employeeHierarchy: employeeHierarchyReducer,
+    aiBrain: aiBrainReducer,
+    compliance: complianceReducer,
   },
 });
 
