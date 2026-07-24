@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  Brain, HeartPulse, Users, UserMinus, Zap, TrendingUp, Building2, Activity, Sparkles,
+  Brain, HeartPulse, Users, UserMinus, Zap, TrendingUp, Building2, Activity, Sparkles, Loader2
 } from "lucide-react";
+import { useEffect } from "react";
 import { AIModulePage } from "@/components/aurix/AIModule";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { fetchWorkforceInsights } from "@/store/aiBrain/aiBrainThunk";
 
 export const Route = createFileRoute("/ai/workforce-insights")({
   head: () => ({ meta: [{ title: "AI Workforce Insights — Aurix" }] }),
@@ -10,6 +13,27 @@ export const Route = createFileRoute("/ai/workforce-insights")({
 });
 
 function Page() {
+  const dispatch = useAppDispatch();
+  const { data, loading, error } = useAppSelector((state) => state.aiBrain.workforce);
+
+  useEffect(() => {
+    dispatch(fetchWorkforceInsights());
+  }, [dispatch]);
+
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-foreground" />
+      </div>
+    );
+  }
+
+  // Fallback mock data if backend fails or returns empty
+  const workforceHealth = data?.workforceHealth ?? 87;
+  const attritionRisk = data?.attritionRisk ?? "14%";
+  const productivityScore = data?.productivityScore ?? 91;
+  const headcount = data?.headcount ?? 482;
+
   return (
     <AIModulePage
       icon={Brain}
@@ -18,10 +42,10 @@ function Page() {
       description="Track workforce health, predict attrition and forecast headcount across every department."
       lastAnalysis="2 min ago"
       kpis={[
-        { label: "Workforce Health", value: 87, trend: 4.2, icon: HeartPulse, hint: "Strong engagement overall" },
-        { label: "Attrition Risk", value: "14%", trend: -3.4, icon: UserMinus, invert: true, hint: "5 employees flagged" },
-        { label: "Productivity Score", value: 91, trend: 5.8, icon: Zap, hint: "Engineering leading" },
-        { label: "Headcount", value: 482, trend: 2.1, icon: Users, hint: "+10 this month" },
+        { label: "Workforce Health", value: workforceHealth, trend: 4.2, icon: HeartPulse, hint: "Strong engagement overall" },
+        { label: "Attrition Risk", value: attritionRisk, trend: -3.4, icon: UserMinus, invert: true, hint: "5 employees flagged" },
+        { label: "Productivity Score", value: productivityScore, trend: 5.8, icon: Zap, hint: "Engineering leading" },
+        { label: "Headcount", value: headcount, trend: 2.1, icon: Users, hint: "+10 this month" },
       ]}
       charts={[
         {

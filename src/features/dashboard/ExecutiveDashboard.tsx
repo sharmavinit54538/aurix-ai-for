@@ -3,7 +3,7 @@
 // A world-class HR operating system dashboard.
 // ============================================================
 import { Link } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense, lazy } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertTriangle,
@@ -32,26 +32,25 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
-  RadialBar,
-  RadialBarChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+
 import { useAurix } from "@/lib/aurix-store";
+
+// PERFORMANCE OPTIMIZATION:
+// Lazy load heavy chart components that rely on 'recharts'.
+// This removes 'recharts' from the initial dashboard bundle, drastically reducing
+// the initial chunk size, which improves First Contentful Paint (FCP) and
+// Time to Interactive (TTI).
+const KpiSparkline = lazy(() => import("./components/KpiSparkline"));
+const PipelineChart = lazy(() => import("./components/PipelineChart"));
+const WeeklyAttendanceChart = lazy(() => import("./components/WeeklyAttendanceChart"));
+const DeptAttendanceChart = lazy(() => import("./components/DeptAttendanceChart"));
+const MonthlyPayrollChart = lazy(() => import("./components/MonthlyPayrollChart"));
+const HeadcountGrowthChart = lazy(() => import("./components/HeadcountGrowthChart"));
+const AttritionRateChart = lazy(() => import("./components/AttritionRateChart"));
+const GenderDiversityChart = lazy(() => import("./components/GenderDiversityChart"));
+const SalaryDistributionChart = lazy(() => import("./components/SalaryDistributionChart"));
+const DeptDistributionChart = lazy(() => import("./components/DeptDistributionChart"));
+
 import { useExecutiveDashboardData } from "./hooks/useExecutiveDashboardData";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -263,13 +262,12 @@ function KpiCards({ cards }: { cards?: ReturnType<typeof useExecutiveDashboardDa
                 {kpi.change}
               </div>
               {/* Mini sparkline */}
+              {/* PERFORMANCE OPTIMIZATION: Use Suspense boundary with matching height fallback to avoid Layout Shifts (CLS) while chart loads */}
               <div className="mt-3 h-10 w-full opacity-60">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={kpi.spark}>
-                    <Line
-                      type="monotone"
-                      dataKey="v"
-                      stroke={
+                <Suspense fallback={<div className="h-full w-full" />}>
+                  <KpiSparkline
+                    spark={kpi.spark}
+                    color={
                         kpi.accent.includes("emerald")
                           ? "#10b981"
                           : kpi.accent.includes("blue")
@@ -293,12 +291,9 @@ function KpiCards({ cards }: { cards?: ReturnType<typeof useExecutiveDashboardDa
                           : kpi.accent.includes("slate")
                           ? "#64748b"
                           : "#6366f1"
-                      }
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                    }
+                  />
+                </Suspense>
               </div>
             </Card>
           </Link>
@@ -415,21 +410,9 @@ function RecruitmentDashboard() {
           <div>
             <p className="mb-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Candidate Pipeline</p>
             <div className="h-56">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={PIPELINE_STAGES} layout="vertical" margin={{ left: 0, right: 16, top: 0, bottom: 0 }}>
-                  <CartesianGrid stroke="oklch(0.5 0.02 264 / 0.1)" horizontal={false} />
-                  <XAxis type="number" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                  <YAxis type="category" dataKey="stage" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={64} />
-                  <Tooltip
-                    contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }}
-                  />
-                  <Bar dataKey="count" radius={[0, 6, 6, 0]}>
-                    {PIPELINE_STAGES.map((s) => (
-                      <Cell key={s.stage} fill={s.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              <Suspense fallback={<div className="h-full w-full" />}>
+                <PipelineChart />
+              </Suspense>
             </div>
           </div>
 
@@ -499,41 +482,18 @@ function AttendanceAnalytics() {
           <div>
             <p className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Daily Attendance — This Week</p>
             <div className="h-52">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={WEEKLY_ATTENDANCE} margin={{ top: 6, right: 8, left: -16, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="attGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.35} />
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid stroke="oklch(0.5 0.02 264 / 0.1)" vertical={false} />
-                  <XAxis dataKey="day" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
-                  <Area type="monotone" dataKey="present" stroke="#10b981" strokeWidth={2} fill="url(#attGrad)" name="Present" />
-                  <Area type="monotone" dataKey="late" stroke="#f59e0b" strokeWidth={1.5} fill="transparent" name="Late" />
-                </AreaChart>
-              </ResponsiveContainer>
+              <Suspense fallback={<div className="h-full w-full" />}>
+                <WeeklyAttendanceChart />
+              </Suspense>
             </div>
           </div>
 
           <div>
             <p className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Dept Attendance %</p>
             <div className="h-52">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={DEPT_ATTENDANCE} margin={{ top: 6, right: 8, left: -16, bottom: 0 }}>
-                  <CartesianGrid stroke="oklch(0.5 0.02 264 / 0.1)" vertical={false} />
-                  <XAxis dataKey="name" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} domain={[80, 100]} />
-                  <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} formatter={(v) => [`${v}%`, "Attendance"]} />
-                  <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                    {DEPT_ATTENDANCE.map((_, idx) => (
-                      <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              <Suspense fallback={<div className="h-full w-full" />}>
+                <DeptAttendanceChart />
+              </Suspense>
             </div>
           </div>
         </div>
@@ -580,24 +540,9 @@ function PayrollOverview({ data }: { data?: ReturnType<typeof useExecutiveDashbo
           <div className="lg:col-span-2">
             <p className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Monthly Salary Cost (Lakhs ₹)</p>
             <div className="h-56">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 6, right: 8, left: -16, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="payGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#10b981" stopOpacity={0.9} />
-                      <stop offset="100%" stopColor="#10b981" stopOpacity={0.5} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid stroke="oklch(0.5 0.02 264 / 0.1)" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                  <Tooltip
-                    contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }}
-                    formatter={(v) => [`₹${v}L`, "Payroll"]}
-                  />
-                  <Bar dataKey="cost" radius={[6, 6, 0, 0]} fill="url(#payGrad)" />
-                </BarChart>
-              </ResponsiveContainer>
+              <Suspense fallback={<div className="h-full w-full" />}>
+                <MonthlyPayrollChart data={chartData} />
+              </Suspense>
             </div>
           </div>
         </div>
@@ -808,21 +753,9 @@ function ExecutiveAnalytics() {
           <div>
             <p className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Headcount Growth</p>
             <div className="h-44">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={HEADCOUNT_GROWTH} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="hcGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.35} />
-                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid stroke="oklch(0.5 0.02 264 / 0.1)" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} domain={[230, 295]} />
-                  <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 11 }} />
-                  <Area type="monotone" dataKey="headcount" stroke="#6366f1" strokeWidth={2} fill="url(#hcGrad)" />
-                </AreaChart>
-              </ResponsiveContainer>
+              <Suspense fallback={<div className="h-full w-full" />}>
+                <HeadcountGrowthChart />
+              </Suspense>
             </div>
           </div>
 
@@ -830,15 +763,9 @@ function ExecutiveAnalytics() {
           <div>
             <p className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Attrition Rate (%)</p>
             <div className="h-44">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={ATTRITION_RATE} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-                  <CartesianGrid stroke="oklch(0.5 0.02 264 / 0.1)" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} domain={[2, 5]} />
-                  <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 11 }} formatter={(v) => [`${v}%`, "Attrition"]} />
-                  <Line type="monotone" dataKey="rate" stroke="#f43f5e" strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
+              <Suspense fallback={<div className="h-full w-full" />}>
+                <AttritionRateChart />
+              </Suspense>
             </div>
           </div>
 
@@ -846,25 +773,9 @@ function ExecutiveAnalytics() {
           <div>
             <p className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Gender Diversity</p>
             <div className="h-44">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={GENDER_DIVERSITY}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={40}
-                    outerRadius={65}
-                    dataKey="value"
-                    paddingAngle={3}
-                  >
-                    {GENDER_DIVERSITY.map((d, i) => (
-                      <Cell key={i} fill={d.fill} />
-                    ))}
-                  </Pie>
-                  <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 11 }} />
-                  <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-                </PieChart>
-              </ResponsiveContainer>
+              <Suspense fallback={<div className="h-full w-full" />}>
+                <GenderDiversityChart />
+              </Suspense>
             </div>
           </div>
 
@@ -872,15 +783,9 @@ function ExecutiveAnalytics() {
           <div>
             <p className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Salary Distribution</p>
             <div className="h-44">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={SALARY_DISTRIBUTION} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-                  <CartesianGrid stroke="oklch(0.5 0.02 264 / 0.1)" vertical={false} />
-                  <XAxis dataKey="band" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 11 }} />
-                  <Bar dataKey="employees" radius={[4, 4, 0, 0]} fill="#f59e0b" />
-                </BarChart>
-              </ResponsiveContainer>
+              <Suspense fallback={<div className="h-full w-full" />}>
+                <SalaryDistributionChart />
+              </Suspense>
             </div>
           </div>
 
@@ -888,19 +793,9 @@ function ExecutiveAnalytics() {
           <div className="lg:col-span-2">
             <p className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Department Distribution</p>
             <div className="h-44">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={DEPT_DISTRIBUTION} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-                  <CartesianGrid stroke="oklch(0.5 0.02 264 / 0.1)" vertical={false} />
-                  <XAxis dataKey="dept" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 11 }} />
-                  <Bar dataKey="employees" radius={[4, 4, 0, 0]}>
-                    {DEPT_DISTRIBUTION.map((d, i) => (
-                      <Cell key={i} fill={d.fill} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              <Suspense fallback={<div className="h-full w-full" />}>
+                <DeptDistributionChart />
+              </Suspense>
             </div>
           </div>
         </div>
