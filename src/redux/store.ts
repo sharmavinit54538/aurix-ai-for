@@ -5,6 +5,10 @@ import managersReducer from "@/features/admin/managers/managersSlice";
 import performanceReducer from "@/features/admin/performance/performanceSlice";
 import recruitmentReducer from "@/features/admin/recruitment/recruitmentSlice";
 import aiInsightsReducer from "@/store/aiInsights/aiInsightsSlice";
+import aiAttendanceReducer from "@/store/aiAttendance/aiAttendanceSlice";
+import aiLeaveReducer from "@/store/aiLeave/aiLeaveSlice";
+import aiPerformanceReducer from "@/store/aiPerformance/aiPerformanceSlice";
+import aiPayrollReducer from "@/store/aiPayroll/aiPayrollSlice";
 import settingsReducer from "@/store/settings/settingsSlice";
 import sidebarReducer from "@/store/sidebar/sidebarSlice";
 import employeeHierarchyReducer from "@/store/employeeHierarchy/employeeHierarchySlice";
@@ -19,6 +23,10 @@ export const store = configureStore({
     performance: performanceReducer,
     recruitment: recruitmentReducer,
     aiInsights: aiInsightsReducer,
+    aiAttendance: aiAttendanceReducer,
+    aiLeave: aiLeaveReducer,
+    aiPerformance: aiPerformanceReducer,
+    aiPayroll: aiPayrollReducer,
     settings: settingsReducer,
     sidebar: sidebarReducer,
     employeeHierarchy: employeeHierarchyReducer,
