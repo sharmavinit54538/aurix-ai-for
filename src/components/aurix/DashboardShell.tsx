@@ -368,10 +368,15 @@ export function DashboardShell() {
 
   const visibleNav = useMemo(() => {
     const normalizedRole = (role || "").toLowerCase();
-    if (normalizedRole === "employee" || pathname.startsWith("/dashboard/employee")) {
+
+    // Strict path checks to avoid misclassifying paths like /dashboard/employees
+    const isEmployeePortalPath = pathname === "/dashboard/employee" || pathname.startsWith("/dashboard/employee/");
+    const isManagerPortalPath = pathname === "/dashboard/manager" || pathname.startsWith("/dashboard/manager/");
+
+    if (normalizedRole === "employee" || isEmployeePortalPath) {
       return filterNavTree(EMPLOYEE_NAV_SECTIONS, role, userPermissions);
     }
-    if (normalizedRole === "manager" || pathname.startsWith("/dashboard/manager")) {
+    if (normalizedRole === "manager" || isManagerPortalPath) {
       return filterNavTree(MANAGER_NAV_SECTIONS, role, userPermissions);
     }
     return filterNavTree(NAV_SECTIONS, role, userPermissions);
@@ -420,7 +425,7 @@ export function DashboardShell() {
               <span className="grid h-8 w-8 place-items-center rounded-lg text-brand-foreground shadow-glow" style={{ background: "var(--gradient-brand)" }}>
                 <Sparkles className="h-4 w-4" />
               </span>
-              {!collapsed ? <span className="font-display text-lg font-semibold tracking-tight">Aurix</span> : null}
+              {!collapsed ? <span className="font-display text-lg font-semibold tracking-tight">OFC HR</span> : null}
             </Link>
             <button onClick={() => setCollapsed((c) => !c)} className="hidden rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground lg:inline-flex cursor-pointer" aria-label="Toggle sidebar">
               {collapsed ? <ChevronsRight className="h-4 w-4" /> : <ChevronsLeft className="h-4 w-4" />}
