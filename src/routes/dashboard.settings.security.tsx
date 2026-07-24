@@ -1,10 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { KeyRound, LogOut, Shield } from "lucide-react";
 import { toast } from "sonner";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -19,17 +16,6 @@ export const Route = createFileRoute("/dashboard/settings/security")({
   component: SecuritySettingsPage,
 });
 
-const passwordSchema = z.object({
-  current: z.string().min(1, "Current password is required"),
-  newPass: z.string().min(8, "New password must be at least 8 characters"),
-  confirm: z.string().min(1, "Confirm password is required"),
-}).refine((data) => data.newPass === data.confirm, {
-  message: "Passwords don't match",
-  path: ["confirm"],
-});
-
-type PasswordFormValues = z.infer<typeof passwordSchema>;
-
 function SecuritySettingsPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -37,32 +23,51 @@ function SecuritySettingsPage() {
   const loading = useAppSelector(selectSettingsLoading);
   const submitting = useAppSelector(selectSettingsSubmitting);
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<PasswordFormValues>({
-    resolver: zodResolver(passwordSchema),
-    defaultValues: {
-      current: "",
-      newPass: "",
-      confirm: "",
-    }
+  const [form, setForm] = useState({
+    twoFactorEnabled: true,
+    sessionTimeoutMinutes: 60,
+    passwordExpirationDays: 90,
+  });
+
+  const [passwords, setPasswords] = useState({
+    current: "",
+    newPass: "",
+    confirm: "",
   });
 
   useEffect(() => {
     dispatch(fetchSecurity());
   }, [dispatch]);
 
+  useEffect(() => {
+    if (security) {
+      setForm({
+        twoFactorEnabled: security.twoFactorEnabled ?? true,
+        sessionTimeoutMinutes: security.sessionTimeoutMinutes ?? 60,
+        passwordExpirationDays: security.passwordExpirationDays ?? 90,
+      });
+    }
+  }, [security]);
+
   const handleToggle2FA = async (val: boolean) => {
+    setForm({ ...form, twoFactorEnabled: val });
     try {
-      await dispatch(updateSecurity({ twoFactorEnabled: val })).unwrap();
+      await dispatch(updateSecurity({ ...form, twoFactorEnabled: val })).unwrap();
       toast.success(val ? "Two-factor authentication enabled" : "Two-factor authentication disabled");
     } catch {
       toast.error("Failed to update 2FA setting");
     }
   };
 
-  const onPasswordSubmit = (data: PasswordFormValues) => {
-    // In a real app, this would dispatch a change password thunk
+  const handlePasswordUpdate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!passwords.newPass) return;
+    if (passwords.newPass !== passwords.confirm) {
+      toast.error("New passwords do not match!");
+      return;
+    }
     toast.success("Password updated successfully!");
-    reset();
+    setPasswords({ current: "", newPass: "", confirm: "" });
   };
 
   const handleSignOut = () => {
@@ -101,9 +106,9 @@ function SecuritySettingsPage() {
             <div className="text-xs text-muted-foreground">Require an authenticator app code on login to secure workspace access.</div>
           </div>
           <Switch
-            checked={security?.twoFactorEnabled ?? true}
+            checked={form.twoFactorEnabled}
             onCheckedChange={handleToggle2FA}
-            disabled={submitting || !security}
+            disabled={submitting}
           />
         </div>
       </div>
@@ -112,35 +117,26 @@ function SecuritySettingsPage() {
       <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-xl">
         <h3 className="text-sm font-semibold tracking-tight">Change Password</h3>
         <p className="text-xs text-muted-foreground">Ensure your account uses a strong, unique password.</p>
-        <form onSubmit={handleSubmit(onPasswordSubmit)} className="mt-4 space-y-3">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 items-start">
-            <div className="space-y-1">
-              <Input
-                type="password"
-                {...register("current")}
-                placeholder="Current password"
-                aria-invalid={!!errors.current}
-              />
-              {errors.current && <p className="text-[10px] text-destructive">{errors.current.message}</p>}
-            </div>
-            <div className="space-y-1">
-              <Input
-                type="password"
-                {...register("newPass")}
-                placeholder="New password"
-                aria-invalid={!!errors.newPass}
-              />
-              {errors.newPass && <p className="text-[10px] text-destructive">{errors.newPass.message}</p>}
-            </div>
-            <div className="space-y-1">
-              <Input
-                type="password"
-                {...register("confirm")}
-                placeholder="Confirm new password"
-                aria-invalid={!!errors.confirm}
-              />
-              {errors.confirm && <p className="text-[10px] text-destructive">{errors.confirm.message}</p>}
-            </div>
+        <form onSubmit={handlePasswordUpdate} className="mt-4 space-y-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <Input
+              type="password"
+              placeholder="Current password"
+              value={passwords.current}
+              onChange={(e) => setPasswords({ ...passwords, current: e.target.value })}
+            />
+            <Input
+              type="password"
+              placeholder="New password"
+              value={passwords.newPass}
+              onChange={(e) => setPasswords({ ...passwords, newPass: e.target.value })}
+            />
+            <Input
+              type="password"
+              placeholder="Confirm new password"
+              value={passwords.confirm}
+              onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
+            />
           </div>
           <Button type="submit" size="sm" className="mt-2">
             <KeyRound className="mr-2 h-4 w-4" /> Update Password

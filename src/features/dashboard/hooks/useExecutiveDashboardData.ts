@@ -100,26 +100,11 @@ export function useExecutiveDashboardData(): DashboardLiveData {
     ],
   });
 
-  const fetchAllDashboardData = useCallback(() => {
+  const fetchAllDashboardData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
-    // PERFORMANCE OPTIMIZATION:
-    // Execute all 8 dashboard API requests in parallel rather than using `await Promise.allSettled`
-    // which would block the initial UI render (waterfall effect). This allows the dashboard shell
-    // to mount and show loading states immediately.
-    const requests = [
-      apiInstance.get("/departments", { params: { limit: 100 } }),
-      apiInstance.get("/hierarchy"),
-      apiInstance.get("/jobs", { params: { limit: 100 } }),
-      apiInstance.get("/assets", { params: { limit: 100 } }),
-      apiInstance.get("/exits", { params: { limit: 100 } }),
-      apiInstance.get("/internal/dashboard"),
-      apiInstance.get("/payroll/salary-structures"),
-      apiInstance.get("/payroll/dashboard"),
-    ];
-
-    Promise.allSettled(requests).then((results) => {
+    try {
       const [
         deptsRes,
         hierRes,
@@ -129,7 +114,16 @@ export function useExecutiveDashboardData(): DashboardLiveData {
         internalRes,
         payrollStructuresRes,
         payrollDashboardRes,
-      ] = results;
+      ] = await Promise.allSettled([
+        apiInstance.get("/departments", { params: { limit: 100 } }),
+        apiInstance.get("/hierarchy"),
+        apiInstance.get("/jobs", { params: { limit: 100 } }),
+        apiInstance.get("/assets", { params: { limit: 100 } }),
+        apiInstance.get("/exits", { params: { limit: 100 } }),
+        apiInstance.get("/internal/dashboard"),
+        apiInstance.get("/payroll/salary-structures"),
+        apiInstance.get("/payroll/dashboard"),
+      ]);
 
       // 1. Departments
       let deptsList: any[] = [];
@@ -270,12 +264,12 @@ export function useExecutiveDashboardData(): DashboardLiveData {
         ],
         monthlySalaryCostChart: monthlyChart,
       });
-      setLoading(false);
-    }).catch((err: any) => {
+    } catch (err: any) {
       console.error("Error fetching executive dashboard live data:", err);
       setError(err?.message || "Failed to load dashboard data");
+    } finally {
       setLoading(false);
-    });
+    }
   }, []);
 
   useEffect(() => {
