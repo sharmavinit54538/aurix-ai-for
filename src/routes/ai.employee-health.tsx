@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  HeartPulse, Flame, Activity, AlertTriangle, Timer, Smile,
+  HeartPulse, Flame, Activity, AlertTriangle, Timer, Smile, Loader2
 } from "lucide-react";
+import { useEffect } from "react";
 import { AIModulePage } from "@/components/aurix/AIModule";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { fetchEmployeeHealthSentiment } from "@/store/aiBrain/aiBrainThunk";
 
 export const Route = createFileRoute("/ai/employee-health")({
   head: () => ({ meta: [{ title: "AI Employee Health — Aurix" }] }),
@@ -10,6 +13,27 @@ export const Route = createFileRoute("/ai/employee-health")({
 });
 
 function Page() {
+  const dispatch = useAppDispatch();
+  const { data, loading, error } = useAppSelector((state) => state.aiBrain.health);
+
+  useEffect(() => {
+    dispatch(fetchEmployeeHealthSentiment());
+  }, [dispatch]);
+
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-foreground" />
+      </div>
+    );
+  }
+
+  // Fallback mock data if backend fails or returns empty
+  const wellbeingScore = data?.wellbeingScore ?? 81;
+  const burnoutRisk = data?.burnoutRisk ?? 7;
+  const avgWorkload = data?.avgWorkload ?? "38h";
+  const otHours = data?.otHours ?? 218;
+
   return (
     <AIModulePage
       icon={HeartPulse}
@@ -18,10 +42,10 @@ function Page() {
       description="Detect burnout, analyze workload, monitor overtime and surface wellbeing risks."
       lastAnalysis="Today"
       kpis={[
-        { label: "Wellbeing Score", value: 81, trend: 1.4, icon: Smile },
-        { label: "Burnout Risk", value: 7, trend: -22.0, icon: Flame, invert: true },
-        { label: "Avg Workload", value: "38h", trend: -3.0, icon: Activity, invert: true },
-        { label: "OT Hours", value: 218, trend: -6.0, icon: Timer, invert: true },
+        { label: "Wellbeing Score", value: wellbeingScore, trend: 1.4, icon: Smile },
+        { label: "Burnout Risk", value: burnoutRisk, trend: -22.0, icon: Flame, invert: true },
+        { label: "Avg Workload", value: avgWorkload, trend: -3.0, icon: Activity, invert: true },
+        { label: "OT Hours", value: otHours, trend: -6.0, icon: Timer, invert: true },
       ]}
       charts={[
         {
