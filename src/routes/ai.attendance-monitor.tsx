@@ -34,7 +34,7 @@ function Page() {
           series: [{ key: "late", label: "Late" }],
           data: ["Mon","Tue","Wed","Thu","Fri"].map((d,i)=>({d, late: 4+((i*7)%8)})),
         },
-      ]}
+      ]}  
       features={[
         { title: "Attendance Anomalies", description: "Detect unusual punches, missed swipes and outliers.", icon: AlertTriangle, metric: "12", tone: "warn" },
         { title: "Late Arrival Detection", description: "Spot recurring late arrivals by employee and team.", icon: Clock, tone: "warn" },
