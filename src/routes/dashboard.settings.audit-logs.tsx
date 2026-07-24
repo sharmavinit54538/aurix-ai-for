@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { selectAuditLogs, selectSettingsLoading } from "@/store/settings/settingsSelectors";
+import { selectAuditLogs, selectSettingsLoading, selectSettingsError } from "@/store/settings/settingsSelectors";
 import { fetchAuditLogs } from "@/store/settings/settingsThunk";
 
 export const Route = createFileRoute("/dashboard/settings/audit-logs")({
@@ -20,6 +20,7 @@ function AuditLogsPage() {
   const dispatch = useAppDispatch();
   const auditData = useAppSelector(selectAuditLogs);
   const loading = useAppSelector(selectSettingsLoading);
+  const error = useAppSelector(selectSettingsError);
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -48,6 +49,17 @@ function AuditLogsPage() {
           <Download className="mr-2 h-4 w-4" /> Export CSV
         </Button>
       </div>
+
+      {error && (
+        <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-500 flex items-center justify-between">
+          <div>
+            <span className="font-semibold">Failed to load audit logs:</span> {error}
+          </div>
+          <Button size="sm" variant="outline" className="border-rose-500/50 text-rose-500 hover:bg-rose-500/20" onClick={() => dispatch(fetchAuditLogs({ page, limit: 10, search, module: moduleFilter }))}>
+            Retry
+          </Button>
+        </div>
+      )}
 
       <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-xl space-y-4">
         <div className="flex flex-wrap items-center gap-3">

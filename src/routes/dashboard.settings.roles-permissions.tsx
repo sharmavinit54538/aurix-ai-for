@@ -2,6 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Plus, ShieldCheck, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +22,13 @@ export const Route = createFileRoute("/dashboard/settings/roles-permissions")({
   component: RolesPermissionsPage,
 });
 
+const roleSchema = z.object({
+  name: z.string().min(1, "Role name is required"),
+  description: z.string().optional(),
+});
+
+type RoleFormValues = z.infer<typeof roleSchema>;
+
 function RolesPermissionsPage() {
   const dispatch = useAppDispatch();
   const roles = useAppSelector(selectRoles);
@@ -28,10 +38,12 @@ function RolesPermissionsPage() {
   const [openAdd, setOpenAdd] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
 
-  const [roleForm, setRoleForm] = useState({
-    name: "",
-    description: "",
-    permissions: [] as string[],
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<RoleFormValues>({
+    resolver: zodResolver(roleSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+    }
   });
 
   useEffect(() => {
@@ -45,14 +57,12 @@ function RolesPermissionsPage() {
     }
   }, [roles, selectedRole]);
 
-  const handleCreateRole = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!roleForm.name.trim()) return;
+  const onSubmitRole = async (data: RoleFormValues) => {
     try {
-      await dispatch(createRole(roleForm)).unwrap();
+      await dispatch(createRole({ ...data, permissions: [] })).unwrap();
       toast.success("New role created successfully!");
       setOpenAdd(false);
-      setRoleForm({ name: "", description: "", permissions: [] });
+      reset();
     } catch {
       toast.error("Failed to create role");
     }
@@ -122,23 +132,24 @@ function RolesPermissionsPage() {
             <DialogHeader>
               <DialogTitle>Create New Role</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleCreateRole} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmitRole)} className="space-y-4">
               <div className="space-y-1.5">
                 <Label className="text-xs">Role Name</Label>
                 <Input
-                  value={roleForm.name}
-                  onChange={(e) => setRoleForm({ ...roleForm, name: e.target.value })}
+                  {...register("name")}
                   placeholder="e.g. Payroll Specialist"
-                  required
+                  aria-invalid={!!errors.name}
                 />
+                {errors.name && <p className="text-[10px] text-destructive">{errors.name.message}</p>}
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs">Description</Label>
                 <Input
-                  value={roleForm.description}
-                  onChange={(e) => setRoleForm({ ...roleForm, description: e.target.value })}
+                  {...register("description")}
                   placeholder="Brief summary of responsibilities"
+                  aria-invalid={!!errors.description}
                 />
+                {errors.description && <p className="text-[10px] text-destructive">{errors.description.message}</p>}
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <Button type="button" variant="outline" onClick={() => setOpenAdd(false)}>Cancel</Button>
