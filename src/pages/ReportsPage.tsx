@@ -1,17 +1,16 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Download, RefreshCw, AlertCircle } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { ArrowLeft, Download, RefreshCw, AlertCircle } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import apiInstance from "@/api/apiInstance";
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-
-
 const COLORS = ["oklch(0.6 0.2 285)", "oklch(0.7 0.18 320)", "oklch(0.65 0.16 200)", "oklch(0.75 0.15 90)", "oklch(0.55 0.18 25)"];
 
 export function ReportsPage() {
+  const navigate = useNavigate();
   const [headcount, setHeadcount] = useState<{ m: string; n: number }[]>([]);
   const [byDept, setByDept] = useState<{ name: string; value: number }[]>([]);
   const [tenure, setTenure] = useState<{ range: string; n: number }[]>([]);
@@ -48,6 +47,14 @@ export function ReportsPage() {
     fetchReportsData();
   }, []);
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      navigate({ to: "/dashboard/analytics" as any });
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-6 p-6">
@@ -67,11 +74,21 @@ export function ReportsPage() {
         title="Reports"
         description="Live PostgreSQL cross-cut insights about your workforce."
         actions={
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={fetchReportsData} className="gap-1.5">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleBack}
+              className="gap-1.5 border-border/60 hover:bg-accent cursor-pointer"
+            >
+              <ArrowLeft className="h-4 w-4" /> Back
+            </Button>
+            <Button variant="outline" size="sm" onClick={fetchReportsData} className="gap-1.5 cursor-pointer">
               <RefreshCw className="h-4 w-4" /> Refresh
             </Button>
-            <Button variant="outline" size="sm"><Download className="mr-2 h-4 w-4" />Export PDF</Button>
+            <Button variant="outline" size="sm" className="cursor-pointer">
+              <Download className="mr-2 h-4 w-4" /> Export PDF
+            </Button>
           </div>
         }
       />
@@ -143,6 +160,9 @@ function Card({ title, children, className = "" }: { title: string; children: Re
     </div>
   );
 }
-function Empty() { return <div className="grid h-[260px] place-items-center text-sm text-muted-foreground">Not enough data yet</div>; }
+
+function Empty() {
+  return <div className="grid h-[260px] place-items-center text-sm text-muted-foreground">Not enough data yet</div>;
+}
 
 export default ReportsPage;

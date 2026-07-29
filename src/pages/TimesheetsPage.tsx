@@ -460,6 +460,8 @@ export function TimesheetsPage() {
   return (
     <>
       <PageHeader 
+        showBack={true}
+        backText="Back"
         title="Timesheets" 
         description="Log your daily work hours, categorize by projects, and track approval processes."
         actions={
@@ -618,7 +620,7 @@ export function TimesheetsPage() {
                 <CardContent>
                   <p className="text-xs text-muted-foreground">
                     {timesheetStatus === "draft" && "Ready to save or submit"}
-                    {timesheetStatus === "pending" && "Sent to Rohan Varma"}
+                    {timesheetStatus === "pending" && "Sent to Manager for approval"}
                     {timesheetStatus === "approved" && "Processed for Payroll integration"}
                     {timesheetStatus === "rejected" && "Requires changes"}
                   </p>

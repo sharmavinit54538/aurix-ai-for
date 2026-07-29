@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { PayrollBackButton } from "@/features/admin/payroll/components/PayrollBackButton";
+import { ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
 
 import "@/features/admin/payroll/components/deductions/deductions.css";
@@ -32,6 +34,7 @@ export const Route = createFileRoute("/dashboard/payroll/deductions")({
 });
 
 function DeductionsPage() {
+  const navigate = useNavigate({ from: "/dashboard/payroll/deductions" });
   const [loading, setLoading] = useState(true);
   const [deductions, setDeductions] = useState<DeductionRule[]>([]);
   const [kpis, setKpis] = useState<DeductionsSummaryKPIs>({
@@ -168,7 +171,8 @@ function DeductionsPage() {
   };
 
   return (
-    <div className="deductions-container p-6 space-y-6">
+    <div className="space-y-6">
+      <PayrollBackButton />
       {/* Header */}
       <DeductionsHeader
         onCreateClick={() => {

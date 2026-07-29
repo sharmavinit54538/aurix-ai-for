@@ -1,14 +1,15 @@
 import React, { useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import {
   MoreHorizontal,
   Eye,
   CheckCircle,
   XCircle,
-  FileText,
   ShieldAlert,
   ArrowUpDown,
   SlidersHorizontal,
-  User,
+  Receipt,
+  PlusCircle,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ interface TaxTableProps {
   sortBy?: string;
   sortDir?: "asc" | "desc";
   onSortChange?: (field: string) => void;
+  onRunTaxCalc?: () => void;
 }
 
 export const TaxTable: React.FC<TaxTableProps> = ({
@@ -57,7 +59,10 @@ export const TaxTable: React.FC<TaxTableProps> = ({
   sortBy = "name",
   sortDir = "asc",
   onSortChange,
+  onRunTaxCalc,
 }) => {
+  const navigate = useNavigate();
+
   const [columnVisibility, setColumnVisibility] = useState({
     employee_id: true,
     department: true,
@@ -78,14 +83,16 @@ export const TaxTable: React.FC<TaxTableProps> = ({
       style: "currency",
       currency: "INR",
       maximumFractionDigits: 0,
-    }).format(amount);
+    }).format(amount || 0);
 
-  const getStatusBadge = (status: string) => {
-    switch (status.toUpperCase()) {
+  const getStatusBadge = (status?: string) => {
+    const s = (status || "").toUpperCase();
+    switch (s) {
       case "APPROVED":
+      case "VERIFIED":
         return (
           <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 font-medium hover:bg-emerald-500/20">
-            Approved
+            Verified & Approved
           </Badge>
         );
       case "REJECTED":
@@ -97,14 +104,15 @@ export const TaxTable: React.FC<TaxTableProps> = ({
       default:
         return (
           <Badge className="bg-amber-500/15 text-amber-400 border-amber-500/30 font-medium hover:bg-amber-500/20">
-            Pending Proofs
+            Pending Declarations
           </Badge>
         );
     }
   };
 
-  const getRegimeBadge = (regime: string) => {
-    return regime.toUpperCase() === "NEW" ? (
+  const getRegimeBadge = (regime?: string) => {
+    const r = (regime || "").toUpperCase();
+    return r.includes("NEW") ? (
       <Badge variant="outline" className="bg-indigo-500/10 text-indigo-400 border-indigo-500/30 font-medium">
         New Regime
       </Badge>
@@ -215,10 +223,40 @@ export const TaxTable: React.FC<TaxTableProps> = ({
               ))
             ) : items.length === 0 ? (
               <tr>
-                <td colSpan={12} className="py-12 text-center text-muted-foreground">
-                  <User className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                  <p className="text-sm font-medium">No tax records found</p>
-                  <p className="text-xs text-muted-foreground">Try adjusting your search or filters.</p>
+                <td colSpan={12} className="py-12 px-4 text-center">
+                  <div className="flex flex-col items-center justify-center space-y-3">
+                    <div className="h-12 w-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shadow-md">
+                      <Receipt className="h-6 w-6" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="text-base font-bold text-foreground">No payroll tax records found.</h3>
+                      <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                        No active employee tax declarations or payroll records match your criteria.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => navigate({ to: "/dashboard/payroll/salary-processing" })}
+                        className="h-8 text-xs bg-amber-600 hover:bg-amber-500 text-white font-medium gap-1.5"
+                      >
+                        <Receipt className="h-3.5 w-3.5" />
+                        Generate Payroll
+                      </Button>
+                      {onRunTaxCalc && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={onRunTaxCalc}
+                          className="h-8 text-xs border-amber-500/30 text-amber-400 hover:bg-amber-500/10 font-medium gap-1.5"
+                        >
+                          <PlusCircle className="h-3.5 w-3.5" />
+                          Create Tax Record
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 </td>
               </tr>
             ) : (
@@ -244,10 +282,12 @@ export const TaxTable: React.FC<TaxTableProps> = ({
                           <AvatarImage src={item.avatar || undefined} />
                           <AvatarFallback className="text-xs bg-amber-500/20 text-amber-300 font-semibold">
                             {item.employee_name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")
-                              .toUpperCase()}
+                              ? item.employee_name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")
+                                  .toUpperCase()
+                              : "E"}
                           </AvatarFallback>
                         </Avatar>
                         <div>
@@ -295,7 +335,7 @@ export const TaxTable: React.FC<TaxTableProps> = ({
                     )}
                     {columnVisibility.last_updated && (
                       <td className="py-3 px-4 text-muted-foreground text-[11px]">
-                        {new Date(item.last_updated).toLocaleDateString()}
+                        {item.last_updated ? new Date(item.last_updated).toLocaleDateString() : "Active"}
                       </td>
                     )}
                     <td className="py-3 px-4 text-center">

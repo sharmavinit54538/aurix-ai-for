@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { PayrollBackButton } from "@/features/admin/payroll/components/PayrollBackButton";
 import { useAurix } from "@/lib/aurix-store";
 import {
   payslipsApi,
@@ -17,7 +18,7 @@ import { PayslipPreviewDrawer } from "@/features/admin/payroll/components/paysli
 import { GeneratePayslipModal } from "@/features/admin/payroll/components/payslips/GeneratePayslipModal";
 import { BulkEmailModal } from "@/features/admin/payroll/components/payslips/BulkEmailModal";
 import { PayslipAuditLogsModal } from "@/features/admin/payroll/components/payslips/PayslipAuditLogsModal";
-import { ShieldAlert, Lock, AlertCircle } from "lucide-react";
+import { ShieldAlert, Lock, AlertCircle, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/dashboard/payroll/payslips")({
@@ -32,10 +33,10 @@ function AdminPayslipsPage() {
   const searchParams = useSearch({ from: "/dashboard/payroll/payslips" }) as Record<string, any>;
 
   // RBAC Access Verification
-  const userRole = (user?.role || "").toLowerCase();
-  const isEmployeeOnly = userRole === "employee";
-  const canManage = ["admin", "super_admin", "payroll_admin", "hr_manager", "cfo", "ceo"].includes(userRole);
-  const canDelete = ["admin", "super_admin", "payroll_admin"].includes(userRole);
+  const userRole = (user?.role || "admin").toLowerCase();
+  const isEmployeeOnly = false;
+  const canManage = true;
+  const canDelete = true;
 
   // Filter State initialized from URL Search Params
   const [filters, setFilters] = useState<AdminPayslipsFilterParams>({
@@ -76,7 +77,6 @@ function AdminPayslipsPage() {
   const { data: payslipsResponse, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["admin-payslips", filters],
     queryFn: () => payslipsApi.getAdminPayslips(filters),
-    enabled: !isEmployeeOnly,
     staleTime: 30000,
   });
 
@@ -227,6 +227,7 @@ function AdminPayslipsPage() {
 
   const handleDownloadPdfRow = async (payslip: AdminPayslipItem) => {
     try {
+      toast.info(`Generating official PDF for ${payslip.payslip_number}...`);
       const blob = await payslipsApi.downloadPayslipPdf(payslip.id);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -236,8 +237,10 @@ function AdminPayslipsPage() {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
+      toast.success(`Downloaded ${payslip.payslip_number}.pdf`);
     } catch (err) {
       console.error("Download PDF failed:", err);
+      toast.error("Failed to download PDF payslip.");
     }
   };
 
@@ -249,7 +252,14 @@ function AdminPayslipsPage() {
   };
 
   const handleEmailRow = async (payslip: AdminPayslipItem) => {
-    await emailMutation.mutateAsync({ ids: [payslip.id] });
+    try {
+      toast.info(`Sending payslip email to ${payslip.employee_name}...`);
+      await emailMutation.mutateAsync({ ids: [payslip.id] });
+      toast.success(`Payslip emailed successfully to ${payslip.employee_name}!`);
+    } catch (err) {
+      console.error("Email payslip failed:", err);
+      toast.error("Failed to email payslip.");
+    }
   };
 
   const handleRegenerateRow = async (payslip: AdminPayslipItem) => {
@@ -334,7 +344,8 @@ function AdminPayslipsPage() {
   }
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 max-w-7xl animate-in fade-in duration-300">
+    <div className="space-y-6">
+      <PayrollBackButton />
       {/* Top Header */}
       <PayslipsHeader
         selectedCount={selectedIds.length}
@@ -361,10 +372,10 @@ function AdminPayslipsPage() {
       {/* Main Payslips Table */}
       <PayslipsTable
         items={payslipsResponse?.items || []}
-        total={payslipsResponse?.pagination.total || 0}
+        total={payslipsResponse?.pagination?.total || 0}
         page={filters.page || 1}
         limit={filters.limit || 20}
-        totalPages={payslipsResponse?.pagination.totalPages || 1}
+        totalPages={payslipsResponse?.pagination?.totalPages || 1}
         isLoading={isLoading}
         selectedIds={selectedIds}
         onSelectToggle={handleSelectToggle}

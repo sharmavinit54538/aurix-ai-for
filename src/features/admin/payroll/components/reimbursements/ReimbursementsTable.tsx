@@ -224,8 +224,8 @@ export const ReimbursementsTable: React.FC<ReimbursementsTableProps> = ({
 
                   {/* Claim Amount */}
                   <td className="text-right font-mono font-bold text-white text-xs">
-                    ₹{row.claimAmount.toLocaleString("en-IN")}
-                    {row.receipts.length > 0 && (
+                    ₹{(row.claimAmount || 0).toLocaleString("en-IN")}
+                    {row.receipts && row.receipts.length > 0 && (
                       <span className="block text-[10px] text-emerald-400 font-normal">
                         {row.receipts.length} Receipt(s) OCR ✓
                       </span>

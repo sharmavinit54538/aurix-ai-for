@@ -56,27 +56,19 @@ export function IdentityVerificationStep({
             <Label className="font-bold text-foreground">Aadhaar Number (12 digits) *</Label>
             <Input
               {...register("aadhaar_number", {
-                required: true,
-                pattern: /^\d{12}$/,
+                required: false,
               })}
               placeholder="e.g. 123456789012"
             />
-            {errors.aadhaar_number && (
-              <span className="text-xs text-destructive">Must be a valid 12-digit number.</span>
-            )}
           </div>
           <div className="space-y-1">
             <Label className="font-bold text-foreground">PAN Card Number *</Label>
             <Input
               {...register("pan_number", {
-                required: true,
-                pattern: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/,
+                required: false,
               })}
               placeholder="e.g. ABCDE1234F"
             />
-            {errors.pan_number && (
-              <span className="text-xs text-destructive">Must be a valid PAN format (ABCDE1234F).</span>
-            )}
           </div>
         </div>
 
@@ -95,72 +87,54 @@ export function IdentityVerificationStep({
           </div>
         </div>
 
-        <div className="flex justify-end">
-          <Button type="submit">
-            Save Verification Numbers
+        <hr className="border-border/40" />
+
+        <div>
+          <h3 className="text-lg font-bold text-foreground mb-4">Upload Verification Documents</h3>
+          <div className="grid gap-6 md:grid-cols-2">
+            <DocumentUploadCard
+              title="Aadhaar Card Front"
+              documentType="AADHAAR_FRONT"
+              required={true}
+              existingDoc={getDocByType("AADHAAR_FRONT")}
+              onUploadSuccess={refetchData}
+              onDeleteSuccess={refetchData}
+            />
+            <DocumentUploadCard
+              title="Aadhaar Card Back"
+              documentType="AADHAAR_BACK"
+              required={true}
+              existingDoc={getDocByType("AADHAAR_BACK")}
+              onUploadSuccess={refetchData}
+              onDeleteSuccess={refetchData}
+            />
+            <DocumentUploadCard
+              title="PAN Card"
+              documentType="PAN"
+              required={true}
+              existingDoc={getDocByType("PAN")}
+              onUploadSuccess={refetchData}
+              onDeleteSuccess={refetchData}
+            />
+            <DocumentUploadCard
+              title="Passport (Optional)"
+              documentType="PASSPORT"
+              existingDoc={getDocByType("PASSPORT")}
+              onUploadSuccess={refetchData}
+              onDeleteSuccess={refetchData}
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-between pt-4">
+          <Button type="button" variant="outline" onClick={onPrev}>
+            Previous
+          </Button>
+          <Button type="submit" className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6">
+            Continue
           </Button>
         </div>
       </form>
-
-      <hr className="border-border/40" />
-
-      <div>
-        <h3 className="text-lg font-bold text-foreground mb-4">Upload Verification Documents</h3>
-        <div className="grid gap-6 md:grid-cols-2">
-          <DocumentUploadCard
-            title="Aadhaar Card Front"
-            documentType="AADHAAR_FRONT"
-            required={true}
-            existingDoc={getDocByType("AADHAAR_FRONT")}
-            onUploadSuccess={refetchData}
-            onDeleteSuccess={refetchData}
-          />
-          <DocumentUploadCard
-            title="Aadhaar Card Back"
-            documentType="AADHAAR_BACK"
-            required={true}
-            existingDoc={getDocByType("AADHAAR_BACK")}
-            onUploadSuccess={refetchData}
-            onDeleteSuccess={refetchData}
-          />
-          <DocumentUploadCard
-            title="PAN Card"
-            documentType="PAN"
-            required={true}
-            existingDoc={getDocByType("PAN")}
-            onUploadSuccess={refetchData}
-            onDeleteSuccess={refetchData}
-          />
-          <DocumentUploadCard
-            title="Passport (Optional)"
-            documentType="PASSPORT"
-            existingDoc={getDocByType("PASSPORT")}
-            onUploadSuccess={refetchData}
-            onDeleteSuccess={refetchData}
-          />
-        </div>
-      </div>
-
-      <div className="flex justify-between pt-4">
-        <Button type="button" variant="outline" onClick={onPrev}>
-          Previous
-        </Button>
-        <Button
-          type="button"
-          onClick={() => {
-            const hasAadhaarFront = getDocByType("AADHAAR_FRONT");
-            const hasAadhaarBack = getDocByType("AADHAAR_BACK");
-            const hasPan = getDocByType("PAN");
-            if (!hasAadhaarFront || !hasAadhaarBack || !hasPan) {
-              toast.error("Please upload Aadhaar Front, Aadhaar Back, and PAN Card to continue.");
-              return;
-            }
-            onNext();
-          }}
-        >
-          Continue
-        </Button>
-      </div>
     </div>
   );
 }

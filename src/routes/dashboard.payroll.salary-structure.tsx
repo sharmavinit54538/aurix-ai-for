@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { PayrollBackButton } from "@/features/admin/payroll/components/PayrollBackButton";
+import { ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
 
 import "@/features/admin/payroll/components/salary-structure/salary-structure.css";
@@ -18,6 +20,8 @@ import { ApprovalWorkflowTracker } from "@/features/admin/payroll/components/sal
 import { RightContextPanel } from "@/features/admin/payroll/components/salary-structure/RightContextPanel";
 import { SalaryStructureAnalytics } from "@/features/admin/payroll/components/salary-structure/SalaryStructureAnalytics";
 
+import { SalaryStructureSubmodelViews } from "@/features/admin/payroll/components/salary-structure/SalaryStructureSubmodelViews";
+
 import { salaryStructureApi } from "@/services/salaryStructureApi";
 import {
   SalaryStructure,
@@ -34,6 +38,7 @@ export const Route = createFileRoute("/dashboard/payroll/salary-structure")({
 });
 
 function SalaryStructurePage() {
+  const navigate = useNavigate({ from: "/dashboard/payroll/salary-structure" });
   const [loading, setLoading] = useState(true);
   const [structures, setStructures] = useState<SalaryStructure[]>([]);
   const [kpis, setKpis] = useState<SalaryStructureSummaryKPIs>({
@@ -219,7 +224,8 @@ function SalaryStructurePage() {
   };
 
   return (
-    <div className="salary-structure-container p-6 space-y-6">
+    <div className="space-y-6">
+      <PayrollBackButton />
       {/* Header */}
       <SalaryStructureHeader
         onCreateClick={handleCreateNew}
@@ -287,8 +293,8 @@ function SalaryStructurePage() {
             <SalaryBreakdownFlow structure={selectedStructure} />
           )}
 
-          {/* Tab View 1: Overview & All Templates Table */}
-          {(activeTab === "overview" || activeTab === "templates") && (
+          {/* Tab View 1: Overview Main Table */}
+          {activeTab === "overview" && (
             <SalaryStructureTable
               data={structures}
               onCreateClick={handleCreateNew}
@@ -303,59 +309,28 @@ function SalaryStructurePage() {
             />
           )}
 
+          {/* Submodel Views for Sidebar Tabs */}
+          {activeTab !== "overview" && activeTab !== "approval_workflow" && (
+            <SalaryStructureSubmodelViews
+              activeTab={activeTab}
+              structures={structures}
+              selectedStructure={selectedStructure}
+              auditLogs={auditLogs}
+              onSelectStructure={(st) => setSelectedStructure(st)}
+              onEditStructure={handleEdit}
+              onAssignStructure={handleAssign}
+              onCloneStructure={handleClone}
+              onRollbackVersion={handleRollback}
+              onApproveDecision={handleApprovalDecision}
+            />
+          )}
+
           {/* Tab View 2: Approval Workflow */}
           {activeTab === "approval_workflow" && (
             <ApprovalWorkflowTracker
               structure={selectedStructure || structures[0] || ({} as any)}
               onApproveDecision={handleApprovalDecision}
             />
-          )}
-
-          {/* Tab View 3: Audit Logs Table */}
-          {activeTab === "audit_logs" && (
-            <div className="salary-card p-5 space-y-4">
-              <h3 className="text-sm font-semibold text-white">System Salary Structure Audit Trail</h3>
-              <div className="salary-table-wrapper">
-                <table className="salary-table">
-                  <thead>
-                    <tr>
-                      <th>Timestamp</th>
-                      <th>Structure</th>
-                      <th>Action</th>
-                      <th>Actor</th>
-                      <th>Details</th>
-                      <th>IP Address</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {auditLogs.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="py-8 text-center text-slate-400">
-                          No audit logs available.
-                        </td>
-                      </tr>
-                    ) : (
-                      auditLogs.map((log) => (
-                      <tr key={log.id}>
-                        <td className="font-mono text-slate-400">{log.timestamp}</td>
-                        <td className="font-semibold text-blue-300">{log.structureName}</td>
-                        <td>
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/30">
-                            {log.action}
-                          </span>
-                        </td>
-                        <td>
-                          {log.actorName} ({log.actorRole})
-                        </td>
-                        <td className="text-slate-300">{log.details}</td>
-                        <td className="font-mono text-slate-500">{log.ipAddress}</td>
-                      </tr>
-                    ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
           )}
         </div>
 

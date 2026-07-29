@@ -170,11 +170,11 @@ export default function RostersPage() {
     });
 
     return {
-      activeRosters: 3,
-      employeesAssigned: assignedCount || DEFAULT_EMPLOYEES.length,
-      openShifts: openShifts || 5,
-      coverage: "94.2%",
-      overtime: overtimeHours || 16,
+      activeRosters: filteredRosters.length > 0 ? 1 : 0,
+      employeesAssigned: assignedCount,
+      openShifts: openShifts,
+      coverage: assignedCount > 0 ? "100%" : "0%",
+      overtime: overtimeHours,
       pending: pendingCount,
       conflicts,
     };
@@ -416,6 +416,8 @@ export default function RostersPage() {
     <div className="space-y-6">
       {/* Header section with top actions */}
       <PageHeader
+        showBack={true}
+        backText="Back"
         title="Roster Planner"
         description="Plan employee shifts, weekly schedules, monthly rosters, and workforce allocation."
         actions={
@@ -475,14 +477,14 @@ export default function RostersPage() {
       {/* Dashboard Statistics Cards */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-8">
         {[
-          { label: "Active Rosters", value: stats.activeRosters, color: "text-blue-500 bg-blue-500/10", prog: 60, sub: "+2 this week" },
-          { label: "Employees Assigned", value: stats.employeesAssigned, color: "text-emerald-500 bg-emerald-500/10", prog: 85, sub: "92% of staff" },
-          { label: "Open Shifts", value: stats.openShifts, color: "text-amber-500 bg-amber-500/10", prog: 40, sub: "5 unassigned" },
-          { label: "Weekly Coverage", value: stats.coverage, color: "text-indigo-500 bg-indigo-500/10", prog: 94, sub: "Target 95%" },
-          { label: "Monthly Coverage", value: "92.8%", color: "text-purple-500 bg-purple-500/10", prog: 92, sub: "Stable" },
-          { label: "Overtime Hours", value: `${stats.overtime}h`, color: "text-orange-500 bg-orange-500/10", prog: 15, sub: "1.2h avg/emp" },
-          { label: "Pending Approvals", value: stats.pending, color: "text-teal-500 bg-teal-500/10", prog: stats.pending > 0 ? 80 : 0, sub: "Requires action" },
-          { label: "Conflicts Detected", value: stats.conflicts, color: stats.conflicts > 0 ? "text-destructive bg-destructive/15 animate-pulse" : "text-emerald-500 bg-emerald-500/10", prog: stats.conflicts * 10, sub: stats.conflicts > 0 ? `${stats.conflicts} warnings` : "Clear" }
+          { label: "Active Rosters", value: stats.activeRosters, color: "text-blue-500 bg-blue-500/10", prog: stats.activeRosters > 0 ? 100 : 0, sub: stats.activeRosters > 0 ? "Active" : "None" },
+          { label: "Employees Assigned", value: stats.employeesAssigned, color: "text-emerald-500 bg-emerald-500/10", prog: stats.employeesAssigned > 0 ? 100 : 0, sub: `${stats.employeesAssigned} staff` },
+          { label: "Open Shifts", value: stats.openShifts, color: "text-amber-500 bg-amber-500/10", prog: 0, sub: `${stats.openShifts} open` },
+          { label: "Weekly Coverage", value: stats.coverage, color: "text-indigo-500 bg-indigo-500/10", prog: parseInt(stats.coverage) || 0, sub: "Coverage" },
+          { label: "Monthly Coverage", value: stats.coverage, color: "text-purple-500 bg-purple-500/10", prog: parseInt(stats.coverage) || 0, sub: "Coverage" },
+          { label: "Overtime Hours", value: `${stats.overtime}h`, color: "text-orange-500 bg-orange-500/10", prog: stats.overtime > 0 ? 50 : 0, sub: `${stats.overtime}h total` },
+          { label: "Pending Approvals", value: stats.pending, color: "text-teal-500 bg-teal-500/10", prog: stats.pending > 0 ? 80 : 0, sub: stats.pending > 0 ? "Requires action" : "Clean" },
+          { label: "Conflicts Detected", value: stats.conflicts, color: stats.conflicts > 0 ? "text-destructive bg-destructive/15 animate-pulse" : "text-emerald-500 bg-emerald-500/10", prog: stats.conflicts * 10, sub: stats.conflicts > 0 ? `${stats.conflicts} warnings` : "Clean" }
         ].map((c, i) => {
           return (
             <div
@@ -943,24 +945,33 @@ export default function RostersPage() {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                   Shift Distribution (Assigned Rows)
                 </span>
-                <div className="space-y-2.5">
-                  {[
-                    { label: "Morning Shifts", value: 12, pct: "60%", color: "bg-blue-500" },
-                    { label: "Evening Shifts", value: 8, pct: "40%", color: "bg-amber-500" },
-                    { label: "Night Shifts", value: 5, pct: "25%", color: "bg-purple-500" },
-                    { label: "WFH / Hybrid", value: 4, pct: "20%", color: "bg-emerald-500" },
-                  ].map((bar, i) => (
-                    <div key={i} className="space-y-1 text-xs">
-                      <div className="flex justify-between text-[11px] font-medium">
-                        <span className="text-muted-foreground">{bar.label}</span>
-                        <span className="font-semibold text-foreground">{bar.value} employees ({bar.pct})</span>
-                      </div>
-                      <div className="h-2 w-full bg-border rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full ${bar.color}`} style={{ width: bar.pct }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                {filteredRosters.length > 0 ? (
+                  <div className="space-y-2.5">
+                    {[
+                      { label: "Morning Shifts", value: filteredRosters.filter(r => r.shift === "Morning").length, color: "bg-blue-500" },
+                      { label: "Evening Shifts", value: filteredRosters.filter(r => r.shift === "Evening").length, color: "bg-amber-500" },
+                      { label: "Night Shifts", value: filteredRosters.filter(r => r.shift === "Night").length, color: "bg-purple-500" },
+                      { label: "WFH / Hybrid", value: filteredRosters.filter(r => r.shift === "WFH").length, color: "bg-emerald-500" },
+                    ].map((bar, i) => {
+                      const pctVal = filteredRosters.length > 0 ? Math.round((bar.value / filteredRosters.length) * 100) : 0;
+                      return (
+                        <div key={i} className="space-y-1 text-xs">
+                          <div className="flex justify-between text-[11px] font-medium">
+                            <span className="text-muted-foreground">{bar.label}</span>
+                            <span className="font-semibold text-foreground">{bar.value} employees ({pctVal}%)</span>
+                          </div>
+                          <div className="h-2 w-full bg-border rounded-full overflow-hidden">
+                            <div className={`h-full rounded-full ${bar.color}`} style={{ width: `${pctVal}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground py-6 text-center border border-dashed border-border rounded-lg">
+                    No active shifts assigned yet.
+                  </p>
+                )}
               </div>
 
               {/* Attendance density heatmap grid */}
@@ -968,35 +979,25 @@ export default function RostersPage() {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                   Workforce Density Heatmap (Active Coverage)
                 </span>
-                <div className="grid grid-cols-7 gap-1 bg-border/20 rounded-lg p-2.5 border border-border">
-                  {["M", "T", "W", "T", "F", "S", "S"].map((l, i) => (
-                    <span key={i} className="text-center font-bold text-[9px] text-muted-foreground/80 mb-1">
-                      {l}
-                    </span>
-                  ))}
-                  {[
-                    "bg-blue-500/80", "bg-blue-500/60", "bg-blue-500/90", "bg-blue-500/70", "bg-blue-500/40", "bg-muted/40", "bg-muted/40",
-                    "bg-blue-500/90", "bg-blue-500/80", "bg-blue-500/75", "bg-blue-500/85", "bg-blue-500/50", "bg-muted/40", "bg-muted/40",
-                    "bg-blue-500/70", "bg-blue-500/70", "bg-blue-500/80", "bg-blue-500/95", "bg-blue-500/60", "bg-muted/40", "bg-muted/40",
-                    "bg-blue-500/90", "bg-blue-500/85", "bg-blue-500/90", "bg-blue-500/75", "bg-blue-500/80", "bg-muted/40", "bg-muted/40"
-                  ].map((cell, idx) => (
-                    <div
-                      key={idx}
-                      className={`h-4 rounded ${cell} transition-all hover:scale-105 hover:ring-1 hover:ring-white/40 cursor-help`}
-                      title="Peak shift utilization: 95%"
-                    />
-                  ))}
-                </div>
-                <div className="flex items-center justify-between text-[9px] text-muted-foreground">
-                  <span>Low Coverage</span>
-                  <div className="flex gap-0.5">
-                    <span className="h-2 w-2 rounded bg-blue-500/20" />
-                    <span className="h-2 w-2 rounded bg-blue-500/50" />
-                    <span className="h-2 w-2 rounded bg-blue-500/80" />
-                    <span className="h-2 w-2 rounded bg-blue-500/95" />
+                {filteredRosters.length > 0 ? (
+                  <div className="grid grid-cols-7 gap-1 bg-border/20 rounded-lg p-2.5 border border-border">
+                    {["M", "T", "W", "T", "F", "S", "S"].map((l, i) => (
+                      <span key={i} className="text-center font-bold text-[9px] text-muted-foreground/80 mb-1">
+                        {l}
+                      </span>
+                    ))}
+                    {Array.from({ length: 28 }).map((_, idx) => (
+                      <div
+                        key={idx}
+                        className="h-4 rounded bg-blue-500/20 transition-all hover:scale-105"
+                      />
+                    ))}
                   </div>
-                  <span>Peak Coverage</span>
-                </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground py-6 text-center border border-dashed border-border rounded-lg">
+                    No active shift density data recorded yet.
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -1051,7 +1052,7 @@ export default function RostersPage() {
                   <CheckCircle2 className="h-5 w-5" />
                   <span className="font-semibold text-xs mt-1">No Schedule Conflicts</span>
                   <p className="text-[9px] text-muted-foreground">
-                    AI checked 28 weekly shifts sequence. Overlap clearance is 100%.
+                    AI checked {rosters.length} active shift sequence. Overlap clearance is 100%.
                   </p>
                 </div>
               )}
@@ -1063,25 +1064,24 @@ export default function RostersPage() {
             <h3 className="font-display text-sm font-semibold tracking-tight text-foreground mb-4">
               Today's Schedule & Timeline
             </h3>
-            <div className="space-y-3 text-xs">
-              {[
-                { time: "08:00 - 16:00", name: "Jordan Lee", type: "Morning Shift", color: "bg-blue-500" },
-                { time: "09:00 - 17:00", name: "Sarah Connor", type: "Night Shift Recovery", color: "bg-purple-500" },
-                { time: "16:00 - 00:00", name: "Michael Scott", type: "Evening Shift Coverage", color: "bg-amber-500" },
-                { time: "16:00 - 00:00", name: "Dwight Schrute", type: "Evening Shift Coverage", color: "bg-amber-500" },
-              ].map((shift, i) => (
-                <div key={i} className="flex items-start gap-2.5 pb-2.5 border-b border-border last:border-b-0 last:pb-0">
-                  <span className={`h-2 w-2 rounded-full mt-1.5 shrink-0 ${shift.color}`} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-baseline font-semibold text-foreground">
-                      <span className="truncate">{shift.name}</span>
-                      <span className="text-[9px] text-muted-foreground font-mono font-medium">{shift.time}</span>
+            {rosters.length > 0 ? (
+              <div className="space-y-3 text-xs">
+                {rosters.slice(0, 5).map((shift) => (
+                  <div key={shift.id} className="flex items-start gap-2.5 pb-2.5 border-b border-border last:border-b-0 last:pb-0">
+                    <span className={`h-2 w-2 rounded-full mt-1.5 shrink-0 ${getShiftBadgeStyle(shift.shift)}`} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-baseline font-semibold text-foreground">
+                        <span className="truncate">{shift.employeeName}</span>
+                        <span className="text-[9px] text-muted-foreground font-mono font-medium">{shift.startTime} - {shift.endTime}</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{shift.shift}</p>
                     </div>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">{shift.type}</p>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground text-center py-4">No shifts scheduled for today.</p>
+            )}
           </div>
 
           {/* Weekly Summary overview */}
@@ -1092,23 +1092,25 @@ export default function RostersPage() {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Total Active Shifts</span>
-                <span className="font-semibold text-foreground">28 shifts</span>
+                <span className="font-semibold text-foreground">{rosters.length} shifts</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Average Shift Length</span>
-                <span className="font-semibold text-foreground">8.0 hours</span>
+                <span className="font-semibold text-foreground">
+                  {rosters.length > 0 ? (rosters.reduce((s, r) => s + r.workingHours, 0) / rosters.length).toFixed(1) : "0.0"} hours
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">WFH Days Approved</span>
-                <span className="font-semibold text-foreground">2 days</span>
+                <span className="font-semibold text-foreground">{rosters.filter(r => r.shift === "WFH").length} days</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Leave Absences</span>
-                <span className="font-semibold text-foreground">1 day</span>
+                <span className="font-semibold text-foreground">{rosters.filter(r => r.shift === "Leave").length} days</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Estimated Overtime</span>
-                <span className="font-semibold text-foreground">16.0 hours</span>
+                <span className="font-semibold text-foreground">{rosters.filter(r => r.shift === "Overtime").reduce((s, r) => s + r.workingHours, 0).toFixed(1)} hours</span>
               </div>
             </div>
           </div>

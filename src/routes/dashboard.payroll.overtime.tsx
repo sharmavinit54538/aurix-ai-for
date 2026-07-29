@@ -1,37 +1,35 @@
 import React, { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 import "@/features/admin/payroll/components/overtime/overtime.css";
 
-import { OvertimeHeader } from "@/features/admin/payroll/components/overtime/OvertimeHeader";
-import { OvertimeKPIs } from "@/features/admin/payroll/components/overtime/OvertimeKPIs";
-import { OvertimeFilters } from "@/features/admin/payroll/components/overtime/OvertimeFilters";
-import { OvertimeTable } from "@/features/admin/payroll/components/overtime/OvertimeTable";
-import { OvertimeDetailsDrawer } from "@/features/admin/payroll/components/overtime/OvertimeDetailsDrawer";
+import { OvertimeHubHeader } from "@/features/admin/payroll/components/overtime/OvertimeHubHeader";
+import { OvertimeHubCardGrid } from "@/features/admin/payroll/components/overtime/OvertimeHubCardGrid";
+import { OvertimeHubModuleViews } from "@/features/admin/payroll/components/overtime/OvertimeHubModuleViews";
 import { CreateOvertimeWizardDrawer } from "@/features/admin/payroll/components/overtime/CreateOvertimeWizardDrawer";
-import { AttendanceTimelineModal } from "@/features/admin/payroll/components/overtime/AttendanceTimelineModal";
-import { AIOvertimeInsights } from "@/features/admin/payroll/components/overtime/AIOvertimeInsights";
-import { ApprovalWorkflowTracker } from "@/features/admin/payroll/components/overtime/ApprovalWorkflowTracker";
-import { RightPolicyPanel } from "@/features/admin/payroll/components/overtime/RightPolicyPanel";
-import { OvertimeAnalytics } from "@/features/admin/payroll/components/overtime/OvertimeAnalytics";
+import { OvertimeDetailsDrawer } from "@/features/admin/payroll/components/overtime/OvertimeDetailsDrawer";
 
 import { overtimeApi } from "@/services/overtimeApi";
 import {
   OvertimeRecord,
   OvertimeFilters as FilterType,
   OvertimeSummaryKPIs,
-  OvertimeAuditLog,
-  OvertimeAIInsight,
 } from "@/features/admin/payroll/components/overtime/overtimeTypes";
 
 export const Route = createFileRoute("/dashboard/payroll/overtime")({
-  head: () => ({ meta: [{ title: "Overtime & Shift Compensation — Aurix AI" }] }),
+  head: () => ({ meta: [{ title: "Enterprise Overtime Hub — Aurix AI" }] }),
   component: OvertimePage,
 });
 
 function OvertimePage() {
   const [loading, setLoading] = useState(true);
+  const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+
   const [records, setRecords] = useState<OvertimeRecord[]>([]);
   const [kpis, setKpis] = useState<OvertimeSummaryKPIs>({
     totalOvertimeHours: 0,
@@ -69,11 +67,7 @@ function OvertimePage() {
   // Modal Controllers
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
   const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
-  const [timelineModalOpen, setTimelineModalOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<OvertimeRecord | null>(null);
-  const [activeView, setActiveView] = useState<"RECORDS" | "AUDIT_LOGS">("RECORDS");
-  const [auditLogs, setAuditLogs] = useState<OvertimeAuditLog[]>([]);
-  const [aiInsights, setAiInsights] = useState<OvertimeAIInsight[]>([]);
 
   const loadData = async () => {
     setLoading(true);
@@ -81,12 +75,6 @@ function OvertimePage() {
       const res = await overtimeApi.getOvertimeRecords(filters);
       setRecords(res.items);
       setKpis(res.kpis);
-
-      const logs = await overtimeApi.getAuditLogs();
-      setAuditLogs(logs);
-
-      const insights = await overtimeApi.getAIInsights();
-      setAiInsights(insights);
     } catch {
       toast.error("Failed to load overtime data.");
     } finally {
@@ -96,73 +84,49 @@ function OvertimePage() {
 
   useEffect(() => {
     loadData();
-  }, [filters]);
-
-  const handleSelectToggle = (id: string) => {
-    if (selectedIds.includes(id)) {
-      setSelectedIds(selectedIds.filter((item) => item !== id));
-    } else {
-      setSelectedIds([...selectedIds, id]);
-    }
-  };
-
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedIds(records.map((r) => r.id));
-    } else {
-      setSelectedIds([]);
-    }
-  };
+  }, []);
 
   const handleView = (record: OvertimeRecord) => {
     setSelectedRecord(record);
     setDetailsDrawerOpen(true);
   };
 
-  const handleEdit = (record: OvertimeRecord) => {
-    setSelectedRecord(record);
-    setCreateDrawerOpen(true);
-  };
-
   const handleApprove = async (record: OvertimeRecord) => {
     try {
       await overtimeApi.approveOvertime(record.id, "Finance Manager");
-      toast.success(`Approved overtime '${record.requestCode}' for ${record.employeeName}`);
+      toast.success(`Approved overtime request '${record.requestCode}'`);
       loadData();
     } catch {
-      toast.error("Failed to approve overtime.");
+      toast.error("Failed to approve overtime request.");
     }
   };
 
   const handleReject = async (record: OvertimeRecord) => {
     try {
-      await overtimeApi.rejectOvertime(record.id, "Finance Manager", "Unapproved OT hours.");
-      toast.success(`Rejected overtime claim '${record.requestCode}'.`);
+      await overtimeApi.rejectOvertime(record.id, "Finance Manager", "Exceeds daily OT hours limit.");
+      toast.success(`Rejected overtime request '${record.requestCode}'.`);
       loadData();
     } catch {
-      toast.error("Failed to reject overtime.");
+      toast.error("Failed to reject overtime request.");
     }
   };
 
-  const handleRecalculate = async (record: OvertimeRecord) => {
-    toast.success(`Recalculated overtime multiplier for ${record.requestCode}: ₹${record.overtimeAmount.toLocaleString("en-IN")}`);
+  const handleBulkApprove = async () => {
+    const idsToApprove = selectedIds.length > 0 ? selectedIds : records.map((r) => r.id);
+    if (idsToApprove.length === 0) {
+      toast.error("No overtime requests selected for bulk approval.");
+      return;
+    }
+    for (const id of idsToApprove) {
+      await overtimeApi.approveOvertime(id, "Finance Manager");
+    }
+    toast.success(`Bulk approved ${idsToApprove.length} overtime request(s).`);
+    setSelectedIds([]);
     loadData();
   };
 
-  const handleAddPayrollEntry = async (record: OvertimeRecord) => {
-    await overtimeApi.addPayrollEntries([record.id], "JULY-2026");
-    toast.success(`Added OT payout of ₹${record.overtimeAmount.toLocaleString("en-IN")} into July 2026 Pay Run.`);
-    loadData();
-  };
-
-  const handleSaveOvertime = async (payload: Partial<OvertimeRecord>) => {
+  const handleCreateSave = async (payload: Partial<OvertimeRecord>) => {
     await overtimeApi.createOvertimeRecord(payload);
-    loadData();
-  };
-
-  const handleSyncAttendance = async () => {
-    const res = await overtimeApi.syncAttendance();
-    toast.success(`Synced ${res.count} biometric attendance punches into overtime calculation engine.`);
     loadData();
   };
 
@@ -174,181 +138,93 @@ function OvertimePage() {
     link.href = url;
     link.download = `overtime_records_export_${new Date().toISOString().split("T")[0]}.json`;
     link.click();
-    toast.success("Exported overtime records.");
+    toast.success("Exported overtime audit records.");
   };
 
+  const categoryTabs = ["All", "Core Workflow", "Shift & Attendance", "Compensation & Rules", "AI & Compliance", "Analytics & Settings"];
+
   return (
-    <div className="overtime-container p-6 space-y-6">
-      {/* Header */}
-      <OvertimeHeader
-        onCreateClick={() => {
-          setSelectedRecord(null);
-          setCreateDrawerOpen(true);
-        }}
-        onBulkApproveClick={() => {
-          if (selectedIds.length === 0) {
-            toast.error("Select overtime records to bulk approve.");
-            return;
-          }
-          selectedIds.forEach((id) => overtimeApi.approveOvertime(id, "Finance Manager"));
-          toast.success(`Bulk approved ${selectedIds.length} overtime claim(s).`);
-          setSelectedIds([]);
-          loadData();
-        }}
-        onSyncAttendanceClick={handleSyncAttendance}
-        onGeneratePayrollEntriesClick={() => {
-          if (selectedIds.length === 0) {
-            toast.error("Select approved overtime claims to push into payroll.");
-            return;
-          }
-          overtimeApi.addPayrollEntries(selectedIds, "JULY-2026");
-          toast.success(`Queued ${selectedIds.length} overtime claim(s) into July 2026 Pay Run.`);
-          setSelectedIds([]);
-          loadData();
-        }}
-        onExportClick={handleExport}
-        onImportSuccess={loadData}
-        onAuditLogsClick={() => setActiveView(activeView === "RECORDS" ? "AUDIT_LOGS" : "RECORDS")}
-      />
-
-      {/* KPI Cards */}
-      <OvertimeKPIs
-        kpis={kpis}
-        activeStatusFilter={filters.approvalStatus}
-        onFilterStatus={(s) => setFilters((prev) => ({ ...prev, approvalStatus: s }))}
-      />
-
-      {/* Recharts Analytics Dashboard */}
-      <OvertimeAnalytics records={records} />
-
-      {/* AI Overtime & Burnout Insights */}
-      <AIOvertimeInsights insights={aiInsights} />
-
-      {/* Main Layout: Filters & Table + Right Policy Rail */}
-      <div className="flex flex-col lg:flex-row gap-5 items-start">
-        <div className="flex-1 w-full space-y-4">
-          {/* Multi-filter Bar */}
-          <OvertimeFilters
-            filters={filters}
-            onChange={(updated) => setFilters((prev) => ({ ...prev, ...updated }))}
-            onReset={() =>
-              setFilters({
-                search: "",
-                employee: "all",
-                employeeId: "all",
-                department: "all",
-                designation: "all",
-                location: "all",
-                shift: "all",
-                manager: "all",
-                payrollCycle: "JULY-2026",
-                approvalStatus: "ALL",
-                compensationStatus: "ALL",
-                overtimeType: "all",
-                page: 1,
-                limit: 10,
-                sortBy: "updatedOn",
-                sortDir: "desc",
-              })
-            }
+    <div className="space-y-6">
+      {activeModuleId ? (
+        /* Full-Screen Module View when a Feature Card is Opened */
+        <OvertimeHubModuleViews
+          moduleId={activeModuleId}
+          onBackToHub={() => setActiveModuleId(null)}
+          records={records}
+          onOpenCreateDrawer={() => setCreateDrawerOpen(true)}
+          onViewRecordDetails={handleView}
+          onApproveRecord={handleApprove}
+          onRejectRecord={handleReject}
+          onAddPayrollEntry={async (record) => {
+            await overtimeApi.addPayrollEntries([record.id], "JULY-2026");
+            toast.success(`Added OT entry ${record.requestCode} to July payroll cycle.`);
+            loadData();
+          }}
+        />
+      ) : (
+        /* Overtime Hub Landing Page Architecture */
+        <div className="space-y-6">
+          {/* Hub Header & High Level Metrics */}
+          <OvertimeHubHeader
+            kpis={kpis}
+            onCreateClick={() => setCreateDrawerOpen(true)}
+            onBulkApproveClick={handleBulkApprove}
+            onExportClick={handleExport}
           />
 
-          {/* Workflow Tracker for Selected Record */}
-          {selectedRecord && (
-            <ApprovalWorkflowTracker
-              record={selectedRecord}
-              onApprove={handleApprove}
-              onReject={handleReject}
-            />
-          )}
-
-          {/* Main Table View */}
-          {activeView === "RECORDS" && (
-            <OvertimeTable
-              data={records}
-              selectedIds={selectedIds}
-              onSelectToggle={handleSelectToggle}
-              onSelectAll={handleSelectAll}
-              onView={handleView}
-              onEdit={handleEdit}
-              onApprove={handleApprove}
-              onReject={handleReject}
-              onRecalculate={handleRecalculate}
-              onAddPayrollEntry={handleAddPayrollEntry}
-              onViewTimeline={(rec) => {
-                setSelectedRecord(rec);
-                setTimelineModalOpen(true);
-              }}
-              onViewLogs={() => setActiveView("AUDIT_LOGS")}
-            />
-          )}
-
-          {/* Audit Logs View */}
-          {activeView === "AUDIT_LOGS" && (
-            <div className="ot-card p-5 space-y-4">
-              <h3 className="text-sm font-semibold text-white">Overtime Audit Trail & Compliance Log</h3>
-              <div className="ot-table-wrapper">
-                <table className="ot-table">
-                  <thead>
-                    <tr>
-                      <th>Timestamp</th>
-                      <th>Request Code</th>
-                      <th>Action</th>
-                      <th>Actor</th>
-                      <th>Details</th>
-                      <th>IP Address</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {auditLogs.map((log) => (
-                      <tr key={log.id}>
-                        <td className="font-mono text-slate-400">{log.timestamp}</td>
-                        <td className="font-mono font-semibold text-blue-300">{log.requestCode}</td>
-                        <td>
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/30">
-                            {log.action}
-                          </span>
-                        </td>
-                        <td>
-                          {log.actorName} ({log.actorRole})
-                        </td>
-                        <td className="text-slate-300">{log.details}</td>
-                        <td className="font-mono text-slate-500">{log.ipAddress}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+          {/* Module Search & Category Filter Navigation */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl bg-slate-900/60 border border-white/5">
+            {/* Category Filter Tabs */}
+            <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
+              {categoryTabs.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    selectedCategory === cat
+                      ? "bg-purple-600 text-white shadow-md shadow-purple-600/25"
+                      : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
             </div>
-          )}
+
+            {/* Hub Search Box */}
+            <div className="relative w-full sm:w-72">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Input
+                placeholder="Search overtime modules..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 bg-slate-950/60 border-white/10 text-xs text-white placeholder:text-slate-500 h-9"
+              />
+            </div>
+          </div>
+
+          {/* Feature Card Grid (22 Modules) */}
+          <OvertimeHubCardGrid
+            onSelectModule={(modId) => setActiveModuleId(modId)}
+            selectedCategory={selectedCategory}
+            searchQuery={searchQuery}
+          />
         </div>
+      )}
 
-        {/* Right Policy & Copilot Rail */}
-        <RightPolicyPanel />
-      </div>
-
-      {/* 4-Step Multi-step Overtime Wizard Drawer */}
+      {/* Drawers */}
       <CreateOvertimeWizardDrawer
         open={createDrawerOpen}
-        onClose={() => setCreateDrawerOpen(false)}
-        onSave={handleSaveOvertime}
+        onOpenChange={setCreateDrawerOpen}
+        onSave={handleCreateSave}
       />
 
-      {/* Overtime Details Drawer */}
       <OvertimeDetailsDrawer
         open={detailsDrawerOpen}
-        onClose={() => setDetailsDrawerOpen(false)}
+        onOpenChange={setDetailsDrawerOpen}
         record={selectedRecord}
         onApprove={handleApprove}
         onReject={handleReject}
-        onAddPayrollEntry={handleAddPayrollEntry}
-      />
-
-      {/* Biometric Attendance Punch Timeline Modal */}
-      <AttendanceTimelineModal
-        open={timelineModalOpen}
-        onClose={() => setTimelineModalOpen(false)}
-        record={selectedRecord}
       />
     </div>
   );

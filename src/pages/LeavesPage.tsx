@@ -273,6 +273,8 @@ export function LeavesPage() {
   return (
     <>
       <PageHeader 
+        showBack={true}
+        backText="Back"
         title={
           userRole === "admin" 
             ? "Enterprise Leave Dashboard" 
@@ -289,6 +291,20 @@ export function LeavesPage() {
         }
         actions={
           <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                loadBalances();
+                loadHistory();
+                if (userRole === "admin" || userRole === "manager") {
+                  loadPendingApprovals();
+                }
+                toast.info("Refreshed leave data.");
+              }}
+              className="gap-2 border-border text-muted-foreground hover:text-foreground"
+            >
+              <RefreshCw className="h-4 w-4" /> Refresh
+            </Button>
             <Button
               onClick={() => setApplyOpen(true)}
               className="gap-2 bg-indigo-600 hover:bg-indigo-500 text-white"
@@ -381,8 +397,8 @@ export function LeavesPage() {
                 );
               })}
               {balances.length === 0 && (
-                <div className="col-span-3 text-center py-4 text-xs text-muted-foreground">
-                  Initializing leave policies balances...
+                <div className="col-span-3 rounded-2xl border border-dashed border-border bg-card/30 p-8 text-center text-xs text-muted-foreground">
+                  No leave policies or balances allocated yet.
                 </div>
               )}
             </div>

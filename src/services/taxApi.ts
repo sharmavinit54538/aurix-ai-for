@@ -2,13 +2,24 @@ import { api, apiRequest } from "@/api";
 
 export interface TaxSummaryMetrics {
   total_employees: number;
+  taxable_employees: number;
   tax_filed: number;
   pending_declaration: number;
+  pending_tax_filings: number;
+  total_tax: number;
   total_tds: number;
+  tds_collected: number;
   tax_collected: number;
+  professional_tax: number;
+  exemptions: number;
   tax_refund: number;
   average_tax: number;
   compliance_score: number;
+  financial_year?: string;
+  regime_breakdown?: {
+    old_regime: number;
+    new_regime: number;
+  };
 }
 
 export interface AdminTaxItem {
@@ -26,6 +37,7 @@ export interface AdminTaxItem {
   taxable_income: number;
   exemptions: number;
   deductions: number;
+  professional_tax: number;
   tds: number;
   net_tax: number;
   refund: number;

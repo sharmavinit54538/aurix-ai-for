@@ -179,7 +179,7 @@ export const PayrollSettingsSidebar: React.FC<PayrollSettingsSidebarProps> = ({
                           className={cn(
                             "group/item relative flex w-full items-center justify-between rounded-xl p-2.5 text-left transition-all duration-200",
                             isActive
-                              ? "sidebar-active-glow bg-gradient-to-r from-indigo-500/[0.12] via-indigo-500/[0.06] to-transparent text-indigo-300"
+                              ? "sidebar-item-active"
                               : "text-slate-400 hover:bg-white/[0.04] hover:text-slate-200"
                           )}
                         >

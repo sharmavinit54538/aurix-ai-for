@@ -18,6 +18,8 @@ export interface BackendHierarchyNode {
   reporting_to: string | null;
   reporting_manager_name: string | null;
   children: BackendHierarchyNode[];
+  work_location_type?: "remote" | "hybrid" | "office" | string | null;
+  skills?: string[];
 }
 
 export interface ReportingChainDetails {
@@ -35,7 +37,11 @@ export interface HierarchyFilterState {
   location: string;
   employmentType: string;
   reportingManagerId: string;
+  workLocationType?: string;
 }
+
+export type HierarchyLayoutType = "vertical" | "horizontal" | "radial" | "compact";
+export type ConnectorStyleType = "curved" | "orthogonal" | "straight";
 
 export interface EmployeeHierarchyState {
   loading: boolean;
@@ -50,4 +56,8 @@ export interface EmployeeHierarchyState {
   filters: HierarchyFilterState;
   zoomLevel: number;
   isFullscreen: boolean;
+  layout: HierarchyLayoutType;
+  connectorStyle: ConnectorStyleType;
+  showAiInsights: boolean;
+  showAnalyticsPanel: boolean;
 }

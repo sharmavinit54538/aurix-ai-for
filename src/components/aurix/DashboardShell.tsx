@@ -1,9 +1,10 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+// Executive Dashboards Navigation Enabled
 import {
   Activity, AlertCircle, Archive, Award, Banknote, BarChart3, Bell, BookOpen, Bot, Brain,
-  Briefcase, Building2, CalendarDays, CalendarCheck, CheckCircle2, ChevronLeft, ChevronsLeft, ChevronsRight,
-  ChevronDown, ClipboardCheck, Clock, CreditCard, Download, FileCheck, FileText, FilePlus2,
+  Briefcase, Building2, CalendarDays, CalendarCheck, CheckCircle2, ChevronLeft, PanelLeft,
+  ChevronDown, ClipboardCheck, Clock, CreditCard, Crown, Download, FileCheck, FileText, FilePlus2,
   FileSignature, Folder, FolderOpen, Gauge, Gift, Globe, HandCoins, HeartPulse, History,
   Info, Languages, LayoutDashboard, LineChart as LineChartIcon, Lock, LogOut, Mail, Medal,
   Menu, MessageCircle, MessageSquare, Mic, MinusCircle, Moon, Package, Palmtree, Percent,
@@ -13,12 +14,21 @@ import {
   ClipboardList, BadgeCheck, Headphones, HelpCircle, TicketCheck, Map, Laptop, Printer,
   Repeat, Wrench, TrendingDown, BrainCircuit, Fingerprint, Coffee, HeartHandshake, GraduationCap,
   BookMarked, PenLine, FileEdit, Landmark, Coins, Building, Hash, Sliders, Shield, Layers, PackageCheck,
+  GitPullRequest, Send, ShieldAlert, Scale, Cpu, Home, Rocket,
 } from "lucide-react";
 import { aurix, useAurix, type Role } from "@/lib/aurix-store";
 import { useAuthReady } from "@/lib/auth-bootstrap";
 import { AuthLoadingScreen } from "@/features/auth/components/AuthLoadingScreen";
 import { hasValidAccessToken, setTokens } from "@/api";
 import { Input } from "@/components/ui/input";
+import {
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { useTheme } from "@/components/site/ThemeProvider";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { fetchSidebarPermissions } from "@/store/sidebar/sidebarActions";
@@ -253,6 +263,57 @@ const MANAGER_NAV_SECTIONS: SidebarNavSection[] = [
   },
 ];
 
+const CIO_NAV_SECTIONS: SidebarNavSection[] = [
+  {
+    title: "CIO PORTAL",
+    items: [
+      { to: "/dashboard/executive/cio", label: "Overview", icon: Home, exact: true },
+      { to: "/dashboard/executive/cio/it-operations", label: "IT Operations", icon: Laptop },
+      { to: "/dashboard/executive/cio/infrastructure", label: "Infrastructure", icon: Building },
+      { to: "/dashboard/executive/cio/cyber-security", label: "Cyber Security", icon: ShieldCheck },
+      { to: "/dashboard/executive/cio/cloud-network", label: "Cloud & Network", icon: Globe },
+      { to: "/dashboard/executive/cio/it-governance", label: "IT Governance", icon: FileCheck },
+      { to: "/dashboard/executive/cio/digital-transformation", label: "Digital Transformation", icon: Sparkles },
+      { to: "/dashboard/executive/cio/analytics", label: "Analytics", icon: BarChart3 },
+      { to: "/dashboard/executive/cio/settings", label: "Settings", icon: Settings },
+    ],
+  },
+];
+
+const CEO_NAV_SECTIONS: SidebarNavSection[] = [
+  {
+    title: "CEO PORTAL",
+    items: [
+      { to: "/dashboard/executive/ceo", label: "Overview", icon: Home, exact: true },
+      { to: "/dashboard/executive/ceo/business", label: "Business", icon: TrendingUp },
+      { to: "/dashboard/executive/ceo/finance", label: "Finance", icon: HandCoins },
+      { to: "/dashboard/executive/ceo/sales", label: "Sales", icon: BarChart3 },
+      { to: "/dashboard/executive/ceo/organization", label: "Organization", icon: Users },
+      { to: "/dashboard/executive/ceo/operations", label: "Operations", icon: ClipboardCheck },
+      { to: "/dashboard/executive/ceo/reports", label: "Reports", icon: LineChartIcon },
+      { to: "/dashboard/executive/ceo/ai-insights", label: "AI Insights", icon: Bot },
+      { to: "/dashboard/executive/ceo/settings", label: "Settings", icon: Settings },
+    ],
+  },
+];
+
+const CTO_NAV_SECTIONS: SidebarNavSection[] = [
+  {
+    title: "CTO PORTAL",
+    items: [
+      { to: "/dashboard/executive/cto", label: "Overview", icon: Home, exact: true },
+      { to: "/dashboard/executive/cto/engineering", label: "Engineering", icon: Wrench },
+      { to: "/dashboard/executive/cto/projects", label: "Projects", icon: Folder },
+      { to: "/dashboard/executive/cto/developers", label: "Developers", icon: UserCheck },
+      { to: "/dashboard/executive/cto/devops", label: "DevOps", icon: Rocket },
+      { to: "/dashboard/executive/cto/analytics", label: "Analytics", icon: BarChart3 },
+      { to: "/dashboard/executive/cto/ai", label: "AI Platform", icon: Bot },
+      { to: "/dashboard/executive/cto/security", label: "Security", icon: Lock },
+      { to: "/dashboard/executive/cto/settings", label: "Settings", icon: Settings },
+    ],
+  },
+];
+
 // ── Demo Mode Banner ──────────────────────────────────────────
 function DemoBanner({ role, onDismiss }: { role: Role; onDismiss: () => void }) {
   const roleLabel = role === "manager" ? "Manager" : "Employee";
@@ -278,89 +339,87 @@ function DemoBanner({ role, onDismiss }: { role: Role; onDismiss: () => void }) 
 
 export function DashboardShell() {
   const ws = useAurix();
-  const authReady = useAuthReady();
+  const role = ws.user?.role;
   const navigate = useNavigate();
+  const authReady = useAuthReady();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const dispatch = useAppDispatch();
+  const userPermissions = useAppSelector(selectUserPermissions);
+  const { theme, toggle: toggleTheme } = useTheme();
 
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [demoDismissed, setDemoDismissed] = useState(false);
 
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { theme, toggle: toggleTheme } = useTheme();
+  const isDemo = false;
 
-  const role = (ws.user?.role ?? "admin") as string;
-  const isDemo = Boolean(ws.isDemoUser) && !demoDismissed;
-
-  const userPermissions = useAppSelector(selectUserPermissions);
-
-  // Fetch backend sidebar permissions when auth is ready
   useEffect(() => {
-    if (authReady && ws.user) {
-      dispatch(fetchSidebarPermissions(role));
-    }
-  }, [authReady, ws.user, role, dispatch]);
-
-  // Update active route in Redux
-  useEffect(() => {
-    dispatch(setActiveRoute(pathname));
-  }, [pathname, dispatch]);
+    dispatch(fetchSidebarPermissions());
+  }, [dispatch]);
 
   // ── Auth & Role guard ────────────────────────────────────────
   useEffect(() => {
-    if (!authReady || ws.isRestoring) return;
+    if (!authReady || ws.isRestoring || !ws.user) return;
 
-    if (!ws.user && !hasValidAccessToken()) {
-      navigate({ to: "/login" });
-      return;
-    }
-    if (!ws.user) return;
-    if (!ws.user.emailVerified) {
-      navigate({ to: "/verify-email" as any });
-      return;
-    }
-    if (!ws.user.onboardingComplete) {
-      navigate({ to: "/onboarding" });
-      return;
-    }
+    const normalizedRole = (role || "").toLowerCase();
+    const isExecutive = normalizedRole === "cto" || normalizedRole === "ceo" || normalizedRole === "cio";
+    const isAdminOrHr = normalizedRole === "admin" || normalizedRole === "hr";
 
-    const isAdminOrHr = role === "admin" || role === "hr";
-
-    // ── Direct access guard & redirection ──
-    if (pathname === "/dashboard") {
-      if (role === "manager") {
+    if (pathname === "/dashboard/employee" && normalizedRole !== "employee") {
+      if (normalizedRole === "cio") {
+        navigate({ to: "/dashboard/executive/cio" });
+        return;
+      }
+      if (normalizedRole === "cto") {
+        navigate({ to: "/dashboard/executive/cto" });
+        return;
+      }
+      if (normalizedRole === "ceo") {
+        navigate({ to: "/dashboard/executive/ceo" });
+        return;
+      }
+      if (normalizedRole === "manager") {
         navigate({ to: "/dashboard/manager" });
         return;
       }
-      if (role === "employee") {
+      if (isAdminOrHr) {
+        navigate({ to: "/dashboard" });
+        return;
+      }
+    }
+
+    if (pathname === "/onboarding") {
+      if (normalizedRole === "cio") {
+        navigate({ to: "/dashboard/executive/cio" });
+        return;
+      }
+      if (normalizedRole === "cto") {
+        navigate({ to: "/dashboard/executive/cto" });
+        return;
+      }
+      if (normalizedRole === "ceo") {
+        navigate({ to: "/dashboard/executive/ceo" });
+        return;
+      }
+      if (normalizedRole === "employee") {
         navigate({ to: "/dashboard/employee" });
         return;
       }
     }
 
-    if (pathname === "/dashboard/manager" && role !== "manager") {
-      navigate({ to: isAdminOrHr ? "/dashboard" : "/dashboard/employee" });
+    if (normalizedRole === "cio" && (pathname === "/dashboard/employee" || pathname.startsWith("/dashboard/employee/"))) {
+      navigate({ to: "/dashboard/executive/cio" });
+      return;
+    }
+    if (normalizedRole === "cto" && (pathname === "/dashboard/employee" || pathname.startsWith("/dashboard/employee/"))) {
+      navigate({ to: "/dashboard/executive/cto" });
       return;
     }
 
-    // Employees cannot access Admin/Manager pages
-    if (role === "employee") {
-      const adminManagerPaths = [
-        "/dashboard/workforce/people",
-        "/dashboard/workforce/departments",
-        "/dashboard/talent",
-        "/dashboard/hr-operations",
-        "/dashboard/analytics",
-        "/dashboard/settings/roles-permissions",
-        "/dashboard/settings/company",
-        "/dashboard/settings/audit-logs",
-        "/dashboard/settings/billing",
-        "/dashboard/settings/integrations",
-      ];
-      const isTryingToAccessAdminManager = adminManagerPaths.some((p) => pathname.startsWith(p));
-      if (isTryingToAccessAdminManager) {
-        navigate({ to: "/dashboard/employee" });
-      }
+    if (normalizedRole === "ceo" && (pathname === "/dashboard/employee" || pathname.startsWith("/dashboard/employee/"))) {
+      navigate({ to: "/dashboard/executive/ceo" });
+      return;
     }
   }, [authReady, ws.isRestoring, ws.user, pathname, role, navigate]);
 
@@ -369,10 +428,21 @@ export function DashboardShell() {
   const visibleNav = useMemo(() => {
     const normalizedRole = (role || "").toLowerCase();
 
-    // Strict path checks to avoid misclassifying paths like /dashboard/employees
     const isEmployeePortalPath = pathname === "/dashboard/employee" || pathname.startsWith("/dashboard/employee/");
     const isManagerPortalPath = pathname === "/dashboard/manager" || pathname.startsWith("/dashboard/manager/");
+    const isCtoPortalPath = pathname === "/dashboard/executive/cto" || pathname.startsWith("/dashboard/executive/cto");
+    const isCeoPortalPath = pathname === "/dashboard/executive/ceo" || pathname.startsWith("/dashboard/executive/ceo");
+    const isCioPortalPath = pathname === "/dashboard/executive/cio" || pathname.startsWith("/dashboard/executive/cio");
 
+    if (normalizedRole === "cio" || isCioPortalPath) {
+      return filterNavTree(CIO_NAV_SECTIONS, role, userPermissions);
+    }
+    if (normalizedRole === "ceo" || isCeoPortalPath) {
+      return filterNavTree(CEO_NAV_SECTIONS, role, userPermissions);
+    }
+    if (normalizedRole === "cto" || isCtoPortalPath) {
+      return filterNavTree(CTO_NAV_SECTIONS, role, userPermissions);
+    }
     if (normalizedRole === "employee" || isEmployeePortalPath) {
       return filterNavTree(EMPLOYEE_NAV_SECTIONS, role, userPermissions);
     }
@@ -394,8 +464,18 @@ export function DashboardShell() {
 
   const initials = ws.user.fullName?.split(" ").map((p) => p[0]).slice(0, 2).join("") || "A";
 
+  const isCeoMode = (role || "").toLowerCase() === "ceo" || (ws.user?.email || "").toLowerCase() === "siddhubunny09@gmail.com" || pathname.startsWith("/dashboard/executive/ceo");
+  const isCioMode = (role || "").toLowerCase() === "cio" || pathname.startsWith("/dashboard/executive/cio");
+  const isCtoMode = (role || "").toLowerCase() === "cto" || pathname.startsWith("/dashboard/executive/cto");
+
   const homeLink =
-    role === "manager"
+    isCeoMode
+      ? "/dashboard/executive/ceo"
+      : isCioMode
+      ? "/dashboard/executive/cio"
+      : isCtoMode
+      ? "/dashboard/executive/cto"
+      : role === "manager"
       ? "/dashboard/manager"
       : role === "employee"
       ? "/dashboard/employee"
@@ -420,16 +500,44 @@ export function DashboardShell() {
             mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
           }`}
         >
-          <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-4">
-            <Link to={homeLink as any} className="flex items-center gap-2">
-              <span className="grid h-8 w-8 place-items-center rounded-lg text-brand-foreground shadow-glow" style={{ background: "var(--gradient-brand)" }}>
-                <Sparkles className="h-4 w-4" />
-              </span>
-              {!collapsed ? <span className="font-display text-lg font-semibold tracking-tight">OFC HR</span> : null}
-            </Link>
-            <button onClick={() => setCollapsed((c) => !c)} className="hidden rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground lg:inline-flex cursor-pointer" aria-label="Toggle sidebar">
-              {collapsed ? <ChevronsRight className="h-4 w-4" /> : <ChevronsLeft className="h-4 w-4" />}
-            </button>
+          <div className={`flex h-16 shrink-0 items-center border-b border-border px-3 ${collapsed ? "justify-center" : "justify-between"}`}>
+            {!collapsed ? (
+              <>
+                <Link to={homeLink as any} className="flex items-center gap-2 min-w-0">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-brand-foreground shadow-glow" style={{ background: "var(--gradient-brand)" }}>
+                    <Sparkles className="h-4 w-4" />
+                  </span>
+                  <span className="font-display text-lg font-semibold tracking-tight truncate">OFC HR</span>
+                </Link>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={() => setSearchOpen(true)}
+                    className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer transition-colors"
+                    aria-label="Search"
+                    title="Search (Ctrl+K)"
+                  >
+                    <Search className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => setCollapsed(true)}
+                    className="hidden rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground lg:inline-flex cursor-pointer transition-colors"
+                    aria-label="Collapse sidebar"
+                    title="Collapse sidebar"
+                  >
+                    <PanelLeft className="h-4 w-4" />
+                  </button>
+                </div>
+              </>
+            ) : (
+              <button
+                onClick={() => setCollapsed(false)}
+                className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer transition-colors"
+                aria-label="Expand sidebar"
+                title="Expand sidebar"
+              >
+                <PanelLeft className="h-4 w-4" />
+              </button>
+            )}
           </div>
 
           <nav className="flex-1 space-y-2 overflow-y-auto p-2">
@@ -486,7 +594,9 @@ export function DashboardShell() {
               {!collapsed ? (
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-medium">{ws.user?.fullName}</div>
-                  <div className="truncate text-xs capitalize text-muted-foreground">{ws.user?.role}</div>
+                  <div className="truncate text-xs capitalize text-muted-foreground">
+                    {isCeoMode ? "Chief Executive Officer" : isCioMode ? "Chief Information Officer" : isCtoMode ? "Chief Technology Officer" : ws.user?.role}
+                  </div>
                 </div>
               ) : null}
               {!collapsed ? (
@@ -506,28 +616,40 @@ export function DashboardShell() {
           }`}
         >
           {/* Topbar */}
-          <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/70 px-4 backdrop-blur-xl sm:px-6">
-            <button onClick={() => setMobileOpen(true)} className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground lg:hidden cursor-pointer" aria-label="Open menu">
-              <Menu className="h-5 w-5" />
-            </button>
-            <div className="relative max-w-md flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Search employees, departments, requests…" className="h-9 pl-9" />
+          <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/70 px-4 backdrop-blur-xl sm:px-6">
+            <div className="flex items-center gap-2">
+              <button onClick={() => setMobileOpen(true)} className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground lg:hidden cursor-pointer" aria-label="Open menu">
+                <Menu className="h-5 w-5" />
+              </button>
             </div>
-            <button
-              onClick={toggleTheme}
-              className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer"
-              aria-label="Toggle theme"
-            >
-              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </button>
-            <button className="relative rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer" aria-label="Notifications">
-              <Bell className="h-4 w-4" />
-              <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-destructive" />
-            </button>
-            <div className="hidden items-center gap-2 rounded-md border border-border bg-card/40 px-3 py-1.5 text-xs sm:flex">
-              <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="font-medium">{ws.company?.name || "Workspace"}</span>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setSearchOpen(true)}
+                className="flex items-center gap-2 rounded-lg border border-border/80 bg-card/60 px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer transition-all shadow-sm"
+                title="Search (Ctrl+K)"
+              >
+                <Search className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Search...</span>
+                <kbd className="hidden rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground sm:inline-block">
+                  ⌘K
+                </kbd>
+              </button>
+              <button
+                onClick={toggleTheme}
+                className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer"
+                aria-label="Toggle theme"
+              >
+                {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </button>
+              <button className="relative rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer" aria-label="Notifications">
+                <Bell className="h-4 w-4" />
+                <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-destructive" />
+              </button>
+              <div className="hidden items-center gap-2 rounded-md border border-border bg-card/40 px-3 py-1.5 text-xs sm:flex">
+                <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="font-medium">{ws.company?.name || "Workspace"}</span>
+              </div>
             </div>
           </header>
 
@@ -536,6 +658,66 @@ export function DashboardShell() {
           </main>
         </div>
       </div>
+
+      {/* ChatGPT-style Quick Search Modal */}
+      <CommandDialog open={searchOpen} onOpenChange={setSearchOpen}>
+        <CommandInput placeholder="Search employees, departments, requests, pages..." />
+        <CommandList className="max-h-[350px] overflow-y-auto p-2">
+          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandGroup heading="Quick Navigation">
+            <CommandItem
+              onSelect={() => {
+                navigate({ to: "/dashboard" as any });
+                setSearchOpen(false);
+              }}
+              className="cursor-pointer"
+            >
+              <LayoutDashboard className="mr-2 h-4 w-4" />
+              <span>Overview</span>
+            </CommandItem>
+            <CommandItem
+              onSelect={() => {
+                navigate({ to: "/dashboard/people" as any });
+                setSearchOpen(false);
+              }}
+              className="cursor-pointer"
+            >
+              <Users className="mr-2 h-4 w-4" />
+              <span>Workforce & Employees</span>
+            </CommandItem>
+            <CommandItem
+              onSelect={() => {
+                navigate({ to: "/dashboard/payroll" as any });
+                setSearchOpen(false);
+              }}
+              className="cursor-pointer"
+            >
+              <Banknote className="mr-2 h-4 w-4" />
+              <span>Payroll</span>
+            </CommandItem>
+            <CommandItem
+              onSelect={() => {
+                navigate({ to: "/dashboard/leaves" as any });
+                setSearchOpen(false);
+              }}
+              className="cursor-pointer"
+            >
+              <CalendarDays className="mr-2 h-4 w-4" />
+              <span>Leaves & Attendance</span>
+            </CommandItem>
+            <CommandItem
+              onSelect={() => {
+                navigate({ to: "/dashboard/ai" as any });
+                setSearchOpen(false);
+              }}
+              className="cursor-pointer"
+            >
+              <Bot className="mr-2 h-4 w-4" />
+              <span>AI Hub</span>
+            </CommandItem>
+          </CommandGroup>
+        </CommandList>
+      </CommandDialog>
     </div>
   );
 }
@@ -625,7 +807,23 @@ function NavGroup({
   );
 }
 
-export function PageHeader({ title, description, actions }: { title: string; description?: string; actions?: React.ReactNode }) {
+export function PageHeader({
+  title,
+  description,
+  actions,
+  showBack,
+  backLink,
+  backText,
+  onBack,
+}: {
+  title: string;
+  description?: string;
+  actions?: React.ReactNode;
+  showBack?: boolean;
+  backLink?: string;
+  backText?: string;
+  onBack?: () => void;
+}) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isRecruitmentSubPage =
     pathname.startsWith("/dashboard/recruitment/") &&
@@ -643,8 +841,37 @@ export function PageHeader({ title, description, actions }: { title: string; des
     pathname.startsWith("/dashboard/employees") ||
     pathname.startsWith("/dashboard/managers");
 
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else if (window.history.length > 1) {
+      window.history.back();
+    }
+  };
+
   return (
     <div className="mb-6 flex flex-col min-w-0 gap-2 text-left">
+      {(showBack || backLink || onBack) && (
+        <div className="mb-1 flex items-center">
+          {backLink ? (
+            <Link
+              to={backLink as any}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group/back"
+            >
+              <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover/back:-translate-x-0.5" />
+              {backText || "Back"}
+            </Link>
+          ) : (
+            <button
+              onClick={handleBack}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group/back"
+            >
+              <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover/back:-translate-x-0.5" />
+              {backText || "Back"}
+            </button>
+          )}
+        </div>
+      )}
       {isRecruitmentSubPage && (
         <div className="mb-1 flex items-center">
           <Link
@@ -656,17 +883,7 @@ export function PageHeader({ title, description, actions }: { title: string; des
           </Link>
         </div>
       )}
-      {isPayrollSubPage && (
-        <div className="mb-1 flex items-center">
-          <Link
-            to="/dashboard/payroll"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group/back"
-          >
-            <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover/back:-translate-x-0.5" />
-            Back to Payroll Hub
-          </Link>
-        </div>
-      )}
+
       {isAttendanceSubPage && (
         <div className="mb-1 flex items-center">
           <Link

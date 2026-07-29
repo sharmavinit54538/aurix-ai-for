@@ -34,7 +34,7 @@ export const PayrollSettingsHeader: React.FC<PayrollSettingsHeaderProps> = ({
   isSaving = false,
 }) => {
   return (
-    <div className="sticky top-0 z-30 -mx-2 px-2">
+    <div className="w-full">
       <div className="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-gradient-to-r from-[#0c1425]/95 via-[#0f1a2e]/95 to-[#0c1425]/95 p-5 shadow-2xl backdrop-blur-2xl">
         {/* Ambient background glows */}
         <div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-indigo-500/[0.07] blur-[80px]" />

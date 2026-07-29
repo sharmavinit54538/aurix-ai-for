@@ -53,6 +53,7 @@ import { Route as DashboardLeavesRouteImport } from './routes/dashboard.leaves'
 import { Route as DashboardHrOpsRouteImport } from './routes/dashboard.hr-ops'
 import { Route as DashboardHrOperationsRouteImport } from './routes/dashboard.hr-operations'
 import { Route as DashboardHrRouteImport } from './routes/dashboard.hr'
+import { Route as DashboardHierarchyRouteImport } from './routes/dashboard.hierarchy'
 import { Route as DashboardExpensesRouteImport } from './routes/dashboard.expenses'
 import { Route as DashboardExitManagementRouteImport } from './routes/dashboard.exit-management'
 import { Route as DashboardExitRouteImport } from './routes/dashboard.exit'
@@ -100,6 +101,7 @@ import { Route as DashboardRecruitmentIndexRouteImport } from './routes/dashboar
 import { Route as DashboardPeopleIndexRouteImport } from './routes/dashboard.people.index'
 import { Route as DashboardPayrollIndexRouteImport } from './routes/dashboard.payroll.index'
 import { Route as DashboardHrOperationsIndexRouteImport } from './routes/dashboard.hr-operations.index'
+import { Route as DashboardExecutiveIndexRouteImport } from './routes/dashboard.executive.index'
 import { Route as DashboardAttendanceIndexRouteImport } from './routes/dashboard.attendance.index'
 import { Route as DashboardAnalyticsIndexRouteImport } from './routes/dashboard.analytics.index'
 import { Route as DashboardAiHubIndexRouteImport } from './routes/dashboard.ai-hub.index'
@@ -169,6 +171,12 @@ import { Route as DashboardHrOperationsTimelineRouteImport } from './routes/dash
 import { Route as DashboardHrOperationsOnboardingRouteImport } from './routes/dashboard.hr-operations.onboarding'
 import { Route as DashboardHrOperationsOffboardingRouteImport } from './routes/dashboard.hr-operations.offboarding'
 import { Route as DashboardHrOperationsExitManagementRouteImport } from './routes/dashboard.hr-operations.exit-management'
+import { Route as DashboardExecutiveCtoRouteImport } from './routes/dashboard.executive.cto'
+import { Route as DashboardExecutiveCooRouteImport } from './routes/dashboard.executive.coo'
+import { Route as DashboardExecutiveCmoRouteImport } from './routes/dashboard.executive.cmo'
+import { Route as DashboardExecutiveCioRouteImport } from './routes/dashboard.executive.cio'
+import { Route as DashboardExecutiveCfoRouteImport } from './routes/dashboard.executive.cfo'
+import { Route as DashboardExecutiveCeoRouteImport } from './routes/dashboard.executive.ceo'
 import { Route as DashboardAttendanceShiftsRouteImport } from './routes/dashboard.attendance.shifts'
 import { Route as DashboardAttendanceRostersRouteImport } from './routes/dashboard.attendance.rosters'
 import { Route as DashboardAttendanceHolidaysRouteImport } from './routes/dashboard.attendance.holidays'
@@ -180,9 +188,39 @@ import { Route as DashboardAiHubAutomationRouteImport } from './routes/dashboard
 import { Route as DashboardAiHubAssistantRouteImport } from './routes/dashboard.ai-hub.assistant'
 import { Route as DashboardRecruitmentJobsIndexRouteImport } from './routes/dashboard/recruitment/jobs/index'
 import { Route as DashboardRecruitmentCandidatesIndexRouteImport } from './routes/dashboard/recruitment/candidates/index'
+import { Route as DashboardExecutiveCtoIndexRouteImport } from './routes/dashboard.executive.cto.index'
+import { Route as DashboardExecutiveCioIndexRouteImport } from './routes/dashboard.executive.cio.index'
+import { Route as DashboardExecutiveCeoIndexRouteImport } from './routes/dashboard.executive.ceo.index'
 import { Route as DashboardRecruitmentJobsNewRouteImport } from './routes/dashboard/recruitment/jobs/new'
 import { Route as DashboardRecruitmentJobsJobIdRouteImport } from './routes/dashboard/recruitment/jobs/$jobId'
 import { Route as DashboardRecruitmentCandidatesCandidateIdRouteImport } from './routes/dashboard/recruitment/candidates/$candidateId'
+import { Route as DashboardExecutiveCtoSettingsRouteImport } from './routes/dashboard.executive.cto.settings'
+import { Route as DashboardExecutiveCtoSecurityRouteImport } from './routes/dashboard.executive.cto.security'
+import { Route as DashboardExecutiveCtoProjectsRouteImport } from './routes/dashboard.executive.cto.projects'
+import { Route as DashboardExecutiveCtoMonitoringRouteImport } from './routes/dashboard.executive.cto.monitoring'
+import { Route as DashboardExecutiveCtoInfrastructureRouteImport } from './routes/dashboard.executive.cto.infrastructure'
+import { Route as DashboardExecutiveCtoEngineeringRouteImport } from './routes/dashboard.executive.cto.engineering'
+import { Route as DashboardExecutiveCtoDevopsRouteImport } from './routes/dashboard.executive.cto.devops'
+import { Route as DashboardExecutiveCtoDevelopersRouteImport } from './routes/dashboard.executive.cto.developers'
+import { Route as DashboardExecutiveCtoDatabaseRouteImport } from './routes/dashboard.executive.cto.database'
+import { Route as DashboardExecutiveCtoAnalyticsRouteImport } from './routes/dashboard.executive.cto.analytics'
+import { Route as DashboardExecutiveCtoAiRouteImport } from './routes/dashboard.executive.cto.ai'
+import { Route as DashboardExecutiveCioSettingsRouteImport } from './routes/dashboard.executive.cio.settings'
+import { Route as DashboardExecutiveCioItOperationsRouteImport } from './routes/dashboard.executive.cio.it-operations'
+import { Route as DashboardExecutiveCioItGovernanceRouteImport } from './routes/dashboard.executive.cio.it-governance'
+import { Route as DashboardExecutiveCioInfrastructureRouteImport } from './routes/dashboard.executive.cio.infrastructure'
+import { Route as DashboardExecutiveCioDigitalTransformationRouteImport } from './routes/dashboard.executive.cio.digital-transformation'
+import { Route as DashboardExecutiveCioCyberSecurityRouteImport } from './routes/dashboard.executive.cio.cyber-security'
+import { Route as DashboardExecutiveCioCloudNetworkRouteImport } from './routes/dashboard.executive.cio.cloud-network'
+import { Route as DashboardExecutiveCioAnalyticsRouteImport } from './routes/dashboard.executive.cio.analytics'
+import { Route as DashboardExecutiveCeoSettingsRouteImport } from './routes/dashboard.executive.ceo.settings'
+import { Route as DashboardExecutiveCeoSalesRouteImport } from './routes/dashboard.executive.ceo.sales'
+import { Route as DashboardExecutiveCeoReportsRouteImport } from './routes/dashboard.executive.ceo.reports'
+import { Route as DashboardExecutiveCeoOrganizationRouteImport } from './routes/dashboard.executive.ceo.organization'
+import { Route as DashboardExecutiveCeoOperationsRouteImport } from './routes/dashboard.executive.ceo.operations'
+import { Route as DashboardExecutiveCeoFinanceRouteImport } from './routes/dashboard.executive.ceo.finance'
+import { Route as DashboardExecutiveCeoBusinessRouteImport } from './routes/dashboard.executive.ceo.business'
+import { Route as DashboardExecutiveCeoAiInsightsRouteImport } from './routes/dashboard.executive.ceo.ai-insights'
 import { Route as DashboardRecruitmentJobsJobIdPublishRouteImport } from './routes/dashboard/recruitment/jobs/$jobId/publish'
 
 const VerifyResetOtpRoute = VerifyResetOtpRouteImport.update({
@@ -404,6 +442,11 @@ const DashboardHrOperationsRoute = DashboardHrOperationsRouteImport.update({
 const DashboardHrRoute = DashboardHrRouteImport.update({
   id: '/hr',
   path: '/hr',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardHierarchyRoute = DashboardHierarchyRouteImport.update({
+  id: '/hierarchy',
+  path: '/hierarchy',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardExpensesRoute = DashboardExpensesRouteImport.update({
@@ -644,6 +687,11 @@ const DashboardHrOperationsIndexRoute =
     path: '/',
     getParentRoute: () => DashboardHrOperationsRoute,
   } as any)
+const DashboardExecutiveIndexRoute = DashboardExecutiveIndexRouteImport.update({
+  id: '/executive/',
+  path: '/executive/',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardAttendanceIndexRoute =
   DashboardAttendanceIndexRouteImport.update({
     id: '/',
@@ -1049,6 +1097,36 @@ const DashboardHrOperationsExitManagementRoute =
     path: '/exit-management',
     getParentRoute: () => DashboardHrOperationsRoute,
   } as any)
+const DashboardExecutiveCtoRoute = DashboardExecutiveCtoRouteImport.update({
+  id: '/executive/cto',
+  path: '/executive/cto',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardExecutiveCooRoute = DashboardExecutiveCooRouteImport.update({
+  id: '/executive/coo',
+  path: '/executive/coo',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardExecutiveCmoRoute = DashboardExecutiveCmoRouteImport.update({
+  id: '/executive/cmo',
+  path: '/executive/cmo',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardExecutiveCioRoute = DashboardExecutiveCioRouteImport.update({
+  id: '/executive/cio',
+  path: '/executive/cio',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardExecutiveCfoRoute = DashboardExecutiveCfoRouteImport.update({
+  id: '/executive/cfo',
+  path: '/executive/cfo',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardExecutiveCeoRoute = DashboardExecutiveCeoRouteImport.update({
+  id: '/executive/ceo',
+  path: '/executive/ceo',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardAttendanceShiftsRoute =
   DashboardAttendanceShiftsRouteImport.update({
     id: '/shifts',
@@ -1114,6 +1192,24 @@ const DashboardRecruitmentCandidatesIndexRoute =
     path: '/',
     getParentRoute: () => DashboardRecruitmentCandidatesRoute,
   } as any)
+const DashboardExecutiveCtoIndexRoute =
+  DashboardExecutiveCtoIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => DashboardExecutiveCtoRoute,
+  } as any)
+const DashboardExecutiveCioIndexRoute =
+  DashboardExecutiveCioIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => DashboardExecutiveCioRoute,
+  } as any)
+const DashboardExecutiveCeoIndexRoute =
+  DashboardExecutiveCeoIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => DashboardExecutiveCeoRoute,
+  } as any)
 const DashboardRecruitmentJobsNewRoute =
   DashboardRecruitmentJobsNewRouteImport.update({
     id: '/jobs/new',
@@ -1131,6 +1227,167 @@ const DashboardRecruitmentCandidatesCandidateIdRoute =
     id: '/$candidateId',
     path: '/$candidateId',
     getParentRoute: () => DashboardRecruitmentCandidatesRoute,
+  } as any)
+const DashboardExecutiveCtoSettingsRoute =
+  DashboardExecutiveCtoSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => DashboardExecutiveCtoRoute,
+  } as any)
+const DashboardExecutiveCtoSecurityRoute =
+  DashboardExecutiveCtoSecurityRouteImport.update({
+    id: '/security',
+    path: '/security',
+    getParentRoute: () => DashboardExecutiveCtoRoute,
+  } as any)
+const DashboardExecutiveCtoProjectsRoute =
+  DashboardExecutiveCtoProjectsRouteImport.update({
+    id: '/projects',
+    path: '/projects',
+    getParentRoute: () => DashboardExecutiveCtoRoute,
+  } as any)
+const DashboardExecutiveCtoMonitoringRoute =
+  DashboardExecutiveCtoMonitoringRouteImport.update({
+    id: '/monitoring',
+    path: '/monitoring',
+    getParentRoute: () => DashboardExecutiveCtoRoute,
+  } as any)
+const DashboardExecutiveCtoInfrastructureRoute =
+  DashboardExecutiveCtoInfrastructureRouteImport.update({
+    id: '/infrastructure',
+    path: '/infrastructure',
+    getParentRoute: () => DashboardExecutiveCtoRoute,
+  } as any)
+const DashboardExecutiveCtoEngineeringRoute =
+  DashboardExecutiveCtoEngineeringRouteImport.update({
+    id: '/engineering',
+    path: '/engineering',
+    getParentRoute: () => DashboardExecutiveCtoRoute,
+  } as any)
+const DashboardExecutiveCtoDevopsRoute =
+  DashboardExecutiveCtoDevopsRouteImport.update({
+    id: '/devops',
+    path: '/devops',
+    getParentRoute: () => DashboardExecutiveCtoRoute,
+  } as any)
+const DashboardExecutiveCtoDevelopersRoute =
+  DashboardExecutiveCtoDevelopersRouteImport.update({
+    id: '/developers',
+    path: '/developers',
+    getParentRoute: () => DashboardExecutiveCtoRoute,
+  } as any)
+const DashboardExecutiveCtoDatabaseRoute =
+  DashboardExecutiveCtoDatabaseRouteImport.update({
+    id: '/database',
+    path: '/database',
+    getParentRoute: () => DashboardExecutiveCtoRoute,
+  } as any)
+const DashboardExecutiveCtoAnalyticsRoute =
+  DashboardExecutiveCtoAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => DashboardExecutiveCtoRoute,
+  } as any)
+const DashboardExecutiveCtoAiRoute = DashboardExecutiveCtoAiRouteImport.update({
+  id: '/ai',
+  path: '/ai',
+  getParentRoute: () => DashboardExecutiveCtoRoute,
+} as any)
+const DashboardExecutiveCioSettingsRoute =
+  DashboardExecutiveCioSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => DashboardExecutiveCioRoute,
+  } as any)
+const DashboardExecutiveCioItOperationsRoute =
+  DashboardExecutiveCioItOperationsRouteImport.update({
+    id: '/it-operations',
+    path: '/it-operations',
+    getParentRoute: () => DashboardExecutiveCioRoute,
+  } as any)
+const DashboardExecutiveCioItGovernanceRoute =
+  DashboardExecutiveCioItGovernanceRouteImport.update({
+    id: '/it-governance',
+    path: '/it-governance',
+    getParentRoute: () => DashboardExecutiveCioRoute,
+  } as any)
+const DashboardExecutiveCioInfrastructureRoute =
+  DashboardExecutiveCioInfrastructureRouteImport.update({
+    id: '/infrastructure',
+    path: '/infrastructure',
+    getParentRoute: () => DashboardExecutiveCioRoute,
+  } as any)
+const DashboardExecutiveCioDigitalTransformationRoute =
+  DashboardExecutiveCioDigitalTransformationRouteImport.update({
+    id: '/digital-transformation',
+    path: '/digital-transformation',
+    getParentRoute: () => DashboardExecutiveCioRoute,
+  } as any)
+const DashboardExecutiveCioCyberSecurityRoute =
+  DashboardExecutiveCioCyberSecurityRouteImport.update({
+    id: '/cyber-security',
+    path: '/cyber-security',
+    getParentRoute: () => DashboardExecutiveCioRoute,
+  } as any)
+const DashboardExecutiveCioCloudNetworkRoute =
+  DashboardExecutiveCioCloudNetworkRouteImport.update({
+    id: '/cloud-network',
+    path: '/cloud-network',
+    getParentRoute: () => DashboardExecutiveCioRoute,
+  } as any)
+const DashboardExecutiveCioAnalyticsRoute =
+  DashboardExecutiveCioAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => DashboardExecutiveCioRoute,
+  } as any)
+const DashboardExecutiveCeoSettingsRoute =
+  DashboardExecutiveCeoSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => DashboardExecutiveCeoRoute,
+  } as any)
+const DashboardExecutiveCeoSalesRoute =
+  DashboardExecutiveCeoSalesRouteImport.update({
+    id: '/sales',
+    path: '/sales',
+    getParentRoute: () => DashboardExecutiveCeoRoute,
+  } as any)
+const DashboardExecutiveCeoReportsRoute =
+  DashboardExecutiveCeoReportsRouteImport.update({
+    id: '/reports',
+    path: '/reports',
+    getParentRoute: () => DashboardExecutiveCeoRoute,
+  } as any)
+const DashboardExecutiveCeoOrganizationRoute =
+  DashboardExecutiveCeoOrganizationRouteImport.update({
+    id: '/organization',
+    path: '/organization',
+    getParentRoute: () => DashboardExecutiveCeoRoute,
+  } as any)
+const DashboardExecutiveCeoOperationsRoute =
+  DashboardExecutiveCeoOperationsRouteImport.update({
+    id: '/operations',
+    path: '/operations',
+    getParentRoute: () => DashboardExecutiveCeoRoute,
+  } as any)
+const DashboardExecutiveCeoFinanceRoute =
+  DashboardExecutiveCeoFinanceRouteImport.update({
+    id: '/finance',
+    path: '/finance',
+    getParentRoute: () => DashboardExecutiveCeoRoute,
+  } as any)
+const DashboardExecutiveCeoBusinessRoute =
+  DashboardExecutiveCeoBusinessRouteImport.update({
+    id: '/business',
+    path: '/business',
+    getParentRoute: () => DashboardExecutiveCeoRoute,
+  } as any)
+const DashboardExecutiveCeoAiInsightsRoute =
+  DashboardExecutiveCeoAiInsightsRouteImport.update({
+    id: '/ai-insights',
+    path: '/ai-insights',
+    getParentRoute: () => DashboardExecutiveCeoRoute,
   } as any)
 const DashboardRecruitmentJobsJobIdPublishRoute =
   DashboardRecruitmentJobsJobIdPublishRouteImport.update({
@@ -1199,6 +1456,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/exit': typeof DashboardExitRoute
   '/dashboard/exit-management': typeof DashboardExitManagementRoute
   '/dashboard/expenses': typeof DashboardExpensesRoute
+  '/dashboard/hierarchy': typeof DashboardHierarchyRoute
   '/dashboard/hr': typeof DashboardHrRoute
   '/dashboard/hr-operations': typeof DashboardHrOperationsRouteWithChildren
   '/dashboard/hr-ops': typeof DashboardHrOpsRoute
@@ -1232,6 +1490,12 @@ export interface FileRoutesByFullPath {
   '/dashboard/attendance/holidays': typeof DashboardAttendanceHolidaysRoute
   '/dashboard/attendance/rosters': typeof DashboardAttendanceRostersRoute
   '/dashboard/attendance/shifts': typeof DashboardAttendanceShiftsRoute
+  '/dashboard/executive/ceo': typeof DashboardExecutiveCeoRouteWithChildren
+  '/dashboard/executive/cfo': typeof DashboardExecutiveCfoRoute
+  '/dashboard/executive/cio': typeof DashboardExecutiveCioRouteWithChildren
+  '/dashboard/executive/cmo': typeof DashboardExecutiveCmoRoute
+  '/dashboard/executive/coo': typeof DashboardExecutiveCooRoute
+  '/dashboard/executive/cto': typeof DashboardExecutiveCtoRouteWithChildren
   '/dashboard/hr-operations/exit-management': typeof DashboardHrOperationsExitManagementRoute
   '/dashboard/hr-operations/offboarding': typeof DashboardHrOperationsOffboardingRoute
   '/dashboard/hr-operations/onboarding': typeof DashboardHrOperationsOnboardingRoute
@@ -1301,6 +1565,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/ai-hub/': typeof DashboardAiHubIndexRoute
   '/dashboard/analytics/': typeof DashboardAnalyticsIndexRoute
   '/dashboard/attendance/': typeof DashboardAttendanceIndexRoute
+  '/dashboard/executive/': typeof DashboardExecutiveIndexRoute
   '/dashboard/hr-operations/': typeof DashboardHrOperationsIndexRoute
   '/dashboard/payroll/': typeof DashboardPayrollIndexRoute
   '/dashboard/people/': typeof DashboardPeopleIndexRoute
@@ -1309,9 +1574,39 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
   '/dashboard/talent/': typeof DashboardTalentIndexRoute
   '/dashboard/workforce/': typeof DashboardWorkforceIndexRoute
+  '/dashboard/executive/ceo/ai-insights': typeof DashboardExecutiveCeoAiInsightsRoute
+  '/dashboard/executive/ceo/business': typeof DashboardExecutiveCeoBusinessRoute
+  '/dashboard/executive/ceo/finance': typeof DashboardExecutiveCeoFinanceRoute
+  '/dashboard/executive/ceo/operations': typeof DashboardExecutiveCeoOperationsRoute
+  '/dashboard/executive/ceo/organization': typeof DashboardExecutiveCeoOrganizationRoute
+  '/dashboard/executive/ceo/reports': typeof DashboardExecutiveCeoReportsRoute
+  '/dashboard/executive/ceo/sales': typeof DashboardExecutiveCeoSalesRoute
+  '/dashboard/executive/ceo/settings': typeof DashboardExecutiveCeoSettingsRoute
+  '/dashboard/executive/cio/analytics': typeof DashboardExecutiveCioAnalyticsRoute
+  '/dashboard/executive/cio/cloud-network': typeof DashboardExecutiveCioCloudNetworkRoute
+  '/dashboard/executive/cio/cyber-security': typeof DashboardExecutiveCioCyberSecurityRoute
+  '/dashboard/executive/cio/digital-transformation': typeof DashboardExecutiveCioDigitalTransformationRoute
+  '/dashboard/executive/cio/infrastructure': typeof DashboardExecutiveCioInfrastructureRoute
+  '/dashboard/executive/cio/it-governance': typeof DashboardExecutiveCioItGovernanceRoute
+  '/dashboard/executive/cio/it-operations': typeof DashboardExecutiveCioItOperationsRoute
+  '/dashboard/executive/cio/settings': typeof DashboardExecutiveCioSettingsRoute
+  '/dashboard/executive/cto/ai': typeof DashboardExecutiveCtoAiRoute
+  '/dashboard/executive/cto/analytics': typeof DashboardExecutiveCtoAnalyticsRoute
+  '/dashboard/executive/cto/database': typeof DashboardExecutiveCtoDatabaseRoute
+  '/dashboard/executive/cto/developers': typeof DashboardExecutiveCtoDevelopersRoute
+  '/dashboard/executive/cto/devops': typeof DashboardExecutiveCtoDevopsRoute
+  '/dashboard/executive/cto/engineering': typeof DashboardExecutiveCtoEngineeringRoute
+  '/dashboard/executive/cto/infrastructure': typeof DashboardExecutiveCtoInfrastructureRoute
+  '/dashboard/executive/cto/monitoring': typeof DashboardExecutiveCtoMonitoringRoute
+  '/dashboard/executive/cto/projects': typeof DashboardExecutiveCtoProjectsRoute
+  '/dashboard/executive/cto/security': typeof DashboardExecutiveCtoSecurityRoute
+  '/dashboard/executive/cto/settings': typeof DashboardExecutiveCtoSettingsRoute
   '/dashboard/recruitment/candidates/$candidateId': typeof DashboardRecruitmentCandidatesCandidateIdRoute
   '/dashboard/recruitment/jobs/$jobId': typeof DashboardRecruitmentJobsJobIdRouteWithChildren
   '/dashboard/recruitment/jobs/new': typeof DashboardRecruitmentJobsNewRoute
+  '/dashboard/executive/ceo/': typeof DashboardExecutiveCeoIndexRoute
+  '/dashboard/executive/cio/': typeof DashboardExecutiveCioIndexRoute
+  '/dashboard/executive/cto/': typeof DashboardExecutiveCtoIndexRoute
   '/dashboard/recruitment/candidates/': typeof DashboardRecruitmentCandidatesIndexRoute
   '/dashboard/recruitment/jobs/': typeof DashboardRecruitmentJobsIndexRoute
   '/dashboard/recruitment/jobs/$jobId/publish': typeof DashboardRecruitmentJobsJobIdPublishRoute
@@ -1370,6 +1665,7 @@ export interface FileRoutesByTo {
   '/dashboard/exit': typeof DashboardExitRoute
   '/dashboard/exit-management': typeof DashboardExitManagementRoute
   '/dashboard/expenses': typeof DashboardExpensesRoute
+  '/dashboard/hierarchy': typeof DashboardHierarchyRoute
   '/dashboard/hr': typeof DashboardHrRoute
   '/dashboard/hr-ops': typeof DashboardHrOpsRoute
   '/dashboard/leaves': typeof DashboardLeavesRoute
@@ -1396,6 +1692,9 @@ export interface FileRoutesByTo {
   '/dashboard/attendance/holidays': typeof DashboardAttendanceHolidaysRoute
   '/dashboard/attendance/rosters': typeof DashboardAttendanceRostersRoute
   '/dashboard/attendance/shifts': typeof DashboardAttendanceShiftsRoute
+  '/dashboard/executive/cfo': typeof DashboardExecutiveCfoRoute
+  '/dashboard/executive/cmo': typeof DashboardExecutiveCmoRoute
+  '/dashboard/executive/coo': typeof DashboardExecutiveCooRoute
   '/dashboard/hr-operations/exit-management': typeof DashboardHrOperationsExitManagementRoute
   '/dashboard/hr-operations/offboarding': typeof DashboardHrOperationsOffboardingRoute
   '/dashboard/hr-operations/onboarding': typeof DashboardHrOperationsOnboardingRoute
@@ -1464,6 +1763,7 @@ export interface FileRoutesByTo {
   '/dashboard/ai-hub': typeof DashboardAiHubIndexRoute
   '/dashboard/analytics': typeof DashboardAnalyticsIndexRoute
   '/dashboard/attendance': typeof DashboardAttendanceIndexRoute
+  '/dashboard/executive': typeof DashboardExecutiveIndexRoute
   '/dashboard/hr-operations': typeof DashboardHrOperationsIndexRoute
   '/dashboard/payroll': typeof DashboardPayrollIndexRoute
   '/dashboard/people': typeof DashboardPeopleIndexRoute
@@ -1472,9 +1772,39 @@ export interface FileRoutesByTo {
   '/dashboard/settings': typeof DashboardSettingsIndexRoute
   '/dashboard/talent': typeof DashboardTalentIndexRoute
   '/dashboard/workforce': typeof DashboardWorkforceIndexRoute
+  '/dashboard/executive/ceo/ai-insights': typeof DashboardExecutiveCeoAiInsightsRoute
+  '/dashboard/executive/ceo/business': typeof DashboardExecutiveCeoBusinessRoute
+  '/dashboard/executive/ceo/finance': typeof DashboardExecutiveCeoFinanceRoute
+  '/dashboard/executive/ceo/operations': typeof DashboardExecutiveCeoOperationsRoute
+  '/dashboard/executive/ceo/organization': typeof DashboardExecutiveCeoOrganizationRoute
+  '/dashboard/executive/ceo/reports': typeof DashboardExecutiveCeoReportsRoute
+  '/dashboard/executive/ceo/sales': typeof DashboardExecutiveCeoSalesRoute
+  '/dashboard/executive/ceo/settings': typeof DashboardExecutiveCeoSettingsRoute
+  '/dashboard/executive/cio/analytics': typeof DashboardExecutiveCioAnalyticsRoute
+  '/dashboard/executive/cio/cloud-network': typeof DashboardExecutiveCioCloudNetworkRoute
+  '/dashboard/executive/cio/cyber-security': typeof DashboardExecutiveCioCyberSecurityRoute
+  '/dashboard/executive/cio/digital-transformation': typeof DashboardExecutiveCioDigitalTransformationRoute
+  '/dashboard/executive/cio/infrastructure': typeof DashboardExecutiveCioInfrastructureRoute
+  '/dashboard/executive/cio/it-governance': typeof DashboardExecutiveCioItGovernanceRoute
+  '/dashboard/executive/cio/it-operations': typeof DashboardExecutiveCioItOperationsRoute
+  '/dashboard/executive/cio/settings': typeof DashboardExecutiveCioSettingsRoute
+  '/dashboard/executive/cto/ai': typeof DashboardExecutiveCtoAiRoute
+  '/dashboard/executive/cto/analytics': typeof DashboardExecutiveCtoAnalyticsRoute
+  '/dashboard/executive/cto/database': typeof DashboardExecutiveCtoDatabaseRoute
+  '/dashboard/executive/cto/developers': typeof DashboardExecutiveCtoDevelopersRoute
+  '/dashboard/executive/cto/devops': typeof DashboardExecutiveCtoDevopsRoute
+  '/dashboard/executive/cto/engineering': typeof DashboardExecutiveCtoEngineeringRoute
+  '/dashboard/executive/cto/infrastructure': typeof DashboardExecutiveCtoInfrastructureRoute
+  '/dashboard/executive/cto/monitoring': typeof DashboardExecutiveCtoMonitoringRoute
+  '/dashboard/executive/cto/projects': typeof DashboardExecutiveCtoProjectsRoute
+  '/dashboard/executive/cto/security': typeof DashboardExecutiveCtoSecurityRoute
+  '/dashboard/executive/cto/settings': typeof DashboardExecutiveCtoSettingsRoute
   '/dashboard/recruitment/candidates/$candidateId': typeof DashboardRecruitmentCandidatesCandidateIdRoute
   '/dashboard/recruitment/jobs/$jobId': typeof DashboardRecruitmentJobsJobIdRouteWithChildren
   '/dashboard/recruitment/jobs/new': typeof DashboardRecruitmentJobsNewRoute
+  '/dashboard/executive/ceo': typeof DashboardExecutiveCeoIndexRoute
+  '/dashboard/executive/cio': typeof DashboardExecutiveCioIndexRoute
+  '/dashboard/executive/cto': typeof DashboardExecutiveCtoIndexRoute
   '/dashboard/recruitment/candidates': typeof DashboardRecruitmentCandidatesIndexRoute
   '/dashboard/recruitment/jobs': typeof DashboardRecruitmentJobsIndexRoute
   '/dashboard/recruitment/jobs/$jobId/publish': typeof DashboardRecruitmentJobsJobIdPublishRoute
@@ -1540,6 +1870,7 @@ export interface FileRoutesById {
   '/dashboard/exit': typeof DashboardExitRoute
   '/dashboard/exit-management': typeof DashboardExitManagementRoute
   '/dashboard/expenses': typeof DashboardExpensesRoute
+  '/dashboard/hierarchy': typeof DashboardHierarchyRoute
   '/dashboard/hr': typeof DashboardHrRoute
   '/dashboard/hr-operations': typeof DashboardHrOperationsRouteWithChildren
   '/dashboard/hr-ops': typeof DashboardHrOpsRoute
@@ -1573,6 +1904,12 @@ export interface FileRoutesById {
   '/dashboard/attendance/holidays': typeof DashboardAttendanceHolidaysRoute
   '/dashboard/attendance/rosters': typeof DashboardAttendanceRostersRoute
   '/dashboard/attendance/shifts': typeof DashboardAttendanceShiftsRoute
+  '/dashboard/executive/ceo': typeof DashboardExecutiveCeoRouteWithChildren
+  '/dashboard/executive/cfo': typeof DashboardExecutiveCfoRoute
+  '/dashboard/executive/cio': typeof DashboardExecutiveCioRouteWithChildren
+  '/dashboard/executive/cmo': typeof DashboardExecutiveCmoRoute
+  '/dashboard/executive/coo': typeof DashboardExecutiveCooRoute
+  '/dashboard/executive/cto': typeof DashboardExecutiveCtoRouteWithChildren
   '/dashboard/hr-operations/exit-management': typeof DashboardHrOperationsExitManagementRoute
   '/dashboard/hr-operations/offboarding': typeof DashboardHrOperationsOffboardingRoute
   '/dashboard/hr-operations/onboarding': typeof DashboardHrOperationsOnboardingRoute
@@ -1642,6 +1979,7 @@ export interface FileRoutesById {
   '/dashboard/ai-hub/': typeof DashboardAiHubIndexRoute
   '/dashboard/analytics/': typeof DashboardAnalyticsIndexRoute
   '/dashboard/attendance/': typeof DashboardAttendanceIndexRoute
+  '/dashboard/executive/': typeof DashboardExecutiveIndexRoute
   '/dashboard/hr-operations/': typeof DashboardHrOperationsIndexRoute
   '/dashboard/payroll/': typeof DashboardPayrollIndexRoute
   '/dashboard/people/': typeof DashboardPeopleIndexRoute
@@ -1650,9 +1988,39 @@ export interface FileRoutesById {
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
   '/dashboard/talent/': typeof DashboardTalentIndexRoute
   '/dashboard/workforce/': typeof DashboardWorkforceIndexRoute
+  '/dashboard/executive/ceo/ai-insights': typeof DashboardExecutiveCeoAiInsightsRoute
+  '/dashboard/executive/ceo/business': typeof DashboardExecutiveCeoBusinessRoute
+  '/dashboard/executive/ceo/finance': typeof DashboardExecutiveCeoFinanceRoute
+  '/dashboard/executive/ceo/operations': typeof DashboardExecutiveCeoOperationsRoute
+  '/dashboard/executive/ceo/organization': typeof DashboardExecutiveCeoOrganizationRoute
+  '/dashboard/executive/ceo/reports': typeof DashboardExecutiveCeoReportsRoute
+  '/dashboard/executive/ceo/sales': typeof DashboardExecutiveCeoSalesRoute
+  '/dashboard/executive/ceo/settings': typeof DashboardExecutiveCeoSettingsRoute
+  '/dashboard/executive/cio/analytics': typeof DashboardExecutiveCioAnalyticsRoute
+  '/dashboard/executive/cio/cloud-network': typeof DashboardExecutiveCioCloudNetworkRoute
+  '/dashboard/executive/cio/cyber-security': typeof DashboardExecutiveCioCyberSecurityRoute
+  '/dashboard/executive/cio/digital-transformation': typeof DashboardExecutiveCioDigitalTransformationRoute
+  '/dashboard/executive/cio/infrastructure': typeof DashboardExecutiveCioInfrastructureRoute
+  '/dashboard/executive/cio/it-governance': typeof DashboardExecutiveCioItGovernanceRoute
+  '/dashboard/executive/cio/it-operations': typeof DashboardExecutiveCioItOperationsRoute
+  '/dashboard/executive/cio/settings': typeof DashboardExecutiveCioSettingsRoute
+  '/dashboard/executive/cto/ai': typeof DashboardExecutiveCtoAiRoute
+  '/dashboard/executive/cto/analytics': typeof DashboardExecutiveCtoAnalyticsRoute
+  '/dashboard/executive/cto/database': typeof DashboardExecutiveCtoDatabaseRoute
+  '/dashboard/executive/cto/developers': typeof DashboardExecutiveCtoDevelopersRoute
+  '/dashboard/executive/cto/devops': typeof DashboardExecutiveCtoDevopsRoute
+  '/dashboard/executive/cto/engineering': typeof DashboardExecutiveCtoEngineeringRoute
+  '/dashboard/executive/cto/infrastructure': typeof DashboardExecutiveCtoInfrastructureRoute
+  '/dashboard/executive/cto/monitoring': typeof DashboardExecutiveCtoMonitoringRoute
+  '/dashboard/executive/cto/projects': typeof DashboardExecutiveCtoProjectsRoute
+  '/dashboard/executive/cto/security': typeof DashboardExecutiveCtoSecurityRoute
+  '/dashboard/executive/cto/settings': typeof DashboardExecutiveCtoSettingsRoute
   '/dashboard/recruitment/candidates/$candidateId': typeof DashboardRecruitmentCandidatesCandidateIdRoute
   '/dashboard/recruitment/jobs/$jobId': typeof DashboardRecruitmentJobsJobIdRouteWithChildren
   '/dashboard/recruitment/jobs/new': typeof DashboardRecruitmentJobsNewRoute
+  '/dashboard/executive/ceo/': typeof DashboardExecutiveCeoIndexRoute
+  '/dashboard/executive/cio/': typeof DashboardExecutiveCioIndexRoute
+  '/dashboard/executive/cto/': typeof DashboardExecutiveCtoIndexRoute
   '/dashboard/recruitment/candidates/': typeof DashboardRecruitmentCandidatesIndexRoute
   '/dashboard/recruitment/jobs/': typeof DashboardRecruitmentJobsIndexRoute
   '/dashboard/recruitment/jobs/$jobId/publish': typeof DashboardRecruitmentJobsJobIdPublishRoute
@@ -1719,6 +2087,7 @@ export interface FileRouteTypes {
     | '/dashboard/exit'
     | '/dashboard/exit-management'
     | '/dashboard/expenses'
+    | '/dashboard/hierarchy'
     | '/dashboard/hr'
     | '/dashboard/hr-operations'
     | '/dashboard/hr-ops'
@@ -1752,6 +2121,12 @@ export interface FileRouteTypes {
     | '/dashboard/attendance/holidays'
     | '/dashboard/attendance/rosters'
     | '/dashboard/attendance/shifts'
+    | '/dashboard/executive/ceo'
+    | '/dashboard/executive/cfo'
+    | '/dashboard/executive/cio'
+    | '/dashboard/executive/cmo'
+    | '/dashboard/executive/coo'
+    | '/dashboard/executive/cto'
     | '/dashboard/hr-operations/exit-management'
     | '/dashboard/hr-operations/offboarding'
     | '/dashboard/hr-operations/onboarding'
@@ -1821,6 +2196,7 @@ export interface FileRouteTypes {
     | '/dashboard/ai-hub/'
     | '/dashboard/analytics/'
     | '/dashboard/attendance/'
+    | '/dashboard/executive/'
     | '/dashboard/hr-operations/'
     | '/dashboard/payroll/'
     | '/dashboard/people/'
@@ -1829,9 +2205,39 @@ export interface FileRouteTypes {
     | '/dashboard/settings/'
     | '/dashboard/talent/'
     | '/dashboard/workforce/'
+    | '/dashboard/executive/ceo/ai-insights'
+    | '/dashboard/executive/ceo/business'
+    | '/dashboard/executive/ceo/finance'
+    | '/dashboard/executive/ceo/operations'
+    | '/dashboard/executive/ceo/organization'
+    | '/dashboard/executive/ceo/reports'
+    | '/dashboard/executive/ceo/sales'
+    | '/dashboard/executive/ceo/settings'
+    | '/dashboard/executive/cio/analytics'
+    | '/dashboard/executive/cio/cloud-network'
+    | '/dashboard/executive/cio/cyber-security'
+    | '/dashboard/executive/cio/digital-transformation'
+    | '/dashboard/executive/cio/infrastructure'
+    | '/dashboard/executive/cio/it-governance'
+    | '/dashboard/executive/cio/it-operations'
+    | '/dashboard/executive/cio/settings'
+    | '/dashboard/executive/cto/ai'
+    | '/dashboard/executive/cto/analytics'
+    | '/dashboard/executive/cto/database'
+    | '/dashboard/executive/cto/developers'
+    | '/dashboard/executive/cto/devops'
+    | '/dashboard/executive/cto/engineering'
+    | '/dashboard/executive/cto/infrastructure'
+    | '/dashboard/executive/cto/monitoring'
+    | '/dashboard/executive/cto/projects'
+    | '/dashboard/executive/cto/security'
+    | '/dashboard/executive/cto/settings'
     | '/dashboard/recruitment/candidates/$candidateId'
     | '/dashboard/recruitment/jobs/$jobId'
     | '/dashboard/recruitment/jobs/new'
+    | '/dashboard/executive/ceo/'
+    | '/dashboard/executive/cio/'
+    | '/dashboard/executive/cto/'
     | '/dashboard/recruitment/candidates/'
     | '/dashboard/recruitment/jobs/'
     | '/dashboard/recruitment/jobs/$jobId/publish'
@@ -1890,6 +2296,7 @@ export interface FileRouteTypes {
     | '/dashboard/exit'
     | '/dashboard/exit-management'
     | '/dashboard/expenses'
+    | '/dashboard/hierarchy'
     | '/dashboard/hr'
     | '/dashboard/hr-ops'
     | '/dashboard/leaves'
@@ -1916,6 +2323,9 @@ export interface FileRouteTypes {
     | '/dashboard/attendance/holidays'
     | '/dashboard/attendance/rosters'
     | '/dashboard/attendance/shifts'
+    | '/dashboard/executive/cfo'
+    | '/dashboard/executive/cmo'
+    | '/dashboard/executive/coo'
     | '/dashboard/hr-operations/exit-management'
     | '/dashboard/hr-operations/offboarding'
     | '/dashboard/hr-operations/onboarding'
@@ -1984,6 +2394,7 @@ export interface FileRouteTypes {
     | '/dashboard/ai-hub'
     | '/dashboard/analytics'
     | '/dashboard/attendance'
+    | '/dashboard/executive'
     | '/dashboard/hr-operations'
     | '/dashboard/payroll'
     | '/dashboard/people'
@@ -1992,9 +2403,39 @@ export interface FileRouteTypes {
     | '/dashboard/settings'
     | '/dashboard/talent'
     | '/dashboard/workforce'
+    | '/dashboard/executive/ceo/ai-insights'
+    | '/dashboard/executive/ceo/business'
+    | '/dashboard/executive/ceo/finance'
+    | '/dashboard/executive/ceo/operations'
+    | '/dashboard/executive/ceo/organization'
+    | '/dashboard/executive/ceo/reports'
+    | '/dashboard/executive/ceo/sales'
+    | '/dashboard/executive/ceo/settings'
+    | '/dashboard/executive/cio/analytics'
+    | '/dashboard/executive/cio/cloud-network'
+    | '/dashboard/executive/cio/cyber-security'
+    | '/dashboard/executive/cio/digital-transformation'
+    | '/dashboard/executive/cio/infrastructure'
+    | '/dashboard/executive/cio/it-governance'
+    | '/dashboard/executive/cio/it-operations'
+    | '/dashboard/executive/cio/settings'
+    | '/dashboard/executive/cto/ai'
+    | '/dashboard/executive/cto/analytics'
+    | '/dashboard/executive/cto/database'
+    | '/dashboard/executive/cto/developers'
+    | '/dashboard/executive/cto/devops'
+    | '/dashboard/executive/cto/engineering'
+    | '/dashboard/executive/cto/infrastructure'
+    | '/dashboard/executive/cto/monitoring'
+    | '/dashboard/executive/cto/projects'
+    | '/dashboard/executive/cto/security'
+    | '/dashboard/executive/cto/settings'
     | '/dashboard/recruitment/candidates/$candidateId'
     | '/dashboard/recruitment/jobs/$jobId'
     | '/dashboard/recruitment/jobs/new'
+    | '/dashboard/executive/ceo'
+    | '/dashboard/executive/cio'
+    | '/dashboard/executive/cto'
     | '/dashboard/recruitment/candidates'
     | '/dashboard/recruitment/jobs'
     | '/dashboard/recruitment/jobs/$jobId/publish'
@@ -2059,6 +2500,7 @@ export interface FileRouteTypes {
     | '/dashboard/exit'
     | '/dashboard/exit-management'
     | '/dashboard/expenses'
+    | '/dashboard/hierarchy'
     | '/dashboard/hr'
     | '/dashboard/hr-operations'
     | '/dashboard/hr-ops'
@@ -2092,6 +2534,12 @@ export interface FileRouteTypes {
     | '/dashboard/attendance/holidays'
     | '/dashboard/attendance/rosters'
     | '/dashboard/attendance/shifts'
+    | '/dashboard/executive/ceo'
+    | '/dashboard/executive/cfo'
+    | '/dashboard/executive/cio'
+    | '/dashboard/executive/cmo'
+    | '/dashboard/executive/coo'
+    | '/dashboard/executive/cto'
     | '/dashboard/hr-operations/exit-management'
     | '/dashboard/hr-operations/offboarding'
     | '/dashboard/hr-operations/onboarding'
@@ -2161,6 +2609,7 @@ export interface FileRouteTypes {
     | '/dashboard/ai-hub/'
     | '/dashboard/analytics/'
     | '/dashboard/attendance/'
+    | '/dashboard/executive/'
     | '/dashboard/hr-operations/'
     | '/dashboard/payroll/'
     | '/dashboard/people/'
@@ -2169,9 +2618,39 @@ export interface FileRouteTypes {
     | '/dashboard/settings/'
     | '/dashboard/talent/'
     | '/dashboard/workforce/'
+    | '/dashboard/executive/ceo/ai-insights'
+    | '/dashboard/executive/ceo/business'
+    | '/dashboard/executive/ceo/finance'
+    | '/dashboard/executive/ceo/operations'
+    | '/dashboard/executive/ceo/organization'
+    | '/dashboard/executive/ceo/reports'
+    | '/dashboard/executive/ceo/sales'
+    | '/dashboard/executive/ceo/settings'
+    | '/dashboard/executive/cio/analytics'
+    | '/dashboard/executive/cio/cloud-network'
+    | '/dashboard/executive/cio/cyber-security'
+    | '/dashboard/executive/cio/digital-transformation'
+    | '/dashboard/executive/cio/infrastructure'
+    | '/dashboard/executive/cio/it-governance'
+    | '/dashboard/executive/cio/it-operations'
+    | '/dashboard/executive/cio/settings'
+    | '/dashboard/executive/cto/ai'
+    | '/dashboard/executive/cto/analytics'
+    | '/dashboard/executive/cto/database'
+    | '/dashboard/executive/cto/developers'
+    | '/dashboard/executive/cto/devops'
+    | '/dashboard/executive/cto/engineering'
+    | '/dashboard/executive/cto/infrastructure'
+    | '/dashboard/executive/cto/monitoring'
+    | '/dashboard/executive/cto/projects'
+    | '/dashboard/executive/cto/security'
+    | '/dashboard/executive/cto/settings'
     | '/dashboard/recruitment/candidates/$candidateId'
     | '/dashboard/recruitment/jobs/$jobId'
     | '/dashboard/recruitment/jobs/new'
+    | '/dashboard/executive/ceo/'
+    | '/dashboard/executive/cio/'
+    | '/dashboard/executive/cto/'
     | '/dashboard/recruitment/candidates/'
     | '/dashboard/recruitment/jobs/'
     | '/dashboard/recruitment/jobs/$jobId/publish'
@@ -2519,6 +2998,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardHrRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/hierarchy': {
+      id: '/dashboard/hierarchy'
+      path: '/hierarchy'
+      fullPath: '/dashboard/hierarchy'
+      preLoaderRoute: typeof DashboardHierarchyRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/expenses': {
       id: '/dashboard/expenses'
       path: '/expenses'
@@ -2847,6 +3333,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/hr-operations/'
       preLoaderRoute: typeof DashboardHrOperationsIndexRouteImport
       parentRoute: typeof DashboardHrOperationsRoute
+    }
+    '/dashboard/executive/': {
+      id: '/dashboard/executive/'
+      path: '/executive'
+      fullPath: '/dashboard/executive/'
+      preLoaderRoute: typeof DashboardExecutiveIndexRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/dashboard/attendance/': {
       id: '/dashboard/attendance/'
@@ -3331,6 +3824,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardHrOperationsExitManagementRouteImport
       parentRoute: typeof DashboardHrOperationsRoute
     }
+    '/dashboard/executive/cto': {
+      id: '/dashboard/executive/cto'
+      path: '/executive/cto'
+      fullPath: '/dashboard/executive/cto'
+      preLoaderRoute: typeof DashboardExecutiveCtoRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/executive/coo': {
+      id: '/dashboard/executive/coo'
+      path: '/executive/coo'
+      fullPath: '/dashboard/executive/coo'
+      preLoaderRoute: typeof DashboardExecutiveCooRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/executive/cmo': {
+      id: '/dashboard/executive/cmo'
+      path: '/executive/cmo'
+      fullPath: '/dashboard/executive/cmo'
+      preLoaderRoute: typeof DashboardExecutiveCmoRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/executive/cio': {
+      id: '/dashboard/executive/cio'
+      path: '/executive/cio'
+      fullPath: '/dashboard/executive/cio'
+      preLoaderRoute: typeof DashboardExecutiveCioRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/executive/cfo': {
+      id: '/dashboard/executive/cfo'
+      path: '/executive/cfo'
+      fullPath: '/dashboard/executive/cfo'
+      preLoaderRoute: typeof DashboardExecutiveCfoRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/executive/ceo': {
+      id: '/dashboard/executive/ceo'
+      path: '/executive/ceo'
+      fullPath: '/dashboard/executive/ceo'
+      preLoaderRoute: typeof DashboardExecutiveCeoRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/attendance/shifts': {
       id: '/dashboard/attendance/shifts'
       path: '/shifts'
@@ -3408,6 +3943,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRecruitmentCandidatesIndexRouteImport
       parentRoute: typeof DashboardRecruitmentCandidatesRoute
     }
+    '/dashboard/executive/cto/': {
+      id: '/dashboard/executive/cto/'
+      path: '/'
+      fullPath: '/dashboard/executive/cto/'
+      preLoaderRoute: typeof DashboardExecutiveCtoIndexRouteImport
+      parentRoute: typeof DashboardExecutiveCtoRoute
+    }
+    '/dashboard/executive/cio/': {
+      id: '/dashboard/executive/cio/'
+      path: '/'
+      fullPath: '/dashboard/executive/cio/'
+      preLoaderRoute: typeof DashboardExecutiveCioIndexRouteImport
+      parentRoute: typeof DashboardExecutiveCioRoute
+    }
+    '/dashboard/executive/ceo/': {
+      id: '/dashboard/executive/ceo/'
+      path: '/'
+      fullPath: '/dashboard/executive/ceo/'
+      preLoaderRoute: typeof DashboardExecutiveCeoIndexRouteImport
+      parentRoute: typeof DashboardExecutiveCeoRoute
+    }
     '/dashboard/recruitment/jobs/new': {
       id: '/dashboard/recruitment/jobs/new'
       path: '/jobs/new'
@@ -3428,6 +3984,195 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/recruitment/candidates/$candidateId'
       preLoaderRoute: typeof DashboardRecruitmentCandidatesCandidateIdRouteImport
       parentRoute: typeof DashboardRecruitmentCandidatesRoute
+    }
+    '/dashboard/executive/cto/settings': {
+      id: '/dashboard/executive/cto/settings'
+      path: '/settings'
+      fullPath: '/dashboard/executive/cto/settings'
+      preLoaderRoute: typeof DashboardExecutiveCtoSettingsRouteImport
+      parentRoute: typeof DashboardExecutiveCtoRoute
+    }
+    '/dashboard/executive/cto/security': {
+      id: '/dashboard/executive/cto/security'
+      path: '/security'
+      fullPath: '/dashboard/executive/cto/security'
+      preLoaderRoute: typeof DashboardExecutiveCtoSecurityRouteImport
+      parentRoute: typeof DashboardExecutiveCtoRoute
+    }
+    '/dashboard/executive/cto/projects': {
+      id: '/dashboard/executive/cto/projects'
+      path: '/projects'
+      fullPath: '/dashboard/executive/cto/projects'
+      preLoaderRoute: typeof DashboardExecutiveCtoProjectsRouteImport
+      parentRoute: typeof DashboardExecutiveCtoRoute
+    }
+    '/dashboard/executive/cto/monitoring': {
+      id: '/dashboard/executive/cto/monitoring'
+      path: '/monitoring'
+      fullPath: '/dashboard/executive/cto/monitoring'
+      preLoaderRoute: typeof DashboardExecutiveCtoMonitoringRouteImport
+      parentRoute: typeof DashboardExecutiveCtoRoute
+    }
+    '/dashboard/executive/cto/infrastructure': {
+      id: '/dashboard/executive/cto/infrastructure'
+      path: '/infrastructure'
+      fullPath: '/dashboard/executive/cto/infrastructure'
+      preLoaderRoute: typeof DashboardExecutiveCtoInfrastructureRouteImport
+      parentRoute: typeof DashboardExecutiveCtoRoute
+    }
+    '/dashboard/executive/cto/engineering': {
+      id: '/dashboard/executive/cto/engineering'
+      path: '/engineering'
+      fullPath: '/dashboard/executive/cto/engineering'
+      preLoaderRoute: typeof DashboardExecutiveCtoEngineeringRouteImport
+      parentRoute: typeof DashboardExecutiveCtoRoute
+    }
+    '/dashboard/executive/cto/devops': {
+      id: '/dashboard/executive/cto/devops'
+      path: '/devops'
+      fullPath: '/dashboard/executive/cto/devops'
+      preLoaderRoute: typeof DashboardExecutiveCtoDevopsRouteImport
+      parentRoute: typeof DashboardExecutiveCtoRoute
+    }
+    '/dashboard/executive/cto/developers': {
+      id: '/dashboard/executive/cto/developers'
+      path: '/developers'
+      fullPath: '/dashboard/executive/cto/developers'
+      preLoaderRoute: typeof DashboardExecutiveCtoDevelopersRouteImport
+      parentRoute: typeof DashboardExecutiveCtoRoute
+    }
+    '/dashboard/executive/cto/database': {
+      id: '/dashboard/executive/cto/database'
+      path: '/database'
+      fullPath: '/dashboard/executive/cto/database'
+      preLoaderRoute: typeof DashboardExecutiveCtoDatabaseRouteImport
+      parentRoute: typeof DashboardExecutiveCtoRoute
+    }
+    '/dashboard/executive/cto/analytics': {
+      id: '/dashboard/executive/cto/analytics'
+      path: '/analytics'
+      fullPath: '/dashboard/executive/cto/analytics'
+      preLoaderRoute: typeof DashboardExecutiveCtoAnalyticsRouteImport
+      parentRoute: typeof DashboardExecutiveCtoRoute
+    }
+    '/dashboard/executive/cto/ai': {
+      id: '/dashboard/executive/cto/ai'
+      path: '/ai'
+      fullPath: '/dashboard/executive/cto/ai'
+      preLoaderRoute: typeof DashboardExecutiveCtoAiRouteImport
+      parentRoute: typeof DashboardExecutiveCtoRoute
+    }
+    '/dashboard/executive/cio/settings': {
+      id: '/dashboard/executive/cio/settings'
+      path: '/settings'
+      fullPath: '/dashboard/executive/cio/settings'
+      preLoaderRoute: typeof DashboardExecutiveCioSettingsRouteImport
+      parentRoute: typeof DashboardExecutiveCioRoute
+    }
+    '/dashboard/executive/cio/it-operations': {
+      id: '/dashboard/executive/cio/it-operations'
+      path: '/it-operations'
+      fullPath: '/dashboard/executive/cio/it-operations'
+      preLoaderRoute: typeof DashboardExecutiveCioItOperationsRouteImport
+      parentRoute: typeof DashboardExecutiveCioRoute
+    }
+    '/dashboard/executive/cio/it-governance': {
+      id: '/dashboard/executive/cio/it-governance'
+      path: '/it-governance'
+      fullPath: '/dashboard/executive/cio/it-governance'
+      preLoaderRoute: typeof DashboardExecutiveCioItGovernanceRouteImport
+      parentRoute: typeof DashboardExecutiveCioRoute
+    }
+    '/dashboard/executive/cio/infrastructure': {
+      id: '/dashboard/executive/cio/infrastructure'
+      path: '/infrastructure'
+      fullPath: '/dashboard/executive/cio/infrastructure'
+      preLoaderRoute: typeof DashboardExecutiveCioInfrastructureRouteImport
+      parentRoute: typeof DashboardExecutiveCioRoute
+    }
+    '/dashboard/executive/cio/digital-transformation': {
+      id: '/dashboard/executive/cio/digital-transformation'
+      path: '/digital-transformation'
+      fullPath: '/dashboard/executive/cio/digital-transformation'
+      preLoaderRoute: typeof DashboardExecutiveCioDigitalTransformationRouteImport
+      parentRoute: typeof DashboardExecutiveCioRoute
+    }
+    '/dashboard/executive/cio/cyber-security': {
+      id: '/dashboard/executive/cio/cyber-security'
+      path: '/cyber-security'
+      fullPath: '/dashboard/executive/cio/cyber-security'
+      preLoaderRoute: typeof DashboardExecutiveCioCyberSecurityRouteImport
+      parentRoute: typeof DashboardExecutiveCioRoute
+    }
+    '/dashboard/executive/cio/cloud-network': {
+      id: '/dashboard/executive/cio/cloud-network'
+      path: '/cloud-network'
+      fullPath: '/dashboard/executive/cio/cloud-network'
+      preLoaderRoute: typeof DashboardExecutiveCioCloudNetworkRouteImport
+      parentRoute: typeof DashboardExecutiveCioRoute
+    }
+    '/dashboard/executive/cio/analytics': {
+      id: '/dashboard/executive/cio/analytics'
+      path: '/analytics'
+      fullPath: '/dashboard/executive/cio/analytics'
+      preLoaderRoute: typeof DashboardExecutiveCioAnalyticsRouteImport
+      parentRoute: typeof DashboardExecutiveCioRoute
+    }
+    '/dashboard/executive/ceo/settings': {
+      id: '/dashboard/executive/ceo/settings'
+      path: '/settings'
+      fullPath: '/dashboard/executive/ceo/settings'
+      preLoaderRoute: typeof DashboardExecutiveCeoSettingsRouteImport
+      parentRoute: typeof DashboardExecutiveCeoRoute
+    }
+    '/dashboard/executive/ceo/sales': {
+      id: '/dashboard/executive/ceo/sales'
+      path: '/sales'
+      fullPath: '/dashboard/executive/ceo/sales'
+      preLoaderRoute: typeof DashboardExecutiveCeoSalesRouteImport
+      parentRoute: typeof DashboardExecutiveCeoRoute
+    }
+    '/dashboard/executive/ceo/reports': {
+      id: '/dashboard/executive/ceo/reports'
+      path: '/reports'
+      fullPath: '/dashboard/executive/ceo/reports'
+      preLoaderRoute: typeof DashboardExecutiveCeoReportsRouteImport
+      parentRoute: typeof DashboardExecutiveCeoRoute
+    }
+    '/dashboard/executive/ceo/organization': {
+      id: '/dashboard/executive/ceo/organization'
+      path: '/organization'
+      fullPath: '/dashboard/executive/ceo/organization'
+      preLoaderRoute: typeof DashboardExecutiveCeoOrganizationRouteImport
+      parentRoute: typeof DashboardExecutiveCeoRoute
+    }
+    '/dashboard/executive/ceo/operations': {
+      id: '/dashboard/executive/ceo/operations'
+      path: '/operations'
+      fullPath: '/dashboard/executive/ceo/operations'
+      preLoaderRoute: typeof DashboardExecutiveCeoOperationsRouteImport
+      parentRoute: typeof DashboardExecutiveCeoRoute
+    }
+    '/dashboard/executive/ceo/finance': {
+      id: '/dashboard/executive/ceo/finance'
+      path: '/finance'
+      fullPath: '/dashboard/executive/ceo/finance'
+      preLoaderRoute: typeof DashboardExecutiveCeoFinanceRouteImport
+      parentRoute: typeof DashboardExecutiveCeoRoute
+    }
+    '/dashboard/executive/ceo/business': {
+      id: '/dashboard/executive/ceo/business'
+      path: '/business'
+      fullPath: '/dashboard/executive/ceo/business'
+      preLoaderRoute: typeof DashboardExecutiveCeoBusinessRouteImport
+      parentRoute: typeof DashboardExecutiveCeoRoute
+    }
+    '/dashboard/executive/ceo/ai-insights': {
+      id: '/dashboard/executive/ceo/ai-insights'
+      path: '/ai-insights'
+      fullPath: '/dashboard/executive/ceo/ai-insights'
+      preLoaderRoute: typeof DashboardExecutiveCeoAiInsightsRouteImport
+      parentRoute: typeof DashboardExecutiveCeoRoute
     }
     '/dashboard/recruitment/jobs/$jobId/publish': {
       id: '/dashboard/recruitment/jobs/$jobId/publish'
@@ -3800,6 +4545,107 @@ const DashboardWorkforceRouteChildren: DashboardWorkforceRouteChildren = {
 const DashboardWorkforceRouteWithChildren =
   DashboardWorkforceRoute._addFileChildren(DashboardWorkforceRouteChildren)
 
+interface DashboardExecutiveCeoRouteChildren {
+  DashboardExecutiveCeoAiInsightsRoute: typeof DashboardExecutiveCeoAiInsightsRoute
+  DashboardExecutiveCeoBusinessRoute: typeof DashboardExecutiveCeoBusinessRoute
+  DashboardExecutiveCeoFinanceRoute: typeof DashboardExecutiveCeoFinanceRoute
+  DashboardExecutiveCeoOperationsRoute: typeof DashboardExecutiveCeoOperationsRoute
+  DashboardExecutiveCeoOrganizationRoute: typeof DashboardExecutiveCeoOrganizationRoute
+  DashboardExecutiveCeoReportsRoute: typeof DashboardExecutiveCeoReportsRoute
+  DashboardExecutiveCeoSalesRoute: typeof DashboardExecutiveCeoSalesRoute
+  DashboardExecutiveCeoSettingsRoute: typeof DashboardExecutiveCeoSettingsRoute
+  DashboardExecutiveCeoIndexRoute: typeof DashboardExecutiveCeoIndexRoute
+}
+
+const DashboardExecutiveCeoRouteChildren: DashboardExecutiveCeoRouteChildren = {
+  DashboardExecutiveCeoAiInsightsRoute: DashboardExecutiveCeoAiInsightsRoute,
+  DashboardExecutiveCeoBusinessRoute: DashboardExecutiveCeoBusinessRoute,
+  DashboardExecutiveCeoFinanceRoute: DashboardExecutiveCeoFinanceRoute,
+  DashboardExecutiveCeoOperationsRoute: DashboardExecutiveCeoOperationsRoute,
+  DashboardExecutiveCeoOrganizationRoute:
+    DashboardExecutiveCeoOrganizationRoute,
+  DashboardExecutiveCeoReportsRoute: DashboardExecutiveCeoReportsRoute,
+  DashboardExecutiveCeoSalesRoute: DashboardExecutiveCeoSalesRoute,
+  DashboardExecutiveCeoSettingsRoute: DashboardExecutiveCeoSettingsRoute,
+  DashboardExecutiveCeoIndexRoute: DashboardExecutiveCeoIndexRoute,
+}
+
+const DashboardExecutiveCeoRouteWithChildren =
+  DashboardExecutiveCeoRoute._addFileChildren(
+    DashboardExecutiveCeoRouteChildren,
+  )
+
+interface DashboardExecutiveCioRouteChildren {
+  DashboardExecutiveCioAnalyticsRoute: typeof DashboardExecutiveCioAnalyticsRoute
+  DashboardExecutiveCioCloudNetworkRoute: typeof DashboardExecutiveCioCloudNetworkRoute
+  DashboardExecutiveCioCyberSecurityRoute: typeof DashboardExecutiveCioCyberSecurityRoute
+  DashboardExecutiveCioDigitalTransformationRoute: typeof DashboardExecutiveCioDigitalTransformationRoute
+  DashboardExecutiveCioInfrastructureRoute: typeof DashboardExecutiveCioInfrastructureRoute
+  DashboardExecutiveCioItGovernanceRoute: typeof DashboardExecutiveCioItGovernanceRoute
+  DashboardExecutiveCioItOperationsRoute: typeof DashboardExecutiveCioItOperationsRoute
+  DashboardExecutiveCioSettingsRoute: typeof DashboardExecutiveCioSettingsRoute
+  DashboardExecutiveCioIndexRoute: typeof DashboardExecutiveCioIndexRoute
+}
+
+const DashboardExecutiveCioRouteChildren: DashboardExecutiveCioRouteChildren = {
+  DashboardExecutiveCioAnalyticsRoute: DashboardExecutiveCioAnalyticsRoute,
+  DashboardExecutiveCioCloudNetworkRoute:
+    DashboardExecutiveCioCloudNetworkRoute,
+  DashboardExecutiveCioCyberSecurityRoute:
+    DashboardExecutiveCioCyberSecurityRoute,
+  DashboardExecutiveCioDigitalTransformationRoute:
+    DashboardExecutiveCioDigitalTransformationRoute,
+  DashboardExecutiveCioInfrastructureRoute:
+    DashboardExecutiveCioInfrastructureRoute,
+  DashboardExecutiveCioItGovernanceRoute:
+    DashboardExecutiveCioItGovernanceRoute,
+  DashboardExecutiveCioItOperationsRoute:
+    DashboardExecutiveCioItOperationsRoute,
+  DashboardExecutiveCioSettingsRoute: DashboardExecutiveCioSettingsRoute,
+  DashboardExecutiveCioIndexRoute: DashboardExecutiveCioIndexRoute,
+}
+
+const DashboardExecutiveCioRouteWithChildren =
+  DashboardExecutiveCioRoute._addFileChildren(
+    DashboardExecutiveCioRouteChildren,
+  )
+
+interface DashboardExecutiveCtoRouteChildren {
+  DashboardExecutiveCtoAiRoute: typeof DashboardExecutiveCtoAiRoute
+  DashboardExecutiveCtoAnalyticsRoute: typeof DashboardExecutiveCtoAnalyticsRoute
+  DashboardExecutiveCtoDatabaseRoute: typeof DashboardExecutiveCtoDatabaseRoute
+  DashboardExecutiveCtoDevelopersRoute: typeof DashboardExecutiveCtoDevelopersRoute
+  DashboardExecutiveCtoDevopsRoute: typeof DashboardExecutiveCtoDevopsRoute
+  DashboardExecutiveCtoEngineeringRoute: typeof DashboardExecutiveCtoEngineeringRoute
+  DashboardExecutiveCtoInfrastructureRoute: typeof DashboardExecutiveCtoInfrastructureRoute
+  DashboardExecutiveCtoMonitoringRoute: typeof DashboardExecutiveCtoMonitoringRoute
+  DashboardExecutiveCtoProjectsRoute: typeof DashboardExecutiveCtoProjectsRoute
+  DashboardExecutiveCtoSecurityRoute: typeof DashboardExecutiveCtoSecurityRoute
+  DashboardExecutiveCtoSettingsRoute: typeof DashboardExecutiveCtoSettingsRoute
+  DashboardExecutiveCtoIndexRoute: typeof DashboardExecutiveCtoIndexRoute
+}
+
+const DashboardExecutiveCtoRouteChildren: DashboardExecutiveCtoRouteChildren = {
+  DashboardExecutiveCtoAiRoute: DashboardExecutiveCtoAiRoute,
+  DashboardExecutiveCtoAnalyticsRoute: DashboardExecutiveCtoAnalyticsRoute,
+  DashboardExecutiveCtoDatabaseRoute: DashboardExecutiveCtoDatabaseRoute,
+  DashboardExecutiveCtoDevelopersRoute: DashboardExecutiveCtoDevelopersRoute,
+  DashboardExecutiveCtoDevopsRoute: DashboardExecutiveCtoDevopsRoute,
+  DashboardExecutiveCtoEngineeringRoute: DashboardExecutiveCtoEngineeringRoute,
+  DashboardExecutiveCtoInfrastructureRoute:
+    DashboardExecutiveCtoInfrastructureRoute,
+  DashboardExecutiveCtoMonitoringRoute: DashboardExecutiveCtoMonitoringRoute,
+  DashboardExecutiveCtoProjectsRoute: DashboardExecutiveCtoProjectsRoute,
+  DashboardExecutiveCtoSecurityRoute: DashboardExecutiveCtoSecurityRoute,
+  DashboardExecutiveCtoSettingsRoute: DashboardExecutiveCtoSettingsRoute,
+  DashboardExecutiveCtoIndexRoute: DashboardExecutiveCtoIndexRoute,
+}
+
+const DashboardExecutiveCtoRouteWithChildren =
+  DashboardExecutiveCtoRoute._addFileChildren(
+    DashboardExecutiveCtoRouteChildren,
+  )
+
 interface DashboardRouteChildren {
   DashboardAiHubRoute: typeof DashboardAiHubRouteWithChildren
   DashboardAiInsightsRoute: typeof DashboardAiInsightsRoute
@@ -3816,6 +4662,7 @@ interface DashboardRouteChildren {
   DashboardExitRoute: typeof DashboardExitRoute
   DashboardExitManagementRoute: typeof DashboardExitManagementRoute
   DashboardExpensesRoute: typeof DashboardExpensesRoute
+  DashboardHierarchyRoute: typeof DashboardHierarchyRoute
   DashboardHrRoute: typeof DashboardHrRoute
   DashboardHrOperationsRoute: typeof DashboardHrOperationsRouteWithChildren
   DashboardHrOpsRoute: typeof DashboardHrOpsRoute
@@ -3838,6 +4685,13 @@ interface DashboardRouteChildren {
   DashboardVisitorsRoute: typeof DashboardVisitorsRoute
   DashboardWorkforceRoute: typeof DashboardWorkforceRouteWithChildren
   DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardExecutiveCeoRoute: typeof DashboardExecutiveCeoRouteWithChildren
+  DashboardExecutiveCfoRoute: typeof DashboardExecutiveCfoRoute
+  DashboardExecutiveCioRoute: typeof DashboardExecutiveCioRouteWithChildren
+  DashboardExecutiveCmoRoute: typeof DashboardExecutiveCmoRoute
+  DashboardExecutiveCooRoute: typeof DashboardExecutiveCooRoute
+  DashboardExecutiveCtoRoute: typeof DashboardExecutiveCtoRouteWithChildren
+  DashboardExecutiveIndexRoute: typeof DashboardExecutiveIndexRoute
   DashboardPeopleIndexRoute: typeof DashboardPeopleIndexRoute
 }
 
@@ -3857,6 +4711,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardExitRoute: DashboardExitRoute,
   DashboardExitManagementRoute: DashboardExitManagementRoute,
   DashboardExpensesRoute: DashboardExpensesRoute,
+  DashboardHierarchyRoute: DashboardHierarchyRoute,
   DashboardHrRoute: DashboardHrRoute,
   DashboardHrOperationsRoute: DashboardHrOperationsRouteWithChildren,
   DashboardHrOpsRoute: DashboardHrOpsRoute,
@@ -3879,6 +4734,13 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardVisitorsRoute: DashboardVisitorsRoute,
   DashboardWorkforceRoute: DashboardWorkforceRouteWithChildren,
   DashboardIndexRoute: DashboardIndexRoute,
+  DashboardExecutiveCeoRoute: DashboardExecutiveCeoRouteWithChildren,
+  DashboardExecutiveCfoRoute: DashboardExecutiveCfoRoute,
+  DashboardExecutiveCioRoute: DashboardExecutiveCioRouteWithChildren,
+  DashboardExecutiveCmoRoute: DashboardExecutiveCmoRoute,
+  DashboardExecutiveCooRoute: DashboardExecutiveCooRoute,
+  DashboardExecutiveCtoRoute: DashboardExecutiveCtoRouteWithChildren,
+  DashboardExecutiveIndexRoute: DashboardExecutiveIndexRoute,
   DashboardPeopleIndexRoute: DashboardPeopleIndexRoute,
 }
 

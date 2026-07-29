@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { ShieldAlert } from "lucide-react";
+import { PayrollBackButton } from "@/features/admin/payroll/components/PayrollBackButton";
+import { ShieldAlert, ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useAurix } from "@/lib/aurix-store";
 import { Button } from "@/components/ui/button";
@@ -99,54 +100,52 @@ function PayrollReportsPage() {
   const generateMutation = useMutation({
     mutationFn: (id: string) => payrollReportsApi.generateReport(id),
     onSuccess: (res) => {
-      toast.success(`Report generated successfully.`);
+      toast.success(`Report '${res.file_name}' generated successfully.`);
     },
-    onError: () => toast.error("Failed to generate report."),
+    onError: (err: any) => toast.error(err?.message || "Failed to generate report."),
   });
 
   const customBuildMutation = useMutation({
     mutationFn: (config: any) => payrollReportsApi.generateCustomReport(config),
-    onSuccess: () => {
-      toast.success("Custom report generated.");
+    onSuccess: (res: any) => {
+      toast.success(`Custom report '${res?.file_name || "Custom"}' compiled.`);
       setCustomBuilderOpen(false);
     },
-    onError: () => toast.error("Failed to generate custom report."),
+    onError: (err: any) => toast.error(err?.message || "Failed to build custom report."),
   });
 
   const scheduleMutation = useMutation({
     mutationFn: (config: any) => payrollReportsApi.scheduleReport(config),
     onSuccess: () => {
-      toast.success("Report schedule created.");
+      toast.success("Automated report schedule saved successfully.");
       setScheduleOpen(false);
     },
-    onError: () => toast.error("Failed to create schedule."),
+    onError: (err: any) => toast.error(err?.message || "Failed to schedule report."),
   });
 
-  const handleExport = async () => {
-    try {
-      const data = await payrollReportsApi.exportReport();
-      const jsonStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
-      const link = document.createElement("a");
-      link.setAttribute("href", jsonStr);
-      link.setAttribute("download", `Payroll_Analytics_${new Date().toISOString().split("T")[0]}.json`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast.success("Analytics report exported.");
-    } catch {
-      toast.error("Export failed.");
-    }
+  const handleExport = () => {
+    const jsonStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(kpis, null, 2));
+    const link = document.createElement("a");
+    link.setAttribute("href", jsonStr);
+    link.setAttribute("download", `Payroll_Reports_Summary_${new Date().toISOString().split("T")[0]}.json`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Reports dataset exported successfully.");
   };
 
   const handleShare = () => {
-    toast.info("Report sharing link copied to clipboard.");
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(window.location.href);
+      toast.success("Report dashboard link copied to clipboard.");
+    }
   };
 
   const handleAuditLogs = async () => {
     try {
       await payrollReportsApi.getAuditLogs();
-      toast.info("Report audit logs retrieved.");
-    } catch {
+      toast.info("Report audit history retrieved.");
+    } catch (err) {
       toast.error("Failed to load audit logs.");
     }
   };
@@ -172,7 +171,8 @@ function PayrollReportsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-[1600px] mx-auto pb-24">
+    <div className="space-y-6">
+      <PayrollBackButton />
       {/* Header */}
       <ReportsHeader
         onGenerateReport={() => generateMutation.mutate("tmpl_salary_register")}

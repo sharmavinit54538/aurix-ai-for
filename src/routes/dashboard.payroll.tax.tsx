@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ShieldAlert, Receipt, Lock } from "lucide-react";
+import { PayrollBackButton } from "@/features/admin/payroll/components/PayrollBackButton";
+import { ShieldAlert, Receipt, AlertCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useAurix } from "@/lib/aurix-store";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 
 import {
@@ -18,6 +18,7 @@ import {
 import { TaxHeader } from "@/features/admin/payroll/components/tax/TaxHeader";
 import { TaxSummaryCards } from "@/features/admin/payroll/components/tax/TaxSummaryCards";
 import { TaxFilterBar } from "@/features/admin/payroll/components/tax/TaxFilterBar";
+import { TaxAnalyticsCharts } from "@/features/admin/payroll/components/tax/TaxAnalyticsCharts";
 import { TaxTable } from "@/features/admin/payroll/components/tax/TaxTable";
 import { EmployeeTaxProfileDrawer } from "@/features/admin/payroll/components/tax/EmployeeTaxProfileDrawer";
 import { YearEndProcessingModal } from "@/features/admin/payroll/components/tax/YearEndProcessingModal";
@@ -37,7 +38,6 @@ function AdminTaxManagementPage() {
   // RBAC Access Verification
   const userRole = (user?.role || "").toLowerCase();
   const isEmployeeOnly = userRole === "employee";
-  const canManage = ["admin", "super_admin", "payroll_admin", "finance_manager", "cfo", "ceo"].includes(userRole);
 
   // Filter State initialized from URL Search Params
   const [filters, setFilters] = useState<AdminTaxFilterParams>({
@@ -68,7 +68,7 @@ function AdminTaxManagementPage() {
   const [selectedAuditEmpName, setSelectedAuditEmpName] = useState<string>("");
   const [isLoadingAudit, setIsLoadingAudit] = useState(false);
 
-  // TanStack Query for Admin Tax Dashboard
+  // TanStack Query for Admin Tax Dashboard (Direct backend API fetch)
   const {
     data: taxDashboardData,
     isLoading,
@@ -80,6 +80,7 @@ function AdminTaxManagementPage() {
     queryFn: () => taxApi.getAdminTaxDashboard(filters),
     enabled: !isEmployeeOnly,
     staleTime: 30000,
+    retry: 1,
   });
 
   // Keep URL Search Params synced with filter state
@@ -146,6 +147,9 @@ function AdminTaxManagementPage() {
       toast.success(data?.message || "Tax calculation completed successfully.");
       queryClient.invalidateQueries({ queryKey: ["admin-tax-dashboard"] });
     },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.detail || "Tax calculation failed.");
+    },
   });
 
   const approveMutation = useMutation({
@@ -153,6 +157,9 @@ function AdminTaxManagementPage() {
     onSuccess: () => {
       toast.success("Tax declaration approved successfully.");
       queryClient.invalidateQueries({ queryKey: ["admin-tax-dashboard"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.detail || "Approval failed.");
     },
   });
 
@@ -162,6 +169,9 @@ function AdminTaxManagementPage() {
     onSuccess: () => {
       toast.success("Tax declaration rejected.");
       queryClient.invalidateQueries({ queryKey: ["admin-tax-dashboard"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.detail || "Rejection failed.");
     },
   });
 
@@ -286,7 +296,9 @@ function AdminTaxManagementPage() {
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-[1600px] mx-auto">
+    <div className="space-y-6">
+      <PayrollBackButton />
+      
       {/* Top Header */}
       <TaxHeader
         onImport={() => toast.info("Import Tax Data modal opened.")}
@@ -297,7 +309,31 @@ function AdminTaxManagementPage() {
         isCalculating={taxCalcMutation.isPending}
       />
 
-      {/* Summary KPI Cards */}
+      {/* API Error Handling Banner */}
+      {isError && (
+        <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 flex flex-wrap items-center justify-between gap-3 text-rose-300 text-xs">
+          <div className="flex items-center gap-2.5">
+            <AlertCircle className="h-5 w-5 text-rose-400 shrink-0" />
+            <div>
+              <span className="font-semibold text-rose-200">Unable to load payroll tax data</span>
+              <p className="text-[11px] opacity-80 mt-0.5">
+                {(error as any)?.response?.data?.detail || (error as any)?.message || "A network or server error occurred. Please try again."}
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            className="h-8 px-3 text-xs border-rose-500/40 text-rose-300 hover:bg-rose-500/20 gap-1.5"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Retry Connection
+          </Button>
+        </div>
+      )}
+
+      {/* Summary KPI Cards (Powered strictly by backend) */}
       <TaxSummaryCards summary={taxDashboardData?.summary} isLoading={isLoading} />
 
       {/* Filter Control Bar */}
@@ -305,6 +341,13 @@ function AdminTaxManagementPage() {
         filters={filters}
         onChange={handleFilterChange}
         onReset={handleResetFilters}
+      />
+
+      {/* Tax Analytics & Adoption Charts (Backend data driven) */}
+      <TaxAnalyticsCharts
+        summary={taxDashboardData?.summary}
+        items={taxDashboardData?.items}
+        isLoading={isLoading}
       />
 
       {/* Main Enterprise Tax Table */}
@@ -329,6 +372,7 @@ function AdminTaxManagementPage() {
             sort_dir: filters.sort_by === field && filters.sort_dir === "asc" ? "desc" : "asc",
           })
         }
+        onRunTaxCalc={() => taxCalcMutation.mutate()}
       />
 
       {/* Employee Tax Profile Drawer */}

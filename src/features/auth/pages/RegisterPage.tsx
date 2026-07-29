@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { aurix } from "@/lib/aurix-store";
 import { api } from "@/api";
 import { toast } from "sonner";
+import { GoogleAuthButton } from "@/features/auth/components/GoogleAuthButton";
 
 const schema = z
   .object({
@@ -283,6 +284,8 @@ console.log("Register response:", res);
           {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           Create workspace
         </Button>
+
+        <GoogleAuthButton action="register" />
       </form>
     </AuthShell>
   );

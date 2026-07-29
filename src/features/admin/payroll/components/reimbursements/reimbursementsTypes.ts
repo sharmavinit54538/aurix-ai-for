@@ -23,17 +23,40 @@ export type ApprovalStatus =
 
 export type PaymentStatus = "UNPAID" | "PROCESSING" | "PAID" | "SCHEDULED_PAYROLL";
 
+export type ReimbursementsSubmodelTabId =
+  | "dashboard"
+  | "create_claim"
+  | "drafts"
+  | "pending_approval"
+  | "approved"
+  | "rejected"
+  | "paid"
+  | "categories"
+  | "travel"
+  | "food"
+  | "medical"
+  | "fuel"
+  | "internet"
+  | "wfh"
+  | "policies"
+  | "tax_gst"
+  | "ocr_scanner"
+  | "fraud_ai"
+  | "reports"
+  | "audit_logs";
+
 export interface ReceiptDocument {
   id: string;
   fileName: string;
   fileUrl: string;
-  fileType: "PDF" | "JPEG" | "PNG";
+  fileType: "PDF" | "JPEG" | "PNG" | "HEIC";
   fileSize: string;
   uploadedAt: string;
   ocrVerified: boolean;
   extractedAmount?: number;
   extractedVendor?: string;
   extractedDate?: string;
+  extractedGst?: string;
 }
 
 export interface ApprovalStep {
@@ -65,6 +88,10 @@ export interface ReimbursementClaim {
   costCenter: string;
   project: string;
   location: string;
+  vendorName?: string;
+  paymentMode?: string;
+  billNumber?: string;
+  gstNumber?: string;
   paymentStatus: PaymentStatus;
   approvalStatus: ApprovalStatus;
   approvalStage: "MANAGER" | "FINANCE" | "PAYROLL" | "COMPLETED";
@@ -98,8 +125,8 @@ export interface ReimbursementsFilters {
   department: string;
   designation: string;
   expenseCategory: string;
-  claimStatus: string; // 'ALL' | 'SUBMITTED' | 'MANAGER_APPROVED' | 'FINANCE_APPROVED' | 'PAYROLL_APPROVED' | 'REJECTED'
-  paymentStatus: string; // 'ALL' | 'UNPAID' | 'PROCESSING' | 'PAID' | 'SCHEDULED_PAYROLL'
+  claimStatus: string;
+  paymentStatus: string;
   financialYear: string;
   month: string;
   minAmount?: number;

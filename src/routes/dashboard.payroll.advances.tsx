@@ -1,38 +1,35 @@
 import React, { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 import "@/features/admin/payroll/components/advances/advances.css";
 
-import { AdvancesHeader } from "@/features/admin/payroll/components/advances/AdvancesHeader";
-import { AdvancesKPIs } from "@/features/admin/payroll/components/advances/AdvancesKPIs";
-import { AdvancesFilters } from "@/features/admin/payroll/components/advances/AdvancesFilters";
-import { AdvancesTable } from "@/features/admin/payroll/components/advances/AdvancesTable";
-import { AdvanceDetailsDrawer } from "@/features/admin/payroll/components/advances/AdvanceDetailsDrawer";
+import { AdvanceHubHeader } from "@/features/admin/payroll/components/advances/AdvanceHubHeader";
+import { AdvanceHubCardGrid } from "@/features/admin/payroll/components/advances/AdvanceHubCardGrid";
+import { AdvanceHubModuleViews } from "@/features/admin/payroll/components/advances/AdvanceHubModuleViews";
 import { CreateAdvanceWizardDrawer } from "@/features/admin/payroll/components/advances/CreateAdvanceWizardDrawer";
-import { RecoveryPlanModal } from "@/features/admin/payroll/components/advances/RecoveryPlanModal";
-import { BankDisbursementModal } from "@/features/admin/payroll/components/advances/BankDisbursementModal";
-import { AIAdvanceInsights } from "@/features/admin/payroll/components/advances/AIAdvanceInsights";
-import { ApprovalWorkflowTracker } from "@/features/admin/payroll/components/advances/ApprovalWorkflowTracker";
-import { RightPolicyPanel } from "@/features/admin/payroll/components/advances/RightPolicyPanel";
-import { AdvancesAnalytics } from "@/features/admin/payroll/components/advances/AdvancesAnalytics";
+import { AdvanceDetailsDrawer } from "@/features/admin/payroll/components/advances/AdvanceDetailsDrawer";
 
 import { advancesApi } from "@/services/advancesApi";
 import {
   SalaryAdvanceRequest,
   AdvancesFilters as FilterType,
   AdvancesSummaryKPIs,
-  AdvanceAuditLog,
-  AdvanceAIInsight,
 } from "@/features/admin/payroll/components/advances/advancesTypes";
 
 export const Route = createFileRoute("/dashboard/payroll/advances")({
-  head: () => ({ meta: [{ title: "Salary Advances & Recovery Management — Aurix AI" }] }),
+  head: () => ({ meta: [{ title: "Enterprise Advance & Loan Hub — Aurix AI" }] }),
   component: AdvancesPage,
 });
 
 function AdvancesPage() {
   const [loading, setLoading] = useState(true);
+  const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+
   const [advances, setAdvances] = useState<SalaryAdvanceRequest[]>([]);
   const [kpis, setKpis] = useState<AdvancesSummaryKPIs>({
     totalRequests: 0,
@@ -47,7 +44,7 @@ function AdvancesPage() {
     recoveryRate: 0,
   });
 
-  const [selectedAdvanceIds, setSelectedAdvanceIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [filters, setFilters] = useState<FilterType>({
     search: "",
     employee: "all",
@@ -69,12 +66,7 @@ function AdvancesPage() {
   // Modal Controllers
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
   const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
-  const [recoveryModalOpen, setRecoveryModalOpen] = useState(false);
-  const [bankModalOpen, setBankModalOpen] = useState(false);
   const [selectedAdvance, setSelectedAdvance] = useState<SalaryAdvanceRequest | null>(null);
-  const [activeView, setActiveView] = useState<"ADVANCES" | "AUDIT_LOGS">("ADVANCES");
-  const [auditLogs, setAuditLogs] = useState<AdvanceAuditLog[]>([]);
-  const [aiInsights, setAiInsights] = useState<AdvanceAIInsight[]>([]);
 
   const loadData = async () => {
     setLoading(true);
@@ -82,12 +74,6 @@ function AdvancesPage() {
       const res = await advancesApi.getAdvanceRequests(filters);
       setAdvances(res.items);
       setKpis(res.kpis);
-
-      const logs = await advancesApi.getAuditLogs();
-      setAuditLogs(logs);
-
-      const insights = await advancesApi.getAIInsights();
-      setAiInsights(insights);
     } catch {
       toast.error("Failed to load advances data.");
     } finally {
@@ -97,86 +83,60 @@ function AdvancesPage() {
 
   useEffect(() => {
     loadData();
-  }, [filters]);
+  }, []);
 
-  const handleSelectToggle = (id: string) => {
-    if (selectedAdvanceIds.includes(id)) {
-      setSelectedAdvanceIds(selectedAdvanceIds.filter((item) => item !== id));
-    } else {
-      setSelectedAdvanceIds([...selectedAdvanceIds, id]);
-    }
-  };
-
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedAdvanceIds(advances.map((a) => a.id));
-    } else {
-      setSelectedAdvanceIds([]);
-    }
-  };
-
-  const handleView = (advance: SalaryAdvanceRequest) => {
-    setSelectedAdvance(advance);
+  const handleView = (req: SalaryAdvanceRequest) => {
+    setSelectedAdvance(req);
     setDetailsDrawerOpen(true);
   };
 
-  const handleEdit = (advance: SalaryAdvanceRequest) => {
-    setSelectedAdvance(advance);
-    setCreateDrawerOpen(true);
-  };
-
-  const handleApprove = async (advance: SalaryAdvanceRequest) => {
+  const handleApprove = async (req: SalaryAdvanceRequest) => {
     try {
-      await advancesApi.approveAdvance(advance.id, "Finance Approval");
-      toast.success(`Approved salary advance '${advance.advanceCode}' for ${advance.employeeName}`);
+      await advancesApi.approveAdvance(req.id, "Finance Manager");
+      toast.success(`Approved advance request '${req.advanceCode}'`);
       loadData();
     } catch {
-      toast.error("Failed to approve advance.");
+      toast.error("Failed to approve advance request.");
     }
   };
 
-  const handleReject = async (advance: SalaryAdvanceRequest) => {
+  const handleReject = async (req: SalaryAdvanceRequest) => {
     try {
-      await advancesApi.rejectAdvance(advance.id, "Finance Approval", "Exceeds advance limit.");
-      toast.success(`Rejected salary advance '${advance.advanceCode}'.`);
+      await advancesApi.rejectAdvance(req.id, "Finance Manager", "Exceeds max 50% salary cap.");
+      toast.success(`Rejected advance request '${req.advanceCode}'.`);
       loadData();
     } catch {
-      toast.error("Failed to reject advance.");
+      toast.error("Failed to reject advance request.");
     }
   };
 
-  const handleDisburse = (advance: SalaryAdvanceRequest) => {
-    setSelectedAdvance(advance);
-    setBankModalOpen(true);
+  const handleDisburse = async (req: SalaryAdvanceRequest) => {
+    try {
+      await advancesApi.disbursePayment([req.id], "HDFC Bank Corporate Transfer");
+      toast.success(`Disbursed ₹${req.approvedAmount.toLocaleString("en-IN")} to ${req.employeeName}`);
+      loadData();
+    } catch {
+      toast.error("Failed to disburse advance payment.");
+    }
   };
 
-  const handleGenerateRecoveryPlan = (advance: SalaryAdvanceRequest) => {
-    setSelectedAdvance(advance);
-    setRecoveryModalOpen(true);
-  };
-
-  const handleCloseAdvance = async (advance: SalaryAdvanceRequest) => {
-    toast.success(`Closed advance '${advance.advanceCode}' after lump-sum settlement.`);
+  const handleBulkApprove = async () => {
+    const idsToApprove = selectedIds.length > 0 ? selectedIds : advances.map((r) => r.id);
+    if (idsToApprove.length === 0) {
+      toast.error("No advance requests selected for bulk approval.");
+      return;
+    }
+    for (const id of idsToApprove) {
+      await advancesApi.approveAdvance(id, "Finance Manager");
+    }
+    toast.success(`Bulk approved ${idsToApprove.length} advance request(s).`);
+    setSelectedIds([]);
     loadData();
   };
 
-  const handleSaveAdvance = async (payload: Partial<SalaryAdvanceRequest>) => {
+  const handleCreateSave = async (payload: Partial<SalaryAdvanceRequest>) => {
     await advancesApi.createAdvanceRequest(payload);
     loadData();
-  };
-
-  const handleConfirmDisbursement = async (bankAccount: string, ref: string) => {
-    if (selectedAdvance) {
-      await advancesApi.disburseAdvance(selectedAdvance.id, bankAccount, ref);
-      loadData();
-    }
-  };
-
-  const handleConfirmPlan = async (newEmi: number) => {
-    if (selectedAdvance) {
-      toast.success(`Saved new EMI of ₹${newEmi.toLocaleString("en-IN")}/month.`);
-      loadData();
-    }
   };
 
   const handleExport = () => {
@@ -185,182 +145,96 @@ function AdvancesPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `salary_advances_export_${new Date().toISOString().split("T")[0]}.json`;
+    link.download = `advance_records_export_${new Date().toISOString().split("T")[0]}.json`;
     link.click();
-    toast.success("Exported salary advance data.");
+    toast.success("Exported advance and loan audit records.");
   };
 
+  const categoryTabs = ["All", "Core Workflow", "Loans & Recovery", "Policies & Credit", "AI & Compliance", "Analytics & Settings"];
+
   return (
-    <div className="advances-container p-6 space-y-6">
-      {/* Header */}
-      <AdvancesHeader
-        onCreateClick={() => {
-          setSelectedAdvance(null);
-          setCreateDrawerOpen(true);
-        }}
-        onBulkApproveClick={() => {
-          if (selectedAdvanceIds.length === 0) {
-            toast.error("Select advance requests to bulk approve.");
-            return;
-          }
-          selectedAdvanceIds.forEach((id) => advancesApi.approveAdvance(id, "Finance Approval"));
-          toast.success(`Bulk approved ${selectedAdvanceIds.length} salary advance request(s).`);
-          setSelectedAdvanceIds([]);
-          loadData();
-        }}
-        onExportClick={handleExport}
-        onImportSuccess={loadData}
-        onGenerateRecoveryScheduleClick={() => {
-          if (advances.length > 0) setSelectedAdvance(advances[0]);
-          setRecoveryModalOpen(true);
-        }}
-        onAuditLogsClick={() => setActiveView(activeView === "ADVANCES" ? "AUDIT_LOGS" : "ADVANCES")}
-      />
-
-      {/* KPI Cards */}
-      <AdvancesKPIs
-        kpis={kpis}
-        activeStatusFilter={filters.approvalStatus}
-        onFilterStatus={(s) => setFilters((prev) => ({ ...prev, approvalStatus: s }))}
-      />
-
-      {/* Recharts Analytics Dashboard */}
-      <AdvancesAnalytics advances={advances} />
-
-      {/* AI Advance Insights */}
-      <AIAdvanceInsights insights={aiInsights} />
-
-      {/* Main Layout: Filters & Table + Right Policy Rail */}
-      <div className="flex flex-col lg:flex-row gap-5 items-start">
-        <div className="flex-1 w-full space-y-4">
-          {/* Multi-filter Bar */}
-          <AdvancesFilters
-            filters={filters}
-            onChange={(updated) => setFilters((prev) => ({ ...prev, ...updated }))}
-            onReset={() =>
-              setFilters({
-                search: "",
-                employee: "all",
-                employeeId: "all",
-                department: "all",
-                designation: "all",
-                location: "all",
-                employmentType: "all",
-                advanceType: "all",
-                approvalStatus: "ALL",
-                recoveryStatus: "ALL",
-                financialYear: "FY26-27",
-                page: 1,
-                limit: 10,
-                sortBy: "updatedOn",
-                sortDir: "desc",
-              })
-            }
+    <div className="space-y-6">
+      {activeModuleId ? (
+        /* Full-Screen Module View when a Feature Card is Opened */
+        <AdvanceHubModuleViews
+          moduleId={activeModuleId}
+          onBackToHub={() => setActiveModuleId(null)}
+          requests={advances}
+          onOpenCreateDrawer={() => setCreateDrawerOpen(true)}
+          onViewRequestDetails={handleView}
+          onApproveRequest={handleApprove}
+          onRejectRequest={handleReject}
+          onDisburseRequest={handleDisburse}
+          onManageRecovery={(req) => {
+            setSelectedAdvance(req);
+            toast.info(`Managing payroll EMI recovery for ${req.advanceCode}`);
+          }}
+        />
+      ) : (
+        /* Advance Hub Landing Page Architecture */
+        <div className="space-y-6">
+          {/* Hub Header & High Level Metrics */}
+          <AdvanceHubHeader
+            kpis={kpis}
+            onCreateClick={() => setCreateDrawerOpen(true)}
+            onBulkApproveClick={handleBulkApprove}
+            onExportClick={handleExport}
           />
 
-          {/* Workflow Tracker for Selected Advance */}
-          {selectedAdvance && (
-            <ApprovalWorkflowTracker
-              advance={selectedAdvance}
-              onApprove={handleApprove}
-              onReject={handleReject}
-            />
-          )}
-
-          {/* Main Table View */}
-          {activeView === "ADVANCES" && (
-            <AdvancesTable
-              data={advances}
-              selectedIds={selectedAdvanceIds}
-              onSelectToggle={handleSelectToggle}
-              onSelectAll={handleSelectAll}
-              onView={handleView}
-              onEdit={handleEdit}
-              onApprove={handleApprove}
-              onReject={handleReject}
-              onDisburse={handleDisburse}
-              onGenerateRecoveryPlan={handleGenerateRecoveryPlan}
-              onCloseAdvance={handleCloseAdvance}
-              onViewLogs={() => setActiveView("AUDIT_LOGS")}
-            />
-          )}
-
-          {/* Audit Logs View */}
-          {activeView === "AUDIT_LOGS" && (
-            <div className="adv-card p-5 space-y-4">
-              <h3 className="text-sm font-semibold text-white">Salary Advances Audit Trail & Compliance Log</h3>
-              <div className="adv-table-wrapper">
-                <table className="adv-table">
-                  <thead>
-                    <tr>
-                      <th>Timestamp</th>
-                      <th>Advance Code</th>
-                      <th>Action</th>
-                      <th>Actor</th>
-                      <th>Details</th>
-                      <th>IP Address</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {auditLogs.map((log) => (
-                      <tr key={log.id}>
-                        <td className="font-mono text-slate-400">{log.timestamp}</td>
-                        <td className="font-mono font-semibold text-cyan-300">{log.advanceCode}</td>
-                        <td>
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
-                            {log.action}
-                          </span>
-                        </td>
-                        <td>
-                          {log.actorName} ({log.actorRole})
-                        </td>
-                        <td className="text-slate-300">{log.details}</td>
-                        <td className="font-mono text-slate-500">{log.ipAddress}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+          {/* Module Search & Category Filter Navigation */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl bg-slate-900/60 border border-white/5">
+            {/* Category Filter Tabs */}
+            <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
+              {categoryTabs.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    selectedCategory === cat
+                      ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/25"
+                      : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
             </div>
-          )}
+
+            {/* Hub Search Box */}
+            <div className="relative w-full sm:w-72">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Input
+                placeholder="Search advance & loan modules..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 bg-slate-950/60 border-white/10 text-xs text-white placeholder:text-slate-500 h-9"
+              />
+            </div>
+          </div>
+
+          {/* Feature Card Grid (18 Modules) */}
+          <AdvanceHubCardGrid
+            onSelectModule={(modId) => setActiveModuleId(modId)}
+            selectedCategory={selectedCategory}
+            searchQuery={searchQuery}
+          />
         </div>
+      )}
 
-        {/* Right Policy & Copilot Rail */}
-        <RightPolicyPanel />
-      </div>
-
-      {/* 4-Step Multi-step Advance Wizard Drawer */}
+      {/* Drawers */}
       <CreateAdvanceWizardDrawer
         open={createDrawerOpen}
-        onClose={() => setCreateDrawerOpen(false)}
-        onSave={handleSaveAdvance}
+        onOpenChange={setCreateDrawerOpen}
+        onSave={handleCreateSave}
       />
 
-      {/* Advance Details Drawer */}
       <AdvanceDetailsDrawer
         open={detailsDrawerOpen}
-        onClose={() => setDetailsDrawerOpen(false)}
-        advance={selectedAdvance}
+        onOpenChange={setDetailsDrawerOpen}
+        request={selectedAdvance}
         onApprove={handleApprove}
         onReject={handleReject}
         onDisburse={handleDisburse}
-        onAdjustPlan={handleGenerateRecoveryPlan}
-      />
-
-      {/* Recovery Plan Calculator Modal */}
-      <RecoveryPlanModal
-        open={recoveryModalOpen}
-        onClose={() => setRecoveryModalOpen(false)}
-        advance={selectedAdvance}
-        onConfirmPlan={handleConfirmPlan}
-      />
-
-      {/* Direct Bank Disbursement Gateway Modal */}
-      <BankDisbursementModal
-        open={bankModalOpen}
-        onClose={() => setBankModalOpen(false)}
-        advance={selectedAdvance}
-        onConfirmDisbursement={handleConfirmDisbursement}
       />
     </div>
   );

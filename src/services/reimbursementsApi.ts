@@ -300,11 +300,12 @@ export const reimbursementsApi = {
       if (params.claimStatus) query.append("status", params.claimStatus);
 
       const res: any = await api.get(`payroll/reimbursements?${query.toString()}`);
-      if (res.data && Array.isArray(res.data?.items)) {
+      const rawItems = Array.isArray(res?.data?.items) ? res.data.items : (Array.isArray(res?.data) ? res.data : []);
+      if (rawItems.length > 0) {
         return {
-          items: res.data.items,
-          total: res.data.total || res.data.items.length,
-          kpis: res.data.kpis || reimbursementsApi.computeKPIs(res.data.items),
+          items: rawItems,
+          total: rawItems.length,
+          kpis: reimbursementsApi.computeKPIs(rawItems),
         };
       }
     } catch {
@@ -334,6 +335,15 @@ export const reimbursementsApi = {
 
   // POST create new claim
   createClaim: async (payload: Partial<ReimbursementClaim>): Promise<ReimbursementClaim> => {
+    try {
+      const res: any = await api.post("payroll/reimbursements", payload);
+      if (res?.data?.id) {
+        reimbursementsApi.addAuditLog(res.data.id, res.data.claimNumber, "CREATE", `Created claim via Backend API`);
+      }
+    } catch {
+      // Local fallback
+    }
+
     const newId = `clm-${Date.now()}`;
     const claimNum = `CLM-2026-${Math.floor(1000 + Math.random() * 9000)}`;
 
@@ -388,8 +398,14 @@ export const reimbursementsApi = {
     return newClaim;
   },
 
-  // POST approve / reject claim
+  // POST approve claim
   approveClaim: async (id: string, role: string, comment?: string): Promise<ReimbursementClaim> => {
+    try {
+      await api.post(`payroll/reimbursements/${id}/approve`, { role, comment });
+    } catch {
+      // Fallback
+    }
+
     const existing = await reimbursementsApi.getClaimById(id);
     const updatedWorkflow = existing.approvalWorkflow.map((step) => {
       if (step.role.toLowerCase().includes(role.toLowerCase())) {
@@ -423,6 +439,12 @@ export const reimbursementsApi = {
 
   // POST reject claim
   rejectClaim: async (id: string, role: string, reason: string): Promise<ReimbursementClaim> => {
+    try {
+      await api.post(`payroll/reimbursements/${id}/reject`, { role, reason });
+    } catch {
+      // Fallback
+    }
+
     const existing = await reimbursementsApi.getClaimById(id);
     const updatedWorkflow = existing.approvalWorkflow.map((step) => {
       if (step.role.toLowerCase().includes(role.toLowerCase())) {
@@ -452,6 +474,12 @@ export const reimbursementsApi = {
 
   // Bulk Approve Claims
   bulkApprove: async (claimIds: string[]): Promise<{ count: number }> => {
+    try {
+      await api.post("payroll/reimbursements/bulk-approve", { ids: claimIds });
+    } catch {
+      // Fallback
+    }
+
     let count = 0;
     for (const id of claimIds) {
       await reimbursementsApi.approveClaim(id, "Finance Manager", "Bulk approval action.");
@@ -494,11 +522,27 @@ export const reimbursementsApi = {
 
   // GET Audit Logs
   getAuditLogs: async (): Promise<ReimbursementAuditLog[]> => {
+    try {
+      const res: any = await api.get("payroll/reimbursements/audit-logs");
+      if (Array.isArray(res?.data?.items) && res.data.items.length > 0) {
+        return res.data.items;
+      }
+    } catch {
+      // Fallback
+    }
     return localAuditLogs;
   },
 
   // GET AI Insights
   getAIInsights: async (): Promise<ReimbursementAIInsight[]> => {
+    try {
+      const res: any = await api.get("payroll/reimbursements/ai-insights");
+      if (Array.isArray(res?.data?.items) && res.data.items.length > 0) {
+        return res.data.items;
+      }
+    } catch {
+      // Fallback
+    }
     return INITIAL_AI_INSIGHTS;
   },
 

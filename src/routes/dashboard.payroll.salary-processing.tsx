@@ -1,7 +1,9 @@
 import React, { useState, useMemo } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { ChevronLeft } from "lucide-react";
+import { PayrollBackButton } from "@/features/admin/payroll/components/PayrollBackButton";
 
 import "@/features/admin/payroll/components/salary-processing/salary-processing.css";
 
@@ -209,7 +211,8 @@ function SalaryProcessingPage() {
   };
 
   return (
-    <div className="sp-command-center min-h-screen bg-[#070b17] text-slate-100 p-4 lg:p-6 space-y-6 pb-28">
+    <div className="space-y-6">
+      <PayrollBackButton />
       {/* 1. Header & Actions */}
       <SalaryProcessingHeader
         currentCycle={heroMetrics?.month ? `${heroMetrics.month} ${heroMetrics.year}` : "July 2026"}

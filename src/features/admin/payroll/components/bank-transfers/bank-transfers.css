@@ -1,0 +1,7 @@
+/* Bank Transfers Custom CSS Styles */
+.salary-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  backdrop-filter: blur(16px);
+}

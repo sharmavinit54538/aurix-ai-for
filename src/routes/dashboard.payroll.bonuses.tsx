@@ -1,53 +1,47 @@
 import React, { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 import "@/features/admin/payroll/components/bonuses/bonuses.css";
 
-import { BonusesHeader } from "@/features/admin/payroll/components/bonuses/BonusesHeader";
-import { BonusesKPIs } from "@/features/admin/payroll/components/bonuses/BonusesKPIs";
-import { BonusesFilters } from "@/features/admin/payroll/components/bonuses/BonusesFilters";
-import { BonusesTable } from "@/features/admin/payroll/components/bonuses/BonusesTable";
-import { BonusDetailsDrawer } from "@/features/admin/payroll/components/bonuses/BonusDetailsDrawer";
+import { BonusHubHeader } from "@/features/admin/payroll/components/bonuses/BonusHubHeader";
+import { BonusHubCardGrid } from "@/features/admin/payroll/components/bonuses/BonusHubCardGrid";
+import { BonusHubModuleViews } from "@/features/admin/payroll/components/bonuses/BonusHubModuleViews";
 import { CreateBonusWizardDrawer } from "@/features/admin/payroll/components/bonuses/CreateBonusWizardDrawer";
-import { BulkAllocationModal } from "@/features/admin/payroll/components/bonuses/BulkAllocationModal";
-import { BonusLetterModal } from "@/features/admin/payroll/components/bonuses/BonusLetterModal";
-import { AIBonusInsights } from "@/features/admin/payroll/components/bonuses/AIBonusInsights";
-import { ApprovalWorkflowTracker } from "@/features/admin/payroll/components/bonuses/ApprovalWorkflowTracker";
-import { RightPolicyPanel } from "@/features/admin/payroll/components/bonuses/RightPolicyPanel";
-import { BonusesAnalytics } from "@/features/admin/payroll/components/bonuses/BonusesAnalytics";
+import { BonusDetailsDrawer } from "@/features/admin/payroll/components/bonuses/BonusDetailsDrawer";
 
 import { bonusesApi } from "@/services/bonusesApi";
 import {
-  BonusAward,
+  BonusRecord,
   BonusesFilters as FilterType,
   BonusesSummaryKPIs,
-  BonusAuditLog,
-  BonusAIInsight,
 } from "@/features/admin/payroll/components/bonuses/bonusesTypes";
 
 export const Route = createFileRoute("/dashboard/payroll/bonuses")({
-  head: () => ({ meta: [{ title: "Bonus & Variable Compensation Center — Aurix AI" }] }),
+  head: () => ({ meta: [{ title: "Enterprise Bonus & Incentives Hub — Aurix AI" }] }),
   component: BonusesPage,
 });
 
 function BonusesPage() {
   const [loading, setLoading] = useState(true);
-  const [bonuses, setBonuses] = useState<BonusAward[]>([]);
+  const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+
+  const [records, setRecords] = useState<BonusRecord[]>([]);
   const [kpis, setKpis] = useState<BonusesSummaryKPIs>({
-    totalBonusBudget: 0,
-    allocatedBonus: 0,
-    pendingApproval: 0,
-    approvedBonuses: 0,
-    paidBonuses: 0,
-    outstandingBonus: 0,
-    averageBonus: 0,
-    topRewardedDepartment: "-",
-    topRewardedEmployee: "-",
-    budgetRemaining: 0,
+    totalBonusAmount: 0,
+    approvedBonusAmount: 0,
+    paidBonusAmount: 0,
+    pendingApprovals: 0,
+    totalEligibleEmployees: 0,
+    averageBonusAmount: 0,
+    topBonusType: "-",
   });
 
-  const [selectedBonusIds, setSelectedBonusIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [filters, setFilters] = useState<FilterType>({
     search: "",
     employee: "all",
@@ -57,11 +51,10 @@ function BonusesPage() {
     location: "all",
     employmentType: "all",
     bonusType: "all",
-    bonusCycle: "all",
-    financialYear: "FY26-27",
+    bonusCategory: "all",
+    performancePeriod: "FY2026-Q1",
     approvalStatus: "ALL",
-    paymentStatus: "ALL",
-    performanceRating: "ALL",
+    payrollStatus: "ALL",
     page: 1,
     limit: 10,
     sortBy: "updatedOn",
@@ -71,25 +64,14 @@ function BonusesPage() {
   // Modal Controllers
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
   const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
-  const [bulkModalOpen, setBulkModalOpen] = useState(false);
-  const [letterModalOpen, setLetterModalOpen] = useState(false);
-  const [selectedBonus, setSelectedBonus] = useState<BonusAward | null>(null);
-  const [activeView, setActiveView] = useState<"BONUSES" | "AUDIT_LOGS">("BONUSES");
-  const [auditLogs, setAuditLogs] = useState<BonusAuditLog[]>([]);
-  const [aiInsights, setAiInsights] = useState<BonusAIInsight[]>([]);
+  const [selectedRecord, setSelectedRecord] = useState<BonusRecord | null>(null);
 
   const loadData = async () => {
     setLoading(true);
     try {
       const res = await bonusesApi.getBonuses(filters);
-      setBonuses(res.items);
+      setRecords(res.items);
       setKpis(res.kpis);
-
-      const logs = await bonusesApi.getAuditLogs();
-      setAuditLogs(logs);
-
-      const insights = await bonusesApi.getAIInsights();
-      setAiInsights(insights);
     } catch {
       toast.error("Failed to load bonus data.");
     } finally {
@@ -99,259 +81,147 @@ function BonusesPage() {
 
   useEffect(() => {
     loadData();
-  }, [filters]);
+  }, []);
 
-  const handleSelectToggle = (id: string) => {
-    if (selectedBonusIds.includes(id)) {
-      setSelectedBonusIds(selectedBonusIds.filter((item) => item !== id));
-    } else {
-      setSelectedBonusIds([...selectedBonusIds, id]);
-    }
-  };
-
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedBonusIds(bonuses.map((b) => b.id));
-    } else {
-      setSelectedBonusIds([]);
-    }
-  };
-
-  const handleView = (bonus: BonusAward) => {
-    setSelectedBonus(bonus);
+  const handleView = (record: BonusRecord) => {
+    setSelectedRecord(record);
     setDetailsDrawerOpen(true);
   };
 
-  const handleEdit = (bonus: BonusAward) => {
-    setSelectedBonus(bonus);
-    setCreateDrawerOpen(true);
-  };
-
-  const handleApprove = async (bonus: BonusAward) => {
+  const handleApprove = async (record: BonusRecord) => {
     try {
-      await bonusesApi.approveBonus(bonus.id, "Compensation Manager");
-      toast.success(`Approved bonus award '${bonus.bonusCode}' for ${bonus.employeeName}`);
+      await bonusesApi.approveBonus(record.id, "Finance Manager");
+      toast.success(`Approved bonus allocation '${record.bonusCode}'`);
       loadData();
     } catch {
-      toast.error("Failed to approve bonus.");
+      toast.error("Failed to approve bonus allocation.");
     }
   };
 
-  const handleReject = async (bonus: BonusAward) => {
+  const handleReject = async (record: BonusRecord) => {
     try {
-      await bonusesApi.rejectBonus(bonus.id, "Compensation Manager", "Budget cap reached.");
-      toast.success(`Rejected bonus award '${bonus.bonusCode}'.`);
+      await bonusesApi.rejectBonus(record.id, "Finance Manager", "Exceeds department budget pool.");
+      toast.success(`Rejected bonus allocation '${record.bonusCode}'.`);
       loadData();
     } catch {
-      toast.error("Failed to reject bonus.");
+      toast.error("Failed to reject bonus allocation.");
     }
   };
 
-  const handleRecalculate = async (bonus: BonusAward) => {
-    toast.success(`Recalculated bonus formula for ${bonus.employeeName}. Updated net payout.`);
+  const handleBulkApprove = async () => {
+    const idsToApprove = selectedIds.length > 0 ? selectedIds : records.map((r) => r.id);
+    if (idsToApprove.length === 0) {
+      toast.error("No bonus allocations selected for bulk approval.");
+      return;
+    }
+    for (const id of idsToApprove) {
+      await bonusesApi.approveBonus(id, "Finance Manager");
+    }
+    toast.success(`Bulk approved ${idsToApprove.length} bonus allocation(s).`);
+    setSelectedIds([]);
     loadData();
   };
 
-  const handleAddPayrollEntry = async (bonus: BonusAward) => {
-    await bonusesApi.addPayrollEntry([bonus.id], "JULY-2026");
-    toast.success(`Queued bonus '${bonus.bonusCode}' into July 2026 salary run.`);
-    loadData();
-  };
-
-  const handleGenerateLetter = (bonus: BonusAward) => {
-    setSelectedBonus(bonus);
-    setLetterModalOpen(true);
-  };
-
-  const handleSaveBonus = async (payload: Partial<BonusAward>) => {
-    await bonusesApi.createBonus(payload);
-    loadData();
-  };
-
-  const handleConfirmBulk = async (allocation: any) => {
-    await bonusesApi.bulkAllocateBonuses(allocation);
+  const handleCreateSave = async (payload: Partial<BonusRecord>) => {
+    await bonusesApi.createBonusRecord(payload);
     loadData();
   };
 
   const handleExport = () => {
-    const jsonStr = JSON.stringify(bonuses, null, 2);
+    const jsonStr = JSON.stringify(records, null, 2);
     const blob = new Blob([jsonStr], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `bonus_awards_export_${new Date().toISOString().split("T")[0]}.json`;
+    link.download = `bonus_records_export_${new Date().toISOString().split("T")[0]}.json`;
     link.click();
-    toast.success("Exported bonus & incentive data configuration.");
+    toast.success("Exported bonus and incentive audit records.");
   };
 
+  const categoryTabs = ["All", "Core Workflow", "Performance & Rewards", "Calculations & Budget", "AI & Governance", "Analytics & Settings"];
+
   return (
-    <div className="bonuses-container p-6 space-y-6">
-      {/* Header */}
-      <BonusesHeader
-        onCreateClick={() => {
-          setSelectedBonus(null);
-          setCreateDrawerOpen(true);
-        }}
-        onBulkAllocateClick={() => setBulkModalOpen(true)}
-        onExportClick={handleExport}
-        onImportSuccess={loadData}
-        onGeneratePayrollEntriesClick={() => {
-          if (selectedBonusIds.length === 0) {
-            toast.error("Select bonus awards to generate payroll entries.");
-            return;
-          }
-          bonusesApi.addPayrollEntry(selectedBonusIds, "JULY-2026");
-          toast.success(`Queued ${selectedBonusIds.length} bonus(es) into July 2026 payroll.`);
-          setSelectedBonusIds([]);
-          loadData();
-        }}
-        onAuditLogsClick={() => setActiveView(activeView === "BONUSES" ? "AUDIT_LOGS" : "BONUSES")}
-      />
-
-      {/* KPI Cards */}
-      <BonusesKPIs
-        kpis={kpis}
-        activeStatusFilter={filters.approvalStatus}
-        onFilterStatus={(s) => setFilters((prev) => ({ ...prev, approvalStatus: s }))}
-      />
-
-      {/* Recharts Analytics Dashboard */}
-      <BonusesAnalytics bonuses={bonuses} />
-
-      {/* AI Bonus Insights */}
-      <AIBonusInsights insights={aiInsights} />
-
-      {/* Main Layout: Filters & Table + Right Policy Rail */}
-      <div className="flex flex-col lg:flex-row gap-5 items-start">
-        <div className="flex-1 w-full space-y-4">
-          {/* Multi-filter Bar */}
-          <BonusesFilters
-            filters={filters}
-            onChange={(updated) => setFilters((prev) => ({ ...prev, ...updated }))}
-            onReset={() =>
-              setFilters({
-                search: "",
-                employee: "all",
-                employeeId: "all",
-                department: "all",
-                designation: "all",
-                location: "all",
-                employmentType: "all",
-                bonusType: "all",
-                bonusCycle: "all",
-                financialYear: "FY26-27",
-                approvalStatus: "ALL",
-                paymentStatus: "ALL",
-                performanceRating: "ALL",
-                page: 1,
-                limit: 10,
-                sortBy: "updatedOn",
-                sortDir: "desc",
-              })
-            }
+    <div className="space-y-6">
+      {activeModuleId ? (
+        /* Full-Screen Module View when a Feature Card is Opened */
+        <BonusHubModuleViews
+          moduleId={activeModuleId}
+          onBackToHub={() => setActiveModuleId(null)}
+          records={records}
+          onOpenCreateDrawer={() => setCreateDrawerOpen(true)}
+          onViewRecordDetails={handleView}
+          onApproveRecord={handleApprove}
+          onRejectRecord={handleReject}
+          onAddPayrollEntry={async (record) => {
+            await bonusesApi.addPayrollEntries([record.id], "JULY-2026");
+            toast.success(`Synced bonus ${record.bonusCode} into July payroll cycle.`);
+            loadData();
+          }}
+        />
+      ) : (
+        /* Bonus Hub Landing Page Architecture */
+        <div className="space-y-6">
+          {/* Hub Header & High Level Metrics */}
+          <BonusHubHeader
+            kpis={kpis}
+            onCreateClick={() => setCreateDrawerOpen(true)}
+            onBulkApproveClick={handleBulkApprove}
+            onExportClick={handleExport}
           />
 
-          {/* Workflow Tracker for Selected Bonus */}
-          {selectedBonus && (
-            <ApprovalWorkflowTracker
-              bonus={selectedBonus}
-              onApprove={handleApprove}
-              onReject={handleReject}
-            />
-          )}
-
-          {/* Main Table View */}
-          {activeView === "BONUSES" && (
-            <BonusesTable
-              data={bonuses}
-              selectedIds={selectedBonusIds}
-              onSelectToggle={handleSelectToggle}
-              onSelectAll={handleSelectAll}
-              onView={handleView}
-              onEdit={handleEdit}
-              onApprove={handleApprove}
-              onReject={handleReject}
-              onRecalculate={handleRecalculate}
-              onAddPayrollEntry={handleAddPayrollEntry}
-              onGenerateLetter={handleGenerateLetter}
-              onViewLogs={() => setActiveView("AUDIT_LOGS")}
-            />
-          )}
-
-          {/* Audit Logs View */}
-          {activeView === "AUDIT_LOGS" && (
-            <div className="bns-card p-5 space-y-4">
-              <h3 className="text-sm font-semibold text-white">Bonus Governance Audit Log</h3>
-              <div className="bns-table-wrapper">
-                <table className="bns-table">
-                  <thead>
-                    <tr>
-                      <th>Timestamp</th>
-                      <th>Bonus Code</th>
-                      <th>Action</th>
-                      <th>Actor</th>
-                      <th>Details</th>
-                      <th>IP Address</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {auditLogs.map((log) => (
-                      <tr key={log.id}>
-                        <td className="font-mono text-slate-400">{log.timestamp}</td>
-                        <td className="font-mono font-semibold text-amber-300">{log.bonusCode}</td>
-                        <td>
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">
-                            {log.action}
-                          </span>
-                        </td>
-                        <td>
-                          {log.actorName} ({log.actorRole})
-                        </td>
-                        <td className="text-slate-300">{log.details}</td>
-                        <td className="font-mono text-slate-500">{log.ipAddress}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+          {/* Module Search & Category Filter Navigation */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl bg-slate-900/60 border border-white/5">
+            {/* Category Filter Tabs */}
+            <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
+              {categoryTabs.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    selectedCategory === cat
+                      ? "bg-purple-600 text-white shadow-md shadow-purple-600/25"
+                      : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
             </div>
-          )}
+
+            {/* Hub Search Box */}
+            <div className="relative w-full sm:w-72">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Input
+                placeholder="Search bonus & incentive modules..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 bg-slate-950/60 border-white/10 text-xs text-white placeholder:text-slate-500 h-9"
+              />
+            </div>
+          </div>
+
+          {/* Feature Card Grid (18 Modules) */}
+          <BonusHubCardGrid
+            onSelectModule={(modId) => setActiveModuleId(modId)}
+            selectedCategory={selectedCategory}
+            searchQuery={searchQuery}
+          />
         </div>
+      )}
 
-        {/* Right Policy & Copilot Rail */}
-        <RightPolicyPanel />
-      </div>
-
-      {/* 5-Step Multi-step Bonus Wizard Drawer */}
+      {/* Drawers */}
       <CreateBonusWizardDrawer
         open={createDrawerOpen}
-        onClose={() => setCreateDrawerOpen(false)}
-        onSave={handleSaveBonus}
+        onOpenChange={setCreateDrawerOpen}
+        onSave={handleCreateSave}
       />
 
-      {/* Bonus Details Drawer */}
       <BonusDetailsDrawer
         open={detailsDrawerOpen}
-        onClose={() => setDetailsDrawerOpen(false)}
-        bonus={selectedBonus}
+        onOpenChange={setDetailsDrawerOpen}
+        record={selectedRecord}
         onApprove={handleApprove}
         onReject={handleReject}
-        onGenerateLetter={handleGenerateLetter}
-        onAddPayrollEntry={handleAddPayrollEntry}
-      />
-
-      {/* Bulk Allocation Modal */}
-      <BulkAllocationModal
-        open={bulkModalOpen}
-        onClose={() => setBulkModalOpen(false)}
-        onConfirmBulk={handleConfirmBulk}
-      />
-
-      {/* Branded Award Letter Generator Modal */}
-      <BonusLetterModal
-        open={letterModalOpen}
-        onClose={() => setLetterModalOpen(false)}
-        bonus={selectedBonus}
       />
     </div>
   );

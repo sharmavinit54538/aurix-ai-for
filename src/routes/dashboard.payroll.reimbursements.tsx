@@ -1,20 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { PayrollBackButton } from "@/features/admin/payroll/components/PayrollBackButton";
 import { toast } from "sonner";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 import "@/features/admin/payroll/components/reimbursements/reimbursements.css";
 
-import { ReimbursementsHeader } from "@/features/admin/payroll/components/reimbursements/ReimbursementsHeader";
-import { ReimbursementsKPIs } from "@/features/admin/payroll/components/reimbursements/ReimbursementsKPIs";
-import { ReimbursementsFilters } from "@/features/admin/payroll/components/reimbursements/ReimbursementsFilters";
-import { ReimbursementsTable } from "@/features/admin/payroll/components/reimbursements/ReimbursementsTable";
+import { ReimbursementHubHeader } from "@/features/admin/payroll/components/reimbursements/ReimbursementHubHeader";
+import { ReimbursementHubCardGrid } from "@/features/admin/payroll/components/reimbursements/ReimbursementHubCardGrid";
+import { ReimbursementHubModuleViews } from "@/features/admin/payroll/components/reimbursements/ReimbursementHubModuleViews";
 import { ClaimDetailsDrawer } from "@/features/admin/payroll/components/reimbursements/ClaimDetailsDrawer";
 import { CreateClaimWizardDrawer } from "@/features/admin/payroll/components/reimbursements/CreateClaimWizardDrawer";
-import { AIReimbursementInsights } from "@/features/admin/payroll/components/reimbursements/AIReimbursementInsights";
-import { ApprovalWorkflowTracker } from "@/features/admin/payroll/components/reimbursements/ApprovalWorkflowTracker";
 import { PayrollIntegrationModal } from "@/features/admin/payroll/components/reimbursements/PayrollIntegrationModal";
-import { RightPolicyPanel } from "@/features/admin/payroll/components/reimbursements/RightPolicyPanel";
-import { ReimbursementsAnalytics } from "@/features/admin/payroll/components/reimbursements/ReimbursementsAnalytics";
 
 import { reimbursementsApi } from "@/services/reimbursementsApi";
 import {
@@ -26,12 +25,17 @@ import {
 } from "@/features/admin/payroll/components/reimbursements/reimbursementsTypes";
 
 export const Route = createFileRoute("/dashboard/payroll/reimbursements")({
-  head: () => ({ meta: [{ title: "Reimbursements & Expense Management Center — Aurix AI" }] }),
-  component: ReimbursementsPage,
+  head: () => ({ meta: [{ title: "Enterprise Reimbursement Hub — Aurix AI" }] }),
+  component: ReimbursementsHubPage,
 });
 
-function ReimbursementsPage() {
+function ReimbursementsHubPage() {
+  const navigate = useNavigate({ from: "/dashboard/payroll/reimbursements" });
   const [loading, setLoading] = useState(true);
+  const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+
   const [claims, setClaims] = useState<ReimbursementClaim[]>([]);
   const [kpis, setKpis] = useState<ReimbursementsSummaryKPIs>({
     totalClaims: 0,
@@ -69,7 +73,6 @@ function ReimbursementsPage() {
   const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
   const [payrollModalOpen, setPayrollModalOpen] = useState(false);
   const [selectedClaim, setSelectedClaim] = useState<ReimbursementClaim | null>(null);
-  const [activeView, setActiveView] = useState<"CLAIMS" | "AUDIT_LOGS">("CLAIMS");
   const [auditLogs, setAuditLogs] = useState<ReimbursementAuditLog[]>([]);
   const [aiInsights, setAiInsights] = useState<ReimbursementAIInsight[]>([]);
 
@@ -94,23 +97,7 @@ function ReimbursementsPage() {
 
   useEffect(() => {
     loadData();
-  }, [filters]);
-
-  const handleSelectToggle = (id: string) => {
-    if (selectedClaimIds.includes(id)) {
-      setSelectedClaimIds(selectedClaimIds.filter((item) => item !== id));
-    } else {
-      setSelectedClaimIds([...selectedClaimIds, id]);
-    }
-  };
-
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedClaimIds(claims.map((c) => c.id));
-    } else {
-      setSelectedClaimIds([]);
-    }
-  };
+  }, []);
 
   const handleView = (claim: ReimbursementClaim) => {
     setSelectedClaim(claim);
@@ -176,134 +163,90 @@ function ReimbursementsPage() {
     toast.success("Exported reimbursement claims data.");
   };
 
+  const categoryTabs = ["All", "Core Workflow", "Categories & Policy", "AI & Compliance", "Analytics & Settings"];
+
   return (
-    <div className="reimbursements-container p-6 space-y-6">
-      {/* Header */}
-      <ReimbursementsHeader
-        onCreateClick={() => setCreateDrawerOpen(true)}
-        onBulkApproveClick={handleBulkApprove}
-        onExportClick={handleExport}
-        onImportSuccess={loadData}
-        onGeneratePayrollEntriesClick={() => setPayrollModalOpen(true)}
-        onAuditLogsClick={() => setActiveView(activeView === "CLAIMS" ? "AUDIT_LOGS" : "CLAIMS")}
-      />
+    <div className="space-y-6">
+      <PayrollBackButton />
 
-      {/* KPI Cards */}
-      <ReimbursementsKPIs
-        kpis={kpis}
-        activeStatusFilter={filters.claimStatus}
-        onFilterStatus={(s) => setFilters((prev) => ({ ...prev, claimStatus: s }))}
-      />
-
-      {/* Recharts Analytics Dashboard */}
-      <ReimbursementsAnalytics claims={claims} />
-
-      {/* AI Reimbursement Insights */}
-      <AIReimbursementInsights insights={aiInsights} />
-
-      {/* Main Layout: Filters & Table + Right Policy Rail */}
-      <div className="flex flex-col lg:flex-row gap-5 items-start">
-        <div className="flex-1 w-full space-y-4">
-          {/* Multi-filter Bar */}
-          <ReimbursementsFilters
-            filters={filters}
-            onChange={(updated) => setFilters((prev) => ({ ...prev, ...updated }))}
-            onReset={() =>
-              setFilters({
-                search: "",
-                employee: "all",
-                employeeId: "all",
-                department: "all",
-                designation: "all",
-                expenseCategory: "all",
-                claimStatus: "ALL",
-                paymentStatus: "ALL",
-                financialYear: "FY26-27",
-                month: "all",
-                page: 1,
-                limit: 10,
-                sortBy: "submittedDate",
-                sortDir: "desc",
-              })
-            }
+      {activeModuleId ? (
+        /* Full-Screen Module View when a Feature Card is Opened */
+        <ReimbursementHubModuleViews
+          moduleId={activeModuleId}
+          onBackToHub={() => setActiveModuleId(null)}
+          claims={claims}
+          auditLogs={auditLogs}
+          aiInsights={aiInsights}
+          onOpenCreateDrawer={() => setCreateDrawerOpen(true)}
+          onViewClaimDetails={handleView}
+          onApproveClaim={handleApprove}
+          onRejectClaim={handleReject}
+          onProcessPayment={(c) => {
+            setSelectedClaimIds([c.id]);
+            setPayrollModalOpen(true);
+          }}
+          onAddPayrollEntry={(c) => {
+            setSelectedClaimIds([c.id]);
+            setPayrollModalOpen(true);
+          }}
+        />
+      ) : (
+        /* Reimbursement Hub Landing Page Architecture */
+        <div className="space-y-6">
+          {/* Hub Header & High Level Metrics */}
+          <ReimbursementHubHeader
+            kpis={kpis}
+            onCreateClick={() => setCreateDrawerOpen(true)}
+            onOcrClick={() => setActiveModuleId("receipt-management")}
+            onBulkApproveClick={handleBulkApprove}
+            onExportClick={handleExport}
           />
 
-          {/* Workflow Tracker for Selected Claim */}
-          {selectedClaim && (
-            <ApprovalWorkflowTracker
-              claim={selectedClaim}
-              onApprove={handleApprove}
-              onReject={handleReject}
-            />
-          )}
-
-          {/* Main Table View */}
-          {activeView === "CLAIMS" && (
-            <ReimbursementsTable
-              data={claims}
-              selectedIds={selectedClaimIds}
-              onSelectToggle={handleSelectToggle}
-              onSelectAll={handleSelectAll}
-              onView={handleView}
-              onApprove={handleApprove}
-              onReject={handleReject}
-              onRequestChanges={handleView}
-              onProcessPayment={(c) => {
-                setSelectedClaimIds([c.id]);
-                setPayrollModalOpen(true);
-              }}
-              onAddPayrollEntry={(c) => {
-                setSelectedClaimIds([c.id]);
-                setPayrollModalOpen(true);
-              }}
-              onDownloadReceipt={(c) => toast.success(`Downloading receipts for claim ${c.claimNumber}`)}
-              onViewLogs={() => setActiveView("AUDIT_LOGS")}
-            />
-          )}
-
-          {/* Audit Logs View */}
-          {activeView === "AUDIT_LOGS" && (
-            <div className="reimb-card p-5 space-y-4">
-              <h3 className="text-sm font-semibold text-white">Reimbursement Audit Trail & Governance Log</h3>
-              <div className="reimb-table-wrapper">
-                <table className="reimb-table">
-                  <thead>
-                    <tr>
-                      <th>Timestamp</th>
-                      <th>Claim Number</th>
-                      <th>Action</th>
-                      <th>Actor</th>
-                      <th>Details</th>
-                      <th>IP Address</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {auditLogs.map((log) => (
-                      <tr key={log.id}>
-                        <td className="font-mono text-slate-400">{log.timestamp}</td>
-                        <td className="font-mono font-semibold text-blue-300">{log.claimNumber}</td>
-                        <td>
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/30">
-                            {log.action}
-                          </span>
-                        </td>
-                        <td>
-                          {log.actorName} ({log.actorRole})
-                        </td>
-                        <td className="text-slate-300">{log.details}</td>
-                        <td className="font-mono text-slate-500">{log.ipAddress}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+          {/* Module Search & Category Filter Navigation */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl bg-slate-900/60 border border-white/5">
+            {/* Category Filter Tabs */}
+            <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
+              {categoryTabs.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    selectedCategory === cat
+                      ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
+                      : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
             </div>
-          )}
-        </div>
 
-        {/* Right Policy & Copilot Rail */}
-        <RightPolicyPanel />
-      </div>
+            {/* Module Search Bar */}
+            <div className="relative w-full sm:w-72">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search reimbursement modules..."
+                className="pl-9 bg-slate-950 border-white/10 text-xs text-white h-9"
+              />
+            </div>
+          </div>
+
+          {/* 20 Enterprise Feature Cards Grid */}
+          <ReimbursementHubCardGrid
+            onSelectModule={(id) => {
+              if (id === "create-claim") {
+                setCreateDrawerOpen(true);
+              } else {
+                setActiveModuleId(id);
+              }
+            }}
+            searchQuery={searchQuery}
+            selectedCategory={selectedCategory}
+          />
+        </div>
+      )}
 
       {/* 4-Step Multi-step Claim Creation Wizard */}
       <CreateClaimWizardDrawer

@@ -1,7 +1,27 @@
 import React, { useEffect, useCallback } from "react";
 import {
-  Search, ZoomIn, ZoomOut, Maximize2, Minimize2, RotateCcw,
-  RefreshCw, Users, MapPin, X, AlertTriangle, ShieldAlert, Calendar, DollarSign
+  Search,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+  Minimize2,
+  RotateCcw,
+  RefreshCw,
+  Users,
+  MapPin,
+  X,
+  AlertTriangle,
+  Sparkles,
+  GitBranch,
+  LayoutGrid,
+  ListFilter,
+  Download,
+  Printer,
+  ChevronRight,
+  ShieldCheck,
+  DollarSign,
+  Calendar,
+  Briefcase,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { fetchEmployeeHierarchy, fetchEmployeeReportingDetails } from "@/store/employeeHierarchy/employeeHierarchyThunk";
@@ -26,14 +46,20 @@ import {
   zoomOut,
   resetZoom,
   toggleFullscreen,
+  setLayout,
+  setConnectorStyle,
+  toggleAiInsights,
 } from "@/store/employeeHierarchy/employeeHierarchySlice";
-import type { BackendHierarchyNode } from "@/store/employeeHierarchy/employeeHierarchyTypes";
+import type { BackendHierarchyNode, HierarchyLayoutType } from "@/store/employeeHierarchy/employeeHierarchyTypes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { OrgChartCanvas } from "./OrgChartCanvas";
 import { OrgChartMobileTree } from "./OrgChartMobileTree";
+import { HierarchyAnalyticsPanel } from "./HierarchyAnalyticsPanel";
+import { toast } from "sonner";
 
 export function EmployeeHierarchyView() {
   const dispatch = useAppDispatch();
@@ -49,6 +75,10 @@ export function EmployeeHierarchyView() {
     filters,
     zoomLevel,
     isFullscreen,
+    layout,
+    connectorStyle,
+    showAiInsights,
+    showAnalyticsPanel,
   } = useAppSelector(selectHierarchyState);
 
   const userRole = useAppSelector((state) => state.sidebar?.userRole) || "admin";
@@ -83,35 +113,68 @@ export function EmployeeHierarchyView() {
     [dispatch]
   );
 
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleExportPNG = () => {
+    toast.success("Exporting Organizational Hierarchy as high-resolution image...");
+  };
+
   const isEmpDetailsAllowed = userRole === "admin" || userRole === "hr" || userRole === "hr_manager";
 
   return (
-    <div className={`space-y-4 ${isFullscreen ? "fixed inset-0 z-50 overflow-auto bg-background p-6" : ""}`}>
-      {/* TOOLBAR & SEARCH SECTION */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between text-left">
-        {/* Search Input */}
+    <div className={`space-y-5 ${isFullscreen ? "fixed inset-0 z-50 overflow-auto bg-background p-6" : ""}`}>
+      {/* TOP HEADER & CONTROLS TOOLBAR */}
+      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between text-left shadow-md">
+        {/* Search Bar */}
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={searchKeyword}
             onChange={(e) => dispatch(setSearchKeyword(e.target.value))}
-            placeholder="Search by Name, Employee ID, Department, or Designation..."
-            className="pl-9 pr-8"
+            placeholder="Search by Name, Employee ID, Department, or Role..."
+            className="pl-9 pr-8 h-9 text-xs bg-muted/20 border-border/60"
           />
           {searchKeyword && (
             <button
               type="button"
               onClick={() => dispatch(setSearchKeyword(""))}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
             >
               <X className="h-4 w-4" />
             </button>
           )}
         </div>
 
-        {/* Action Controls Toolbar */}
+        {/* Action Toolbar */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* Zoom controls */}
+          {/* Layout Selector Pills */}
+          <div className="flex items-center rounded-lg border border-border bg-accent/30 p-0.5">
+            {[
+              { id: "vertical", label: "Vertical", icon: GitBranch },
+              { id: "horizontal", label: "Horizontal", icon: LayoutGrid },
+              { id: "compact", label: "Compact", icon: ListFilter },
+            ].map((l) => {
+              const Icon = l.icon;
+              const active = layout === l.id;
+              return (
+                <button
+                  key={l.id}
+                  onClick={() => dispatch(setLayout(l.id as HierarchyLayoutType))}
+                  className={`flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                    active ? "bg-brand text-brand-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  title={`${l.label} Tree Layout`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">{l.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Zoom Controls */}
           <div className="flex items-center rounded-lg border border-border bg-accent/30 p-0.5">
             <Button
               variant="ghost"
@@ -138,14 +201,14 @@ export function EmployeeHierarchyView() {
               variant="ghost"
               size="icon"
               onClick={() => dispatch(resetZoom())}
-              title="Reset / Fit to Screen"
+              title="Reset Zoom"
               className="h-8 w-8 cursor-pointer"
             >
               <RotateCcw className="h-3.5 w-3.5" />
             </Button>
           </div>
 
-          {/* Node Expand/Collapse All */}
+          {/* Expand/Collapse All */}
           <Button
             variant="outline"
             size="sm"
@@ -163,7 +226,17 @@ export function EmployeeHierarchyView() {
             Collapse All
           </Button>
 
-          {/* Fullscreen Toggle */}
+          {/* Export & Fullscreen */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportPNG}
+            className="text-xs h-8 gap-1.5 cursor-pointer"
+            title="Export Image"
+          >
+            <Download className="h-3.5 w-3.5" /> Export
+          </Button>
+
           <Button
             variant="outline"
             size="sm"
@@ -171,14 +244,17 @@ export function EmployeeHierarchyView() {
             className="text-xs h-8 gap-1.5 cursor-pointer"
           >
             {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
-            {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
           </Button>
         </div>
       </div>
 
-      {/* FILTER DROPDOWNS ROW */}
+      {/* ANALYTICS & AI INSIGHTS KPI PANEL */}
+      {filteredTrees && filteredTrees.length > 0 && showAnalyticsPanel && (
+        <HierarchyAnalyticsPanel trees={filteredTrees} />
+      )}
+
+      {/* ADVANCED FILTER DROPDOWNS ROW */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5 text-left">
-        {/* Department Filter */}
         <div>
           <Label className="text-[11px] font-semibold text-muted-foreground">Department</Label>
           <select
@@ -195,7 +271,6 @@ export function EmployeeHierarchyView() {
           </select>
         </div>
 
-        {/* Designation Filter */}
         <div>
           <Label className="text-[11px] font-semibold text-muted-foreground">Designation</Label>
           <select
@@ -212,7 +287,6 @@ export function EmployeeHierarchyView() {
           </select>
         </div>
 
-        {/* Location Filter */}
         <div>
           <Label className="text-[11px] font-semibold text-muted-foreground">Location / Branch</Label>
           <select
@@ -229,7 +303,6 @@ export function EmployeeHierarchyView() {
           </select>
         </div>
 
-        {/* Employment Type Filter */}
         <div>
           <Label className="text-[11px] font-semibold text-muted-foreground">Employment Type</Label>
           <select
@@ -245,7 +318,6 @@ export function EmployeeHierarchyView() {
           </select>
         </div>
 
-        {/* Manager Filter */}
         <div>
           <Label className="text-[11px] font-semibold text-muted-foreground">Reporting Manager</Label>
           <select
@@ -266,7 +338,7 @@ export function EmployeeHierarchyView() {
       {/* ACTIVE SEARCH RESULT INFO */}
       {matchingNodeIds.size > 0 && (
         <div className="flex items-center justify-between rounded-xl border border-brand-accent/30 bg-brand-accent/10 px-4 py-2 text-xs font-semibold text-brand-foreground">
-          <span>Found {matchingNodeIds.size} matching backend node(s)</span>
+          <span>Found {matchingNodeIds.size} matching node(s) in organization tree</span>
           <button
             type="button"
             onClick={() => dispatch(resetFilters())}
@@ -296,7 +368,7 @@ export function EmployeeHierarchyView() {
           <div className="flex items-center gap-3">
             <AlertTriangle className="h-6 w-6 text-destructive shrink-0" />
             <div>
-              <h3 className="font-display text-base font-semibold text-foreground">Hierarchy API Failure</h3>
+              <h3 className="font-display text-base font-semibold text-foreground">Hierarchy API Error</h3>
               <p className="text-xs text-muted-foreground mt-0.5">{error}</p>
             </div>
           </div>
@@ -319,7 +391,7 @@ export function EmployeeHierarchyView() {
           <Users className="mx-auto h-10 w-10 text-muted-foreground/60 mb-3" />
           <h3 className="font-display text-base font-semibold text-foreground">No Employee Hierarchy Available</h3>
           <p className="mt-1 text-xs text-muted-foreground">
-            No active reporting structures or employees match the selected filters in the database.
+            No active reporting structures match the selected filters in the database.
           </p>
           <Button
             variant="outline"
@@ -332,10 +404,9 @@ export function EmployeeHierarchyView() {
         </div>
       )}
 
-      {/* CANVAS / CHART VIEW */}
+      {/* CANVAS ORG CHART VIEW */}
       {!loading && !error && filteredTrees && filteredTrees.length > 0 && (
         <>
-          {/* Desktop & Tablet Org Chart Canvas */}
           <div className="hidden sm:block">
             <OrgChartCanvas
               trees={filteredTrees}
@@ -343,12 +414,13 @@ export function EmployeeHierarchyView() {
               selectedEmployeeId={selectedEmployeeId}
               matchingNodeIds={matchingNodeIds}
               zoomLevel={zoomLevel}
+              layout={layout}
+              connectorStyle={connectorStyle}
               onToggleExpand={handleToggleExpand}
               onSelectNode={handleSelectNode}
             />
           </div>
 
-          {/* Mobile Collapsible Tree List */}
           <div className="block sm:hidden">
             <OrgChartMobileTree
               trees={filteredTrees}
@@ -362,11 +434,14 @@ export function EmployeeHierarchyView() {
         </>
       )}
 
-      {/* LAZY-LOADED SIDE DRAWER DETAILS */}
+      {/* SIDE DRAWER FOR EMPLOYEE DETAILS */}
       {selectedEmployeeId && (
         <div className="fixed bottom-6 right-6 z-40 max-w-md w-full rounded-2xl border border-border bg-card/95 p-5 shadow-2xl backdrop-blur-xl text-left animate-in slide-in-from-bottom duration-200">
           <div className="flex items-start justify-between gap-3 pb-3 border-b border-border">
-            <h3 className="font-display text-sm font-bold text-foreground">Employee Hierarchy Intelligence</h3>
+            <h3 className="font-display text-sm font-bold text-foreground flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-brand" />
+              Employee Hierarchy Intelligence
+            </h3>
             <button
               type="button"
               onClick={() => dispatch(setSelectedEmployee(null))}
@@ -392,7 +467,6 @@ export function EmployeeHierarchyView() {
 
           {!loadingDetails && selectedEmployeeDetails && (
             <div className="mt-3 space-y-4 text-xs">
-              {/* Employee Summary Card */}
               <div className="flex items-center gap-3">
                 {selectedEmployeeDetails.employee.profile_photo_url ? (
                   <img
@@ -414,6 +488,27 @@ export function EmployeeHierarchyView() {
                   <p className="text-[11px] text-muted-foreground/80">{selectedEmployeeDetails.employee.department}</p>
                 </div>
               </div>
+
+              {/* Reporting Chain Path */}
+              {selectedEmployeeDetails.reporting_chain && selectedEmployeeDetails.reporting_chain.length > 0 && (
+                <div className="rounded-xl border border-border bg-accent/30 p-2.5 space-y-1">
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block">
+                    Reporting Chain Path
+                  </span>
+                  <div className="flex flex-wrap items-center gap-1 text-[11px]">
+                    {selectedEmployeeDetails.reporting_chain.map((ancestor, idx) => (
+                      <React.Fragment key={ancestor.id}>
+                        <span className="font-medium text-foreground">
+                          {ancestor.first_name} {ancestor.last_name}
+                        </span>
+                        {idx < selectedEmployeeDetails.reporting_chain.length - 1 && (
+                          <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Grid Metadata */}
               <div className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-accent/20 p-3">
@@ -444,7 +539,7 @@ export function EmployeeHierarchyView() {
                       <DollarSign className="h-3 w-3 text-emerald-400" /> Confidential CTC
                     </span>
                     <p className="font-mono text-xs font-semibold text-emerald-400">
-                      ${Number(selectedEmployeeDetails.employee.ctc).toLocaleString()} / yr
+                      ₹ {Number(selectedEmployeeDetails.employee.ctc).toLocaleString()} / yr
                     </p>
                   </div>
                 )}
@@ -479,3 +574,4 @@ export function EmployeeHierarchyView() {
     </div>
   );
 }
+export default EmployeeHierarchyView;

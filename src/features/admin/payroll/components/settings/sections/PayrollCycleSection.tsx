@@ -62,7 +62,7 @@ export const PayrollCycleSection: React.FC<SectionProps> = ({
         <div className="mb-6 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
 
         {/* Fields Grid */}
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           {/* Pay Cycle Type */}
           <div className="space-y-2">
             <Label className="text-[13px] font-semibold text-slate-300">

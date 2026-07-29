@@ -64,7 +64,7 @@ export const GeneralSettingsSection: React.FC<SectionProps> = ({
         <div className="mb-6 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
 
         {/* Fields Grid */}
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           {/* Company Name */}
           <div className="space-y-2">
             <Label className="text-[13px] font-semibold text-slate-300">
@@ -194,25 +194,25 @@ export const GeneralSettingsSection: React.FC<SectionProps> = ({
 
         <div className="mb-5 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           {/* Auto Payroll Lock */}
-          <div className="card-hover-lift flex flex-col rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 transition-all">
-            <div className="flex items-start justify-between gap-4">
-              <div className="space-y-2">
-                <div className="text-[15px] font-semibold text-white/95">Auto Payroll Lock</div>
-                <p className="text-[12px] leading-[1.6] text-slate-400/80">
-                  Automatically lock the pay cycle after the approval workflow is completed. Prevents further edits.
+          <div className="card-hover-lift flex flex-col rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 transition-all">
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1.5 flex-1 min-w-0">
+                <div className="text-[14px] font-semibold text-white/95">Auto Payroll Lock</div>
+                <p className="text-[11px] leading-relaxed text-slate-400/80">
+                  Automatically lock the pay cycle after the approval workflow is completed.
                 </p>
               </div>
               <Switch
                 disabled={isReadOnly}
                 checked={data.auto_lock_payroll}
                 onCheckedChange={(val) => onChange({ auto_lock_payroll: val })}
-                className="premium-switch mt-0.5 flex-shrink-0"
+                className="premium-switch mt-0.5 shrink-0"
               />
             </div>
-            <div className="mt-auto pt-4">
-              <div className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[11px] font-semibold ${
+            <div className="mt-auto pt-3">
+              <div className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold ${
                 data.auto_lock_payroll
                   ? "border-emerald-500/20 bg-emerald-500/[0.06] text-emerald-400"
                   : "border-white/[0.06] bg-white/[0.02] text-slate-500"
@@ -224,23 +224,23 @@ export const GeneralSettingsSection: React.FC<SectionProps> = ({
           </div>
 
           {/* Draft Payroll Mode */}
-          <div className="card-hover-lift flex flex-col rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 transition-all">
-            <div className="flex items-start justify-between gap-4">
-              <div className="space-y-2">
-                <div className="text-[15px] font-semibold text-white/95">Draft Payroll Mode</div>
-                <p className="text-[12px] leading-[1.6] text-slate-400/80">
-                  Allow HR managers to preview and review draft payrolls before the final lock is applied.
+          <div className="card-hover-lift flex flex-col rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 transition-all">
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1.5 flex-1 min-w-0">
+                <div className="text-[14px] font-semibold text-white/95">Draft Payroll Mode</div>
+                <p className="text-[11px] leading-relaxed text-slate-400/80">
+                  Allow HR managers to preview and review draft payrolls before final lock.
                 </p>
               </div>
               <Switch
                 disabled={isReadOnly}
                 checked={data.enable_draft_payroll}
                 onCheckedChange={(val) => onChange({ enable_draft_payroll: val })}
-                className="premium-switch mt-0.5 flex-shrink-0"
+                className="premium-switch mt-0.5 shrink-0"
               />
             </div>
-            <div className="mt-auto pt-4">
-              <div className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[11px] font-semibold ${
+            <div className="mt-auto pt-3">
+              <div className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold ${
                 data.enable_draft_payroll
                   ? "border-emerald-500/20 bg-emerald-500/[0.06] text-emerald-400"
                   : "border-white/[0.06] bg-white/[0.02] text-slate-500"
@@ -252,11 +252,11 @@ export const GeneralSettingsSection: React.FC<SectionProps> = ({
           </div>
 
           {/* Retroactive Payroll */}
-          <div className="card-hover-lift flex flex-col rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 transition-all">
-            <div className="flex items-start justify-between gap-4">
-              <div className="space-y-2">
-                <div className="text-[15px] font-semibold text-white/95">Retroactive Payroll</div>
-                <p className="text-[12px] leading-[1.6] text-slate-400/80">
+          <div className="card-hover-lift flex flex-col rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 transition-all">
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1.5 flex-1 min-w-0">
+                <div className="text-[14px] font-semibold text-white/95">Retroactive Payroll</div>
+                <p className="text-[11px] leading-relaxed text-slate-400/80">
                   Enable salary adjustment back-calculations for prior periods when corrections are needed.
                 </p>
               </div>
@@ -264,11 +264,11 @@ export const GeneralSettingsSection: React.FC<SectionProps> = ({
                 disabled={isReadOnly}
                 checked={data.enable_retro_payroll}
                 onCheckedChange={(val) => onChange({ enable_retro_payroll: val })}
-                className="premium-switch mt-0.5 flex-shrink-0"
+                className="premium-switch mt-0.5 shrink-0"
               />
             </div>
-            <div className="mt-auto pt-4">
-              <div className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[11px] font-semibold ${
+            <div className="mt-auto pt-3">
+              <div className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold ${
                 data.enable_retro_payroll
                   ? "border-emerald-500/20 bg-emerald-500/[0.06] text-emerald-400"
                   : "border-white/[0.06] bg-white/[0.02] text-slate-500"

@@ -1,5 +1,11 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import type { EmployeeHierarchyState, HierarchyFilterState, BackendHierarchyNode } from "./employeeHierarchyTypes";
+import type {
+  EmployeeHierarchyState,
+  HierarchyFilterState,
+  BackendHierarchyNode,
+  HierarchyLayoutType,
+  ConnectorStyleType,
+} from "./employeeHierarchyTypes";
 import { fetchEmployeeHierarchy, fetchEmployeeReportingDetails } from "./employeeHierarchyThunk";
 
 const initialFilters: HierarchyFilterState = {
@@ -8,6 +14,7 @@ const initialFilters: HierarchyFilterState = {
   location: "all",
   employmentType: "all",
   reportingManagerId: "all",
+  workLocationType: "all",
 };
 
 const initialState: EmployeeHierarchyState = {
@@ -23,6 +30,10 @@ const initialState: EmployeeHierarchyState = {
   filters: initialFilters,
   zoomLevel: 100,
   isFullscreen: false,
+  layout: "vertical",
+  connectorStyle: "curved",
+  showAiInsights: false,
+  showAnalyticsPanel: true,
 };
 
 function getAllNodeIds(nodes: BackendHierarchyNode[]): string[] {
@@ -90,13 +101,13 @@ export const employeeHierarchySlice = createSlice({
       }
     },
     setZoomLevel(state, action: PayloadAction<number>) {
-      state.zoomLevel = Math.max(50, Math.min(180, action.payload));
+      state.zoomLevel = Math.max(40, Math.min(200, action.payload));
     },
     zoomIn(state) {
-      state.zoomLevel = Math.min(180, state.zoomLevel + 15);
+      state.zoomLevel = Math.min(200, state.zoomLevel + 15);
     },
     zoomOut(state) {
-      state.zoomLevel = Math.max(50, state.zoomLevel - 15);
+      state.zoomLevel = Math.max(40, state.zoomLevel - 15);
     },
     resetZoom(state) {
       state.zoomLevel = 100;
@@ -106,6 +117,18 @@ export const employeeHierarchySlice = createSlice({
     },
     setIsFullscreen(state, action: PayloadAction<boolean>) {
       state.isFullscreen = action.payload;
+    },
+    setLayout(state, action: PayloadAction<HierarchyLayoutType>) {
+      state.layout = action.payload;
+    },
+    setConnectorStyle(state, action: PayloadAction<ConnectorStyleType>) {
+      state.connectorStyle = action.payload;
+    },
+    toggleAiInsights(state) {
+      state.showAiInsights = !state.showAiInsights;
+    },
+    toggleAnalyticsPanel(state) {
+      state.showAnalyticsPanel = !state.showAnalyticsPanel;
     },
   },
   extraReducers: (builder) => {
@@ -160,6 +183,10 @@ export const {
   resetZoom,
   toggleFullscreen,
   setIsFullscreen,
+  setLayout,
+  setConnectorStyle,
+  toggleAiInsights,
+  toggleAnalyticsPanel,
 } = employeeHierarchySlice.actions;
 
 export default employeeHierarchySlice.reducer;
