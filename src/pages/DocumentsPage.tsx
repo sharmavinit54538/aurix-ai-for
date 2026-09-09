@@ -20,6 +20,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { aurix, uid, useAurix, type HRDocument, type HRDocumentActivity } from "@/lib/aurix-store";
 import { toast } from "sonner";
 import { apiInstance } from "@/api";
+import { getFileUrl } from "@/lib/utils";
 
 // ----------------------------------------------------
 // DOCUMENT CONSTANTS
@@ -590,7 +591,7 @@ Acknowledged and Signed electronically.`;
     aurix.set({ documentActivities: [newActivity, ...activities] });
 
     if (doc.fileUrl) {
-      const targetUrl = doc.fileUrl.startsWith("http") ? doc.fileUrl : `http://127.0.0.1:8001${doc.fileUrl}`;
+      const targetUrl = getFileUrl(doc.fileUrl);
       window.open(targetUrl, "_blank");
       return;
     }
@@ -1822,7 +1823,7 @@ Acknowledged and Signed electronically.`;
                               alt={previewDoc.name}
                               className="w-full max-h-[480px] object-contain rounded-lg shadow-lg"
                               onError={(e) => {
-                                (e.target as HTMLImageElement).src = `http://127.0.0.1:8001${previewDoc.fileUrl}`;
+                                (e.target as HTMLImageElement).src = getFileUrl(previewDoc.fileUrl);
                               }}
                             />
                             <div className="mt-2 flex items-center gap-2">

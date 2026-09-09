@@ -23,6 +23,7 @@ import {
   Rocket
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { api } from "@/api";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -45,9 +46,8 @@ export function CtoPortalPage() {
   const fetchCtoMetrics = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/v1/cto/dashboard");
-      const json = await res.json();
-      if (json.success && json.data) {
+      const json: any = await api.get("/api/v1/cto/dashboard");
+      if (json && json.success && json.data) {
         setKpis(json.data.kpis || []);
         setSystemHealth(json.data.systemHealth || []);
         setVelocityTrend(json.data.velocityTrend || []);

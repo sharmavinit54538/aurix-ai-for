@@ -1,34 +1,42 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 
-export default defineConfig({
-  server: {
-    port: 8080,
-    proxy: {
-      "/uploads": {
-        target: "http://127.0.0.1:8001",
-        changeOrigin: true,
-      },
-      "/api": {
-        target: "http://127.0.0.1:8001",
-        changeOrigin: true,
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "");
+  let targetApi = (env.VITE_API_URL || "https://www.api.ofc360.com").trim().replace(/\/$/, "");
+  if (!targetApi.startsWith("http://") && !targetApi.startsWith("https://")) {
+    targetApi = `https://${targetApi}`;
+  }
+
+  return {
+    server: {
+      port: 8080,
+      proxy: {
+        "/uploads": {
+          target: targetApi,
+          changeOrigin: true,
+        },
+        "/api": {
+          target: targetApi,
+          changeOrigin: true,
+        },
       },
     },
-  },
   resolve: {
     tsconfigPaths: true,
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  plugins: [
-    tailwindcss(),
-    tanstackStart({
-      server: { entry: "server" },
-    }),
-    viteReact(),
-  ],
+    plugins: [
+      tailwindcss(),
+      tanstackStart({
+        server: { entry: "server" },
+      }),
+      viteReact(),
+    ],
+  };
 });
