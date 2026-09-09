@@ -6,10 +6,11 @@ import path from "path";
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
-  let targetApi = (env.VITE_API_URL || "https://www.api.ofc360.com").trim().replace(/\/$/, "");
+  let targetApi = (env.VITE_API_URL || "https://api.ofc360.com").trim().replace(/\/$/, "");
   if (!targetApi.startsWith("http://") && !targetApi.startsWith("https://")) {
     targetApi = `https://${targetApi}`;
   }
+  targetApi = targetApi.replace(/www\.api\.ofc360\.com/g, "api.ofc360.com");
 
   return {
     server: {

@@ -73,10 +73,11 @@ function JobApplyPage() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  let rawApiUrl = ((import.meta.env.VITE_API_URL as string) || "https://www.api.ofc360.com").trim().replace(/\/$/, "");
+  let rawApiUrl = ((import.meta.env.VITE_API_URL as string) || "https://api.ofc360.com").trim().replace(/\/$/, "");
   if (!rawApiUrl.startsWith("http://") && !rawApiUrl.startsWith("https://")) {
     rawApiUrl = `https://${rawApiUrl}`;
   }
+  rawApiUrl = rawApiUrl.replace(/www\.api\.ofc360\.com/g, "api.ofc360.com");
   const PUBLIC_API_URL = `${rawApiUrl}/api/public/careers`;
 
   useEffect(() => {

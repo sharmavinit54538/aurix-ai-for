@@ -10,7 +10,7 @@ import { getTokens, setTokens } from "./tokens";
 export function getApiBaseUrl(): string {
   let url = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
   if (!url) {
-    return "https://www.api.ofc360.com";
+    return "https://api.ofc360.com";
   }
   // Remove any accidental leading slashes
   url = url.replace(/^\/+/, "");
@@ -18,6 +18,8 @@ export function getApiBaseUrl(): string {
   if (!url.startsWith("http://") && !url.startsWith("https://")) {
     url = `https://${url}`;
   }
+  // Normalize www.api.ofc360.com -> api.ofc360.com (www subdomain has no DNS entry)
+  url = url.replace(/www\.api\.ofc360\.com/g, "api.ofc360.com");
   // Remove trailing slashes
   url = url.replace(/\/+$/, "");
   // Strip trailing /api/v1 or /api to get purely the origin base
