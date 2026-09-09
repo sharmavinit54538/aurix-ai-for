@@ -3,10 +3,33 @@ import { aurix } from "@/lib/aurix-store";
 import { isAccessTokenExpired } from "./token-utils";
 import { getTokens, setTokens } from "./tokens";
 
-export const BASE_URL = ((import.meta.env.VITE_API_URL as string) || "http://localhost:8001").trim().replace(/\/$/, "") + "/api/v1";
+/**
+ * Normalizes the API base origin, ensuring https:// protocol and no trailing slashes.
+ * e.g., "https://www.api.ofc360.com"
+ */
+export function getApiBaseUrl(): string {
+  let url = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
+  if (!url) {
+    return "https://www.api.ofc360.com";
+  }
+  // Remove any accidental leading slashes
+  url = url.replace(/^\/+/, "");
+  // Prepend https:// if protocol is omitted
+  if (!url.startsWith("http://") && !url.startsWith("https://")) {
+    url = `https://${url}`;
+  }
+  // Remove trailing slashes
+  url = url.replace(/\/+$/, "");
+  // Strip trailing /api/v1 or /api to get purely the origin base
+  url = url.replace(/\/api(\/v1)?$/, "");
+  return url;
+}
+
+export const API_BASE_URL = getApiBaseUrl();
+export const BASE_URL = `${API_BASE_URL}/api/v1`;
 
 const apiInstance = axios.create({
-  baseURL: BASE_URL,
+  baseURL: API_BASE_URL,
   timeout: 120000,
   headers: {
     "Content-Type": "application/json",
@@ -63,6 +86,32 @@ apiInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   if (tokens?.accessToken) {
     config.headers.Authorization = `Bearer ${tokens.accessToken}`;
   }
+
+  if (config.url) {
+    let url = config.url.trim();
+
+    // Fix accidental local host or domain prepends
+    url = url.replace(/^(?:https?:\/\/[^/]+)?(?:\/)?(?:www\.)?api\.ofc360\.com(?:\/)?/, "/");
+    url = url.replace(/^\/?(?:http:\/\/localhost:\d+\/)?/, "/");
+
+    // If it's a full external URL, don't modify
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      config.url = url;
+      return config;
+    }
+
+    if (!url.startsWith("/")) {
+      url = `/${url}`;
+    }
+
+    // Automatically route to /api/v1 if not already prefixed with /api/
+    if (!url.startsWith("/api/")) {
+      url = `/api/v1${url}`;
+    }
+
+    config.url = url;
+  }
+
   return config;
 });
 

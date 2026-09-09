@@ -58,7 +58,7 @@ export function LoginPage() {
       if (remember) rememberStore.set(email);
       else rememberStore.clear();
 
-      const res = await api.post("auth/login", {
+      const res = await api.post("/api/v1/auth/login", {
         identifier: email,
         password,
       });

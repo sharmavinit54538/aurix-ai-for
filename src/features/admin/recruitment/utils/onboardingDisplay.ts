@@ -91,9 +91,12 @@ export function resolveMediaUrl(url?: string | null): string | null {
   if (!url?.trim()) return null;
   const trimmed = url.trim();
   if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
-  const apiOrigin = ((import.meta.env.VITE_API_URL as string) || "http://localhost:8001")
+  let apiOrigin = ((import.meta.env.VITE_API_URL as string) || "https://www.api.ofc360.com")
     .trim()
     .replace(/\/$/, "");
+  if (!apiOrigin.startsWith("http://") && !apiOrigin.startsWith("https://")) {
+    apiOrigin = `https://${apiOrigin}`;
+  }
   if (trimmed.startsWith("/")) return `${apiOrigin}${trimmed}`;
   return `${apiOrigin}/${trimmed}`;
 }

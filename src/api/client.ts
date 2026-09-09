@@ -13,8 +13,29 @@ export class ApiError extends Error {
   }
 }
 
-function normalizePath(path: string) {
-  return path.replace(/^\//, "");
+function normalizePath(path: string): string {
+  let clean = path.trim();
+
+  // If full URL with scheme, return as is
+  if (clean.startsWith("http://") || clean.startsWith("https://")) {
+    return clean;
+  }
+
+  // Strip accidental domain prefix (e.g. www.api.ofc360.com, /www.api.ofc360.com, or localhost:8081)
+  clean = clean.replace(/^(?:https?:\/\/[^/]+)?(?:\/)?(?:www\.)?api\.ofc360\.com(?:\/)?/, "/");
+  clean = clean.replace(/^\/?(?:http:\/\/localhost:\d+\/)?/, "/");
+
+  // Ensure leading slash
+  if (!clean.startsWith("/")) {
+    clean = `/${clean}`;
+  }
+
+  // If the path doesn't already start with /api/, route under /api/v1
+  if (!clean.startsWith("/api/")) {
+    clean = `/api/v1${clean}`;
+  }
+
+  return clean;
 }
 
 function toApiError(error: unknown): ApiError {
