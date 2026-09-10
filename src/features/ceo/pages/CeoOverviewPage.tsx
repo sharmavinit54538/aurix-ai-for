@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import {
   Crown, TrendingUp, HandCoins, BarChart3, Users, ClipboardCheck, LineChart as LineChartIcon,
   Bot, Settings, ShieldCheck, Download, RefreshCw, Calendar, Sparkles, CheckCircle2,
-  AlertCircle, ArrowUpRight, ArrowDownRight, DollarSign, Building2, Zap
+  AlertCircle, ArrowUpRight, ArrowDownRight, DollarSign, Building2, Zap, Activity
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

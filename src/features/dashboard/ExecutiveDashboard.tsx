@@ -3,7 +3,7 @@
 // A world-class HR operating system dashboard.
 // ============================================================
 import { Link } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, Component, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertTriangle,
@@ -55,6 +55,7 @@ import { useExecutiveDashboardData } from "./hooks/useExecutiveDashboardData";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useAurix, type HRDocument } from "@/lib/aurix-store";
 import {
   AI_FEATURES,
   AI_METRICS,
@@ -78,7 +79,6 @@ import {
   ONBOARDING_STAGES,
   PAYROLL_STATUS,
   PIPELINE_STAGES,
-  REPORT_BUTTONS,
   SALARY_DISTRIBUTION,
   WEEKLY_ATTENDANCE,
   WIDGET_SCORES,
@@ -117,6 +117,53 @@ function Card({
       {children}
     </div>
   );
+}
+
+// ── Resilient Widget Error Boundary ───────────────────────────
+interface WidgetErrorBoundaryProps {
+  name?: string;
+  children: ReactNode;
+}
+
+interface WidgetErrorBoundaryState {
+  hasError: boolean;
+}
+
+class WidgetErrorBoundary extends Component<WidgetErrorBoundaryProps, WidgetErrorBoundaryState> {
+  constructor(props: WidgetErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(): WidgetErrorBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error(`Error in widget "${this.props.name || "DashboardWidget"}":`, error, info);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <Card className="border-rose-500/30 bg-rose-500/5 p-4 text-center">
+          <div className="flex flex-col items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-rose-500" />
+            <p className="text-xs font-medium text-rose-600 dark:text-rose-400">
+              Unable to load {this.props.name || "this section"}
+            </p>
+            <button
+              onClick={() => this.setState({ hasError: false })}
+              className="text-[11px] font-semibold text-primary underline underline-offset-2 hover:opacity-80 cursor-pointer"
+            >
+              Retry
+            </button>
+          </div>
+        </Card>
+      );
+    }
+    return this.props.children;
+  }
 }
 
 function SectionHeader({
@@ -659,15 +706,15 @@ function ExitManagement() {
 function DocumentsCenter() {
   const ws = useAurix();
   const docs = ws.documents ?? [];
-  const pending = docs.filter((d) => d.status === "Pending");
-  const missing = docs.filter((d) => d.status === "Rejected");
-  const expiring = docs.filter((d) => {
+  const pending = docs.filter((d: HRDocument) => d.status === "Pending");
+  const missing = docs.filter((d: HRDocument) => d.status === "Rejected");
+  const expiring = docs.filter((d: HRDocument) => {
     if (!d.expiryDate) return false;
     const exp = new Date(d.expiryDate);
     const diff = (exp.getTime() - Date.now()) / (1000 * 60 * 60 * 24);
     return diff < 60 && diff > 0;
   });
-  const recent = [...docs].sort((a, b) => b.uploadDate.localeCompare(a.uploadDate)).slice(0, 4);
+  const recent = [...docs].sort((a: HRDocument, b: HRDocument) => (b.uploadDate || "").localeCompare(a.uploadDate || "")).slice(0, 4);
 
   return (
     <motion.div {...fadeUp}>
@@ -688,23 +735,33 @@ function DocumentsCenter() {
         </div>
         <p className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Recent Uploads</p>
         <div className="space-y-2">
-          {recent.map((d) => (
-            <div key={d.id} className="flex items-center gap-3 rounded-lg border border-border bg-background/50 px-3 py-2">
-              <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-medium">{d.name}</div>
-                <div className="text-xs text-muted-foreground">{d.uploadDate}</div>
-              </div>
-              <Badge
-                variant={
-                  d.status === "Verified" ? "default" : d.status === "Pending" ? "secondary" : "destructive"
-                }
-                className="shrink-0 text-[10px]"
-              >
-                {d.status}
-              </Badge>
+          {recent.length === 0 ? (
+            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-6 text-center">
+              <FileText className="h-8 w-8 text-muted-foreground/40 mb-1" />
+              <p className="text-xs text-muted-foreground">No recent documents uploaded</p>
+              <Link to="/dashboard/documents" className="mt-2 text-xs font-medium text-primary hover:underline">
+                Upload or manage documents &rarr;
+              </Link>
             </div>
-          ))}
+          ) : (
+            recent.map((d: HRDocument) => (
+              <div key={d.id} className="flex items-center gap-3 rounded-lg border border-border bg-background/50 px-3 py-2">
+                <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium">{d.name}</div>
+                  <div className="text-xs text-muted-foreground">{d.uploadDate || "Recent"}</div>
+                </div>
+                <Badge
+                  variant={
+                    d.status === "Verified" ? "default" : d.status === "Pending" ? "secondary" : "destructive"
+                  }
+                  className="shrink-0 text-[10px]"
+                >
+                  {d.status}
+                </Badge>
+              </div>
+            ))
+          )}
         </div>
       </Card>
     </motion.div>
@@ -1053,22 +1110,98 @@ function DepartmentPerformance() {
 }
 
 // ── 18. Reports Center ────────────────────────────────────────
+const REPORT_CARD_ITEMS = [
+  {
+    label: "Attendance",
+    link: "/dashboard/attendance",
+    color: "from-teal-600 to-cyan-600 border-teal-500/20",
+    shadow: "hover:shadow-teal-500/20",
+  },
+  {
+    label: "Payroll",
+    link: "/dashboard/payroll/reports",
+    color: "from-emerald-600 to-green-600 border-emerald-500/20",
+    shadow: "hover:shadow-emerald-500/20",
+  },
+  {
+    label: "Recruitment",
+    link: "/dashboard/recruitment/reports",
+    color: "from-blue-600 to-indigo-600 border-blue-500/20",
+    shadow: "hover:shadow-blue-500/20",
+    isLong: true,
+  },
+  {
+    label: "Assets",
+    link: "/dashboard/assets",
+    color: "from-slate-600 to-gray-700 border-slate-500/20",
+    shadow: "hover:shadow-slate-500/20",
+  },
+  {
+    label: "Leave",
+    link: "/dashboard/leaves",
+    color: "from-amber-600 to-orange-600 border-orange-500/20",
+    shadow: "hover:shadow-orange-500/20",
+  },
+  {
+    label: "Exit",
+    link: "/dashboard/exit",
+    color: "from-rose-600 to-red-600 border-rose-500/20",
+    shadow: "hover:shadow-rose-500/20",
+  },
+  {
+    label: "Analytics",
+    link: "/dashboard/recruitment/analytics",
+    color: "from-purple-600 to-violet-600 border-purple-500/20",
+    shadow: "hover:shadow-purple-500/20",
+  },
+];
+
 function ReportsCenter() {
   return (
     <motion.div {...fadeUp}>
       <Card>
-        <SectionHeader title="Reports Center" subtitle="One-click report generation" link="/dashboard/reports" />
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
-          {REPORT_BUTTONS.map((r) => (
-            <Link key={r.label} to={r.link as any}>
-              <div
-                className={`group flex flex-col items-center gap-2.5 rounded-xl bg-gradient-to-br ${r.color} p-4 text-center transition-all hover:shadow-md hover:-translate-y-0.5`}
+        <div className="mb-5 flex items-center justify-between gap-3">
+          <div>
+            <h2 className="font-display text-lg font-semibold tracking-tight text-foreground">
+              Reports Center
+            </h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              One-click report generation
+            </p>
+          </div>
+          <Link
+            to="/dashboard/reports"
+            className="group inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all duration-200 hover:border-foreground/30 hover:bg-accent hover:text-foreground"
+          >
+            <span>View More</span>
+            <ChevronRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+          </Link>
+        </div>
+
+        <div className="reports-center-container w-full">
+          <div className="reports-center-grid">
+            {REPORT_CARD_ITEMS.map((r) => (
+              <Link
+                key={r.label}
+                to={r.link as any}
+                className="group flex flex-col justify-center outline-hidden"
               >
-                <Download className="h-5 w-5 text-white/90" />
-                <span className="text-xs font-semibold text-white">{r.label}</span>
-              </div>
-            </Link>
-          ))}
+                <div
+                  className={`flex h-24 w-full flex-col items-center justify-center gap-3.5 rounded-xl border bg-gradient-to-br ${r.color} px-2 py-3 text-center transition-all duration-200 ease-out hover:-translate-y-1 hover:brightness-105 hover:shadow-md ${r.shadow} active:translate-y-0 cursor-pointer select-none`}
+                >
+                  <Download className="h-5 w-5 shrink-0 text-white/95 transition-transform duration-200 group-hover:scale-110" />
+                  <span
+                    className={`w-full max-w-full truncate px-1 text-center font-semibold text-white tracking-tight leading-none ${
+                      r.isLong ? "text-[11px]" : "text-xs"
+                    }`}
+                    title={r.label}
+                  >
+                    {r.label}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       </Card>
     </motion.div>
@@ -1149,66 +1282,124 @@ export function ExecutiveDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Live Error Banner if an API had issues */}
+      {live.error && (
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-600 dark:text-amber-400">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500" />
+            <span>Some live metrics could not be loaded ({live.error}). Showing cached metrics.</span>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={live.refetch}
+            disabled={live.loading}
+            className="h-7 border-amber-500/30 bg-transparent text-xs hover:bg-amber-500/20"
+          >
+            <RefreshCw className={`mr-1.5 h-3 w-3 ${live.loading ? "animate-spin" : ""}`} />
+            Retry
+          </Button>
+        </div>
+      )}
+
       {/* Quick Actions */}
-      <QuickActions />
+      <WidgetErrorBoundary name="Quick Actions">
+        <QuickActions />
+      </WidgetErrorBoundary>
 
       {/* KPI Command Cards */}
-      <KpiCards cards={live.kpiCards} />
+      <WidgetErrorBoundary name="KPI Metrics">
+        <KpiCards cards={live.kpiCards} />
+      </WidgetErrorBoundary>
 
       {/* Approvals + Activity Feed */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <ApprovalCenter />
+          <WidgetErrorBoundary name="HR Approvals">
+            <ApprovalCenter />
+          </WidgetErrorBoundary>
         </div>
-        <ActivityFeed />
+        <WidgetErrorBoundary name="Activity Feed">
+          <ActivityFeed />
+        </WidgetErrorBoundary>
       </div>
 
       {/* Notifications + Dept Performance */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <NotificationCenter />
-        <DepartmentPerformance />
+        <WidgetErrorBoundary name="Notifications">
+          <NotificationCenter />
+        </WidgetErrorBoundary>
+        <WidgetErrorBoundary name="Department Performance">
+          <DepartmentPerformance />
+        </WidgetErrorBoundary>
       </div>
 
       {/* Recruitment */}
-      <RecruitmentDashboard />
+      <WidgetErrorBoundary name="Recruitment Pipeline">
+        <RecruitmentDashboard />
+      </WidgetErrorBoundary>
 
       {/* Attendance */}
-      <AttendanceAnalytics />
+      <WidgetErrorBoundary name="Attendance Analytics">
+        <AttendanceAnalytics />
+      </WidgetErrorBoundary>
 
       {/* Payroll + Onboarding + Exit */}
       <div className="grid grid-cols-1 gap-6">
-        <PayrollOverview data={live.payrollOverview} />
+        <WidgetErrorBoundary name="Payroll Overview">
+          <PayrollOverview data={live.payrollOverview} />
+        </WidgetErrorBoundary>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <OnboardingCenter />
-        <ExitManagement />
+        <WidgetErrorBoundary name="Onboarding Center">
+          <OnboardingCenter />
+        </WidgetErrorBoundary>
+        <WidgetErrorBoundary name="Exit Management">
+          <ExitManagement />
+        </WidgetErrorBoundary>
       </div>
 
       {/* Assets + Documents */}
       <div className="grid grid-cols-1 gap-6">
-        <AssetOverview />
+        <WidgetErrorBoundary name="Assets Overview">
+          <AssetOverview />
+        </WidgetErrorBoundary>
       </div>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <DocumentsCenter />
+          <WidgetErrorBoundary name="Documents Center">
+            <DocumentsCenter />
+          </WidgetErrorBoundary>
         </div>
         <div className="space-y-6">
-          <WorldClock />
-          <ScoreWidgets />
+          <WidgetErrorBoundary name="World Clock">
+            <WorldClock />
+          </WidgetErrorBoundary>
+          <WidgetErrorBoundary name="Company Scores">
+            <ScoreWidgets />
+          </WidgetErrorBoundary>
         </div>
       </div>
 
       {/* AI Command Center */}
-      <AICommandCenter />
+      <WidgetErrorBoundary name="AI Command Center">
+        <AICommandCenter />
+      </WidgetErrorBoundary>
 
       {/* Executive Analytics */}
-      <ExecutiveAnalytics />
+      <WidgetErrorBoundary name="Executive Analytics">
+        <ExecutiveAnalytics />
+      </WidgetErrorBoundary>
 
       {/* Calendar + Reports */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <CompanyCalendar />
-        <ReportsCenter />
+        <WidgetErrorBoundary name="Company Calendar">
+          <CompanyCalendar />
+        </WidgetErrorBoundary>
+        <WidgetErrorBoundary name="Reports Center">
+          <ReportsCenter />
+        </WidgetErrorBoundary>
       </div>
     </div>
   );

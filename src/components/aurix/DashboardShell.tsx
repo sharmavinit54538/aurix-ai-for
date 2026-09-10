@@ -364,7 +364,11 @@ export function DashboardShell() {
 
     const normalizedRole = (role || "").toLowerCase();
     const isExecutive = normalizedRole === "cto" || normalizedRole === "ceo" || normalizedRole === "cio";
-    const isAdminOrHr = normalizedRole === "admin" || normalizedRole === "hr";
+    const isAdminOrHr =
+      normalizedRole === "admin" ||
+      normalizedRole === "hr" ||
+      normalizedRole === "super_admin" ||
+      normalizedRole === "superadmin";
 
     if (pathname === "/dashboard/employee" && normalizedRole !== "employee") {
       if (normalizedRole === "cio") {

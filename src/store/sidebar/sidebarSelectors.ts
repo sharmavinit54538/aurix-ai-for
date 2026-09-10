@@ -29,11 +29,15 @@ export const selectUserRole = (state: RootState) =>
  */
 export function filterNavTree(
   sections: SidebarNavSection[],
-  role: string,
-  userPermissions: string[]
+  role?: string,
+  userPermissions: string[] = []
 ): SidebarNavSection[] {
   const normalizedRole = (role || "").toLowerCase();
-  const isAdmin = normalizedRole === "admin" || normalizedRole === "super_admin" || !role;
+  const isAdmin =
+    normalizedRole === "admin" ||
+    normalizedRole === "super_admin" ||
+    normalizedRole === "superadmin" ||
+    !role;
 
   const isAllowedByRole = (roles?: string[]) =>
     isAdmin || !roles || roles.length === 0 || roles.includes(normalizedRole);

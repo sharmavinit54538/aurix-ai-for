@@ -128,7 +128,8 @@ export function useExecutiveDashboardData(): DashboardLiveData {
       // 1. Departments
       let deptsList: any[] = [];
       if (deptsRes.status === "fulfilled" && deptsRes.value.data?.data) {
-        deptsList = deptsRes.value.data.data.items ?? deptsRes.value.data.data ?? [];
+        const rawDepts = deptsRes.value.data.data.items ?? deptsRes.value.data.data;
+        deptsList = Array.isArray(rawDepts) ? rawDepts : [];
         setTotalDepartments(deptsList.length);
 
         const mappedDepts = deptsList.slice(0, 6).map((d: any, idx: number) => {
@@ -168,7 +169,8 @@ export function useExecutiveDashboardData(): DashboardLiveData {
 
       // 3. Jobs
       if (jobsRes.status === "fulfilled" && jobsRes.value.data?.data) {
-        const jobsList = jobsRes.value.data.data.items ?? jobsRes.value.data.data ?? [];
+        const rawJobs = jobsRes.value.data.data.items ?? jobsRes.value.data.data;
+        const jobsList = Array.isArray(rawJobs) ? rawJobs : [];
         setTotalJobs(jobsList.length);
 
         const mappedJobs = jobsList.slice(0, 5).map((j: any) => ({
@@ -183,21 +185,25 @@ export function useExecutiveDashboardData(): DashboardLiveData {
 
       // 4. Assets
       if (assetsRes.status === "fulfilled" && assetsRes.value.data?.data) {
-        const assetsList = assetsRes.value.data.data.items ?? assetsRes.value.data.data ?? [];
+        const rawAssets = assetsRes.value.data.data.items ?? assetsRes.value.data.data;
+        const assetsList = Array.isArray(rawAssets) ? rawAssets : [];
         setTotalAssets(assetsList.length);
       }
 
       // 5. Exits
       if (exitsRes.status === "fulfilled" && exitsRes.value.data?.data) {
-        const exitsList = exitsRes.value.data.data.items ?? exitsRes.value.data.data ?? [];
+        const rawExits = exitsRes.value.data.data.items ?? exitsRes.value.data.data;
+        const exitsList = Array.isArray(rawExits) ? rawExits : [];
         setTotalExits(exitsList.length);
       }
 
       // 6. Internal Dashboard / Activity Feed
       if (internalRes.status === "fulfilled" && internalRes.value.data?.data) {
         const internalData = internalRes.value.data.data;
-        const announcements = internalData.pinned_announcements ?? internalData.recent_announcements ?? [];
-        const news = internalData.news_articles ?? [];
+        const rawAnnouncements = internalData.pinned_announcements ?? internalData.recent_announcements ?? [];
+        const rawNews = internalData.news_articles ?? [];
+        const announcements = Array.isArray(rawAnnouncements) ? rawAnnouncements : [];
+        const news = Array.isArray(rawNews) ? rawNews : [];
 
         const feed: DashboardLiveData["activityFeed"] = [];
         announcements.slice(0, 3).forEach((a: any, idx: number) => {
@@ -228,7 +234,8 @@ export function useExecutiveDashboardData(): DashboardLiveData {
       // 7. Payroll Overview
       let calculatedGrossSum = 0;
       if (payrollStructuresRes.status === "fulfilled" && payrollStructuresRes.value.data?.data) {
-        const structItems = payrollStructuresRes.value.data.data.items ?? payrollStructuresRes.value.data.data ?? [];
+        const rawStruct = payrollStructuresRes.value.data.data.items ?? payrollStructuresRes.value.data.data;
+        const structItems = Array.isArray(rawStruct) ? rawStruct : [];
         calculatedGrossSum = structItems.reduce((acc: number, item: any) => acc + Number(item.gross_salary ?? item.base_salary ?? item.annual_ctc ?? 0), 0);
       }
 
