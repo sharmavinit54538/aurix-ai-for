@@ -51,7 +51,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useAurix } from "@/lib/aurix-store";
 import { useExecutiveDashboardData } from "./hooks/useExecutiveDashboardData";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -159,37 +158,6 @@ const ICON_MAP: Record<string, React.ElementType> = {
   UserPlus, Briefcase, FileText, CreditCard, MessageSquare, ClipboardCheck,
   LogOut, FileCheck, Award,
 };
-
-// ── 1. Live DateTime Clock ────────────────────────────────────
-function LiveClock() {
-  const [mounted, setMounted] = useState(false);
-  const [time, setTime] = useState(new Date());
-  useEffect(() => {
-    setMounted(true);
-    const t = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(t);
-  }, []);
-  
-  if (!mounted) {
-    return (
-      <div className="text-right hidden sm:block">
-        <div className="text-sm font-semibold tabular-nums">--:--:--</div>
-        <div className="text-xs text-muted-foreground">Loading...</div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="text-right hidden sm:block">
-      <div className="text-sm font-semibold tabular-nums">
-        {time.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-      </div>
-      <div className="text-xs text-muted-foreground">
-        {time.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
-      </div>
-    </div>
-  );
-}
 
 // ── 2. Quick Actions Strip ────────────────────────────────────
 const QUICK_ACTIONS = [
@@ -1177,61 +1145,10 @@ function ScoreWidgets() {
 
 // ── Main Executive Dashboard ──────────────────────────────────
 export function ExecutiveDashboard() {
-  const ws = useAurix();
   const live = useExecutiveDashboardData();
-  const firstName = ws.user?.fullName?.split(" ")[0] ?? "there";
-  const companyName = ws.company?.name ?? "Your Workspace";
 
   return (
     <div className="space-y-6">
-      {/* Executive Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="rounded-2xl border border-border bg-gradient-to-r from-card/80 via-card/60 to-card/40 p-5 backdrop-blur-xl"
-        style={{ background: "linear-gradient(135deg, var(--card) 0%, oklch(0.6 0.2 285 / 0.04) 100%)" }}
-      >
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div
-              className="grid h-12 w-12 shrink-0 place-items-center rounded-xl text-white shadow-lg"
-              style={{ background: "var(--gradient-brand)" }}
-            >
-              <Sparkles className="h-6 w-6" />
-            </div>
-            <div>
-              <h1 className="font-display text-xl font-semibold tracking-tight">
-                Good {new Date().getHours() < 12 ? "morning" : new Date().getHours() < 17 ? "afternoon" : "evening"},{" "}
-                {firstName} 👋
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                {companyName} · Executive Command Center
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <LiveClock />
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1.5 text-xs"
-                onClick={() => live.refetch()}
-                disabled={live.loading}
-              >
-                <RefreshCw className={`h-3.5 w-3.5 ${live.loading ? "animate-spin" : ""}`} />{" "}
-                {live.loading ? "Syncing..." : "Refresh"}
-              </Button>
-              <Button variant="outline" size="sm" className="gap-1.5 text-xs">
-                <Download className="h-3.5 w-3.5" /> Export
-              </Button>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-
       {/* Quick Actions */}
       <QuickActions />
 

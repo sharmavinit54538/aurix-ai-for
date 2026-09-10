@@ -13,37 +13,17 @@ export interface ModuleItem {
 
 export interface ModuleHubViewProps {
   eyebrow?: string;
-  title: string;
-  description: string;
+  title?: string;
+  description?: string;
   headerIcon?: LucideIcon;
   modules: ModuleItem[];
 }
 
 export function ModuleHubView({
-  eyebrow,
-  title,
-  description,
-  headerIcon: HeaderIcon,
   modules,
 }: ModuleHubViewProps) {
   return (
     <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-xl">
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            {eyebrow && (
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-brand-accent/30 bg-brand-accent/10 px-3 py-0.5 text-xs font-semibold text-brand-foreground">
-                {HeaderIcon && <HeaderIcon className="h-3.5 w-3.5" />}
-                {eyebrow}
-              </div>
-            )}
-            <h1 className="font-display text-2xl font-bold tracking-tight">{title}</h1>
-            <p className="max-w-2xl text-sm text-muted-foreground leading-relaxed">{description}</p>
-          </div>
-        </div>
-      </div>
-
       {/* Grid of Module Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {modules.map((m) => {

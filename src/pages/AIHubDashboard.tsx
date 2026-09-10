@@ -141,43 +141,6 @@ export const AI_MODULES_LIST: AIModuleDef[] = [
 export function AIHubDashboard() {
   return (
     <div className="space-y-6">
-      {/* HEADER SECTION */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-brand text-brand-foreground shadow-glow">
-              <Brain className="h-5 w-5" />
-            </span>
-            <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">AI Hub</h1>
-          </div>
-          <p className="mt-1 text-xs text-muted-foreground text-left">
-            Configure LLMs, manage autonomous multi-agent systems, write workflow automations, and run specialized intelligence tools.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => toast.success("AI Hub data refreshed")}
-            className="h-8 gap-1.5 cursor-pointer text-xs"
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            Refresh
-          </Button>
-
-          <div className="flex flex-wrap gap-2">
-            <Badge className="bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/15 border-none shadow-none text-xs font-bold gap-1 px-3 py-1">
-              <Sparkles className="h-3 w-3 fill-indigo-500 animate-pulse" />
-              V2.0 Active
-            </Badge>
-            <Badge className="bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/15 border-none shadow-none text-xs font-bold gap-1 px-3 py-1">
-              <CheckCircle2 className="h-3 w-3" />
-              LLM Gateway Connected
-            </Badge>
-          </div>
-        </div>
-      </div>
-
       <div className="space-y-6 animate-in fade-in duration-300">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {AI_MODULES_LIST.map((module) => {

@@ -173,20 +173,8 @@ function PayrollDashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* HEADER SECTION */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-brand text-brand-foreground shadow-glow">
-              <CreditCard className="h-5 w-5" />
-            </span>
-            <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">Payroll Hub</h1>
-          </div>
-          <p className="mt-1 text-xs text-muted-foreground text-left">
-            Run payroll, manage compensation, audit tax compliance, and distribute employee payslips.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
+      {/* Controls */}
+      <div className="flex flex-wrap items-center justify-end gap-3">
           <div className="flex items-center bg-card/65 border border-border/80 p-0.5 rounded-lg">
             <Button
               variant={viewMode === "modules" ? "secondary" : "ghost"}
@@ -216,7 +204,6 @@ function PayrollDashboardPage() {
             Refresh
           </Button>
         </div>
-      </div>
 
       {viewMode === "modules" ? (
         <div className="space-y-6 animate-in fade-in duration-300">
