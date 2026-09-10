@@ -8,6 +8,16 @@ import { getTokens, setTokens } from "./tokens";
  * e.g., "https://www.api.ofc360.com"
  */
 export function getApiBaseUrl(): string {
+  // If accessed from localhost on a port other than 8080 (e.g. 8081),
+  // backend rejects with '400 Disallowed CORS origin'.
+  // Using relative path routes through Vite dev server proxy (changeOrigin: true), bypassing CORS completely!
+  if (typeof window !== "undefined") {
+    const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    if (isLocalhost && window.location.port !== "8080") {
+      return "";
+    }
+  }
+
   let url = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
   if (!url) {
     return "https://api.ofc360.com";
