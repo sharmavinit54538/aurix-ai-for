@@ -190,7 +190,7 @@ export function VisitorsPage() {
             <div className="flex flex-col items-center gap-3 text-center">
               <div className="text-lg font-semibold">{pass.name}</div>
               <div className="text-xs text-muted-foreground">Host: {pass.hostEmployee}</div>
-              <QrTile value={`AURIX-VISITOR:${pass.passCode}`} label={pass.passCode} size={170} />
+              <QrTile value={`OFC360-VISITOR:${pass.passCode}`} label={pass.passCode} size={170} />
               <Button variant="outline" size="sm" onClick={() => window.print()}>Print pass</Button>
             </div>
           ) : null}

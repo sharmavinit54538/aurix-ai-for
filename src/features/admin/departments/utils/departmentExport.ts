@@ -26,7 +26,7 @@ export function exportDepartmentsCSV(data: Department[]) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.setAttribute("href", url);
-  link.setAttribute("download", `aurix_departments_export_${Date.now()}.csv`);
+  link.setAttribute("download", `ofc360_departments_export_${Date.now()}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -65,7 +65,7 @@ export function exportDepartmentsPDF(data: Department[]) {
   printWindow.document.write(`
     <html>
       <head>
-        <title>Departments Directory - Aurix HRMS</title>
+        <title>Departments Directory - OFC360</title>
         <style>
           body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 20px; color: #333; }
           h1 { font-size: 18px; margin-bottom: 5px; }

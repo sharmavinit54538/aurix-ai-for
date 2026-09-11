@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 export const RightPolicyPanel: React.FC = () => {
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState<string[]>([
-    "Welcome! I am your Aurix AI Variable Compensation Assistant. Ask me about performance multipliers, TDS tax rates, or CFO governance rules.",
+    "Welcome! I am your OFC360 Variable Compensation Assistant. Ask me about performance multipliers, TDS tax rates, or CFO governance rules.",
   ]);
 
   const handleSendQuery = (e: React.FormEvent) => {
@@ -20,7 +20,7 @@ export const RightPolicyPanel: React.FC = () => {
     setTimeout(() => {
       setMessages((prev) => [
         ...prev,
-        `Aurix AI: Under Company Bonus Policy #BNS-2026, performance rating >= 4.5 qualifies for 1.2x - 1.5x Basic Pay multiplier. Tax withholding is computed u/s 192 at slab rates.`,
+        `OFC360: Under Company Bonus Policy #BNS-2026, performance rating >= 4.5 qualifies for 1.2x - 1.5x Basic Pay multiplier. Tax withholding is computed u/s 192 at slab rates.`,
       ]);
     }, 600);
   };

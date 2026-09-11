@@ -91,18 +91,12 @@ export function AssetManagementPage() {
 
   return (
     <>
-      <PageHeader
-        title="Asset Management"
-        description="Track, assign, and maintain company equipment."
-        actions={
-          <>
-            <CsvButton rows={assets} filename="assets.csv" />
-            <Button size="sm" onClick={() => { setDraft(emptyAsset()); setOpen(true); }} className="gap-2">
-              <Plus className="h-4 w-4" /> Add asset
-            </Button>
-          </>
-        }
-      />
+      <div className="flex justify-end gap-2 mb-6">
+        <CsvButton rows={assets} filename="assets.csv" />
+        <Button size="sm" onClick={() => { setDraft(emptyAsset()); setOpen(true); }} className="gap-2">
+          <Plus className="h-4 w-4" /> Add asset
+        </Button>
+      </div>
 
       <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
         <StatCard label="Total" value={stats.total} icon={Package} />

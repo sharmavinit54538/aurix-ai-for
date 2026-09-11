@@ -12,7 +12,7 @@ import { selectProfileSettings, selectSettingsLoading, selectSettingsSubmitting 
 import { fetchProfileSettings, updateProfileSettings } from "@/store/settings/settingsThunk";
 
 export const Route = createFileRoute("/dashboard/settings/profile")({
-  head: () => ({ meta: [{ title: "User Profile — Aurix" }] }),
+  head: () => ({ meta: [{ title: "User Profile — OFC360" }] }),
   component: ProfileSettingsPage,
 });
 
@@ -98,7 +98,7 @@ function ProfileSettingsPage() {
               type="email"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              placeholder="aarav@aurix.ai"
+              placeholder="aarav@ofc360.ai"
             />
           </div>
 

@@ -79,7 +79,7 @@ export const BonusHubModuleViews: React.FC<BonusHubModuleViewsProps> = ({
   >([
     {
       sender: "ai",
-      text: "Welcome to Aurix AI Bonus Intelligence! I have full visibility into performance rating multipliers, festival bonus allocations, TDS tax calculations, and corporate budget caps. How can I assist you today?",
+      text: "Welcome to OFC360 Bonus Intelligence! I have full visibility into performance rating multipliers, festival bonus allocations, TDS tax calculations, and corporate budget caps. How can I assist you today?",
       timestamp: "10:00 AM",
     },
   ]);
@@ -125,7 +125,7 @@ export const BonusHubModuleViews: React.FC<BonusHubModuleViewsProps> = ({
       } else if (lower.includes("executive") || lower.includes("c-suite") || lower.includes("ceo")) {
         aiReply = `👑 Executive Compensation: C-Suite bonuses require Board Remuneration Committee sign-off and are tied to Annual EBITDA growth targets.`;
       } else {
-        aiReply = `🤖 Aurix AI Bonus Intelligence: All bonus allocations are 100% integrated with monthly payroll runs under Company Compensation Policy #BON-2026. You can ask me about KPI multipliers, TDS tax rates, or budget limits.`;
+        aiReply = `🤖 OFC360 Bonus Intelligence: All bonus allocations are 100% integrated with monthly payroll runs under Company Compensation Policy #BON-2026. You can ask me about KPI multipliers, TDS tax rates, or budget limits.`;
       }
 
       setCopilotChat((prev) => [
@@ -139,14 +139,7 @@ export const BonusHubModuleViews: React.FC<BonusHubModuleViewsProps> = ({
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-4 mb-6">
       <div className="flex flex-wrap items-center gap-3">
         <PayrollBackButton to="/dashboard/payroll" label="Back to Payroll Hub" />
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onBackToHub}
-          className="border-white/10 bg-slate-900 text-slate-300 hover:text-white text-xs gap-1.5 h-8 shadow-sm"
-        >
-          <ArrowLeft className="w-4 h-4 text-purple-400" /> Back to Bonus Hub
-        </Button>
+
         <div>
           <h2 className="text-xl font-black text-white tracking-tight">{title}</h2>
           <p className="text-xs text-slate-400">{subtitle}</p>
@@ -388,7 +381,7 @@ export const BonusHubModuleViews: React.FC<BonusHubModuleViewsProps> = ({
     case "ai-intelligence":
       return (
         <div className="space-y-6">
-          {renderBreadcrumb("Aurix AI Bonus Intelligence", "Consult your AI assistant for performance rating predictions, TDS tax estimates, and budget optimization.")}
+          {renderBreadcrumb("OFC360 Bonus Intelligence", "Consult your AI assistant for performance rating predictions, TDS tax estimates, and budget optimization.")}
           
           <div className="w-full">
             {/* Copilot Main Interactive Chat Thread */}

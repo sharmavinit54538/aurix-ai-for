@@ -27,7 +27,7 @@ export const Route = createFileRoute("/onboarding")({
   validateSearch: z.object({
     token: z.string().optional(),
   }),
-  head: () => ({ meta: [{ title: "Set up your workspace — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Set up your workspace — OFC360" }] }),
   component: OnboardingPage,
 });
 
@@ -375,7 +375,7 @@ function OnboardingPage() {
               <span className="grid h-8 w-8 place-items-center rounded-lg text-brand-foreground shadow-glow" style={{ background: "var(--gradient-brand)" }}>
                 <Sparkles className="h-4 w-4" />
               </span>
-              <span className="font-display text-lg font-semibold tracking-tight">Aurix</span>
+              <span className="font-display text-lg font-semibold tracking-tight">OFC360</span>
             </Link>
             <span className="text-xs text-muted-foreground">Account Setup</span>
           </header>
@@ -516,7 +516,7 @@ function OnboardingPage() {
           <span className="grid h-8 w-8 place-items-center rounded-lg text-brand-foreground shadow-glow" style={{ background: "var(--gradient-brand)" }}>
             <Sparkles className="h-4 w-4" />
           </span>
-          <span className="font-display text-lg font-semibold tracking-tight">Aurix</span>
+          <span className="font-display text-lg font-semibold tracking-tight">OFC360</span>
         </Link>
         <span className="text-xs text-muted-foreground">Step {Math.min(step + 1, 6)} of 6</span>
       </header>
@@ -651,7 +651,7 @@ function CompanyStep({ onNext }: { onNext: () => void }) {
         </div>
 
         <Field label="Company name" error={errors.name}>
-          <Input value={c.name} onChange={(e) => set("name", e.target.value)} placeholder="Aurix, Inc." />
+          <Input value={c.name} onChange={(e) => set("name", e.target.value)} placeholder="OFC360, Inc." />
         </Field>
         <Field label="Industry" error={errors.industry}>
           <Select value={c.industry} onValueChange={(v) => set("industry", v)}>
@@ -665,9 +665,9 @@ function CompanyStep({ onNext }: { onNext: () => void }) {
             <SelectContent>{SIZES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
           </Select>
         </Field>
-        <Field label="Website"><Input value={c.website ?? ""} onChange={(e) => set("website", e.target.value)} placeholder="https://aurix.com" /></Field>
+        <Field label="Website"><Input value={c.website ?? ""} onChange={(e) => set("website", e.target.value)} placeholder="https://ofc360.com" /></Field>
         <Field label="Company email" error={errors.email}>
-          <Input type="email" value={c.email ?? ""} onChange={(e) => set("email", e.target.value)} placeholder="hello@aurix.com" />
+          <Input type="email" value={c.email ?? ""} onChange={(e) => set("email", e.target.value)} placeholder="hello@ofc360.com" />
         </Field>
         <Field label="Company phone"><Input value={c.phone ?? ""} onChange={(e) => set("phone", e.target.value)} placeholder="+1 555 0100" /></Field>
         <div className="sm:col-span-2">
@@ -1570,7 +1570,7 @@ function SuccessStep() {
         className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl text-brand-foreground shadow-glow" style={{ background: "var(--gradient-brand)" }}>
         <CheckCircle2 className="h-8 w-8" />
       </motion.div>
-      <h2 className="font-display text-2xl font-semibold tracking-tight">Your Aurix workspace is ready</h2>
+      <h2 className="font-display text-2xl font-semibold tracking-tight">Your OFC360 workspace is ready</h2>
       <p className="mt-2 text-sm text-muted-foreground">Everything is set up. Jump into the dashboard or invite the rest of your team.</p>
       <div className="mt-6 flex flex-wrap justify-center gap-2">
         <Button onClick={() => navigate({ to: "/dashboard" })}>Go to dashboard</Button>

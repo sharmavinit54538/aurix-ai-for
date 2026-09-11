@@ -25,40 +25,40 @@ const seed: Template[] = [
     id: "t_outreach_1",
     name: "Outreach - Initial Contact",
     category: "Outreach",
-    subject: "Opportunities at Aurix - {{candidate.first_name}}",
-    body: "Hi {{candidate.first_name}},\n\nI came across your profile and was really impressed by your background in software engineering. We are looking for talented people to join our team at Aurix.\n\nWould you be open to a quick 15-minute introductory call this week to discuss potential opportunities?\n\nBest regards,\nRecruitment Team, Aurix",
+    subject: "Opportunities at OFC360 - {{candidate.first_name}}",
+    body: "Hi {{candidate.first_name}},\n\nI came across your profile and was really impressed by your background in software engineering. We are looking for talented people to join our team at OFC360.\n\nWould you be open to a quick 15-minute introductory call this week to discuss potential opportunities?\n\nBest regards,\nRecruitment Team, OFC360",
     usage: 14,
   },
   {
     id: "t_interview_1",
     name: "Interview - Schedule Confirmation",
     category: "Interview",
-    subject: "Interview Scheduled with Aurix - {{candidate.first_name}}",
-    body: "Hi {{candidate.first_name}},\n\nThank you for scheduling your interview round. Here are the details of your upcoming slot:\n\n- Date/Time: {{interview.date}} at {{interview.time}}\n- Meeting Link: {{interview.meeting_url}}\n\nIf you have any questions or need to reschedule, please let us know at least 24 hours in advance.\n\nLooking forward to speaking with you!\n\nBest regards,\nRecruitment Team, Aurix",
+    subject: "Interview Scheduled with OFC360 - {{candidate.first_name}}",
+    body: "Hi {{candidate.first_name}},\n\nThank you for scheduling your interview round. Here are the details of your upcoming slot:\n\n- Date/Time: {{interview.date}} at {{interview.time}}\n- Meeting Link: {{interview.meeting_url}}\n\nIf you have any questions or need to reschedule, please let us know at least 24 hours in advance.\n\nLooking forward to speaking with you!\n\nBest regards,\nRecruitment Team, OFC360",
     usage: 32,
   },
   {
     id: "t_offer_1",
     name: "Offer - Formal Offer Letter",
     category: "Offer",
-    subject: "Job Offer from Aurix - {{candidate.first_name}}",
-    body: "Dear {{candidate.first_name}},\n\nWe are absolutely thrilled to offer you the position of {{job.title}} at Aurix! The entire team was incredibly impressed by your interviews, and we believe you will be a fantastic addition.\n\nAttached is the formal offer letter specifying your compensation details and target joining date.\n\nPlease review and sign the document to confirm your acceptance.\n\nWarm regards,\nRecruitment Team, Aurix",
+    subject: "Job Offer from OFC360 - {{candidate.first_name}}",
+    body: "Dear {{candidate.first_name}},\n\nWe are absolutely thrilled to offer you the position of {{job.title}} at OFC360! The entire team was incredibly impressed by your interviews, and we believe you will be a fantastic addition.\n\nAttached is the formal offer letter specifying your compensation details and target joining date.\n\nPlease review and sign the document to confirm your acceptance.\n\nWarm regards,\nRecruitment Team, OFC360",
     usage: 5,
   },
   {
     id: "t_rejection_1",
     name: "Rejection - Application Outcome",
     category: "Rejection",
-    subject: "Update on your application with Aurix",
-    body: "Dear {{candidate.first_name}},\n\nThank you for taking the time to apply and interview for the {{job.title}} role at Aurix. We truly appreciate the opportunity to review your qualifications.\n\nWhile our team was impressed by your skills, we have decided to move forward with another candidate whose experience matches the position's requirements more closely at this time.\n\nWe will keep your profile in our Talent Pool and reach out if other matching roles open up in the future. We wish you the very best in your search.\n\nSincerely,\nRecruitment Team, Aurix",
+    subject: "Update on your application with OFC360",
+    body: "Dear {{candidate.first_name}},\n\nThank you for taking the time to apply and interview for the {{job.title}} role at OFC360. We truly appreciate the opportunity to review your qualifications.\n\nWhile our team was impressed by your skills, we have decided to move forward with another candidate whose experience matches the position's requirements more closely at this time.\n\nWe will keep your profile in our Talent Pool and reach out if other matching roles open up in the future. We wish you the very best in your search.\n\nSincerely,\nRecruitment Team, OFC360",
     usage: 21,
   },
   {
     id: "t_onboarding_1",
     name: "Onboarding - Welcome Day 1",
     category: "Onboarding",
-    subject: "Welcome to Aurix! Day 1 Prep & Details - {{candidate.first_name}}",
-    body: "Hi {{candidate.first_name}},\n\nWelcome to Aurix! We are excited to have you join us next week.\n\nTo help you prepare for Day 1, here is some key information:\n\n- Start Time: 9:30 AM\n- Location: Bengaluru HQ Office\n- Dress Code: Smart Casual\n\nYour laptop and IT accounts have been set up and will be handed over to you during your onboarding session. Let us know if you need any assistance beforehand!\n\nWelcome aboard!\n\nBest regards,\nHR Operations Team, Aurix",
+    subject: "Welcome to OFC360! Day 1 Prep & Details - {{candidate.first_name}}",
+    body: "Hi {{candidate.first_name}},\n\nWelcome to OFC360! We are excited to have you join us next week.\n\nTo help you prepare for Day 1, here is some key information:\n\n- Start Time: 9:30 AM\n- Location: Bengaluru HQ Office\n- Dress Code: Smart Casual\n\nYour laptop and IT accounts have been set up and will be handed over to you during your onboarding session. Let us know if you need any assistance beforehand!\n\nWelcome aboard!\n\nBest regards,\nHR Operations Team, OFC360",
     usage: 8,
   },
 ];
@@ -164,7 +164,7 @@ export function RecruitmentTemplatesPage() {
 
       const text = response.data?.data || "";
       if (text) {
-        let subject = `Opportunities at Aurix`;
+        let subject = `Opportunities at OFC360`;
         let body = text;
 
         const subjectMatch = text.match(/Subject:\s*(.*)/i);

@@ -5,7 +5,7 @@ import {
 import { AIModulePage } from "@/components/aurix/AIModule";
 
 export const Route = createFileRoute("/ai/leave-assistant")({
-  head: () => ({ meta: [{ title: "AI Leave Assistant — Aurix" }] }),
+  head: () => ({ meta: [{ title: "AI Leave Assistant — OFC360" }] }),
   component: Page,
 });
 

@@ -8,9 +8,9 @@ import { hasValidAccessToken } from "@/api";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Recruitment Dashboard — Aurix" },
+      { title: "Recruitment Dashboard — OFC360" },
       { name: "description", content: "Recruitment Insight Engine dashboard for jobs, candidates, pipeline health, and hiring velocity." },
-      { property: "og:title", content: "Recruitment Dashboard — Aurix" },
+      { property: "og:title", content: "Recruitment Dashboard — OFC360" },
       { property: "og:description", content: "Recruitment Insight Engine dashboard for jobs, candidates, pipeline health, and hiring velocity." },
     ],
   }),

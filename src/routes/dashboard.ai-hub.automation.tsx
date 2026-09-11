@@ -3,7 +3,7 @@ import { Workflow } from "lucide-react";
 import { ComingSoon } from "@/components/aurix/DashboardShell";
 
 export const Route = createFileRoute("/dashboard/ai-hub/automation")({
-  head: () => ({ meta: [{ title: "AI Automation — Aurix" }] }),
+  head: () => ({ meta: [{ title: "AI Automation — OFC360" }] }),
   component: AIAutomationPage,
 });
 

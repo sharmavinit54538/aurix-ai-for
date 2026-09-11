@@ -12,7 +12,7 @@ import { selectAuditLogs, selectSettingsLoading } from "@/store/settings/setting
 import { fetchAuditLogs } from "@/store/settings/settingsThunk";
 
 export const Route = createFileRoute("/dashboard/settings/audit-logs")({
-  head: () => ({ meta: [{ title: "Audit Logs — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Audit Logs — OFC360" }] }),
   component: AuditLogsPage,
 });
 

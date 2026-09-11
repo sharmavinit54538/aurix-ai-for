@@ -5,7 +5,7 @@ import { PayrollBackButton } from "@/features/admin/payroll/components/PayrollBa
 const ExpensesPage = lazyFeaturePage(() => import("@/pages/ExpensesPage"));
 
 export const Route = createFileRoute("/dashboard/payroll/expense-claims")({
-  head: () => ({ meta: [{ title: "Expenses — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Expenses — OFC360" }] }),
   component: ExpenseClaimsRouteComponent,
 });
 

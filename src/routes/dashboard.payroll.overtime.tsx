@@ -20,7 +20,7 @@ import {
 } from "@/features/admin/payroll/components/overtime/overtimeTypes";
 
 export const Route = createFileRoute("/dashboard/payroll/overtime")({
-  head: () => ({ meta: [{ title: "Enterprise Overtime Hub — Aurix AI" }] }),
+  head: () => ({ meta: [{ title: "Enterprise Overtime Hub — OFC360" }] }),
   component: OvertimePage,
 });
 

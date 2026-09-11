@@ -1,0 +1,757 @@
+[
+  {
+    "file": "src\\api\\apiInstance.ts",
+    "lineNum": 76,
+    "text": "aurix.set({ isRestoring: false, user: null, company: null });"
+  },
+  {
+    "file": "src\\api\\apiInstance.ts",
+    "lineNum": 90,
+    "text": "aurix.set({ isRestoring: false, user: null, company: null });"
+  },
+  {
+    "file": "src\\api\\apiInstance.ts",
+    "lineNum": 148,
+    "text": "aurix.set({ isRestoring: false, user: null, company: null });"
+  },
+  {
+    "file": "src\\api\\apiInstance.ts",
+    "lineNum": 167,
+    "text": "aurix.set({ isRestoring: false, user: null, company: null });"
+  },
+  {
+    "file": "src\\components\\aurix\\DashboardShell.tsx",
+    "lineNum": 340,
+    "text": "const ws = useAurix();"
+  },
+  {
+    "file": "src\\features\\admin\\departments\\components\\DepartmentProfileDrawer.tsx",
+    "lineNum": 77,
+    "text": "const ws = useAurix();"
+  },
+  {
+    "file": "src\\features\\admin\\departments\\departmentsThunk.ts",
+    "lineNum": 117,
+    "text": "const workspace = aurix.get();"
+  },
+  {
+    "file": "src\\features\\admin\\departments\\departmentsThunk.ts",
+    "lineNum": 278,
+    "text": "const workspace = aurix.get();"
+  },
+  {
+    "file": "src\\features\\admin\\departments\\departmentsThunk.ts",
+    "lineNum": 289,
+    "text": "aurix.set({ employees: updatedEmployees });"
+  },
+  {
+    "file": "src\\features\\admin\\departments\\departmentsThunk.ts",
+    "lineNum": 304,
+    "text": "const workspace = aurix.get();"
+  },
+  {
+    "file": "src\\features\\admin\\departments\\departmentsThunk.ts",
+    "lineNum": 311,
+    "text": "aurix.set({ employees: updatedEmployees });"
+  },
+  {
+    "file": "src\\features\\admin\\departments\\departmentsThunk.ts",
+    "lineNum": 332,
+    "text": "const workspace = aurix.get();"
+  },
+  {
+    "file": "src\\features\\admin\\departments\\departmentsThunk.ts",
+    "lineNum": 338,
+    "text": "aurix.set({ employees: updatedEmployees });"
+  },
+  {
+    "file": "src\\features\\admin\\departments\\departmentsThunk.ts",
+    "lineNum": 353,
+    "text": "const workspace = aurix.get();"
+  },
+  {
+    "file": "src\\features\\admin\\departments\\departmentsThunk.ts",
+    "lineNum": 359,
+    "text": "aurix.set({ employees: updatedEmployees });"
+  },
+  {
+    "file": "src\\features\\admin\\departments\\hooks\\useDepartmentsPage.ts",
+    "lineNum": 30,
+    "text": "employees: ReturnType<typeof useAurix>[\"employees\"],"
+  },
+  {
+    "file": "src\\features\\admin\\departments\\hooks\\useDepartmentsPage.ts",
+    "lineNum": 41,
+    "text": "const ws = useAurix();"
+  },
+  {
+    "file": "src\\features\\admin\\managers\\components\\ImportDialog.tsx",
+    "lineNum": 245,
+    "text": "email: d.email || `imported.${idx}@aurix.com`,"
+  },
+  {
+    "file": "src\\features\\admin\\managers\\components\\ImportDialog.tsx",
+    "lineNum": 283,
+    "text": "const sampleRow = \"\\nEMP-1100,Raj,Malhotra,raj.malhotra@aurix.com,+91 98989 89898,Engineering,Engineering Manager,Bengaluru Tech Park,active,team_lead,Rohan Mehta,2026-06-01,110000\";"
+  },
+  {
+    "file": "src\\features\\admin\\managers\\components\\ManagerFormDialog.tsx",
+    "lineNum": 218,
+    "text": "placeholder=\"e.g. john.doe@aurix.com\""
+  },
+  {
+    "file": "src\\features\\admin\\managers\\hooks\\useManagersList.ts",
+    "lineNum": 6,
+    "text": "function mergeManagers(reduxManagers: Manager[], aurixManagers: AurixManager[]): Manager[] {"
+  },
+  {
+    "file": "src\\features\\admin\\managers\\hooks\\useManagersList.ts",
+    "lineNum": 58,
+    "text": "const ws = useAurix();"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\payslips\\BulkEmailModal.tsx",
+    "lineNum": 69,
+    "text": "placeholder=\"e.g. Please find attached your encrypted monthly payslip. For payroll queries, contact hr@aurix.ai...\""
+  },
+  {
+    "file": "src\\features\\admin\\performance\\components\\ImportDialog.tsx",
+    "lineNum": 39,
+    "text": "const ws = useAurix();"
+  },
+  {
+    "file": "src\\features\\admin\\performance\\components\\PerformanceFormDialog.tsx",
+    "lineNum": 42,
+    "text": "const ws = useAurix();"
+  },
+  {
+    "file": "src\\features\\admin\\performance\\pages\\PerformancePage.tsx",
+    "lineNum": 205,
+    "text": "const ws = useAurix();"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\CareerSitePage.tsx",
+    "lineNum": 29,
+    "text": "const savedBrand = window.localStorage.getItem(\"aurix.careers.brand\");"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\CareerSitePage.tsx",
+    "lineNum": 32,
+    "text": "const savedTagline = window.localStorage.getItem(\"aurix.careers.tagline\");"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\CareerSitePage.tsx",
+    "lineNum": 35,
+    "text": "const savedAccent = window.localStorage.getItem(\"aurix.careers.accent\");"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\CareerSitePage.tsx",
+    "lineNum": 38,
+    "text": "const savedShowSalary = window.localStorage.getItem(\"aurix.careers.showSalary\");"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\CareerSitePage.tsx",
+    "lineNum": 41,
+    "text": "const savedAllowReferrals = window.localStorage.getItem(\"aurix.careers.allowReferrals\");"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\CareerSitePage.tsx",
+    "lineNum": 44,
+    "text": "const savedEeo = window.localStorage.getItem(\"aurix.careers.eeoStatement\");"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\CareerSitePage.tsx",
+    "lineNum": 54,
+    "text": "window.localStorage.setItem(\"aurix.careers.brand\", brand);"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\CareerSitePage.tsx",
+    "lineNum": 55,
+    "text": "window.localStorage.setItem(\"aurix.careers.tagline\", tagline);"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\CareerSitePage.tsx",
+    "lineNum": 56,
+    "text": "window.localStorage.setItem(\"aurix.careers.accent\", accent);"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\CareerSitePage.tsx",
+    "lineNum": 57,
+    "text": "window.localStorage.setItem(\"aurix.careers.showSalary\", String(showSalary));"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\CareerSitePage.tsx",
+    "lineNum": 58,
+    "text": "window.localStorage.setItem(\"aurix.careers.allowReferrals\", String(allowReferrals));"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\CareerSitePage.tsx",
+    "lineNum": 59,
+    "text": "window.localStorage.setItem(\"aurix.careers.eeoStatement\", eeoStatement);"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\JobDetailPage.tsx",
+    "lineNum": 100,
+    "text": "const userRole = (useAurix().user?.role || \"employee\") as string;"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\JobDetailPage.tsx",
+    "lineNum": 869,
+    "text": "{ label: \"Public Career Site URL\", url: `https://careers.aurix.com/jobs/${jobId}` },"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\JobDetailPage.tsx",
+    "lineNum": 870,
+    "text": "{ label: \"Internal Employee Referral Link\", url: `https://aurix.com/portal/referrals?job=${jobId}` },"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\JobDetailPage.tsx",
+    "lineNum": 871,
+    "text": "{ label: \"Campus Sourcing URL\", url: `https://careers.aurix.com/campus/sourcing?tag=uni-${jobId}` },"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\RecruitmentCompliancePage.tsx",
+    "lineNum": 20,
+    "text": "const raw = window.localStorage.getItem(\"aurix.compliance.controls\");"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\RecruitmentCompliancePage.tsx",
+    "lineNum": 42,
+    "text": "const raw = window.localStorage.getItem(\"aurix.compliance.checklist\");"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\RecruitmentCompliancePage.tsx",
+    "lineNum": 65,
+    "text": "window.localStorage.setItem(\"aurix.compliance.controls\", JSON.stringify(next));"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\RecruitmentCompliancePage.tsx",
+    "lineNum": 74,
+    "text": "window.localStorage.setItem(\"aurix.compliance.checklist\", JSON.stringify(next));"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\RecruitmentTemplatesPage.tsx",
+    "lineNum": 77,
+    "text": "const raw = window.localStorage.getItem(\"aurix.recruitment.templates\");"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\RecruitmentTemplatesPage.tsx",
+    "lineNum": 104,
+    "text": "window.localStorage.setItem(\"aurix.recruitment.templates\", JSON.stringify(newItems));"
+  },
+  {
+    "file": "src\\features\\auth\\components\\AuthShell.tsx",
+    "lineNum": 16,
+    "text": "const ws = useAurix();"
+  },
+  {
+    "file": "src\\features\\auth\\pages\\RegisterPage.tsx",
+    "lineNum": 92,
+    "text": "aurix.set({"
+  },
+  {
+    "file": "src\\features\\auth\\pages\\VerifyEmailPage.tsx",
+    "lineNum": 15,
+    "text": "const ws = useAurix();"
+  },
+  {
+    "file": "src\\features\\auth\\pages\\VerifyEmailPage.tsx",
+    "lineNum": 58,
+    "text": "aurix.set({ user: { ...ws.user, emailVerified: true } });"
+  },
+  {
+    "file": "src\\features\\cto\\pages\\CtoSettingsPage.tsx",
+    "lineNum": 12,
+    "text": "const [qdrantHost, setQdrantHost] = useState(\"qdrant.internal.aurix.ai:6333\");"
+  },
+  {
+    "file": "src\\features\\dashboard\\ExecutiveDashboard.tsx",
+    "lineNum": 703,
+    "text": "const ws = useAurix();"
+  },
+  {
+    "file": "src\\features\\executive\\pages\\ExecutiveHubPage.tsx",
+    "lineNum": 88,
+    "text": "const ws = useAurix();"
+  },
+  {
+    "file": "src\\features\\portal\\employee\\EmployeeDashboard.tsx",
+    "lineNum": 581,
+    "text": "const ws = useAurix();"
+  },
+  {
+    "file": "src\\features\\portal\\manager\\ManagerDashboard.tsx",
+    "lineNum": 1027,
+    "text": "const ws = useAurix();"
+  },
+  {
+    "file": "src\\lib\\ai\\hr-tools.ts",
+    "lineNum": 31,
+    "text": "{ id: \"E-1001\", name: \"Priya Singh\",   email: \"priya.singh@aurix.io\",   department: \"Engineering\", role: \"Senior Engineer\",     manager: \"Anita Rao\",   joinedOn: \"2021-03-14\", ctcLpa: 28, performance: 88, attendancePct: 97, unplannedAbsencesMtd: 0, trainingCompletionPct: 100, riskScore: 18, leaveBalance: { casual: 4, sick: 6, earned: 11 } },"
+  },
+  {
+    "file": "src\\lib\\ai\\hr-tools.ts",
+    "lineNum": 32,
+    "text": "{ id: \"E-1002\", name: \"Rahul Mehta\",   email: \"rahul.mehta@aurix.io\",   department: \"Engineering\", role: \"Engineer II\",         manager: \"Anita Rao\",   joinedOn: \"2022-07-01\", ctcLpa: 18, performance: 62, attendancePct: 82, unplannedAbsencesMtd: 4, trainingCompletionPct: 40,  riskScore: 71, leaveBalance: { casual: 2, sick: 5, earned: 6 } },"
+  },
+  {
+    "file": "src\\lib\\ai\\hr-tools.ts",
+    "lineNum": 33,
+    "text": "{ id: \"E-1003\", name: \"Anita Rao\",     email: \"anita.rao@aurix.io\",     department: \"Engineering\", role: \"Engineering Manager\", manager: \"Vikram Shah\", joinedOn: \"2019-01-10\", ctcLpa: 46, performance: 91, attendancePct: 96, unplannedAbsencesMtd: 1, trainingCompletionPct: 90,  riskScore: 22, leaveBalance: { casual: 5, sick: 7, earned: 14 } },"
+  },
+  {
+    "file": "src\\lib\\ai\\hr-tools.ts",
+    "lineNum": 34,
+    "text": "{ id: \"E-1004\", name: \"Maya Iyer\",     email: \"maya.iyer@aurix.io\",     department: \"Design\",      role: \"Senior Designer\",     manager: \"Karan Verma\", joinedOn: \"2020-11-22\", ctcLpa: 24, performance: 84, attendancePct: 94, unplannedAbsencesMtd: 1, trainingCompletionPct: 80,  riskScore: 34, leaveBalance: { casual: 3, sick: 6, earned: 9 } },"
+  },
+  {
+    "file": "src\\lib\\ai\\hr-tools.ts",
+    "lineNum": 35,
+    "text": "{ id: \"E-1005\", name: \"Vikram Shah\",   email: \"vikram.shah@aurix.io\",   department: \"Leadership\",  role: \"VP Engineering\",      manager: \"CEO\",         joinedOn: \"2017-05-02\", ctcLpa: 78, performance: 93, attendancePct: 98, unplannedAbsencesMtd: 0, trainingCompletionPct: 100, riskScore: 12, leaveBalance: { casual: 6, sick: 8, earned: 18 } },"
+  },
+  {
+    "file": "src\\lib\\ai\\hr-tools.ts",
+    "lineNum": 36,
+    "text": "{ id: \"E-1006\", name: \"Karan Verma\",   email: \"karan.verma@aurix.io\",   department: \"Design\",      role: \"Design Lead\",         manager: \"Vikram Shah\", joinedOn: \"2019-09-15\", ctcLpa: 38, performance: 80, attendancePct: 92, unplannedAbsencesMtd: 2, trainingCompletionPct: 70,  riskScore: 41, leaveBalance: { casual: 4, sick: 6, earned: 10 } },"
+  },
+  {
+    "file": "src\\lib\\ai\\hr-tools.ts",
+    "lineNum": 37,
+    "text": "{ id: \"E-1007\", name: \"Neha Kapoor\",   email: \"neha.kapoor@aurix.io\",   department: \"Sales\",       role: \"Account Executive\",   manager: \"Sandeep Roy\", joinedOn: \"2023-02-01\", ctcLpa: 14, performance: 58, attendancePct: 78, unplannedAbsencesMtd: 5, trainingCompletionPct: 25,  riskScore: 82, leaveBalance: { casual: 1, sick: 4, earned: 3 } },"
+  },
+  {
+    "file": "src\\lib\\ai\\hr-tools.ts",
+    "lineNum": 38,
+    "text": "{ id: \"E-1008\", name: \"Sandeep Roy\",   email: \"sandeep.roy@aurix.io\",   department: \"Sales\",       role: \"Sales Manager\",       manager: \"Vikram Shah\", joinedOn: \"2018-04-19\", ctcLpa: 42, performance: 76, attendancePct: 88, unplannedAbsencesMtd: 2, trainingCompletionPct: 60,  riskScore: 48, leaveBalance: { casual: 3, sick: 5, earned: 8 } },"
+  },
+  {
+    "file": "src\\lib\\aurix-store.ts",
+    "lineNum": 5,
+    "text": "export interface AurixUser {"
+  },
+  {
+    "file": "src\\lib\\aurix-store.ts",
+    "lineNum": 181,
+    "text": "export function useAurix(): Workspace {"
+  },
+  {
+    "file": "src\\lib\\aurix-store.ts",
+    "lineNum": 183,
+    "text": "aurix.subscribe,"
+  },
+  {
+    "file": "src\\lib\\auth-bootstrap.ts",
+    "lineNum": 22,
+    "text": "const ws = aurix.get();"
+  },
+  {
+    "file": "src\\lib\\auth-bootstrap.ts",
+    "lineNum": 49,
+    "text": "aurix.set(mapAuthUser(user));"
+  },
+  {
+    "file": "src\\lib\\auth-bootstrap.ts",
+    "lineNum": 73,
+    "text": "aurix.set({ isRestoring: false });"
+  },
+  {
+    "file": "src\\lib\\auth-bootstrap.ts",
+    "lineNum": 78,
+    "text": "const ws = aurix.get();"
+  },
+  {
+    "file": "src\\lib\\auth-bootstrap.ts",
+    "lineNum": 97,
+    "text": "aurix.set(mapAuthUser(res.data));"
+  },
+  {
+    "file": "src\\lib\\auth-bootstrap.ts",
+    "lineNum": 111,
+    "text": "aurix.set(mapAuthUser(res.data));"
+  },
+  {
+    "file": "src\\lib\\auth-bootstrap.ts",
+    "lineNum": 114,
+    "text": "aurix.set({ user: null, company: null });"
+  },
+  {
+    "file": "src\\lib\\auth-bootstrap.ts",
+    "lineNum": 119,
+    "text": "aurix.set({ user: null, company: null });"
+  },
+  {
+    "file": "src\\lib\\hrms\\store.ts",
+    "lineNum": 20,
+    "text": "const STORAGE_KEY = \"aurix.hrms.v1\";"
+  },
+  {
+    "file": "src\\pages\\AssetsPage.tsx",
+    "lineNum": 65,
+    "text": "const authWs = useAurix(); // For employees list"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 61,
+    "text": "const ws = useAurix();"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 165,
+    "text": "aurix.set({ documents: mapped });"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 275,
+    "text": "aurix.set({"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 433,
+    "text": "aurix.set({"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 460,
+    "text": "aurix.set({"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 501,
+    "text": "aurix.set({"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 532,
+    "text": "aurix.set({"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 565,
+    "text": "aurix.set({"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 591,
+    "text": "aurix.set({ documentActivities: [newActivity, ...activities] });"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 1945,
+    "text": "<Button variant=\"outline\" onClick={() => { const updatedDocs = docs.map(d => { if (d.id === previewDoc.id) return { ...d, status: \"Pending\" as const, rejectionReason: undefined }; return d; }); aurix.set({ documents: updatedDocs }); setPreviewDoc({ ...previewDoc, status: \"Pending\" as const, rejectionReason: undefined }); toast.info(\"Document reset to Pending review state\"); }} className=\"h-9 text-xs border-border bg-transparent hover:bg-accent/60 cursor-pointer\">Reset Status to Review</Button>"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage_good_top.txt",
+    "lineNum": 62,
+    "text": "const ws = useAurix();"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage_good_top.txt",
+    "lineNum": 161,
+    "text": "aurix.set({"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage_good_top.txt",
+    "lineNum": 288,
+    "text": "aurix.set({"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage_good_top.txt",
+    "lineNum": 315,
+    "text": "aurix.set({"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage_good_top.txt",
+    "lineNum": 356,
+    "text": "aurix.set({"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage_good_top.txt",
+    "lineNum": 387,
+    "text": "aurix.set({"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage_good_top.txt",
+    "lineNum": 420,
+    "text": "aurix.set({"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage_good_top.txt",
+    "lineNum": 446,
+    "text": "aurix.set({ documentActivities: [newActivity, ...activities] });"
+  },
+  {
+    "file": "src\\pages\\ExitManagementPage.tsx",
+    "lineNum": 85,
+    "text": "const authWs = useAurix(); // Fetch active employees and HR profiles"
+  },
+  {
+    "file": "src\\pages\\LeavesPage.tsx",
+    "lineNum": 47,
+    "text": "const ws = useAurix();"
+  },
+  {
+    "file": "src\\pages\\TimesheetsPage.tsx",
+    "lineNum": 50,
+    "text": "const ws = useAurix();"
+  },
+  {
+    "file": "src\\routes\\contact.tsx",
+    "lineNum": 87,
+    "text": "{ icon: Mail, label: \"Email\", value: \"hello@aurix.com\" },"
+  },
+  {
+    "file": "src\\routes\\contact.tsx",
+    "lineNum": 89,
+    "text": "{ icon: MessageSquare, label: \"Sales\", value: \"sales@aurix.com\" },"
+  },
+  {
+    "file": "src\\routes\\dashboard.attendance.checkin.tsx",
+    "lineNum": 408,
+    "text": "const ws = useAurix();"
+  },
+  {
+    "file": "src\\routes\\dashboard.hr.tsx",
+    "lineNum": 18,
+    "text": "const ws = useAurix();"
+  },
+  {
+    "file": "src\\routes\\dashboard.hr.tsx",
+    "lineNum": 27,
+    "text": "aurix.set({ hrs: exists ? ws.hrs.map((h) => h.id === d.id ? d : h) : [...ws.hrs, d] });"
+  },
+  {
+    "file": "src\\routes\\dashboard.hr.tsx",
+    "lineNum": 30,
+    "text": "function remove(id: string) { aurix.set({ hrs: ws.hrs.filter((h) => h.id !== id) }); }"
+  },
+  {
+    "file": "src\\routes\\dashboard.payroll.compliance.tsx",
+    "lineNum": 217,
+    "text": "const { user } = useAurix();"
+  },
+  {
+    "file": "src\\routes\\dashboard.payroll.index.tsx",
+    "lineNum": 159,
+    "text": "const ws = useAurix();"
+  },
+  {
+    "file": "src\\routes\\dashboard.payroll.payslips.tsx",
+    "lineNum": 30,
+    "text": "const { user } = useAurix();"
+  },
+  {
+    "file": "src\\routes\\dashboard.payroll.reports.tsx",
+    "lineNum": 70,
+    "text": "const { user } = useAurix();"
+  },
+  {
+    "file": "src\\routes\\dashboard.payroll.settings.tsx",
+    "lineNum": 239,
+    "text": "const { user } = useAurix();"
+  },
+  {
+    "file": "src\\routes\\dashboard.payroll.tax.tsx",
+    "lineNum": 33,
+    "text": "const { user } = useAurix();"
+  },
+  {
+    "file": "src\\routes\\dashboard.settings.company.tsx",
+    "lineNum": 60,
+    "text": "const currentWs = aurix.get();"
+  },
+  {
+    "file": "src\\routes\\dashboard.settings.company.tsx",
+    "lineNum": 61,
+    "text": "aurix.set({"
+  },
+  {
+    "file": "src\\routes\\dashboard.settings.company.tsx",
+    "lineNum": 114,
+    "text": "placeholder=\"contact@aurix.ai\""
+  },
+  {
+    "file": "src\\routes\\dashboard.settings.company.tsx",
+    "lineNum": 132,
+    "text": "placeholder=\"https://aurix.ai\""
+  },
+  {
+    "file": "src\\routes\\dashboard.settings.profile.tsx",
+    "lineNum": 101,
+    "text": "placeholder=\"aarav@aurix.ai\""
+  },
+  {
+    "file": "src\\routes\\dashboard.settings.security.tsx",
+    "lineNum": 74,
+    "text": "aurix.reset();"
+  },
+  {
+    "file": "src\\routes\\employee-onboarding.tsx",
+    "lineNum": 45,
+    "text": "const ws = useAurix();"
+  },
+  {
+    "file": "src\\routes\\employee-onboarding.tsx",
+    "lineNum": 112,
+    "text": "aurix.set({"
+  },
+  {
+    "file": "src\\routes\\index.tsx",
+    "lineNum": 27,
+    "text": "const workspace = aurix.get();"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 52,
+    "text": "async function syncDeptsAndDesignations(ws: ReturnType<typeof useAurix>) {"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 77,
+    "text": "async function syncInvites(ws: ReturnType<typeof useAurix>) {"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 128,
+    "text": "const ws = useAurix();"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 199,
+    "text": "aurix.set({ user: { ...ws.user, onboardingComplete: true } });"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 209,
+    "text": "aurix.set({"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 248,
+    "text": "aurix.set({ user: { ...ws.user, onboardingComplete: true } });"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 340,
+    "text": "aurix.set({ user: res.data.user });"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 574,
+    "text": "const ws = useAurix();"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 613,
+    "text": "aurix.set({ company: c });"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 668,
+    "text": "<Field label=\"Website\"><Input value={c.website ?? \"\"} onChange={(e) => set(\"website\", e.target.value)} placeholder=\"https://aurix.com\" /></Field>"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 670,
+    "text": "<Input type=\"email\" value={c.email ?? \"\"} onChange={(e) => set(\"email\", e.target.value)} placeholder=\"hello@aurix.com\" />"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 703,
+    "text": "const ws = useAurix();"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 1099,
+    "text": "const ws = useAurix();"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 1171,
+    "text": "const ws = useAurix();"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 1183,
+    "text": "aurix.set({ hrs: updated });"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 1217,
+    "text": "<button onClick={() => aurix.set({ hrs: hrs.filter((x) => x.id !== h.id) })} className=\"rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive\"><Trash2 className=\"h-4 w-4\" /></button>"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 1232,
+    "text": "const ws = useAurix();"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 1249,
+    "text": "aurix.set({ employees: updated });"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 1282,
+    "text": "aurix.set({ employees: [...employees, ...preview] });"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 1383,
+    "text": "<button onClick={() => aurix.set({ employees: employees.filter((x) => x.id !== e.id) })} className=\"rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive\"><Trash2 className=\"h-4 w-4\" /></button>"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 1397,
+    "text": "const ws = useAurix();"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 1411,
+    "text": "aurix.set({ managers: updated });"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 1483,
+    "text": "<button onClick={() => aurix.set({ managers: managers.filter((x) => x.id !== m.id) })} className=\"rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive\"><Trash2 className=\"h-4 w-4\" /></button>"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 1502,
+    "text": "const ws = useAurix();"
+  },
+  {
+    "file": "src\\routes\\privacy.tsx",
+    "lineNum": 24,
+    "text": "{ h: \"6. Your rights\", p: \"Depending on your jurisdiction, you may have rights to access, correct, delete, port, or restrict processing of your personal information. Contact privacy@aurix.com to exercise these rights.\" },"
+  },
+  {
+    "file": "src\\routes\\privacy.tsx",
+    "lineNum": 29,
+    "text": "{ h: \"11. Contact\", p: \"Questions? Contact us at privacy@aurix.com or write to Aurix Inc., Rua Augusta 100, Lisbon, Portugal.\" },"
+  },
+  {
+    "file": "src\\routes\\terms.tsx",
+    "lineNum": 30,
+    "text": "{ h: \"12. Contact\", p: \"Questions about these terms? Contact legal@aurix.com.\" },"
+  },
+  {
+    "file": "src\\store\\settings\\settingsSlice.ts",
+    "lineNum": 88,
+    "text": "const currentWs = aurix.get();"
+  },
+  {
+    "file": "src\\store\\settings\\settingsSlice.ts",
+    "lineNum": 90,
+    "text": "aurix.set({ company: { ...currentWs.company, name: action.payload.name } });"
+  },
+  {
+    "file": "src\\store\\settings\\settingsSlice.ts",
+    "lineNum": 97,
+    "text": "const currentWs = aurix.get();"
+  },
+  {
+    "file": "src\\store\\settings\\settingsSlice.ts",
+    "lineNum": 99,
+    "text": "aurix.set({ company: { ...currentWs.company, name: action.payload.name } });"
+  }
+]

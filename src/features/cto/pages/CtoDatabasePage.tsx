@@ -4,9 +4,9 @@ import { Badge } from "@/components/ui/badge";
 
 export function CtoDatabasePage() {
   const dbs = [
-    { name: "PostgreSQL Primary (aurix_prod)", engine: "PostgreSQL 16.2", conn: "142 / 500", size: "14.2 GB", status: "Healthy" },
-    { name: "Redis Cache Cluster (aurix_cache)", engine: "Redis 7.2 (Sentinel)", conn: "84 / 1000", size: "2.4 GB", status: "Healthy" },
-    { name: "Qdrant Vector DB (aurix_vectors)", engine: "Qdrant 1.8", conn: "24 / 200", size: "6.8 GB", status: "Healthy" },
+    { name: "PostgreSQL Primary (ofc360_prod)", engine: "PostgreSQL 16.2", conn: "142 / 500", size: "14.2 GB", status: "Healthy" },
+    { name: "Redis Cache Cluster (ofc360_cache)", engine: "Redis 7.2 (Sentinel)", conn: "84 / 1000", size: "2.4 GB", status: "Healthy" },
+    { name: "Qdrant Vector DB (ofc360_vectors)", engine: "Qdrant 1.8", conn: "24 / 200", size: "6.8 GB", status: "Healthy" },
   ];
 
   return (

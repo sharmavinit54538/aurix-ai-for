@@ -22,7 +22,7 @@ import { ShieldAlert, Lock, AlertCircle, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/dashboard/payroll/payslips")({
-  head: () => ({ meta: [{ title: "Payslips Management — Aurix AI" }] }),
+  head: () => ({ meta: [{ title: "Payslips Management — OFC360" }] }),
   component: AdminPayslipsPage,
 });
 

@@ -1,5 +1,5 @@
 // ============================================================
-// Aurix HR — Manager Dashboard Component
+// OFC360 — Manager Dashboard Component
 // Production-ready manager view for team leads and managers.
 // ============================================================
 import { Link } from "@tanstack/react-router";
@@ -1026,7 +1026,7 @@ function ReportsSection() {
 export function ManagerDashboard() {
   const ws = useAurix();
   const firstName = ws.user?.fullName?.split(" ")[0] ?? "Manager";
-  const companyName = ws.company?.name ?? "Aurix HR";
+  const companyName = ws.company?.name ?? "OFC360";
   const hour = new Date().getHours();
   const greeting =
     hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";

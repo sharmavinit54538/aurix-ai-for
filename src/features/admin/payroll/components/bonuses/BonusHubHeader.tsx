@@ -53,7 +53,7 @@ export const BonusHubHeader: React.FC<BonusHubHeaderProps> = ({
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-black text-white tracking-tight">Enterprise Bonus & Incentives Hub</h1>
                 <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-[10px] uppercase font-bold tracking-wider">
-                  Aurix Bonus v2026
+                  OFC360 Bonus v2026
                 </Badge>
               </div>
               <p className="text-xs text-slate-400">

@@ -55,7 +55,7 @@ export const BankHubHeader: React.FC<BankHubHeaderProps> = ({
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-black text-white tracking-tight">Enterprise Bank Transfer Hub</h1>
                 <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px] uppercase font-bold tracking-wider">
-                  Aurix Banking v2026
+                  OFC360 Banking v2026
                 </Badge>
               </div>
               <p className="text-xs text-slate-400">

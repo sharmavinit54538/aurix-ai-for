@@ -3,7 +3,7 @@ import { Activity, History, UserCheck, ClipboardCheck, LogOut, FileCheck, Layers
 import { ModuleHubView, type ModuleItem } from "@/components/aurix/ModuleHubView";
 
 export const Route = createFileRoute("/dashboard/hr-operations/")({
-  head: () => ({ meta: [{ title: "HR Operations Hub — Aurix" }] }),
+  head: () => ({ meta: [{ title: "HR Operations Hub — OFC360" }] }),
   component: HrOperationsHubPage,
 });
 

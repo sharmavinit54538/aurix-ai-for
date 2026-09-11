@@ -7,6 +7,6 @@ const CioOverviewPage = lazyFeaturePage(
 );
 
 export const Route = createFileRoute("/dashboard/executive/cio/")({
-  head: () => ({ meta: [{ title: "CIO IT Executive Hub — Aurix AI" }] }),
+  head: () => ({ meta: [{ title: "CIO IT Executive Hub — OFC360" }] }),
   component: CioOverviewPage,
 });

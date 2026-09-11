@@ -5,7 +5,7 @@ import {
 import { AIModulePage } from "@/components/aurix/AIModule";
 
 export const Route = createFileRoute("/ai/workforce-planning")({
-  head: () => ({ meta: [{ title: "AI Workforce Planning — Aurix" }] }),
+  head: () => ({ meta: [{ title: "AI Workforce Planning — OFC360" }] }),
   component: Page,
 });
 

@@ -233,7 +233,7 @@ export const BANK_MODULE_CARDS: BankModuleCard[] = [
     description: "Consult your AI assistant for duplicate payout detection, anomalous salary transfers, cash flow forecasts, and settlement predictions.",
     category: "AI & Compliance",
     icon: Brain,
-    badgeText: "Aurix AI Core",
+    badgeText: "OFC360 Core",
     badgeColor: "border-purple-500/30 text-purple-400 bg-purple-500/10",
     iconBg: "bg-purple-600/20 border-purple-500/30",
     iconColor: "text-purple-300",

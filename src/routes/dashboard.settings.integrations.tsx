@@ -11,7 +11,7 @@ import { fetchIntegrations, toggleIntegration } from "@/store/settings/settingsT
 import type { IntegrationItem } from "@/store/settings/settingsTypes";
 
 export const Route = createFileRoute("/dashboard/settings/integrations")({
-  head: () => ({ meta: [{ title: "Integrations — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Integrations — OFC360" }] }),
   component: IntegrationsPage,
 });
 
@@ -59,7 +59,7 @@ function IntegrationsPage() {
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-xl">
         <div>
           <h2 className="text-lg font-semibold tracking-tight">Integrations & Ecosystem</h2>
-          <p className="text-xs text-muted-foreground">Connect Aurix with your enterprise toolstack for automated communications, single sign-on, and sync.</p>
+          <p className="text-xs text-muted-foreground">Connect OFC360 with your enterprise toolstack for automated communications, single sign-on, and sync.</p>
         </div>
         <Layers className="h-5 w-5 text-muted-foreground" />
       </div>

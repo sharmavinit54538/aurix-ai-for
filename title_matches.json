@@ -1,0 +1,862 @@
+[
+  {
+    "file": "src\\features\\admin\\departments\\utils\\departmentExport.ts",
+    "lineNum": 68,
+    "text": "<title>Departments Directory - Aurix HRMS</title>"
+  },
+  {
+    "file": "src\\features\\admin\\managers\\utils\\managerExport.ts",
+    "lineNum": 69,
+    "text": "<title>Managers Directory - Aurix HRMS</title>"
+  },
+  {
+    "file": "src\\features\\admin\\performance\\pages\\PerformancePage.tsx",
+    "lineNum": 479,
+    "text": "<title>Performance Reviews Pool - Aurix HRMS</title>"
+  },
+  {
+    "file": "src\\features\\cto\\pages\\CtoEngineeringPage.tsx",
+    "lineNum": 43,
+    "text": "{ id: \"PR-842\", title: \"feat(payroll): add automated tax calculation engine\", author: \"Vinit Sharma\", repo: \"aurix-core-backend\", status: \"Approved\", reviews: \"2/2\", ci: \"Passing\" },"
+  },
+  {
+    "file": "src\\features\\cto\\pages\\CtoEngineeringPage.tsx",
+    "lineNum": 44,
+    "text": "{ id: \"PR-841\", title: \"fix(auth): sanitize JWT token refresh payload\", author: \"Alex Rivera\", repo: \"aurix-core-backend\", status: \"In Review\", reviews: \"1/2\", ci: \"Passing\" },"
+  },
+  {
+    "file": "src\\features\\cto\\pages\\CtoEngineeringPage.tsx",
+    "lineNum": 45,
+    "text": "{ id: \"PR-840\", title: \"ui(dashboard): responsive CTO portal sub-module layout\", author: \"Priya Patel\", repo: \"aurix-enterprise-web\", status: \"Changes Requested\", reviews: \"2/2\", ci: \"Passing\" },"
+  },
+  {
+    "file": "src\\features\\cto\\pages\\CtoEngineeringPage.tsx",
+    "lineNum": 46,
+    "text": "{ id: \"PR-839\", title: \"infra(k8s): autoscale GPU inference pod cluster\", author: \"Rohan Verma\", repo: \"aurix-infra-terraform\", status: \"Approved\", reviews: \"3/3\", ci: \"Passing\" },"
+  },
+  {
+    "file": "src\\lib\\ai\\hr-tools.ts",
+    "lineNum": 46,
+    "text": "{ id: \"POL-POSH-001\",  title: \"PoSH Policy\", section: \"5 Complaint Process\", content: \"Complaints can be raised confidentially via posh@aurix.io or to any IC member. Inquiry must complete within 90 days under the PoSH Act, 2013.\" },"
+  },
+  {
+    "file": "src\\lib\\blog-data.ts",
+    "lineNum": 17,
+    "text": "title: \"How modern teams ship 3x faster with Aurix\","
+  },
+  {
+    "file": "src\\routes\\about.tsx",
+    "lineNum": 10,
+    "text": "{ title: \"About — Aurix\" },"
+  },
+  {
+    "file": "src\\routes\\about.tsx",
+    "lineNum": 41,
+    "text": "{ year: \"2025\", title: \"Aurix AI\", desc: \"Native AI woven through every surface — not bolted on top.\" },"
+  },
+  {
+    "file": "src\\routes\\about.tsx",
+    "lineNum": 42,
+    "text": "{ year: \"2026\", title: \"Today\", desc: \"12,000+ teams in 180 countries shipping with Aurix.\" },"
+  },
+  {
+    "file": "src\\routes\\ai.analytics-center.tsx",
+    "lineNum": 24,
+    "text": "head: () => ({ meta: [{ title: \"AI Analytics Center — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\ai.attendance-monitor.tsx",
+    "lineNum": 8,
+    "text": "head: () => ({ meta: [{ title: \"AI Attendance Monitor — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\ai.brain.tsx",
+    "lineNum": 25,
+    "text": "{ title: \"AI Insight 2.0 — Autonomous HR Brain | Aurix\" },"
+  },
+  {
+    "file": "src\\routes\\ai.chat-assistant.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"AI Chat Assistant — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\ai.compliance-monitor.tsx",
+    "lineNum": 8,
+    "text": "head: () => ({ meta: [{ title: \"AI Compliance Monitor — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\ai.document-generator.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"AI Document Generator — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\ai.employee-health.tsx",
+    "lineNum": 8,
+    "text": "head: () => ({ meta: [{ title: \"AI Employee Health — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\ai.index.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"AI Hub — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\ai.leave-assistant.tsx",
+    "lineNum": 8,
+    "text": "head: () => ({ meta: [{ title: \"AI Leave Assistant — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\ai.meeting-intelligence.tsx",
+    "lineNum": 8,
+    "text": "head: () => ({ meta: [{ title: \"AI Meeting Intelligence — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\ai.payroll-insights.tsx",
+    "lineNum": 8,
+    "text": "head: () => ({ meta: [{ title: \"AI Payroll Insights — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\ai.performance-coach.tsx",
+    "lineNum": 8,
+    "text": "head: () => ({ meta: [{ title: \"AI Performance Coach — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\ai.policy-assistant.tsx",
+    "lineNum": 9,
+    "text": "head: () => ({ meta: [{ title: \"AI Policy Assistant — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\ai.recruiter.tsx",
+    "lineNum": 8,
+    "text": "head: () => ({ meta: [{ title: \"AI Recruiter — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\ai.tsx",
+    "lineNum": 5,
+    "text": "head: () => ({ meta: [{ title: \"AI Hub — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\ai.workforce-insights.tsx",
+    "lineNum": 8,
+    "text": "head: () => ({ meta: [{ title: \"AI Workforce Insights — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\ai.workforce-planning.tsx",
+    "lineNum": 8,
+    "text": "head: () => ({ meta: [{ title: \"AI Workforce Planning — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\auth\\forgot-password.tsx",
+    "lineNum": 5,
+    "text": "head: () => ({ meta: [{ title: \"Reset password — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\auth\\login.tsx",
+    "lineNum": 5,
+    "text": "head: () => ({ meta: [{ title: \"Sign in — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\auth\\register.tsx",
+    "lineNum": 5,
+    "text": "head: () => ({ meta: [{ title: \"Create your workspace — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\auth\\reset-password.tsx",
+    "lineNum": 11,
+    "text": "head: () => ({ meta: [{ title: \"Set new password — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\auth\\verify-email.tsx",
+    "lineNum": 5,
+    "text": "head: () => ({ meta: [{ title: \"Verify your email — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\auth\\verify-reset-otp.tsx",
+    "lineNum": 9,
+    "text": "head: () => ({ meta: [{ title: \"Verify OTP — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\blog.$slug.tsx",
+    "lineNum": 17,
+    "text": "{ title: `${loaderData.post.title} — Aurix Blog` },"
+  },
+  {
+    "file": "src\\routes\\blog.index.tsx",
+    "lineNum": 12,
+    "text": "{ title: \"Blog — Aurix\" },"
+  },
+  {
+    "file": "src\\routes\\blog.tsx",
+    "lineNum": 6,
+    "text": "{ title: \"Blog — Aurix\" },"
+  },
+  {
+    "file": "src\\routes\\contact.tsx",
+    "lineNum": 14,
+    "text": "{ title: \"Contact — Aurix\" },"
+  },
+  {
+    "file": "src\\routes\\dashboard\\recruitment\\index.tsx",
+    "lineNum": 10,
+    "text": "head: () => ({ meta: [{ title: \"Recruitment Workspace — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard\\recruitment.tsx",
+    "lineNum": 4,
+    "text": "head: () => ({ meta: [{ title: \"Recruitment — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.ai-hub.assistant.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Chat Assistant — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.ai-hub.automation.tsx",
+    "lineNum": 6,
+    "text": "head: () => ({ meta: [{ title: \"AI Automation — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.ai-hub.document-generator.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Document Generator — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.ai-hub.index.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"AI Hub — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.ai-hub.tsx",
+    "lineNum": 4,
+    "text": "head: () => ({ meta: [{ title: \"AI Hub — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.ai-insights.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"AI Insights — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.analytics.ai-insights.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"AI Insights — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.analytics.index.tsx",
+    "lineNum": 6,
+    "text": "head: () => ({ meta: [{ title: \"Analytics Hub — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.analytics.reports.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Reports — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.analytics.tsx",
+    "lineNum": 4,
+    "text": "head: () => ({ meta: [{ title: \"Analytics — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.asset-management.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Asset Management — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.assets.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Asset Management — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.attendance.checkin.tsx",
+    "lineNum": 27,
+    "text": "head: () => ({ meta: [{ title: \"Check In / Check Out — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.attendance.holidays.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Holidays — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.attendance.index.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Attendance — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.attendance.rosters.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Rosters — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.attendance.shifts.tsx",
+    "lineNum": 38,
+    "text": "head: () => ({ meta: [{ title: \"Shifts Management — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.attendance.tsx",
+    "lineNum": 4,
+    "text": "head: () => ({ meta: [{ title: \"Attendance — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.departments.tsx",
+    "lineNum": 10,
+    "text": "head: () => ({ meta: [{ title: \"Departments — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.documents.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Document Management — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.employee.tsx",
+    "lineNum": 12,
+    "text": "{ title: \"My Dashboard — Aurix HR\" },"
+  },
+  {
+    "file": "src\\routes\\dashboard.employees.tsx",
+    "lineNum": 35,
+    "text": "head: () => ({ meta: [{ title: \"Employees — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.executive.ceo.index.tsx",
+    "lineNum": 10,
+    "text": "head: () => ({ meta: [{ title: \"CEO Executive Control Center — Aurix AI\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.executive.cfo.tsx",
+    "lineNum": 5,
+    "text": "head: () => ({ meta: [{ title: \"CFO Dashboard — Aurix AI\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.executive.cio.index.tsx",
+    "lineNum": 10,
+    "text": "head: () => ({ meta: [{ title: \"CIO IT Executive Hub — Aurix AI\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.executive.cmo.tsx",
+    "lineNum": 5,
+    "text": "head: () => ({ meta: [{ title: \"CMO Dashboard — Aurix AI\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.executive.coo.tsx",
+    "lineNum": 5,
+    "text": "head: () => ({ meta: [{ title: \"COO Dashboard — Aurix AI\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.executive.cto.ai.tsx",
+    "lineNum": 10,
+    "text": "head: () => ({ meta: [{ title: \"AI & LLM Platform — Aurix CTO\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.executive.cto.analytics.tsx",
+    "lineNum": 10,
+    "text": "head: () => ({ meta: [{ title: \"Engineering Analytics — Aurix CTO\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.executive.cto.database.tsx",
+    "lineNum": 10,
+    "text": "head: () => ({ meta: [{ title: \"Database Hub — Aurix CTO\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.executive.cto.developers.tsx",
+    "lineNum": 10,
+    "text": "head: () => ({ meta: [{ title: \"Developers Directory — Aurix CTO\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.executive.cto.devops.tsx",
+    "lineNum": 10,
+    "text": "head: () => ({ meta: [{ title: \"DevOps & CI/CD Hub — Aurix CTO\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.executive.cto.engineering.tsx",
+    "lineNum": 10,
+    "text": "head: () => ({ meta: [{ title: \"Engineering Hub — Aurix CTO\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.executive.cto.index.tsx",
+    "lineNum": 10,
+    "text": "head: () => ({ meta: [{ title: \"CTO Executive Control Center — Aurix AI\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.executive.cto.infrastructure.tsx",
+    "lineNum": 10,
+    "text": "head: () => ({ meta: [{ title: \"Infrastructure Hub — Aurix CTO\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.executive.cto.monitoring.tsx",
+    "lineNum": 10,
+    "text": "head: () => ({ meta: [{ title: \"Monitoring & Observability — Aurix CTO\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.executive.cto.projects.tsx",
+    "lineNum": 10,
+    "text": "head: () => ({ meta: [{ title: \"Project Portfolio — Aurix CTO\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.executive.cto.security.tsx",
+    "lineNum": 10,
+    "text": "head: () => ({ meta: [{ title: \"Security Center — Aurix CTO\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.executive.cto.settings.tsx",
+    "lineNum": 10,
+    "text": "head: () => ({ meta: [{ title: \"CTO Settings — Aurix CTO\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.executive.index.tsx",
+    "lineNum": 5,
+    "text": "head: () => ({ meta: [{ title: \"Executive Control Center — Aurix AI\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.exit-management.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Exit Management — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.exit.tsx",
+    "lineNum": 15,
+    "text": "head: () => ({ meta: [{ title: \"Exit Management — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.expenses.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Expense Management — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.hierarchy.tsx",
+    "lineNum": 6,
+    "text": "head: () => ({ meta: [{ title: \"Interactive Employee Hierarchy — Aurix AI\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.hr-operations.exit-management.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Exit Management — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.hr-operations.index.tsx",
+    "lineNum": 6,
+    "text": "head: () => ({ meta: [{ title: \"HR Operations Hub — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.hr-operations.offboarding.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Offboarding — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.hr-operations.onboarding.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Onboarding Checklist — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.hr-operations.timeline.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Timeline — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.hr-operations.tsx",
+    "lineNum": 4,
+    "text": "head: () => ({ meta: [{ title: \"HR Operations — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.hr-operations.visitor-management.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Visitor Management — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.hr-ops.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"HR Operations — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.hr.tsx",
+    "lineNum": 13,
+    "text": "head: () => ({ meta: [{ title: \"HR Management — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.index.tsx",
+    "lineNum": 12,
+    "text": "{ title: \"Executive Command Center — Aurix HR\" },"
+  },
+  {
+    "file": "src\\routes\\dashboard.leaves.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Leave Management — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.manager.tsx",
+    "lineNum": 12,
+    "text": "{ title: \"Manager Dashboard — Aurix HR\" },"
+  },
+  {
+    "file": "src\\routes\\dashboard.managers.tsx",
+    "lineNum": 10,
+    "text": "head: () => ({ meta: [{ title: \"Managers — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.offboarding.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Offboarding — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.onboarding-checklist.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Onboarding Checklist — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.payroll.advances.tsx",
+    "lineNum": 23,
+    "text": "head: () => ({ meta: [{ title: \"Enterprise Advance & Loan Hub — Aurix AI\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.payroll.approvals.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Payroll Approvals — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.payroll.bank-transfers.tsx",
+    "lineNum": 22,
+    "text": "head: () => ({ meta: [{ title: \"Enterprise Bank Transfer Hub — Aurix AI\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.payroll.bonuses.tsx",
+    "lineNum": 23,
+    "text": "head: () => ({ meta: [{ title: \"Enterprise Bonus & Incentives Hub — Aurix AI\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.payroll.compliance.tsx",
+    "lineNum": 34,
+    "text": "head: () => ({ meta: [{ title: \"Payroll Compliance — Aurix AI Enterprise HRMS\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.payroll.copilot.tsx",
+    "lineNum": 23,
+    "text": "head: () => ({ meta: [{ title: \"AI Payroll Copilot — Aurix AI\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.payroll.deductions.tsx",
+    "lineNum": 32,
+    "text": "head: () => ({ meta: [{ title: \"Payroll Deductions & Recovery Management — Aurix AI\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.payroll.expense-claims.tsx",
+    "lineNum": 8,
+    "text": "head: () => ({ meta: [{ title: \"Expenses — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.payroll.index.tsx",
+    "lineNum": 14,
+    "text": "head: () => ({ meta: [{ title: \"Payroll Dashboard — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.payroll.overtime.tsx",
+    "lineNum": 23,
+    "text": "head: () => ({ meta: [{ title: \"Enterprise Overtime Hub — Aurix AI\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.payroll.payslips.tsx",
+    "lineNum": 25,
+    "text": "head: () => ({ meta: [{ title: \"Payslips Management — Aurix AI\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.payroll.reimbursements.tsx",
+    "lineNum": 28,
+    "text": "head: () => ({ meta: [{ title: \"Enterprise Reimbursement Hub — Aurix AI\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.payroll.reports.tsx",
+    "lineNum": 25,
+    "text": "head: () => ({ meta: [{ title: \"Payroll Reports — Aurix AI Enterprise HRMS\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.payroll.salary-processing.tsx",
+    "lineNum": 30,
+    "text": "head: () => ({ meta: [{ title: \"Salary Processing Command Center — Aurix AI\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.payroll.salary-structure.tsx",
+    "lineNum": 36,
+    "text": "head: () => ({ meta: [{ title: \"Enterprise Salary Structure & Compensation Management — Aurix AI\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.payroll.settings.tsx",
+    "lineNum": 50,
+    "text": "head: () => ({ meta: [{ title: \"Payroll Settings — Aurix AI Enterprise HRMS\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.payroll.tax.tsx",
+    "lineNum": 28,
+    "text": "head: () => ({ meta: [{ title: \"Tax Management — Aurix AI Enterprise HRMS\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.payroll.travel-requests.tsx",
+    "lineNum": 8,
+    "text": "head: () => ({ meta: [{ title: \"Travel Requests — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.payroll.tsx",
+    "lineNum": 4,
+    "text": "head: () => ({ meta: [{ title: \"Payroll — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.people.index.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"People Hub — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.performance.tsx",
+    "lineNum": 10,
+    "text": "head: () => ({ meta: [{ title: \"Performance — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.reports.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Reports — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.resources.asset-management.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Asset Management — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.resources.assets.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Assets — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.resources.documents.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Documents — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.resources.index.tsx",
+    "lineNum": 6,
+    "text": "head: () => ({ meta: [{ title: \"Resources Hub — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.resources.tsx",
+    "lineNum": 4,
+    "text": "head: () => ({ meta: [{ title: \"Resources — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.settings.audit-logs.tsx",
+    "lineNum": 15,
+    "text": "head: () => ({ meta: [{ title: \"Audit Logs — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.settings.billing.tsx",
+    "lineNum": 14,
+    "text": "head: () => ({ meta: [{ title: \"Billing & Subscriptions — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.settings.company.tsx",
+    "lineNum": 15,
+    "text": "head: () => ({ meta: [{ title: \"Company Settings — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.settings.general.tsx",
+    "lineNum": 15,
+    "text": "head: () => ({ meta: [{ title: \"General Settings — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.settings.index.tsx",
+    "lineNum": 33,
+    "text": "head: () => ({ meta: [{ title: \"Settings Hub — Aurix AI\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.settings.integrations.tsx",
+    "lineNum": 14,
+    "text": "head: () => ({ meta: [{ title: \"Integrations — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.settings.notifications.tsx",
+    "lineNum": 13,
+    "text": "head: () => ({ meta: [{ title: \"Notification Settings — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.settings.profile.tsx",
+    "lineNum": 15,
+    "text": "head: () => ({ meta: [{ title: \"User Profile — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.settings.roles-permissions.tsx",
+    "lineNum": 18,
+    "text": "head: () => ({ meta: [{ title: \"Roles & Permissions — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.settings.security.tsx",
+    "lineNum": 15,
+    "text": "head: () => ({ meta: [{ title: \"Security Settings — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.settings.tsx",
+    "lineNum": 4,
+    "text": "head: () => ({ meta: [{ title: \"Settings — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.talent.index.tsx",
+    "lineNum": 6,
+    "text": "head: () => ({ meta: [{ title: \"Talent Management — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.talent.performance.tsx",
+    "lineNum": 10,
+    "text": "head: () => ({ meta: [{ title: \"Performance — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.talent.recruitment.tsx",
+    "lineNum": 10,
+    "text": "head: () => ({ meta: [{ title: \"Recruitment — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.talent.tsx",
+    "lineNum": 4,
+    "text": "head: () => ({ meta: [{ title: \"Talent Management — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.timeline.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Employee Timeline — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.timesheets.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Timesheets — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.travel.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Travel Management — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.tsx",
+    "lineNum": 5,
+    "text": "head: () => ({ meta: [{ title: \"Dashboard — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.visitors.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Visitor Management — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.workforce.attendance.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Attendance — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.workforce.departments.tsx",
+    "lineNum": 10,
+    "text": "head: () => ({ meta: [{ title: \"Departments — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.workforce.index.tsx",
+    "lineNum": 6,
+    "text": "head: () => ({ meta: [{ title: \"Workforce Hub — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.workforce.leaves.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Leaves — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.workforce.people.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"People — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.workforce.timesheets.tsx",
+    "lineNum": 7,
+    "text": "head: () => ({ meta: [{ title: \"Timesheets — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\dashboard.workforce.tsx",
+    "lineNum": 4,
+    "text": "head: () => ({ meta: [{ title: \"Workforce — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\employee-onboarding.tsx",
+    "lineNum": 27,
+    "text": "head: () => ({ meta: [{ title: \"Employee Onboarding Wizard — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\faq.tsx",
+    "lineNum": 13,
+    "text": "{ title: \"FAQ — Aurix\" },"
+  },
+  {
+    "file": "src\\routes\\features.tsx",
+    "lineNum": 13,
+    "text": "{ title: \"Features — Aurix\" },"
+  },
+  {
+    "file": "src\\routes\\features.tsx",
+    "lineNum": 26,
+    "text": "{ icon: Sparkles, title: \"Aurix AI\", desc: \"Drafts updates, summarizes threads, and triages issues. Trained on your team's context, not the internet.\" },"
+  },
+  {
+    "file": "src\\routes\\features.tsx",
+    "lineNum": 30,
+    "text": "{ icon: Calendar, title: \"Smart scheduling\", desc: \"Aurix learns your team's rhythm and suggests realistic timelines.\" },"
+  },
+  {
+    "file": "src\\routes\\features.tsx",
+    "lineNum": 39,
+    "text": "{ icon: Cpu, title: \"API & webhooks\", desc: \"Build on top of Aurix with a clean, fully documented REST and GraphQL API.\" },"
+  },
+  {
+    "file": "src\\routes\\forgot-password.tsx",
+    "lineNum": 5,
+    "text": "head: () => ({ meta: [{ title: \"Reset password — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\index.tsx",
+    "lineNum": 11,
+    "text": "{ title: \"Recruitment Dashboard — Aurix\" },"
+  },
+  {
+    "file": "src\\routes\\login.tsx",
+    "lineNum": 5,
+    "text": "head: () => ({ meta: [{ title: \"Sign in — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 30,
+    "text": "head: () => ({ meta: [{ title: \"Set up your workspace — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\pricing.tsx",
+    "lineNum": 13,
+    "text": "{ title: \"Pricing — Aurix\" },"
+  },
+  {
+    "file": "src\\routes\\privacy.tsx",
+    "lineNum": 8,
+    "text": "{ title: \"Privacy Policy — Aurix\" },"
+  },
+  {
+    "file": "src\\routes\\register.tsx",
+    "lineNum": 5,
+    "text": "head: () => ({ meta: [{ title: \"Create your workspace — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\reset-password.tsx",
+    "lineNum": 11,
+    "text": "head: () => ({ meta: [{ title: \"Set new password — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\terms.tsx",
+    "lineNum": 8,
+    "text": "{ title: \"Terms & Conditions — Aurix\" },"
+  },
+  {
+    "file": "src\\routes\\verify-email.tsx",
+    "lineNum": 5,
+    "text": "head: () => ({ meta: [{ title: \"Verify your email — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\verify-reset-otp.tsx",
+    "lineNum": 9,
+    "text": "head: () => ({ meta: [{ title: \"Verify OTP — Aurix\" }] }),"
+  },
+  {
+    "file": "src\\routes\\__root.tsx",
+    "lineNum": 84,
+    "text": "{ title: \"Aurix — Operations & Intelligence Platform\" },"
+  }
+]

@@ -250,7 +250,7 @@ export const ADVANCE_MODULE_CARDS: AdvanceModuleCard[] = [
     description: "Consult your AI assistant for default risk predictions, loan eligibility evaluations, EMI repayment forecasts, and fraud scoring.",
     category: "AI & Compliance",
     icon: Brain,
-    badgeText: "Aurix AI Core",
+    badgeText: "OFC360 Core",
     badgeColor: "border-purple-500/30 text-purple-400 bg-purple-500/10",
     iconBg: "bg-purple-600/20 border-purple-500/30",
     iconColor: "text-purple-300",

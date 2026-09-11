@@ -3,7 +3,7 @@ import { Folder, Laptop, Wrench, FolderOpen } from "lucide-react";
 import { ModuleHubView, type ModuleItem } from "@/components/aurix/ModuleHubView";
 
 export const Route = createFileRoute("/dashboard/resources/")({
-  head: () => ({ meta: [{ title: "Resources Hub — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Resources Hub — OFC360" }] }),
   component: ResourcesHubPage,
 });
 

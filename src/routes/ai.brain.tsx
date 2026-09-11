@@ -22,7 +22,7 @@ import { AGENT_LIST, AGENTS, type AgentId, type AgentDef } from "@/lib/ai/agents
 export const Route = createFileRoute("/ai/brain")({
   head: () => ({
     meta: [
-      { title: "AI Insight 2.0 — Autonomous HR Brain | Aurix" },
+      { title: "AI Insight 2.0 — Autonomous HR Brain | OFC360" },
       { name: "description", content: "An autonomous AI HR brain: 15+ specialist agents that recruit, evaluate, predict attrition, run payroll, draft letters and more." },
     ],
   }),

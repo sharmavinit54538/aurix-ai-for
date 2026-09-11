@@ -11,7 +11,7 @@ import { selectBillingData, selectSettingsLoading } from "@/store/settings/setti
 import { fetchBilling } from "@/store/settings/settingsThunk";
 
 export const Route = createFileRoute("/dashboard/settings/billing")({
-  head: () => ({ meta: [{ title: "Billing & Subscriptions — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Billing & Subscriptions — OFC360" }] }),
   component: BillingPage,
 });
 

@@ -3,7 +3,7 @@ import { Briefcase, Target, Sparkles } from "lucide-react";
 import { ModuleHubView, type ModuleItem } from "@/components/aurix/ModuleHubView";
 
 export const Route = createFileRoute("/dashboard/talent/")({
-  head: () => ({ meta: [{ title: "Talent Management — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Talent Management — OFC360" }] }),
   component: TalentHubPage,
 });
 

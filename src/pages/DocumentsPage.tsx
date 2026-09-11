@@ -114,7 +114,7 @@ export function DocumentsPage() {
           designation: e.designation || "Senior Software Architect",
           location: e.work_location || "Hyderabad, Telangana",
           joiningDate: e.joining_date || "2026-08-01",
-          email: e.company_email || e.personal_email || "aurix@gmail.com",
+          email: e.company_email || e.personal_email || "ofc360@gmail.com",
           phone: e.phone || "8976499879",
           panNumber: e.pan_number || "QYPPS7378N",
           fatherName: e.father_name || "Dinesh Kumar Sharma",
@@ -340,7 +340,7 @@ export function DocumentsPage() {
       const emp = activeEmps.find(x => x.id === genEmployee);
       const recipient = emp ? emp.fullName : (genEmployee === "general" ? "Vinit Sharma" : (activeEmps[0]?.fullName || "Vinit Sharma"));
 
-      let text = `AURIX TALENT LABS — OFFICIAL HR LETTER
+      let text = `OFC360 — OFFICIAL HR LETTER
 Date: ${new Date().toISOString().split("T")[0]}
 Recipient: ${recipient}
 Ref No: ATL-DOC-${Math.floor(100000 + Math.random() * 900000)}
@@ -349,7 +349,7 @@ Ref No: ATL-DOC-${Math.floor(100000 + Math.random() * 900000)}
       if (genTemplateId === "offer") {
         text += `Dear ${recipient},
 
-We are pleased to offer you the position of ${genFields["Role"] || "Senior Software Architect"} at Aurix Talent Labs.
+We are pleased to offer you the position of ${genFields["Role"] || "Senior Software Architect"} at OFC360.
 Your initial annual compensation package will be INR ${genFields["Salary (LPA)"] || "18.5"} Lakhs per annum, subject to standard statutory deductions.
 Your employment will commence on ${genFields["Start Date"] || "2026-08-01"}.
 
@@ -357,21 +357,21 @@ This offer is contingent upon successful verification of your educational certif
 
 Best Regards,
 People Ops & HR Executive Team
-Aurix Talent Labs`;
+OFC360`;
       } else if (genTemplateId === "nda") {
         text += `NON-DISCLOSURE AGREEMENT (NDA)
 
-This Confidentiality Agreement is entered into by and between Aurix Talent Labs and ${recipient}, with witness ${genFields["Witness Name"] || "Priya Nair (Legal Lead)"}.
+This Confidentiality Agreement is entered into by and between OFC360 and ${recipient}, with witness ${genFields["Witness Name"] || "Priya Nair (Legal Lead)"}.
 Both parties agree to hold all proprietary corporate information in strict confidence for a duration of ${genFields["Duration (Years)"] || "3"} years from signing.
 Information covered includes software source code, corporate financials, client records, and AI models.
 
 Signed by:
-Aurix Corporate Legal Representative
+OFC360 Corporate Legal Representative
 And Recipient: ${recipient}`;
       } else if (genTemplateId === "relieving") {
         text += `RELIEVING & EXPERIENCE CERTIFICATE
 
-This is to certify that ${recipient} was employed with Aurix Talent Labs.
+This is to certify that ${recipient} was employed with OFC360.
 Their last working day was ${genFields["Last Working Day"] || "2026-08-31"}.
 Reason for release: ${genFields["Reason for Leaving"] || "Resignation (Career Advancement)"}.
 
@@ -384,7 +384,7 @@ Priya Nair, People Ops Lead Partner`;
 Version: ${genFields["Version Date"] || "2026-01-01"}
 
 I, ${recipient}, holding the designation of ${genFields["Signee Designation"] || "Lead Architect"},
-acknowledge that I have received, read, and understood all policies stated in the Aurix Corporate Handbook v4.0.
+acknowledge that I have received, read, and understood all policies stated in the OFC360 Corporate Handbook v4.0.
 
 Acknowledged and Signed electronically.`;
       }
@@ -597,7 +597,7 @@ Acknowledged and Signed electronically.`;
     }
 
     const element = document.createElement("a");
-    const file = new Blob([`Aurix HR Vault. Document ID: ${doc.id}\nCategory: ${doc.category}\nName: ${doc.name}\nStatus: ${doc.status}`], {type: 'text/plain'});
+    const file = new Blob([`OFC360 Vault. Document ID: ${doc.id}\nCategory: ${doc.category}\nName: ${doc.name}\nStatus: ${doc.status}`], {type: 'text/plain'});
     element.href = URL.createObjectURL(file);
     element.download = doc.name;
     document.body.appendChild(element);
@@ -737,36 +737,26 @@ Acknowledged and Signed electronically.`;
 
   return (
     <div className="space-y-6">
-      {/* 1. PAGE HEADER */}
-      <PageHeader
-        title={isEmployee ? "My Documents & Vault" : "Documents"}
-        description={
-          isEmployee
-            ? "View your personal verification documents, certificates, and company policies."
-            : "Securely store, verify, and generate employee records and company templates."
-        }
-        actions={
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setUploadOpen(true)}
-              className="h-9 gap-2 border-border bg-card/60 hover:bg-accent/60 cursor-pointer"
-            >
-              <Upload className="h-4 w-4" />
-              Upload Document
-            </Button>
-            {!isEmployee && (
-              <Button
-                onClick={() => setGenerateOpen(true)}
-                className="h-9 gap-2 bg-gradient-brand text-brand-foreground hover:opacity-90 cursor-pointer"
-              >
-                <Wand2 className="h-4 w-4" />
-                AI Document Generator
-              </Button>
-            )}
-          </div>
-        }
-      />
+      {/* 1. TOP ACTIONS */}
+      <div className="flex justify-end gap-2 mb-6">
+        <Button
+          variant="outline"
+          onClick={() => setUploadOpen(true)}
+          className="h-9 gap-2 border-border bg-card/60 hover:bg-accent/60 cursor-pointer"
+        >
+          <Upload className="h-4 w-4" />
+          Upload Document
+        </Button>
+        {!isEmployee && (
+          <Button
+            onClick={() => setGenerateOpen(true)}
+            className="h-9 gap-2 bg-gradient-brand text-brand-foreground hover:opacity-90 cursor-pointer"
+          >
+            <Wand2 className="h-4 w-4" />
+            AI Document Generator
+          </Button>
+        )}
+      </div>
 
       {/* 2. STATS CARDS */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
@@ -1111,13 +1101,13 @@ Acknowledged and Signed electronically.`;
                             <div className="flex items-center gap-2">
                               <div className="h-8 w-8 rounded-lg bg-indigo-950 flex items-center justify-center text-white font-bold text-sm">A</div>
                               <div>
-                                <h2 className="text-xs sm:text-sm font-extrabold tracking-wider text-slate-900 uppercase">AURIX TALENT LABS PRIVATE LIMITED</h2>
+                                <h2 className="text-xs sm:text-sm font-extrabold tracking-wider text-slate-900 uppercase">OFC360 PRIVATE LIMITED</h2>
                                 <p className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider">AI-Powered HR Technology Company</p>
                               </div>
                             </div>
                             <div className="text-[9px] text-slate-600 leading-relaxed pt-1 space-y-0.5">
                               <p><strong>Registered Office:</strong> Plot No. 42, HITEC City, Hyderabad, Telangana - 500081, India</p>
-                              <p>www.aurixtalentlabs.com &bull; hr@aurixtalentlabs.com &bull; +91-40-69201100</p>
+                              <p>www.ofc360.com &bull; hr@ofc360.com &bull; +91-40-69201100</p>
                               <p className="text-[8px] text-slate-400">CIN: U72900TG2024PTC184910 &bull; GSTIN: 36AAACA0000A1Z5</p>
                             </div>
                           </div>
@@ -1181,7 +1171,7 @@ Acknowledged and Signed electronically.`;
                             <div className="space-y-2.5 text-[11px] leading-relaxed text-slate-800">
                               <p className="font-bold text-slate-900">Dear Mr. {empFirstName},</p>
                               <p>
-                                This is to certify that you were employed with <strong>Aurix Talent Labs Private Limited</strong> as a <strong>{genFields["Role"] || selEmp?.designation || "Senior Software Architect"}</strong> in the <strong>{selEmp?.department || "Developer"}</strong> department from <strong>{selEmp?.joiningDate || "2026-07-21"}</strong> to <strong>{genFields["Last Working Day"] || "2026-08-31"}</strong>.
+                                This is to certify that you were employed with <strong>OFC360 Private Limited</strong> as a <strong>{genFields["Role"] || selEmp?.designation || "Senior Software Architect"}</strong> in the <strong>{selEmp?.department || "Developer"}</strong> department from <strong>{selEmp?.joiningDate || "2026-07-21"}</strong> to <strong>{genFields["Last Working Day"] || "2026-08-31"}</strong>.
                               </p>
                               <p>
                                 During your tenure, you successfully fulfilled your assigned responsibilities and contributed to various engineering initiatives with high professionalism, technical competence, and dedication.
@@ -1190,7 +1180,7 @@ Acknowledged and Signed electronically.`;
                                 We confirm that all company assets assigned to you have been returned and all applicable exit formalities have been completed successfully. Reason for separation: <em>{genFields["Reason for Leaving"] || "Resignation (Career Advancement)"}</em>.
                               </p>
                               <p>
-                                Accordingly, you are hereby formally relieved from your duties and services at Aurix Talent Labs Private Limited effective from the close of business hours on <strong>{genFields["Last Working Day"] || "2026-08-31"}</strong>.
+                                Accordingly, you are hereby formally relieved from your duties and services at OFC360 Private Limited effective from the close of business hours on <strong>{genFields["Last Working Day"] || "2026-08-31"}</strong>.
                               </p>
                               <p>
                                 We sincerely appreciate your valuable contributions during your employment with us and extend our best wishes for your continued success, professional growth, and prosperity in all future endeavors.
@@ -1221,21 +1211,21 @@ Acknowledged and Signed electronically.`;
                         <div className="border-t-2 border-slate-200 pt-3 flex justify-between items-end">
                           <div className="space-y-2">
                             <p className="text-[9px] font-bold text-slate-900 uppercase">HUMAN RESOURCES DEPARTMENT</p>
-                            <p className="text-[9px] text-slate-500">Aurix Talent Labs Private Limited</p>
+                            <p className="text-[9px] text-slate-500">OFC360 Private Limited</p>
                           </div>
                           <div className="text-right space-y-1">
                             <div className="inline-block rounded-lg border border-indigo-200 bg-indigo-50/60 p-2.5 text-right">
                               <p className="text-[8px] font-bold text-indigo-900 uppercase tracking-wider">OFFICIALLY SIGNED & E-ISSUED</p>
                               <p className="text-[9px] font-semibold text-slate-800">Priya Nair</p>
                               <p className="text-[8px] text-slate-500">Lead People Operations Partner</p>
-                              <p className="text-[7px] text-slate-400 font-mono">Aurix Talent Labs Pvt Ltd</p>
+                              <p className="text-[7px] text-slate-400 font-mono">OFC360 Pvt Ltd</p>
                             </div>
                           </div>
                         </div>
 
                         {/* 7. FOOTER */}
                         <div className="border-t border-slate-200 pt-2 flex justify-between items-center text-[8px] text-slate-400">
-                          <span>AURIX TALENT LABS PRIVATE LIMITED</span>
+                          <span>OFC360 PRIVATE LIMITED</span>
                           <span className="italic">Confidential &bull; Official HR Document &bull; Document ID: RL-2026-000001</span>
                           <span>Page 1 of 1</span>
                         </div>
@@ -1253,13 +1243,13 @@ Acknowledged and Signed electronically.`;
                             <div className="flex items-center gap-2">
                               <div className="h-8 w-8 rounded-lg bg-indigo-950 flex items-center justify-center text-white font-bold text-sm">A</div>
                               <div>
-                                <h2 className="text-xs sm:text-sm font-extrabold tracking-wider text-slate-900 uppercase">AURIX TALENT LABS PRIVATE LIMITED</h2>
+                                <h2 className="text-xs sm:text-sm font-extrabold tracking-wider text-slate-900 uppercase">OFC360 PRIVATE LIMITED</h2>
                                 <p className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider">AI-Powered HR Technology Company</p>
                               </div>
                             </div>
                             <div className="text-[9px] text-slate-600 leading-relaxed pt-1 space-y-0.5">
                               <p><strong>Registered Office:</strong> Plot No. 42, HITEC City, Hyderabad, Telangana - 500081, India</p>
-                              <p>www.aurixtalentlabs.com &bull; legal@aurixtalentlabs.com &bull; +91-40-69201100</p>
+                              <p>www.ofc360.com &bull; legal@ofc360.com &bull; +91-40-69201100</p>
                               <p className="text-[8px] text-slate-400">CIN: U72900TG2024PTC184910 &bull; GSTIN: 36AAACA0000A1Z5</p>
                             </div>
                           </div>
@@ -1280,7 +1270,7 @@ Acknowledged and Signed electronically.`;
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px]">
                                 <div className="bg-white p-2.5 rounded-lg border border-slate-200 space-y-0.5">
                                   <span className="text-[9px] font-bold text-indigo-950 uppercase tracking-wider">DISCLOSING PARTY</span>
-                                  <p className="font-bold text-slate-900">Aurix Talent Labs Private Limited</p>
+                                  <p className="font-bold text-slate-900">OFC360 Private Limited</p>
                                   <p className="text-[10px] text-slate-500">Corporate HQ: HITEC City, Hyderabad, Telangana</p>
                                 </div>
                                 <div className="bg-white p-2.5 rounded-lg border border-slate-200 space-y-0.5">
@@ -1292,7 +1282,7 @@ Acknowledged and Signed electronically.`;
                               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px] pt-1">
                                 <div><span className="text-slate-400 block">Department</span><strong className="text-slate-800">{selEmp?.department || "Developer"}</strong></div>
                                 <div><span className="text-slate-400 block">Work Location</span><strong className="text-slate-800">{selEmp?.location || "Hyderabad, Telangana"}</strong></div>
-                                <div><span className="text-slate-400 block">Email Address</span><strong className="text-slate-800">{selEmp?.email || "aurix@gmail.com"}</strong></div>
+                                <div><span className="text-slate-400 block">Email Address</span><strong className="text-slate-800">{selEmp?.email || "ofc360@gmail.com"}</strong></div>
                                 <div><span className="text-slate-400 block">Legal Witness</span><strong className="text-slate-800">{genFields["Witness Name"] || "Priya Nair (Legal Lead)"}</strong></div>
                               </div>
                             </div>
@@ -1306,7 +1296,7 @@ Acknowledged and Signed electronically.`;
                             <div className="space-y-1 text-[11px] leading-relaxed text-slate-800">
                               <h4 className="text-[10px] font-bold text-slate-900 uppercase tracking-wider">1. PURPOSE & INTENT</h4>
                               <p>
-                                This Proprietary Non-Disclosure Agreement ("Agreement") is executed between <strong>Aurix Talent Labs Private Limited</strong> ("Disclosing Party") and <strong>{selEmp?.fullName || "Vinit Sharma"}</strong> ("Receiving Party") to safeguard confidential, proprietary, and technical assets accessed during employment, research, product engineering, customer interaction, and corporate operations.
+                                This Proprietary Non-Disclosure Agreement ("Agreement") is executed between <strong>OFC360 Private Limited</strong> ("Disclosing Party") and <strong>{selEmp?.fullName || "Vinit Sharma"}</strong> ("Receiving Party") to safeguard confidential, proprietary, and technical assets accessed during employment, research, product engineering, customer interaction, and corporate operations.
                               </p>
                             </div>
                           );
@@ -1352,7 +1342,7 @@ Acknowledged and Signed electronically.`;
 
                         {/* 6. INTELLECTUAL PROPERTY & ASSET RETURN */}
                         <div className="space-y-1 text-[10px] text-slate-700 leading-relaxed bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                          <p><strong>3. INTELLECTUAL PROPERTY RIGHTS:</strong> All inventions, software source code, algorithms, designs, AI models, and documentation created during employment remain the sole and exclusive property of Aurix Talent Labs Private Limited under the Work-For-Hire doctrine.</p>
+                          <p><strong>3. INTELLECTUAL PROPERTY RIGHTS:</strong> All inventions, software source code, algorithms, designs, AI models, and documentation created during employment remain the sole and exclusive property of OFC360 Private Limited under the Work-For-Hire doctrine.</p>
                           <p><strong>4. RETURN OF COMPANY ASSETS:</strong> Upon termination or resignation, the employee shall immediately return all laptops, storage drives, security access badges, digital keys, and source code repositories.</p>
                           <p><strong>5. TERM & ENFORCEABILITY:</strong> This NDA is effective immediately and remains binding during employment and for a period of <strong>{genFields["Duration (Years)"] || "3"} years</strong> post-offboarding.</p>
                         </div>
@@ -1382,7 +1372,7 @@ Acknowledged and Signed electronically.`;
                                   <p className="text-[8px] font-bold text-indigo-900 uppercase tracking-wider">OFFICIALLY SIGNED & EXECUTED</p>
                                   <p className="text-[9px] font-semibold text-slate-800">{genFields["Witness Name"] || "Priya Nair (Legal Lead)"}</p>
                                   <p className="text-[8px] text-slate-500">Corporate Legal Counsel</p>
-                                  <p className="text-[7px] text-slate-400 font-mono">Aurix Talent Labs Pvt Ltd</p>
+                                  <p className="text-[7px] text-slate-400 font-mono">OFC360 Pvt Ltd</p>
                                 </div>
                               </div>
                             </div>
@@ -1391,7 +1381,7 @@ Acknowledged and Signed electronically.`;
 
                         {/* 9. FOOTER */}
                         <div className="border-t border-slate-200 pt-2 flex justify-between items-center text-[8px] text-slate-400">
-                          <span>AURIX TALENT LABS PRIVATE LIMITED</span>
+                          <span>OFC360 PRIVATE LIMITED</span>
                           <span className="italic">Electronically generated & legally valid under Information Technology Act, 2000 (India).</span>
                           <span>Page 1 of 1</span>
                         </div>
@@ -1409,13 +1399,13 @@ Acknowledged and Signed electronically.`;
                             <div className="flex items-center gap-2">
                               <div className="h-8 w-8 rounded-lg bg-indigo-950 flex items-center justify-center text-white font-bold text-sm">A</div>
                               <div>
-                                <h2 className="text-xs sm:text-sm font-extrabold tracking-wider text-slate-900 uppercase">AURIX TALENT LABS PRIVATE LIMITED</h2>
+                                <h2 className="text-xs sm:text-sm font-extrabold tracking-wider text-slate-900 uppercase">OFC360 PRIVATE LIMITED</h2>
                                 <p className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider">AI-Powered HR Technology Company</p>
                               </div>
                             </div>
                             <div className="text-[9px] text-slate-600 leading-relaxed pt-1 space-y-0.5">
                               <p><strong>Registered Office:</strong> Plot No. 42, HITEC City, Hyderabad, Telangana - 500081, India</p>
-                              <p>www.aurixtalentlabs.com &bull; hr@aurixtalentlabs.com &bull; +91-40-69201100</p>
+                              <p>www.ofc360.com &bull; hr@ofc360.com &bull; +91-40-69201100</p>
                               <p className="text-[8px] text-slate-400">CIN: U72900TG2024PTC184910 &bull; GSTIN: 36AAACA0000A1Z5</p>
                             </div>
                           </div>
@@ -1475,7 +1465,7 @@ Acknowledged and Signed electronically.`;
                         <div className="space-y-2 text-[11px] leading-relaxed text-slate-800">
                           <h4 className="text-[10px] font-bold text-slate-900 uppercase tracking-wider">1. ACKNOWLEDGMENT & AGREEMENT</h4>
                           <p>
-                            I acknowledge that I have received, accessed, and thoroughly reviewed the official <strong>Company Handbook v4.0</strong> issued by <strong>Aurix Talent Labs Private Limited</strong>.
+                            I acknowledge that I have received, accessed, and thoroughly reviewed the official <strong>Company Handbook v4.0</strong> issued by <strong>OFC360 Private Limited</strong>.
                           </p>
                           <p>
                             I understand that the handbook contains vital policies regarding code of conduct, acceptable asset usage, workplace ethics, information security, leave rules, anti-harassment standards, and employment guidelines. I agree to comply with all current and future corporate policies throughout my tenure.
@@ -1519,14 +1509,14 @@ Acknowledged and Signed electronically.`;
                               <p className="text-[8px] font-bold text-indigo-900 uppercase tracking-wider">OFFICIALLY REGISTERED & VERIFIED</p>
                               <p className="text-[9px] font-semibold text-slate-800">Priya Nair</p>
                               <p className="text-[8px] text-slate-500">Lead People Operations Partner</p>
-                              <p className="text-[7px] text-slate-400 font-mono">Aurix Talent Labs Pvt Ltd</p>
+                              <p className="text-[7px] text-slate-400 font-mono">OFC360 Pvt Ltd</p>
                             </div>
                           </div>
                         </div>
 
                         {/* 7. FOOTER */}
                         <div className="border-t border-slate-200 pt-2 flex justify-between items-center text-[8px] text-slate-400">
-                          <span>AURIX TALENT LABS PRIVATE LIMITED</span>
+                          <span>OFC360 PRIVATE LIMITED</span>
                           <span className="italic">Confidential &bull; Official HR Policy Document &bull; Document ID: CHA-2026-000001</span>
                           <span>Page 1 of 1</span>
                         </div>
@@ -1535,7 +1525,7 @@ Acknowledged and Signed electronically.`;
                       <div className="bg-white text-slate-900 shadow-2xl border border-slate-200 rounded-xl p-6 sm:p-8 relative overflow-hidden font-sans text-left space-y-6 select-none">
                         {/* WATERMARK */}
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] rotate-[-30deg] select-none">
-                          <span className="text-5xl font-extrabold uppercase tracking-widest text-slate-900">AURIX TALENT LABS</span>
+                          <span className="text-5xl font-extrabold uppercase tracking-widest text-slate-900">OFC360</span>
                         </div>
 
                         {/* 1. CORPORATE HEADER */}
@@ -1544,13 +1534,13 @@ Acknowledged and Signed electronically.`;
                             <div className="flex items-center gap-2">
                               <div className="h-8 w-8 rounded-lg bg-indigo-950 flex items-center justify-center text-white font-bold text-sm">A</div>
                               <div>
-                                <h2 className="text-xs sm:text-sm font-extrabold tracking-wider text-slate-900 uppercase">AURIX TALENT LABS PRIVATE LIMITED</h2>
+                                <h2 className="text-xs sm:text-sm font-extrabold tracking-wider text-slate-900 uppercase">OFC360 PRIVATE LIMITED</h2>
                                 <p className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider">AI-Powered HR Technology Company</p>
                               </div>
                             </div>
                             <div className="text-[9px] text-slate-600 leading-relaxed pt-1 space-y-0.5">
                               <p><strong>Registered Office:</strong> Plot No. 42, HITEC City, Hyderabad, Telangana - 500081, India</p>
-                              <p>www.aurixtalentlabs.com &bull; careers@aurixtalentlabs.com &bull; +91-40-69201100</p>
+                              <p>www.ofc360.com &bull; careers@ofc360.com &bull; +91-40-69201100</p>
                               <p className="text-[8px] text-slate-400">CIN: U72900TG2024PTC184910 &bull; GSTIN: 36AAACA0000A1Z5</p>
                             </div>
                           </div>
@@ -1610,7 +1600,7 @@ Acknowledged and Signed electronically.`;
                         <div className="space-y-2 text-[11px] leading-relaxed text-slate-800">
                           <p className="font-bold text-slate-900">Dear Mr. {(((employeesList.length > 0 ? employeesList : ws.employees).find(x => x.id === genEmployee)?.fullName) || "Vinit Sharma").split(' ')[0]},</p>
                           <p>
-                            We are delighted to formally offer you the position of <strong>{genFields["Role"] || "Senior Software Architect"}</strong> at <strong>Aurix Talent Labs Private Limited</strong>. After evaluating your technical accomplishments and leadership profile, we are confident that your experience will play a crucial role in building our next-generation enterprise AI HR platform.
+                            We are delighted to formally offer you the position of <strong>{genFields["Role"] || "Senior Software Architect"}</strong> at <strong>OFC360 Private Limited</strong>. After evaluating your technical accomplishments and leadership profile, we are confident that your experience will play a crucial role in building our next-generation enterprise AI HR platform.
                           </p>
                           <p>
                             Your appointment is subject to the terms and conditions outlined in this offer letter and corporate governance policies.
@@ -1710,14 +1700,14 @@ Acknowledged and Signed electronically.`;
                               <p className="text-[8px] font-bold text-indigo-900 uppercase tracking-wider">OFFICIALLY VERIFIED & E-SIGNED</p>
                               <p className="text-[9px] font-semibold text-slate-800">Priya Nair</p>
                               <p className="text-[8px] text-slate-500">Lead Talent Acquisition Partner</p>
-                              <p className="text-[7px] text-slate-400 font-mono">Aurix Talent Labs Pvt Ltd</p>
+                              <p className="text-[7px] text-slate-400 font-mono">OFC360 Pvt Ltd</p>
                             </div>
                           </div>
                         </div>
 
                         {/* 7. FOOTER */}
                         <div className="border-t border-slate-200 pt-2 flex justify-between items-center text-[8px] text-slate-400">
-                          <span>AURIX TALENT LABS PRIVATE LIMITED</span>
+                          <span>OFC360 PRIVATE LIMITED</span>
                           <span className="italic">This document is system-generated and legally binding upon electronic acceptance.</span>
                           <span>Page 1 of 1</span>
                         </div>

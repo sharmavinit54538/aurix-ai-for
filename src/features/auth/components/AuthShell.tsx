@@ -37,7 +37,7 @@ export function AuthShell({ title, subtitle, children, footer }: AuthShellProps)
           >
             <Sparkles className="h-4 w-4" />
           </span>
-          <span className="font-display text-lg font-semibold tracking-tight">Aurix</span>
+          <span className="font-display text-lg font-semibold tracking-tight">OFC360</span>
         </Link>
       </header>
 

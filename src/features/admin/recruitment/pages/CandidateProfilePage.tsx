@@ -466,7 +466,7 @@ export function CandidateProfilePage() {
               <div className="space-y-1">
                 <label className="text-xs font-medium">Offered Benefits Included</label>
                 <div className="text-xs space-y-1.5 pl-1 pt-1 text-muted-foreground">
-                  <div className="flex items-center gap-2">✓ Standard Aurix Health Insurance (Group Plan)</div>
+                  <div className="flex items-center gap-2">✓ Standard OFC360 Health Insurance (Group Plan)</div>
                   <div className="flex items-center gap-2">✓ Equity / Employee Stock Options (ESOPs)</div>
                   <div className="flex items-center gap-2">✓ Remote Home-Office Setup Allowance</div>
                 </div>

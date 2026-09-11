@@ -17,7 +17,7 @@ export const Route = createFileRoute("/api/payroll-copilot")({
         const result = streamText({
           model: gateway("google/gemini-3-flash-preview"),
           system:
-            "You are Aurix Payroll Copilot, an expert AI assistant for HR & payroll teams. " +
+            "You are OFC360 Payroll Copilot, an expert AI assistant for HR & payroll teams. " +
             "Help with salary processing, payslips, deductions, tax (PF, ESI, TDS, income tax), " +
             "bonuses, reimbursements, compliance, bank transfers, and payroll reports. " +
             "Be concise, use bullet points and tables when useful, and ask for missing details when needed.",

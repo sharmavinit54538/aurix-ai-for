@@ -162,7 +162,7 @@ function simulate(tool: ToolKey, ctx: { job?: any; candidate?: any; input: strin
     case "boolean":
       return `("${(input || job?.title || "Engineer").replace(/\s+/g, " AND ")}") AND (${(job?.skills ?? ["React", "TypeScript"]).map((s: string) => `"${s}"`).join(" OR ")}) AND ("Senior" OR "Staff" OR "Lead") NOT ("intern" OR "junior")`;
     case "email":
-      return `Subject: Quick chat about ${job?.title ?? "an opening"} at our team?\n\nHi ${candidate?.name?.split(" ")[0] ?? ""},\n\n${input || "Loved your recent work — your experience with " + (candidate?.skills?.[0] ?? "this stack") + " caught my eye."}\n\nWe're hiring a ${job?.title} (${job?.workMode}, ${job?.location}). Comp ${job ? `$${(job.salaryMin / 1000).toFixed(0)}k-$${(job.salaryMax / 1000).toFixed(0)}k` : ""}.\n\nWould a 15-minute call this week work?\n\nThanks,\nThe Aurix team`;
+      return `Subject: Quick chat about ${job?.title ?? "an opening"} at our team?\n\nHi ${candidate?.name?.split(" ")[0] ?? ""},\n\n${input || "Loved your recent work — your experience with " + (candidate?.skills?.[0] ?? "this stack") + " caught my eye."}\n\nWe're hiring a ${job?.title} (${job?.workMode}, ${job?.location}). Comp ${job ? `$${(job.salaryMin / 1000).toFixed(0)}k-$${(job.salaryMax / 1000).toFixed(0)}k` : ""}.\n\nWould a 15-minute call this week work?\n\nThanks,\nThe OFC360 team`;
   }
 }
 

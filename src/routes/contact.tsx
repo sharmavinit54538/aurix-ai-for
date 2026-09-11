@@ -11,10 +11,10 @@ import { Toaster } from "@/components/ui/sonner";
 export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
-      { title: "Contact — Aurix" },
-      { name: "description", content: "Get in touch with the Aurix team. We respond within one business day." },
-      { property: "og:title", content: "Contact — Aurix" },
-      { property: "og:description", content: "Talk to the Aurix team." },
+      { title: "Contact — OFC360" },
+      { name: "description", content: "Get in touch with the OFC360 team. We respond within one business day." },
+      { property: "og:title", content: "Contact — OFC360" },
+      { property: "og:description", content: "Talk to the OFC360 team." },
       { property: "og:url", content: "/contact" },
     ],
     links: [{ rel: "canonical", href: "/contact" }],
@@ -68,7 +68,7 @@ function ContactPage() {
                 name="message"
                 rows={5}
                 required
-                placeholder="Tell us what you're hoping to do with Aurix…"
+                placeholder="Tell us what you're hoping to do with OFC360…"
                 className="mt-2 w-full rounded-xl bg-background border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
               />
             </div>
@@ -84,9 +84,9 @@ function ContactPage() {
           {/* Info */}
           <div className="lg:col-span-2 space-y-4">
             {[
-              { icon: Mail, label: "Email", value: "hello@aurix.com" },
+              { icon: Mail, label: "Email", value: "hello@ofc360.com" },
               { icon: Phone, label: "Phone", value: "+1 (415) 555-0142" },
-              { icon: MessageSquare, label: "Sales", value: "sales@aurix.com" },
+              { icon: MessageSquare, label: "Sales", value: "sales@ofc360.com" },
               { icon: MapPin, label: "Headquarters", value: "Lisbon, Portugal" },
             ].map((b) => (
               <div key={b.label} className="glass rounded-2xl p-5 flex items-start gap-4">

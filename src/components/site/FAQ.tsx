@@ -6,7 +6,7 @@ export type FAQItem = { q: string; a: string };
 export function FAQ({
   items,
   title = "Frequently asked questions",
-  subtitle = "Everything you need to know about Aurix.",
+  subtitle = "Everything you need to know about OFC360.",
   eyebrow = "FAQ",
 }: {
   items: FAQItem[];

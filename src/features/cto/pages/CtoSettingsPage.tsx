@@ -7,9 +7,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
 export function CtoSettingsPage() {
-  const [githubOrg, setGithubOrg] = useState("aurix-ai-enterprise");
+  const [githubOrg, setGithubOrg] = useState("ofc360-enterprise");
   const [awsAccount, setAwsAccount] = useState("8420-1940-2041 (prod-us-east-1)");
-  const [qdrantHost, setQdrantHost] = useState("qdrant.internal.aurix.ai:6333");
+  const [qdrantHost, setQdrantHost] = useState("qdrant.internal.ofc360.ai:6333");
 
   const handleSave = () => {
     toast.success("Saved CTO Organization & Technical Settings.");
@@ -62,7 +62,7 @@ export function CtoSettingsPage() {
             <div className="space-y-3">
               <div>
                 <label className="text-xs font-semibold text-muted-foreground block mb-1">Organization Name</label>
-                <Input defaultValue="Aurix AI Enterprise Technologies" className="bg-slate-900/60 text-xs" />
+                <Input defaultValue="OFC360 Technologies" className="bg-slate-900/60 text-xs" />
               </div>
               <div>
                 <label className="text-xs font-semibold text-muted-foreground block mb-1">Primary Vector DB Endpoint</label>

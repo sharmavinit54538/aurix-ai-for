@@ -78,7 +78,7 @@ export const BankHubModuleViews: React.FC<BankHubModuleViewsProps> = ({
   >([
     {
       sender: "ai",
-      text: "Welcome to Aurix AI Banking Intelligence! I have full visibility into NEFT/ACH batch files, HDFC/ICICI Corporate Gateways, Penny Drop verification, and duplicate payment detection. How can I assist you today?",
+      text: "Welcome to OFC360 Banking Intelligence! I have full visibility into NEFT/ACH batch files, HDFC/ICICI Corporate Gateways, Penny Drop verification, and duplicate payment detection. How can I assist you today?",
       timestamp: "10:00 AM",
     },
   ]);
@@ -118,7 +118,7 @@ export const BankHubModuleViews: React.FC<BankHubModuleViewsProps> = ({
       } else if (lower.includes("failed") || lower.includes("error") || lower.includes("retry")) {
         aiReply = `⚠️ Failed Payment Intelligence: Currently ${metrics.failed_transfers} failed transfers detected (Cause: Invalid IFSC Code or Account Closed). You can trigger auto-retry from the Failed Payment Center.`;
       } else {
-        aiReply = `🤖 Aurix AI Banking Intelligence: All bank transfers are 100% compliant with RBI & NPCI electronic funds transfer guidelines under Company Treasury Policy #BANK-2026. You can ask me about NEFT batch files, Penny Drop verification, or gateway status.`;
+        aiReply = `🤖 OFC360 Banking Intelligence: All bank transfers are 100% compliant with RBI & NPCI electronic funds transfer guidelines under Company Treasury Policy #BANK-2026. You can ask me about NEFT batch files, Penny Drop verification, or gateway status.`;
       }
 
       setCopilotChat((prev) => [
@@ -146,14 +146,7 @@ export const BankHubModuleViews: React.FC<BankHubModuleViewsProps> = ({
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-4 mb-6">
       <div className="flex flex-wrap items-center gap-3">
         <PayrollBackButton to="/dashboard/payroll" label="Back to Payroll Hub" />
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onBackToHub}
-          className="border-white/10 bg-slate-900 text-slate-300 hover:text-white text-xs gap-1.5 h-8 shadow-sm"
-        >
-          <ArrowLeft className="w-4 h-4 text-emerald-400" /> Back to Bank Hub
-        </Button>
+
         <div>
           <h2 className="text-xl font-black text-white tracking-tight">{title}</h2>
           <p className="text-xs text-slate-400">{subtitle}</p>
@@ -341,7 +334,7 @@ export const BankHubModuleViews: React.FC<BankHubModuleViewsProps> = ({
     case "ai-intelligence":
       return (
         <div className="space-y-6">
-          {renderBreadcrumb("Aurix AI Banking Intelligence", "Consult your AI assistant for duplicate payment detection, fraud risk scores, and settlement predictions.")}
+          {renderBreadcrumb("OFC360 Banking Intelligence", "Consult your AI assistant for duplicate payment detection, fraud risk scores, and settlement predictions.")}
           
           <div className="w-full">
             {/* Copilot Main Interactive Chat Thread */}

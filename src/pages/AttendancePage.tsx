@@ -149,16 +149,7 @@ export function AttendancePage() {
 
   return (
     <div className="space-y-6">
-      {/* BACK BUTTON */}
-      <div className="text-left">
-        <button
-          onClick={() => window.history.back()}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group/back"
-        >
-          <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover/back:-translate-x-0.5" />
-          Back
-        </button>
-      </div>
+
 
       {/* HEADER SECTION */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

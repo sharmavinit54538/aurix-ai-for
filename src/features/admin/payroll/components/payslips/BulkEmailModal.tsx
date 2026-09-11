@@ -57,7 +57,7 @@ export const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
           <div className="space-y-1.5">
             <Label className="text-xs">Email Subject</Label>
             <Input
-              value="Official Monthly Payslip Issued — Aurix HRMS"
+              value="Official Monthly Payslip Issued — OFC360"
               readOnly
               className="h-9 text-xs bg-muted/40 font-medium"
             />

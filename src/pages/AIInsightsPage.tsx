@@ -132,23 +132,7 @@ export function AIInsightsPage() {
 
   return (
     <>
-      <PageHeader
-        title="AI Insights"
-        description="AI-powered workforce intelligence and automation for your organization."
-        actions={
-          <>
-            <Button variant="outline" onClick={handleRetry} disabled={loading}>
-              <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-              Refresh
-            </Button>
-            <Button variant="outline"><Download className="mr-2 h-4 w-4" />Export Report</Button>
-            <Button variant="outline"><MessageSquare className="mr-2 h-4 w-4" />Ask AI</Button>
-            <Button onClick={handleRetry} disabled={loading}>
-              <Wand2 className="mr-2 h-4 w-4" />Generate Insights
-            </Button>
-          </>
-        }
-      />
+
 
       {error ? (
         <ErrorBanner message={error} onRetry={handleRetry} />
@@ -633,7 +617,7 @@ const HeroBanner = memo(function HeroBanner({ summary }: { summary: SummaryData 
             <Brain className="h-5 w-5" />
           </div>
           <div>
-            <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Aurix Intelligence</div>
+            <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">OFC360 Intelligence</div>
             <div className="font-display text-lg font-semibold">{total} new insights generated</div>
           </div>
         </div>
@@ -773,7 +757,7 @@ const BarMeter = memo(function BarMeter({ value, tone = "primary" }: { value: nu
 const AIChatPanel = memo(function AIChatPanel({ recommendations }: { recommendations: string[] }) {
   const [text, setText] = useState("");
   const [messages, setMessages] = useState<{ role: "user" | "ai"; text: string }[]>([
-    { role: "ai", text: "Hi! I’m Aurix AI. Ask me about workforce metrics, attrition, burnout, or hiring forecasts." },
+    { role: "ai", text: "Hi! I’m OFC360 AI. Ask me about workforce metrics, attrition, burnout, or hiring forecasts." },
   ]);
 
   const examples = useMemo(() => {
@@ -798,7 +782,7 @@ const AIChatPanel = memo(function AIChatPanel({ recommendations }: { recommendat
           <div className="grid h-7 w-7 place-items-center rounded-lg text-brand-foreground" style={{ background: "var(--gradient-brand)" }}>
             <Brain className="h-3.5 w-3.5" />
           </div>
-          <div className="text-sm font-medium">Aurix AI Assistant</div>
+          <div className="text-sm font-medium">OFC360 Assistant</div>
         </div>
         <Badge variant="secondary" className="text-[10px]">Live</Badge>
       </div>
@@ -822,7 +806,7 @@ const AIChatPanel = memo(function AIChatPanel({ recommendations }: { recommendat
           ))}
         </div>
         <form onSubmit={(e) => { e.preventDefault(); send(); }} className="flex items-center gap-2">
-          <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="Ask Aurix AI anything..." className="h-9" />
+          <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="Ask OFC360 anything..." className="h-9" />
           <Button type="submit" size="sm"><Send className="h-4 w-4" /></Button>
         </form>
       </div>

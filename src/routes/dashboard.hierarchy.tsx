@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/aurix/DashboardShell";
 import { EmployeeHierarchyView } from "@/features/admin/employees/components/EmployeeHierarchyView";
 
 export const Route = createFileRoute("/dashboard/hierarchy")({
-  head: () => ({ meta: [{ title: "Interactive Employee Hierarchy — Aurix AI" }] }),
+  head: () => ({ meta: [{ title: "Interactive Employee Hierarchy — OFC360" }] }),
   component: HierarchyPage,
 });
 

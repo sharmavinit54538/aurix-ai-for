@@ -606,7 +606,7 @@ export function JobDetailPage() {
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <Section title="Company Info" icon={Building}>
                       <p className="text-xs text-muted-foreground leading-relaxed">
-                        Aurix Inc. is a high-growth HR Technology platforms enterprise. This job role resides in our main operations product division.
+                        OFC360 Inc. is a high-growth HR Technology platforms enterprise. This job role resides in our main operations product division.
                       </p>
                     </Section>
 
@@ -866,9 +866,9 @@ export function JobDetailPage() {
 
               <div className="space-y-4">
                 {[
-                  { label: "Public Career Site URL", url: `https://careers.aurix.com/jobs/${jobId}` },
-                  { label: "Internal Employee Referral Link", url: `https://aurix.com/portal/referrals?job=${jobId}` },
-                  { label: "Campus Sourcing URL", url: `https://careers.aurix.com/campus/sourcing?tag=uni-${jobId}` },
+                  { label: "Public Career Site URL", url: `https://careers.ofc360.com/jobs/${jobId}` },
+                  { label: "Internal Employee Referral Link", url: `https://ofc360.com/portal/referrals?job=${jobId}` },
+                  { label: "Campus Sourcing URL", url: `https://careers.ofc360.com/campus/sourcing?tag=uni-${jobId}` },
                 ].map((linkItem) => (
                   <div key={linkItem.label} className="rounded-xl border border-border bg-card/40 p-4">
                     <span className="text-xs font-semibold block mb-2">{linkItem.label}</span>

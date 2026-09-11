@@ -4,6 +4,6 @@ import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
 const ChatAssistantPage = lazyFeaturePage(() => import("@/pages/ChatAssistantPage"));
 
 export const Route = createFileRoute("/dashboard/ai-hub/assistant")({
-  head: () => ({ meta: [{ title: "Chat Assistant — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Chat Assistant — OFC360" }] }),
   component: ChatAssistantPage,
 });

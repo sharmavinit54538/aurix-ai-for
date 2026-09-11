@@ -24,7 +24,7 @@ import {
 
 // ── Route ─────────────────────────────────────────────────────
 export const Route = createFileRoute("/dashboard/attendance/checkin")({
-  head: () => ({ meta: [{ title: "Check In / Check Out — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Check In / Check Out — OFC360" }] }),
   component: CheckInPage,
 });
 
@@ -1007,7 +1007,7 @@ function CheckInPage() {
 
           {/* ── AI Insights ── */}
           <GlassCard>
-            <SectionHeader title="AI Attendance Insights" subtitle="Powered by Aurix AI" icon={Brain} />
+            <SectionHeader title="AI Attendance Insights" subtitle="Powered by OFC360" icon={Brain} />
             <AIInsights />
           </GlassCard>
 
@@ -1116,7 +1116,7 @@ function CheckInPage() {
                 <div className="text-2xl">🎉</div>
                 <div className="min-w-0">
                   <div className="text-xs font-semibold">Priya Nair — Work Anniversary</div>
-                  <div className="text-[10px] text-muted-foreground">Today · 5 years at Aurix!</div>
+                  <div className="text-[10px] text-muted-foreground">Today · 5 years at OFC360!</div>
                 </div>
               </div>
             </div>

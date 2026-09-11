@@ -13,8 +13,8 @@ export type Post = {
 
 export const posts: Post[] = [
   {
-    slug: "shipping-faster-with-aurix",
-    title: "How modern teams ship 3x faster with Aurix",
+    slug: "shipping-faster-with-ofc360",
+    title: "How modern teams ship 3x faster with OFC360",
     excerpt: "Inside the workflow changes that helped 500+ engineering teams cut their release cycle in half.",
     category: "Product",
     author: "Elena Rivera",
@@ -24,7 +24,7 @@ export const posts: Post[] = [
     cover: "linear-gradient(135deg, oklch(0.6 0.2 285), oklch(0.7 0.18 320))",
     content: [
       "The biggest predictor of how fast a team ships isn't headcount or tooling budget — it's how little friction sits between an idea and its first shipped iteration.",
-      "Over the past year, we studied how the fastest teams using Aurix structure their work. Three patterns kept showing up: tight loops, fewer handoffs, and a shared source of truth that engineers actually trust.",
+      "Over the past year, we studied how the fastest teams using OFC360 structure their work. Three patterns kept showing up: tight loops, fewer handoffs, and a shared source of truth that engineers actually trust.",
       "The teams who internalized this shipped roughly three times faster than the median — without working longer hours. The product simply got out of their way.",
     ],
   },

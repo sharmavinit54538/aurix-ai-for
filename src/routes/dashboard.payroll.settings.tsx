@@ -47,12 +47,12 @@ import { StickySaveBar } from "@/features/admin/payroll/components/settings/Stic
 import { SettingsAuditModal } from "@/features/admin/payroll/components/settings/SettingsAuditModal";
 
 export const Route = createFileRoute("/dashboard/payroll/settings")({
-  head: () => ({ meta: [{ title: "Payroll Settings — Aurix AI Enterprise HRMS" }] }),
+  head: () => ({ meta: [{ title: "Payroll Settings — OFC360 Enterprise HRMS" }] }),
   component: PayrollSettingsPage,
 });
 
 const DEFAULT_PAYROLL_SETTINGS: PayrollSettingsData = {
-  company_name: "Aurix AI Enterprise",
+  company_name: "OFC360",
   currency: "INR",
   country: "India",
   timezone: "Asia/Kolkata",

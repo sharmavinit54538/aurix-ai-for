@@ -12,7 +12,7 @@ import { selectCompanySettings, selectSettingsLoading, selectSettingsSubmitting 
 import { fetchCompanySettings, updateCompanySettings } from "@/store/settings/settingsThunk";
 
 export const Route = createFileRoute("/dashboard/settings/company")({
-  head: () => ({ meta: [{ title: "Company Settings — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Company Settings — OFC360" }] }),
   component: CompanySettingsPage,
 });
 
@@ -101,7 +101,7 @@ function CompanySettingsPage() {
             <Input
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder="Aurix AI Technologies Pvt Ltd"
+              placeholder="OFC360 Technologies Pvt Ltd"
             />
           </div>
 
@@ -111,7 +111,7 @@ function CompanySettingsPage() {
               type="email"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              placeholder="contact@aurix.ai"
+              placeholder="contact@ofc360.ai"
             />
           </div>
 
@@ -129,7 +129,7 @@ function CompanySettingsPage() {
             <Input
               value={form.website}
               onChange={(e) => setForm({ ...form, website: e.target.value })}
-              placeholder="https://aurix.ai"
+              placeholder="https://ofc360.ai"
             />
           </div>
 

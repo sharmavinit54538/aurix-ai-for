@@ -47,7 +47,7 @@ export function Navbar() {
                 <Sparkles className="h-4 w-4 text-brand-foreground" />
               </div>
             </div>
-            <span className="font-display text-xl font-bold tracking-tight">Aurix</span>
+            <span className="font-display text-xl font-bold tracking-tight">OFC360</span>
           </Link>
 
           <nav className="hidden lg:flex items-center gap-1">

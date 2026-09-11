@@ -3,7 +3,7 @@ import { Users, Building2, Clock, Timer, Palmtree, Users2 } from "lucide-react";
 import { ModuleHubView, type ModuleItem } from "@/components/aurix/ModuleHubView";
 
 export const Route = createFileRoute("/dashboard/workforce/")({
-  head: () => ({ meta: [{ title: "Workforce Hub — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Workforce Hub — OFC360" }] }),
   component: WorkforceHubPage,
 });
 

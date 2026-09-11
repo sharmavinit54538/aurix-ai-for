@@ -476,7 +476,7 @@ export function PerformancePage() {
     printWindow.document.write(`
       <html>
         <head>
-          <title>Performance Reviews Pool - Aurix HRMS</title>
+          <title>Performance Reviews Pool - OFC360</title>
           <style>
             body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 20px; color: #333; }
             h1 { font-size: 18px; margin-bottom: 5px; }
@@ -521,15 +521,7 @@ export function PerformancePage() {
 
   return (
     <div className="space-y-6">
-      <Link
-        to="/dashboard/talent"
-        className="group/back inline-flex items-center gap-2 rounded-xl border border-border/80 bg-card/60 hover:bg-accent/80 hover:border-primary/40 px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground shadow-xs backdrop-blur-md transition-all duration-200 hover:shadow-md hover:shadow-primary/5 cursor-pointer mb-2"
-      >
-        <span className="flex h-5 w-5 items-center justify-center rounded-lg bg-background/80 border border-border/50 group-hover/back:border-primary/40 group-hover/back:bg-primary/10 text-muted-foreground group-hover/back:text-primary transition-all duration-200">
-          <ChevronLeft className="h-3.5 w-3.5 transition-transform duration-200 group-hover/back:-translate-x-0.5" />
-        </span>
-        <span>Back to Talent Hub</span>
-      </Link>
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <PageHeader
           title="Performance Management"

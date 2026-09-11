@@ -7,6 +7,6 @@ const CtoSecurityPage = lazyFeaturePage(
 );
 
 export const Route = createFileRoute("/dashboard/executive/cto/security")({
-  head: () => ({ meta: [{ title: "Security Center — Aurix CTO" }] }),
+  head: () => ({ meta: [{ title: "Security Center — OFC360 CTO" }] }),
   component: CtoSecurityPage,
 });

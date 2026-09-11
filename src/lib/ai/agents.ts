@@ -38,7 +38,7 @@ export interface AgentDef {
 }
 
 const SHARED_GUARDRAILS = `
-You are part of Aurix AI Insight 2.0 — an autonomous HR brain operating inside
+You are part of OFC360 Insight 2.0 — an autonomous HR brain operating inside
 an enterprise HRMS. Be concise, executive-grade, and structured. Default to
 Markdown: short paragraphs, bullet lists, and tables when comparing entities.
 

@@ -14,7 +14,7 @@ export function CareerSitePage() {
   const allJobs = useRecruitment((s) => s.jobs);
   const jobs = useMemo(() => allJobs.filter((j: any) => j.status === "active"), [allJobs]);
   
-  const [brand, setBrand] = useState("Aurix");
+  const [brand, setBrand] = useState("OFC360");
   const [tagline, setTagline] = useState("Build the future of work with us.");
   const [accent, setAccent] = useState("#7c5cff");
   const [showSalary, setShowSalary] = useState(true);
@@ -26,22 +26,22 @@ export function CareerSitePage() {
   useEffect(() => {
     try {
       if (typeof window !== "undefined" && window.localStorage) {
-        const savedBrand = window.localStorage.getItem("aurix.careers.brand");
+        const savedBrand = window.localStorage.getItem("ofc360.careers.brand");
         if (savedBrand) setBrand(savedBrand);
 
-        const savedTagline = window.localStorage.getItem("aurix.careers.tagline");
+        const savedTagline = window.localStorage.getItem("ofc360.careers.tagline");
         if (savedTagline) setTagline(savedTagline);
 
-        const savedAccent = window.localStorage.getItem("aurix.careers.accent");
+        const savedAccent = window.localStorage.getItem("ofc360.careers.accent");
         if (savedAccent) setAccent(savedAccent);
 
-        const savedShowSalary = window.localStorage.getItem("aurix.careers.showSalary");
+        const savedShowSalary = window.localStorage.getItem("ofc360.careers.showSalary");
         if (savedShowSalary !== null) setShowSalary(savedShowSalary === "true");
 
-        const savedAllowReferrals = window.localStorage.getItem("aurix.careers.allowReferrals");
+        const savedAllowReferrals = window.localStorage.getItem("ofc360.careers.allowReferrals");
         if (savedAllowReferrals !== null) setAllowReferrals(savedAllowReferrals === "true");
 
-        const savedEeo = window.localStorage.getItem("aurix.careers.eeoStatement");
+        const savedEeo = window.localStorage.getItem("ofc360.careers.eeoStatement");
         if (savedEeo) setEeoStatement(savedEeo);
       }
     } catch (e) {
@@ -51,12 +51,12 @@ export function CareerSitePage() {
 
   const handleSave = () => {
     if (typeof window !== "undefined") {
-      window.localStorage.setItem("aurix.careers.brand", brand);
-      window.localStorage.setItem("aurix.careers.tagline", tagline);
-      window.localStorage.setItem("aurix.careers.accent", accent);
-      window.localStorage.setItem("aurix.careers.showSalary", String(showSalary));
-      window.localStorage.setItem("aurix.careers.allowReferrals", String(allowReferrals));
-      window.localStorage.setItem("aurix.careers.eeoStatement", eeoStatement);
+      window.localStorage.setItem("ofc360.careers.brand", brand);
+      window.localStorage.setItem("ofc360.careers.tagline", tagline);
+      window.localStorage.setItem("ofc360.careers.accent", accent);
+      window.localStorage.setItem("ofc360.careers.showSalary", String(showSalary));
+      window.localStorage.setItem("ofc360.careers.allowReferrals", String(allowReferrals));
+      window.localStorage.setItem("ofc360.careers.eeoStatement", eeoStatement);
       toast.success("Career site configuration saved successfully!");
     }
   };

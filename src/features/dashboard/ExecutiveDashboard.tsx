@@ -769,7 +769,7 @@ function AICommandCenter() {
   return (
     <motion.div {...fadeUp}>
       <Card>
-        <SectionHeader title="AI Command Center" subtitle="Powered by Aurix AI" link="/ai" />
+        <SectionHeader title="AI Command Center" subtitle="Powered by OFC360" link="/ai" />
         {/* Metrics row */}
         <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {AI_METRICS.map((m) => (

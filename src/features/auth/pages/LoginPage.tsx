@@ -80,10 +80,10 @@ export function LoginPage() {
   return (
     <AuthShell
       title="Welcome back"
-      subtitle="Sign in to your Aurix workspace"
+      subtitle="Sign in to your OFC360 workspace"
       footer={
         <>
-          New to Aurix?{" "}
+          New to OFC360?{" "}
           <Link to="/register" className="font-medium text-foreground underline-offset-4 hover:underline">
             Create a workspace
           </Link>

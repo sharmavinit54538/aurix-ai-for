@@ -10,7 +10,7 @@ import { selectNotificationSettings, selectSettingsLoading, selectSettingsSubmit
 import { fetchNotifications, updateNotifications } from "@/store/settings/settingsThunk";
 
 export const Route = createFileRoute("/dashboard/settings/notifications")({
-  head: () => ({ meta: [{ title: "Notification Settings — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Notification Settings — OFC360" }] }),
   component: NotificationSettingsPage,
 });
 
@@ -91,7 +91,7 @@ function NotificationSettingsPage() {
           <div className="flex items-center justify-between pt-4">
             <div>
               <div className="text-sm font-medium">In-App Notification Center</div>
-              <div className="text-xs text-muted-foreground">Show real-time toast alerts and badges inside the Aurix dashboard header.</div>
+              <div className="text-xs text-muted-foreground">Show real-time toast alerts and badges inside the OFC360 dashboard header.</div>
             </div>
             <Switch
               checked={form.inAppAlerts}

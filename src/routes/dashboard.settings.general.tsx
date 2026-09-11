@@ -12,7 +12,7 @@ import { selectGeneralSettings, selectSettingsError, selectSettingsLoading, sele
 import { fetchGeneralSettings, updateGeneralSettings } from "@/store/settings/settingsThunk";
 
 export const Route = createFileRoute("/dashboard/settings/general")({
-  head: () => ({ meta: [{ title: "General Settings — Aurix" }] }),
+  head: () => ({ meta: [{ title: "General Settings — OFC360" }] }),
   component: GeneralSettingsPage,
 });
 
@@ -24,7 +24,7 @@ function GeneralSettingsPage() {
   const error = useAppSelector(selectSettingsError);
 
   const [form, setForm] = useState({
-    appName: "Aurix HRMS",
+    appName: "OFC360",
     language: "en",
     timezone: "UTC+05:30 (IST)",
     dateFormat: "DD/MM/YYYY",
@@ -40,7 +40,7 @@ function GeneralSettingsPage() {
   useEffect(() => {
     if (settings) {
       setForm({
-        appName: settings.appName || "Aurix HRMS",
+        appName: settings.appName || "OFC360",
         language: settings.language || "en",
         timezone: settings.timezone || "UTC+05:30 (IST)",
         dateFormat: settings.dateFormat || "DD/MM/YYYY",
@@ -97,7 +97,7 @@ function GeneralSettingsPage() {
             <Input
               value={form.appName}
               onChange={(e) => setForm({ ...form, appName: e.target.value })}
-              placeholder="Aurix HRMS"
+              placeholder="OFC360"
             />
           </div>
 

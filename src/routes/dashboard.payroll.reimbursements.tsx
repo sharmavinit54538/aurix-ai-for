@@ -25,7 +25,7 @@ import {
 } from "@/features/admin/payroll/components/reimbursements/reimbursementsTypes";
 
 export const Route = createFileRoute("/dashboard/payroll/reimbursements")({
-  head: () => ({ meta: [{ title: "Enterprise Reimbursement Hub — Aurix AI" }] }),
+  head: () => ({ meta: [{ title: "Enterprise Reimbursement Hub — OFC360" }] }),
   component: ReimbursementsHubPage,
 });
 

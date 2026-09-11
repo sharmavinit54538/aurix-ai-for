@@ -183,7 +183,7 @@ export function ExitManagementPage() {
         // Populate standard mock assets for clearance simulation
         { id: newId("ret"), assetId: "a1", assetName: "MacBook Pro 14 M3", category: "laptop", serial: "C02XJ1", status: "pending" },
         { id: newId("ret"), assetId: "a3", assetName: "LG UltraFine 27", category: "monitor", serial: "LG2701", status: "pending" },
-        { id: newId("ret"), assetId: "a10", assetName: "Aurix access ID Card", category: "accessory", serial: "AC-19401", status: "pending" }
+        { id: newId("ret"), assetId: "a10", assetName: "OFC360 access ID Card", category: "accessory", serial: "AC-19401", status: "pending" }
       ],
       clearanceWorkflow: [
         { department: "HR", status: "pending" },
@@ -552,11 +552,11 @@ export function ExitManagementPage() {
   };
 
   const handlePreviewLetter = (exit: ExitCase, docName: string) => {
-    let text = `AURIX TALENT LABS
+    let text = `OFC360
 To whom it may concern,
 
 This is to certify that ${exit.employee} (Employee ID: ${exit.employeeId || "AUR-1048"})
-was employed with Aurix Talent Labs from ${exit.joiningDate || "2024-01-01"} to ${exit.lastWorkingDay}.
+was employed with OFC360 from ${exit.joiningDate || "2024-01-01"} to ${exit.lastWorkingDay}.
 During their tenure, they held the designation of ${exit.designation || exit.role} under Platform Engineering department.
 
 We verify that all clearances have been successfully compiled.
@@ -566,7 +566,7 @@ Priya Nair
 Head of People Operations`;
 
     if (docName.includes("Settlement")) {
-      text = `AURIX TALENT LABS — FINAL SETTLEMENT SHEET
+      text = `OFC360 — FINAL SETTLEMENT SHEET
 Employee: ${exit.employee}
 Designation: ${exit.designation}
 
@@ -1755,7 +1755,7 @@ Finance Operations Partner`;
 
                     <div className="space-y-1">
                       <Label className="text-xs text-muted-foreground">Suggestions for Improvement</Label>
-                      <Textarea value={intSuggestions} onChange={e => setIntSuggestions(e.target.value)} placeholder="How can Aurix HR retain talent better?" className="min-h-[50px] bg-background/50 border-border text-xs" />
+                      <Textarea value={intSuggestions} onChange={e => setIntSuggestions(e.target.value)} placeholder="How can OFC360 retain talent better?" className="min-h-[50px] bg-background/50 border-border text-xs" />
                     </div>
 
                     <div className="pt-2 flex justify-end">

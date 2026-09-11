@@ -4,6 +4,6 @@ import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
 const DocumentGeneratorPage = lazyFeaturePage(() => import("@/pages/DocumentGeneratorPage"));
 
 export const Route = createFileRoute("/ai/document-generator")({
-  head: () => ({ meta: [{ title: "AI Document Generator — Aurix" }] }),
+  head: () => ({ meta: [{ title: "AI Document Generator — OFC360" }] }),
   component: DocumentGeneratorPage,
 });

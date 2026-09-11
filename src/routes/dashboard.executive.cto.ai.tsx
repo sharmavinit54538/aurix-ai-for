@@ -7,6 +7,6 @@ const CtoAiPlatformPage = lazyFeaturePage(
 );
 
 export const Route = createFileRoute("/dashboard/executive/cto/ai")({
-  head: () => ({ meta: [{ title: "AI & LLM Platform — Aurix CTO" }] }),
+  head: () => ({ meta: [{ title: "AI & LLM Platform — OFC360 CTO" }] }),
   component: CtoAiPlatformPage,
 });

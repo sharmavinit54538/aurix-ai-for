@@ -84,15 +84,7 @@ export function ExecutiveHeader({
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5 text-left">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 px-2.5 text-xs gap-1.5 border-border/60 hover:bg-accent cursor-pointer"
-                onClick={() => navigate({ to: "/dashboard/executive" })}
-              >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                Back to Hub
-              </Button>
+
 
               <div className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-xs font-semibold ${currentRoleObj.color}`}>
                 <RoleIcon className="h-3.5 w-3.5" />

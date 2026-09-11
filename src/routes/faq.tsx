@@ -10,10 +10,10 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/faq")({
   head: () => ({
     meta: [
-      { title: "FAQ — Aurix" },
-      { name: "description", content: "Answers to common questions about Aurix — product, pricing, security, and more." },
-      { property: "og:title", content: "FAQ — Aurix" },
-      { property: "og:description", content: "Everything you need to know about Aurix." },
+      { title: "FAQ — OFC360" },
+      { name: "description", content: "Answers to common questions about OFC360 — product, pricing, security, and more." },
+      { property: "og:title", content: "FAQ — OFC360" },
+      { property: "og:description", content: "Everything you need to know about OFC360." },
       { property: "og:url", content: "/faq" },
     ],
     links: [{ rel: "canonical", href: "/faq" }],
@@ -25,9 +25,9 @@ const groups = [
   {
     name: "Product",
     items: [
-      { q: "What is Aurix?", a: "Aurix is a unified workspace for product teams — combining planning, execution, and analytics in one fast interface." },
+      { q: "What is OFC360?", a: "OFC360 is a unified workspace for product teams — combining planning, execution, and analytics in one fast interface." },
       { q: "What platforms does it run on?", a: "We have native macOS, Windows, iOS, and Android apps, plus a web app that runs anywhere." },
-      { q: "Can I use it offline?", a: "Yes — Aurix is local-first. Your data is available offline and syncs when you're back online." },
+      { q: "Can I use it offline?", a: "Yes — OFC360 is local-first. Your data is available offline and syncs when you're back online." },
     ],
   },
   {
@@ -41,7 +41,7 @@ const groups = [
   {
     name: "Security",
     items: [
-      { q: "Is Aurix SOC 2 certified?", a: "We are SOC 2 Type II certified and undergo annual audits." },
+      { q: "Is OFC360 SOC 2 certified?", a: "We are SOC 2 Type II certified and undergo annual audits." },
       { q: "Do you support SSO?", a: "Yes — SAML SSO and SCIM provisioning are available on Business and Enterprise plans." },
       { q: "Where is my data stored?", a: "You can choose between US, EU, or APAC regions. Data is encrypted in transit and at rest." },
     ],
@@ -49,7 +49,7 @@ const groups = [
   {
     name: "Integrations",
     items: [
-      { q: "Does Aurix integrate with GitHub?", a: "Yes — bi-directional sync with GitHub, GitLab, Bitbucket, and others." },
+      { q: "Does OFC360 integrate with GitHub?", a: "Yes — bi-directional sync with GitHub, GitLab, Bitbucket, and others." },
       { q: "Can I bring my data from another tool?", a: "We support one-click migration from Jira, Linear, Asana, and Notion." },
       { q: "Do you have a public API?", a: "Yes — fully documented REST and GraphQL APIs, plus webhooks for every event." },
     ],

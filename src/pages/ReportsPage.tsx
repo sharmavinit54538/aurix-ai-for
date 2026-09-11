@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Download, RefreshCw, AlertCircle } from "lucide-react";
-import { PageHeader } from "@/components/aurix/DashboardShell";
+import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import apiInstance from "@/api/apiInstance";
@@ -70,28 +69,7 @@ export function ReportsPage() {
 
   return (
     <>
-      <PageHeader
-        title="Reports"
-        description="Live PostgreSQL cross-cut insights about your workforce."
-        actions={
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleBack}
-              className="gap-1.5 border-border/60 hover:bg-accent cursor-pointer"
-            >
-              <ArrowLeft className="h-4 w-4" /> Back
-            </Button>
-            <Button variant="outline" size="sm" onClick={fetchReportsData} className="gap-1.5 cursor-pointer">
-              <RefreshCw className="h-4 w-4" /> Refresh
-            </Button>
-            <Button variant="outline" size="sm" className="cursor-pointer">
-              <Download className="mr-2 h-4 w-4" /> Export PDF
-            </Button>
-          </div>
-        }
-      />
+
 
       {error ? (
         <div className="mb-4 flex items-center justify-between rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-xs text-destructive">

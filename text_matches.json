@@ -1,0 +1,1327 @@
+[
+  {
+    "file": "README.md",
+    "lineNum": 1,
+    "text": "# aurix-ai-for"
+  },
+  {
+    "file": "src\\api\\tokens.ts",
+    "lineNum": 1,
+    "text": "const TOKENS_KEY = \"aurix:tokens\";"
+  },
+  {
+    "file": "src\\components\\site\\CTA.tsx",
+    "lineNum": 7,
+    "text": "subtitle = \"Join thousands of teams using Aurix to build, launch, and scale their products.\","
+  },
+  {
+    "file": "src\\components\\site\\FAQ.tsx",
+    "lineNum": 9,
+    "text": "subtitle = \"Everything you need to know about Aurix.\","
+  },
+  {
+    "file": "src\\components\\site\\Footer.tsx",
+    "lineNum": 41,
+    "text": "<span className=\"font-display text-xl font-bold\">Aurix</span>"
+  },
+  {
+    "file": "src\\components\\site\\Footer.tsx",
+    "lineNum": 72,
+    "text": "<p>© {new Date().getFullYear()} Aurix Inc. All rights reserved.</p>"
+  },
+  {
+    "file": "src\\components\\site\\Navbar.tsx",
+    "lineNum": 50,
+    "text": "<span className=\"font-display text-xl font-bold tracking-tight\">Aurix</span>"
+  },
+  {
+    "file": "src\\features\\admin\\departments\\components\\ImportDialog.tsx",
+    "lineNum": 276,
+    "text": "link.setAttribute(\"download\", \"aurix_departments_import_template.csv\");"
+  },
+  {
+    "file": "src\\features\\admin\\departments\\utils\\departmentExport.ts",
+    "lineNum": 29,
+    "text": "link.setAttribute(\"download\", `aurix_departments_export_${Date.now()}.csv`);"
+  },
+  {
+    "file": "src\\features\\admin\\managers\\components\\ImportDialog.tsx",
+    "lineNum": 288,
+    "text": "link.setAttribute(\"download\", \"aurix_managers_import_template.csv\");"
+  },
+  {
+    "file": "src\\features\\admin\\managers\\hooks\\useManagersList.ts",
+    "lineNum": 8,
+    "text": "aurixManagers.forEach((sm) => {"
+  },
+  {
+    "file": "src\\features\\admin\\managers\\utils\\managerExport.ts",
+    "lineNum": 26,
+    "text": "link.setAttribute(\"download\", `aurix_managers_export_${Date.now()}.csv`);"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\advances\\AdvanceHubCardGrid.tsx",
+    "lineNum": 253,
+    "text": "badgeText: \"Aurix AI Core\","
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\advances\\AdvanceHubHeader.tsx",
+    "lineNum": 56,
+    "text": "Aurix Loans v2026"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\advances\\AdvanceHubModuleViews.tsx",
+    "lineNum": 83,
+    "text": "text: \"Welcome to Aurix AI Financial Assistant! I have full visibility into salary advance limits (max 50% gross basic), EMI repayment schedules, credit eligibility scores, and default risk predictions. How can I assist you today?\","
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\advances\\AdvanceHubModuleViews.tsx",
+    "lineNum": 129,
+    "text": "aiReply = `🤖 Aurix AI Financial Assistant: Salary advances and loan repayments are 100% integrated with monthly payroll runs under Company Policy #ADV-2026. You can ask me about loan caps, EMI calculations, or credit eligibility.`;"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\advances\\AdvanceHubModuleViews.tsx",
+    "lineNum": 381,
+    "text": "{renderBreadcrumb(\"Aurix AI Financial Assistant\", \"Consult your AI assistant for default risk predictions, loan eligibility evaluations, and EMI repayment forecasts.\")}"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\advances\\advances.css",
+    "lineNum": 2,
+    "text": "Aurix AI — Enterprise Salary Advances & Recovery Management CSS"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\advances\\AIAdvanceInsights.tsx",
+    "lineNum": 35,
+    "text": "Aurix AI Advance Risk & Eligibility Intelligence"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\advances\\BankDisbursementModal.tsx",
+    "lineNum": 79,
+    "text": "<span>Integrated with Aurix Corporate Bank Transfer Gateway (HDFC / ICICI API).</span>"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\advances\\RightPolicyPanel.tsx",
+    "lineNum": 9,
+    "text": "\"Welcome! I am your Aurix AI Salary Advance Copilot. Ask me about advance limits, repayment tenure, or EMI salary ratios.\","
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\advances\\RightPolicyPanel.tsx",
+    "lineNum": 23,
+    "text": "`Aurix AI: Under Company Advance Policy #ADV-2026, maximum advance is capped at 3x monthly basic salary or ₹2,00,000. Maximum recovery tenure is 6 months at 0% interest.`,"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\bank-transfers\\BankHubCardGrid.tsx",
+    "lineNum": 236,
+    "text": "badgeText: \"Aurix AI Core\","
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\bank-transfers\\BankHubHeader.tsx",
+    "lineNum": 58,
+    "text": "Aurix Banking v2026"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\bank-transfers\\BankHubModuleViews.tsx",
+    "lineNum": 81,
+    "text": "text: \"Welcome to Aurix AI Banking Intelligence! I have full visibility into NEFT/ACH batch files, HDFC/ICICI Corporate Gateways, Penny Drop verification, and duplicate payment detection. How can I assist you today?\","
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\bank-transfers\\BankHubModuleViews.tsx",
+    "lineNum": 121,
+    "text": "aiReply = `🤖 Aurix AI Banking Intelligence: All bank transfers are 100% compliant with RBI & NPCI electronic funds transfer guidelines under Company Treasury Policy #BANK-2026. You can ask me about NEFT batch files, Penny Drop verification, or gateway status.`;"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\bank-transfers\\BankHubModuleViews.tsx",
+    "lineNum": 344,
+    "text": "{renderBreadcrumb(\"Aurix AI Banking Intelligence\", \"Consult your AI assistant for duplicate payment detection, fraud risk scores, and settlement predictions.\")}"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\bonuses\\AIBonusInsights.tsx",
+    "lineNum": 34,
+    "text": "Aurix AI Compensation & High Performer Intelligence"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\bonuses\\bonuses.css",
+    "lineNum": 2,
+    "text": "Aurix AI — Enterprise Bonus & Variable Compensation Management CSS"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\bonuses\\BonusHubCardGrid.tsx",
+    "lineNum": 210,
+    "text": "badgeText: \"Aurix AI Core\","
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\bonuses\\BonusHubHeader.tsx",
+    "lineNum": 56,
+    "text": "Aurix Bonus v2026"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\bonuses\\BonusHubModuleViews.tsx",
+    "lineNum": 82,
+    "text": "text: \"Welcome to Aurix AI Bonus Intelligence! I have full visibility into performance rating multipliers, festival bonus allocations, TDS tax calculations, and corporate budget caps. How can I assist you today?\","
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\bonuses\\BonusHubModuleViews.tsx",
+    "lineNum": 128,
+    "text": "aiReply = `🤖 Aurix AI Bonus Intelligence: All bonus allocations are 100% integrated with monthly payroll runs under Company Compensation Policy #BON-2026. You can ask me about KPI multipliers, TDS tax rates, or budget limits.`;"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\bonuses\\BonusHubModuleViews.tsx",
+    "lineNum": 391,
+    "text": "{renderBreadcrumb(\"Aurix AI Bonus Intelligence\", \"Consult your AI assistant for performance rating predictions, TDS tax estimates, and budget optimization.\")}"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\bonuses\\BonusLetterModal.tsx",
+    "lineNum": 36,
+    "text": "<h2 className=\"text-lg font-bold tracking-tight text-slate-900 uppercase\">AURIX AI ENTERPRISE CORP</h2>"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\bonuses\\BonusLetterModal.tsx",
+    "lineNum": 72,
+    "text": "<p className=\"pt-2\">We thank you for your leadership and look forward to your continued success with Aurix AI.</p>"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\bonuses\\BonusLetterModal.tsx",
+    "lineNum": 85,
+    "text": "<span className=\"text-[10px] text-slate-400\">Aurix HRMS Seal #99012</span>"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\bonuses\\RightPolicyPanel.tsx",
+    "lineNum": 9,
+    "text": "\"Welcome! I am your Aurix AI Variable Compensation Assistant. Ask me about performance multipliers, TDS tax rates, or CFO governance rules.\","
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\bonuses\\RightPolicyPanel.tsx",
+    "lineNum": 23,
+    "text": "`Aurix AI: Under Company Bonus Policy #BNS-2026, performance rating >= 4.5 qualifies for 1.2x - 1.5x Basic Pay multiplier. Tax withholding is computed u/s 192 at slab rates.`,"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\deductions\\AIDeductionInsights.tsx",
+    "lineNum": 35,
+    "text": "Aurix AI Deduction Risk & Statutory Compliance Intelligence"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\deductions\\deductions.css",
+    "lineNum": 2,
+    "text": "Aurix AI — Enterprise Payroll Deductions & Recovery Management CSS"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\deductions\\RightPolicyPanel.tsx",
+    "lineNum": 9,
+    "text": "\"Welcome! I am your Aurix AI Deduction Copilot. Ask me about EPF capping, ESI salary thresholds, or Section 7 recovery limits.\","
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\deductions\\RightPolicyPanel.tsx",
+    "lineNum": 23,
+    "text": "`Aurix AI: Under EPF Act 1952, standard employee contribution is 12% on Basic Pay up to ₹15,000 ceiling. Under Payment of Wages Act, total monthly recoveries cannot exceed 50% of gross salary.`,"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\overtime\\AIOvertimeInsights.tsx",
+    "lineNum": 35,
+    "text": "Aurix AI Workforce Overtime & Burnout Intelligence"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\overtime\\overtime.css",
+    "lineNum": 2,
+    "text": "Aurix AI — Enterprise Overtime & Workforce Time Management CSS"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\overtime\\OvertimeHubCardGrid.tsx",
+    "lineNum": 271,
+    "text": "badgeText: \"Aurix AI Core\","
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\overtime\\OvertimeHubCardGrid.tsx",
+    "lineNum": 341,
+    "text": "badgeText: \"Aurix AI Assistant\","
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\overtime\\OvertimeHubCardGrid.tsx",
+    "lineNum": 346,
+    "text": "metricValue: \"Aurix LLM v2026\","
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\overtime\\OvertimeHubHeader.tsx",
+    "lineNum": 55,
+    "text": "Aurix Overtime v2026"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\overtime\\OvertimeHubModuleViews.tsx",
+    "lineNum": 83,
+    "text": "text: \"Welcome to Aurix AI Overtime Copilot! I have full visibility into Factories Act 1948 limits, 1.5x/2.0x/3.0x rate multipliers, employee fatigue scores, and biometric attendance logs. How can I assist you today?\","
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\overtime\\OvertimeHubModuleViews.tsx",
+    "lineNum": 126,
+    "text": "aiReply = `⚡ AI Fatigue Score: Aurix AI flags employees with > 12 continuous working days or > 18 OT hours in a single week to prevent workplace burnout. Currently 2 staff flagged for workload rest.`;"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\overtime\\OvertimeHubModuleViews.tsx",
+    "lineNum": 130,
+    "text": "aiReply = `🤖 Aurix AI Overtime Copilot: Overtime calculations are 100% compliant with Factories Act 1948 and Company HR Policy #OT-2026. You can ask me about OT multipliers, shift allowances, or specific employee hours.`;"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\overtime\\OvertimeHubModuleViews.tsx",
+    "lineNum": 458,
+    "text": "{renderBreadcrumb(\"Aurix AI Overtime Copilot Assistant\", \"Consult your AI assistant for Factories Act 1948 rules, 1.5x/2.0x rate multipliers, and fatigue checks.\")}"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\overtime\\RightPolicyPanel.tsx",
+    "lineNum": 9,
+    "text": "\"Welcome! I am your Aurix AI Overtime & Shift Copilot. Ask me about Factories Act OT multipliers, night shift differentials, or weekly OT limits.\","
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\overtime\\RightPolicyPanel.tsx",
+    "lineNum": 23,
+    "text": "`Aurix AI: Under Statutory Factories Act Section 59, overtime hours worked beyond 9 hours/day or 48 hours/week must be compensated at 2.0x basic hourly rate. Weekend OT applies 2.0x, and National Holidays 3.0x.`,"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\payslips\\BulkEmailModal.tsx",
+    "lineNum": 60,
+    "text": "value=\"Official Monthly Payslip Issued — Aurix HRMS\""
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\payslips\\PayslipPreviewDrawer.tsx",
+    "lineNum": 214,
+    "text": "Token: {previewData.security.qr_code_token || \"AURIX-VERIFIED-PAYSLIP\"}"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\reimbursements\\AIReimbursementInsights.tsx",
+    "lineNum": 35,
+    "text": "Aurix AI Expense Fraud & Policy Intelligence"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\reimbursements\\CreateClaimWizardDrawer.tsx",
+    "lineNum": 50,
+    "text": "const [project, setProject] = useState(\"PROJ-AURIX-CORE\");"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\reimbursements\\ReimbursementHubCardGrid.tsx",
+    "lineNum": 132,
+    "text": "description: \"Aurix AI duplicate bill detection, high-risk dinner expense alerts, and policy violation timeline.\","
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\reimbursements\\ReimbursementHubHeader.tsx",
+    "lineNum": 55,
+    "text": "Aurix Expense v2026"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\reimbursements\\ReimbursementHubModuleViews.tsx",
+    "lineNum": 103,
+    "text": "text: \"Welcome to Aurix AI Expense Copilot! I have full access to company policy rules, GST tax exemption limits, and your reimbursement history. How can I assist you today?\","
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\reimbursements\\ReimbursementHubModuleViews.tsx",
+    "lineNum": 159,
+    "text": "aiReply = `🛡️ AI Fraud Intelligence: Aurix OCR automatically scans receipts for duplicate bill numbers, altered invoice amounts, and out-of-policy spending. Currently 0 high-risk critical violations detected.`;"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\reimbursements\\ReimbursementHubModuleViews.tsx",
+    "lineNum": 163,
+    "text": "aiReply = `🤖 Aurix AI Copilot: Under Enterprise Policy #EXP-2026, employee reimbursements are verified via automated OCR and policy compliance checks before manager and finance approval. You can ask about flight limits, hotel caps, GST input credit, or specific claim statuses.`;"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\reimbursements\\ReimbursementHubModuleViews.tsx",
+    "lineNum": 680,
+    "text": "{renderBreadcrumb(\"Aurix AI Expense Copilot Assistant\", \"Consult your AI assistant for policy rules, GST tax exemption limits, and expense optimization.\")}"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\reimbursements\\reimbursements.css",
+    "lineNum": 2,
+    "text": "Aurix AI — Enterprise Expense & Reimbursements Management CSS"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\reimbursements\\ReimbursementsSubmodelViews.tsx",
+    "lineNum": 307,
+    "text": "<Badge className=\"bg-blue-500/20 text-blue-400 border border-blue-500/30\">Aurix OCR v2.4</Badge>"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\reimbursements\\ReimbursementsSubmodelViews.tsx",
+    "lineNum": 325,
+    "text": "<p className=\"text-xs font-bold\">Scanning receipt image with Aurix OCR Vision model...</p>"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\reimbursements\\ReimbursementsSubmodelViews.tsx",
+    "lineNum": 426,
+    "text": "<Sparkles className=\"h-5 w-5 text-purple-400\" /> Aurix AI Expense Fraud & Policy Intelligence"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\reimbursements\\RightPolicyPanel.tsx",
+    "lineNum": 9,
+    "text": "\"Welcome to Aurix Expense Copilot! Ask me about policy limits, meal caps, or receipt tax requirements.\","
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\reimbursements\\RightPolicyPanel.tsx",
+    "lineNum": 23,
+    "text": "`Aurix AI: Under Company Policy #EXP-2026, single meal claims over ₹10,000 require VP pre-approval. Receipts over ₹5,000 must include GSTIN.`,"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\salary-processing\\SalaryProcessingHeader.tsx",
+    "lineNum": 89,
+    "text": "Aurix AI Enterprise"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\salary-structure\\AICompensationInsights.tsx",
+    "lineNum": 35,
+    "text": "Aurix AI Compensation & Pay Equity Intelligence"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\salary-structure\\salary-structure.css",
+    "lineNum": 2,
+    "text": "Aurix AI — Enterprise Salary Structure & Compensation Management CSS"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\salary-structure\\SalaryStructureHeader.tsx",
+    "lineNum": 166,
+    "text": "<span className=\"text-slate-200 font-medium\">Aurix Enterprise Corp</span>"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\settings\\payroll-settings.css",
+    "lineNum": 2,
+    "text": "AURIX AI ENTERPRISE — PAYROLL CONFIGURATION NEXT-LEVEL STYLING"
+  },
+  {
+    "file": "src\\features\\admin\\payroll\\components\\settings\\sections\\DocumentTemplatesSection.tsx",
+    "lineNum": 89,
+    "text": "defaultValue=\"Aurix AI Enterprise Logo (SVG/PNG)\""
+  },
+  {
+    "file": "src\\features\\admin\\performance\\components\\ImportDialog.tsx",
+    "lineNum": 291,
+    "text": "link.setAttribute(\"download\", \"aurix_performance_import_template.csv\");"
+  },
+  {
+    "file": "src\\features\\admin\\performance\\pages\\PerformancePage.tsx",
+    "lineNum": 435,
+    "text": "link.setAttribute(\"download\", `aurix_performance_export_${Date.now()}.csv`);"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\CandidateProfilePage.tsx",
+    "lineNum": 91,
+    "text": "setEmailSubject(`Aurix Job Application Update - ${candidate.appliedPosition}`);"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\CandidateProfilePage.tsx",
+    "lineNum": 92,
+    "text": "setEmailBody(`Dear ${candidate.name},\\n\\nThank you for taking the time to apply for the ${candidate.appliedPosition} role at Aurix.\\n\\nWe have reviewed your application and would love to move you forward to the next stage of our recruitment process.\\n\\nBest regards,\\nRecruitment Team\\nAurix`);"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\CandidateProfilePage.tsx",
+    "lineNum": 469,
+    "text": "<div className=\"flex items-center gap-2\">✓ Standard Aurix Health Insurance (Group Plan)</div>"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\CareerSitePage.tsx",
+    "lineNum": 17,
+    "text": "const [brand, setBrand] = useState(\"Aurix\");"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\JobDetailPage.tsx",
+    "lineNum": 609,
+    "text": "Aurix Inc. is a high-growth HR Technology platforms enterprise. This job role resides in our main operations product division."
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\NewJobPage.tsx",
+    "lineNum": 100,
+    "text": "<p className=\"text-xs text-muted-foreground/70 mt-1\">Switch to the \"Write\" tab or use Aurix AI to generate one.</p>"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\NewJobPage.tsx",
+    "lineNum": 282,
+    "text": "toast.info(\"Aurix AI is drafting job requirements...\");"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\NewJobPage.tsx",
+    "lineNum": 335,
+    "text": "toast.info(\"Aurix AI is refining description...\");"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\NewJobPage.tsx",
+    "lineNum": 540,
+    "text": "description=\"Specify job requirements, role parameters, compensation, and let Aurix AI assist in drafting job descriptions.\""
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\NewJobPage.tsx",
+    "lineNum": 1189,
+    "text": "Aurix AI Copilot"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\NewJobPage.tsx",
+    "lineNum": 1333,
+    "text": "Aurix AI is working..."
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\RecruitmentCalendarPage.tsx",
+    "lineNum": 104,
+    "text": "<Button variant=\"outline\" onClick={() => toast.success(\"Syncing Google Calendar with Aurix AI...\")}><CalIcon className=\"mr-2 h-4 w-4\" />Sync Google</Button>"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\RecruitmentCopilotPage.tsx",
+    "lineNum": 165,
+    "text": "return `Subject: Quick chat about ${job?.title ?? \"an opening\"} at our team?\\n\\nHi ${candidate?.name?.split(\" \")[0] ?? \"\"},\\n\\n${input || \"Loved your recent work — your experience with \" + (candidate?.skills?.[0] ?? \"this stack\") + \" caught my eye.\"}\\n\\nWe're hiring a ${job?.title} (${job?.workMode}, ${job?.location}). Comp ${job ? `$${(job.salaryMin / 1000).toFixed(0)}k-$${(job.salaryMax / 1000).toFixed(0)}k` : \"\"}.\\n\\nWould a 15-minute call this week work?\\n\\nThanks,\\nThe Aurix team`;"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\RecruitmentImportExportPage.tsx",
+    "lineNum": 48,
+    "text": "<PageHeader title=\"Import & Export\" description=\"Bulk move candidates in and out of Aurix — CSV, Excel, JSON.\" />"
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\RecruitmentTemplatesPage.tsx",
+    "lineNum": 28,
+    "text": "subject: \"Opportunities at Aurix - {{candidate.first_name}}\","
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\RecruitmentTemplatesPage.tsx",
+    "lineNum": 29,
+    "text": "body: \"Hi {{candidate.first_name}},\\n\\nI came across your profile and was really impressed by your background in software engineering. We are looking for talented people to join our team at Aurix.\\n\\nWould you be open to a quick 15-minute introductory call this week to discuss potential opportunities?\\n\\nBest regards,\\nRecruitment Team, Aurix\","
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\RecruitmentTemplatesPage.tsx",
+    "lineNum": 36,
+    "text": "subject: \"Interview Scheduled with Aurix - {{candidate.first_name}}\","
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\RecruitmentTemplatesPage.tsx",
+    "lineNum": 37,
+    "text": "body: \"Hi {{candidate.first_name}},\\n\\nThank you for scheduling your interview round. Here are the details of your upcoming slot:\\n\\n- Date/Time: {{interview.date}} at {{interview.time}}\\n- Meeting Link: {{interview.meeting_url}}\\n\\nIf you have any questions or need to reschedule, please let us know at least 24 hours in advance.\\n\\nLooking forward to speaking with you!\\n\\nBest regards,\\nRecruitment Team, Aurix\","
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\RecruitmentTemplatesPage.tsx",
+    "lineNum": 45,
+    "text": "body: \"Dear {{candidate.first_name}},\\n\\nWe are absolutely thrilled to offer you the position of {{job.title}} at Aurix! The entire team was incredibly impressed by your interviews, and we believe you will be a fantastic addition.\\n\\nAttached is the formal offer letter specifying your compensation details and target joining date.\\n\\nPlease review and sign the document to confirm your acceptance.\\n\\nWarm regards,\\nRecruitment Team, Aurix\","
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\RecruitmentTemplatesPage.tsx",
+    "lineNum": 52,
+    "text": "subject: \"Update on your application with Aurix\","
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\RecruitmentTemplatesPage.tsx",
+    "lineNum": 53,
+    "text": "body: \"Dear {{candidate.first_name}},\\n\\nThank you for taking the time to apply and interview for the {{job.title}} role at Aurix. We truly appreciate the opportunity to review your qualifications.\\n\\nWhile our team was impressed by your skills, we have decided to move forward with another candidate whose experience matches the position's requirements more closely at this time.\\n\\nWe will keep your profile in our Talent Pool and reach out if other matching roles open up in the future. We wish you the very best in your search.\\n\\nSincerely,\\nRecruitment Team, Aurix\","
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\RecruitmentTemplatesPage.tsx",
+    "lineNum": 60,
+    "text": "subject: \"Welcome to Aurix! Day 1 Prep & Details - {{candidate.first_name}}\","
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\RecruitmentTemplatesPage.tsx",
+    "lineNum": 61,
+    "text": "body: \"Hi {{candidate.first_name}},\\n\\nWelcome to Aurix! We are excited to have you join us next week.\\n\\nTo help you prepare for Day 1, here is some key information:\\n\\n- Start Time: 9:30 AM\\n- Location: Bengaluru HQ Office\\n- Dress Code: Smart Casual\\n\\nYour laptop and IT accounts have been set up and will be handed over to you during your onboarding session. Let us know if you need any assistance beforehand!\\n\\nWelcome aboard!\\n\\nBest regards,\\nHR Operations Team, Aurix\","
+  },
+  {
+    "file": "src\\features\\admin\\recruitment\\pages\\RecruitmentTemplatesPage.tsx",
+    "lineNum": 167,
+    "text": "let subject = `Opportunities at Aurix`;"
+  },
+  {
+    "file": "src\\features\\attendance\\pages\\HolidaysPage.tsx",
+    "lineNum": 436,
+    "text": "link.setAttribute(\"download\", `aurix_holidays_${new Date().toISOString().split(\"T\")[0]}.csv`);"
+  },
+  {
+    "file": "src\\features\\attendance\\pages\\HolidaysPage.tsx",
+    "lineNum": 865,
+    "text": "{ label: \"Company Holidays\", desc: \"Strategic operations days off by Aurix.\", count: categoryCounts.Company, color: \"bg-emerald-500\" },"
+  },
+  {
+    "file": "src\\features\\auth\\components\\AuthShell.tsx",
+    "lineNum": 40,
+    "text": "<span className=\"font-display text-lg font-semibold tracking-tight\">Aurix</span>"
+  },
+  {
+    "file": "src\\features\\auth\\pages\\LoginPage.tsx",
+    "lineNum": 83,
+    "text": "subtitle=\"Sign in to your Aurix workspace\""
+  },
+  {
+    "file": "src\\features\\auth\\pages\\LoginPage.tsx",
+    "lineNum": 86,
+    "text": "New to Aurix?{\" \"}"
+  },
+  {
+    "file": "src\\features\\cio\\pages\\CioSettingsPage.tsx",
+    "lineNum": 10,
+    "text": "const [apiKey, setApiKey] = useState(\"aurix_live_cio_key_948192049182\");"
+  },
+  {
+    "file": "src\\features\\cto\\pages\\CtoDatabasePage.tsx",
+    "lineNum": 7,
+    "text": "{ name: \"PostgreSQL Primary (aurix_prod)\", engine: \"PostgreSQL 16.2\", conn: \"142 / 500\", size: \"14.2 GB\", status: \"Healthy\" },"
+  },
+  {
+    "file": "src\\features\\cto\\pages\\CtoDatabasePage.tsx",
+    "lineNum": 8,
+    "text": "{ name: \"Redis Cache Cluster (aurix_cache)\", engine: \"Redis 7.2 (Sentinel)\", conn: \"84 / 1000\", size: \"2.4 GB\", status: \"Healthy\" },"
+  },
+  {
+    "file": "src\\features\\cto\\pages\\CtoDatabasePage.tsx",
+    "lineNum": 9,
+    "text": "{ name: \"Qdrant Vector DB (aurix_vectors)\", engine: \"Qdrant 1.8\", conn: \"24 / 200\", size: \"6.8 GB\", status: \"Healthy\" },"
+  },
+  {
+    "file": "src\\features\\cto\\pages\\CtoDevOpsPage.tsx",
+    "lineNum": 10,
+    "text": "{ name: \"aurix-backend-production-deploy\", env: \"Production\", status: \"Success\", duration: \"3m 42s\", lastRun: \"12 mins ago\" },"
+  },
+  {
+    "file": "src\\features\\cto\\pages\\CtoDevOpsPage.tsx",
+    "lineNum": 11,
+    "text": "{ name: \"aurix-frontend-vercel-deploy\", env: \"Production\", status: \"Success\", duration: \"1m 18s\", lastRun: \"24 mins ago\" },"
+  },
+  {
+    "file": "src\\features\\cto\\pages\\CtoDevOpsPage.tsx",
+    "lineNum": 12,
+    "text": "{ name: \"aurix-ai-inference-gpu-deploy\", env: \"Staging\", status: \"Running\", duration: \"2m 04s\", lastRun: \"Just now\" },"
+  },
+  {
+    "file": "src\\features\\cto\\pages\\CtoDevOpsPage.tsx",
+    "lineNum": 13,
+    "text": "{ name: \"aurix-postgres-migration-check\", env: \"Development\", status: \"Success\", duration: \"45s\", lastRun: \"1 hour ago\" },"
+  },
+  {
+    "file": "src\\features\\cto\\pages\\CtoSettingsPage.tsx",
+    "lineNum": 10,
+    "text": "const [githubOrg, setGithubOrg] = useState(\"aurix-ai-enterprise\");"
+  },
+  {
+    "file": "src\\features\\cto\\pages\\CtoSettingsPage.tsx",
+    "lineNum": 65,
+    "text": "<Input defaultValue=\"Aurix AI Enterprise Technologies\" className=\"bg-slate-900/60 text-xs\" />"
+  },
+  {
+    "file": "src\\features\\dashboard\\executive-data.ts",
+    "lineNum": 2,
+    "text": "// Aurix HR — Enterprise Executive Dashboard — Live Data Schema"
+  },
+  {
+    "file": "src\\features\\dashboard\\ExecutiveDashboard.tsx",
+    "lineNum": 772,
+    "text": "<SectionHeader title=\"AI Command Center\" subtitle=\"Powered by Aurix AI\" link=\"/ai\" />"
+  },
+  {
+    "file": "src\\features\\portal\\employee\\employee-data.ts",
+    "lineNum": 2,
+    "text": "// Aurix HR — Employee Dashboard — Data Schema"
+  },
+  {
+    "file": "src\\features\\portal\\employee\\EmployeeDashboard.tsx",
+    "lineNum": 2,
+    "text": "// Aurix HR — Employee Dashboard Component"
+  },
+  {
+    "file": "src\\features\\portal\\employee\\EmployeeDashboard.tsx",
+    "lineNum": 583,
+    "text": "const companyName = ws.company?.name ?? \"Aurix HR\";"
+  },
+  {
+    "file": "src\\features\\portal\\manager\\manager-data.ts",
+    "lineNum": 2,
+    "text": "// Aurix HR — Manager Dashboard — Data Schema"
+  },
+  {
+    "file": "src\\features\\portal\\manager\\ManagerDashboard.tsx",
+    "lineNum": 2,
+    "text": "// Aurix HR — Manager Dashboard Component"
+  },
+  {
+    "file": "src\\features\\portal\\manager\\ManagerDashboard.tsx",
+    "lineNum": 1029,
+    "text": "const companyName = ws.company?.name ?? \"Aurix HR\";"
+  },
+  {
+    "file": "src\\lib\\ai\\agents.ts",
+    "lineNum": 41,
+    "text": "You are part of Aurix AI Insight 2.0 — an autonomous HR brain operating inside"
+  },
+  {
+    "file": "src\\lib\\aurix-store.ts",
+    "lineNum": 100,
+    "text": "user: AurixUser | null;"
+  },
+  {
+    "file": "src\\lib\\aurix-store.ts",
+    "lineNum": 112,
+    "text": "const KEY = \"aurix:workspace:v1\";"
+  },
+  {
+    "file": "src\\lib\\aurix-store.ts",
+    "lineNum": 113,
+    "text": "const REMEMBER_KEY = \"aurix:remember\";"
+  },
+  {
+    "file": "src\\lib\\aurix-store.ts",
+    "lineNum": 139,
+    "text": "const tokensRaw = localStorage.getItem(\"aurix:tokens\");"
+  },
+  {
+    "file": "src\\lib\\aurix-store.ts",
+    "lineNum": 163,
+    "text": "export const aurix = {"
+  },
+  {
+    "file": "src\\lib\\blog-data.ts",
+    "lineNum": 16,
+    "text": "slug: \"shipping-faster-with-aurix\","
+  },
+  {
+    "file": "src\\lib\\blog-data.ts",
+    "lineNum": 27,
+    "text": "\"Over the past year, we studied how the fastest teams using Aurix structure their work. Three patterns kept showing up: tight loops, fewer handoffs, and a shared source of truth that engineers actually trust.\","
+  },
+  {
+    "file": "src\\pages\\AIInsightsPage.tsx",
+    "lineNum": 636,
+    "text": "<div className=\"text-xs font-medium uppercase tracking-wider text-muted-foreground\">Aurix Intelligence</div>"
+  },
+  {
+    "file": "src\\pages\\AIInsightsPage.tsx",
+    "lineNum": 776,
+    "text": "{ role: \"ai\", text: \"Hi! I’m Aurix AI. Ask me about workforce metrics, attrition, burnout, or hiring forecasts.\" },"
+  },
+  {
+    "file": "src\\pages\\AIInsightsPage.tsx",
+    "lineNum": 801,
+    "text": "<div className=\"text-sm font-medium\">Aurix AI Assistant</div>"
+  },
+  {
+    "file": "src\\pages\\AIInsightsPage.tsx",
+    "lineNum": 825,
+    "text": "<Input value={text} onChange={(e) => setText(e.target.value)} placeholder=\"Ask Aurix AI anything...\" className=\"h-9\" />"
+  },
+  {
+    "file": "src\\pages\\AssetsPage.tsx",
+    "lineNum": 615,
+    "text": "link.download = `Aurix_Assets_Inventory_${new Date().toISOString().split(\"T\")[0]}.csv`;"
+  },
+  {
+    "file": "src\\pages\\AssetsPage.tsx",
+    "lineNum": 1418,
+    "text": "<div className=\"text-[10px] font-bold tracking-widest text-slate-500 uppercase\">AURIX HRMS ASSET</div>"
+  },
+  {
+    "file": "src\\pages\\AssetsPage.tsx",
+    "lineNum": 1434,
+    "text": "<div className=\"text-[8px] text-slate-400 italic\">Company: Aurix Talent Labs</div>"
+  },
+  {
+    "file": "src\\pages\\ChatAssistantPage.tsx",
+    "lineNum": 20,
+    "text": "{ role: \"ai\", text: \"Hi 👋 I'm Aurix AI. Ask me about employees, payroll, attendance, reports or analytics.\" },"
+  },
+  {
+    "file": "src\\pages\\ChatAssistantPage.tsx",
+    "lineNum": 51,
+    "text": "<Input value={input} onChange={(e) => setInput(e.target.value)} placeholder=\"Ask Aurix AI… (e.g. show top performers in Sales)\" />"
+  },
+  {
+    "file": "src\\pages\\DocumentGeneratorPage.tsx",
+    "lineNum": 32,
+    "text": "We are pleased to inform you regarding your ${t.title.toLowerCase()} as ${role} at Aurix Inc."
+  },
+  {
+    "file": "src\\pages\\DocumentGeneratorPage.tsx",
+    "lineNum": 36,
+    "text": "HR Team — Aurix Inc.`"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 117,
+    "text": "email: e.company_email || e.personal_email || \"aurix@gmail.com\","
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 343,
+    "text": "let text = `AURIX TALENT LABS — OFFICIAL HR LETTER"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 352,
+    "text": "We are pleased to offer you the position of ${genFields[\"Role\"] || \"Senior Software Architect\"} at Aurix Talent Labs."
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 360,
+    "text": "Aurix Talent Labs`;"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 364,
+    "text": "This Confidentiality Agreement is entered into by and between Aurix Talent Labs and ${recipient}, with witness ${genFields[\"Witness Name\"] || \"Priya Nair (Legal Lead)\"}."
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 369,
+    "text": "Aurix Corporate Legal Representative"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 374,
+    "text": "This is to certify that ${recipient} was employed with Aurix Talent Labs."
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 387,
+    "text": "acknowledge that I have received, read, and understood all policies stated in the Aurix Corporate Handbook v4.0."
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 600,
+    "text": "const file = new Blob([`Aurix HR Vault. Document ID: ${doc.id}\\nCategory: ${doc.category}\\nName: ${doc.name}\\nStatus: ${doc.status}`], {type: 'text/plain'});"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 1114,
+    "text": "<h2 className=\"text-xs sm:text-sm font-extrabold tracking-wider text-slate-900 uppercase\">AURIX TALENT LABS PRIVATE LIMITED</h2>"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 1120,
+    "text": "<p>www.aurixtalentlabs.com &bull; hr@aurixtalentlabs.com &bull; +91-40-69201100</p>"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 1224,
+    "text": "<p className=\"text-[9px] text-slate-500\">Aurix Talent Labs Private Limited</p>"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 1231,
+    "text": "<p className=\"text-[7px] text-slate-400 font-mono\">Aurix Talent Labs Pvt Ltd</p>"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 1238,
+    "text": "<span>AURIX TALENT LABS PRIVATE LIMITED</span>"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 1256,
+    "text": "<h2 className=\"text-xs sm:text-sm font-extrabold tracking-wider text-slate-900 uppercase\">AURIX TALENT LABS PRIVATE LIMITED</h2>"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 1262,
+    "text": "<p>www.aurixtalentlabs.com &bull; legal@aurixtalentlabs.com &bull; +91-40-69201100</p>"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 1283,
+    "text": "<p className=\"font-bold text-slate-900\">Aurix Talent Labs Private Limited</p>"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 1295,
+    "text": "<div><span className=\"text-slate-400 block\">Email Address</span><strong className=\"text-slate-800\">{selEmp?.email || \"aurix@gmail.com\"}</strong></div>"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 1309,
+    "text": "This Proprietary Non-Disclosure Agreement (\"Agreement\") is executed between <strong>Aurix Talent Labs Private Limited</strong> (\"Disclosing Party\") and <strong>{selEmp?.fullName || \"Vinit Sharma\"}</strong> (\"Receiving Party\") to safeguard confidential, proprietary, and technical assets accessed during employment, research, product engineering, customer interaction, and corporate operations."
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 1355,
+    "text": "<p><strong>3. INTELLECTUAL PROPERTY RIGHTS:</strong> All inventions, software source code, algorithms, designs, AI models, and documentation created during employment remain the sole and exclusive property of Aurix Talent Labs Private Limited under the Work-For-Hire doctrine.</p>"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 1385,
+    "text": "<p className=\"text-[7px] text-slate-400 font-mono\">Aurix Talent Labs Pvt Ltd</p>"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 1394,
+    "text": "<span>AURIX TALENT LABS PRIVATE LIMITED</span>"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 1412,
+    "text": "<h2 className=\"text-xs sm:text-sm font-extrabold tracking-wider text-slate-900 uppercase\">AURIX TALENT LABS PRIVATE LIMITED</h2>"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 1418,
+    "text": "<p>www.aurixtalentlabs.com &bull; hr@aurixtalentlabs.com &bull; +91-40-69201100</p>"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 1478,
+    "text": "I acknowledge that I have received, accessed, and thoroughly reviewed the official <strong>Company Handbook v4.0</strong> issued by <strong>Aurix Talent Labs Private Limited</strong>."
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 1522,
+    "text": "<p className=\"text-[7px] text-slate-400 font-mono\">Aurix Talent Labs Pvt Ltd</p>"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 1529,
+    "text": "<span>AURIX TALENT LABS PRIVATE LIMITED</span>"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 1538,
+    "text": "<span className=\"text-5xl font-extrabold uppercase tracking-widest text-slate-900\">AURIX TALENT LABS</span>"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 1547,
+    "text": "<h2 className=\"text-xs sm:text-sm font-extrabold tracking-wider text-slate-900 uppercase\">AURIX TALENT LABS PRIVATE LIMITED</h2>"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 1553,
+    "text": "<p>www.aurixtalentlabs.com &bull; careers@aurixtalentlabs.com &bull; +91-40-69201100</p>"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 1613,
+    "text": "We are delighted to formally offer you the position of <strong>{genFields[\"Role\"] || \"Senior Software Architect\"}</strong> at <strong>Aurix Talent Labs Private Limited</strong>. After evaluating your technical accomplishments and leadership profile, we are confident that your experience will play a crucial role in building our next-generation enterprise AI HR platform."
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 1713,
+    "text": "<p className=\"text-[7px] text-slate-400 font-mono\">Aurix Talent Labs Pvt Ltd</p>"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage.tsx",
+    "lineNum": 1720,
+    "text": "<span>AURIX TALENT LABS PRIVATE LIMITED</span>"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage_good_top.txt",
+    "lineNum": 199,
+    "text": "let text = `AURIX TALENT LABS â€” OFFICIAL LETTER"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage_good_top.txt",
+    "lineNum": 207,
+    "text": "We are pleased to offer you the position of ${genFields[\"Role\"] || \"Frontend Architect\"} at Aurix Talent Labs."
+  },
+  {
+    "file": "src\\pages\\DocumentsPage_good_top.txt",
+    "lineNum": 215,
+    "text": "Aurix Talent Labs`;"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage_good_top.txt",
+    "lineNum": 219,
+    "text": "This Agreement is entered into by and between Aurix Talent Labs and ${recipient}, with witness ${genFields[\"Witness Name\"] || \"Priya Nair\"}."
+  },
+  {
+    "file": "src\\pages\\DocumentsPage_good_top.txt",
+    "lineNum": 224,
+    "text": "Aurix Representative"
+  },
+  {
+    "file": "src\\pages\\DocumentsPage_good_top.txt",
+    "lineNum": 229,
+    "text": "This is to certify that ${recipient} was employed with Aurix Talent Labs."
+  },
+  {
+    "file": "src\\pages\\DocumentsPage_good_top.txt",
+    "lineNum": 242,
+    "text": "acknowledge that I have received, read, and understood the policies stated in the Aurix Company Handbook v4.0."
+  },
+  {
+    "file": "src\\pages\\DocumentsPage_good_top.txt",
+    "lineNum": 449,
+    "text": "const file = new Blob([`Aurix HR Vault. Document ID: ${doc.id}\\nCategory: ${doc.category}\\nName: ${doc.name}\\nStatus: ${doc.status}`], {type: 'text/plain'});"
+  },
+  {
+    "file": "src\\pages\\ExitManagementPage.tsx",
+    "lineNum": 186,
+    "text": "{ id: newId(\"ret\"), assetId: \"a10\", assetName: \"Aurix access ID Card\", category: \"accessory\", serial: \"AC-19401\", status: \"pending\" }"
+  },
+  {
+    "file": "src\\pages\\ExitManagementPage.tsx",
+    "lineNum": 555,
+    "text": "let text = `AURIX TALENT LABS"
+  },
+  {
+    "file": "src\\pages\\ExitManagementPage.tsx",
+    "lineNum": 569,
+    "text": "text = `AURIX TALENT LABS — FINAL SETTLEMENT SHEET"
+  },
+  {
+    "file": "src\\pages\\ExitManagementPage.tsx",
+    "lineNum": 1758,
+    "text": "<Textarea value={intSuggestions} onChange={e => setIntSuggestions(e.target.value)} placeholder=\"How can Aurix HR retain talent better?\" className=\"min-h-[50px] bg-background/50 border-border text-xs\" />"
+  },
+  {
+    "file": "src\\pages\\TimesheetsPage.tsx",
+    "lineNum": 42,
+    "text": "{ id: \"proj_aurix_core\", name: \"Aurix AI Core Engine\" },"
+  },
+  {
+    "file": "src\\pages\\TimesheetsPage.tsx",
+    "lineNum": 61,
+    "text": "{ id: \"row_1\", projectId: \"proj_aurix_core\", hours: [0, 0, 0, 0, 0, 0, 0], description: \"\" }"
+  },
+  {
+    "file": "src\\pages\\TimesheetsPage.tsx",
+    "lineNum": 379,
+    "text": "projectId: \"proj_aurix_core\","
+  },
+  {
+    "file": "src\\pages\\TimesheetsPage.tsx",
+    "lineNum": 1009,
+    "text": "Aurix AI can analyze your git repository commits, local workspace project updates, and calendar events to automatically write descriptions and estimate daily hours."
+  },
+  {
+    "file": "src\\pages\\VisitorsPage.tsx",
+    "lineNum": 193,
+    "text": "<QrTile value={`AURIX-VISITOR:${pass.passCode}`} label={pass.passCode} size={170} />"
+  },
+  {
+    "file": "src\\routes\\about.tsx",
+    "lineNum": 11,
+    "text": "{ name: \"description\", content: \"Aurix is on a mission to give every team the operating system they deserve.\" },"
+  },
+  {
+    "file": "src\\routes\\about.tsx",
+    "lineNum": 12,
+    "text": "{ property: \"og:title\", content: \"About — Aurix\" },"
+  },
+  {
+    "file": "src\\routes\\about.tsx",
+    "lineNum": 13,
+    "text": "{ property: \"og:description\", content: \"Our mission, our story, and the team building Aurix.\" },"
+  },
+  {
+    "file": "src\\routes\\about.tsx",
+    "lineNum": 53,
+    "text": "About Aurix"
+  },
+  {
+    "file": "src\\routes\\about.tsx",
+    "lineNum": 59,
+    "text": "Software for work is stuck in 2012. Aurix is a fresh take — engineered for the way modern teams actually move, with the polish of a product you'd pay double for."
+  },
+  {
+    "file": "src\\routes\\about.tsx",
+    "lineNum": 86,
+    "text": "<p>Aurix started in a small studio in Lisbon in 2022. Our founders had built and shipped product at some of the most respected tech companies — and were tired of stitching together five tools to get anything done.</p>"
+  },
+  {
+    "file": "src\\routes\\about.tsx",
+    "lineNum": 87,
+    "text": "<p>The first version of Aurix was an opinionated weekend project. It got passed quietly between teams who told their friends. Within a year, thousands of companies were using it daily.</p>"
+  },
+  {
+    "file": "src\\routes\\about.tsx",
+    "lineNum": 88,
+    "text": "<p>Today, Aurix is a team of 60 across three continents, building one of the most loved products in its category. We're still early.</p>"
+  },
+  {
+    "file": "src\\routes\\about.tsx",
+    "lineNum": 94,
+    "text": "<SectionHeader eyebrow=\"Team\" title=\"The people building Aurix\" />"
+  },
+  {
+    "file": "src\\routes\\api\\ai-brain.ts",
+    "lineNum": 60,
+    "text": "\"X-Aurix-Agent\": agent.id,"
+  },
+  {
+    "file": "src\\routes\\api\\ai-brain.ts",
+    "lineNum": 61,
+    "text": "\"X-Aurix-Model\": modelName,"
+  },
+  {
+    "file": "src\\routes\\api\\payroll-copilot.ts",
+    "lineNum": 20,
+    "text": "\"You are Aurix Payroll Copilot, an expert AI assistant for HR & payroll teams. \" +"
+  },
+  {
+    "file": "src\\routes\\blog.$slug.tsx",
+    "lineNum": 81,
+    "text": "<p className=\"mt-2 text-sm text-muted-foreground\">Writing about product, craft, and the future of work at Aurix.</p>"
+  },
+  {
+    "file": "src\\routes\\blog.index.tsx",
+    "lineNum": 14,
+    "text": "{ property: \"og:title\", content: \"Blog — Aurix\" },"
+  },
+  {
+    "file": "src\\routes\\blog.tsx",
+    "lineNum": 8,
+    "text": "{ property: \"og:title\", content: \"Blog — Aurix\" },"
+  },
+  {
+    "file": "src\\routes\\contact.tsx",
+    "lineNum": 15,
+    "text": "{ name: \"description\", content: \"Get in touch with the Aurix team. We respond within one business day.\" },"
+  },
+  {
+    "file": "src\\routes\\contact.tsx",
+    "lineNum": 16,
+    "text": "{ property: \"og:title\", content: \"Contact — Aurix\" },"
+  },
+  {
+    "file": "src\\routes\\contact.tsx",
+    "lineNum": 17,
+    "text": "{ property: \"og:description\", content: \"Talk to the Aurix team.\" },"
+  },
+  {
+    "file": "src\\routes\\contact.tsx",
+    "lineNum": 71,
+    "text": "placeholder=\"Tell us what you're hoping to do with Aurix…\""
+  },
+  {
+    "file": "src\\routes\\dashboard.attendance.checkin.tsx",
+    "lineNum": 1010,
+    "text": "<SectionHeader title=\"AI Attendance Insights\" subtitle=\"Powered by Aurix AI\" icon={Brain} />"
+  },
+  {
+    "file": "src\\routes\\dashboard.attendance.checkin.tsx",
+    "lineNum": 1119,
+    "text": "<div className=\"text-[10px] text-muted-foreground\">Today · 5 years at Aurix!</div>"
+  },
+  {
+    "file": "src\\routes\\dashboard.employee.tsx",
+    "lineNum": 16,
+    "text": "\"Aurix HR Employee Self-Service Dashboard — manage your attendance, leaves, payslips, performance goals, documents, and assets.\","
+  },
+  {
+    "file": "src\\routes\\dashboard.index.tsx",
+    "lineNum": 16,
+    "text": "\"Aurix HR Enterprise Executive Dashboard — a world-class HR operating system command center with real-time KPIs, approvals, analytics, recruitment, payroll, attendance, and more.\","
+  },
+  {
+    "file": "src\\routes\\dashboard.payroll.copilot.tsx",
+    "lineNum": 283,
+    "text": "{msg.role === \"assistant\" ? <span>Aurix Copilot</span> : null}"
+  },
+  {
+    "file": "src\\routes\\dashboard.payroll.copilot.tsx",
+    "lineNum": 294,
+    "text": "<span>Aurix Copilot is computing response...</span>"
+  },
+  {
+    "file": "src\\routes\\dashboard.payroll.settings.tsx",
+    "lineNum": 55,
+    "text": "company_name: \"Aurix AI Enterprise\","
+  },
+  {
+    "file": "src\\routes\\dashboard.settings.company.tsx",
+    "lineNum": 104,
+    "text": "placeholder=\"Aurix AI Technologies Pvt Ltd\""
+  },
+  {
+    "file": "src\\routes\\dashboard.settings.general.tsx",
+    "lineNum": 27,
+    "text": "appName: \"Aurix HRMS\","
+  },
+  {
+    "file": "src\\routes\\dashboard.settings.general.tsx",
+    "lineNum": 43,
+    "text": "appName: settings.appName || \"Aurix HRMS\","
+  },
+  {
+    "file": "src\\routes\\dashboard.settings.general.tsx",
+    "lineNum": 100,
+    "text": "placeholder=\"Aurix HRMS\""
+  },
+  {
+    "file": "src\\routes\\dashboard.settings.integrations.tsx",
+    "lineNum": 62,
+    "text": "<p className=\"text-xs text-muted-foreground\">Connect Aurix with your enterprise toolstack for automated communications, single sign-on, and sync.</p>"
+  },
+  {
+    "file": "src\\routes\\dashboard.settings.notifications.tsx",
+    "lineNum": 94,
+    "text": "<div className=\"text-xs text-muted-foreground\">Show real-time toast alerts and badges inside the Aurix dashboard header.</div>"
+  },
+  {
+    "file": "src\\routes\\employee-onboarding.tsx",
+    "lineNum": 227,
+    "text": "<h1 className=\"text-2xl font-black tracking-tight\">Aurix HRMS</h1>"
+  },
+  {
+    "file": "src\\routes\\faq.tsx",
+    "lineNum": 14,
+    "text": "{ name: \"description\", content: \"Answers to common questions about Aurix — product, pricing, security, and more.\" },"
+  },
+  {
+    "file": "src\\routes\\faq.tsx",
+    "lineNum": 15,
+    "text": "{ property: \"og:title\", content: \"FAQ — Aurix\" },"
+  },
+  {
+    "file": "src\\routes\\faq.tsx",
+    "lineNum": 16,
+    "text": "{ property: \"og:description\", content: \"Everything you need to know about Aurix.\" },"
+  },
+  {
+    "file": "src\\routes\\faq.tsx",
+    "lineNum": 28,
+    "text": "{ q: \"What is Aurix?\", a: \"Aurix is a unified workspace for product teams — combining planning, execution, and analytics in one fast interface.\" },"
+  },
+  {
+    "file": "src\\routes\\faq.tsx",
+    "lineNum": 30,
+    "text": "{ q: \"Can I use it offline?\", a: \"Yes — Aurix is local-first. Your data is available offline and syncs when you're back online.\" },"
+  },
+  {
+    "file": "src\\routes\\faq.tsx",
+    "lineNum": 44,
+    "text": "{ q: \"Is Aurix SOC 2 certified?\", a: \"We are SOC 2 Type II certified and undergo annual audits.\" },"
+  },
+  {
+    "file": "src\\routes\\faq.tsx",
+    "lineNum": 52,
+    "text": "{ q: \"Does Aurix integrate with GitHub?\", a: \"Yes — bi-directional sync with GitHub, GitLab, Bitbucket, and others.\" },"
+  },
+  {
+    "file": "src\\routes\\features.tsx",
+    "lineNum": 14,
+    "text": "{ name: \"description\", content: \"Explore everything Aurix can do — planning, AI, analytics, integrations, and more.\" },"
+  },
+  {
+    "file": "src\\routes\\features.tsx",
+    "lineNum": 15,
+    "text": "{ property: \"og:title\", content: \"Features — Aurix\" },"
+  },
+  {
+    "file": "src\\routes\\features.tsx",
+    "lineNum": 16,
+    "text": "{ property: \"og:description\", content: \"Every capability Aurix offers, in detail.\" },"
+  },
+  {
+    "file": "src\\routes\\features.tsx",
+    "lineNum": 138,
+    "text": "<SectionHeader eyebrow=\"Integrations\" title=\"Plays nicely with your stack\" subtitle=\"Connect Aurix to the tools your team already uses.\" />"
+  },
+  {
+    "file": "src\\routes\\index.tsx",
+    "lineNum": 13,
+    "text": "{ property: \"og:title\", content: \"Recruitment Dashboard — Aurix\" },"
+  },
+  {
+    "file": "src\\routes\\jobs.apply.$ukey.tsx",
+    "lineNum": 283,
+    "text": "Aurix <span className=\"font-normal text-indigo-400/90 text-sm tracking-normal ml-1\">Careers Portal</span>"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 338,
+    "text": "// Save user to aurix store"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 378,
+    "text": "<span className=\"font-display text-lg font-semibold tracking-tight\">Aurix</span>"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 519,
+    "text": "<span className=\"font-display text-lg font-semibold tracking-tight\">Aurix</span>"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 654,
+    "text": "<Input value={c.name} onChange={(e) => set(\"name\", e.target.value)} placeholder=\"Aurix, Inc.\" />"
+  },
+  {
+    "file": "src\\routes\\onboarding.tsx",
+    "lineNum": 1573,
+    "text": "<h2 className=\"font-display text-2xl font-semibold tracking-tight\">Your Aurix workspace is ready</h2>"
+  },
+  {
+    "file": "src\\routes\\pricing.tsx",
+    "lineNum": 15,
+    "text": "{ property: \"og:title\", content: \"Pricing — Aurix\" },"
+  },
+  {
+    "file": "src\\routes\\pricing.tsx",
+    "lineNum": 37,
+    "text": "tagline: \"For individuals exploring Aurix.\","
+  },
+  {
+    "file": "src\\routes\\pricing.tsx",
+    "lineNum": 50,
+    "text": "features: [\"Unlimited members\", \"Unlimited history\", \"Aurix AI included\", \"Advanced integrations\", \"Priority support\"],"
+  },
+  {
+    "file": "src\\routes\\pricing.tsx",
+    "lineNum": 73,
+    "text": "{ feature: \"Aurix AI\", values: [\"—\", \"Included\", \"Included\", \"Custom\"] },"
+  },
+  {
+    "file": "src\\routes\\privacy.tsx",
+    "lineNum": 9,
+    "text": "{ name: \"description\", content: \"How Aurix collects, uses, and protects your data.\" },"
+  },
+  {
+    "file": "src\\routes\\privacy.tsx",
+    "lineNum": 10,
+    "text": "{ property: \"og:title\", content: \"Privacy Policy — Aurix\" },"
+  },
+  {
+    "file": "src\\routes\\privacy.tsx",
+    "lineNum": 19,
+    "text": "{ h: \"1. Introduction\", p: \"Aurix Inc. (\\\"Aurix\\\", \\\"we\\\", \\\"us\\\") respects your privacy. This Privacy Policy describes how we collect, use, disclose, and protect your information when you use our products and services.\" },"
+  },
+  {
+    "file": "src\\routes\\terms.tsx",
+    "lineNum": 9,
+    "text": "{ name: \"description\", content: \"The terms that govern your use of Aurix.\" },"
+  },
+  {
+    "file": "src\\routes\\terms.tsx",
+    "lineNum": 10,
+    "text": "{ property: \"og:title\", content: \"Terms & Conditions — Aurix\" },"
+  },
+  {
+    "file": "src\\routes\\terms.tsx",
+    "lineNum": 19,
+    "text": "{ h: \"1. Acceptance of terms\", p: \"By accessing or using Aurix, you agree to be bound by these Terms & Conditions and our Privacy Policy. If you do not agree, do not use the service.\" },"
+  },
+  {
+    "file": "src\\routes\\terms.tsx",
+    "lineNum": 20,
+    "text": "{ h: \"2. Use of the service\", p: \"You may use Aurix only in compliance with these terms and all applicable laws. You are responsible for the activities that occur under your account.\" },"
+  },
+  {
+    "file": "src\\routes\\terms.tsx",
+    "lineNum": 24,
+    "text": "{ h: \"6. Intellectual property\", p: \"Aurix retains all rights in the service. You retain all rights to content you create. You grant us a limited license to host and display your content as needed to provide the service.\" },"
+  },
+  {
+    "file": "src\\routes\\terms.tsx",
+    "lineNum": 26,
+    "text": "{ h: \"8. Disclaimers\", p: \"The service is provided \\\"as is\\\" without warranties of any kind. To the maximum extent permitted by law, Aurix disclaims all warranties, express or implied.\" },"
+  },
+  {
+    "file": "src\\routes\\terms.tsx",
+    "lineNum": 27,
+    "text": "{ h: \"9. Limitation of liability\", p: \"Aurix's liability is limited to the fees you paid in the twelve months prior to the event giving rise to the claim.\" },"
+  },
+  {
+    "file": "src\\routes\\__root.tsx",
+    "lineNum": 86,
+    "text": "{ name: \"author\", content: \"Aurix\" },"
+  },
+  {
+    "file": "src\\routes\\__root.tsx",
+    "lineNum": 87,
+    "text": "{ property: \"og:title\", content: \"Aurix\" },"
+  },
+  {
+    "file": "src\\routes\\__root.tsx",
+    "lineNum": 91,
+    "text": "{ name: \"twitter:site\", content: \"@Aurix\" },"
+  },
+  {
+    "file": "src\\services\\reimbursementsApi.ts",
+    "lineNum": 45,
+    "text": "project: \"PROJ-AURIX-CORE\","
+  },
+  {
+    "file": "src\\store\\sidebar\\sidebarSlice.ts",
+    "lineNum": 5,
+    "text": "const STORAGE_KEY = \"AURIX_SIDEBAR_EXPANDED\";"
+  }
+]

@@ -11,7 +11,7 @@ import { useAurix } from "@/lib/aurix-store";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard/payroll/")({
-  head: () => ({ meta: [{ title: "Payroll Dashboard — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Payroll Dashboard — OFC360" }] }),
   component: PayrollDashboardPage,
 });
 

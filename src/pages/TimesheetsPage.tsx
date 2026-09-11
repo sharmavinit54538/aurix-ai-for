@@ -39,7 +39,7 @@ interface PendingApproval {
 }
 
 const AVAILABLE_PROJECTS = [
-  { id: "proj_aurix_core", name: "Aurix AI Core Engine" },
+  { id: "proj_aurix_core", name: "OFC360 Core Engine" },
   { id: "proj_recruitment", name: "Enterprise Recruitment Bot" },
   { id: "proj_compensation", name: "Compensation Analytics" },
   { id: "proj_internal", name: "Internal Admin Operations" },
@@ -1006,7 +1006,7 @@ export function TimesheetsPage() {
               AI Copilot Timesheet Autofill
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground mt-2">
-              Aurix AI can analyze your git repository commits, local workspace project updates, and calendar events to automatically write descriptions and estimate daily hours.
+              OFC360 can analyze your git repository commits, local workspace project updates, and calendar events to automatically write descriptions and estimate daily hours.
             </DialogDescription>
           </DialogHeader>
 

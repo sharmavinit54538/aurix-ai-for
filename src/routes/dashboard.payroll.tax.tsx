@@ -25,7 +25,7 @@ import { YearEndProcessingModal } from "@/features/admin/payroll/components/tax/
 import { TaxAuditLogsModal } from "@/features/admin/payroll/components/tax/TaxAuditLogsModal";
 
 export const Route = createFileRoute("/dashboard/payroll/tax")({
-  head: () => ({ meta: [{ title: "Tax Management — Aurix AI Enterprise HRMS" }] }),
+  head: () => ({ meta: [{ title: "Tax Management — OFC360 Enterprise HRMS" }] }),
   component: AdminTaxManagementPage,
 });
 

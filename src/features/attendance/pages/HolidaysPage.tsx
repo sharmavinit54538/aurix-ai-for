@@ -433,7 +433,7 @@ export default function HolidaysPage() {
     const csvContent = "data:text/csv;charset=utf-8," + headers + rows;
     const link = document.createElement("a");
     link.setAttribute("href", encodeURI(csvContent));
-    link.setAttribute("download", `aurix_holidays_${new Date().toISOString().split("T")[0]}.csv`);
+    link.setAttribute("download", `ofc360_holidays_${new Date().toISOString().split("T")[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -862,7 +862,7 @@ export default function HolidaysPage() {
             <div className="space-y-3.5">
               {[
                 { label: "Public Holidays", desc: "National or federal statutory paid off.", count: categoryCounts.Public, color: "bg-blue-500" },
-                { label: "Company Holidays", desc: "Strategic operations days off by Aurix.", count: categoryCounts.Company, color: "bg-emerald-500" },
+                { label: "Company Holidays", desc: "Strategic operations days off by OFC360.", count: categoryCounts.Company, color: "bg-emerald-500" },
                 { label: "Regional Holidays", desc: "State or territory level local festivals.", count: categoryCounts.Regional, color: "bg-amber-500" },
                 { label: "Optional / Floating", desc: "Personal cultural or religious choices.", count: categoryCounts.Optional, color: "bg-purple-500" },
               ].map((cat, i) => (

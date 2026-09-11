@@ -35,7 +35,7 @@ import {
 } from "@/services/attendanceApi";
 
 export const Route = createFileRoute("/dashboard/attendance/shifts")({
-  head: () => ({ meta: [{ title: "Shifts Management — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Shifts Management — OFC360" }] }),
   component: ShiftsPage,
 });
 
@@ -306,16 +306,7 @@ export function ShiftsPage() {
 
   return (
     <div className="space-y-6 pb-20">
-      {/* ── Top Navigation / Back ── */}
-      <div className="text-left">
-        <Link
-          to="/dashboard/attendance"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group/back"
-        >
-          <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover/back:-translate-x-0.5" />
-          Back to Attendance Hub
-        </Link>
-      </div>
+
 
       {/* ── Page Header ── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

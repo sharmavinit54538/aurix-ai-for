@@ -7,6 +7,6 @@ const CeoOverviewPage = lazyFeaturePage(
 );
 
 export const Route = createFileRoute("/dashboard/executive/ceo/")({
-  head: () => ({ meta: [{ title: "CEO Executive Control Center — Aurix AI" }] }),
+  head: () => ({ meta: [{ title: "CEO Executive Control Center — OFC360" }] }),
   component: CeoOverviewPage,
 });

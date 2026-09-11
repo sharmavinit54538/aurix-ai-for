@@ -33,7 +33,7 @@ export const BonusLetterModal: React.FC<BonusLetterModalProps> = ({ open, onClos
           {/* Header Branding */}
           <div className="flex items-center justify-between pb-4 border-b border-slate-200">
             <div>
-              <h2 className="text-lg font-bold tracking-tight text-slate-900 uppercase">AURIX AI ENTERPRISE CORP</h2>
+              <h2 className="text-lg font-bold tracking-tight text-slate-900 uppercase">OFC360 ENTERPRISE CORP</h2>
               <p className="text-[11px] text-slate-500 font-sans">Human Capital & Compensation Governance Office</p>
             </div>
             <div className="text-right text-[11px] font-sans text-slate-500">
@@ -69,7 +69,7 @@ export const BonusLetterModal: React.FC<BonusLetterModalProps> = ({ open, onClos
               <strong>{bonus.payrollCycle || "July 2026"}</strong>.
             </p>
 
-            <p className="pt-2">We thank you for your leadership and look forward to your continued success with Aurix AI.</p>
+            <p className="pt-2">We thank you for your leadership and look forward to your continued success with OFC360.</p>
           </div>
 
           {/* Digital Signature Footer */}
@@ -82,7 +82,7 @@ export const BonusLetterModal: React.FC<BonusLetterModalProps> = ({ open, onClos
               </span>
             </div>
             <div className="text-right">
-              <span className="text-[10px] text-slate-400">Aurix HRMS Seal #99012</span>
+              <span className="text-[10px] text-slate-400">OFC360 Seal #99012</span>
             </div>
           </div>
         </div>

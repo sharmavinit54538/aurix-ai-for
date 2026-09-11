@@ -7,10 +7,10 @@ import { toast } from "sonner";
 
 export function CtoDevOpsPage() {
   const pipelines = [
-    { name: "aurix-backend-production-deploy", env: "Production", status: "Success", duration: "3m 42s", lastRun: "12 mins ago" },
-    { name: "aurix-frontend-vercel-deploy", env: "Production", status: "Success", duration: "1m 18s", lastRun: "24 mins ago" },
-    { name: "aurix-ai-inference-gpu-deploy", env: "Staging", status: "Running", duration: "2m 04s", lastRun: "Just now" },
-    { name: "aurix-postgres-migration-check", env: "Development", status: "Success", duration: "45s", lastRun: "1 hour ago" },
+    { name: "ofc360-backend-production-deploy", env: "Production", status: "Success", duration: "3m 42s", lastRun: "12 mins ago" },
+    { name: "ofc360-frontend-vercel-deploy", env: "Production", status: "Success", duration: "1m 18s", lastRun: "24 mins ago" },
+    { name: "ofc360-ai-inference-gpu-deploy", env: "Staging", status: "Running", duration: "2m 04s", lastRun: "Just now" },
+    { name: "ofc360-postgres-migration-check", env: "Development", status: "Success", duration: "45s", lastRun: "1 hour ago" },
   ];
 
   const servers = [

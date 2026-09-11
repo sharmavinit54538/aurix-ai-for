@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/ai/analytics-center")({
-  head: () => ({ meta: [{ title: "AI Analytics Center — Aurix" }] }),
+  head: () => ({ meta: [{ title: "AI Analytics Center — OFC360" }] }),
   component: Page,
 });
 

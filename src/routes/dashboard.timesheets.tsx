@@ -4,6 +4,6 @@ import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
 const TimesheetsPage = lazyFeaturePage(() => import("@/pages/TimesheetsPage"));
 
 export const Route = createFileRoute("/dashboard/timesheets")({
-  head: () => ({ meta: [{ title: "Timesheets — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Timesheets — OFC360" }] }),
   component: TimesheetsPage,
 });

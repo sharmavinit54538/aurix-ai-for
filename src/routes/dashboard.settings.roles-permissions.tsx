@@ -15,7 +15,7 @@ import { createRole, deleteRole, fetchPermissions, fetchRoles, updateRole } from
 import type { Role } from "@/store/settings/settingsTypes";
 
 export const Route = createFileRoute("/dashboard/settings/roles-permissions")({
-  head: () => ({ meta: [{ title: "Roles & Permissions — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Roles & Permissions — OFC360" }] }),
   component: RolesPermissionsPage,
 });
 

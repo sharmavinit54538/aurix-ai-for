@@ -9,10 +9,10 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/blog/")({
   head: () => ({
     meta: [
-      { title: "Blog — Aurix" },
-      { name: "description", content: "Stories, product updates, and ideas from the Aurix team." },
-      { property: "og:title", content: "Blog — Aurix" },
-      { property: "og:description", content: "Stories and ideas from the team building Aurix." },
+      { title: "Blog — OFC360" },
+      { name: "description", content: "Stories, product updates, and ideas from the OFC360 team." },
+      { property: "og:title", content: "Blog — OFC360" },
+      { property: "og:description", content: "Stories and ideas from the team building OFC360." },
       { property: "og:url", content: "/blog" },
     ],
     links: [{ rel: "canonical", href: "/blog" }],
@@ -37,7 +37,7 @@ function BlogIndex() {
   return (
     <SiteLayout>
       <Section>
-        <SectionHeader eyebrow="Blog" title="Ideas, stories, and product updates" subtitle="Writing from the team building Aurix." />
+        <SectionHeader eyebrow="Blog" title="Ideas, stories, and product updates" subtitle="Writing from the team building OFC360." />
 
         {/* Featured */}
         <Link

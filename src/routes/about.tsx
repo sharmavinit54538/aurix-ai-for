@@ -7,10 +7,10 @@ import { CTA } from "@/components/site/CTA";
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "About — Aurix" },
-      { name: "description", content: "Aurix is on a mission to give every team the operating system they deserve." },
-      { property: "og:title", content: "About — Aurix" },
-      { property: "og:description", content: "Our mission, our story, and the team building Aurix." },
+      { title: "About — OFC360" },
+      { name: "description", content: "OFC360 is on a mission to give every team the operating system they deserve." },
+      { property: "og:title", content: "About — OFC360" },
+      { property: "og:description", content: "Our mission, our story, and the team building OFC360." },
       { property: "og:url", content: "/about" },
     ],
     links: [{ rel: "canonical", href: "/about" }],
@@ -38,8 +38,8 @@ const timeline = [
   { year: "2022", title: "The first sketch", desc: "Two co-founders, one Figma file, a shared frustration with bloated tools." },
   { year: "2023", title: "Private beta", desc: "300 teams. 4 months of relentless iteration." },
   { year: "2024", title: "Public launch", desc: "10,000 teams in the first quarter. The product began to define a category." },
-  { year: "2025", title: "Aurix AI", desc: "Native AI woven through every surface — not bolted on top." },
-  { year: "2026", title: "Today", desc: "12,000+ teams in 180 countries shipping with Aurix." },
+  { year: "2025", title: "OFC360", desc: "Native AI woven through every surface — not bolted on top." },
+  { year: "2026", title: "Today", desc: "12,000+ teams in 180 countries shipping with OFC360." },
 ];
 
 function AboutPage() {
@@ -50,13 +50,13 @@ function AboutPage() {
         <Section className="relative text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-xs font-medium mb-6">
             <span className="h-1.5 w-1.5 rounded-full bg-gradient-brand" />
-            About Aurix
+            About OFC360
           </div>
           <h1 className="font-display text-5xl sm:text-6xl font-bold tracking-tight max-w-3xl mx-auto leading-tight">
             We're building the operating system <span className="text-gradient">teams deserve</span>.
           </h1>
           <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">
-            Software for work is stuck in 2012. Aurix is a fresh take — engineered for the way modern teams actually move, with the polish of a product you'd pay double for.
+            Software for work is stuck in 2012. OFC360 is a fresh take — engineered for the way modern teams actually move, with the polish of a product you'd pay double for.
           </p>
         </Section>
       </section>
@@ -83,15 +83,15 @@ function AboutPage() {
       <Section>
         <SectionHeader eyebrow="Our story" title="Built by people who lived the problem" />
         <div className="mt-12 max-w-3xl mx-auto space-y-5 text-muted-foreground leading-relaxed text-lg">
-          <p>Aurix started in a small studio in Lisbon in 2022. Our founders had built and shipped product at some of the most respected tech companies — and were tired of stitching together five tools to get anything done.</p>
-          <p>The first version of Aurix was an opinionated weekend project. It got passed quietly between teams who told their friends. Within a year, thousands of companies were using it daily.</p>
-          <p>Today, Aurix is a team of 60 across three continents, building one of the most loved products in its category. We're still early.</p>
+          <p>OFC360 started in a small studio in Lisbon in 2022. Our founders had built and shipped product at some of the most respected tech companies — and were tired of stitching together five tools to get anything done.</p>
+          <p>The first version of OFC360 was an opinionated weekend project. It got passed quietly between teams who told their friends. Within a year, thousands of companies were using it daily.</p>
+          <p>Today, OFC360 is a team of 60 across three continents, building one of the most loved products in its category. We're still early.</p>
         </div>
       </Section>
 
       {/* Team */}
       <Section>
-        <SectionHeader eyebrow="Team" title="The people building Aurix" />
+        <SectionHeader eyebrow="Team" title="The people building OFC360" />
         <div className="mt-16 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {team.map((t) => (
             <div key={t.name} className="glass rounded-2xl p-6">

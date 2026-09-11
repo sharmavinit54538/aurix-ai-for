@@ -4,6 +4,6 @@ import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
 const AIInsightsPage = lazyFeaturePage(() => import("@/pages/AIInsightsPage"));
 
 export const Route = createFileRoute("/dashboard/ai-insights")({
-  head: () => ({ meta: [{ title: "AI Insights — Aurix" }] }),
+  head: () => ({ meta: [{ title: "AI Insights — OFC360" }] }),
   component: AIInsightsPage,
 });

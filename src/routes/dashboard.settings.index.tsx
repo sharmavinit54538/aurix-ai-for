@@ -30,7 +30,7 @@ import { api } from "@/api";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard/settings/")({
-  head: () => ({ meta: [{ title: "Settings Hub — Aurix AI" }] }),
+  head: () => ({ meta: [{ title: "Settings Hub — OFC360" }] }),
   component: SettingsHubPage,
 });
 

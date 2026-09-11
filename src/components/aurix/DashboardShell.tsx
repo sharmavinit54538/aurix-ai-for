@@ -504,7 +504,7 @@ export function DashboardShell() {
                   <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-brand-foreground shadow-glow" style={{ background: "var(--gradient-brand)" }}>
                     <Sparkles className="h-4 w-4" />
                   </span>
-                  <span className="font-display text-lg font-semibold tracking-tight truncate">OFC HR</span>
+                  <span className="font-display text-lg font-semibold tracking-tight truncate">OFC360</span>
                 </Link>
                 <div className="flex items-center gap-1 shrink-0">
                   <button
@@ -843,61 +843,6 @@ export function PageHeader({
 
   return (
     <div className="mb-6 flex flex-col min-w-0 gap-2 text-left">
-      {(showBack || backLink || onBack) && (
-        <div className="mb-1 flex items-center">
-          {backLink ? (
-            <Link
-              to={backLink as any}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group/back"
-            >
-              <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover/back:-translate-x-0.5" />
-              {backText || "Back"}
-            </Link>
-          ) : (
-            <button
-              onClick={handleBack}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group/back"
-            >
-              <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover/back:-translate-x-0.5" />
-              {backText || "Back"}
-            </button>
-          )}
-        </div>
-      )}
-      {isRecruitmentSubPage && (
-        <div className="mb-1 flex items-center">
-          <Link
-            to="/dashboard/recruitment"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group/back"
-          >
-            <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover/back:-translate-x-0.5" />
-            Back to Recruitment Hub
-          </Link>
-        </div>
-      )}
-
-      {isAttendanceSubPage && (
-        <div className="mb-1 flex items-center">
-          <Link
-            to="/dashboard/attendance"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group/back"
-          >
-            <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover/back:-translate-x-0.5" />
-            Back to Attendance Hub
-          </Link>
-        </div>
-      )}
-      {isPeopleSubPage && (
-        <div className="mb-1 flex items-center">
-          <Link
-            to="/dashboard/people"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group/back"
-          >
-            <ChevronLeft className="h-3.5 w-3.5 transition-transform group-hover/back:-translate-x-0.5" />
-            Back to People Hub
-          </Link>
-        </div>
-      )}
       <div className="flex min-w-0 flex-wrap items-end justify-between gap-4">
         <div className="min-w-0 flex-1">
           <h1 className="font-display text-2xl font-semibold tracking-tight">{title}</h1>

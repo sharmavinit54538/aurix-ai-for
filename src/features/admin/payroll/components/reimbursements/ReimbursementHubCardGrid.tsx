@@ -129,7 +129,7 @@ export const REIMBURSEMENT_HUB_MODULES: ReimbursementModuleCardDef[] = [
   {
     id: "fraud-detection",
     title: "Fraud Detection Center",
-    description: "Aurix AI duplicate bill detection, high-risk dinner expense alerts, and policy violation timeline.",
+    description: "OFC360 duplicate bill detection, high-risk dinner expense alerts, and policy violation timeline.",
     category: "AI & Compliance",
     icon: AlertTriangle,
     color: "from-red-500/20 to-rose-500/20 text-red-400 border-red-500/30",

@@ -4,6 +4,6 @@ import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
 const OnboardingChecklistPage = lazyFeaturePage(() => import("@/pages/OnboardingChecklistPage"));
 
 export const Route = createFileRoute("/dashboard/onboarding-checklist")({
-  head: () => ({ meta: [{ title: "Onboarding Checklist — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Onboarding Checklist — OFC360" }] }),
   component: OnboardingChecklistPage,
 });

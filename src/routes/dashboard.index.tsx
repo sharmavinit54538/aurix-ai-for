@@ -9,11 +9,11 @@ const ExecutiveDashboardPage = lazyFeaturePage(
 export const Route = createFileRoute("/dashboard/")({
   head: () => ({
     meta: [
-      { title: "Executive Command Center — Aurix HR" },
+      { title: "Executive Command Center — OFC360 HR" },
       {
         name: "description",
         content:
-          "Aurix HR Enterprise Executive Dashboard — a world-class HR operating system command center with real-time KPIs, approvals, analytics, recruitment, payroll, attendance, and more.",
+          "OFC360 Enterprise Executive Dashboard — a world-class HR operating system command center with real-time KPIs, approvals, analytics, recruitment, payroll, attendance, and more.",
       },
     ],
   }),

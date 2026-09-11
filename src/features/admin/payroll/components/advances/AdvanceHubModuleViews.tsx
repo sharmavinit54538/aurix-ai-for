@@ -80,7 +80,7 @@ export const AdvanceHubModuleViews: React.FC<AdvanceHubModuleViewsProps> = ({
   >([
     {
       sender: "ai",
-      text: "Welcome to Aurix AI Financial Assistant! I have full visibility into salary advance limits (max 50% gross basic), EMI repayment schedules, credit eligibility scores, and default risk predictions. How can I assist you today?",
+      text: "Welcome to OFC360 Financial Assistant! I have full visibility into salary advance limits (max 50% gross basic), EMI repayment schedules, credit eligibility scores, and default risk predictions. How can I assist you today?",
       timestamp: "10:00 AM",
     },
   ]);
@@ -126,7 +126,7 @@ export const AdvanceHubModuleViews: React.FC<AdvanceHubModuleViewsProps> = ({
       } else if (lower.includes("guarantor") || lower.includes("co-signer")) {
         aiReply = `👥 Guarantor Policy: Loans exceeding ₹1,00,000 require 1 active colleague guarantor verification and uploaded identity proof documents.`;
       } else {
-        aiReply = `🤖 Aurix AI Financial Assistant: Salary advances and loan repayments are 100% integrated with monthly payroll runs under Company Policy #ADV-2026. You can ask me about loan caps, EMI calculations, or credit eligibility.`;
+        aiReply = `🤖 OFC360 Financial Assistant: Salary advances and loan repayments are 100% integrated with monthly payroll runs under Company Policy #ADV-2026. You can ask me about loan caps, EMI calculations, or credit eligibility.`;
       }
 
       setCopilotChat((prev) => [
@@ -140,14 +140,7 @@ export const AdvanceHubModuleViews: React.FC<AdvanceHubModuleViewsProps> = ({
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-4 mb-6">
       <div className="flex flex-wrap items-center gap-3">
         <PayrollBackButton to="/dashboard/payroll" label="Back to Payroll Hub" />
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onBackToHub}
-          className="border-white/10 bg-slate-900 text-slate-300 hover:text-white text-xs gap-1.5 h-8 shadow-sm"
-        >
-          <ArrowLeft className="w-4 h-4 text-emerald-400" /> Back to Advance Hub
-        </Button>
+
         <div>
           <h2 className="text-xl font-black text-white tracking-tight">{title}</h2>
           <p className="text-xs text-slate-400">{subtitle}</p>
@@ -378,7 +371,7 @@ export const AdvanceHubModuleViews: React.FC<AdvanceHubModuleViewsProps> = ({
     case "ai-assistant":
       return (
         <div className="space-y-6">
-          {renderBreadcrumb("Aurix AI Financial Assistant", "Consult your AI assistant for default risk predictions, loan eligibility evaluations, and EMI repayment forecasts.")}
+          {renderBreadcrumb("OFC360 Financial Assistant", "Consult your AI assistant for default risk predictions, loan eligibility evaluations, and EMI repayment forecasts.")}
           
           <div className="w-full">
             {/* Copilot Main Interactive Chat Thread */}

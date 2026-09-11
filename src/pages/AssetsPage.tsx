@@ -582,57 +582,47 @@ export function AssetsPage() {
 
   return (
     <div className="space-y-6">
-      {/* 1. PAGE HEADER */}
-      <PageHeader
-        title={isEmployee ? "My Assets & Equipment" : "Asset Management"}
-        description={
-          isEmployee
-            ? "View hardware, laptops, and devices currently assigned to your profile."
-            : "Monitor configurations, assignments, QR codes, and maintenance records of company hardware."
-        }
-        actions={
-          !isEmployee ? (
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setScanOpen(true)}
-                className="h-9 gap-2 border-border bg-card/60 hover:bg-accent/60 cursor-pointer"
-              >
-                <QrIcon className="h-4 w-4" />
-                Scan QR Code
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  const headers = ["Asset Tag", "Asset Name", "Category", "Brand", "Model", "Serial", "Purchase Cost", "Purchase Date", "Status", "Assigned Employee"];
-                  const rows = assets.map(a => [
-                    a.tag, a.name, a.category, a.brand || "", a.model || "", a.serial, (a.purchaseCost || 0).toString(), a.purchaseDate, a.status, a.assignedTo || "Unassigned"
-                  ].map(v => `"${v.replace(/"/g, '""')}"`).join(","));
-                  const csv = [headers.join(","), ...rows].join("\n");
-                  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-                  const link = document.createElement("a");
-                  link.href = url;
-                  link.download = `Aurix_Assets_Inventory_${new Date().toISOString().split("T")[0]}.csv`;
-                  link.click();
-                  URL.revokeObjectURL(url);
-                  toast.success("Inventory exported as CSV");
-                }}
-                className="h-9 gap-2 border-border bg-card/60 hover:bg-accent/60 cursor-pointer"
-              >
-                <Download className="h-4 w-4" />
-                Export CSV
-              </Button>
-              <Button
-                onClick={() => setAddOpen(true)}
-                className="h-9 gap-2 bg-gradient-brand text-brand-foreground hover:opacity-90 transition-opacity cursor-pointer"
-              >
-                <Plus className="h-4 w-4" />
-                Add Asset
-              </Button>
-            </div>
-          ) : null
-        }
-      />
+      {/* 1. TOP ACTIONS */}
+      {!isEmployee && (
+        <div className="flex justify-end gap-2 mb-6">
+          <Button
+            variant="outline"
+            onClick={() => setScanOpen(true)}
+            className="h-9 gap-2 border-border bg-card/60 hover:bg-accent/60 cursor-pointer"
+          >
+            <QrIcon className="h-4 w-4" />
+            Scan QR Code
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              const headers = ["Asset Tag", "Asset Name", "Category", "Brand", "Model", "Serial", "Purchase Cost", "Purchase Date", "Status", "Assigned Employee"];
+              const rows = assets.map(a => [
+                a.tag, a.name, a.category, a.brand || "", a.model || "", a.serial, (a.purchaseCost || 0).toString(), a.purchaseDate, a.status, a.assignedTo || "Unassigned"
+              ].map(v => `"${v.replace(/"/g, '""')}"`).join(","));
+              const csv = [headers.join(","), ...rows].join("\n");
+              const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+              const link = document.createElement("a");
+              link.href = url;
+              link.download = `OFC360_Assets_Inventory_${new Date().toISOString().split("T")[0]}.csv`;
+              link.click();
+              URL.revokeObjectURL(url);
+              toast.success("Inventory exported as CSV");
+            }}
+            className="h-9 gap-2 border-border bg-card/60 hover:bg-accent/60 cursor-pointer"
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Button>
+          <Button
+            onClick={() => setAddOpen(true)}
+            className="h-9 gap-2 bg-gradient-brand text-brand-foreground hover:opacity-90 transition-opacity cursor-pointer"
+          >
+            <Plus className="h-4 w-4" />
+            Add Asset
+          </Button>
+        </div>
+      )}
 
       {/* 2. STATS CARDS */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
@@ -1415,7 +1405,7 @@ export function AssetsPage() {
             <div className="space-y-4 pt-3 flex flex-col items-center">
               {/* Sticker frame */}
               <div className="rounded-xl border border-slate-300 bg-white p-4 shadow-md w-[220px] flex flex-col items-center select-none text-slate-800">
-                <div className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">AURIX HRMS ASSET</div>
+                <div className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">OFC360 ASSET</div>
                 <div className="font-mono text-sm font-extrabold text-slate-900 border-b border-slate-200 pb-1.5 w-full text-center">
                   {targetAsset.tag}
                 </div>
@@ -1431,7 +1421,7 @@ export function AssetsPage() {
                 </div>
 
                 <div className="text-[10px] font-semibold text-slate-700 truncate max-w-full">{targetAsset.name}</div>
-                <div className="text-[8px] text-slate-400 italic">Company: Aurix Talent Labs</div>
+                <div className="text-[8px] text-slate-400 italic">Company: OFC360</div>
               </div>
 
               {/* Actions */}

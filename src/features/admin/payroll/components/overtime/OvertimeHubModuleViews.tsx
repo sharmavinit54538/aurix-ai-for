@@ -141,14 +141,7 @@ export const OvertimeHubModuleViews: React.FC<OvertimeHubModuleViewsProps> = ({
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-4 mb-6">
       <div className="flex flex-wrap items-center gap-3">
         <PayrollBackButton to="/dashboard/payroll" label="Back to Payroll Hub" />
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onBackToHub}
-          className="border-white/10 bg-slate-900 text-slate-300 hover:text-white text-xs gap-1.5 h-8 shadow-sm"
-        >
-          <ArrowLeft className="w-4 h-4 text-purple-400" /> Back to Overtime Hub
-        </Button>
+
         <div>
           <h2 className="text-xl font-black text-white tracking-tight">{title}</h2>
           <p className="text-xs text-slate-400">{subtitle}</p>

@@ -215,7 +215,7 @@ export function ManagerFormDialog({
                     const email = e.target.value;
                     dispatch(setManagerForm({ personal_email: email, company_email: email }));
                   }}
-                  placeholder="e.g. john.doe@aurix.com"
+                  placeholder="e.g. john.doe@ofc360.com"
                   className={formErrors.personal_email ? "border-rose-500" : ""}
                 />
                 {formErrors.personal_email && <p className="text-[10px] text-rose-500">{formErrors.personal_email}</p>}

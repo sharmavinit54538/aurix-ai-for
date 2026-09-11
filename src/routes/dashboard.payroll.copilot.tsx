@@ -20,7 +20,7 @@ import {
 } from "@/services/payrollCopilotApi";
 
 export const Route = createFileRoute("/dashboard/payroll/copilot")({
-  head: () => ({ meta: [{ title: "AI Payroll Copilot — Aurix AI" }] }),
+  head: () => ({ meta: [{ title: "AI Payroll Copilot — OFC360" }] }),
   component: PayrollCopilotPage,
 });
 
@@ -280,7 +280,7 @@ function PayrollCopilotPage() {
 
                     <div className="mt-2 flex items-center justify-between text-[10px] opacity-60">
                       <span>{msg.timestamp}</span>
-                      {msg.role === "assistant" ? <span>Aurix Copilot</span> : null}
+                      {msg.role === "assistant" ? <span>OFC360 Copilot</span> : null}
                     </div>
                   </div>
                 </div>
@@ -291,7 +291,7 @@ function PayrollCopilotPage() {
           {isLoading ? (
             <div className="flex max-w-xs items-center gap-2.5 rounded-2xl border border-indigo-500/20 bg-indigo-500/10 p-3 text-xs text-indigo-400">
               <Loader2 className="h-4 w-4 animate-spin text-indigo-400" />
-              <span>Aurix Copilot is computing response...</span>
+              <span>OFC360 Copilot is computing response...</span>
             </div>
           ) : null}
         </div>

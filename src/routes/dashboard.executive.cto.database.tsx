@@ -7,6 +7,6 @@ const CtoDatabasePage = lazyFeaturePage(
 );
 
 export const Route = createFileRoute("/dashboard/executive/cto/database")({
-  head: () => ({ meta: [{ title: "Database Hub — Aurix CTO" }] }),
+  head: () => ({ meta: [{ title: "Database Hub — OFC360 CTO" }] }),
   component: CtoDatabasePage,
 });

@@ -24,7 +24,7 @@ import { PoliciesStep } from "@/features/employee-onboarding/components/steps/Po
 import { FinalReviewStep } from "@/features/employee-onboarding/components/steps/FinalReviewStep";
 
 export const Route = createFileRoute("/employee-onboarding")({
-  head: () => ({ meta: [{ title: "Employee Onboarding Wizard — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Employee Onboarding Wizard — OFC360" }] }),
   component: EmployeeOnboardingPage,
 });
 
@@ -224,7 +224,7 @@ function EmployeeOnboardingPage() {
       <div className="mx-auto max-w-4xl space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-black tracking-tight">Aurix HRMS</h1>
+            <h1 className="text-2xl font-black tracking-tight">OFC360</h1>
             <p className="text-sm text-muted-foreground mt-0.5">Enterprise Employee Onboarding Portal</p>
           </div>
         </div>

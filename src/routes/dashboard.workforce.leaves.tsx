@@ -4,6 +4,6 @@ import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
 const LeavesPage = lazyFeaturePage(() => import("@/pages/LeavesPage"));
 
 export const Route = createFileRoute("/dashboard/workforce/leaves")({
-  head: () => ({ meta: [{ title: "Leaves — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Leaves — OFC360" }] }),
   component: LeavesPage,
 });

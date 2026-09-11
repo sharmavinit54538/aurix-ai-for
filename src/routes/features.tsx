@@ -10,10 +10,10 @@ import { CTA } from "@/components/site/CTA";
 export const Route = createFileRoute("/features")({
   head: () => ({
     meta: [
-      { title: "Features — Aurix" },
-      { name: "description", content: "Explore everything Aurix can do — planning, AI, analytics, integrations, and more." },
-      { property: "og:title", content: "Features — Aurix" },
-      { property: "og:description", content: "Every capability Aurix offers, in detail." },
+      { title: "Features — OFC360" },
+      { name: "description", content: "Explore everything OFC360 can do — planning, AI, analytics, integrations, and more." },
+      { property: "og:title", content: "Features — OFC360" },
+      { property: "og:description", content: "Every capability OFC360 offers, in detail." },
       { property: "og:url", content: "/features" },
     ],
     links: [{ rel: "canonical", href: "/features" }],
@@ -23,11 +23,11 @@ export const Route = createFileRoute("/features")({
 
 const detailed = [
   { icon: Workflow, title: "Unified planning", desc: "Roadmaps, sprints, and quarterly goals — connected by default. No more reconciling four tools." },
-  { icon: Sparkles, title: "Aurix AI", desc: "Drafts updates, summarizes threads, and triages issues. Trained on your team's context, not the internet." },
+  { icon: Sparkles, title: "OFC360", desc: "Drafts updates, summarizes threads, and triages issues. Trained on your team's context, not the internet." },
   { icon: BarChart3, title: "Insights", desc: "Velocity, cycle time, and team health — out of the box. No dashboards to build." },
   { icon: GitBranch, title: "Deep code integrations", desc: "Bi-directional sync with GitHub, GitLab, and Linear. Issues update from PR titles automatically." },
   { icon: MessageSquare, title: "Threaded discussions", desc: "Discuss in context. Decisions are linked to the work — not lost in Slack." },
-  { icon: Calendar, title: "Smart scheduling", desc: "Aurix learns your team's rhythm and suggests realistic timelines." },
+  { icon: Calendar, title: "Smart scheduling", desc: "OFC360 learns your team's rhythm and suggests realistic timelines." },
 ];
 
 const capabilities = [
@@ -36,7 +36,7 @@ const capabilities = [
   { icon: Bell, title: "Calm notifications", desc: "Smart batching. You decide what's worth interrupting you." },
   { icon: Layers, title: "Custom views", desc: "Slice your data by any field, save as a view, share with your team." },
   { icon: Lock, title: "Granular permissions", desc: "Project, document, and field-level access — without becoming an admin headache." },
-  { icon: Cpu, title: "API & webhooks", desc: "Build on top of Aurix with a clean, fully documented REST and GraphQL API." },
+  { icon: Cpu, title: "API & webhooks", desc: "Build on top of OFC360 with a clean, fully documented REST and GraphQL API." },
 ];
 
 const integrations = [
@@ -57,7 +57,7 @@ function FeaturesPage() {
             One workspace. <span className="text-gradient">Infinite leverage</span>.
           </h1>
           <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">
-            Aurix is engineered to make every step from idea to shipped feel effortless. Here's how.
+            OFC360 is engineered to make every step from idea to shipped feel effortless. Here's how.
           </p>
         </Section>
       </section>
@@ -135,7 +135,7 @@ function FeaturesPage() {
 
       {/* Integrations */}
       <Section>
-        <SectionHeader eyebrow="Integrations" title="Plays nicely with your stack" subtitle="Connect Aurix to the tools your team already uses." />
+        <SectionHeader eyebrow="Integrations" title="Plays nicely with your stack" subtitle="Connect OFC360 to the tools your team already uses." />
         <div className="mt-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {integrations.map((name) => (
             <div key={name} className="glass rounded-2xl p-5 text-center hover:shadow-elegant transition-all">

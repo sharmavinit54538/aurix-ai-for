@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/talent")({
-  head: () => ({ meta: [{ title: "Talent Management — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Talent Management — OFC360" }] }),
   component: TalentLayout,
 });
 

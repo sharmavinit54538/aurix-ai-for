@@ -4,7 +4,7 @@ import { Section } from "./Section";
 
 export function CTA({
   title = "Ready to ship faster?",
-  subtitle = "Join thousands of teams using Aurix to build, launch, and scale their products.",
+  subtitle = "Join thousands of teams using OFC360 to build, launch, and scale their products.",
 }: {
   title?: string;
   subtitle?: string;

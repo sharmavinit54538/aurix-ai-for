@@ -7,6 +7,6 @@ const CtoMonitoringPage = lazyFeaturePage(
 );
 
 export const Route = createFileRoute("/dashboard/executive/cto/monitoring")({
-  head: () => ({ meta: [{ title: "Monitoring & Observability — Aurix CTO" }] }),
+  head: () => ({ meta: [{ title: "Monitoring & Observability — OFC360 CTO" }] }),
   component: CtoMonitoringPage,
 });

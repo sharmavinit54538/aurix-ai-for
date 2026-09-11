@@ -57,8 +57,8 @@ export const Route = createFileRoute("/api/ai-brain")({
           return result.toUIMessageStreamResponse({
             originalMessages: messages,
             headers: {
-              "X-Aurix-Agent": agent.id,
-              "X-Aurix-Model": modelName,
+              "X- OFC360-Agent": agent.id,
+              "X- OFC360-Model": modelName,
             },
           });
         } catch (err) {

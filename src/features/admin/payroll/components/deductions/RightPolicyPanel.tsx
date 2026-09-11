@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 export const RightPolicyPanel: React.FC = () => {
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState<string[]>([
-    "Welcome! I am your Aurix AI Deduction Copilot. Ask me about EPF capping, ESI salary thresholds, or Section 7 recovery limits.",
+    "Welcome! I am your OFC360 Deduction Copilot. Ask me about EPF capping, ESI salary thresholds, or Section 7 recovery limits.",
   ]);
 
   const handleSendQuery = (e: React.FormEvent) => {
@@ -20,7 +20,7 @@ export const RightPolicyPanel: React.FC = () => {
     setTimeout(() => {
       setMessages((prev) => [
         ...prev,
-        `Aurix AI: Under EPF Act 1952, standard employee contribution is 12% on Basic Pay up to ₹15,000 ceiling. Under Payment of Wages Act, total monthly recoveries cannot exceed 50% of gross salary.`,
+        `OFC360: Under EPF Act 1952, standard employee contribution is 12% on Basic Pay up to ₹15,000 ceiling. Under Payment of Wages Act, total monthly recoveries cannot exceed 50% of gross salary.`,
       ]);
     }, 600);
   };

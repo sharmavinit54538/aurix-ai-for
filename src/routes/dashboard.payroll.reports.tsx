@@ -22,7 +22,7 @@ import { CustomReportBuilderModal } from "@/features/admin/payroll/components/re
 import { ScheduleReportModal } from "@/features/admin/payroll/components/reports/ScheduleReportModal";
 
 export const Route = createFileRoute("/dashboard/payroll/reports")({
-  head: () => ({ meta: [{ title: "Payroll Reports — Aurix AI Enterprise HRMS" }] }),
+  head: () => ({ meta: [{ title: "Payroll Reports — OFC360 Enterprise HRMS" }] }),
   component: PayrollReportsPage,
 });
 

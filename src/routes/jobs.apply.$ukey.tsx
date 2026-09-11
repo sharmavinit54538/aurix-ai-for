@@ -280,7 +280,7 @@ function JobApplyPage() {
             A
           </div>
           <span className="font-display font-black text-xl tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
-            Aurix <span className="font-normal text-indigo-400/90 text-sm tracking-normal ml-1">Careers Portal</span>
+            OFC360 <span className="font-normal text-indigo-400/90 text-sm tracking-normal ml-1">Careers Portal</span>
           </span>
         </div>
         <div className="flex items-center gap-2">

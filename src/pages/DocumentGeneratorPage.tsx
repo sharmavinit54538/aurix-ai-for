@@ -29,11 +29,11 @@ export default function DocumentGeneratorPage() {
 
 Dear ${name},
 
-We are pleased to inform you regarding your ${t.title.toLowerCase()} as ${role} at Aurix Inc.
+We are pleased to inform you regarding your ${t.title.toLowerCase()} as ${role} at OFC360 Inc.
 This letter confirms the terms and conditions of your engagement, effective from the joining date discussed.
 
 Sincerely,
-HR Team — Aurix Inc.`
+HR Team — OFC360 Inc.`
     );
   }
   return (

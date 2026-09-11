@@ -7,6 +7,6 @@ const CtoSettingsPage = lazyFeaturePage(
 );
 
 export const Route = createFileRoute("/dashboard/executive/cto/settings")({
-  head: () => ({ meta: [{ title: "CTO Settings — Aurix CTO" }] }),
+  head: () => ({ meta: [{ title: "CTO Settings — OFC360 CTO" }] }),
   component: CtoSettingsPage,
 });

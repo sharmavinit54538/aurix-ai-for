@@ -7,6 +7,6 @@ const DepartmentsPage = lazyFeaturePage(
 );
 
 export const Route = createFileRoute("/dashboard/departments")({
-  head: () => ({ meta: [{ title: "Departments — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Departments — OFC360" }] }),
   component: DepartmentsPage,
 });

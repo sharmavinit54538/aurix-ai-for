@@ -97,7 +97,7 @@ function MarkdownRenderer({ content }: { content: unknown }) {
       <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground border border-dashed border-border/70 rounded-xl">
         <Edit3 className="h-8 w-8 mb-2 opacity-40" />
         <p className="text-sm font-medium">No description written yet.</p>
-        <p className="text-xs text-muted-foreground/70 mt-1">Switch to the "Write" tab or use Aurix AI to generate one.</p>
+        <p className="text-xs text-muted-foreground/70 mt-1">Switch to the "Write" tab or use OFC360 to generate one.</p>
       </div>
     );
   }
@@ -279,7 +279,7 @@ export function NewJobPage() {
 
     setIsGeneratingAi(true);
     setSubmitError(null);
-    toast.info("Aurix AI is drafting job requirements...");
+    toast.info("OFC360 is drafting job requirements...");
 
     const effectiveDept = department === "Other" && customDepartment ? customDepartment : department;
 
@@ -332,7 +332,7 @@ export function NewJobPage() {
     }
 
     setIsRefiningAi(true);
-    toast.info("Aurix AI is refining description...");
+    toast.info("OFC360 is refining description...");
 
     try {
       const response = await api.post<any>("/jobs/modify-description", {
@@ -523,21 +523,11 @@ export function NewJobPage() {
           <span className="text-foreground font-medium">New Position</span>
         </div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          asChild
-          className="rounded-xl border-border/80 text-xs hover:bg-accent/50"
-        >
-          <Link to="/dashboard/recruitment/jobs">
-            <ArrowLeft className="h-3.5 w-3.5 mr-1.5" /> Back to Jobs
-          </Link>
-        </Button>
       </div>
 
       <PageHeader 
         title="Create New Job Requisition" 
-        description="Specify job requirements, role parameters, compensation, and let Aurix AI assist in drafting job descriptions." 
+        description="Specify job requirements, role parameters, compensation, and let OFC360 assist in drafting job descriptions." 
       />
 
       {submitError && (
@@ -1186,7 +1176,7 @@ export function NewJobPage() {
                 <div className="p-1 rounded-lg bg-primary/10 text-primary">
                   <Sparkles className="h-4 w-4" />
                 </div>
-                Aurix AI Copilot
+                OFC360 Copilot
               </h3>
               <Badge variant="outline" className="text-[10px] text-primary border-primary/30 bg-primary/5">
                 Assisted
@@ -1330,7 +1320,7 @@ export function NewJobPage() {
             {isRefiningAi && (
               <div className="flex items-center justify-center gap-2 py-2 px-3 bg-muted/40 rounded-xl text-xs text-muted-foreground animate-pulse border border-border/50">
                 <Loader2 className="h-3.5 w-3.5 animate-spin text-primary shrink-0" />
-                Aurix AI is working...
+                OFC360 is working...
               </div>
             )}
           </div>

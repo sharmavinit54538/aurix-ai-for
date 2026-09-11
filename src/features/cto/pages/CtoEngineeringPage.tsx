@@ -40,10 +40,10 @@ export function CtoEngineeringPage() {
   ];
 
   const pullRequests = [
-    { id: "PR-842", title: "feat(payroll): add automated tax calculation engine", author: "Vinit Sharma", repo: "aurix-core-backend", status: "Approved", reviews: "2/2", ci: "Passing" },
-    { id: "PR-841", title: "fix(auth): sanitize JWT token refresh payload", author: "Alex Rivera", repo: "aurix-core-backend", status: "In Review", reviews: "1/2", ci: "Passing" },
-    { id: "PR-840", title: "ui(dashboard): responsive CTO portal sub-module layout", author: "Priya Patel", repo: "aurix-enterprise-web", status: "Changes Requested", reviews: "2/2", ci: "Passing" },
-    { id: "PR-839", title: "infra(k8s): autoscale GPU inference pod cluster", author: "Rohan Verma", repo: "aurix-infra-terraform", status: "Approved", reviews: "3/3", ci: "Passing" },
+    { id: "PR-842", title: "feat(payroll): add automated tax calculation engine", author: "Vinit Sharma", repo: "ofc360-core-backend", status: "Approved", reviews: "2/2", ci: "Passing" },
+    { id: "PR-841", title: "fix(auth): sanitize JWT token refresh payload", author: "Alex Rivera", repo: "ofc360-core-backend", status: "In Review", reviews: "1/2", ci: "Passing" },
+    { id: "PR-840", title: "ui(dashboard): responsive CTO portal sub-module layout", author: "Priya Patel", repo: "ofc360-enterprise-web", status: "Changes Requested", reviews: "2/2", ci: "Passing" },
+    { id: "PR-839", title: "infra(k8s): autoscale GPU inference pod cluster", author: "Rohan Verma", repo: "ofc360-infra-terraform", status: "Approved", reviews: "3/3", ci: "Passing" },
   ];
 
   const codeReviews = [

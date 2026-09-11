@@ -29,7 +29,7 @@ import {
 } from "@/features/admin/payroll/components/deductions/deductionsTypes";
 
 export const Route = createFileRoute("/dashboard/payroll/deductions")({
-  head: () => ({ meta: [{ title: "Payroll Deductions & Recovery Management — Aurix AI" }] }),
+  head: () => ({ meta: [{ title: "Payroll Deductions & Recovery Management — OFC360" }] }),
   component: DeductionsPage,
 });
 

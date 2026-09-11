@@ -7,6 +7,6 @@ const PerformancePage = lazyFeaturePage(
 );
 
 export const Route = createFileRoute("/dashboard/performance")({
-  head: () => ({ meta: [{ title: "Performance — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Performance — OFC360" }] }),
   component: PerformancePage,
 });

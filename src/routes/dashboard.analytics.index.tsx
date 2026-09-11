@@ -3,7 +3,7 @@ import { BarChart3, Sparkles, LineChart } from "lucide-react";
 import { ModuleHubView, type ModuleItem } from "@/components/aurix/ModuleHubView";
 
 export const Route = createFileRoute("/dashboard/analytics/")({
-  head: () => ({ meta: [{ title: "Analytics Hub — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Analytics Hub — OFC360" }] }),
   component: AnalyticsHubPage,
 });
 

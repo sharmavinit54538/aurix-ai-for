@@ -242,7 +242,7 @@ export function ImportDialog({
         firstName,
         lastName,
         fullName: `${firstName} ${lastName}`,
-        email: d.email || `imported.${idx}@aurix.com`,
+        email: d.email || `imported.${idx}@ofc360.com`,
         phone: d.phone || "+91 99999 99999",
         dob: "1990-01-01",
         gender: "prefer_not_to_say",
@@ -280,12 +280,12 @@ export function ImportDialog({
 
   const downloadTemplate = () => {
     const headers = "Employee ID,First Name,Last Name,Email,Phone,Department,Designation,Office,Status,Role,Reporting Manager,Joining Date,Salary";
-    const sampleRow = "\nEMP-1100,Raj,Malhotra,raj.malhotra@aurix.com,+91 98989 89898,Engineering,Engineering Manager,Bengaluru Tech Park,active,team_lead,Rohan Mehta,2026-06-01,110000";
+    const sampleRow = "\nEMP-1100,Raj,Malhotra,raj.malhotra@ofc360.com,+91 98989 89898,Engineering,Engineering Manager,Bengaluru Tech Park,active,team_lead,Rohan Mehta,2026-06-01,110000";
     const blob = new Blob([headers, sampleRow], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", "aurix_managers_import_template.csv");
+    link.setAttribute("download", "ofc360_managers_import_template.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

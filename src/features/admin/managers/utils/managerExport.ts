@@ -23,7 +23,7 @@ export function exportManagersCSV(data: Manager[]) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.setAttribute("href", url);
-  link.setAttribute("download", `aurix_managers_export_${Date.now()}.csv`);
+  link.setAttribute("download", `ofc360_managers_export_${Date.now()}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -66,7 +66,7 @@ export function exportManagersPDF(data: Manager[]) {
   printWindow.document.write(`
     <html>
       <head>
-        <title>Managers Directory - Aurix HRMS</title>
+        <title>Managers Directory - OFC360</title>
         <style>
           body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 20px; color: #333; }
           h1 { font-size: 18px; margin-bottom: 5px; }

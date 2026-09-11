@@ -31,7 +31,7 @@ export const AIBonusInsights: React.FC<AIBonusInsightsProps> = ({ insights }) =>
           </div>
           <div>
             <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-              Aurix AI Compensation & High Performer Intelligence
+              OFC360 Compensation & High Performer Intelligence
               <span className="ai-pulse-dot" />
             </h3>
             <p className="text-xs text-slate-400">Automated performance correlation, pay equity gaps, and bonus pool optimization.</p>

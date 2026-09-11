@@ -19,7 +19,7 @@ import {
 } from "@/services/bankTransfersApi";
 
 export const Route = createFileRoute("/dashboard/payroll/bank-transfers")({
-  head: () => ({ meta: [{ title: "Enterprise Bank Transfer Hub — Aurix AI" }] }),
+  head: () => ({ meta: [{ title: "Enterprise Bank Transfer Hub — OFC360" }] }),
   component: BankTransfersPage,
 });
 

@@ -4,7 +4,7 @@ import { ComingSoon, PageHeader } from "@/components/aurix/DashboardShell";
 import { PayrollBackButton } from "@/features/admin/payroll/components/PayrollBackButton";
 
 export const Route = createFileRoute("/dashboard/payroll/approvals")({
-  head: () => ({ meta: [{ title: "Payroll Approvals — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Payroll Approvals — OFC360" }] }),
   component: PayrollApprovalsPage,
 });
 

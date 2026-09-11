@@ -33,7 +33,7 @@ import {
 } from "@/features/admin/payroll/components/salary-structure/salaryStructureTypes";
 
 export const Route = createFileRoute("/dashboard/payroll/salary-structure")({
-  head: () => ({ meta: [{ title: "Enterprise Salary Structure & Compensation Management — Aurix AI" }] }),
+  head: () => ({ meta: [{ title: "Enterprise Salary Structure & Compensation Management — OFC360" }] }),
   component: SalaryStructurePage,
 });
 

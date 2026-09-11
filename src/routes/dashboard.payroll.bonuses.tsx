@@ -20,7 +20,7 @@ import {
 } from "@/features/admin/payroll/components/bonuses/bonusesTypes";
 
 export const Route = createFileRoute("/dashboard/payroll/bonuses")({
-  head: () => ({ meta: [{ title: "Enterprise Bonus & Incentives Hub — Aurix AI" }] }),
+  head: () => ({ meta: [{ title: "Enterprise Bonus & Incentives Hub — OFC360" }] }),
   component: BonusesPage,
 });
 

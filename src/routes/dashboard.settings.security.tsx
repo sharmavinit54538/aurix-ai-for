@@ -12,7 +12,7 @@ import { selectSecuritySettings, selectSettingsLoading, selectSettingsSubmitting
 import { fetchSecurity, updateSecurity } from "@/store/settings/settingsThunk";
 
 export const Route = createFileRoute("/dashboard/settings/security")({
-  head: () => ({ meta: [{ title: "Security Settings — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Security Settings — OFC360" }] }),
   component: SecuritySettingsPage,
 });
 

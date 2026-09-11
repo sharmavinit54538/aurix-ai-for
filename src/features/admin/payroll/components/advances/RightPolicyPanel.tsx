@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 export const RightPolicyPanel: React.FC = () => {
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState<string[]>([
-    "Welcome! I am your Aurix AI Salary Advance Copilot. Ask me about advance limits, repayment tenure, or EMI salary ratios.",
+    "Welcome! I am your OFC360 Salary Advance Copilot. Ask me about advance limits, repayment tenure, or EMI salary ratios.",
   ]);
 
   const handleSendQuery = (e: React.FormEvent) => {
@@ -20,7 +20,7 @@ export const RightPolicyPanel: React.FC = () => {
     setTimeout(() => {
       setMessages((prev) => [
         ...prev,
-        `Aurix AI: Under Company Advance Policy #ADV-2026, maximum advance is capped at 3x monthly basic salary or ₹2,00,000. Maximum recovery tenure is 6 months at 0% interest.`,
+        `OFC360: Under Company Advance Policy #ADV-2026, maximum advance is capped at 3x monthly basic salary or ₹2,00,000. Maximum recovery tenure is 6 months at 0% interest.`,
       ]);
     }, 600);
   };

@@ -27,7 +27,7 @@ import { SalaryProcessingSaveBar } from "@/features/admin/payroll/components/sal
 import { salaryProcessingApi } from "@/services/salaryProcessingApi";
 
 export const Route = createFileRoute("/dashboard/payroll/salary-processing")({
-  head: () => ({ meta: [{ title: "Salary Processing Command Center — Aurix AI" }] }),
+  head: () => ({ meta: [{ title: "Salary Processing Command Center — OFC360" }] }),
   component: SalaryProcessingPage,
 });
 

@@ -101,7 +101,7 @@ export function RecruitmentCalendarPage() {
       <PageHeader title="Interview Calendar" description="Drag-and-drop scheduling. Connect Google Calendar, Outlook, Zoom, Google Meet."
         actions={<>
           <Button variant="outline" onClick={() => toast.success("Redirecting to Zoom Integration authorization...")}><Video className="mr-2 h-4 w-4" />Connect Zoom</Button>
-          <Button variant="outline" onClick={() => toast.success("Syncing Google Calendar with Aurix AI...")}><CalIcon className="mr-2 h-4 w-4" />Sync Google</Button>
+          <Button variant="outline" onClick={() => toast.success("Syncing Google Calendar with OFC360...")}><CalIcon className="mr-2 h-4 w-4" />Sync Google</Button>
           <Button onClick={() => setShowScheduleModal(true)}><Plus className="mr-2 h-4 w-4" />Schedule</Button>
         </>} />
 

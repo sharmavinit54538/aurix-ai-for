@@ -10,9 +10,9 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
-      { title: "Pricing — Aurix" },
+      { title: "Pricing — OFC360" },
       { name: "description", content: "Simple, transparent pricing. Free for small teams. Scales with you." },
-      { property: "og:title", content: "Pricing — Aurix" },
+      { property: "og:title", content: "Pricing — OFC360" },
       { property: "og:description", content: "Simple, transparent pricing for every team size." },
       { property: "og:url", content: "/pricing" },
     ],
@@ -34,7 +34,7 @@ type Plan = {
 const plans: Plan[] = [
   {
     name: "Free",
-    tagline: "For individuals exploring Aurix.",
+    tagline: "For individuals exploring OFC360.",
     monthly: 0,
     yearly: 0,
     cta: "Start free",
@@ -47,7 +47,7 @@ const plans: Plan[] = [
     yearly: 10,
     cta: "Start free trial",
     highlight: true,
-    features: ["Unlimited members", "Unlimited history", "Aurix AI included", "Advanced integrations", "Priority support"],
+    features: ["Unlimited members", "Unlimited history", "OFC360 included", "Advanced integrations", "Priority support"],
   },
   {
     name: "Business",
@@ -70,7 +70,7 @@ const plans: Plan[] = [
 const comparison = [
   { feature: "Members", values: ["10", "Unlimited", "Unlimited", "Unlimited"] },
   { feature: "Projects", values: ["Unlimited", "Unlimited", "Unlimited", "Unlimited"] },
-  { feature: "Aurix AI", values: ["—", "Included", "Included", "Custom"] },
+  { feature: "OFC360", values: ["—", "Included", "Included", "Custom"] },
   { feature: "Integrations", values: ["Basic", "Advanced", "Advanced", "Custom"] },
   { feature: "SSO / SCIM", values: ["—", "—", "Yes", "Yes"] },
   { feature: "Audit logs", values: ["—", "—", "Yes", "Yes"] },

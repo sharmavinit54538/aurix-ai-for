@@ -32,7 +32,7 @@ export const AIDeductionInsights: React.FC<AIDeductionInsightsProps> = ({ insigh
           </div>
           <div>
             <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-              Aurix AI Deduction Risk & Statutory Compliance Intelligence
+              OFC360 Deduction Risk & Statutory Compliance Intelligence
               <span className="ai-pulse-dot" />
             </h3>
             <p className="text-xs text-slate-400">Automated negative salary prevention, duplicate recovery detection, and statutory capping alerts.</p>

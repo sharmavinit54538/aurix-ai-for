@@ -4,6 +4,6 @@ import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
 const AttendancePage = lazyFeaturePage(() => import("@/pages/AttendancePage"));
 
 export const Route = createFileRoute("/dashboard/attendance/")({
-  head: () => ({ meta: [{ title: "Attendance — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Attendance — OFC360" }] }),
   component: AttendancePage,
 });

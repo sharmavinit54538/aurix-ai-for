@@ -9,11 +9,11 @@ const EmployeePage = lazyFeaturePage(
 export const Route = createFileRoute("/dashboard/employee")({
   head: () => ({
     meta: [
-      { title: "My Dashboard — Aurix HR" },
+      { title: "My Dashboard — OFC360 HR" },
       {
         name: "description",
         content:
-          "Aurix HR Employee Self-Service Dashboard — manage your attendance, leaves, payslips, performance goals, documents, and assets.",
+          "OFC360 Employee Self-Service Dashboard — manage your attendance, leaves, payslips, performance goals, documents, and assets.",
       },
     ],
   }),

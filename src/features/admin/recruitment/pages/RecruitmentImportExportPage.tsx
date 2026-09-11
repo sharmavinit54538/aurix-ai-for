@@ -45,7 +45,7 @@ export function RecruitmentImportExportPage() {
 
   return (
     <>
-      <PageHeader title="Import & Export" description="Bulk move candidates in and out of Aurix — CSV, Excel, JSON." />
+      <PageHeader title="Import & Export" description="Bulk move candidates in and out of OFC360 — CSV, Excel, JSON." />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl">

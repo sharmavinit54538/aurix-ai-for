@@ -20,7 +20,7 @@ import {
 } from "@/features/admin/payroll/components/advances/advancesTypes";
 
 export const Route = createFileRoute("/dashboard/payroll/advances")({
-  head: () => ({ meta: [{ title: "Enterprise Advance & Loan Hub — Aurix AI" }] }),
+  head: () => ({ meta: [{ title: "Enterprise Advance & Loan Hub — OFC360" }] }),
   component: AdvancesPage,
 });
 

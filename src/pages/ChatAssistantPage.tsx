@@ -17,7 +17,7 @@ type Msg = { role: "user" | "ai"; text: string };
 
 export default function ChatAssistantPage() {
   const [msgs, setMsgs] = useState<Msg[]>([
-    { role: "ai", text: "Hi 👋 I'm Aurix AI. Ask me about employees, payroll, attendance, reports or analytics." },
+    { role: "ai", text: "Hi 👋 I'm OFC360 AI. Ask me about employees, payroll, attendance, reports or analytics." },
   ]);
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -48,7 +48,7 @@ export default function ChatAssistantPage() {
             <div ref={bottomRef} />
           </div>
           <form onSubmit={(e) => { e.preventDefault(); ask(input); }} className="flex items-center gap-2 border-t border-border p-3">
-            <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask Aurix AI… (e.g. show top performers in Sales)" />
+            <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask OFC360… (e.g. show top performers in Sales)" />
             <Button type="submit" className="gap-1.5 bg-gradient-brand text-brand-foreground hover:opacity-90"><Send className="h-3.5 w-3.5" /> Send</Button>
           </form>
         </div>

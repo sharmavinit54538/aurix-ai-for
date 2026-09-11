@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/ai/policy-assistant")({
-  head: () => ({ meta: [{ title: "AI Policy Assistant — Aurix" }] }),
+  head: () => ({ meta: [{ title: "AI Policy Assistant — OFC360" }] }),
   component: Page,
 });
 

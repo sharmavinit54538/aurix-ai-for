@@ -81,14 +81,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Aurix — Operations & Intelligence Platform" },
+      { title: "OFC360 — Operations & Intelligence Platform" },
       { name: "description", content: "Futuristic operations and intelligence platform for modern enterprise teams." },
-      { name: "author", content: "Aurix" },
-      { property: "og:title", content: "Aurix" },
+      { name: "author", content: "OFC360" },
+      { property: "og:title", content: "OFC360" },
       { property: "og:description", content: "Futuristic operations and intelligence platform for modern enterprise teams." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Aurix" },
+      { name: "twitter:site", content: "@OFC360" },
     ],
     links: [
       {

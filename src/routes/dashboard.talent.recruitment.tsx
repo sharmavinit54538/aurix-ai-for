@@ -7,6 +7,6 @@ const RecruitmentDashboardPage = lazyFeaturePage(
 );
 
 export const Route = createFileRoute("/dashboard/talent/recruitment")({
-  head: () => ({ meta: [{ title: "Recruitment — Aurix" }] }),
+  head: () => ({ meta: [{ title: "Recruitment — OFC360" }] }),
   component: RecruitmentDashboardPage,
 });

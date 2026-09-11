@@ -10,7 +10,7 @@ import { aurix, uid, useAurix, type HR } from "@/lib/aurix-store";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard/hr")({
-  head: () => ({ meta: [{ title: "HR Management — Aurix" }] }),
+  head: () => ({ meta: [{ title: "HR Management — OFC360" }] }),
   component: HRPage,
 });
 

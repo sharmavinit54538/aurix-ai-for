@@ -32,7 +32,7 @@ export const AIAdvanceInsights: React.FC<AIAdvanceInsightsProps> = ({ insights }
           </div>
           <div>
             <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-              Aurix AI Advance Risk & Eligibility Intelligence
+              OFC360 Advance Risk & Eligibility Intelligence
               <span className="ai-pulse-dot" />
             </h3>
             <p className="text-xs text-slate-400">Automated credit scoring, payment delay predictions, and negative salary prevention.</p>

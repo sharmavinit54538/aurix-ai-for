@@ -1,5 +1,5 @@
 // ============================================================
-// Aurix HR — Employee Dashboard Component
+// OFC360 — Employee Dashboard Component
 // Self-service portal for individual employees.
 // ============================================================
 import { Link } from "@tanstack/react-router";
@@ -580,7 +580,7 @@ function EmployeeNotifications() {
 export function EmployeeDashboard() {
   const ws = useAurix();
   const firstName = ws.user?.fullName?.split(" ")[0] ?? "there";
-  const companyName = ws.company?.name ?? "Aurix HR";
+  const companyName = ws.company?.name ?? "OFC360";
 
   return (
     <div className="space-y-6">

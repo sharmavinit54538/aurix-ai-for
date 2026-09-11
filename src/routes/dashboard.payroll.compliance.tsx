@@ -31,7 +31,7 @@ import { OverviewComplianceView } from "@/features/admin/payroll/components/comp
 import { RunComplianceCheckModal } from "@/features/admin/payroll/components/compliance/RunComplianceCheckModal";
 
 export const Route = createFileRoute("/dashboard/payroll/compliance")({
-  head: () => ({ meta: [{ title: "Payroll Compliance — Aurix AI Enterprise HRMS" }] }),
+  head: () => ({ meta: [{ title: "Payroll Compliance — OFC360 Enterprise HRMS" }] }),
   component: PayrollCompliancePage,
 });
 

@@ -76,7 +76,7 @@ export const BankDisbursementModal: React.FC<BankDisbursementModalProps> = ({
 
           <div className="p-3 rounded-lg bg-slate-900 border border-white/10 text-slate-300 flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-            <span>Integrated with Aurix Corporate Bank Transfer Gateway (HDFC / ICICI API).</span>
+            <span>Integrated with OFC360 Corporate Bank Transfer Gateway (HDFC / ICICI API).</span>
           </div>
         </div>
 
