@@ -1,7 +1,3 @@
-// ============================================================
-// Aurix HR — Enterprise Executive Command Center
-// A world-class HR operating system dashboard.
-// ============================================================
 import { Link } from "@tanstack/react-router";
 import React, { useState, useEffect, Component, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";

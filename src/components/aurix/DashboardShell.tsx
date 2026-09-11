@@ -493,7 +493,7 @@ export function DashboardShell() {
         <aside
           className={`fixed left-0 z-40 flex flex-col border-r border-border bg-card/60 backdrop-blur-xl transition-[width,transform] duration-200 ${
             isDemo ? "top-9 bottom-0" : "inset-y-0"
-          } ${collapsed ? "w-[68px]" : "w-64"} ${
+          } ${collapsed ? "w-[68px]" : "w-[260px]"} ${
             mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
           }`}
         >
@@ -537,7 +537,7 @@ export function DashboardShell() {
             )}
           </div>
 
-          <nav className="flex-1 space-y-2 overflow-y-auto p-2">
+          <nav className="flex-1 space-y-2 overflow-y-auto overflow-x-hidden p-2">
             {visibleNav.map((section, sIdx) => (
               <div key={section.id || sIdx} className="space-y-0.5">
                 {section.title && !collapsed ? (
@@ -573,7 +573,7 @@ export function DashboardShell() {
                       <Icon className="h-4 w-4 shrink-0" />
                       {!collapsed ? (
                         <>
-                          <span className="flex-1">{item.label}</span>
+                          <span className="flex-1 whitespace-nowrap">{item.label}</span>
                           {item.badge && <NavBadge kind={item.badge} />}
                           {item.count !== undefined && !item.badge && <NavCount count={item.count} />}
                         </>
@@ -604,7 +604,7 @@ export function DashboardShell() {
 
         <div
           className={`flex min-h-screen min-w-0 flex-1 flex-col overflow-x-hidden transition-[margin] duration-200 ${
-            collapsed ? "lg:ml-[68px]" : "lg:ml-64"
+            collapsed ? "lg:ml-[68px]" : "lg:ml-[260px]"
           }`}
         >
           {/* Topbar */}
@@ -768,7 +768,7 @@ function NavGroup({
           className="flex flex-1 items-center gap-3 rounded-lg px-3 py-2"
         >
           <Icon className="h-4 w-4 shrink-0" />
-          <span className="flex-1 text-left">{item.label}</span>
+          <span className="flex-1 text-left whitespace-nowrap">{item.label}</span>
           {item.badge && !item.count && <NavBadge kind={item.badge} />}
           {item.count !== undefined && !item.badge && <NavCount count={item.count} />}
         </Link>
@@ -787,7 +787,7 @@ function NavGroup({
                 }`}
               >
                 <ChildIcon className="h-3.5 w-3.5 shrink-0" />
-                <span className="flex-1">{child.label}</span>
+                <span className="flex-1 whitespace-nowrap">{child.label}</span>
                 {child.badge && <NavBadge kind={child.badge} />}
                 {child.count !== undefined && !child.badge && <NavCount count={child.count} />}
               </Link>
