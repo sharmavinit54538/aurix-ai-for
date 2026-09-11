@@ -6,7 +6,7 @@ import {
   Briefcase, Building2, CalendarDays, CalendarCheck, CheckCircle2, ChevronLeft, PanelLeft,
   ChevronDown, ClipboardCheck, Clock, CreditCard, Crown, Download, FileCheck, FileText, FilePlus2,
   FileSignature, Folder, FolderOpen, Gauge, Gift, Globe, HandCoins, HeartPulse, History,
-  Info, Languages, LayoutDashboard, LineChart as LineChartIcon, Lock, LogOut, Mail, Medal,
+  Info, Languages, LayoutDashboard, LineChart as LineChartIcon, Lock, Mail, Medal,
   Menu, MessageCircle, MessageSquare, Mic, MinusCircle, Moon, Package, Palmtree, Percent,
   PlayCircle, Plane, Receipt, ScanLine, ScrollText, Search, Settings, ShieldCheck, Sparkles,
   Star, Sun, Target, Timer, TrendingUp, Trophy, User, UserCheck, UserCog, UserPlus, Users, Video,
@@ -16,10 +16,9 @@ import {
   BookMarked, PenLine, FileEdit, Landmark, Coins, Building, Hash, Sliders, Shield, Layers, PackageCheck,
   GitPullRequest, Send, ShieldAlert, Scale, Cpu, Home, Rocket,
 } from "lucide-react";
-import { aurix, useAurix, type Role } from "@/lib/aurix-store";
+import { useAurix, type Role } from "@/lib/aurix-store";
 import { useAuthReady } from "@/lib/auth-bootstrap";
 import { AuthLoadingScreen } from "@/features/auth/components/AuthLoadingScreen";
-import { hasValidAccessToken, setTokens } from "@/api";
 import { Input } from "@/components/ui/input";
 import {
   CommandDialog,
@@ -460,12 +459,6 @@ export function DashboardShell() {
     return <AuthLoadingScreen />;
   }
 
-  function logout() {
-    setTokens(null);
-    aurix.reset();
-    navigate({ to: "/login" });
-  }
-
   const initials = ws.user.fullName?.split(" ").map((p) => p[0]).slice(0, 2).join("") || "A";
 
   const isCeoMode = (role || "").toLowerCase() === "ceo" || (ws.user?.email || "").toLowerCase() === "siddhubunny09@gmail.com" || pathname.startsWith("/dashboard/executive/ceo");
@@ -602,11 +595,6 @@ export function DashboardShell() {
                     {isCeoMode ? "Chief Executive Officer" : isCioMode ? "Chief Information Officer" : isCtoMode ? "Chief Technology Officer" : ws.user?.role}
                   </div>
                 </div>
-              ) : null}
-              {!collapsed ? (
-                <button onClick={logout} className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive cursor-pointer" aria-label="Sign out">
-                  <LogOut className="h-4 w-4" />
-                </button>
               ) : null}
             </div>
           </div>
