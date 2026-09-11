@@ -14,8 +14,6 @@ import { api } from "@/api";
 import { getErrorMessage } from "@/api/utils";
 import { toast } from "sonner";
 
-import { GoogleAuthButton } from "@/features/auth/components/GoogleAuthButton";
-
 const schema = z.object({
   email: z.string().email("Enter a valid work email"),
   password: z.string().min(8, "Password must be at least 8 characters"),
@@ -145,8 +143,6 @@ export function LoginPage() {
           {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           Sign in
         </Button>
-
-        <GoogleAuthButton action="login" />
       </form>
     </AuthShell>
   );

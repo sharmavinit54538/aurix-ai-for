@@ -5,7 +5,7 @@ import {
   CalendarDays, Camera, CheckCircle2, ChevronDown, ChevronRight,
   Clock, Coffee, Download, ExternalLink, FileText, Fingerprint,
   Flag, Globe, HelpCircle, History, Info, Laptop, LogIn, LogOut,
-  MapPin, MessageSquare, Monitor, Play, QrCode, RefreshCw, Send,
+  MapPin, MessageSquare, Monitor, Play, RefreshCw, Send,
   Shield, ShieldCheck, Sparkles, Star, Timer, TrendingUp, User, UserCog,
   Wifi, X, Zap, Activity,
 } from "lucide-react";
@@ -422,9 +422,6 @@ function CheckInPage() {
   // ── Timeline events ─────────────────────────────────────────
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
 
-  // ── Geo state ───────────────────────────────────────────────
-  const [geo, setGeo] = useState<{ lat: number; lng: number; accuracy: number; inside: boolean } | null>(null);
-  const [geoLoading, setGeoLoading] = useState(false);
 
   // ── Notes panel ─────────────────────────────────────────────
   const [notesOpen, setNotesOpen] = useState(false);
@@ -514,16 +511,6 @@ function CheckInPage() {
       showToast("Failed to check out.", "error");
     } finally {
       setLoading(null);
-    }
-  }
-
-  async function fetchLocation() {
-    setGeoLoading(true);
-    try {
-      const loc = await API.getLocation();
-      setGeo(loc);
-    } finally {
-      setGeoLoading(false);
     }
   }
 
@@ -771,57 +758,8 @@ function CheckInPage() {
             </GlassCard>
           </div>
 
-          {/* ── Two-col grid: Geo + Face ── */}
+          {/* ── Two-col grid: Face Verification + Device ── */}
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            {/* Geo */}
-            <GlassCard>
-              <SectionHeader title="Geo Location" icon={MapPin} />
-              {geo ? (
-                <div className="space-y-3">
-                  <div className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium w-fit ${
-                    geo.inside ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300" : "bg-rose-500/15 text-rose-600"
-                  }`}>
-                    <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                    {geo.inside ? "Inside Office Radius" : "Outside Office Radius"}
-                  </div>
-                  {/* Map placeholder */}
-                  <div className="relative h-32 rounded-xl overflow-hidden border border-border bg-muted/40">
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
-                      <MapPin className="h-6 w-6 text-violet-500" />
-                      <span className="text-xs text-muted-foreground">OpenStreetMap view</span>
-                      <a href={`https://www.openstreetmap.org/#map=16/${geo.lat}/${geo.lng}`} target="_blank" rel="noreferrer"
-                        className="flex items-center gap-1 text-[10px] text-violet-500 underline">
-                        Open in Maps <ExternalLink className="h-2.5 w-2.5" />
-                      </a>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 text-xs">
-                    <div className="rounded-lg border border-border p-2">
-                      <div className="text-muted-foreground">Latitude</div>
-                      <div className="font-mono font-medium">{geo.lat.toFixed(4)}</div>
-                    </div>
-                    <div className="rounded-lg border border-border p-2">
-                      <div className="text-muted-foreground">Longitude</div>
-                      <div className="font-mono font-medium">{geo.lng.toFixed(4)}</div>
-                    </div>
-                    <div className="rounded-lg border border-border p-2">
-                      <div className="text-muted-foreground">Accuracy</div>
-                      <div className="font-mono font-medium">±{geo.accuracy}m</div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="py-6 text-center">
-                  <MapPin className="mx-auto mb-2 h-8 w-8 text-muted-foreground/40" />
-                  <p className="text-xs text-muted-foreground mb-3">Location not fetched yet.</p>
-                </div>
-              )}
-              <Button size="sm" variant="outline" className="mt-3 w-full gap-2" onClick={fetchLocation} disabled={geoLoading}>
-                {geoLoading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
-                Refresh Location
-              </Button>
-            </GlassCard>
-
             {/* Face Verification */}
             <GlassCard>
               <SectionHeader title="Face Verification" icon={Camera} />
@@ -849,34 +787,6 @@ function CheckInPage() {
                 </div>
                 <Button size="sm" variant="outline" className="w-full gap-2">
                   <Fingerprint className="h-3.5 w-3.5" /> Verify Face
-                </Button>
-              </div>
-            </GlassCard>
-          </div>
-
-          {/* ── QR + Device ── */}
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            {/* QR */}
-            <GlassCard>
-              <SectionHeader title="QR Attendance" icon={QrCode} />
-              <div className="flex flex-col items-center gap-3">
-                <div className="h-28 w-28 rounded-xl border-2 border-dashed border-border bg-muted/20 flex items-center justify-center">
-                  <QrCode className="h-14 w-14 text-muted-foreground/30" />
-                </div>
-                <div className="w-full space-y-2 text-xs">
-                  {[
-                    { label: "Scan Result", value: "AUR-ATT-29JUN2026" },
-                    { label: "Device", value: "Chrome Desktop" },
-                    { label: "Status", value: "Verified", ok: true },
-                  ].map((row) => (
-                    <div key={row.label} className="flex justify-between rounded-lg px-3 py-1.5 hover:bg-muted/40">
-                      <span className="text-muted-foreground">{row.label}</span>
-                      <span className={`font-medium ${row.ok ? "text-emerald-500" : ""}`}>{row.value}</span>
-                    </div>
-                  ))}
-                </div>
-                <Button size="sm" variant="outline" className="w-full gap-2">
-                  <QrCode className="h-3.5 w-3.5" /> Scan QR
                 </Button>
               </div>
             </GlassCard>

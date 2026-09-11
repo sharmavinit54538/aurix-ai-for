@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertTriangle,
   Award,
-  Bot,
   Briefcase,
   CalendarDays,
   CheckCircle2,
@@ -51,6 +50,7 @@ import { useExecutiveDashboardData } from "./hooks/useExecutiveDashboardData";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { GeminiIcon } from "@/components/icons/GeminiIcon";
 import { useAurix, type HRDocument } from "@/lib/aurix-store";
 import {
   AI_FEATURES,
@@ -211,7 +211,7 @@ const QUICK_ACTIONS = [
   { label: "Approve Leave", icon: FileText, link: "/dashboard/leaves", color: "from-amber-600 to-orange-600" },
   { label: "Assign Asset", icon: Package, link: "/dashboard/assets", color: "from-slate-600 to-gray-700" },
   { label: "Generate Report", icon: Download, link: "/dashboard/reports", color: "from-cyan-600 to-blue-600" },
-  { label: "AI Copilot", icon: Bot, link: "/ai/chat-assistant", color: "from-pink-600 to-rose-600" },
+  { label: "AI Copilot", icon: GeminiIcon, link: "/ai/chat-assistant", color: "from-pink-600 to-rose-600" },
 ];
 
 function QuickActions() {
@@ -788,7 +788,7 @@ function AICommandCenter() {
               <div
                 className={`group flex flex-col gap-2 rounded-xl bg-gradient-to-br ${f.color} p-3 transition-all hover:shadow-md hover:-translate-y-0.5`}
               >
-                <Bot className="h-5 w-5 text-white/80" />
+                <GeminiIcon className="h-5 w-5 text-white/90 transition-transform group-hover:scale-110" />
                 <div className="text-xs font-semibold text-white">{f.title}</div>
                 <div className="text-[10px] text-white/70 leading-snug">{f.desc}</div>
               </div>
