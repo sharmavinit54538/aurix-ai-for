@@ -45,19 +45,22 @@ interface AttendanceDay {
   status: "present" | "absent" | "late" | "leave" | "holiday" | "weekend" | "halfday" | "today" | "future";
 }
 
-// ── Mock API layer (swap with real endpoints) ─────────────────
-const API = {
-  checkIn: async () => ({ success: true, time: new Date().toISOString() }),
-  checkOut: async () => ({ success: true, time: new Date().toISOString() }),
-  breakIn: async () => ({ success: true, time: new Date().toISOString() }),
-  breakOut: async () => ({ success: true, time: new Date().toISOString() }),
-  getLocation: async (): Promise<{ lat: number; lng: number; accuracy: number; inside: boolean }> => ({
-    lat: 28.6139,
-    lng: 77.209,
-    accuracy: 15,
-    inside: true,
-  }),
-};
+import { attendanceApi, TimelineEventItem } from "@/services/attendanceApi";
+
+// ── Geolocation Helper ─────────────────────────────────────────
+function getCoordinates(): Promise<{ lat: number; lng: number } | null> {
+  return new Promise((resolve) => {
+    if (typeof navigator !== "undefined" && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => resolve(null),
+        { timeout: 5000, enableHighAccuracy: true }
+      );
+    } else {
+      resolve(null);
+    }
+  });
+}
 
 // ── Utilities ─────────────────────────────────────────────────
 function fmtTime(sec: number) {
@@ -440,32 +443,113 @@ function CheckInPage() {
     return () => clearInterval(t);
   }, [status]);
 
+  // ── Load punch status & timeline on mount ───────────────────
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadTodayState() {
+      try {
+        const [punchRes, timelineRes] = await Promise.allSettled([
+          attendanceApi.getMyTodayStatus(),
+          attendanceApi.getTimeline(),
+        ]);
+
+        if (!isMounted) return;
+
+        if (punchRes.status === "fulfilled") {
+          const p = punchRes.value;
+          if (p.checkedOut) {
+            setStatus("checked-out");
+          } else if (p.onBreak) {
+            setStatus("on-break");
+          } else if (p.checkedIn) {
+            setStatus("checked-in");
+          } else {
+            setStatus("not-checked-in");
+          }
+
+          if (p.checkInTime) {
+            checkInTimeRef.current = new Date(p.checkInTime);
+            const elapsed = Math.max(0, Math.floor((Date.now() - new Date(p.checkInTime).getTime()) / 1000));
+            setWorkSec(elapsed);
+            setActiveSec(elapsed);
+          }
+          if (p.breakDurationMinutes) {
+            setBreakSec(p.breakDurationMinutes * 60);
+          }
+        }
+
+        if (timelineRes.status === "fulfilled" && timelineRes.value.length > 0) {
+          const iconMap: Record<string, any> = {
+            checkin: LogIn,
+            checkout: LogOut,
+            break_start: Coffee,
+            break_end: Play,
+            regularization: FileText,
+          };
+          const colorMap: Record<string, string> = {
+            checkin: "bg-emerald-500/20 text-emerald-600 dark:text-emerald-300",
+            checkout: "bg-rose-500/20 text-rose-600 dark:text-rose-300",
+            break_start: "bg-amber-500/20 text-amber-700 dark:text-amber-300",
+            break_end: "bg-sky-500/20 text-sky-600 dark:text-sky-300",
+            regularization: "bg-violet-500/20 text-violet-600 dark:text-violet-300",
+          };
+
+          setTimeline(
+            timelineRes.value.map((ev) => ({
+              id: ev.id,
+              time: ev.time,
+              label: ev.label,
+              icon: iconMap[ev.type] || Activity,
+              color: colorMap[ev.type] || "bg-muted text-muted-foreground",
+            }))
+          );
+        }
+      } catch (err) {
+        console.warn("Could not load today's attendance state from backend:", err);
+      }
+    }
+
+    loadTodayState();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   function showToast(msg: string, type: "success" | "error" | "info" = "success") {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 4000);
   }
 
-  function pushTimeline(label: string, icon: any, color: string) {
-    setTimeline((prev) => [...prev, {
-      id: Math.random().toString(36).slice(2),
-      time: nowTimeStr(),
-      label,
-      icon,
-      color,
-    }]);
-  }
-
   async function handleCheckIn() {
     setLoading("checkin");
     try {
-      await API.checkIn();
-      checkInTimeRef.current = new Date();
+      const coords = await getCoordinates();
+      const res = await attendanceApi.checkIn({
+        latitude: coords?.lat,
+        longitude: coords?.lng,
+        deviceInfo: typeof navigator !== "undefined" ? navigator.userAgent : "Browser",
+        notes: noteEmp || undefined,
+      });
+
+      checkInTimeRef.current = new Date(res.time);
       setStatus("checked-in");
       setDayStatus("present");
-      pushTimeline("Checked In", LogIn, "bg-emerald-500/20 text-emerald-600 dark:text-emerald-300");
-      showToast("✅ Checked in successfully!", "success");
-    } catch {
-      showToast("Failed to check in. Try again.", "error");
+
+      setTimeline((prev) => [
+        {
+          id: res.id,
+          time: nowTimeStr(),
+          label: "Checked In",
+          icon: LogIn,
+          color: "bg-emerald-500/20 text-emerald-600 dark:text-emerald-300",
+        },
+        ...prev,
+      ]);
+
+      showToast(res.message || "✅ Checked in successfully!", "success");
+    } catch (err: any) {
+      showToast(err?.message || "Failed to check in. Try again.", "error");
     } finally {
       setLoading(null);
     }
@@ -474,13 +558,24 @@ function CheckInPage() {
   async function handleBreakIn() {
     setLoading("breakin");
     try {
-      await API.breakIn();
-      breakStartRef.current = new Date();
+      const res = await attendanceApi.startBreak({ reason: "Rest Break", notes: noteEmp || undefined });
+      breakStartRef.current = new Date(res.time);
       setStatus("on-break");
-      pushTimeline("Break Started", Coffee, "bg-amber-500/20 text-amber-700 dark:text-amber-300");
-      showToast("☕ Break started", "info");
-    } catch {
-      showToast("Failed to start break.", "error");
+
+      setTimeline((prev) => [
+        {
+          id: res.id,
+          time: nowTimeStr(),
+          label: "Break Started",
+          icon: Coffee,
+          color: "bg-amber-500/20 text-amber-700 dark:text-amber-300",
+        },
+        ...prev,
+      ]);
+
+      showToast(res.message || "☕ Break started", "info");
+    } catch (err: any) {
+      showToast(err?.message || "Failed to start break.", "error");
     } finally {
       setLoading(null);
     }
@@ -489,12 +584,23 @@ function CheckInPage() {
   async function handleBreakOut() {
     setLoading("breakout");
     try {
-      await API.breakOut();
+      const res = await attendanceApi.endBreak();
       setStatus("checked-in");
-      pushTimeline("Break Ended", Play, "bg-sky-500/20 text-sky-600 dark:text-sky-300");
-      showToast("Break ended. Back to work!", "info");
-    } catch {
-      showToast("Failed to end break.", "error");
+
+      setTimeline((prev) => [
+        {
+          id: res.id,
+          time: nowTimeStr(),
+          label: "Break Ended",
+          icon: Play,
+          color: "bg-sky-500/20 text-sky-600 dark:text-sky-300",
+        },
+        ...prev,
+      ]);
+
+      showToast(res.message || "Break ended. Back to work!", "info");
+    } catch (err: any) {
+      showToast(err?.message || "Failed to end break.", "error");
     } finally {
       setLoading(null);
     }
@@ -503,12 +609,30 @@ function CheckInPage() {
   async function handleCheckOut() {
     setLoading("checkout");
     try {
-      await API.checkOut();
+      const coords = await getCoordinates();
+      const res = await attendanceApi.checkOut({
+        latitude: coords?.lat,
+        longitude: coords?.lng,
+        deviceInfo: typeof navigator !== "undefined" ? navigator.userAgent : "Browser",
+        notes: noteEmp || undefined,
+      });
+
       setStatus("checked-out");
-      pushTimeline("Checked Out", LogOut, "bg-rose-500/20 text-rose-600 dark:text-rose-300");
-      showToast("👋 Checked out. Great work today!", "success");
-    } catch {
-      showToast("Failed to check out.", "error");
+
+      setTimeline((prev) => [
+        {
+          id: res.id,
+          time: nowTimeStr(),
+          label: "Checked Out",
+          icon: LogOut,
+          color: "bg-rose-500/20 text-rose-600 dark:text-rose-300",
+        },
+        ...prev,
+      ]);
+
+      showToast(res.message || "👋 Checked out. Great work today!", "success");
+    } catch (err: any) {
+      showToast(err?.message || "Failed to check out.", "error");
     } finally {
       setLoading(null);
     }

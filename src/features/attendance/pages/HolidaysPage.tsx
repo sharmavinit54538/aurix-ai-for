@@ -27,6 +27,8 @@ import {
   Share2,
   Sparkles,
   X,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
@@ -48,29 +50,13 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
+import {
+  attendanceApi,
+  HolidayRecord,
+  HolidayCreatePayload,
+} from "@/services/attendanceApi";
 
-interface Holiday {
-  id: string;
-  name: string;
-  description: string;
-  date: string; // YYYY-MM-DD
-  type: "Public" | "Company" | "Regional" | "Optional";
-  country: string;
-  state: string;
-  office: string;
-  department: string;
-  status: "Active" | "Archived";
-  createdBy: string;
-  createdDate: string;
-  updatedDate: string;
-  notes?: string;
-  color?: string;
-  recurring: boolean;
-  everyYear: boolean;
-  applyToAll: boolean;
-}
-
-const INITIAL_HOLIDAYS: Holiday[] = [];
+export type Holiday = HolidayRecord;
 
 const PRESET_COLORS = [
   { value: "#3B82F6", label: "Blue (Public)" },
@@ -101,7 +87,9 @@ const MONTH_NAMES = [
 ];
 
 export default function HolidaysPage() {
-  const [holidays, setHolidays] = useState<Holiday[]>(INITIAL_HOLIDAYS);
+  const [holidays, setHolidays] = useState<Holiday[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar");
 
   // Filters
@@ -155,6 +143,28 @@ export default function HolidaysPage() {
   const sysYear = 2026;
   const sysMonth = 5; // June
   const sysDay = 25;
+
+  const loadHolidays = async (showNotice = false) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const year = yearFilter !== "all" ? Number(yearFilter) : calendarYear;
+      const branch = officeFilter !== "all" ? officeFilter : undefined;
+      const data = await attendanceApi.getHolidays({ year, branch });
+      setHolidays(data);
+      if (showNotice) toast.success("Holidays refreshed from backend");
+    } catch (err: any) {
+      const msg = err?.message || "Failed to load holidays from server";
+      setError(msg);
+      if (showNotice) toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadHolidays();
+  }, [calendarYear, yearFilter]);
 
   useEffect(() => {
     if (yearFilter !== "all") {
@@ -339,42 +349,54 @@ export default function HolidaysPage() {
     setIsAddModalOpen(true);
   };
 
-  // All new Date() calls are in event handlers — safe (client-only)
-  const handleSaveHoliday = (e: React.FormEvent) => {
+  // Save Holiday to backend
+  const handleSaveHoliday = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formName.trim()) { toast.error("Holiday name is required"); return; }
     if (!formDate) { toast.error("Holiday date is required"); return; }
 
-    if (modalMode === "add" || modalMode === "duplicate") {
-      const newHoliday: Holiday = {
-        id: "h" + (holidays.length + 1) + "_" + Math.random().toString(36).substr(2, 4),
-        name: formName, description: formDescription, date: formDate, type: formType,
-        country: formCountry, state: formState, office: formOffice, department: formDepartment,
-        status: "Active", createdBy: "Current User",
-        createdDate: new Date().toISOString().split("T")[0],
-        updatedDate: new Date().toISOString().split("T")[0],
-        color: formColor, recurring: formRecurring, everyYear: formEveryYear,
-        applyToAll: formApplyToAll, notes: formNotes
-      };
-      setHolidays((prev) => [newHoliday, ...prev]);
-      toast.success(`Holiday "${formName}" created successfully`);
-    } else if (modalMode === "edit" && editingHolidayId) {
-      setHolidays((prev) =>
-        prev.map((h) =>
-          h.id === editingHolidayId
-            ? {
-                ...h, name: formName, description: formDescription, date: formDate, type: formType,
-                country: formCountry, state: formState, office: formOffice, department: formDepartment,
-                color: formColor, recurring: formRecurring, everyYear: formEveryYear,
-                applyToAll: formApplyToAll, notes: formNotes,
-                updatedDate: new Date().toISOString().split("T")[0],
-              }
-            : h
-        )
-      );
-      toast.success(`Holiday "${formName}" updated successfully`);
+    try {
+      if (modalMode === "add" || modalMode === "duplicate") {
+        const created = await attendanceApi.createHoliday({
+          name: formName,
+          description: formDescription,
+          date: formDate,
+          type: formType,
+          country: formCountry,
+          state: formState,
+          office: formOffice,
+          department: formDepartment,
+          color: formColor,
+          recurring: formRecurring,
+          everyYear: formEveryYear,
+          applyToAll: formApplyToAll,
+          notes: formNotes,
+        });
+        setHolidays((prev) => [created, ...prev]);
+        toast.success(`Holiday "${formName}" created successfully on backend`);
+      } else if (modalMode === "edit" && editingHolidayId) {
+        const updated = await attendanceApi.updateHoliday(editingHolidayId, {
+          name: formName,
+          description: formDescription,
+          date: formDate,
+          type: formType,
+          country: formCountry,
+          state: formState,
+          office: formOffice,
+          department: formDepartment,
+          color: formColor,
+          recurring: formRecurring,
+          everyYear: formEveryYear,
+          applyToAll: formApplyToAll,
+          notes: formNotes,
+        });
+        setHolidays((prev) => prev.map((h) => (h.id === editingHolidayId ? updated : h)));
+        toast.success(`Holiday "${formName}" updated successfully on backend`);
+      }
+      setIsAddModalOpen(false);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to save holiday to backend");
     }
-    setIsAddModalOpen(false);
   };
 
   const triggerDeleteHoliday = (holiday: Holiday) => {
@@ -382,20 +404,17 @@ export default function HolidaysPage() {
     setIsDeleteConfirmOpen(true);
   };
 
-  const confirmDeleteHoliday = () => {
+  const confirmDeleteHoliday = async () => {
     if (!holidayToDelete) return;
-    setHolidays((prev) => prev.filter((h) => h.id !== holidayToDelete.id));
-    setIsDeleteConfirmOpen(false);
-    setIsDetailsOpen(false);
-    toast.success(`Deleted holiday "${holidayToDelete.name}"`, {
-      action: {
-        label: "Undo",
-        onClick: () => {
-          setHolidays((prev) => [holidayToDelete, ...prev]);
-          toast.success(`Restored holiday "${holidayToDelete.name}"`);
-        },
-      },
-    });
+    try {
+      await attendanceApi.deleteHoliday(holidayToDelete.id);
+      setHolidays((prev) => prev.filter((h) => h.id !== holidayToDelete.id));
+      setIsDeleteConfirmOpen(false);
+      setIsDetailsOpen(false);
+      toast.success(`Deleted holiday "${holidayToDelete.name}"`);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to delete holiday on backend");
+    }
   };
 
   const toggleArchiveHoliday = (holiday: Holiday) => {
@@ -441,24 +460,41 @@ export default function HolidaysPage() {
     toast.success(`File "${file.name}" loaded for preview`);
   };
 
-  const handleConfirmImport = () => {
-    if (importPreviewData.length === 0) { toast.error("No data available to import"); return; }
-    // Math.random() only in event handler — safe
-    const importedHolidays: Holiday[] = importPreviewData.map((row, idx) => ({
-      id: "imp_" + idx + "_" + Math.random().toString(36).substr(2, 4),
-      name: row.name, description: row.description, date: row.date, type: row.type,
-      country: row.country, state: row.state, office: row.office, department: row.department,
-      status: "Active", createdBy: "CSV Import",
-      createdDate: new Date().toISOString().split("T")[0],
-      updatedDate: new Date().toISOString().split("T")[0],
-      color: row.type === "Public" ? "#3B82F6" : row.type === "Company" ? "#10B981" : "#F59E0B",
-      recurring: true, everyYear: true, applyToAll: true,
-    }));
-    setHolidays((prev) => [...importedHolidays, ...prev]);
-    setIsImportModalOpen(false);
-    setImportedFile(null);
-    setImportPreviewData([]);
-    toast.success(`Successfully imported ${importedHolidays.length} holidays`);
+  const handleConfirmImport = async () => {
+    if (importPreviewData.length === 0 && !importedFile) {
+      toast.error("No data available to import");
+      return;
+    }
+
+    try {
+      if (importedFile) {
+        const res = await attendanceApi.importHolidays(importedFile);
+        toast.success(`Imported ${res.importedCount} holidays to backend`);
+      } else {
+        const payloads: HolidayCreatePayload[] = importPreviewData.map((row) => ({
+          name: row.name,
+          description: row.description,
+          date: row.date,
+          type: row.type,
+          country: row.country,
+          state: row.state,
+          office: row.office,
+          department: row.department,
+          color: row.type === "Public" ? "#3B82F6" : row.type === "Company" ? "#10B981" : "#F59E0B",
+          recurring: true,
+          everyYear: true,
+          applyToAll: true,
+        }));
+        const res = await attendanceApi.importHolidays(payloads);
+        toast.success(`Imported ${res.importedCount} holidays to backend`);
+      }
+      await loadHolidays();
+      setIsImportModalOpen(false);
+      setImportedFile(null);
+      setImportPreviewData([]);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to import holidays to backend");
+    }
   };
 
   const highlightText = (text: string, searchStr: string) => {
@@ -484,6 +520,16 @@ export default function HolidaysPage() {
         description="Manage public, regional, and company holidays."
         actions={
           <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={loading}
+              onClick={() => loadHolidays(true)}
+              className="h-9 border-border bg-card/40 text-xs hover:bg-accent/60"
+            >
+              <RefreshCw className={`mr-2 h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
             <Button variant="outline" size="sm" onClick={() => setIsImportModalOpen(true)} className="h-9 border-border bg-card/40 text-xs hover:bg-accent/60">
               <Upload className="mr-2 h-3.5 w-3.5" /> Import Holidays
             </Button>
@@ -496,6 +542,26 @@ export default function HolidaysPage() {
           </div>
         }
       />
+
+      {/* Error Alert Banner */}
+      {error && (
+        <div className="flex items-center justify-between rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-xs text-destructive text-left">
+          <div className="flex items-center gap-2.5">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <div>
+              <span className="font-semibold">Backend Calendar Notice:</span> {error}
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => loadHolidays(true)}
+            className="h-7 text-xs border-destructive/40 hover:bg-destructive/15"
+          >
+            Retry
+          </Button>
+        </div>
+      )}
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">

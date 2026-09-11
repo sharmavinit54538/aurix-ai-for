@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   ScrollText,
   Plus,
@@ -24,6 +24,8 @@ import {
   Copy,
   Trash2,
   Edit,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
@@ -38,32 +40,31 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import apiInstance from "@/api/apiInstance";
+import {
+  attendanceApi,
+  RosterEntryRecord,
+  RosterCreatePayload,
+} from "@/services/attendanceApi";
 
-interface RosterEntry {
+export type RosterEntry = RosterEntryRecord;
+
+export interface EmployeeItem {
   id: string;
-  employeeId: string;
-  employeeName: string;
-  department: string;
-  designation: string;
-  date: string; // YYYY-MM-DD
-  shift: "Morning" | "Evening" | "Night" | "Off Day" | "Leave" | "Holiday" | "Training" | "WFH" | "Overtime";
-  startTime: string;
-  endTime: string;
-  workingHours: number;
-  breakTime: string;
-  location: string;
-  manager: string;
-  status: "Approved" | "Pending" | "Rejected";
+  name: string;
+  code: string;
+  dept: string;
+  role: string;
+  mgr: string;
 }
-
-const DEFAULT_EMPLOYEES: { id: string; name: string; code: string; dept: string; role: string; mgr: string }[] = [];
-
-const INITIAL_ROSTERS: RosterEntry[] = [];
 
 const SHIFT_TYPES = ["Morning", "Evening", "Night", "Off Day", "Leave", "Holiday", "Training", "WFH", "Overtime"] as const;
 
 export default function RostersPage() {
-  const [rosters, setRosters] = useState<RosterEntry[]>(INITIAL_ROSTERS);
+  const [rosters, setRosters] = useState<RosterEntry[]>([]);
+  const [employees, setEmployees] = useState<EmployeeItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar");
   const [calendarView, setCalendarView] = useState<"Day" | "Week" | "Month" | "Timeline">("Week");
 
@@ -117,6 +118,55 @@ export default function RostersPage() {
     { dayName: "Sat", dateStr: "2026-06-27", label: "27 Jun" },
     { dayName: "Sun", dateStr: "2026-06-28", label: "28 Jun" },
   ];
+
+  // Load real rosters and employees on mount
+  const loadData = async (showNotice = false) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [rosterRes, empRes] = await Promise.allSettled([
+        attendanceApi.getRosters(),
+        apiInstance.get("/employees?limit=200"),
+      ]);
+
+      if (rosterRes.status === "fulfilled") {
+        setRosters(rosterRes.value);
+      } else {
+        const msg = (rosterRes.reason as any)?.message || "Failed to load rosters from server";
+        setError(msg);
+      }
+
+      if (empRes.status === "fulfilled") {
+        const data = empRes.value.data?.data;
+        const rawList = Array.isArray(data) ? data : Array.isArray(data?.items) ? data.items : [];
+        const parsed: EmployeeItem[] = rawList.map((e: any) => ({
+          id: e.id || e.employee_id,
+          name: e.full_name || `${e.first_name || ""} ${e.last_name || ""}`.trim() || e.name || "Employee",
+          code: e.employee_id || e.code || `EMP-${(e.id || "").slice(0, 4)}`,
+          dept: e.department || "General",
+          role: e.designation || e.role || "Staff",
+          mgr: e.manager_name || e.manager || "Alex Morgan",
+        }));
+        setEmployees(parsed);
+        if (parsed.length > 0 && !formEmployeeId) {
+          setFormEmployeeId(parsed[0].code);
+        }
+      }
+
+      if (showNotice) {
+        if (rosterRes.status === "fulfilled") toast.success("Roster data refreshed from server");
+        else toast.error("Failed to load rosters from backend");
+      }
+    } catch (err: any) {
+      setError(err?.message || "Failed to load rosters");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Auto-Save Trigger
   const triggerAutoSave = () => {
@@ -230,33 +280,39 @@ export default function RostersPage() {
     return list;
   }, [rosters]);
 
-  // Handle Roster Actions — Math.random() only in event handlers (safe, client-only)
-  const handleAssignShift = (e: React.FormEvent) => {
+  // Handle Roster Actions — Connects to attendanceApi
+  const handleAssignShift = async (e: React.FormEvent) => {
     e.preventDefault();
-    const emp = DEFAULT_EMPLOYEES.find((item) => item.code === formEmployeeId);
-    if (!emp) return;
+    const emp = employees.find((item) => item.code === formEmployeeId);
+    if (!emp) {
+      toast.error("Please select an employee");
+      return;
+    }
 
-    const newRoster: RosterEntry = {
-      id: "r_" + (rosters.length + 1) + "_" + Math.random().toString(36).substr(2, 4),
-      employeeId: emp.code,
-      employeeName: emp.name,
-      department: emp.dept,
-      designation: emp.role,
-      date: formDate,
-      shift: formShift,
-      startTime: formStartTime,
-      endTime: formEndTime,
-      workingHours: formShift === "Off Day" || formShift === "Leave" || formShift === "Holiday" ? 0 : 8,
-      breakTime: formBreak,
-      location: formLocation,
-      manager: emp.mgr,
-      status: formStatus
-    };
+    try {
+      const created = await attendanceApi.createRoster({
+        employeeId: emp.code,
+        employeeName: emp.name,
+        department: emp.dept,
+        designation: emp.role,
+        date: formDate,
+        shift: formShift,
+        startTime: formStartTime,
+        endTime: formEndTime,
+        workingHours: formShift === "Off Day" || formShift === "Leave" || formShift === "Holiday" ? 0 : 8,
+        breakTime: formBreak,
+        location: formLocation,
+        manager: emp.mgr,
+        status: formStatus,
+      });
 
-    setRosters((prev) => [newRoster, ...prev]);
-    setIsAssignModalOpen(false);
-    toast.success(`Assigned shift "${formShift}" to ${emp.name} on ${formDate}`);
-    triggerAutoSave();
+      setRosters((prev) => [created, ...prev]);
+      setIsAssignModalOpen(false);
+      toast.success(`Assigned shift "${formShift}" to ${emp.name} on ${formDate}`);
+      triggerAutoSave();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to save roster entry to backend");
+    }
   };
 
   const handleCreateRoster = (e: React.FormEvent) => {
@@ -304,15 +360,30 @@ export default function RostersPage() {
       setEntryToDelete(entry);
       setIsDeleteConfirmOpen(true);
     } else if (action === "Duplicate") {
-      // Math.random() is safe here — only runs in event handler on client
-      const dup: RosterEntry = {
-        ...entry,
-        id: "dup_" + entry.id + "_" + Math.random().toString(36).substr(2, 4),
-        status: "Pending"
-      };
-      setRosters((prev) => [dup, ...prev]);
-      toast.success(`Duplicated schedule row for ${entry.employeeName}`);
-      triggerAutoSave();
+      (async () => {
+        try {
+          const created = await attendanceApi.createRoster({
+            employeeId: entry.employeeId,
+            employeeName: entry.employeeName,
+            department: entry.department,
+            designation: entry.designation,
+            date: entry.date,
+            shift: entry.shift,
+            startTime: entry.startTime,
+            endTime: entry.endTime,
+            workingHours: entry.workingHours,
+            breakTime: entry.breakTime,
+            location: entry.location,
+            manager: entry.manager,
+            status: "Pending",
+          });
+          setRosters((prev) => [created, ...prev]);
+          toast.success(`Duplicated schedule row for ${entry.employeeName}`);
+          triggerAutoSave();
+        } catch (err: any) {
+          toast.error(err?.message || "Failed to duplicate roster entry");
+        }
+      })();
     } else if (action === "Assign") {
       setFormEmployeeId(entry.employeeId);
       setFormShift(entry.shift);
@@ -326,54 +397,52 @@ export default function RostersPage() {
     }
   };
 
-  const confirmDeleteEntry = () => {
+  const confirmDeleteEntry = async () => {
     if (!entryToDelete) return;
-    setRosters((prev) => prev.filter((r) => r.id !== entryToDelete.id));
-    setIsDeleteConfirmOpen(false);
-    toast.success(`Deleted schedule for ${entryToDelete.employeeName}`, {
-      action: {
-        label: "Undo",
-        onClick: () => {
-          setRosters((prev) => [entryToDelete, ...prev]);
-          toast.success(`Restored schedule for ${entryToDelete.employeeName}`);
-        }
-      }
-    });
-    triggerAutoSave();
+    try {
+      await attendanceApi.deleteRoster(entryToDelete.id);
+      setRosters((prev) => prev.filter((r) => r.id !== entryToDelete.id));
+      setIsDeleteConfirmOpen(false);
+      toast.success(`Deleted schedule for ${entryToDelete.employeeName}`);
+      triggerAutoSave();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to delete schedule on backend");
+    }
   };
 
   const handleDragStart = (id: string) => {
     setDraggingEntryId(id);
   };
 
-  const handleDropCell = (employeeId: string, dateStr: string) => {
+  const handleDropCell = async (employeeId: string, dateStr: string) => {
     if (!draggingEntryId) return;
     const entryToMove = rosters.find((r) => r.id === draggingEntryId);
     if (!entryToMove) return;
 
-    const targetEmployee = DEFAULT_EMPLOYEES.find((item) => item.code === employeeId);
+    const targetEmployee = employees.find((item) => item.code === employeeId);
     if (!targetEmployee) return;
 
-    setRosters((prev) =>
-      prev.map((r) => {
-        if (r.id === draggingEntryId) {
-          return {
-            ...r,
-            employeeId: targetEmployee.code,
-            employeeName: targetEmployee.name,
-            department: targetEmployee.dept,
-            designation: targetEmployee.role,
-            date: dateStr,
-            manager: targetEmployee.mgr,
-          };
-        }
-        return r;
-      })
-    );
+    try {
+      const updated = await attendanceApi.updateRoster(entryToMove.id, {
+        employeeId: targetEmployee.code,
+        employeeName: targetEmployee.name,
+        department: targetEmployee.dept,
+        designation: targetEmployee.role,
+        date: dateStr,
+        manager: targetEmployee.mgr,
+      });
 
-    toast.success(`Moved ${entryToMove.employeeName}'s shift to ${targetEmployee.name} on ${dateStr}`);
-    setDraggingEntryId(null);
-    triggerAutoSave();
+      setRosters((prev) =>
+        prev.map((r) => (r.id === draggingEntryId ? updated : r))
+      );
+
+      toast.success(`Moved ${entryToMove.employeeName}'s shift to ${targetEmployee.name} on ${dateStr}`);
+      triggerAutoSave();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to update roster on backend");
+    } finally {
+      setDraggingEntryId(null);
+    }
   };
 
   const highlightText = (text: string, searchStr: string) => {
@@ -426,6 +495,16 @@ export default function RostersPage() {
               <CheckCircle className="h-3 w-3 text-emerald-500" />
               {autoSaveStatus}
             </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={loading}
+              onClick={() => loadData(true)}
+              className="h-9 border-border bg-card/40 text-xs hover:bg-accent/60"
+            >
+              <RefreshCw className={`mr-2 h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -720,18 +799,23 @@ export default function RostersPage() {
                   </div>
 
                   {/* Grid Rows */}
-                  {DEFAULT_EMPLOYEES.map((emp) => {
-                    return (
-                      <div key={emp.id} className="grid grid-cols-8 hover:bg-muted/5 transition-colors items-center py-2.5">
-                        <div className="px-4 flex items-center gap-2">
-                          <div className="h-7 w-7 rounded-full bg-accent text-[10px] font-bold text-foreground grid place-items-center uppercase">
-                            {emp.name.split(" ").map((n) => n.charAt(0)).join("")}
+                  {employees.length === 0 ? (
+                    <div className="p-8 text-center text-xs text-muted-foreground">
+                      {loading ? "Loading employees from backend..." : "No employees found in directory."}
+                    </div>
+                  ) : (
+                    employees.map((emp) => {
+                      return (
+                        <div key={emp.id} className="grid grid-cols-8 hover:bg-muted/5 transition-colors items-center py-2.5">
+                          <div className="px-4 flex items-center gap-2">
+                            <div className="h-7 w-7 rounded-full bg-accent text-[10px] font-bold text-foreground grid place-items-center uppercase">
+                              {emp.name.split(" ").map((n) => n.charAt(0)).join("")}
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-foreground leading-snug">{emp.name}</span>
+                              <span className="text-[9px] text-muted-foreground truncate max-w-[100px]">{emp.role}</span>
+                            </div>
                           </div>
-                          <div className="flex flex-col">
-                            <span className="font-semibold text-foreground leading-snug">{emp.name}</span>
-                            <span className="text-[9px] text-muted-foreground truncate max-w-[100px]">{emp.role}</span>
-                          </div>
-                        </div>
 
                         {currentWeekDays.map((day) => {
                           const isToday = day.dateStr === "2026-06-25";
@@ -800,8 +884,9 @@ export default function RostersPage() {
                         })}
                       </div>
                     );
-                  })}
-                </div>
+                  })
+                )}
+              </div>
               </div>
             </div>
           ) : (
@@ -1138,7 +1223,7 @@ export default function RostersPage() {
                   onChange={(e) => setFormEmployeeId(e.target.value)}
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs text-foreground outline-none focus:ring-1 focus:ring-ring"
                 >
-                  {DEFAULT_EMPLOYEES.map((emp) => (
+                  {employees.map((emp) => (
                     <option key={emp.id} value={emp.code}>
                       {emp.name} ({emp.code})
                     </option>
