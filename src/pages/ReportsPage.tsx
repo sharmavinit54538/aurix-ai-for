@@ -193,7 +193,9 @@ function Card({
   className?: string;
 }) {
   return (
-    <div className={`rounded-2xl border border-border bg-card/60 p-5 backdrop-blur-xl ${className}`}>
+    <div
+      className={`rounded-2xl border border-border bg-card/60 p-5 backdrop-blur-xl ${className}`}
+    >
       <h3 className="mb-4 font-medium">{title}</h3>
       {children}
     </div>

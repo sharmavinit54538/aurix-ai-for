@@ -1,8 +1,20 @@
 import { useState, useRef, useEffect } from "react";
 import {
-  MessageSquare, Send, Sparkles, Users, Banknote, BarChart3, FileText,
-  UserCheck, Briefcase, CalendarClock, ShieldCheck, CheckCircle2,
-  AlertCircle, History, ArrowRight, CornerDownLeft, RefreshCw, Check
+  MessageSquare,
+  Send,
+  Sparkles,
+  Users,
+  Banknote,
+  BarChart3,
+  FileText,
+  UserCheck,
+  Briefcase,
+  CalendarClock,
+  CheckCircle2,
+  AlertCircle,
+  ArrowRight,
+  RefreshCw,
+  Check,
 } from "lucide-react";
 import { AIHero } from "@/components/aurix/AIModule";
 import { Button } from "@/components/ui/button";
@@ -86,8 +98,38 @@ export default function ChatAssistantPage() {
       text: "I processed your request using local simulated workforce records.",
     };
 
-    if (queryLower.includes("candidate") && (queryLower.includes("siddharth") || queryLower.includes("search"))) {
-      const cand = candidates[0];
+    if (
+      queryLower.includes("candidate") &&
+      (queryLower.includes("siddharth") ||
+        queryLower.includes("search") ||
+        queryLower.includes("find"))
+    ) {
+      const matched =
+        candidates?.find((c: any) => {
+          const cName = (
+            c.name ||
+            c.full_name ||
+            `${c.first_name || ""} ${c.last_name || ""}`
+          ).toLowerCase();
+          return queryLower.split(" ").some((term) => term.length > 2 && cName.includes(term));
+        }) || candidates?.[0];
+
+      const cand = {
+        name:
+          matched?.name && matched.name !== "Candidate Candidate"
+            ? matched.name
+            : "Siddharth Nambiar",
+        atsScore: (matched as any)?.atsScore ?? 94,
+        appliedPosition:
+          (matched as any)?.appliedPosition ||
+          (matched as any)?.position ||
+          "Senior Full Stack Engineer",
+        yearsExperience: (matched as any)?.yearsExperience ?? 6,
+        summary:
+          (matched as any)?.summary ||
+          "Specialized in React, TypeScript, Node.js microservices, and distributed architecture.",
+      };
+
       aiResponse = {
         id: `ai-${Date.now()}`,
         role: "ai",
@@ -110,7 +152,8 @@ export default function ChatAssistantPage() {
         },
         actionRequired: {
           actionName: "Create Job Posting",
-          description: "Publish 'Cloud Infrastructure Architect' to active career portals and distribution feeds.",
+          description:
+            "Publish 'Cloud Infrastructure Architect' to active career portals and distribution feeds.",
           payload: { title: "Cloud Infrastructure Architect" },
         },
       };
@@ -121,7 +164,8 @@ export default function ChatAssistantPage() {
         text: "Candidate has strong 94% match. Would you like to confirm shortlisting?",
         actionRequired: {
           actionName: "Shortlist Candidate",
-          description: "Advance Siddharth Nambiar to Technical Round and dispatch interview invitation.",
+          description:
+            "Advance Siddharth Nambiar to Technical Round and dispatch interview invitation.",
           payload: { candidateId: "cand-201" },
         },
       };
@@ -221,11 +265,18 @@ export default function ChatAssistantPage() {
     try {
       if (confirmModal.actionName.includes("Shortlist") && confirmModal.payload?.candidateId) {
         await moveStage(confirmModal.payload.candidateId, "technical");
-        toast.success(`Action Executed: ${confirmModal.actionName} completed successfully! Candidate advanced to Technical round.`);
+        toast.success(
+          `Action Executed: ${confirmModal.actionName} completed successfully! Candidate advanced to Technical round.`,
+        );
         setActivityHistory((p) => [`Executed: ${confirmModal.actionName}`, ...p]);
       } else {
-        toast.info(`${confirmModal.actionName}: Autonomous direct agent execution is coming soon. Please manage this record in its respective module.`);
-        setActivityHistory((p) => [`Previewed: ${confirmModal.actionName} (Manual dashboard follow-up)`, ...p]);
+        toast.info(
+          `${confirmModal.actionName}: Autonomous direct agent execution is coming soon. Please manage this record in its respective module.`,
+        );
+        setActivityHistory((p) => [
+          `Previewed: ${confirmModal.actionName} (Manual dashboard follow-up)`,
+          ...p,
+        ]);
       }
     } catch (err: any) {
       toast.error(err?.message || `Failed to execute ${confirmModal.actionName}`);
@@ -244,173 +295,148 @@ export default function ChatAssistantPage() {
         lastAnalysis="Live Demo Active"
       />
 
-      {/* People AI Status Banner */}
-      <div className="rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-4 py-2 text-xs flex items-center justify-between text-indigo-700 dark:text-indigo-300">
-        <div className="flex items-center gap-2">
-          <ShieldCheck className="h-4 w-4 shrink-0" />
-          <span>
-            <strong>People AI Assistant:</strong> Connected to live workforce data. Direct command execution operates on real backend APIs.
-          </span>
-        </div>
-        <Badge variant="outline" className="text-[10px] text-indigo-500 border-indigo-500/30">
-          Live Backend Connected
-        </Badge>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
-        {/* Chat Window */}
-        <div className="lg:col-span-3 flex h-[620px] flex-col rounded-2xl border border-border bg-card/60 backdrop-blur-xl shadow-sm">
-          {/* Messages Feed */}
-          <div className="flex-1 space-y-4 overflow-y-auto p-5 text-xs">
-            {msgs.map((m) => (
-              <div
-                key={m.id}
-                className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-[85%] rounded-2xl p-4 leading-relaxed ${
-                    m.role === "user"
-                      ? "bg-foreground text-background"
-                      : "bg-accent/80 text-foreground border border-border/60"
-                  }`}
-                >
-                  <p className="text-xs">{m.text}</p>
-
-                  {/* Render Rich Result Cards */}
-                  {m.cardType === "candidate" && m.cardData && (
-                    <div className="mt-3 rounded-xl border border-border bg-background/80 p-3 text-foreground space-y-1.5 shadow-sm">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-sm">{m.cardData.name}</span>
-                        <Badge variant="secondary" className="text-[10px]">{m.cardData.atsScore}% Match</Badge>
-                      </div>
-                      <div className="text-muted-foreground">{m.cardData.appliedPosition} • {m.cardData.yearsExperience} yrs exp</div>
-                      <div className="text-[11px] text-muted-foreground">{m.cardData.summary}</div>
-                    </div>
-                  )}
-
-                  {m.cardType === "interview" && m.cardData && (
-                    <div className="mt-3 rounded-xl border border-border bg-background/80 p-3 text-foreground space-y-1.5 shadow-sm">
-                      <div className="font-bold text-sm flex items-center gap-1.5 text-indigo-500">
-                        <CalendarClock className="h-4 w-4" />
-                        {m.cardData.round}
-                      </div>
-                      <div>Candidate: <strong>{m.cardData.candidateName}</strong></div>
-                      <div>Interviewer: <strong>{m.cardData.interviewer}</strong></div>
-                      <div className="text-muted-foreground font-mono text-[11px]">{m.cardData.time}</div>
-                    </div>
-                  )}
-
-                  {m.cardType === "offer" && m.cardData && (
-                    <div className="mt-3 rounded-xl border border-border bg-background/80 p-3 text-foreground space-y-1.5 shadow-sm">
-                      <div className="font-bold text-sm text-emerald-600 dark:text-emerald-400">
-                        Offer: {m.cardData.candidateName}
-                      </div>
-                      <div>Role: <strong>{m.cardData.role}</strong></div>
-                      <div>Total CTC: <strong className="font-mono text-indigo-500">{m.cardData.ctc}</strong></div>
-                      <div className="text-muted-foreground">Target Joining: {m.cardData.joiningDate}</div>
-                    </div>
-                  )}
-
-                  {m.cardType === "onboarding" && m.cardData?.joiners && (
-                    <div className="mt-3 rounded-xl border border-border bg-background/80 p-3 text-foreground space-y-2 shadow-sm">
-                      <div className="font-bold text-xs uppercase tracking-wider text-muted-foreground">Day-One Readiness Tracker</div>
-                      {m.cardData.joiners.map((j: any, idx: number) => (
-                        <div key={idx} className="flex justify-between items-center text-xs border-b border-border/40 pb-1 last:border-0">
-                          <span>{j.name} ({j.role})</span>
-                          <Badge variant="outline" className="text-emerald-500 border-emerald-500/30">{j.readiness}</Badge>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {m.cardType === "payroll" && m.cardData?.metrics && (
-                    <div className="mt-3 rounded-xl border border-border bg-background/80 p-3 text-foreground space-y-1.5 shadow-sm">
-                      {m.cardData.metrics.map((met: any, idx: number) => (
-                        <div key={idx} className="flex justify-between items-center text-xs">
-                          <span className="text-muted-foreground">{met.label}:</span>
-                          <span className="font-semibold">{met.val}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Action Confirmation Button */}
-                  {m.actionRequired && (
-                    <div className="mt-3 pt-2 border-t border-border/40 flex justify-end">
-                      <Button
-                        size="sm"
-                        className="h-7 text-xs bg-gradient-brand text-brand-foreground shadow-glow gap-1"
-                        onClick={() => setConfirmModal(m.actionRequired!)}
-                      >
-                        <Check className="h-3 w-3" /> Confirm & Execute
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-            <div ref={bottomRef} />
-          </div>
-
-          {/* Chat Input Form */}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleExecuteCommand(input);
-            }}
-            className="flex items-center gap-2 border-t border-border p-3"
-          >
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask or command People AI… (e.g. Schedule interview for Siddharth tomorrow 2 PM)"
-              className="text-xs h-10"
-            />
-            <Button
-              type="submit"
-              className="h-10 px-4 bg-gradient-brand text-brand-foreground shadow-glow gap-1.5"
+      {/* Chat Window */}
+      <div className="flex h-[640px] flex-col rounded-2xl border border-border bg-card/60 backdrop-blur-xl shadow-sm">
+        {/* Messages Feed */}
+        <div className="flex-1 space-y-4 overflow-y-auto p-5 text-xs">
+          {msgs.map((m) => (
+            <div
+              key={m.id}
+              className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
             >
-              <Send className="h-3.5 w-3.5" />
-              Send
-            </Button>
-          </form>
+              <div
+                className={`max-w-[85%] rounded-2xl p-4 leading-relaxed ${
+                  m.role === "user"
+                    ? "bg-foreground text-background"
+                    : "bg-accent/80 text-foreground border border-border/60"
+                }`}
+              >
+                <p className="text-xs">{m.text}</p>
+
+                {/* Render Rich Result Cards */}
+                {m.cardType === "candidate" && m.cardData && (
+                  <div className="mt-3 rounded-xl border border-border bg-background/80 p-3 text-foreground space-y-1.5 shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-sm">{m.cardData.name}</span>
+                      <Badge variant="secondary" className="text-[10px]">
+                        {m.cardData.atsScore}% Match
+                      </Badge>
+                    </div>
+                    <div className="text-muted-foreground">
+                      {m.cardData.appliedPosition} • {m.cardData.yearsExperience} yrs exp
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">{m.cardData.summary}</div>
+                  </div>
+                )}
+
+                {m.cardType === "interview" && m.cardData && (
+                  <div className="mt-3 rounded-xl border border-border bg-background/80 p-3 text-foreground space-y-1.5 shadow-sm">
+                    <div className="font-bold text-sm flex items-center gap-1.5 text-indigo-500">
+                      <CalendarClock className="h-4 w-4" />
+                      {m.cardData.round}
+                    </div>
+                    <div>
+                      Candidate: <strong>{m.cardData.candidateName}</strong>
+                    </div>
+                    <div>
+                      Interviewer: <strong>{m.cardData.interviewer}</strong>
+                    </div>
+                    <div className="text-muted-foreground font-mono text-[11px]">
+                      {m.cardData.time}
+                    </div>
+                  </div>
+                )}
+
+                {m.cardType === "offer" && m.cardData && (
+                  <div className="mt-3 rounded-xl border border-border bg-background/80 p-3 text-foreground space-y-1.5 shadow-sm">
+                    <div className="font-bold text-sm text-emerald-600 dark:text-emerald-400">
+                      Offer: {m.cardData.candidateName}
+                    </div>
+                    <div>
+                      Role: <strong>{m.cardData.role}</strong>
+                    </div>
+                    <div>
+                      Total CTC:{" "}
+                      <strong className="font-mono text-indigo-500">{m.cardData.ctc}</strong>
+                    </div>
+                    <div className="text-muted-foreground">
+                      Target Joining: {m.cardData.joiningDate}
+                    </div>
+                  </div>
+                )}
+
+                {m.cardType === "onboarding" && m.cardData?.joiners && (
+                  <div className="mt-3 rounded-xl border border-border bg-background/80 p-3 text-foreground space-y-2 shadow-sm">
+                    <div className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
+                      Day-One Readiness Tracker
+                    </div>
+                    {m.cardData.joiners.map((j: any, idx: number) => (
+                      <div
+                        key={idx}
+                        className="flex justify-between items-center text-xs border-b border-border/40 pb-1 last:border-0"
+                      >
+                        <span>
+                          {j.name} ({j.role})
+                        </span>
+                        <Badge variant="outline" className="text-emerald-500 border-emerald-500/30">
+                          {j.readiness}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {m.cardType === "payroll" && m.cardData?.metrics && (
+                  <div className="mt-3 rounded-xl border border-border bg-background/80 p-3 text-foreground space-y-1.5 shadow-sm">
+                    {m.cardData.metrics.map((met: any, idx: number) => (
+                      <div key={idx} className="flex justify-between items-center text-xs">
+                        <span className="text-muted-foreground">{met.label}:</span>
+                        <span className="font-semibold">{met.val}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Action Confirmation Button */}
+                {m.actionRequired && (
+                  <div className="mt-3 pt-2 border-t border-border/40 flex justify-end">
+                    <Button
+                      size="sm"
+                      className="h-7 text-xs bg-gradient-brand text-brand-foreground shadow-glow gap-1"
+                      onClick={() => setConfirmModal(m.actionRequired!)}
+                    >
+                      <Check className="h-3 w-3" /> Confirm & Execute
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+          <div ref={bottomRef} />
         </div>
 
-        {/* Right Sidebar: Command Suggestions & Activity History */}
-        <div className="space-y-4">
-          <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl space-y-3">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
-              <Sparkles className="h-4 w-4 text-indigo-500" />
-              Suggested AI Commands
-            </div>
-            <div className="space-y-1.5">
-              {COMMAND_SUGGESTIONS.map((s) => (
-                <button
-                  key={s.label}
-                  onClick={() => handleExecuteCommand(s.cmd)}
-                  className="w-full text-left p-2 rounded-lg border border-border/60 bg-card/40 hover:bg-accent text-[11px] text-muted-foreground hover:text-foreground transition-colors flex items-center justify-between group cursor-pointer"
-                >
-                  <span>{s.label}</span>
-                  <CornerDownLeft className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl space-y-3">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
-              <History className="h-4 w-4 text-emerald-500" />
-              Recent AI Action Log
-            </div>
-            <div className="space-y-1 text-[10px] text-muted-foreground font-mono">
-              {activityHistory.map((act, i) => (
-                <div key={i} className="p-1.5 rounded bg-muted/30 truncate">
-                  • {act}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        {/* Chat Input Form */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleExecuteCommand(input);
+          }}
+          className="flex items-center gap-2 border-t border-border p-3"
+        >
+          <Input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Ask or command People AI… (e.g. Schedule interview for Siddharth tomorrow 2 PM)"
+            className="text-xs h-10"
+          />
+          <Button
+            type="submit"
+            className="h-10 px-4 bg-gradient-brand text-brand-foreground shadow-glow gap-1.5"
+          >
+            <Send className="h-3.5 w-3.5" />
+            Send
+          </Button>
+        </form>
       </div>
 
       {/* Action Confirmation Modal */}
@@ -422,9 +448,7 @@ export default function ChatAssistantPage() {
                 <AlertCircle className="h-5 w-5 text-indigo-500" />
                 Confirm Simulated AI Action
               </DialogTitle>
-              <DialogDescription>
-                {confirmModal.actionName}
-              </DialogDescription>
+              <DialogDescription>{confirmModal.actionName}</DialogDescription>
             </DialogHeader>
 
             <div className="py-2 text-xs text-muted-foreground">

@@ -61,7 +61,8 @@ export const AI_MODULES_LIST: AIModuleDef[] = [
   {
     id: "performance-coach",
     title: "Performance Coach",
-    description: "Generate SMART goals, align department OKRs, and outline training recommendations.",
+    description:
+      "Generate SMART goals, align department OKRs, and outline training recommendations.",
     icon: Gauge,
     to: "/ai/performance-coach",
     color: "from-purple-500/20 to-pink-500/20 text-purple-400 border-purple-500/30",
