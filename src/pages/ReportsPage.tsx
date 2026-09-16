@@ -1,14 +1,6 @@
-import React, { useEffect } from "react";
-import { useNavigate } from "@tanstack/react-router";
-import { AlertCircle, ArrowLeft, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { fetchHeadcountMetrics, fetchTurnoverMetrics } from "@/store/analytics/analyticsThunk";
-import {
-  selectHeadcountMetrics,
-  selectTurnoverMetrics,
-} from "@/store/analytics/analyticsSelectors";
+import { apiInstance } from "@/api";
 import {
   Bar,
   BarChart,
@@ -34,49 +26,39 @@ const COLORS = [
 ];
 
 export function ReportsPage() {
-  const navigate = useNavigate();
-  const dispatch = useAppDispatch();
+  const [headcount, setHeadcount] = useState<{ m: string; n: number }[]>([]);
+  const [byDept, setByDept] = useState<{ name: string; value: number }[]>([]);
+  const [tenure, setTenure] = useState<{ range: string; n: number }[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const headcountState = useAppSelector(selectHeadcountMetrics);
-  const turnoverState = useAppSelector(selectTurnoverMetrics);
+  const fetchReportsData = async () => {
+    setLoading(true);
+    try {
+      const [hcRes, deptRes, tenRes] = await Promise.allSettled([
+        apiInstance.get("/reports/analytics/headcount"),
+        apiInstance.get("/reports/analytics/department"),
+        apiInstance.get("/reports/analytics/tenure"),
+      ]);
 
-  const fetchReportsData = React.useCallback(() => {
-    dispatch(fetchHeadcountMetrics());
-    dispatch(fetchTurnoverMetrics());
-  }, [dispatch]);
-
-  useEffect(() => {
-    fetchReportsData();
-  }, [fetchReportsData]);
-
-  const handleBack = () => {
-    if (window.history.length > 1) {
-      window.history.back();
-    } else {
-      navigate({ to: "/dashboard/analytics" });
+      if (hcRes.status === "fulfilled") {
+        setHeadcount(hcRes.value.data?.data || []);
+      }
+      if (deptRes.status === "fulfilled") {
+        setByDept(deptRes.value.data?.data || []);
+      }
+      if (tenRes.status === "fulfilled") {
+        setTenure(tenRes.value.data?.data || []);
+      }
+    } catch {
+      // Gracefully fallback to empty states
+    } finally {
+      setLoading(false);
     }
   };
 
-  const loading = (headcountState.loading || turnoverState.loading) && !headcountState.data;
-  const error = headcountState.error || turnoverState.error;
-
-  const headcountData =
-    headcountState.data?.monthlyTrend?.map((t) => ({
-      m: t.month,
-      n: t.headcount,
-    })) ?? [];
-
-  const byDeptData =
-    headcountState.data?.byDepartment?.map((d) => ({
-      name: d.department,
-      value: d.count,
-    })) ?? [];
-
-  const turnoverData =
-    turnoverState.data?.byDepartment?.map((d) => ({
-      range: d.department,
-      n: d.turnoverRate,
-    })) ?? [];
+  useEffect(() => {
+    fetchReportsData();
+  }, []);
 
   if (loading) {
     return (
@@ -93,60 +75,11 @@ export function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleBack}
-            className="h-8 gap-1 text-xs text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Analytics
-          </Button>
-          <h2 className="text-xl font-bold tracking-tight text-foreground">
-            HR Metrics & Reports Visualization
-          </h2>
-        </div>
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={fetchReportsData}
-          disabled={headcountState.loading || turnoverState.loading}
-          className="gap-2 text-xs"
-        >
-          <RefreshCw
-            className={`h-3.5 w-3.5 ${
-              headcountState.loading || turnoverState.loading ? "animate-spin" : ""
-            }`}
-          />
-          Refresh Metrics
-        </Button>
-      </div>
-
-      {error ? (
-        <div className="flex items-center justify-between rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-xs text-destructive">
-          <div className="flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 shrink-0" />
-            <span>{error}</span>
-          </div>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={fetchReportsData}
-            className="gap-1.5 text-xs"
-          >
-            Retry
-          </Button>
-        </div>
-      ) : null}
-
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <Card title="Headcount Trends Over Time" className="lg:col-span-2">
-          {headcountData.length ? (
+        <Card title="Headcount over time" className="lg:col-span-2">
+          {headcount.length ? (
             <ResponsiveContainer width="100%" height={260}>
-              <LineChart data={headcountData} margin={{ top: 10, right: 10, left: -10 }}>
+              <LineChart data={headcount} margin={{ top: 10, right: 10, left: -10 }}>
                 <CartesianGrid stroke="oklch(0.5 0.02 264 / 0.15)" vertical={false} />
                 <XAxis
                   dataKey="m"
@@ -182,19 +115,19 @@ export function ReportsPage() {
           )}
         </Card>
 
-        <Card title="Headcount By Department">
-          {byDeptData.length ? (
+        <Card title="By department">
+          {byDept.length ? (
             <ResponsiveContainer width="100%" height={260}>
               <PieChart>
                 <Pie
-                  data={byDeptData}
+                  data={byDept}
                   dataKey="value"
                   nameKey="name"
                   innerRadius={50}
                   outerRadius={90}
                   paddingAngle={3}
                 >
-                  {byDeptData.map((_, i) => (
+                  {byDept.map((_, i) => (
                     <Cell key={i} fill={COLORS[i % COLORS.length]} />
                   ))}
                 </Pie>
@@ -213,10 +146,10 @@ export function ReportsPage() {
           )}
         </Card>
 
-        <Card title="Turnover Rate By Department" className="lg:col-span-3">
-          {turnoverData.length ? (
+        <Card title="Tenure distribution" className="lg:col-span-3">
+          {tenure.length ? (
             <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={turnoverData} margin={{ top: 10, right: 10, left: -20 }}>
+              <BarChart data={tenure} margin={{ top: 10, right: 10, left: -20 }}>
                 <CartesianGrid stroke="oklch(0.5 0.02 264 / 0.15)" vertical={false} />
                 <XAxis
                   dataKey="range"
@@ -260,10 +193,8 @@ function Card({
   className?: string;
 }) {
   return (
-    <div
-      className={`rounded-2xl border border-border bg-card/60 p-5 backdrop-blur-xl ${className}`}
-    >
-      <h3 className="mb-4 font-medium text-foreground">{title}</h3>
+    <div className={`rounded-2xl border border-border bg-card/60 p-5 backdrop-blur-xl ${className}`}>
+      <h3 className="mb-4 font-medium">{title}</h3>
       {children}
     </div>
   );
@@ -272,7 +203,7 @@ function Card({
 function Empty() {
   return (
     <div className="grid h-[260px] place-items-center text-sm text-muted-foreground">
-      No metrics data available yet
+      Not enough data yet
     </div>
   );
 }
