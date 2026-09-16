@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 
-export type BadgeKind = "New" | "AI" | "Beta" | "Hot";
+export type BadgeKind = "New" | "AI" | "Beta" | "Hot" | "Live";
 
 export interface SidebarNavLeaf {
   id?: string;

@@ -37,6 +37,7 @@ import {
   Brain,
   Check,
   UserCheck,
+  Clock,
 } from "lucide-react";
 import { PayrollBackButton } from "@/features/admin/payroll/components/PayrollBackButton";
 import { BonusesTable } from "./BonusesTable";
@@ -200,7 +201,7 @@ export const BonusHubModuleViews: React.FC<BonusHubModuleViewsProps> = ({
             </div>
             <div className="salary-card p-4 space-y-1">
               <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider">Queued Value</span>
-              <p className="text-xl font-bold text-emerald-400 font-mono">{formatCurrency(pendingList.reduce((acc, r) => acc + r.finalBonusAmount, 0))}</p>
+              <p className="text-xl font-bold text-emerald-400 font-mono">{formatCurrency(pendingList.reduce((acc, r) => acc + (r.finalBonusAmount || r.bonusAmount || 0), 0))}</p>
               <p className="text-xs text-slate-400">Ready for salary sync</p>
             </div>
           </div>

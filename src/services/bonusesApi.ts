@@ -418,8 +418,9 @@ export const bonusesApi = {
   },
 
   // Add Payroll Entry
-  addPayrollEntry: async (bonusIds: string[], payrollCycle: string): Promise<{ success: boolean }> => {
-    for (const id of bonusIds) {
+  addPayrollEntry: async (bonusIds: string | string[], payrollCycle: string): Promise<{ success: boolean }> => {
+    const ids = Array.isArray(bonusIds) ? bonusIds : [bonusIds];
+    for (const id of ids) {
       const idx = localBonuses.findIndex((b) => b.id === id);
       if (idx !== -1) {
         localBonuses[idx] = {
@@ -512,5 +513,6 @@ export const bonusesApi = {
   },
 
   createBonusRecord: (payload: Partial<BonusAward>) => bonusesApi.createBonus(payload),
-  addPayrollEntries: (id: string, payrollCycle: string) => bonusesApi.addPayrollEntry(id, payrollCycle),
+  addPayrollEntries: (ids: string | string[], payrollCycle: string) =>
+    bonusesApi.addPayrollEntry(ids, payrollCycle),
 };

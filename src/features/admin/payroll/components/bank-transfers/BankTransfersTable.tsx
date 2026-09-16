@@ -14,11 +14,15 @@ import { BankTransferItem } from "@/services/bankTransfersApi";
 interface BankTransfersTableProps {
   items: BankTransferItem[];
   selectedIds: string[];
-  onToggleSelect: (id: string) => void;
-  onToggleSelectAll: () => void;
+  onToggleSelect?: (id: string) => void;
+  onSelectToggle?: (id: string) => void;
+  onToggleSelectAll?: () => void;
+  onSelectAll?: (checked: boolean) => void;
   onViewDetails: (item: BankTransferItem) => void;
-  onRetry: (item: BankTransferItem) => void;
-  onMarkPaid: (item: BankTransferItem) => void;
+  onRetry?: (item: BankTransferItem) => void;
+  onRetryTransfer?: (item: BankTransferItem) => void;
+  onMarkPaid?: (item: BankTransferItem) => void;
+  onMarkAsPaid?: (item: BankTransferItem) => void;
   isReadOnly?: boolean;
 }
 
@@ -26,13 +30,21 @@ export const BankTransfersTable: React.FC<BankTransfersTableProps> = ({
   items,
   selectedIds,
   onToggleSelect,
+  onSelectToggle,
   onToggleSelectAll,
+  onSelectAll,
   onViewDetails,
   onRetry,
+  onRetryTransfer,
   onMarkPaid,
+  onMarkAsPaid,
   isReadOnly = false,
 }) => {
   const isAllSelected = items.length > 0 && selectedIds.length === items.length;
+  const toggleSelect = onToggleSelect || onSelectToggle || (() => {});
+  const toggleSelectAll = onToggleSelectAll || (() => onSelectAll?.(!isAllSelected));
+  const handleRetry = onRetry || onRetryTransfer || (() => {});
+  const handleMarkPaid = onMarkPaid || onMarkAsPaid || (() => {});
 
   return (
     <div className="p-6 rounded-2xl bg-card/60 border border-border/50 backdrop-blur-md space-y-4 shadow-xl">
@@ -41,7 +53,7 @@ export const BankTransfersTable: React.FC<BankTransfersTableProps> = ({
           <thead className="bg-muted/40 text-muted-foreground text-[10px] font-bold uppercase tracking-wider">
             <tr>
               <th className="p-3 w-10">
-                <Checkbox checked={isAllSelected} onCheckedChange={onToggleSelectAll} />
+                <Checkbox checked={isAllSelected} onCheckedChange={toggleSelectAll} />
               </th>
               <th className="p-3">Employee</th>
               <th className="p-3">Department</th>
@@ -58,8 +70,8 @@ export const BankTransfersTable: React.FC<BankTransfersTableProps> = ({
           <tbody className="divide-y divide-border/40 font-medium">
             {items.length === 0 ? (
               <tr>
-                <td colSpan={11} className="py-8 text-center text-xs text-muted-foreground">
-                  No salary disbursement records found matching filters.
+                <td colSpan={11} className="p-8 text-center text-muted-foreground">
+                  No bank transfer records found.
                 </td>
               </tr>
             ) : (
@@ -73,7 +85,7 @@ export const BankTransfersTable: React.FC<BankTransfersTableProps> = ({
                     }`}
                   >
                     <td className="p-3">
-                      <Checkbox checked={isSelected} onCheckedChange={() => onToggleSelect(item.id)} />
+                      <Checkbox checked={isSelected} onCheckedChange={() => toggleSelect(item.id)} />
                     </td>
                     <td className="p-3 font-semibold text-foreground">
                       <div>{item.employee_name}</div>
@@ -117,13 +129,13 @@ export const BankTransfersTable: React.FC<BankTransfersTableProps> = ({
                             View Details
                           </DropdownMenuItem>
                           {item.payment_status === "FAILED" && !isReadOnly && (
-                            <DropdownMenuItem onClick={() => onRetry(item)}>
+                            <DropdownMenuItem onClick={() => handleRetry(item)}>
                               <RefreshCw className="h-3.5 w-3.5 mr-2 text-amber-400" />
                               Retry Transfer
                             </DropdownMenuItem>
                           )}
                           {item.payment_status !== "COMPLETED" && !isReadOnly && (
-                            <DropdownMenuItem onClick={() => onMarkPaid(item)}>
+                            <DropdownMenuItem onClick={() => handleMarkPaid(item)}>
                               <CheckCircle className="h-3.5 w-3.5 mr-2 text-emerald-400" />
                               Mark as Paid
                             </DropdownMenuItem>

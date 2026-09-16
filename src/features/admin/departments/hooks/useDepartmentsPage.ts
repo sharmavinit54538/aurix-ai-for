@@ -303,7 +303,6 @@ export function useDepartmentsPage() {
         toast.success(exists ? "Department Updated Successfully" : "Department Created Successfully");
         handleFormOpenChange(false);
         reloadDepartments();
-        fetchStatsData();
       } else {
         toast.error(typeof action.payload === "string" ? action.payload : "Failed to save department");
       }
@@ -419,7 +418,6 @@ export function useDepartmentsPage() {
     if (importDepartmentsThunk.fulfilled.match(action)) {
       toast.success("Departments imported successfully");
       reloadDepartments();
-      fetchStatsData();
     } else {
       toast.error(typeof action.payload === "string" ? action.payload : "Failed to import departments");
     }

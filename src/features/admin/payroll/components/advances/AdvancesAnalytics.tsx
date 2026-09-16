@@ -15,10 +15,11 @@ import {
 import { SalaryAdvanceRequest } from "./advancesTypes";
 
 interface AdvancesAnalyticsProps {
-  advances: SalaryAdvanceRequest[];
+  advances?: SalaryAdvanceRequest[];
+  requests?: SalaryAdvanceRequest[];
 }
 
-export const AdvancesAnalytics: React.FC<AdvancesAnalyticsProps> = ({ advances }) => {
+export const AdvancesAnalytics: React.FC<AdvancesAnalyticsProps> = ({ advances, requests }) => {
   // Recovery Status Distribution
   const recoveryDistribution = [
     { name: "Recovered Amount", value: 72500, color: "#10B981" },

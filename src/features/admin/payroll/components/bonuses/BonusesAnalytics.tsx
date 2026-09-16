@@ -15,10 +15,11 @@ import {
 import { BonusAward } from "./bonusesTypes";
 
 interface BonusesAnalyticsProps {
-  bonuses: BonusAward[];
+  bonuses?: BonusAward[];
+  records?: BonusAward[];
 }
 
-export const BonusesAnalytics: React.FC<BonusesAnalyticsProps> = ({ bonuses }) => {
+export const BonusesAnalytics: React.FC<BonusesAnalyticsProps> = ({ bonuses, records }) => {
   // Bonus Type Distribution
   const bonusTypeDistribution = [
     { name: "Performance Bonus", value: 180000, color: "#F59E0B" },

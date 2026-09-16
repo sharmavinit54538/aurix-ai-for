@@ -84,7 +84,7 @@ export const CreateAdvanceWizardDrawer: React.FC<CreateAdvanceWizardDrawerProps>
         startRecoveryDate,
       });
       toast.success(`Submitted salary advance request of ₹${requestedAmount.toLocaleString("en-IN")} for ${employeeName}`);
-      onClose();
+      onClose?.();
     } catch {
       toast.error("Failed to submit advance request.");
     } finally {

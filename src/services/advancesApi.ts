@@ -418,6 +418,14 @@ export const advancesApi = {
     return updated;
   },
 
+  // Disburse Payment batch helper
+  disbursePayment: async (idOrIds: string | string[], account?: string): Promise<void> => {
+    const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
+    for (const id of ids) {
+      await advancesApi.disburseAdvance(id, account);
+    }
+  },
+
   // GET Audit Logs
   getAuditLogs: async (): Promise<AdvanceAuditLog[]> => {
     return localAuditLogs;
@@ -496,7 +504,4 @@ export const advancesApi = {
       ipAddress: "127.0.0.1",
     });
   },
-
-  disbursePayment: (id: string, bankAccount?: string, transactionRef?: string) =>
-    advancesApi.disburseAdvance(id, bankAccount, transactionRef),
 };

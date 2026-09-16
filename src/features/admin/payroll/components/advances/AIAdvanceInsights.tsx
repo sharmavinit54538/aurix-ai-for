@@ -5,11 +5,41 @@ import { Badge } from "@/components/ui/badge";
 import { AdvanceAIInsight } from "./advancesTypes";
 import { toast } from "sonner";
 
+const DEFAULT_INSIGHTS: AdvanceAIInsight[] = [
+  {
+    id: "insight-1",
+    title: "Negative Net Salary Risk",
+    type: "NEGATIVE_SALARY",
+    severity: "CRITICAL",
+    description: "2 employees have EMI deductions exceeding 50% of projected net monthly salary.",
+    impactMetric: "2 Employees",
+    recommendation: "Cap advance recovery to max 35% of monthly salary.",
+  },
+  {
+    id: "insight-2",
+    title: "Recovery Risk Warning",
+    type: "RECOVERY_RISK",
+    severity: "WARNING",
+    description: "Advance requested by employee with less than 6 months tenure in probation period.",
+    impactMetric: "₹85,000 Exposure",
+    recommendation: "Request guarantor co-approval or shorten tenure.",
+  },
+  {
+    id: "insight-3",
+    title: "High Eligibility Rating",
+    type: "ELIGIBILITY_SCORE",
+    severity: "SUCCESS",
+    description: "94% of applicant employees maintain spotless loan recovery track records.",
+    impactMetric: "94% Clean Rate",
+    recommendation: "Auto-approve emergency advance requests under ₹25,000.",
+  },
+];
+
 interface AIAdvanceInsightsProps {
-  insights: AdvanceAIInsight[];
+  insights?: AdvanceAIInsight[];
 }
 
-export const AIAdvanceInsights: React.FC<AIAdvanceInsightsProps> = ({ insights }) => {
+export const AIAdvanceInsights: React.FC<AIAdvanceInsightsProps> = ({ insights = DEFAULT_INSIGHTS }) => {
   const getSeverityBadge = (sev: AdvanceAIInsight["severity"]) => {
     switch (sev) {
       case "CRITICAL":

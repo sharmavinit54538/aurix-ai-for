@@ -48,6 +48,8 @@ export interface BonusAward {
   location: string;
   employmentType: string;
   bonusType: BonusType;
+  bonusCategory?: string;
+  finalBonusAmount?: number;
   bonusCycle: string; // e.g. "Q2 2026 Performance Bonus", "FY26 Annual Appraisal"
   performanceRating: number; // e.g. 4.8 / 5.0
   bonusAmount: number;
@@ -55,6 +57,7 @@ export interface BonusAward {
   taxImpact: number;
   netPayout: number;
   payrollCycle?: string;
+  payrollStatus?: PaymentStatus;
   payrollEntryId?: string;
   approvalStatus: ApprovalStatus;
   paymentStatus: PaymentStatus;
@@ -72,16 +75,16 @@ export interface BonusAward {
 export type BonusRecord = BonusAward;
 
 export interface BonusesSummaryKPIs {
-  totalBonusBudget: number;
-  allocatedBonus: number;
-  pendingApproval: number;
-  approvedBonuses: number;
-  paidBonuses: number;
-  outstandingBonus: number;
-  averageBonus: number;
-  topRewardedDepartment: string;
-  topRewardedEmployee: string;
-  budgetRemaining: number;
+  totalBonusBudget?: number;
+  allocatedBonus?: number;
+  pendingApproval?: number;
+  approvedBonuses?: number;
+  paidBonuses?: number;
+  outstandingBonus?: number;
+  averageBonus?: number;
+  topRewardedDepartment?: string;
+  topRewardedEmployee?: string;
+  budgetRemaining?: number;
   totalBonusAmount?: number;
   approvedBonusAmount?: number;
   paidBonusAmount?: number;
@@ -103,7 +106,7 @@ export interface BonusesFilters {
   bonusCycle?: string;
   financialYear?: string;
   approvalStatus: string;
-  paymentStatus: string;
+  paymentStatus?: string;
   performanceRating?: string; // 'ALL' | '4.5_ABOVE' | '4.0_ABOVE'
   bonusCategory?: string;
   performancePeriod?: string;

@@ -59,6 +59,7 @@ const BADGE_STYLES: Record<BadgeKind, string> = {
   AI: "bg-violet-500/20 text-violet-400 border border-violet-500/30",
   Beta: "bg-amber-500/20 text-amber-400 border border-amber-500/30",
   Hot: "bg-rose-500/20 text-rose-400 border border-rose-500/30",
+  Live: "bg-red-500/20 text-red-400 border border-red-500/30",
 };
 
 function NavBadge({ kind }: { kind: BadgeKind }) {

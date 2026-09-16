@@ -33,6 +33,7 @@ import {
   ShieldAlert,
   Percent,
   Users,
+  Clock,
   FileText,
   Brain,
   Check,

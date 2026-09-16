@@ -5,11 +5,41 @@ import { Badge } from "@/components/ui/badge";
 import { BonusAIInsight } from "./bonusesTypes";
 import { toast } from "sonner";
 
+const DEFAULT_INSIGHTS: BonusAIInsight[] = [
+  {
+    id: "insight-1",
+    title: "Retention Risk in AI Platform Team",
+    type: "RETENTION_RISK",
+    severity: "WARNING",
+    description: "3 key engineers in Core Systems have below-median compensation relative to market benchmarks.",
+    impactMetric: "+42% Flight Risk",
+    recommendation: "Apply retention award multiplier for high-performing staff.",
+  },
+  {
+    id: "insight-2",
+    title: "Performance & Bonus Correlation",
+    type: "RECOMMENDATION",
+    severity: "SUCCESS",
+    description: "Staff rated 4.5+ received 120% of target bonus pool, driving 96% retention across top quintile.",
+    impactMetric: "96% Retention",
+    recommendation: "Maintain performance-tiered distribution curve for annual appraisal.",
+  },
+  {
+    id: "insight-3",
+    title: "Bonus Pool Budget Optimization",
+    type: "BUDGET_OPTIMIZATION",
+    severity: "INFO",
+    description: "Allocated ₹5.20L from ₹8.00L quarterly pool, with ₹2.80L remaining reserve.",
+    impactMetric: "35% Pool Available",
+    recommendation: "Reserve remaining pool for mid-cycle spot bonuses.",
+  },
+];
+
 interface AIBonusInsightsProps {
-  insights: BonusAIInsight[];
+  insights?: BonusAIInsight[];
 }
 
-export const AIBonusInsights: React.FC<AIBonusInsightsProps> = ({ insights }) => {
+export const AIBonusInsights: React.FC<AIBonusInsightsProps> = ({ insights = DEFAULT_INSIGHTS }) => {
   const getSeverityBadge = (sev: BonusAIInsight["severity"]) => {
     switch (sev) {
       case "CRITICAL":

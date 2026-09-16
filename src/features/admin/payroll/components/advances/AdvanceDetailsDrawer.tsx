@@ -187,7 +187,7 @@ export const AdvanceDetailsDrawer: React.FC<AdvanceDetailsDrawerProps> = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onAdjustPlan(advance)}
+              onClick={() => onAdjustPlan?.(advance)}
               className="border-white/10 bg-slate-950 text-slate-300 text-xs gap-1"
             >
               Adjust Plan

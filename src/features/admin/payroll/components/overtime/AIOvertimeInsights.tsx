@@ -9,6 +9,7 @@ const DEFAULT_INSIGHTS: OvertimeAIInsight[] = [
   {
     id: "insight-1",
     title: "Engineering Fatigue Risk",
+    type: "BURNOUT_DETECTION",
     description: "4 engineers in Platform Team logged >45 hours overtime this month.",
     severity: "CRITICAL",
     impactMetric: "+38% fatigue score",
@@ -17,6 +18,7 @@ const DEFAULT_INSIGHTS: OvertimeAIInsight[] = [
   {
     id: "insight-2",
     title: "Weekend OT Cost Spike",
+    type: "COST_FORECAST",
     description: "2.0x multiplier overtime costs surged ₹1.85L in DevOps shift rotation.",
     severity: "WARNING",
     impactMetric: "₹1.85L budget impact",
@@ -25,6 +27,7 @@ const DEFAULT_INSIGHTS: OvertimeAIInsight[] = [
   {
     id: "insight-3",
     title: "Punch Machine Cross-Audit",
+    type: "ATTENDANCE_ANOMALY",
     description: "Turnstile biometric logs match 98.4% of manual timesheet claim submissions.",
     severity: "SUCCESS",
     impactMetric: "98.4% punch accuracy",

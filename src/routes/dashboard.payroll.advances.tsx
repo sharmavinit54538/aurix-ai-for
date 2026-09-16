@@ -112,7 +112,7 @@ function AdvancesPage() {
 
   const handleDisburse = async (req: SalaryAdvanceRequest) => {
     try {
-      await advancesApi.disbursePayment([req.id], "HDFC Bank Corporate Transfer");
+      await advancesApi.disburseAdvance(req.id, "HDFC Bank Corporate Transfer");
       toast.success(`Disbursed ₹${req.approvedAmount.toLocaleString("en-IN")} to ${req.employeeName}`);
       loadData();
     } catch {

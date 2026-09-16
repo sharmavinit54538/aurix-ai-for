@@ -28,7 +28,7 @@ export const BonusesKPIs: React.FC<BonusesKPIsProps> = ({
     {
       id: "BUDGET",
       label: "Total Bonus Budget",
-      value: `₹${(kpis.totalBonusBudget / 100000).toFixed(2)}L`,
+      value: `₹${((kpis.totalBonusBudget ?? 0) / 100000).toFixed(2)}L`,
       unit: "FY27 Allocation",
       icon: Wallet,
       color: "text-blue-400",
@@ -40,7 +40,7 @@ export const BonusesKPIs: React.FC<BonusesKPIsProps> = ({
     {
       id: "ALLOCATED",
       label: "Allocated Bonus",
-      value: `₹${(kpis.allocatedBonus / 100000).toFixed(2)}L`,
+      value: `₹${((kpis.allocatedBonus ?? 0) / 100000).toFixed(2)}L`,
       unit: "Committed",
       icon: DollarSign,
       color: "text-emerald-400",
@@ -88,7 +88,7 @@ export const BonusesKPIs: React.FC<BonusesKPIsProps> = ({
     {
       id: "OUTSTANDING",
       label: "Outstanding Payout",
-      value: `₹${(kpis.outstandingBonus / 100000).toFixed(2)}L`,
+      value: `₹${((kpis.outstandingBonus ?? 0) / 100000).toFixed(2)}L`,
       unit: "Scheduled",
       icon: Gift,
       color: "text-cyan-400",
@@ -100,7 +100,7 @@ export const BonusesKPIs: React.FC<BonusesKPIsProps> = ({
     {
       id: "AVG_BONUS",
       label: "Average Bonus",
-      value: `₹${(kpis.averageBonus / 1000).toFixed(1)}k`,
+      value: `₹${((kpis.averageBonus ?? 0) / 1000).toFixed(1)}k`,
       unit: "per employee",
       icon: TrendingUp,
       color: "text-amber-400",
@@ -136,7 +136,7 @@ export const BonusesKPIs: React.FC<BonusesKPIsProps> = ({
     {
       id: "BUDGET_REMAINING",
       label: "Budget Remaining",
-      value: `₹${(kpis.budgetRemaining / 100000).toFixed(2)}L`,
+      value: `₹${((kpis.budgetRemaining ?? 0) / 100000).toFixed(2)}L`,
       unit: "Unallocated Pool",
       icon: Sparkles,
       color: "text-rose-400",

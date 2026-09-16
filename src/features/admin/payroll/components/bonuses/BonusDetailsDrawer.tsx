@@ -119,7 +119,7 @@ export const BonusDetailsDrawer: React.FC<BonusDetailsDrawerProps> = ({
           <div className="space-y-3">
             <h4 className="text-xs font-semibold text-slate-300 uppercase tracking-wider">6-Stage Executive Sign-off Governance</h4>
             <div className="space-y-2">
-              {bonus.approvalWorkflow.map((step) => {
+              {bonus.approvalWorkflow?.map((step: any) => {
                 const isApproved = step.status === "APPROVED";
                 const isPending = step.status === "PENDING";
                 const isRejected = step.status === "REJECTED";

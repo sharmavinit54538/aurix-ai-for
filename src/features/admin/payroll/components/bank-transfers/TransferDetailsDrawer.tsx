@@ -119,7 +119,7 @@ export const TransferDetailsDrawer: React.FC<TransferDetailsDrawerProps> = ({
             <Button variant="outline" size="sm" onClick={handleClose} className="h-8 text-xs">
               Close
             </Button>
-            {onRetry && item.status === "failed" && (
+            {onRetry && (item.payment_status === "FAILED" || (item as any).status === "failed") && (
               <Button
                 variant="default"
                 size="sm"
@@ -129,7 +129,7 @@ export const TransferDetailsDrawer: React.FC<TransferDetailsDrawerProps> = ({
                 Retry Transfer
               </Button>
             )}
-            {onMarkAsPaid && item.status !== "successful" && (
+            {onMarkAsPaid && item.payment_status !== "COMPLETED" && (item as any).status !== "successful" && (
               <Button
                 variant="default"
                 size="sm"

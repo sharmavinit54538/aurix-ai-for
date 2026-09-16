@@ -33,13 +33,13 @@ interface OvertimeTableProps {
   onSelectToggle: (id: string) => void;
   onSelectAll: (checked: boolean) => void;
   onView: (record: OvertimeRecord) => void;
-  onEdit: (record: OvertimeRecord) => void;
+  onEdit?: (record: OvertimeRecord) => void;
   onApprove: (record: OvertimeRecord) => void;
   onReject: (record: OvertimeRecord) => void;
-  onRecalculate: (record: OvertimeRecord) => void;
+  onRecalculate?: (record: OvertimeRecord) => void;
   onAddPayrollEntry: (record: OvertimeRecord) => void;
   onViewTimeline: (record: OvertimeRecord) => void;
-  onViewLogs: (record: OvertimeRecord) => void;
+  onViewLogs?: (record: OvertimeRecord) => void;
   onRequestChanges?: (record: OvertimeRecord) => void;
 }
 
@@ -265,7 +265,7 @@ export const OvertimeTable: React.FC<OvertimeTableProps> = ({
                         <DropdownMenuItem onClick={() => onViewTimeline(row)} className="gap-2 cursor-pointer">
                           <Clock className="w-3.5 h-3.5 text-cyan-400" /> Attendance Timeline
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onEdit(row)} className="gap-2 cursor-pointer">
+                        <DropdownMenuItem onClick={() => onEdit?.(row)} className="gap-2 cursor-pointer">
                           <Edit className="w-3.5 h-3.5 text-amber-400" /> Edit Hours & Multiplier
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => onApprove(row)} className="gap-2 cursor-pointer">
@@ -274,14 +274,14 @@ export const OvertimeTable: React.FC<OvertimeTableProps> = ({
                         <DropdownMenuItem onClick={() => onReject(row)} className="gap-2 cursor-pointer text-rose-400">
                           <X className="w-3.5 h-3.5" /> Reject Claim
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onRecalculate(row)} className="gap-2 cursor-pointer">
+                        <DropdownMenuItem onClick={() => onRecalculate?.(row)} className="gap-2 cursor-pointer">
                           <Calculator className="w-3.5 h-3.5 text-purple-400" /> Recalculate Formula
                         </DropdownMenuItem>
                         <DropdownMenuSeparator className="bg-white/10" />
                         <DropdownMenuItem onClick={() => onAddPayrollEntry(row)} className="gap-2 cursor-pointer">
                           <CreditCard className="w-3.5 h-3.5 text-purple-400" /> Add to Payroll Run
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onViewLogs(row)} className="gap-2 cursor-pointer">
+                        <DropdownMenuItem onClick={() => onViewLogs?.(row)} className="gap-2 cursor-pointer">
                           <History className="w-3.5 h-3.5 text-slate-400" /> Audit Logs
                         </DropdownMenuItem>
                       </DropdownMenuContent>

@@ -33,13 +33,15 @@ interface BonusesTableProps {
   onSelectToggle: (id: string) => void;
   onSelectAll: (checked: boolean) => void;
   onView: (bonus: BonusAward) => void;
-  onEdit: (bonus: BonusAward) => void;
+  onEdit?: (bonus: BonusAward) => void;
   onApprove: (bonus: BonusAward) => void;
   onReject: (bonus: BonusAward) => void;
-  onRecalculate: (bonus: BonusAward) => void;
+  onRecalculate?: (bonus: BonusAward) => void;
   onAddPayrollEntry: (bonus: BonusAward) => void;
-  onGenerateLetter: (bonus: BonusAward) => void;
-  onViewLogs: (bonus: BonusAward) => void;
+  onGenerateLetter?: (bonus: BonusAward) => void;
+  onViewLogs?: (bonus: BonusAward) => void;
+  onRequestChanges?: (bonus: BonusAward) => void;
+  onViewTimeline?: (bonus: BonusAward) => void;
 }
 
 export const BonusesTable: React.FC<BonusesTableProps> = ({
@@ -259,7 +261,7 @@ export const BonusesTable: React.FC<BonusesTableProps> = ({
                         <DropdownMenuItem onClick={() => onView(row)} className="gap-2 cursor-pointer">
                           <Eye className="w-3.5 h-3.5 text-blue-400" /> View Award Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onEdit(row)} className="gap-2 cursor-pointer">
+                        <DropdownMenuItem onClick={() => onEdit?.(row)} className="gap-2 cursor-pointer">
                           <Edit className="w-3.5 h-3.5 text-amber-400" /> Edit Bonus Formula
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => onApprove(row)} className="gap-2 cursor-pointer">
@@ -268,17 +270,17 @@ export const BonusesTable: React.FC<BonusesTableProps> = ({
                         <DropdownMenuItem onClick={() => onReject(row)} className="gap-2 cursor-pointer text-rose-400">
                           <X className="w-3.5 h-3.5" /> Reject Award
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onRecalculate(row)} className="gap-2 cursor-pointer">
+                        <DropdownMenuItem onClick={() => onRecalculate?.(row)} className="gap-2 cursor-pointer">
                           <Calculator className="w-3.5 h-3.5 text-purple-400" /> Recalculate Formula
                         </DropdownMenuItem>
                         <DropdownMenuSeparator className="bg-white/10" />
                         <DropdownMenuItem onClick={() => onAddPayrollEntry(row)} className="gap-2 cursor-pointer">
                           <CreditCard className="w-3.5 h-3.5 text-cyan-400" /> Add to Payroll Run
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onGenerateLetter(row)} className="gap-2 cursor-pointer">
+                        <DropdownMenuItem onClick={() => onGenerateLetter?.(row)} className="gap-2 cursor-pointer">
                           <FileText className="w-3.5 h-3.5 text-emerald-400" /> Generate Award Letter
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onViewLogs(row)} className="gap-2 cursor-pointer">
+                        <DropdownMenuItem onClick={() => onViewLogs?.(row)} className="gap-2 cursor-pointer">
                           <History className="w-3.5 h-3.5 text-slate-400" /> Audit Logs
                         </DropdownMenuItem>
                       </DropdownMenuContent>

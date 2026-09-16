@@ -34,13 +34,15 @@ interface AdvancesTableProps {
   onSelectToggle: (id: string) => void;
   onSelectAll: (checked: boolean) => void;
   onView: (advance: SalaryAdvanceRequest) => void;
-  onEdit: (advance: SalaryAdvanceRequest) => void;
+  onEdit?: (advance: SalaryAdvanceRequest) => void;
   onApprove: (advance: SalaryAdvanceRequest) => void;
   onReject: (advance: SalaryAdvanceRequest) => void;
   onDisburse: (advance: SalaryAdvanceRequest) => void;
-  onGenerateRecoveryPlan: (advance: SalaryAdvanceRequest) => void;
-  onCloseAdvance: (advance: SalaryAdvanceRequest) => void;
-  onViewLogs: (advance: SalaryAdvanceRequest) => void;
+  onGenerateRecoveryPlan?: (advance: SalaryAdvanceRequest) => void;
+  onCloseAdvance?: (advance: SalaryAdvanceRequest) => void;
+  onViewLogs?: (advance: SalaryAdvanceRequest) => void;
+  onRequestChanges?: (advance: SalaryAdvanceRequest) => void;
+  onManageRecovery?: (advance: SalaryAdvanceRequest) => void;
 }
 
 export const AdvancesTable: React.FC<AdvancesTableProps> = ({
@@ -56,6 +58,8 @@ export const AdvancesTable: React.FC<AdvancesTableProps> = ({
   onGenerateRecoveryPlan,
   onCloseAdvance,
   onViewLogs,
+  onManageRecovery,
+  onRequestChanges,
 }) => {
   const [sortField, setSortField] = useState<keyof SalaryAdvanceRequest>("updatedOn");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
@@ -252,7 +256,7 @@ export const AdvancesTable: React.FC<AdvancesTableProps> = ({
                         <DropdownMenuItem onClick={() => onView(row)} className="gap-2 cursor-pointer">
                           <Eye className="w-3.5 h-3.5 text-blue-400" /> View Details & Schedule
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onEdit(row)} className="gap-2 cursor-pointer">
+                        <DropdownMenuItem onClick={() => onEdit?.(row)} className="gap-2 cursor-pointer">
                           <Edit className="w-3.5 h-3.5 text-amber-400" /> Edit Financial Terms
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => onApprove(row)} className="gap-2 cursor-pointer">
@@ -264,14 +268,14 @@ export const AdvancesTable: React.FC<AdvancesTableProps> = ({
                         <DropdownMenuItem onClick={() => onDisburse(row)} className="gap-2 cursor-pointer">
                           <CreditCard className="w-3.5 h-3.5 text-indigo-400" /> Disburse via Bank
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onGenerateRecoveryPlan(row)} className="gap-2 cursor-pointer">
+                        <DropdownMenuItem onClick={() => (onGenerateRecoveryPlan ? onGenerateRecoveryPlan(row) : onManageRecovery?.(row))} className="gap-2 cursor-pointer">
                           <Layers className="w-3.5 h-3.5 text-purple-400" /> Adjust Installments Plan
                         </DropdownMenuItem>
                         <DropdownMenuSeparator className="bg-white/10" />
-                        <DropdownMenuItem onClick={() => onCloseAdvance(row)} className="gap-2 cursor-pointer text-emerald-400">
+                        <DropdownMenuItem onClick={() => onCloseAdvance?.(row)} className="gap-2 cursor-pointer text-emerald-400">
                           <CheckCircle2 className="w-3.5 h-3.5" /> Close Advance Early
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onViewLogs(row)} className="gap-2 cursor-pointer">
+                        <DropdownMenuItem onClick={() => onViewLogs?.(row)} className="gap-2 cursor-pointer">
                           <History className="w-3.5 h-3.5 text-slate-400" /> Audit Logs
                         </DropdownMenuItem>
                       </DropdownMenuContent>
