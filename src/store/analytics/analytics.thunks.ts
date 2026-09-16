@@ -60,40 +60,43 @@ export function getAnalyticsThunkErrorMessage(err: unknown, fallbackMessage: str
 
 // ── 1. Overview & Summary Thunks ──────────────────────────────────
 
-export const fetchAnalyticsOverview = createAsyncThunk<AnalyticsOverview, void, { rejectValue: string }>(
-  "analytics/fetchAnalyticsOverview",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await analyticsApi.getOverview();
-    } catch (err) {
-      return rejectWithValue(getAnalyticsThunkErrorMessage(err, "Failed to load analytics overview"));
-    }
-  },
-);
+export const fetchAnalyticsOverview = createAsyncThunk<
+  AnalyticsOverview,
+  void,
+  { rejectValue: string }
+>("analytics/fetchAnalyticsOverview", async (_, { rejectWithValue }) => {
+  try {
+    return await analyticsApi.getOverview();
+  } catch (err) {
+    return rejectWithValue(getAnalyticsThunkErrorMessage(err, "Failed to load analytics overview"));
+  }
+});
 
-export const fetchAnalyticsSummary = createAsyncThunk<AnalyticsSummary, void, { rejectValue: string }>(
-  "analytics/fetchAnalyticsSummary",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await analyticsApi.getSummary();
-    } catch (err) {
-      return rejectWithValue(getAnalyticsThunkErrorMessage(err, "Failed to load analytics summary"));
-    }
-  },
-);
+export const fetchAnalyticsSummary = createAsyncThunk<
+  AnalyticsSummary,
+  void,
+  { rejectValue: string }
+>("analytics/fetchAnalyticsSummary", async (_, { rejectWithValue }) => {
+  try {
+    return await analyticsApi.getSummary();
+  } catch (err) {
+    return rejectWithValue(getAnalyticsThunkErrorMessage(err, "Failed to load analytics summary"));
+  }
+});
 
 // ── 2. Reports Engine Thunks ──────────────────────────────────────
 
-export const fetchReports = createAsyncThunk<Report[], PaginationParams | undefined, { rejectValue: string }>(
-  "analytics/fetchReports",
-  async (params, { rejectWithValue }) => {
-    try {
-      return await analyticsApi.getReports(params);
-    } catch (err) {
-      return rejectWithValue(getAnalyticsThunkErrorMessage(err, "Failed to load reports"));
-    }
-  },
-);
+export const fetchReports = createAsyncThunk<
+  Report[],
+  PaginationParams | undefined,
+  { rejectValue: string }
+>("analytics/fetchReports", async (params, { rejectWithValue }) => {
+  try {
+    return await analyticsApi.getReports(params);
+  } catch (err) {
+    return rejectWithValue(getAnalyticsThunkErrorMessage(err, "Failed to load reports"));
+  }
+});
 
 export const fetchReportById = createAsyncThunk<Report, string, { rejectValue: string }>(
   "analytics/fetchReportById",
@@ -101,7 +104,9 @@ export const fetchReportById = createAsyncThunk<Report, string, { rejectValue: s
     try {
       return await analyticsApi.getReportById(reportId);
     } catch (err) {
-      return rejectWithValue(getAnalyticsThunkErrorMessage(err, `Failed to load report ${reportId}`));
+      return rejectWithValue(
+        getAnalyticsThunkErrorMessage(err, `Failed to load report ${reportId}`),
+      );
     }
   },
 );
@@ -129,27 +134,29 @@ export const updateReport = createAsyncThunk<
   }
 });
 
-export const deleteReport = createAsyncThunk<{ success: boolean; id: string }, string, { rejectValue: string }>(
-  "analytics/deleteReport",
-  async (reportId, { rejectWithValue }) => {
-    try {
-      return await analyticsApi.deleteReport(reportId);
-    } catch (err) {
-      return rejectWithValue(getAnalyticsThunkErrorMessage(err, "Failed to delete report"));
-    }
-  },
-);
+export const deleteReport = createAsyncThunk<
+  { success: boolean; id: string },
+  string,
+  { rejectValue: string }
+>("analytics/deleteReport", async (reportId, { rejectWithValue }) => {
+  try {
+    return await analyticsApi.deleteReport(reportId);
+  } catch (err) {
+    return rejectWithValue(getAnalyticsThunkErrorMessage(err, "Failed to delete report"));
+  }
+});
 
-export const generateReport = createAsyncThunk<ReportResult, GenerateReportPayload, { rejectValue: string }>(
-  "analytics/generateReport",
-  async (payload, { rejectWithValue }) => {
-    try {
-      return await analyticsApi.generateReport(payload);
-    } catch (err) {
-      return rejectWithValue(getAnalyticsThunkErrorMessage(err, "Failed to generate report"));
-    }
-  },
-);
+export const generateReport = createAsyncThunk<
+  ReportResult,
+  GenerateReportPayload,
+  { rejectValue: string }
+>("analytics/generateReport", async (payload, { rejectWithValue }) => {
+  try {
+    return await analyticsApi.generateReport(payload);
+  } catch (err) {
+    return rejectWithValue(getAnalyticsThunkErrorMessage(err, "Failed to generate report"));
+  }
+});
 
 export const exportReport = createAsyncThunk<
   { success: boolean; reportId: string },
@@ -166,62 +173,71 @@ export const exportReport = createAsyncThunk<
 
 // ── 3. Core HR Metrics Thunks ─────────────────────────────────────
 
-export const fetchHeadcountMetrics = createAsyncThunk<HeadcountMetrics, void, { rejectValue: string }>(
-  "analytics/fetchHeadcountMetrics",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await analyticsApi.getHeadcountMetrics();
-    } catch (err) {
-      return rejectWithValue(getAnalyticsThunkErrorMessage(err, "Failed to load headcount metrics"));
-    }
-  },
-);
+export const fetchHeadcountMetrics = createAsyncThunk<
+  HeadcountMetrics,
+  void,
+  { rejectValue: string }
+>("analytics/fetchHeadcountMetrics", async (_, { rejectWithValue }) => {
+  try {
+    return await analyticsApi.getHeadcountMetrics();
+  } catch (err) {
+    return rejectWithValue(getAnalyticsThunkErrorMessage(err, "Failed to load headcount metrics"));
+  }
+});
 
-export const fetchPayrollCostMetrics = createAsyncThunk<PayrollCostMetrics, void, { rejectValue: string }>(
-  "analytics/fetchPayrollCostMetrics",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await analyticsApi.getPayrollCostMetrics();
-    } catch (err) {
-      return rejectWithValue(getAnalyticsThunkErrorMessage(err, "Failed to load payroll cost metrics"));
-    }
-  },
-);
+export const fetchPayrollCostMetrics = createAsyncThunk<
+  PayrollCostMetrics,
+  void,
+  { rejectValue: string }
+>("analytics/fetchPayrollCostMetrics", async (_, { rejectWithValue }) => {
+  try {
+    return await analyticsApi.getPayrollCostMetrics();
+  } catch (err) {
+    return rejectWithValue(
+      getAnalyticsThunkErrorMessage(err, "Failed to load payroll cost metrics"),
+    );
+  }
+});
 
-export const fetchTurnoverMetrics = createAsyncThunk<TurnoverMetrics, void, { rejectValue: string }>(
-  "analytics/fetchTurnoverMetrics",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await analyticsApi.getTurnoverMetrics();
-    } catch (err) {
-      return rejectWithValue(getAnalyticsThunkErrorMessage(err, "Failed to load turnover metrics"));
-    }
-  },
-);
+export const fetchTurnoverMetrics = createAsyncThunk<
+  TurnoverMetrics,
+  void,
+  { rejectValue: string }
+>("analytics/fetchTurnoverMetrics", async (_, { rejectWithValue }) => {
+  try {
+    return await analyticsApi.getTurnoverMetrics();
+  } catch (err) {
+    return rejectWithValue(getAnalyticsThunkErrorMessage(err, "Failed to load turnover metrics"));
+  }
+});
 
-export const fetchComplianceMetrics = createAsyncThunk<ComplianceMetrics, void, { rejectValue: string }>(
-  "analytics/fetchComplianceMetrics",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await analyticsApi.getComplianceMetrics();
-    } catch (err) {
-      return rejectWithValue(getAnalyticsThunkErrorMessage(err, "Failed to load compliance metrics"));
-    }
-  },
-);
+export const fetchComplianceMetrics = createAsyncThunk<
+  ComplianceMetrics,
+  void,
+  { rejectValue: string }
+>("analytics/fetchComplianceMetrics", async (_, { rejectWithValue }) => {
+  try {
+    return await analyticsApi.getComplianceMetrics();
+  } catch (err) {
+    return rejectWithValue(getAnalyticsThunkErrorMessage(err, "Failed to load compliance metrics"));
+  }
+});
 
 // ── 4. AI Predictive Analytics Thunks ─────────────────────────────
 
-export const fetchPredictiveInsights = createAsyncThunk<PredictiveInsight[], void, { rejectValue: string }>(
-  "analytics/fetchPredictiveInsights",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await analyticsApi.getPredictiveInsights();
-    } catch (err) {
-      return rejectWithValue(getAnalyticsThunkErrorMessage(err, "Failed to load predictive insights"));
-    }
-  },
-);
+export const fetchPredictiveInsights = createAsyncThunk<
+  PredictiveInsight[],
+  void,
+  { rejectValue: string }
+>("analytics/fetchPredictiveInsights", async (_, { rejectWithValue }) => {
+  try {
+    return await analyticsApi.getPredictiveInsights();
+  } catch (err) {
+    return rejectWithValue(
+      getAnalyticsThunkErrorMessage(err, "Failed to load predictive insights"),
+    );
+  }
+});
 
 export const analyzePredictiveInsights = createAsyncThunk<
   PredictiveInsight[],
@@ -231,20 +247,25 @@ export const analyzePredictiveInsights = createAsyncThunk<
   try {
     return await analyticsApi.analyzePredictiveInsights(payload);
   } catch (err) {
-    return rejectWithValue(getAnalyticsThunkErrorMessage(err, "Failed to analyze predictive insights"));
+    return rejectWithValue(
+      getAnalyticsThunkErrorMessage(err, "Failed to analyze predictive insights"),
+    );
   }
 });
 
-export const fetchAttritionAnalytics = createAsyncThunk<AttritionPrediction, void, { rejectValue: string }>(
-  "analytics/fetchAttritionAnalytics",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await analyticsApi.getAttritionAnalytics();
-    } catch (err) {
-      return rejectWithValue(getAnalyticsThunkErrorMessage(err, "Failed to load attrition analytics"));
-    }
-  },
-);
+export const fetchAttritionAnalytics = createAsyncThunk<
+  AttritionPrediction,
+  void,
+  { rejectValue: string }
+>("analytics/fetchAttritionAnalytics", async (_, { rejectWithValue }) => {
+  try {
+    return await analyticsApi.getAttritionAnalytics();
+  } catch (err) {
+    return rejectWithValue(
+      getAnalyticsThunkErrorMessage(err, "Failed to load attrition analytics"),
+    );
+  }
+});
 
 export const predictAttrition = createAsyncThunk<
   AttritionPrediction,
@@ -254,20 +275,25 @@ export const predictAttrition = createAsyncThunk<
   try {
     return await analyticsApi.predictAttrition(payload);
   } catch (err) {
-    return rejectWithValue(getAnalyticsThunkErrorMessage(err, "Failed to run attrition prediction"));
+    return rejectWithValue(
+      getAnalyticsThunkErrorMessage(err, "Failed to run attrition prediction"),
+    );
   }
 });
 
-export const fetchSentimentAnalytics = createAsyncThunk<SentimentInsight, void, { rejectValue: string }>(
-  "analytics/fetchSentimentAnalytics",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await analyticsApi.getSentimentAnalytics();
-    } catch (err) {
-      return rejectWithValue(getAnalyticsThunkErrorMessage(err, "Failed to load sentiment analytics"));
-    }
-  },
-);
+export const fetchSentimentAnalytics = createAsyncThunk<
+  SentimentInsight,
+  void,
+  { rejectValue: string }
+>("analytics/fetchSentimentAnalytics", async (_, { rejectWithValue }) => {
+  try {
+    return await analyticsApi.getSentimentAnalytics();
+  } catch (err) {
+    return rejectWithValue(
+      getAnalyticsThunkErrorMessage(err, "Failed to load sentiment analytics"),
+    );
+  }
+});
 
 export const analyzeSentiment = createAsyncThunk<
   SentimentInsight,
@@ -287,7 +313,9 @@ export const fetchBurnoutRisk = createAsyncThunk<BurnoutRiskInsight, void, { rej
     try {
       return await analyticsApi.getBurnoutRisk();
     } catch (err) {
-      return rejectWithValue(getAnalyticsThunkErrorMessage(err, "Failed to load burnout risk insights"));
+      return rejectWithValue(
+        getAnalyticsThunkErrorMessage(err, "Failed to load burnout risk insights"),
+      );
     }
   },
 );
@@ -304,16 +332,17 @@ export const analyzeBurnoutRisk = createAsyncThunk<
   }
 });
 
-export const fetchSalaryBenchmarks = createAsyncThunk<SalaryBenchmark[], void, { rejectValue: string }>(
-  "analytics/fetchSalaryBenchmarks",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await analyticsApi.getSalaryBenchmarks();
-    } catch (err) {
-      return rejectWithValue(getAnalyticsThunkErrorMessage(err, "Failed to load salary benchmarks"));
-    }
-  },
-);
+export const fetchSalaryBenchmarks = createAsyncThunk<
+  SalaryBenchmark[],
+  void,
+  { rejectValue: string }
+>("analytics/fetchSalaryBenchmarks", async (_, { rejectWithValue }) => {
+  try {
+    return await analyticsApi.getSalaryBenchmarks();
+  } catch (err) {
+    return rejectWithValue(getAnalyticsThunkErrorMessage(err, "Failed to load salary benchmarks"));
+  }
+});
 
 export const analyzeSalaryBenchmarks = createAsyncThunk<
   SalaryBenchmark[],
@@ -323,6 +352,8 @@ export const analyzeSalaryBenchmarks = createAsyncThunk<
   try {
     return await analyticsApi.analyzeSalaryBenchmarks(payload);
   } catch (err) {
-    return rejectWithValue(getAnalyticsThunkErrorMessage(err, "Failed to run salary benchmarks analysis"));
+    return rejectWithValue(
+      getAnalyticsThunkErrorMessage(err, "Failed to run salary benchmarks analysis"),
+    );
   }
 });

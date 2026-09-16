@@ -25,10 +25,7 @@ export const selectAnalyticsSummaryData = createSelector(
 );
 
 // ── 2. Reports Engine ─────────────────────────────────────────────
-export const selectReports = createSelector(
-  [selectAnalyticsState],
-  (state) => state.reports,
-);
+export const selectReports = createSelector([selectAnalyticsState], (state) => state.reports);
 
 export const selectReportsData = createSelector(
   [selectAnalyticsState],

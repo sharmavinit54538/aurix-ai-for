@@ -156,7 +156,11 @@ export interface ComplianceMetrics {
   auditReadinessScore: number;
   pendingAuditsCount: number;
   flaggedViolationsCount: number;
-  standards: Array<{ name: string; score: number; status: "compliant" | "warning" | "non_compliant" | string }>;
+  standards: Array<{
+    name: string;
+    score: number;
+    status: "compliant" | "warning" | "non_compliant" | string;
+  }>;
 }
 
 // ── 4. AI Predictive Analytics ────────────────────────────────────

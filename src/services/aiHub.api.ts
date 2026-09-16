@@ -115,15 +115,25 @@ export const aiHubApi = {
 
   // ── 2. Common AI Agent Operations ────────────────────────────────
   async runAgent(agentId: string, payload?: AgentRunRequest): Promise<AgentRunResponse> {
-    const res = await apiInstance.post(`/ai-hub/agents/${encodeURIComponent(agentId)}/run`, payload ?? {});
+    const res = await apiInstance.post(
+      `/ai-hub/agents/${encodeURIComponent(agentId)}/run`,
+      payload ?? {},
+    );
     return extractData<AgentRunResponse>(res);
   },
 
   async getAgentHistory(agentId: string, params?: PaginationParams): Promise<AIAgentHistory[]> {
-    const res = await apiInstance.get(`/ai-hub/agents/${encodeURIComponent(agentId)}/history`, { params });
+    const res = await apiInstance.get(`/ai-hub/agents/${encodeURIComponent(agentId)}/history`, {
+      params,
+    });
     const raw = extractData<unknown>(res, []);
     if (Array.isArray(raw)) return raw as AIAgentHistory[];
-    if (raw && typeof raw === "object" && "items" in raw && Array.isArray((raw as { items: unknown }).items)) {
+    if (
+      raw &&
+      typeof raw === "object" &&
+      "items" in raw &&
+      Array.isArray((raw as { items: unknown }).items)
+    ) {
       return (raw as { items: AIAgentHistory[] }).items;
     }
     return [];
@@ -137,8 +147,14 @@ export const aiHubApi = {
     });
   },
 
-  async submitAgentFeedback(agentId: string, payload: AgentFeedbackPayload): Promise<{ success: boolean; message?: string }> {
-    const res = await apiInstance.post(`/ai-hub/agents/${encodeURIComponent(agentId)}/feedback`, payload);
+  async submitAgentFeedback(
+    agentId: string,
+    payload: AgentFeedbackPayload,
+  ): Promise<{ success: boolean; message?: string }> {
+    const res = await apiInstance.post(
+      `/ai-hub/agents/${encodeURIComponent(agentId)}/feedback`,
+      payload,
+    );
     return extractData<{ success: boolean; message?: string }>(res, { success: true });
   },
 
@@ -174,7 +190,9 @@ export const aiHubApi = {
     return Array.isArray(raw) ? (raw as RecruiterResult[]) : [];
   },
 
-  async generateInterviewQuestions(payload: GenerateQuestionsPayload): Promise<{ questions: string[]; jobTitle: string }> {
+  async generateInterviewQuestions(
+    payload: GenerateQuestionsPayload,
+  ): Promise<{ questions: string[]; jobTitle: string }> {
     const res = await apiInstance.post("/ai-hub/recruiter/generate-questions", payload);
     return extractData<{ questions: string[]; jobTitle: string }>(res, {
       questions: [],
@@ -207,7 +225,12 @@ export const aiHubApi = {
     const res = await apiInstance.get("/ai-hub/attendance-monitor/anomalies", { params });
     const raw = extractData<unknown>(res, []);
     if (Array.isArray(raw)) return raw as AttendanceAnomaly[];
-    if (raw && typeof raw === "object" && "items" in raw && Array.isArray((raw as { items: unknown }).items)) {
+    if (
+      raw &&
+      typeof raw === "object" &&
+      "items" in raw &&
+      Array.isArray((raw as { items: unknown }).items)
+    ) {
       return (raw as { items: AttendanceAnomaly[] }).items;
     }
     return [];
@@ -255,8 +278,13 @@ export const aiHubApi = {
     return Array.isArray(raw) ? (raw as PerformanceGoal[]) : [];
   },
 
-  async generateTrainingRecommendations(payload: GenerateTrainingPayload): Promise<PerformanceCoachData["trainingRecommendations"]> {
-    const res = await apiInstance.post("/ai-hub/performance-coach/training-recommendations", payload);
+  async generateTrainingRecommendations(
+    payload: GenerateTrainingPayload,
+  ): Promise<PerformanceCoachData["trainingRecommendations"]> {
+    const res = await apiInstance.post(
+      "/ai-hub/performance-coach/training-recommendations",
+      payload,
+    );
     const raw = extractData<unknown>(res, []);
     return Array.isArray(raw) ? (raw as PerformanceCoachData["trainingRecommendations"]) : [];
   },
@@ -290,13 +318,20 @@ export const aiHubApi = {
     const res = await apiInstance.get("/ai-hub/payroll-insights/anomalies", { params });
     const raw = extractData<unknown>(res, []);
     if (Array.isArray(raw)) return raw as PayrollAnomaly[];
-    if (raw && typeof raw === "object" && "items" in raw && Array.isArray((raw as { items: unknown }).items)) {
+    if (
+      raw &&
+      typeof raw === "object" &&
+      "items" in raw &&
+      Array.isArray((raw as { items: unknown }).items)
+    ) {
       return (raw as { items: PayrollAnomaly[] }).items;
     }
     return [];
   },
 
-  async runTaxAudit(payload?: TaxAuditPayload): Promise<{ passed: boolean; flagsCount: number; summary: string }> {
+  async runTaxAudit(
+    payload?: TaxAuditPayload,
+  ): Promise<{ passed: boolean; flagsCount: number; summary: string }> {
     const res = await apiInstance.post("/ai-hub/payroll-insights/tax-audit", payload ?? {});
     return extractData<{ passed: boolean; flagsCount: number; summary: string }>(res, {
       passed: true,
@@ -327,12 +362,17 @@ export const aiHubApi = {
     });
   },
 
-  async forecastHeadcount(payload?: ForecastHeadcountPayload): Promise<{ recommendedHeadcount: number; budgetEstimated: number; summary?: string }> {
+  async forecastHeadcount(
+    payload?: ForecastHeadcountPayload,
+  ): Promise<{ recommendedHeadcount: number; budgetEstimated: number; summary?: string }> {
     const res = await apiInstance.post("/ai-hub/workforce-planning/headcount", payload ?? {});
-    return extractData<{ recommendedHeadcount: number; budgetEstimated: number; summary?: string }>(res, {
-      recommendedHeadcount: 0,
-      budgetEstimated: 0,
-    });
+    return extractData<{ recommendedHeadcount: number; budgetEstimated: number; summary?: string }>(
+      res,
+      {
+        recommendedHeadcount: 0,
+        budgetEstimated: 0,
+      },
+    );
   },
 
   // ── 10. Employee Health ──────────────────────────────────────────
@@ -383,7 +423,9 @@ export const aiHubApi = {
     });
   },
 
-  async checkPolicyCompliance(payload: CheckCompliancePayload): Promise<{ compliant: boolean; score: number; issues?: string[] }> {
+  async checkPolicyCompliance(
+    payload: CheckCompliancePayload,
+  ): Promise<{ compliant: boolean; score: number; issues?: string[] }> {
     const res = await apiInstance.post("/ai-hub/policy-assistant/check-compliance", payload);
     return extractData<{ compliant: boolean; score: number; issues?: string[] }>(res, {
       compliant: true,
@@ -414,7 +456,9 @@ export const aiHubApi = {
     return extractData<GeneratedDocument>(res);
   },
 
-  async previewDocument(payload: PreviewDocPayload): Promise<{ previewContent: string; templateId: string }> {
+  async previewDocument(
+    payload: PreviewDocPayload,
+  ): Promise<{ previewContent: string; templateId: string }> {
     const res = await apiInstance.post("/ai-hub/document-generator/preview", payload);
     return extractData<{ previewContent: string; templateId: string }>(res, {
       previewContent: "",
@@ -438,7 +482,9 @@ export const aiHubApi = {
     return extractData<MeetingSummary>(res);
   },
 
-  async summarizeMeeting(payload: SummarizeMeetingPayload): Promise<{ summary: string; keyPoints: string[] }> {
+  async summarizeMeeting(
+    payload: SummarizeMeetingPayload,
+  ): Promise<{ summary: string; keyPoints: string[] }> {
     const res = await apiInstance.post("/ai-hub/meeting-intelligence/summarize", payload);
     return extractData<{ summary: string; keyPoints: string[] }>(res, {
       summary: "",
@@ -450,7 +496,12 @@ export const aiHubApi = {
     const res = await apiInstance.get("/ai-hub/meeting-intelligence/action-items", { params });
     const raw = extractData<unknown>(res, []);
     if (Array.isArray(raw)) return raw as MeetingActionItem[];
-    if (raw && typeof raw === "object" && "items" in raw && Array.isArray((raw as { items: unknown }).items)) {
+    if (
+      raw &&
+      typeof raw === "object" &&
+      "items" in raw &&
+      Array.isArray((raw as { items: unknown }).items)
+    ) {
       return (raw as { items: MeetingActionItem[] }).items;
     }
     return [];
@@ -496,7 +547,12 @@ export const aiHubApi = {
     const res = await apiInstance.get("/ai-hub/chat-assistant/conversations", { params });
     const raw = extractData<unknown>(res, []);
     if (Array.isArray(raw)) return raw as ChatConversation[];
-    if (raw && typeof raw === "object" && "items" in raw && Array.isArray((raw as { items: unknown }).items)) {
+    if (
+      raw &&
+      typeof raw === "object" &&
+      "items" in raw &&
+      Array.isArray((raw as { items: unknown }).items)
+    ) {
       return (raw as { items: ChatConversation[] }).items;
     }
     return [];
@@ -508,7 +564,9 @@ export const aiHubApi = {
   },
 
   async getChatConversation(conversationId: string): Promise<ChatConversation> {
-    const res = await apiInstance.get(`/ai-hub/chat-assistant/conversations/${encodeURIComponent(conversationId)}`);
+    const res = await apiInstance.get(
+      `/ai-hub/chat-assistant/conversations/${encodeURIComponent(conversationId)}`,
+    );
     return extractData<ChatConversation>(res);
   },
 
@@ -518,8 +576,13 @@ export const aiHubApi = {
   },
 
   async deleteChatConversation(conversationId: string): Promise<{ success: boolean; id: string }> {
-    const res = await apiInstance.delete(`/ai-hub/chat-assistant/conversations/${encodeURIComponent(conversationId)}`);
-    return extractData<{ success: boolean; id: string }>(res, { success: true, id: conversationId });
+    const res = await apiInstance.delete(
+      `/ai-hub/chat-assistant/conversations/${encodeURIComponent(conversationId)}`,
+    );
+    return extractData<{ success: boolean; id: string }>(res, {
+      success: true,
+      id: conversationId,
+    });
   },
 
   // ── 16. Analytics Center ─────────────────────────────────────────

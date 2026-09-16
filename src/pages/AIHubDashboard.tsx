@@ -39,11 +39,7 @@ import {
 } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import {
-  fetchAIAgents,
-  fetchAIHubOverview,
-  runAIAgent,
-} from "@/store/aiHub/aiHubThunk";
+import { fetchAIAgents, fetchAIHubOverview, runAIAgent } from "@/store/aiHub/aiHubThunk";
 import {
   selectAIAgents,
   selectAIHubOperationLoading,
@@ -96,7 +92,8 @@ export const AI_MODULES_LIST: AIModuleDef[] = [
   {
     id: "performance-coach",
     title: "Performance Coach",
-    description: "Generate SMART goals, align department OKRs, and outline training recommendations.",
+    description:
+      "Generate SMART goals, align department OKRs, and outline training recommendations.",
     icon: Gauge,
     to: "/ai/performance-coach",
     color: "from-purple-500/20 to-pink-500/20 text-purple-400 border-purple-500/30",
@@ -202,16 +199,15 @@ export function AIHubDashboard() {
     e.stopPropagation();
 
     // Look for matching agent from Redux list or build fallback agent def
-    const matchingAgent =
-      agentsState.data?.find(
-        (a) => a.id === module.id || a.category?.toLowerCase() === module.id.toLowerCase(),
-      ) ?? {
-        id: module.id,
-        name: module.title,
-        category: "Intelligence",
-        description: module.description,
-        status: "idle",
-      };
+    const matchingAgent = agentsState.data?.find(
+      (a) => a.id === module.id || a.category?.toLowerCase() === module.id.toLowerCase(),
+    ) ?? {
+      id: module.id,
+      name: module.title,
+      category: "Intelligence",
+      description: module.description,
+      status: "idle",
+    };
 
     setSelectedAgent(matchingAgent);
     setExecutionPrompt("");
@@ -256,12 +252,16 @@ export function AIHubDashboard() {
               <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
                 OFC360 AI Hub
               </h1>
-              <Badge variant="outline" className="border-indigo-500/30 bg-indigo-500/10 text-indigo-400 text-xs">
+              <Badge
+                variant="outline"
+                className="border-indigo-500/30 bg-indigo-500/10 text-indigo-400 text-xs"
+              >
                 Autonomous Agents
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground">
-              Production-ready enterprise agent orchestrator across HR, attendance, payroll, compliance, and talent.
+              Production-ready enterprise agent orchestrator across HR, attendance, payroll,
+              compliance, and talent.
             </p>
           </div>
 
@@ -287,7 +287,11 @@ export function AIHubDashboard() {
               <Brain className="h-4 w-4 text-blue-400" />
             </div>
             <div className="mt-2 text-xl font-bold text-foreground">
-              {isLoading ? <Skeleton className="h-7 w-12" /> : (overview?.totalAgents ?? AI_MODULES_LIST.length)}
+              {isLoading ? (
+                <Skeleton className="h-7 w-12" />
+              ) : (
+                (overview?.totalAgents ?? AI_MODULES_LIST.length)
+              )}
             </div>
             <span className="text-[11px] text-muted-foreground">Registered modules</span>
           </div>
@@ -298,7 +302,11 @@ export function AIHubDashboard() {
               <Zap className="h-4 w-4 text-emerald-400" />
             </div>
             <div className="mt-2 text-xl font-bold text-foreground">
-              {isLoading ? <Skeleton className="h-7 w-12" /> : (overview?.activeAgents ?? AI_MODULES_LIST.length)}
+              {isLoading ? (
+                <Skeleton className="h-7 w-12" />
+              ) : (
+                (overview?.activeAgents ?? AI_MODULES_LIST.length)
+              )}
             </div>
             <span className="text-[11px] text-emerald-500 font-medium">Ready to serve</span>
           </div>
@@ -331,7 +339,11 @@ export function AIHubDashboard() {
               <ShieldCheck className="h-4 w-4 text-emerald-400" />
             </div>
             <div className="mt-2 text-xl font-bold capitalize text-emerald-400">
-              {isLoading ? <Skeleton className="h-7 w-16" /> : (overview?.systemHealth ?? "Healthy")}
+              {isLoading ? (
+                <Skeleton className="h-7 w-16" />
+              ) : (
+                (overview?.systemHealth ?? "Healthy")
+              )}
             </div>
             <span className="text-[11px] text-muted-foreground">All nodes online</span>
           </div>
@@ -343,7 +355,9 @@ export function AIHubDashboard() {
         <div className="flex items-center justify-between rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
           <div className="flex items-center gap-3">
             <AlertTriangle className="h-5 w-5 shrink-0" />
-            <span>{overviewState.error || agentsState.error || "Failed to load live agent statistics"}</span>
+            <span>
+              {overviewState.error || agentsState.error || "Failed to load live agent statistics"}
+            </span>
           </div>
           <Button
             variant="outline"
@@ -388,7 +402,9 @@ export function AIHubDashboard() {
                 <div>
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3.5">
-                      <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${module.color}`}>
+                      <div
+                        className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${module.color}`}
+                      >
                         <Icon className="h-5 w-5 text-white" />
                       </div>
                       <div className="space-y-1">
@@ -444,10 +460,16 @@ export function AIHubDashboard() {
         <SheetContent className="w-full sm:max-w-lg border-l border-border bg-card/95 backdrop-blur-xl flex flex-col h-full">
           <SheetHeader className="space-y-1 text-left border-b border-border/60 pb-4">
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="border-indigo-500/40 bg-indigo-500/10 text-indigo-400 text-[10px]">
+              <Badge
+                variant="outline"
+                className="border-indigo-500/40 bg-indigo-500/10 text-indigo-400 text-[10px]"
+              >
                 Autonomous Executor
               </Badge>
-              <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-[10px]">
+              <Badge
+                variant="outline"
+                className="border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-[10px]"
+              >
                 Ready
               </Badge>
             </div>

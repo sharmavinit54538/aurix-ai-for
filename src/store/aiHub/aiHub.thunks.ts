@@ -126,7 +126,9 @@ export const fetchAIAgentDetails = createAsyncThunk<AIAgent, string, { rejectVal
     try {
       return await aiHubApi.getAgentDetails(agentId);
     } catch (err) {
-      return rejectWithValue(getAIHubThunkErrorMessage(err, `Failed to load details for agent ${agentId}`));
+      return rejectWithValue(
+        getAIHubThunkErrorMessage(err, `Failed to load details for agent ${agentId}`),
+      );
     }
   },
 );
@@ -153,7 +155,9 @@ export const fetchAIAgentHistory = createAsyncThunk<
   try {
     return await aiHubApi.getAgentHistory(agentId, params);
   } catch (err) {
-    return rejectWithValue(getAIHubThunkErrorMessage(err, `Failed to load history for agent ${agentId}`));
+    return rejectWithValue(
+      getAIHubThunkErrorMessage(err, `Failed to load history for agent ${agentId}`),
+    );
   }
 });
 
@@ -163,7 +167,9 @@ export const fetchAIAgentStatus = createAsyncThunk<AIAgentStatus, string, { reje
     try {
       return await aiHubApi.getAgentStatus(agentId);
     } catch (err) {
-      return rejectWithValue(getAIHubThunkErrorMessage(err, `Failed to check status for agent ${agentId}`));
+      return rejectWithValue(
+        getAIHubThunkErrorMessage(err, `Failed to check status for agent ${agentId}`),
+      );
     }
   },
 );
@@ -182,16 +188,17 @@ export const submitAIAgentFeedback = createAsyncThunk<
 
 // ── 3. Workforce Insights Thunks ──────────────────────────────────
 
-export const fetchWorkforceInsights = createAsyncThunk<WorkforceInsight[], void, { rejectValue: string }>(
-  "aiHub/fetchWorkforceInsights",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await aiHubApi.getWorkforceInsights();
-    } catch (err) {
-      return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load workforce insights"));
-    }
-  },
-);
+export const fetchWorkforceInsights = createAsyncThunk<
+  WorkforceInsight[],
+  void,
+  { rejectValue: string }
+>("aiHub/fetchWorkforceInsights", async (_, { rejectWithValue }) => {
+  try {
+    return await aiHubApi.getWorkforceInsights();
+  } catch (err) {
+    return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load workforce insights"));
+  }
+});
 
 export const analyzeWorkforceInsights = createAsyncThunk<
   WorkforceInsight[],
@@ -207,16 +214,17 @@ export const analyzeWorkforceInsights = createAsyncThunk<
 
 // ── 4. Recruiter Thunks ───────────────────────────────────────────
 
-export const fetchRecruiterInsights = createAsyncThunk<RecruiterResult[], void, { rejectValue: string }>(
-  "aiHub/fetchRecruiterInsights",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await aiHubApi.getRecruiterInsights();
-    } catch (err) {
-      return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load recruiter insights"));
-    }
-  },
-);
+export const fetchRecruiterInsights = createAsyncThunk<
+  RecruiterResult[],
+  void,
+  { rejectValue: string }
+>("aiHub/fetchRecruiterInsights", async (_, { rejectWithValue }) => {
+  try {
+    return await aiHubApi.getRecruiterInsights();
+  } catch (err) {
+    return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load recruiter insights"));
+  }
+});
 
 export const screenResumes = createAsyncThunk<
   RecruiterResult[],
@@ -238,7 +246,9 @@ export const matchCandidates = createAsyncThunk<
   try {
     return await aiHubApi.matchCandidates(payload);
   } catch (err) {
-    return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to match candidates to job requirements"));
+    return rejectWithValue(
+      getAIHubThunkErrorMessage(err, "Failed to match candidates to job requirements"),
+    );
   }
 });
 
@@ -250,22 +260,27 @@ export const generateInterviewQuestions = createAsyncThunk<
   try {
     return await aiHubApi.generateInterviewQuestions(payload);
   } catch (err) {
-    return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to generate interview questions"));
+    return rejectWithValue(
+      getAIHubThunkErrorMessage(err, "Failed to generate interview questions"),
+    );
   }
 });
 
 // ── 5. Attendance Monitor Thunks ──────────────────────────────────
 
-export const fetchAttendanceMonitor = createAsyncThunk<AttendanceMonitorData, void, { rejectValue: string }>(
-  "aiHub/fetchAttendanceMonitor",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await aiHubApi.getAttendanceMonitor();
-    } catch (err) {
-      return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load attendance monitor data"));
-    }
-  },
-);
+export const fetchAttendanceMonitor = createAsyncThunk<
+  AttendanceMonitorData,
+  void,
+  { rejectValue: string }
+>("aiHub/fetchAttendanceMonitor", async (_, { rejectWithValue }) => {
+  try {
+    return await aiHubApi.getAttendanceMonitor();
+  } catch (err) {
+    return rejectWithValue(
+      getAIHubThunkErrorMessage(err, "Failed to load attendance monitor data"),
+    );
+  }
+});
 
 export const analyzeAttendance = createAsyncThunk<
   AttendanceMonitorData,
@@ -293,16 +308,17 @@ export const fetchAttendanceAnomalies = createAsyncThunk<
 
 // ── 6. Leave Assistant Thunks ─────────────────────────────────────
 
-export const fetchLeaveAssistant = createAsyncThunk<LeaveAssistantData, void, { rejectValue: string }>(
-  "aiHub/fetchLeaveAssistant",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await aiHubApi.getLeaveAssistant();
-    } catch (err) {
-      return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load leave assistant data"));
-    }
-  },
-);
+export const fetchLeaveAssistant = createAsyncThunk<
+  LeaveAssistantData,
+  void,
+  { rejectValue: string }
+>("aiHub/fetchLeaveAssistant", async (_, { rejectWithValue }) => {
+  try {
+    return await aiHubApi.getLeaveAssistant();
+  } catch (err) {
+    return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load leave assistant data"));
+  }
+});
 
 export const forecastLeaves = createAsyncThunk<
   LeaveForecast,
@@ -330,16 +346,17 @@ export const analyzeLeavePatterns = createAsyncThunk<
 
 // ── 7. Performance Coach Thunks ───────────────────────────────────
 
-export const fetchPerformanceCoach = createAsyncThunk<PerformanceCoachData, void, { rejectValue: string }>(
-  "aiHub/fetchPerformanceCoach",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await aiHubApi.getPerformanceCoach();
-    } catch (err) {
-      return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load performance coach data"));
-    }
-  },
-);
+export const fetchPerformanceCoach = createAsyncThunk<
+  PerformanceCoachData,
+  void,
+  { rejectValue: string }
+>("aiHub/fetchPerformanceCoach", async (_, { rejectWithValue }) => {
+  try {
+    return await aiHubApi.getPerformanceCoach();
+  } catch (err) {
+    return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load performance coach data"));
+  }
+});
 
 export const generatePerformanceGoals = createAsyncThunk<
   PerformanceGoal[],
@@ -349,7 +366,9 @@ export const generatePerformanceGoals = createAsyncThunk<
   try {
     return await aiHubApi.generatePerformanceGoals(payload);
   } catch (err) {
-    return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to generate SMART performance goals"));
+    return rejectWithValue(
+      getAIHubThunkErrorMessage(err, "Failed to generate SMART performance goals"),
+    );
   }
 });
 
@@ -361,7 +380,9 @@ export const generateTrainingRecommendations = createAsyncThunk<
   try {
     return await aiHubApi.generateTrainingRecommendations(payload);
   } catch (err) {
-    return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to generate training recommendations"));
+    return rejectWithValue(
+      getAIHubThunkErrorMessage(err, "Failed to generate training recommendations"),
+    );
   }
 });
 
@@ -416,16 +437,19 @@ export const runTaxAudit = createAsyncThunk<
 
 // ── 9. Workforce Planning Thunks ──────────────────────────────────
 
-export const fetchWorkforcePlanning = createAsyncThunk<WorkforcePlanningData, void, { rejectValue: string }>(
-  "aiHub/fetchWorkforcePlanning",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await aiHubApi.getWorkforcePlanning();
-    } catch (err) {
-      return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load workforce planning data"));
-    }
-  },
-);
+export const fetchWorkforcePlanning = createAsyncThunk<
+  WorkforcePlanningData,
+  void,
+  { rejectValue: string }
+>("aiHub/fetchWorkforcePlanning", async (_, { rejectWithValue }) => {
+  try {
+    return await aiHubApi.getWorkforcePlanning();
+  } catch (err) {
+    return rejectWithValue(
+      getAIHubThunkErrorMessage(err, "Failed to load workforce planning data"),
+    );
+  }
+});
 
 export const forecastWorkforce = createAsyncThunk<
   WorkforceForecast,
@@ -447,22 +471,27 @@ export const forecastHeadcount = createAsyncThunk<
   try {
     return await aiHubApi.forecastHeadcount(payload);
   } catch (err) {
-    return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to forecast headcount requirements"));
+    return rejectWithValue(
+      getAIHubThunkErrorMessage(err, "Failed to forecast headcount requirements"),
+    );
   }
 });
 
 // ── 10. Employee Health Thunks ────────────────────────────────────
 
-export const fetchEmployeeHealth = createAsyncThunk<EmployeeHealthInsight, void, { rejectValue: string }>(
-  "aiHub/fetchEmployeeHealth",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await aiHubApi.getEmployeeHealth();
-    } catch (err) {
-      return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load employee health insights"));
-    }
-  },
-);
+export const fetchEmployeeHealth = createAsyncThunk<
+  EmployeeHealthInsight,
+  void,
+  { rejectValue: string }
+>("aiHub/fetchEmployeeHealth", async (_, { rejectWithValue }) => {
+  try {
+    return await aiHubApi.getEmployeeHealth();
+  } catch (err) {
+    return rejectWithValue(
+      getAIHubThunkErrorMessage(err, "Failed to load employee health insights"),
+    );
+  }
+});
 
 export const analyzeEmployeeHealth = createAsyncThunk<
   EmployeeHealthInsight,
@@ -472,7 +501,9 @@ export const analyzeEmployeeHealth = createAsyncThunk<
   try {
     return await aiHubApi.analyzeEmployeeHealth(payload);
   } catch (err) {
-    return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to analyze organizational wellness"));
+    return rejectWithValue(
+      getAIHubThunkErrorMessage(err, "Failed to analyze organizational wellness"),
+    );
   }
 });
 
@@ -484,33 +515,39 @@ export const fetchWellnessInsights = createAsyncThunk<
   try {
     return await aiHubApi.getWellnessInsights();
   } catch (err) {
-    return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load wellness recommendations"));
+    return rejectWithValue(
+      getAIHubThunkErrorMessage(err, "Failed to load wellness recommendations"),
+    );
   }
 });
 
 // ── 11. Policy Assistant Thunks ───────────────────────────────────
 
-export const fetchPolicyAssistant = createAsyncThunk<PolicyAssistantData, void, { rejectValue: string }>(
-  "aiHub/fetchPolicyAssistant",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await aiHubApi.getPolicyAssistant();
-    } catch (err) {
-      return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load policy assistant overview"));
-    }
-  },
-);
+export const fetchPolicyAssistant = createAsyncThunk<
+  PolicyAssistantData,
+  void,
+  { rejectValue: string }
+>("aiHub/fetchPolicyAssistant", async (_, { rejectWithValue }) => {
+  try {
+    return await aiHubApi.getPolicyAssistant();
+  } catch (err) {
+    return rejectWithValue(
+      getAIHubThunkErrorMessage(err, "Failed to load policy assistant overview"),
+    );
+  }
+});
 
-export const askPolicyAssistant = createAsyncThunk<PolicyAnswer, AskPolicyPayload, { rejectValue: string }>(
-  "aiHub/askPolicyAssistant",
-  async (payload, { rejectWithValue }) => {
-    try {
-      return await aiHubApi.askPolicyAssistant(payload);
-    } catch (err) {
-      return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to resolve policy query"));
-    }
-  },
-);
+export const askPolicyAssistant = createAsyncThunk<
+  PolicyAnswer,
+  AskPolicyPayload,
+  { rejectValue: string }
+>("aiHub/askPolicyAssistant", async (payload, { rejectWithValue }) => {
+  try {
+    return await aiHubApi.askPolicyAssistant(payload);
+  } catch (err) {
+    return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to resolve policy query"));
+  }
+});
 
 export const checkPolicyCompliance = createAsyncThunk<
   { compliant: boolean; score: number; issues?: string[] },
@@ -526,27 +563,29 @@ export const checkPolicyCompliance = createAsyncThunk<
 
 // ── 12. Document Generator Thunks ─────────────────────────────────
 
-export const fetchDocumentGenerator = createAsyncThunk<DocumentGeneratorData, void, { rejectValue: string }>(
-  "aiHub/fetchDocumentGenerator",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await aiHubApi.getDocumentGenerator();
-    } catch (err) {
-      return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load document generator"));
-    }
-  },
-);
+export const fetchDocumentGenerator = createAsyncThunk<
+  DocumentGeneratorData,
+  void,
+  { rejectValue: string }
+>("aiHub/fetchDocumentGenerator", async (_, { rejectWithValue }) => {
+  try {
+    return await aiHubApi.getDocumentGenerator();
+  } catch (err) {
+    return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load document generator"));
+  }
+});
 
-export const fetchDocumentTemplates = createAsyncThunk<DocumentTemplate[], void, { rejectValue: string }>(
-  "aiHub/fetchDocumentTemplates",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await aiHubApi.getDocumentTemplates();
-    } catch (err) {
-      return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load document templates"));
-    }
-  },
-);
+export const fetchDocumentTemplates = createAsyncThunk<
+  DocumentTemplate[],
+  void,
+  { rejectValue: string }
+>("aiHub/fetchDocumentTemplates", async (_, { rejectWithValue }) => {
+  try {
+    return await aiHubApi.getDocumentTemplates();
+  } catch (err) {
+    return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load document templates"));
+  }
+});
 
 export const generateDocument = createAsyncThunk<
   GeneratedDocument,
@@ -574,16 +613,17 @@ export const previewDocument = createAsyncThunk<
 
 // ── 13. Meeting Intelligence Thunks ───────────────────────────────
 
-export const fetchMeetingIntelligence = createAsyncThunk<MeetingIntelligenceData, void, { rejectValue: string }>(
-  "aiHub/fetchMeetingIntelligence",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await aiHubApi.getMeetingIntelligence();
-    } catch (err) {
-      return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load meeting intelligence"));
-    }
-  },
-);
+export const fetchMeetingIntelligence = createAsyncThunk<
+  MeetingIntelligenceData,
+  void,
+  { rejectValue: string }
+>("aiHub/fetchMeetingIntelligence", async (_, { rejectWithValue }) => {
+  try {
+    return await aiHubApi.getMeetingIntelligence();
+  } catch (err) {
+    return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load meeting intelligence"));
+  }
+});
 
 export const analyzeMeeting = createAsyncThunk<
   MeetingSummary,
@@ -623,16 +663,17 @@ export const fetchMeetingActionItems = createAsyncThunk<
 
 // ── 14. Compliance Monitor Thunks ─────────────────────────────────
 
-export const fetchComplianceMonitor = createAsyncThunk<ComplianceMonitorData, void, { rejectValue: string }>(
-  "aiHub/fetchComplianceMonitor",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await aiHubApi.getComplianceMonitor();
-    } catch (err) {
-      return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load compliance monitor"));
-    }
-  },
-);
+export const fetchComplianceMonitor = createAsyncThunk<
+  ComplianceMonitorData,
+  void,
+  { rejectValue: string }
+>("aiHub/fetchComplianceMonitor", async (_, { rejectWithValue }) => {
+  try {
+    return await aiHubApi.getComplianceMonitor();
+  } catch (err) {
+    return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load compliance monitor"));
+  }
+});
 
 export const scanCompliance = createAsyncThunk<
   ComplianceResult,
@@ -646,16 +687,17 @@ export const scanCompliance = createAsyncThunk<
   }
 });
 
-export const fetchComplianceChecklist = createAsyncThunk<ComplianceChecklistItem[], void, { rejectValue: string }>(
-  "aiHub/fetchComplianceChecklist",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await aiHubApi.getComplianceChecklist();
-    } catch (err) {
-      return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load compliance checklist"));
-    }
-  },
-);
+export const fetchComplianceChecklist = createAsyncThunk<
+  ComplianceChecklistItem[],
+  void,
+  { rejectValue: string }
+>("aiHub/fetchComplianceChecklist", async (_, { rejectWithValue }) => {
+  try {
+    return await aiHubApi.getComplianceChecklist();
+  } catch (err) {
+    return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load compliance checklist"));
+  }
+});
 
 export const fetchComplianceScore = createAsyncThunk<
   { score: number; status: string; lastScan: string },
@@ -695,16 +737,17 @@ export const createChatConversation = createAsyncThunk<
   }
 });
 
-export const fetchChatConversation = createAsyncThunk<ChatConversation, string, { rejectValue: string }>(
-  "aiHub/fetchChatConversation",
-  async (conversationId, { rejectWithValue }) => {
-    try {
-      return await aiHubApi.getChatConversation(conversationId);
-    } catch (err) {
-      return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load conversation details"));
-    }
-  },
-);
+export const fetchChatConversation = createAsyncThunk<
+  ChatConversation,
+  string,
+  { rejectValue: string }
+>("aiHub/fetchChatConversation", async (conversationId, { rejectWithValue }) => {
+  try {
+    return await aiHubApi.getChatConversation(conversationId);
+  } catch (err) {
+    return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load conversation details"));
+  }
+});
 
 export const sendChatMessage = createAsyncThunk<
   ChatMessage,
@@ -732,16 +775,17 @@ export const deleteChatConversation = createAsyncThunk<
 
 // ── 16. Analytics Center Thunks ───────────────────────────────────
 
-export const fetchAnalyticsCenter = createAsyncThunk<AnalyticsCenterData, void, { rejectValue: string }>(
-  "aiHub/fetchAnalyticsCenter",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await aiHubApi.getAnalyticsCenter();
-    } catch (err) {
-      return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load analytics center"));
-    }
-  },
-);
+export const fetchAnalyticsCenter = createAsyncThunk<
+  AnalyticsCenterData,
+  void,
+  { rejectValue: string }
+>("aiHub/fetchAnalyticsCenter", async (_, { rejectWithValue }) => {
+  try {
+    return await aiHubApi.getAnalyticsCenter();
+  } catch (err) {
+    return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load analytics center"));
+  }
+});
 
 export const analyzeAnalytics = createAsyncThunk<
   AnalyticsResult,
@@ -755,27 +799,29 @@ export const analyzeAnalytics = createAsyncThunk<
   }
 });
 
-export const fetchAttritionAnalytics = createAsyncThunk<Record<string, unknown>, void, { rejectValue: string }>(
-  "aiHub/fetchAttritionAnalytics",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await aiHubApi.getAttritionAnalytics();
-    } catch (err) {
-      return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load attrition analytics"));
-    }
-  },
-);
+export const fetchAttritionAnalytics = createAsyncThunk<
+  Record<string, unknown>,
+  void,
+  { rejectValue: string }
+>("aiHub/fetchAttritionAnalytics", async (_, { rejectWithValue }) => {
+  try {
+    return await aiHubApi.getAttritionAnalytics();
+  } catch (err) {
+    return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load attrition analytics"));
+  }
+});
 
-export const fetchDiversityAnalytics = createAsyncThunk<Record<string, unknown>, void, { rejectValue: string }>(
-  "aiHub/fetchDiversityAnalytics",
-  async (_, { rejectWithValue }) => {
-    try {
-      return await aiHubApi.getDiversityAnalytics();
-    } catch (err) {
-      return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load diversity analytics"));
-    }
-  },
-);
+export const fetchDiversityAnalytics = createAsyncThunk<
+  Record<string, unknown>,
+  void,
+  { rejectValue: string }
+>("aiHub/fetchDiversityAnalytics", async (_, { rejectWithValue }) => {
+  try {
+    return await aiHubApi.getDiversityAnalytics();
+  } catch (err) {
+    return rejectWithValue(getAIHubThunkErrorMessage(err, "Failed to load diversity analytics"));
+  }
+});
 
 export const fetchExecutiveSummary = createAsyncThunk<
   { executiveSummary: string; timestamp: string },

@@ -289,7 +289,8 @@ export const aiHubSlice = createSlice({
       })
       .addCase(submitAIAgentFeedback.rejected, (state, action) => {
         state.operationLoading["submitAIAgentFeedback"] = false;
-        state.operationErrors["submitAIAgentFeedback"] = action.payload || "Feedback submission failed";
+        state.operationErrors["submitAIAgentFeedback"] =
+          action.payload || "Feedback submission failed";
       });
 
     // ── 3. Workforce Insights ────────────────────────────────────────
@@ -322,7 +323,8 @@ export const aiHubSlice = createSlice({
       })
       .addCase(analyzeWorkforceInsights.rejected, (state, action) => {
         state.operationLoading["analyzeWorkforceInsights"] = false;
-        state.operationErrors["analyzeWorkforceInsights"] = action.payload || "Workforce analysis failed";
+        state.operationErrors["analyzeWorkforceInsights"] =
+          action.payload || "Workforce analysis failed";
       });
 
     // ── 4. Recruiter ─────────────────────────────────────────────────
@@ -381,7 +383,8 @@ export const aiHubSlice = createSlice({
       })
       .addCase(generateInterviewQuestions.rejected, (state, action) => {
         state.operationLoading["generateInterviewQuestions"] = false;
-        state.operationErrors["generateInterviewQuestions"] = action.payload || "Question generation failed";
+        state.operationErrors["generateInterviewQuestions"] =
+          action.payload || "Question generation failed";
       });
 
     // ── 5. Attendance Monitor ────────────────────────────────────────
@@ -491,7 +494,8 @@ export const aiHubSlice = createSlice({
       })
       .addCase(generatePerformanceGoals.rejected, (state, action) => {
         state.operationLoading["generatePerformanceGoals"] = false;
-        state.operationErrors["generatePerformanceGoals"] = action.payload || "Goal generation failed";
+        state.operationErrors["generatePerformanceGoals"] =
+          action.payload || "Goal generation failed";
       })
 
       .addCase(generateTrainingRecommendations.fulfilled, (state, action) => {
@@ -683,7 +687,8 @@ export const aiHubSlice = createSlice({
       })
       .addCase(checkPolicyCompliance.rejected, (state, action) => {
         state.operationLoading["checkPolicyCompliance"] = false;
-        state.operationErrors["checkPolicyCompliance"] = action.payload || "Compliance check failed";
+        state.operationErrors["checkPolicyCompliance"] =
+          action.payload || "Compliance check failed";
       });
 
     // ── 12. Document Generator ───────────────────────────────────────
@@ -875,19 +880,25 @@ export const aiHubSlice = createSlice({
         state.operationLoading["createChatConversation"] = false;
         state.operationSuccess["createChatConversation"] = true;
         if (state.chatAssistant.data) {
-          state.chatAssistant.data.conversations = [action.payload, ...state.chatAssistant.data.conversations];
+          state.chatAssistant.data.conversations = [
+            action.payload,
+            ...state.chatAssistant.data.conversations,
+          ];
           state.chatAssistant.data.activeConversation = action.payload;
         }
       })
       .addCase(createChatConversation.rejected, (state, action) => {
         state.operationLoading["createChatConversation"] = false;
-        state.operationErrors["createChatConversation"] = action.payload || "Failed to create conversation";
+        state.operationErrors["createChatConversation"] =
+          action.payload || "Failed to create conversation";
       })
 
       .addCase(fetchChatConversation.fulfilled, (state, action) => {
         if (state.chatAssistant.data) {
           state.chatAssistant.data.activeConversation = action.payload;
-          const idx = state.chatAssistant.data.conversations.findIndex((c) => c.id === action.payload.id);
+          const idx = state.chatAssistant.data.conversations.findIndex(
+            (c) => c.id === action.payload.id,
+          );
           if (idx !== -1) {
             state.chatAssistant.data.conversations[idx] = action.payload;
           } else {
@@ -919,7 +930,8 @@ export const aiHubSlice = createSlice({
             (c) => c.id !== action.payload.id,
           );
           if (state.chatAssistant.data.activeConversation?.id === action.payload.id) {
-            state.chatAssistant.data.activeConversation = state.chatAssistant.data.conversations[0] || null;
+            state.chatAssistant.data.activeConversation =
+              state.chatAssistant.data.conversations[0] || null;
           }
         }
       });

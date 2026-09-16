@@ -351,7 +351,8 @@ export const analyticsSlice = createSlice({
       })
       .addCase(analyzePredictiveInsights.rejected, (state, action) => {
         state.operationLoading["analyzePredictiveInsights"] = false;
-        state.operationErrors["analyzePredictiveInsights"] = action.payload || "Predictive analysis failed";
+        state.operationErrors["analyzePredictiveInsights"] =
+          action.payload || "Predictive analysis failed";
       })
 
       .addCase(fetchAttritionAnalytics.pending, (state) => {
@@ -428,7 +429,8 @@ export const analyticsSlice = createSlice({
       })
       .addCase(analyzeSalaryBenchmarks.rejected, (state, action) => {
         state.operationLoading["analyzeSalaryBenchmarks"] = false;
-        state.operationErrors["analyzeSalaryBenchmarks"] = action.payload || "Salary analysis failed";
+        state.operationErrors["analyzeSalaryBenchmarks"] =
+          action.payload || "Salary analysis failed";
       });
   },
 });

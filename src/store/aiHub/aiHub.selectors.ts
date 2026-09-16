@@ -4,10 +4,7 @@ import type { RootState } from "@/redux/store";
 export const selectAIHubState = (state: RootState) => state.aiHub;
 
 // ── 1. Overview & Agents Selectors ───────────────────────────────
-export const selectAIHubOverview = createSelector(
-  [selectAIHubState],
-  (state) => state.overview,
-);
+export const selectAIHubOverview = createSelector([selectAIHubState], (state) => state.overview);
 
 export const selectAIHubOverviewData = createSelector(
   [selectAIHubState],
@@ -24,10 +21,7 @@ export const selectAIHubOverviewError = createSelector(
   (state) => state.overview.error,
 );
 
-export const selectAIAgents = createSelector(
-  [selectAIHubState],
-  (state) => state.agents,
-);
+export const selectAIAgents = createSelector([selectAIHubState], (state) => state.agents);
 
 export const selectAIAgentsData = createSelector(
   [selectAIHubState],
@@ -54,10 +48,7 @@ export const selectAIAgentHistory = createSelector(
   (state) => state.agentHistory,
 );
 
-export const selectAIAgentStatus = createSelector(
-  [selectAIHubState],
-  (state) => state.agentStatus,
-);
+export const selectAIAgentStatus = createSelector([selectAIHubState], (state) => state.agentStatus);
 
 // ── 2. Domain Module Selectors ───────────────────────────────────
 export const selectWorkforceInsights = createSelector(
@@ -65,10 +56,7 @@ export const selectWorkforceInsights = createSelector(
   (state) => state.workforceInsights,
 );
 
-export const selectRecruiter = createSelector(
-  [selectAIHubState],
-  (state) => state.recruiter,
-);
+export const selectRecruiter = createSelector([selectAIHubState], (state) => state.recruiter);
 
 export const selectAttendanceMonitor = createSelector(
   [selectAIHubState],

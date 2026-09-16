@@ -60,7 +60,11 @@ export const analyticsApi = {
       lastUpdated: raw?.lastUpdated ? String(raw.lastUpdated) : new Date().toISOString(),
       summary: raw?.summary ? String(raw.summary) : undefined,
       departmentBreakdown: Array.isArray(raw?.departmentBreakdown ?? raw?.department_breakdown)
-        ? (raw.departmentBreakdown ?? raw.department_breakdown)
+        ? ((raw.departmentBreakdown ?? raw.department_breakdown) as Array<{
+            department: string;
+            count: number;
+            cost: number;
+          }>)
         : [],
       metrics: (raw?.metrics as Record<string, unknown>) ?? {},
     };
@@ -80,7 +84,12 @@ export const analyticsApi = {
     const res = await apiInstance.get("/analytics/reports", { params });
     const raw = extractData<unknown>(res, []);
     if (Array.isArray(raw)) return raw as Report[];
-    if (raw && typeof raw === "object" && "items" in raw && Array.isArray((raw as { items: unknown }).items)) {
+    if (
+      raw &&
+      typeof raw === "object" &&
+      "items" in raw &&
+      Array.isArray((raw as { items: unknown }).items)
+    ) {
       return (raw as { items: Report[] }).items;
     }
     return [];
@@ -97,7 +106,10 @@ export const analyticsApi = {
   },
 
   async updateReport(reportId: string, payload: Partial<ReportRequest>): Promise<Report> {
-    const res = await apiInstance.patch(`/analytics/reports/${encodeURIComponent(reportId)}`, payload);
+    const res = await apiInstance.patch(
+      `/analytics/reports/${encodeURIComponent(reportId)}`,
+      payload,
+    );
     return extractData<Report>(res);
   },
 
@@ -191,7 +203,9 @@ export const analyticsApi = {
     return Array.isArray(raw) ? (raw as PredictiveInsight[]) : [];
   },
 
-  async analyzePredictiveInsights(payload?: AnalyzePredictivePayload): Promise<PredictiveInsight[]> {
+  async analyzePredictiveInsights(
+    payload?: AnalyzePredictivePayload,
+  ): Promise<PredictiveInsight[]> {
     const res = await apiInstance.post("/analytics/predictive-insights/analyze", payload ?? {});
     const raw = extractData<unknown>(res, []);
     return Array.isArray(raw) ? (raw as PredictiveInsight[]) : [];
