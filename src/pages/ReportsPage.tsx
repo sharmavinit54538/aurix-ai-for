@@ -40,20 +40,20 @@ export function ReportsPage() {
   const headcountState = useAppSelector(selectHeadcountMetrics);
   const turnoverState = useAppSelector(selectTurnoverMetrics);
 
-  const fetchReportsData = () => {
+  const fetchReportsData = React.useCallback(() => {
     dispatch(fetchHeadcountMetrics());
     dispatch(fetchTurnoverMetrics());
-  };
+  }, [dispatch]);
 
   useEffect(() => {
     fetchReportsData();
-  }, [dispatch]);
+  }, [fetchReportsData]);
 
   const handleBack = () => {
     if (window.history.length > 1) {
       window.history.back();
     } else {
-      navigate({ to: "/dashboard/analytics" as any });
+      navigate({ to: "/dashboard/analytics" });
     }
   };
 

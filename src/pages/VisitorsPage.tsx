@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { UserPlus, LogIn, LogOut as LogOutIcon, CheckCircle2, XCircle, QrCode } from "lucide-react";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import { GlassCard, QrTile, SearchBox, StatCard, StatusBadge } from "@/components/hrms/Shared";
 import { hrms, newId, useHrms } from "@/lib/hrms/store";
 import type { Visitor, VisitorStatus } from "@/lib/hrms/types";
@@ -78,15 +77,11 @@ export function VisitorsPage() {
 
   return (
     <>
-      <PageHeader
-        title="Visitor Management"
-        description="Check in, approve, and track on-site visitors."
-        actions={
-          <Button size="sm" onClick={() => { setDraft(emptyVisitor()); setOpen(true); }} className="gap-2">
-            <UserPlus className="h-4 w-4" /> New visitor
-          </Button>
-        }
-      />
+      <div className="mb-6 flex items-center justify-end">
+        <Button size="sm" onClick={() => { setDraft(emptyVisitor()); setOpen(true); }} className="gap-2">
+          <UserPlus className="h-4 w-4" /> New visitor
+        </Button>
+      </div>
 
       <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Visitors today" value={stats.today} icon={UserPlus} />

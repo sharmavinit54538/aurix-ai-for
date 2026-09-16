@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Plus, UserCheck, ClipboardCheck } from "lucide-react";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import { GlassCard, Progress, StatCard } from "@/components/hrms/Shared";
 import { hrms, newId, useHrms } from "@/lib/hrms/store";
 import type { OnboardingCase } from "@/lib/hrms/types";
@@ -43,15 +42,11 @@ export default function OnboardingChecklistPage() {
 
   return (
     <>
-      <PageHeader
-        title="Onboarding Checklist"
-        description="Track new hires through their first 30 days."
-        actions={
-          <Button size="sm" onClick={() => { setDraft(newCase()); setOpen(true); }} className="gap-2">
-            <Plus className="h-4 w-4" /> New onboarding
-          </Button>
-        }
-      />
+      <div className="mb-6 flex items-center justify-end">
+        <Button size="sm" onClick={() => { setDraft(newCase()); setOpen(true); }} className="gap-2">
+          <Plus className="h-4 w-4" /> New onboarding
+        </Button>
+      </div>
 
       <div className="mb-6 grid gap-3 sm:grid-cols-3">
         <StatCard label="Active onboardings" value={cases.length} icon={UserCheck} />
