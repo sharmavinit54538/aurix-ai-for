@@ -1,5 +1,6 @@
 import apiInstance from "@/api/apiInstance";
 import type {
+  AuditLog,
   AuditLogExportParams,
   AuditLogParams,
   AuditLogResponse,

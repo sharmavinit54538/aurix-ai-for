@@ -11,6 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Manager } from "../types";
 import { STATUS_OPTIONS } from "../constants";
 import { getDepartmentLabel } from "@/features/admin/employees/utils/departmentOptions";
+import { Loader } from "@/components/aurix/Loader";
 import {
   Mail,
   Phone,

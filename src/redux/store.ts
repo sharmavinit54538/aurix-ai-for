@@ -10,6 +10,9 @@ import settingsReducer from "@/store/settings/settingsSlice";
 import sidebarReducer from "@/store/sidebar/sidebarSlice";
 import employeeHierarchyReducer from "@/store/employeeHierarchy/employeeHierarchySlice";
 
+import aiHubReducer from "@/store/aiHub/aiHubSlice";
+import analyticsReducer from "@/store/analytics/analyticsSlice";
+
 export const store = configureStore({
   reducer: {
     employees: employeesReducer,
@@ -22,6 +25,8 @@ export const store = configureStore({
     profile: profileReducer,
     sidebar: sidebarReducer,
     employeeHierarchy: employeeHierarchyReducer,
+    aiHub: aiHubReducer,
+    analytics: analyticsReducer,
   },
 });
 

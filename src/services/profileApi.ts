@@ -143,7 +143,7 @@ export const profileApi = {
           ? data.items
           : [];
 
-    return items.map((s: Record<string, unknown>) => ({
+    return (items as unknown as Array<Record<string, unknown>>).map((s) => ({
       id: String(s.id ?? s.session_id ?? Math.random().toString(36).substring(2, 9)),
       device: String(s.device ?? s.user_agent ?? s.deviceName ?? "Unknown Device"),
       ip: String(s.ip ?? s.ip_address ?? "127.0.0.1"),
