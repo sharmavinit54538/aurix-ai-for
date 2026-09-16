@@ -230,7 +230,7 @@ export function ImportDialog({
 
     const importedReviews: PerformanceReview[] = parsedRows.map((r, idx) => {
       const d = r.data;
-      // Map to real employee ID if found in global store, otherwise mock it
+      // Map to real employee ID if found in global store, otherwise fallback to imported index
       const matchedEmp = ws.employees.find(
         (e) => (e.employeeId || e.id).toLowerCase() === d.employeeIdCode?.toLowerCase()
       );

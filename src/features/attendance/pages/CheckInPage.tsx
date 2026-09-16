@@ -641,7 +641,16 @@ function CheckInPage() {
 
   // Overtime is anything beyond 8h work
   const overtimeSec = Math.max(0, workSec - 28800);
-  const lateBy = 0; // mock: on time today
+  // Calculate lateBy from real check-in time vs shift start time (09:00 AM standard shift with 15m grace)
+  const lateBy = (() => {
+    if (!checkInTimeRef.current) return 0;
+    const checkInDate = new Date(checkInTimeRef.current);
+    const shiftStart = new Date(checkInDate);
+    shiftStart.setHours(9, 0, 0, 0);
+    const diffSec = Math.floor((checkInDate.getTime() - shiftStart.getTime()) / 1000);
+    const graceSec = 15 * 60; // 15 mins grace period
+    return diffSec > graceSec ? diffSec : 0;
+  })();
 
   const initials = user?.fullName?.split(" ").map((p) => p[0]).slice(0, 2).join("") || "JL";
 

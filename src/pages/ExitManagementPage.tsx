@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import apiInstance from "@/api/apiInstance";
 import {
   LogOut, FileText, ShieldCheck, CheckCircle2, Plus, Search, RefreshCw, Download,
   XCircle, Clock, AlertTriangle, Info, Calendar, User, Building2, HelpCircle,
@@ -83,6 +84,20 @@ const COLORS = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
 export function ExitManagementPage() {
   const exits = useHrms((s) => s.exits);
   const authWs = useAurix(); // Fetch active employees and HR profiles
+
+  const [allAssets, setAllAssets] = useState<any[]>([]);
+
+  useEffect(() => {
+    apiInstance
+      .get("/assets", { params: { limit: 100 } })
+      .then((res) => {
+        const items = res.data?.data?.items || res.data?.items || [];
+        setAllAssets(items);
+      })
+      .catch(() => {
+        setAllAssets([]);
+      });
+  }, []);
 
   // Filters & Page Navigation
   const [q, setQ] = useState("");
@@ -179,12 +194,21 @@ export function ExitManagementPage() {
       remainingDays: noticeDays,
       managerApprovalStatus: "pending",
       hrApprovalStatus: "pending",
-      assignedAssets: [
-        // Populate standard mock assets for clearance simulation
-        { id: newId("ret"), assetId: "a1", assetName: "MacBook Pro 14 M3", category: "laptop", serial: "C02XJ1", status: "pending" },
-        { id: newId("ret"), assetId: "a3", assetName: "LG UltraFine 27", category: "monitor", serial: "LG2701", status: "pending" },
-        { id: newId("ret"), assetId: "a10", assetName: "OFC360 access ID Card", category: "accessory", serial: "AC-19401", status: "pending" }
-      ],
+      assignedAssets: allAssets
+        .filter(
+          (a) =>
+            (a.assignedTo && a.assignedTo.toLowerCase() === selectedEmp.fullName.toLowerCase()) ||
+            (a.employeeId && a.employeeId === selectedEmp.employeeId) ||
+            (a.employee_id && a.employee_id === selectedEmp.id),
+        )
+        .map((a) => ({
+          id: newId("ret"),
+          assetId: String(a.id || a.asset_id || a.tag),
+          assetName: a.name || a.asset_name || "Assigned Equipment",
+          category: (a.category || "laptop") as any,
+          serial: a.serial || a.tag || a.serial_number || "N/A",
+          status: "pending" as const,
+        })),
       clearanceWorkflow: [
         { department: "HR", status: "pending" },
         { department: "IT", status: "pending" },
@@ -751,6 +775,21 @@ Finance Operations Partner`;
     }));
   }, [exits]);
 
+  // Monthly exit trends computed from actual exit records
+  const monthlyExitTrends = useMemo(() => {
+    if (exits.length === 0) return [];
+    const counts: Record<string, number> = {};
+    exits.forEach((e) => {
+      const dateStr = e.resignedAt || e.lastWorkingDay;
+      if (!dateStr) return;
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return;
+      const key = d.toLocaleDateString("en-IN", { month: "short", year: "numeric" });
+      counts[key] = (counts[key] || 0) + 1;
+    });
+    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+  }, [exits]);
+
   return (
     <div className="space-y-6">
       {/* 1. PAGE HEADER */}
@@ -1110,44 +1149,39 @@ Finance Operations Partner`;
               </CardContent>
             </Card>
 
-            {/* Chart 2: General Attrition trends mock */}
+            {/* Chart 2: Monthly Exit Trends */}
             <Card className="border-border bg-card/40 backdrop-blur-xl">
               <CardHeader>
                 <CardTitle className="text-sm font-bold">Monthly Exit Trends</CardTitle>
-                <CardDescription className="text-xs">Timeline attrition count over the last 5 months</CardDescription>
+                <CardDescription className="text-xs">Timeline attrition count from real exit records</CardDescription>
               </CardHeader>
               <CardContent className="h-[250px] flex items-center justify-center">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={[
-                        { name: "Feb 2026", value: 1 },
-                        { name: "Mar 2026", value: 3 },
-                        { name: "Apr 2026", value: 2 },
-                        { name: "May 2026", value: 1 },
-                        { name: "Jun 2026 (Current)", value: exits.length }
-                      ]}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={4}
-                      dataKey="value"
-                    >
-                      {[
-                        { name: "Feb 2026", value: 1 },
-                        { name: "Mar 2026", value: 3 },
-                        { name: "Apr 2026", value: 2 },
-                        { name: "May 2026", value: 1 },
-                        { name: "Jun 2026 (Current)", value: exits.length }
-                      ].map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip contentStyle={{ fontSize: 11 }} />
-                    <Legend wrapperStyle={{ fontSize: 11 }} />
-                  </PieChart>
-                </ResponsiveContainer>
+                {monthlyExitTrends.length === 0 ? (
+                  <div className="text-center text-xs text-muted-foreground p-6">
+                    <LogOut className="h-8 w-8 mx-auto mb-2 text-muted-foreground/40" />
+                    <p>No historical exit trends to display</p>
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={monthlyExitTrends}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={4}
+                        dataKey="value"
+                      >
+                        {monthlyExitTrends.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip contentStyle={{ fontSize: 11 }} />
+                      <Legend wrapperStyle={{ fontSize: 11 }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
               </CardContent>
             </Card>
           </div>

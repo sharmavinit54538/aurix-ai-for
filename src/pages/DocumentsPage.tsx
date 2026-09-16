@@ -1,5 +1,5 @@
 import { createFileRoute, useRouterState } from "@tanstack/react-router";
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import {
   Folder, Search, Upload, Wand2, Download, CheckCircle, Clock, XCircle, AlertTriangle,
   FileText, Shield, Trash2, Eye, FileSpreadsheet, RefreshCw, Info, Calendar,
@@ -232,7 +232,7 @@ export function DocumentsPage() {
   const handleUploadSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!uploadFileName) {
-      toast.error("Please drag or select a mock file to upload.");
+      toast.error("Please select or drop a file to upload.");
       return;
     }
 
@@ -289,15 +289,31 @@ export function DocumentsPage() {
     }, 1200);
   };
 
-  // Drag and drop mock handler
-  const handleMockFileDrop = () => {
-    const randomNames = ["Aadhaar_Front_Back.jpg", "Degree_Certificate.pdf", "Payslip_May_2026.pdf", "NDA_Final_Signed.pdf"];
-    const randomSizes = ["950 KB", "2.4 MB", "420 KB", "1.1 MB"];
-    const randIndex = Math.floor(Math.random() * randomNames.length);
+  // Real drag and drop file handler
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [, setSelectedUploadFile] = useState<File | null>(null);
 
-    setUploadFileName(randomNames[randIndex]);
-    setUploadFileSize(randomSizes[randIndex]);
-    toast.info(`Mock file selected: ${randomNames[randIndex]}`);
+  const handleRealFileSelect = (file: File) => {
+    setSelectedUploadFile(file);
+    setUploadFileName(file.name);
+    const sizeStr = file.size > 1024 * 1024
+      ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
+      : `${Math.round(file.size / 1024)} KB`;
+    setUploadFileSize(sizeStr);
+    toast.success(`File selected: ${file.name}`);
+  };
+
+  const handleFileDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleRealFileSelect(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleRealFileSelect(e.target.files[0]);
+    }
   };
 
   const autoFillTemplateFields = (templateId: string, targetEmpId?: string) => {
@@ -616,13 +632,13 @@ Acknowledged and Signed electronically.`;
     const pending = docs.filter(d => d.status === "Pending").length;
     const rejected = docs.filter(d => d.status === "Rejected").length;
 
-    // Check expiring (expiry within 30 days of 2026-06-28)
-    const mockNow = new Date("2026-06-28").getTime();
-    const thirtyDaysLimit = mockNow + 30 * 24 * 60 * 60 * 1000;
+    // Check expiring (expiry within 30 days from now)
+    const now = Date.now();
+    const thirtyDaysLimit = now + 30 * 24 * 60 * 60 * 1000;
     const expiring = docs.filter(d => {
       if (!d.expiryDate) return false;
       const t = new Date(d.expiryDate).getTime();
-      return t >= mockNow && t <= thirtyDaysLimit;
+      return t >= now && t <= thirtyDaysLimit;
     }).length;
 
     return { total, verified, pending, rejected, expiring };
@@ -635,12 +651,12 @@ Acknowledged and Signed electronically.`;
     const alerts: { id: string; type: "warning" | "info" | "error"; message: string; doc?: HRDocument }[] = [];
 
     // Expiring soon alert
-    const mockNow = new Date("2026-06-28").getTime();
-    const thirtyDaysLimit = mockNow + 30 * 24 * 60 * 60 * 1000;
+    const now = Date.now();
+    const thirtyDaysLimit = now + 30 * 24 * 60 * 60 * 1000;
     docs.forEach(d => {
       if (d.expiryDate) {
         const t = new Date(d.expiryDate).getTime();
-        if (t >= mockNow && t <= thirtyDaysLimit) {
+        if (t >= now && t <= thirtyDaysLimit) {
           alerts.push({
             id: `exp_${d.id}`,
             type: "warning",
@@ -999,10 +1015,22 @@ Acknowledged and Signed electronically.`;
                   <Button type="button" variant="ghost" size="sm" onClick={() => { setUploadFileName(""); setUploadFileSize(""); }} className="h-7 text-muted-foreground hover:text-foreground hover:bg-accent/40 cursor-pointer">Change File</Button>
                 </div>
               ) : (
-                <div onClick={handleMockFileDrop} className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-background/30 p-6 text-center transition-colors hover:bg-accent/20 cursor-pointer">
+                <div
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={handleFileDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-background/30 p-6 text-center transition-colors hover:bg-accent/20 cursor-pointer"
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    className="hidden"
+                    accept=".pdf,.png,.jpg,.jpeg,.docx"
+                    onChange={handleFileInputChange}
+                  />
                   <Upload className="mb-2 h-6 w-6 text-muted-foreground" />
-                  <p className="text-xs font-medium text-foreground">Click to simulate dragging & dropping a file</p>
-                  <p className="mt-0.5 text-[10px] text-muted-foreground">Supports PDF, PNG, JPG up to 10MB</p>
+                  <p className="text-xs font-medium text-foreground">Click to browse or drag & drop a file here</p>
+                  <p className="mt-0.5 text-[10px] text-muted-foreground">Supports PDF, PNG, JPG, DOCX up to 10MB</p>
                 </div>
               )}
             </div>

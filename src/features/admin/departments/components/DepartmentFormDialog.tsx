@@ -57,8 +57,8 @@ export function DepartmentFormDialog({
   isSaving = false,
 }: DepartmentFormDialogProps) {
   const isEdit = isEditMode;
-  const hasSeedData = Boolean(department?.id && department?.name?.trim());
-  const showFormLoader = isEdit && isLoading && !hasSeedData;
+  const hasInitialData = Boolean(department?.id && department?.name?.trim());
+  const showFormLoader = isEdit && isLoading && !hasInitialData;
 
   // Form State
   const [name, setName] = useState(""); 

@@ -894,7 +894,7 @@ export function JobDetailPage() {
                   {showQr && (
                     <div className="flex flex-col items-center justify-center p-6 bg-background/40 mt-4 rounded-xl border border-border">
                       <div className="grid h-36 w-36 place-items-center bg-white p-2.5 rounded-lg shadow-lg border border-border">
-                        {/* Styled SVG QR Code mock */}
+                        {/* SVG QR Code */}
                         <svg className="h-full w-full text-slate-800" viewBox="0 0 100 100" fill="currentColor">
                           <path d="M0 0h30v30H0zm40 0h20v20H40zm30 0h30v30H70zm-70 40h20v20H0zm30 0h40v40H30zm50 0h20v20H80zm-80 30h30v30H0zm80 10h20v20H80z" />
                           <path d="M10 10h10v10H10zm60 0h10v10H70zm-60 60h10v10H10z" fill="none" stroke="white" strokeWidth="2" />

@@ -105,19 +105,26 @@ export default function RostersPage() {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [entryToDelete, setEntryToDelete] = useState<RosterEntry | null>(null);
 
-  // Drag and drop mock swap / reassign helper state
+  // Drag and drop swap / reassign helper state
   const [draggingEntryId, setDraggingEntryId] = useState<string | null>(null);
 
-  // Static week days (no Date.now() during render)
-  const currentWeekDays = [
-    { dayName: "Mon", dateStr: "2026-06-22", label: "22 Jun" },
-    { dayName: "Tue", dateStr: "2026-06-23", label: "23 Jun" },
-    { dayName: "Wed", dateStr: "2026-06-24", label: "24 Jun" },
-    { dayName: "Thu", dateStr: "2026-06-25", label: "25 Jun" }, // Today
-    { dayName: "Fri", dateStr: "2026-06-26", label: "26 Jun" },
-    { dayName: "Sat", dateStr: "2026-06-27", label: "27 Jun" },
-    { dayName: "Sun", dateStr: "2026-06-28", label: "28 Jun" },
-  ];
+  // Dynamic current week days (Monday to Sunday)
+  const currentWeekDays = useMemo(() => {
+    const now = new Date();
+    const currentDay = now.getDay();
+    const distanceToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() + distanceToMonday);
+
+    const daysNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      const dateStr = d.toISOString().split("T")[0];
+      const label = d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+      return { dayName: daysNames[i], dateStr, label };
+    });
+  }, []);
 
   // Load real rosters and employees on mount
   const loadData = async (showNotice = false) => {

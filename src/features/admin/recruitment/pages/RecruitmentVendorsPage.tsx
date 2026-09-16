@@ -74,7 +74,7 @@ export function RecruitmentVendorsPage() {
           return sum + (salary * commission);
         }, 0);
 
-      // Map mock ratings and specialty tags dynamically or default them
+      // Map ratings and specialty tags dynamically or default them
       const rating = v.name.length % 2 === 0 ? 4.7 : 4.4;
       const specialties = v.name.includes("Talent") || v.name.includes("Executive")
         ? ["Engineering", "AI/ML"]

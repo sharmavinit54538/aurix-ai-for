@@ -65,6 +65,3 @@ export const EMPLOYEE_COUNT_RANGES = [
   { value: "31-50", label: "Large (31-50)" },
   { value: "50+", label: "Enterprise (50+)" },
 ];
-
-// Seed Departments (linked with seed managers)
-export const SEED_DEPARTMENTS: Department[] = [];
