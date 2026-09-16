@@ -19,17 +19,24 @@ import { OVERTIME_CATEGORIES_LIST } from "@/services/overtimeApi";
 
 interface CreateOvertimeWizardDrawerProps {
   open: boolean;
-  onClose: () => void;
-  onSave: (payload: Partial<OvertimeRecord>) => Promise<void>;
+  onClose?: () => void;
+  onOpenChange?: (open: boolean) => void;
+  onSave?: (payload: Partial<OvertimeRecord> | any) => Promise<void>;
 }
 
 export const CreateOvertimeWizardDrawer: React.FC<CreateOvertimeWizardDrawerProps> = ({
   open,
   onClose,
+  onOpenChange,
   onSave,
 }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [saving, setSaving] = useState(false);
+
+  const handleClose = () => {
+    onClose?.();
+    onOpenChange?.(false);
+  };
 
   // Form Fields
   const [employeeName, setEmployeeName] = useState("Vikramaditya Roy");
@@ -70,22 +77,24 @@ export const CreateOvertimeWizardDrawer: React.FC<CreateOvertimeWizardDrawerProp
   const handleFormSubmit = async () => {
     setSaving(true);
     try {
-      await onSave({
-        employeeName,
-        employeeCode,
-        department,
-        shift,
-        date,
-        workedHours,
-        scheduledHours,
-        overtimeHours,
-        category,
-        hourlyRate,
-        multiplier,
-        overtimeAmount: calculatedAmount,
-      });
+      if (onSave) {
+        await onSave({
+          employeeName,
+          employeeCode,
+          department,
+          shift,
+          date,
+          workedHours,
+          scheduledHours,
+          overtimeHours,
+          category,
+          hourlyRate,
+          multiplier,
+          overtimeAmount: calculatedAmount,
+        });
+      }
       toast.success(`Created overtime record of ${overtimeHours} hrs (₹${calculatedAmount.toLocaleString("en-IN")}) for ${employeeName}`);
-      onClose();
+      handleClose();
     } catch {
       toast.error("Failed to create overtime record.");
     } finally {
@@ -94,7 +103,7 @@ export const CreateOvertimeWizardDrawer: React.FC<CreateOvertimeWizardDrawerProp
   };
 
   return (
-    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
+    <Sheet open={open} onOpenChange={(v) => { if (!v) handleClose(); else onOpenChange?.(v); }}>
       <SheetContent side="right" className="w-full sm:max-w-2xl bg-[#070B17] border-l border-white/10 text-white p-0 flex flex-col h-full">
         {/* Header */}
         <div className="p-5 border-b border-white/10 flex items-center justify-between bg-slate-900/90">
@@ -105,7 +114,7 @@ export const CreateOvertimeWizardDrawer: React.FC<CreateOvertimeWizardDrawerProp
             </SheetTitle>
             <p className="text-xs text-slate-400 mt-0.5">4-step workforce time & multiplier configuration wizard.</p>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose} className="text-slate-400 hover:text-white">
+          <Button variant="ghost" size="sm" onClick={handleClose} className="text-slate-400 hover:text-white">
             <X className="w-5 h-5" />
           </Button>
         </div>

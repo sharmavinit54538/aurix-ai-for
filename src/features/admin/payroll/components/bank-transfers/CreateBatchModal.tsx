@@ -10,20 +10,38 @@ import {
 import { Button } from "@/components/ui/button";
 
 interface CreateBatchModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirmCreate: () => void;
+  isOpen?: boolean;
+  open?: boolean;
+  onClose?: () => void;
+  onOpenChange?: (open: boolean) => void;
+  onConfirmCreate?: () => void;
+  onBatchCreated?: () => void;
   isCreating?: boolean;
 }
 
 export const CreateBatchModal: React.FC<CreateBatchModalProps> = ({
   isOpen,
+  open,
   onClose,
+  onOpenChange,
   onConfirmCreate,
+  onBatchCreated,
   isCreating = false,
 }) => {
+  const isModalOpen = open ?? isOpen ?? false;
+
+  const handleClose = () => {
+    onClose?.();
+    onOpenChange?.(false);
+  };
+
+  const handleConfirm = () => {
+    if (onConfirmCreate) onConfirmCreate();
+    if (onBatchCreated) onBatchCreated();
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isModalOpen} onOpenChange={(v) => { if (!v) handleClose(); else onOpenChange?.(v); }}>
       <DialogContent className="sm:max-w-md bg-card border-border/60 backdrop-blur-xl">
         <DialogHeader>
           <div className="flex items-center gap-2 text-cyan-400">
@@ -61,13 +79,13 @@ export const CreateBatchModal: React.FC<CreateBatchModalProps> = ({
         </div>
 
         <div className="flex justify-end gap-2 pt-2">
-          <Button variant="outline" size="sm" onClick={onClose} disabled={isCreating} className="h-8 px-4 text-xs">
+          <Button variant="outline" size="sm" onClick={handleClose} disabled={isCreating} className="h-8 px-4 text-xs">
             Cancel
           </Button>
           <Button
             variant="default"
             size="sm"
-            onClick={onConfirmCreate}
+            onClick={handleConfirm}
             disabled={isCreating}
             className="h-8 px-4 text-xs font-semibold bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white gap-1.5"
           >

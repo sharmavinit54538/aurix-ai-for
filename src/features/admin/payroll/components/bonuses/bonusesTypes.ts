@@ -69,6 +69,8 @@ export interface BonusAward {
   aiSuggestions?: string[];
 }
 
+export type BonusRecord = BonusAward;
+
 export interface BonusesSummaryKPIs {
   totalBonusBudget: number;
   allocatedBonus: number;
@@ -80,6 +82,13 @@ export interface BonusesSummaryKPIs {
   topRewardedDepartment: string;
   topRewardedEmployee: string;
   budgetRemaining: number;
+  totalBonusAmount?: number;
+  approvedBonusAmount?: number;
+  paidBonusAmount?: number;
+  pendingApprovals?: number;
+  totalEligibleEmployees?: number;
+  averageBonusAmount?: number;
+  topBonusType?: string;
 }
 
 export interface BonusesFilters {
@@ -91,17 +100,20 @@ export interface BonusesFilters {
   location: string;
   employmentType: string;
   bonusType: string;
-  bonusCycle: string;
-  financialYear: string;
+  bonusCycle?: string;
+  financialYear?: string;
   approvalStatus: string;
   paymentStatus: string;
-  performanceRating: string; // 'ALL' | '4.5_ABOVE' | '4.0_ABOVE'
+  performanceRating?: string; // 'ALL' | '4.5_ABOVE' | '4.0_ABOVE'
+  bonusCategory?: string;
+  performancePeriod?: string;
+  payrollStatus?: string;
   minAmount?: number;
   maxAmount?: number;
   page: number;
   limit: number;
   sortBy: string;
-  sortDir: "asc" | "desc";
+  sortDir?: "asc" | "desc";
 }
 
 export interface BonusAuditLog {

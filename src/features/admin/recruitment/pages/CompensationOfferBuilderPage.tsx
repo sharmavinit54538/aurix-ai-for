@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -452,7 +453,7 @@ export function CompensationOfferBuilderPage() {
                   rows={4}
                   placeholder="e.g. Candidate countered with competing offer from Razorpay. Agreed to match base salary."
                   value={revisionNote}
-                  onChange={(e) => setRevisionNote(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setRevisionNote(e.target.value)}
                   required
                 />
               </div>

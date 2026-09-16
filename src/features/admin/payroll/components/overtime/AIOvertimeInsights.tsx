@@ -5,11 +5,38 @@ import { Badge } from "@/components/ui/badge";
 import { OvertimeAIInsight } from "./overtimeTypes";
 import { toast } from "sonner";
 
+const DEFAULT_INSIGHTS: OvertimeAIInsight[] = [
+  {
+    id: "insight-1",
+    title: "Engineering Fatigue Risk",
+    description: "4 engineers in Platform Team logged >45 hours overtime this month.",
+    severity: "CRITICAL",
+    impactMetric: "+38% fatigue score",
+    recommendation: "Rebalance sprint workload and cap weekend shift hours.",
+  },
+  {
+    id: "insight-2",
+    title: "Weekend OT Cost Spike",
+    description: "2.0x multiplier overtime costs surged ₹1.85L in DevOps shift rotation.",
+    severity: "WARNING",
+    impactMetric: "₹1.85L budget impact",
+    recommendation: "Schedule on-call rotations across broader time zones.",
+  },
+  {
+    id: "insight-3",
+    title: "Punch Machine Cross-Audit",
+    description: "Turnstile biometric logs match 98.4% of manual timesheet claim submissions.",
+    severity: "SUCCESS",
+    impactMetric: "98.4% punch accuracy",
+    recommendation: "Auto-approve punch-verified regular overtime entries.",
+  },
+];
+
 interface AIOvertimeInsightsProps {
-  insights: OvertimeAIInsight[];
+  insights?: OvertimeAIInsight[];
 }
 
-export const AIOvertimeInsights: React.FC<AIOvertimeInsightsProps> = ({ insights }) => {
+export const AIOvertimeInsights: React.FC<AIOvertimeInsightsProps> = ({ insights = DEFAULT_INSIGHTS }) => {
   const getSeverityBadge = (sev: OvertimeAIInsight["severity"]) => {
     switch (sev) {
       case "CRITICAL":

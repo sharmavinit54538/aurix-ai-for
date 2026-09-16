@@ -17,27 +17,32 @@ import { SalaryAdvanceRequest } from "./advancesTypes";
 
 interface AdvanceDetailsDrawerProps {
   open: boolean;
-  onClose: () => void;
-  advance: SalaryAdvanceRequest | null;
+  onClose?: () => void;
+  onOpenChange?: (open: boolean) => void;
+  advance?: SalaryAdvanceRequest | null;
+  request?: SalaryAdvanceRequest | null;
   onApprove: (advance: SalaryAdvanceRequest) => void;
   onReject: (advance: SalaryAdvanceRequest) => void;
   onDisburse: (advance: SalaryAdvanceRequest) => void;
-  onAdjustPlan: (advance: SalaryAdvanceRequest) => void;
+  onAdjustPlan?: (advance: SalaryAdvanceRequest) => void;
 }
 
 export const AdvanceDetailsDrawer: React.FC<AdvanceDetailsDrawerProps> = ({
   open,
   onClose,
-  advance,
+  onOpenChange,
+  advance: advanceProp,
+  request,
   onApprove,
   onReject,
   onDisburse,
   onAdjustPlan,
 }) => {
+  const advance = advanceProp ?? request;
   if (!advance) return null;
 
   return (
-    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
+    <Sheet open={open} onOpenChange={(v) => { onOpenChange?.(v); if (!v) onClose?.(); }}>
       <SheetContent side="right" className="w-full sm:max-w-2xl bg-[#070B17] border-l border-white/10 text-white p-0 flex flex-col h-full">
         {/* Header */}
         <div className="p-5 border-b border-white/10 flex items-center justify-between bg-slate-900/90">

@@ -40,6 +40,7 @@ interface OvertimeTableProps {
   onAddPayrollEntry: (record: OvertimeRecord) => void;
   onViewTimeline: (record: OvertimeRecord) => void;
   onViewLogs: (record: OvertimeRecord) => void;
+  onRequestChanges?: (record: OvertimeRecord) => void;
 }
 
 export const OvertimeTable: React.FC<OvertimeTableProps> = ({

@@ -12,20 +12,35 @@ import { Button } from "@/components/ui/button";
 import { BankTransferItem } from "@/services/bankTransfersApi";
 
 interface TransferDetailsDrawerProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen?: boolean;
+  open?: boolean;
+  onClose?: () => void;
+  onOpenChange?: (open: boolean) => void;
   item: BankTransferItem | null;
+  onRetry?: (item: BankTransferItem) => Promise<any> | void;
+  onMarkAsPaid?: (item: BankTransferItem) => Promise<any> | void;
 }
 
 export const TransferDetailsDrawer: React.FC<TransferDetailsDrawerProps> = ({
   isOpen,
+  open,
   onClose,
+  onOpenChange,
   item,
+  onRetry,
+  onMarkAsPaid,
 }) => {
+  const isDrawerOpen = open ?? isOpen ?? false;
+
+  const handleClose = () => {
+    onClose?.();
+    onOpenChange?.(false);
+  };
+
   if (!item) return null;
 
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
+    <Sheet open={isDrawerOpen} onOpenChange={(v) => { if (!v) handleClose(); else onOpenChange?.(v); }}>
       <SheetContent className="sm:max-w-lg bg-card border-border/60 backdrop-blur-xl overflow-y-auto">
         <SheetHeader>
           <div className="flex items-center gap-2 text-cyan-400">
@@ -100,10 +115,30 @@ export const TransferDetailsDrawer: React.FC<TransferDetailsDrawerProps> = ({
             </div>
           </div>
 
-          <div className="flex justify-end pt-2">
-            <Button variant="outline" size="sm" onClick={onClose} className="h-8 text-xs">
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" size="sm" onClick={handleClose} className="h-8 text-xs">
               Close
             </Button>
+            {onRetry && item.status === "failed" && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => onRetry(item)}
+                className="h-8 text-xs bg-amber-600 hover:bg-amber-500 text-white"
+              >
+                Retry Transfer
+              </Button>
+            )}
+            {onMarkAsPaid && item.status !== "successful" && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => onMarkAsPaid(item)}
+                className="h-8 text-xs bg-emerald-600 hover:bg-emerald-500 text-white"
+              >
+                Mark as Paid
+              </Button>
+            )}
           </div>
         </div>
       </SheetContent>

@@ -20,13 +20,15 @@ import { ADVANCE_TYPES_LIST } from "@/services/advancesApi";
 
 interface CreateAdvanceWizardDrawerProps {
   open: boolean;
-  onClose: () => void;
+  onClose?: () => void;
+  onOpenChange?: (open: boolean) => void;
   onSave: (payload: Partial<SalaryAdvanceRequest>) => Promise<void>;
 }
 
 export const CreateAdvanceWizardDrawer: React.FC<CreateAdvanceWizardDrawerProps> = ({
   open,
   onClose,
+  onOpenChange,
   onSave,
 }) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -91,7 +93,7 @@ export const CreateAdvanceWizardDrawer: React.FC<CreateAdvanceWizardDrawerProps>
   };
 
   return (
-    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
+    <Sheet open={open} onOpenChange={(v) => { onOpenChange?.(v); if (!v) onClose?.(); }}>
       <SheetContent side="right" className="w-full sm:max-w-2xl bg-[#070B17] border-l border-white/10 text-white p-0 flex flex-col h-full">
         {/* Header */}
         <div className="p-5 border-b border-white/10 flex items-center justify-between bg-slate-900/90">

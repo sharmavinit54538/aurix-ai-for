@@ -496,4 +496,7 @@ export const advancesApi = {
       ipAddress: "127.0.0.1",
     });
   },
+
+  disbursePayment: (id: string, bankAccount?: string, transactionRef?: string) =>
+    advancesApi.disburseAdvance(id, bankAccount, transactionRef),
 };

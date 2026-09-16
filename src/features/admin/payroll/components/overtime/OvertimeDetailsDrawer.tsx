@@ -17,25 +17,32 @@ import { OvertimeRecord } from "./overtimeTypes";
 
 interface OvertimeDetailsDrawerProps {
   open: boolean;
-  onClose: () => void;
+  onClose?: () => void;
+  onOpenChange?: (open: boolean) => void;
   record: OvertimeRecord | null;
-  onApprove: (record: OvertimeRecord) => void;
-  onReject: (record: OvertimeRecord) => void;
-  onAddPayrollEntry: (record: OvertimeRecord) => void;
+  onApprove?: (record: OvertimeRecord) => void;
+  onReject?: (record: OvertimeRecord) => void;
+  onAddPayrollEntry?: (record: OvertimeRecord) => void;
 }
 
 export const OvertimeDetailsDrawer: React.FC<OvertimeDetailsDrawerProps> = ({
   open,
   onClose,
+  onOpenChange,
   record,
   onApprove,
   onReject,
   onAddPayrollEntry,
 }) => {
+  const handleClose = () => {
+    onClose?.();
+    onOpenChange?.(false);
+  };
+
   if (!record) return null;
 
   return (
-    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
+    <Sheet open={open} onOpenChange={(v) => { if (!v) handleClose(); else onOpenChange?.(v); }}>
       <SheetContent side="right" className="w-full sm:max-w-2xl bg-[#070B17] border-l border-white/10 text-white p-0 flex flex-col h-full">
         {/* Header */}
         <div className="p-5 border-b border-white/10 flex items-center justify-between bg-slate-900/90">
@@ -46,7 +53,7 @@ export const OvertimeDetailsDrawer: React.FC<OvertimeDetailsDrawerProps> = ({
             </SheetTitle>
             <p className="text-xs text-slate-400 mt-0.5">Date: {record.date} • Shift: {record.shift}</p>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose} className="text-slate-400 hover:text-white">
+          <Button variant="ghost" size="sm" onClick={handleClose} className="text-slate-400 hover:text-white">
             <X className="w-5 h-5" />
           </Button>
         </div>
@@ -133,7 +140,7 @@ export const OvertimeDetailsDrawer: React.FC<OvertimeDetailsDrawerProps> = ({
 
         {/* Footer Actions */}
         <div className="p-4 border-t border-white/10 bg-slate-900 flex items-center justify-between">
-          <Button variant="outline" size="sm" onClick={onClose} className="border-white/10 bg-slate-950 text-slate-300 text-xs">
+          <Button variant="outline" size="sm" onClick={handleClose} className="border-white/10 bg-slate-950 text-slate-300 text-xs">
             Close
           </Button>
 
@@ -141,21 +148,21 @@ export const OvertimeDetailsDrawer: React.FC<OvertimeDetailsDrawerProps> = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onReject(record)}
+              onClick={() => onReject?.(record)}
               className="border-rose-500/30 text-rose-400 hover:bg-rose-950 text-xs"
             >
               Reject
             </Button>
             <Button
               size="sm"
-              onClick={() => onAddPayrollEntry(record)}
+              onClick={() => onAddPayrollEntry?.(record)}
               className="bg-purple-600 hover:bg-purple-500 text-white text-xs gap-1"
             >
               <CreditCard className="w-3.5 h-3.5" /> Add to Payroll
             </Button>
             <Button
               size="sm"
-              onClick={() => onApprove(record)}
+              onClick={() => onApprove?.(record)}
               className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs gap-1"
             >
               <CheckCircle2 className="w-3.5 h-3.5" /> Approve OT

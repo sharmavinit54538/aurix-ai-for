@@ -18,27 +18,38 @@ import { BonusAward } from "./bonusesTypes";
 
 interface BonusDetailsDrawerProps {
   open: boolean;
-  onClose: () => void;
-  bonus: BonusAward | null;
-  onApprove: (bonus: BonusAward) => void;
-  onReject: (bonus: BonusAward) => void;
-  onGenerateLetter: (bonus: BonusAward) => void;
-  onAddPayrollEntry: (bonus: BonusAward) => void;
+  onClose?: () => void;
+  onOpenChange?: (open: boolean) => void;
+  bonus?: any | null;
+  record?: any | null;
+  onApprove?: (bonus: any) => void;
+  onReject?: (bonus: any) => void;
+  onGenerateLetter?: (bonus: any) => void;
+  onAddPayrollEntry?: (bonus: any) => void;
 }
 
 export const BonusDetailsDrawer: React.FC<BonusDetailsDrawerProps> = ({
   open,
   onClose,
-  bonus,
+  onOpenChange,
+  bonus: bonusProp,
+  record,
   onApprove,
   onReject,
   onGenerateLetter,
   onAddPayrollEntry,
 }) => {
+  const bonus = bonusProp || record;
+
+  const handleClose = () => {
+    onClose?.();
+    onOpenChange?.(false);
+  };
+
   if (!bonus) return null;
 
   return (
-    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
+    <Sheet open={open} onOpenChange={(v) => { if (!v) handleClose(); else onOpenChange?.(v); }}>
       <SheetContent side="right" className="w-full sm:max-w-2xl bg-[#070B17] border-l border-white/10 text-white p-0 flex flex-col h-full">
         {/* Header */}
         <div className="p-5 border-b border-white/10 flex items-center justify-between bg-slate-900/90">
@@ -49,7 +60,7 @@ export const BonusDetailsDrawer: React.FC<BonusDetailsDrawerProps> = ({
             </SheetTitle>
             <p className="text-xs text-slate-400 mt-0.5">{bonus.bonusCycle} • Effective {bonus.effectiveDate}</p>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose} className="text-slate-400 hover:text-white">
+          <Button variant="ghost" size="sm" onClick={handleClose} className="text-slate-400 hover:text-white">
             <X className="w-5 h-5" />
           </Button>
         </div>
@@ -136,7 +147,7 @@ export const BonusDetailsDrawer: React.FC<BonusDetailsDrawerProps> = ({
 
         {/* Footer Actions */}
         <div className="p-4 border-t border-white/10 bg-slate-900 flex items-center justify-between">
-          <Button variant="outline" size="sm" onClick={onClose} className="border-white/10 bg-slate-950 text-slate-300 text-xs">
+          <Button variant="outline" size="sm" onClick={handleClose} className="border-white/10 bg-slate-950 text-slate-300 text-xs">
             Close
           </Button>
 
@@ -144,21 +155,21 @@ export const BonusDetailsDrawer: React.FC<BonusDetailsDrawerProps> = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onGenerateLetter(bonus)}
+              onClick={() => onGenerateLetter?.(bonus)}
               className="border-white/10 bg-slate-950 text-slate-300 text-xs gap-1"
             >
               <FileText className="w-3.5 h-3.5 text-emerald-400" /> Letter
             </Button>
             <Button
               size="sm"
-              onClick={() => onAddPayrollEntry(bonus)}
+              onClick={() => onAddPayrollEntry?.(bonus)}
               className="bg-cyan-600 hover:bg-cyan-500 text-white text-xs gap-1"
             >
               <CreditCard className="w-3.5 h-3.5" /> Add to Payroll
             </Button>
             <Button
               size="sm"
-              onClick={() => onApprove(bonus)}
+              onClick={() => onApprove?.(bonus)}
               className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs gap-1"
             >
               <CheckCircle2 className="w-3.5 h-3.5" /> Approve Award

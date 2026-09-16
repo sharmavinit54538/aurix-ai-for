@@ -510,4 +510,7 @@ export const bonusesApi = {
       ipAddress: "127.0.0.1",
     });
   },
+
+  createBonusRecord: (payload: Partial<BonusAward>) => bonusesApi.createBonus(payload),
+  addPayrollEntries: (id: string, payrollCycle: string) => bonusesApi.addPayrollEntry(id, payrollCycle),
 };

@@ -21,17 +21,24 @@ import { VisualFormulaBuilder } from "./VisualFormulaBuilder";
 
 interface CreateBonusWizardDrawerProps {
   open: boolean;
-  onClose: () => void;
-  onSave: (payload: Partial<BonusAward>) => Promise<void>;
+  onClose?: () => void;
+  onOpenChange?: (open: boolean) => void;
+  onSave?: (payload: Partial<BonusAward> | any) => Promise<void>;
 }
 
 export const CreateBonusWizardDrawer: React.FC<CreateBonusWizardDrawerProps> = ({
   open,
   onClose,
+  onOpenChange,
   onSave,
 }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [saving, setSaving] = useState(false);
+
+  const handleClose = () => {
+    onClose?.();
+    onOpenChange?.(false);
+  };
 
   // Form Fields
   const [bonusType, setBonusType] = useState<BonusType>("Performance Bonus");
@@ -73,22 +80,24 @@ export const CreateBonusWizardDrawer: React.FC<CreateBonusWizardDrawerProps> = (
   const handleFormSubmit = async () => {
     setSaving(true);
     try {
-      await onSave({
-        bonusType,
-        bonusCycle,
-        effectiveDate,
-        employeeName,
-        employeeCode,
-        department,
-        designation,
-        location,
-        performanceRating,
-        calculationMode,
-        bonusAmount,
-        formulaExpression,
-      });
+      if (onSave) {
+        await onSave({
+          bonusType,
+          bonusCycle,
+          effectiveDate,
+          employeeName,
+          employeeCode,
+          department,
+          designation,
+          location,
+          performanceRating,
+          calculationMode,
+          bonusAmount,
+          formulaExpression,
+        });
+      }
       toast.success(`Awarded ${bonusType} of ₹${bonusAmount.toLocaleString("en-IN")} to ${employeeName}`);
-      onClose();
+      handleClose();
     } catch {
       toast.error("Failed to submit bonus award.");
     } finally {
@@ -97,7 +106,7 @@ export const CreateBonusWizardDrawer: React.FC<CreateBonusWizardDrawerProps> = (
   };
 
   return (
-    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
+    <Sheet open={open} onOpenChange={(v) => { if (!v) handleClose(); else onOpenChange?.(v); }}>
       <SheetContent side="right" className="w-full sm:max-w-2xl bg-[#070B17] border-l border-white/10 text-white p-0 flex flex-col h-full">
         {/* Header */}
         <div className="p-5 border-b border-white/10 flex items-center justify-between bg-slate-900/90">
@@ -108,7 +117,7 @@ export const CreateBonusWizardDrawer: React.FC<CreateBonusWizardDrawerProps> = (
             </SheetTitle>
             <p className="text-xs text-slate-400 mt-0.5">5-step enterprise compensation wizard.</p>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose} className="text-slate-400 hover:text-white">
+          <Button variant="ghost" size="sm" onClick={handleClose} className="text-slate-400 hover:text-white">
             <X className="w-5 h-5" />
           </Button>
         </div>
