@@ -205,14 +205,20 @@ function MiniCalendar() {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDay = new Date(year, month, 1).getDay();
 
-  // Mock data
-  const statuses: Record<number, AttendanceDay["status"]> = {
-    1: "present", 2: "present", 3: "present", 4: "present", 5: "present",
-    7: "weekend", 8: "present", 9: "late", 10: "present", 11: "present", 12: "present",
-    14: "weekend", 15: "holiday", 16: "present", 17: "present", 18: "leave", 19: "present",
-    21: "weekend", 22: "halfday", 23: "present", 24: "present", 25: "present", 26: "present",
-    28: "weekend", 29: "today",
-  };
+  // Dynamic calendar statuses from real month days
+  const statuses: Record<number, AttendanceDay["status"]> = {};
+  const todayDate = today.getDate();
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dayDate = new Date(year, month, d);
+    const dayOfWeek = dayDate.getDay();
+    if (d === todayDate) {
+      statuses[d] = "today";
+    } else if (d > todayDate) {
+      statuses[d] = "future";
+    } else if (dayOfWeek === 0 || dayOfWeek === 6) {
+      statuses[d] = "weekend";
+    }
+  }
 
   const COLOR: Record<string, string> = {
     present: "bg-emerald-500/20 text-emerald-600 dark:text-emerald-300",

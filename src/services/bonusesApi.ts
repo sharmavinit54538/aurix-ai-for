@@ -1,4 +1,4 @@
-import { api } from "@/api";
+import { api, apiInstance } from "@/api";
 import {
   BonusAward,
   BonusesFilters,
@@ -24,216 +24,13 @@ export const BONUS_TYPES_LIST: BonusType[] = [
   "Custom Bonus",
 ];
 
-const INITIAL_BONUSES: BonusAward[] = [
-  {
-    id: "bns-101",
-    bonusCode: "BNS-2026-901",
-    employeeId: "emp-101",
-    employeeCode: "EMP-101",
-    employeeName: "Vikramaditya Roy",
-    department: "Engineering",
-    designation: "Principal Architect",
-    location: "Global / Bangalore",
-    employmentType: "FULL_TIME",
-    bonusType: "Performance Bonus",
-    bonusCycle: "Q2 2026 High Performer Award",
-    performanceRating: 4.9,
-    bonusAmount: 180000,
-    currency: "INR",
-    taxImpact: 54000,
-    netPayout: 126000,
-    payrollCycle: "JULY-2026",
-    payrollEntryId: "PY-BNS-7701",
-    approvalStatus: "APPROVED",
-    paymentStatus: "SCHEDULED_PAYROLL",
-    approvalStage: "COMPLETED",
-    approvalWorkflow: [
-      { role: "HR Manager", name: "Rohan Varma", status: "APPROVED", timestamp: "2026-07-10 10:00 AM", comment: "Performance rating 4.9/5.0 verified with Q2 goals." },
-      { role: "Compensation Manager", name: "Sunita Menon", status: "APPROVED", timestamp: "2026-07-11 11:30 AM", comment: "Band 4 performance multiplier applied." },
-      { role: "Finance Manager", name: "Karan Johar", status: "APPROVED", timestamp: "2026-07-12 02:15 PM", comment: "Bonus budget available in FY27 allocation." },
-      { role: "CFO", name: "Ananya Roy", status: "APPROVED", timestamp: "2026-07-13 04:00 PM", comment: "Approved." },
-      { role: "CEO", name: "Vikram Malhotra", status: "APPROVED", timestamp: "2026-07-14 09:30 AM", comment: "Approved for executive payout." },
-      { role: "Payroll Admin", name: "Rohan Varma", status: "APPROVED", timestamp: "2026-07-15 11:00 AM", comment: "Added to July 2026 salary run." },
-    ],
-    calculationMode: "PERCENTAGE_BASIC",
-    formulaExpression: "BASIC * 1.20",
-    effectiveDate: "2026-07-01",
-    createdOn: "2026-07-10",
-    updatedOn: "2026-07-15",
-    createdBy: "Sunita Menon",
-    aiSuggestions: ["Exceeds average engineering bonus by 22% due to 4.9 rating."],
-  },
-  {
-    id: "bns-102",
-    bonusCode: "BNS-2026-902",
-    employeeId: "emp-104",
-    employeeCode: "EMP-104",
-    employeeName: "Rahul Sharma",
-    department: "Engineering",
-    designation: "Senior DevOps Lead",
-    location: "Bangalore",
-    employmentType: "FULL_TIME",
-    bonusType: "Project Bonus",
-    bonusCycle: "Cloud Migration Milestone Award",
-    performanceRating: 4.7,
-    bonusAmount: 90000,
-    currency: "INR",
-    taxImpact: 27000,
-    netPayout: 63000,
-    payrollCycle: "JULY-2026",
-    payrollEntryId: "PY-BNS-7702",
-    approvalStatus: "APPROVED",
-    paymentStatus: "PAID",
-    approvalStage: "COMPLETED",
-    approvalWorkflow: [
-      { role: "HR Manager", name: "Rohan Varma", status: "APPROVED", timestamp: "2026-07-01" },
-      { role: "Compensation Manager", name: "Sunita Menon", status: "APPROVED", timestamp: "2026-07-02" },
-      { role: "Finance Manager", name: "Karan Johar", status: "APPROVED", timestamp: "2026-07-03" },
-      { role: "CFO", name: "Ananya Roy", status: "APPROVED", timestamp: "2026-07-04" },
-      { role: "CEO", name: "Vikram Malhotra", status: "APPROVED", timestamp: "2026-07-04" },
-      { role: "Payroll Admin", name: "Rohan Varma", status: "APPROVED", timestamp: "2026-07-05" },
-    ],
-    calculationMode: "FIXED",
-    formulaExpression: "90000",
-    effectiveDate: "2026-07-01",
-    createdOn: "2026-07-01",
-    updatedOn: "2026-07-05",
-    createdBy: "Rohan Varma",
-    aiSuggestions: [],
-  },
-  {
-    id: "bns-103",
-    bonusCode: "BNS-2026-903",
-    employeeId: "emp-189",
-    employeeCode: "EMP-189",
-    employeeName: "Priya Nair",
-    department: "Sales & BD",
-    designation: "Enterprise Account Executive",
-    location: "Mumbai",
-    employmentType: "FULL_TIME",
-    bonusType: "Sales Incentive",
-    bonusCycle: "Q2 Enterprise Target Achievement",
-    performanceRating: 4.9,
-    bonusAmount: 240000,
-    currency: "INR",
-    taxImpact: 72000,
-    netPayout: 168000,
-    approvalStatus: "PENDING_CFO",
-    paymentStatus: "UNPAID",
-    approvalStage: "CFO",
-    approvalWorkflow: [
-      { role: "HR Manager", name: "Rohan Varma", status: "APPROVED", timestamp: "2026-07-16 10:00 AM" },
-      { role: "Compensation Manager", name: "Sunita Menon", status: "APPROVED", timestamp: "2026-07-17 11:30 AM" },
-      { role: "Finance Manager", name: "Karan Johar", status: "APPROVED", timestamp: "2026-07-18 02:00 PM" },
-      { role: "CFO", name: "Ananya Roy", status: "PENDING" },
-      { role: "CEO", name: "Vikram Malhotra", status: "PENDING" },
-      { role: "Payroll Admin", name: "Rohan Varma", status: "PENDING" },
-    ],
-    calculationMode: "PERCENTAGE_CTC",
-    formulaExpression: "CTC * 0.10",
-    effectiveDate: "2026-07-15",
-    createdOn: "2026-07-16",
-    updatedOn: "2026-07-18",
-    createdBy: "Sunita Menon",
-    aiSuggestions: ["140% target achievement recorded in Sales CRM."],
-  },
-  {
-    id: "bns-104",
-    bonusCode: "BNS-2026-904",
-    employeeId: "emp-205",
-    employeeCode: "EMP-205",
-    employeeName: "Amitabh Sen",
-    department: "Operations",
-    designation: "Operations Executive",
-    location: "Hyderabad",
-    employmentType: "FULL_TIME",
-    bonusType: "Spot Award",
-    bonusCycle: "Spot Recognition Award",
-    performanceRating: 4.4,
-    bonusAmount: 25000,
-    currency: "INR",
-    taxImpact: 7500,
-    netPayout: 17500,
-    approvalStatus: "PENDING_HR",
-    paymentStatus: "UNPAID",
-    approvalStage: "HR",
-    approvalWorkflow: [
-      { role: "HR Manager", name: "Rohan Varma", status: "PENDING" },
-      { role: "Compensation Manager", name: "Sunita Menon", status: "PENDING" },
-      { role: "Finance Manager", name: "Karan Johar", status: "PENDING" },
-      { role: "CFO", name: "Ananya Roy", status: "PENDING" },
-      { role: "CEO", name: "Vikram Malhotra", status: "PENDING" },
-      { role: "Payroll Admin", name: "Rohan Varma", status: "PENDING" },
-    ],
-    calculationMode: "FIXED",
-    formulaExpression: "25000",
-    effectiveDate: "2026-07-20",
-    createdOn: "2026-07-20",
-    updatedOn: "2026-07-20",
-    createdBy: "Sunita Menon",
-    aiSuggestions: [],
-  },
-];
+// TODO (Backend): Wire real backend endpoints for payroll bonuses (GET /api/v1/payroll/bonuses)
+const INITIAL_BONUSES: BonusAward[] = [];
+const INITIAL_AUDIT_LOGS: BonusAuditLog[] = [];
+const INITIAL_AI_INSIGHTS: BonusAIInsight[] = [];
 
-const INITIAL_AUDIT_LOGS: BonusAuditLog[] = [
-  {
-    id: "log-b1",
-    bonusId: "bns-101",
-    bonusCode: "BNS-2026-901",
-    action: "ADD_PAYROLL_ENTRY",
-    actorName: "Rohan Varma",
-    actorRole: "Payroll Admin",
-    timestamp: "2026-07-15 11:00 AM",
-    details: "Approved performance bonus of ₹1,80,000 for Vikramaditya Roy and queued into July 2026 salary processing.",
-    ipAddress: "192.168.1.12",
-  },
-  {
-    id: "log-b2",
-    bonusId: "bns-103",
-    bonusCode: "BNS-2026-903",
-    action: "APPROVE",
-    actorName: "Karan Johar",
-    actorRole: "Finance Manager",
-    timestamp: "2026-07-18 02:00 PM",
-    details: "Finance sign-off recorded for Q2 Sales Incentive payout.",
-    ipAddress: "192.168.1.88",
-  },
-];
-
-const INITIAL_AI_INSIGHTS: BonusAIInsight[] = [
-  {
-    id: "ai-b1",
-    title: "High Performer Compensation Recommendation",
-    type: "RECOMMENDATION",
-    severity: "SUCCESS",
-    employeeName: "Vikramaditya Roy",
-    description: "Performance score 4.9/5.0 places employee in top 2% of Engineering cohort. Suggested bonus multiplier: 1.2x Basic.",
-    impactMetric: "Top 2% Performance",
-    recommendation: "Approved Q2 Performance Bonus of ₹1.80L.",
-  },
-  {
-    id: "ai-b2",
-    title: "Retention Risk & Pay Equity Alert",
-    type: "RETENTION_RISK",
-    severity: "WARNING",
-    employeeName: "Priya Nair",
-    description: "Sales Incentive ratio for Grade L3 is 18% below industry peer benchmarks in tech enterprise sales.",
-    impactMetric: "High Retention Risk",
-    recommendation: "Consider spot retention bonus in Q3 cycle.",
-  },
-  {
-    id: "ai-b3",
-    title: "FY27 Bonus Budget Optimization",
-    type: "BUDGET_OPTIMIZATION",
-    severity: "INFO",
-    description: "Total allocated bonus (₹5.35L) is within 44% of the Q2 approved budget ceiling of ₹12.0L.",
-    impactMetric: "56% Budget Remaining",
-    recommendation: "Reallocate remaining pool for Spot Awards.",
-  },
-];
-
-let localBonuses = [...INITIAL_BONUSES];
-let localAuditLogs = [...INITIAL_AUDIT_LOGS];
+let localBonuses: BonusAward[] = [...INITIAL_BONUSES];
+let localAuditLogs: BonusAuditLog[] = [...INITIAL_AUDIT_LOGS];
 
 export const bonusesApi = {
   // GET all bonus awards with filtering
@@ -334,23 +131,30 @@ export const bonusesApi = {
   // Bulk Allocate Bonuses
   bulkAllocateBonuses: async (allocation: { department: string; bonusType: BonusType; amount: number }): Promise<{ count: number }> => {
     let count = 0;
-    const mockEmps = [
-      { id: "emp-301", code: "EMP-301", name: "Ananya Deshmukh", dept: allocation.department, role: "Senior Developer" },
-      { id: "emp-302", code: "EMP-302", name: "Karthik Raja", dept: allocation.department, role: "Lead Engineer" },
-      { id: "emp-303", code: "EMP-303", name: "Sanya Gupta", dept: allocation.department, role: "UI Designer" },
-    ];
+    try {
+      const searchParams = new URLSearchParams();
+      searchParams.set("limit", "100");
+      if (allocation.department && allocation.department !== "all") {
+        searchParams.set("department", allocation.department);
+      }
+      const response = await apiInstance.get(`/employees?${searchParams.toString()}`);
+      const items = response.data?.data?.items || response.data?.items || [];
 
-    for (const emp of mockEmps) {
-      await bonusesApi.createBonus({
-        employeeId: emp.id,
-        employeeCode: emp.code,
-        employeeName: emp.name,
-        department: emp.dept,
-        designation: emp.role,
-        bonusType: allocation.bonusType,
-        bonusAmount: allocation.amount,
-      });
-      count++;
+      for (const emp of items) {
+        const fullName = `${emp.first_name ?? ""} ${emp.last_name ?? ""}`.trim() || emp.name || emp.fullName || "Employee";
+        await bonusesApi.createBonus({
+          employeeId: String(emp.id ?? emp.employee_id ?? ""),
+          employeeCode: String(emp.employee_id ?? emp.id ?? ""),
+          employeeName: fullName,
+          department: String(emp.department ?? allocation.department),
+          designation: String(emp.designation ?? "Employee"),
+          bonusType: allocation.bonusType,
+          bonusAmount: allocation.amount,
+        });
+        count++;
+      }
+    } catch {
+      // If fetching fails or no items, return count 0
     }
 
     return { count };

@@ -26,7 +26,14 @@ import {
   UserCheck2,
 } from "lucide-react";
 import { fmtDate, avatarHue } from "../utils";
-import { Loader } from "@/components/aurix/Loader";
+import apiInstance from "@/api/apiInstance";
+
+interface ManagerDocument {
+  name: string;
+  size: string;
+  date: string;
+  url?: string;
+}
 
 const STATUS_STYLES: Partial<Record<Manager["status"], string>> = {
   PROBATION: "bg-amber-500/10 text-amber-500 border-amber-500/20",
@@ -99,12 +106,40 @@ export function ManagerProfileDrawer({
 
   const hue = avatarHue(manager.fullName);
 
-  // Mock document list
-  const mockDocuments = [
-    { name: "Employment_Contract.pdf", size: "2.4 MB", date: "2026-01-15" },
-    { name: "NDA_Signed.pdf", size: "1.1 MB", date: "2026-01-16" },
-    { name: "Q1_Performance_Review.pdf", size: "850 KB", date: "2026-04-10" },
-  ];
+  const [documents, setDocuments] = React.useState<ManagerDocument[]>([]);
+  const [loadingDocs, setLoadingDocs] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!manager?.id && !manager?.employeeId) return;
+    let active = true;
+    setLoadingDocs(true);
+
+    apiInstance
+      .get("/documents/employees", {
+        params: { employee_id: manager.id || manager.employeeId, limit: 10 },
+      })
+      .then((res) => {
+        if (!active) return;
+        const items = res.data?.data?.items || res.data?.items || [];
+        const mapped: ManagerDocument[] = items.map((d: any) => ({
+          name: d.name || d.document_name || "Document.pdf",
+          size: d.size || d.file_size || "1.0 MB",
+          date: d.date || d.created_at || d.upload_date || new Date().toISOString().split("T")[0],
+          url: d.url || d.file_url,
+        }));
+        setDocuments(mapped);
+      })
+      .catch(() => {
+        if (active) setDocuments([]);
+      })
+      .finally(() => {
+        if (active) setLoadingDocs(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [manager?.id, manager?.employeeId]);
 
   // Permissions list
   const activePermissions = Object.entries(manager.permissions)
@@ -361,25 +396,35 @@ export function ManagerProfileDrawer({
               <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                 <FileText className="h-3.5 w-3.5" /> Shared & Verified Documents
               </h4>
-              <div className="space-y-2">
-                {mockDocuments.map((doc, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/10 hover:bg-muted/20 transition-all duration-200 cursor-pointer"
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-xs font-medium text-foreground truncate">{doc.name}</p>
-                        <p className="text-[9px] text-muted-foreground">{doc.size} • Uploaded {fmtDate(doc.date)}</p>
+              {loadingDocs ? (
+                <div className="py-4 text-center text-xs text-muted-foreground">Loading documents...</div>
+              ) : documents.length > 0 ? (
+                <div className="space-y-2">
+                  {documents.map((doc, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/10 hover:bg-muted/20 transition-all duration-200 cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium text-foreground truncate">{doc.name}</p>
+                          <p className="text-[9px] text-muted-foreground">{doc.size} • Uploaded {fmtDate(doc.date)}</p>
+                        </div>
                       </div>
+                      <Badge variant="outline" className="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0">
+                        Download
+                      </Badge>
                     </div>
-                    <Badge variant="outline" className="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0">
-                      Download
-                    </Badge>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center p-6 border border-dashed border-border/60 rounded-xl bg-muted/5 text-center">
+                  <FileText className="h-7 w-7 text-muted-foreground/40 mb-1.5" />
+                  <p className="text-xs font-medium text-muted-foreground">No documents found</p>
+                  <p className="text-[10px] text-muted-foreground/70 mt-0.5">No verified or uploaded files for this manager.</p>
+                </div>
+              )}
             </div>
           </div>
         </ScrollArea>

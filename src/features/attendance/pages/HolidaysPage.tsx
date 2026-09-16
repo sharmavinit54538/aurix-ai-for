@@ -451,13 +451,85 @@ export default function HolidaysPage() {
 
   const processImportedFile = (file: File) => {
     setImportedFile(file);
-    const mockPreviewRows = [
-      { name: "Labor Day", date: "2026-09-07", type: "Public", country: "USA", state: "All States", office: "San Francisco HQ", department: "All Departments", description: "National holiday honors the labor movement." },
-      { name: "Veterans Day", date: "2026-11-11", type: "Public", country: "USA", state: "All States", office: "San Francisco HQ", department: "All Departments", description: "Honors military veterans of the United States Armed Forces." },
-      { name: "Diwali Fest", date: "2026-11-08", type: "Regional", country: "India", state: "Karnataka", office: "Bengaluru Tech Park", department: "All Departments", description: "Festival of lights celebrated regionally." }
-    ];
-    setImportPreviewData(mockPreviewRows);
-    toast.success(`File "${file.name}" loaded for preview`);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        if (!content || !content.trim()) {
+          setImportPreviewData([]);
+          toast.error("The selected file is empty");
+          return;
+        }
+
+        if (file.name.endsWith(".json")) {
+          const parsed = JSON.parse(content);
+          if (Array.isArray(parsed)) {
+            setImportPreviewData(parsed);
+            toast.success(`Loaded ${parsed.length} holidays for preview`);
+            return;
+          }
+        }
+
+        const lines = content.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        if (lines.length <= 1) {
+          setImportPreviewData([]);
+          toast.error("CSV file contains no data rows");
+          return;
+        }
+
+        const parseLine = (line: string) => {
+          const result: string[] = [];
+          let current = "";
+          let inQuotes = false;
+          for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            if (char === '"') {
+              inQuotes = !inQuotes;
+            } else if (char === "," && !inQuotes) {
+              result.push(current.trim());
+              current = "";
+            } else {
+              current += char;
+            }
+          }
+          result.push(current.trim());
+          return result.map((s) => s.replace(/^"|"$/g, "").trim());
+        };
+
+        const headers = parseLine(lines[0]).map((h) => h.toLowerCase());
+        const rows = lines.slice(1).map((line) => {
+          const cols = parseLine(line);
+          const getCol = (names: string[], fallback = "") => {
+            for (const name of names) {
+              const idx = headers.indexOf(name.toLowerCase());
+              if (idx !== -1 && cols[idx] !== undefined) return cols[idx];
+            }
+            return fallback;
+          };
+          return {
+            name: getCol(["name", "holiday", "holiday_name", "title"], cols[0] || "Holiday"),
+            date: getCol(["date", "holiday_date", "day"], cols[1] || new Date().toISOString().split("T")[0]),
+            type: getCol(["type", "holiday_type", "category"], cols[2] || "Public"),
+            country: getCol(["country"], cols[3] || "All"),
+            state: getCol(["state", "region"], cols[4] || "All States"),
+            office: getCol(["office", "location"], cols[5] || "All Offices"),
+            department: getCol(["department", "dept"], cols[6] || "All Departments"),
+            description: getCol(["description", "desc", "notes"], cols[7] || ""),
+          };
+        }).filter((r) => r.name);
+
+        setImportPreviewData(rows);
+        toast.success(`Parsed ${rows.length} holidays from ${file.name}`);
+      } catch {
+        toast.error("Failed to parse file for preview");
+        setImportPreviewData([]);
+      }
+    };
+    reader.onerror = () => {
+      toast.error("Failed to read file");
+      setImportPreviewData([]);
+    };
+    reader.readAsText(file);
   };
 
   const handleConfirmImport = async () => {
