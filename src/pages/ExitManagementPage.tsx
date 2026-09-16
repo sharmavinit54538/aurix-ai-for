@@ -2,35 +2,96 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo, useEffect } from "react";
 import apiInstance from "@/api/apiInstance";
 import {
-  LogOut, FileText, ShieldCheck, CheckCircle2, Plus, Search, RefreshCw, Download,
-  XCircle, Clock, AlertTriangle, Info, Calendar, User, Building2, HelpCircle,
-  FileSignature, ChevronRight, Check, X, AlertCircle, FileSpreadsheet, Star,
-  PowerOff, Archive, Mail, Eye
+  LogOut,
+  FileText,
+  ShieldCheck,
+  CheckCircle2,
+  Plus,
+  Search,
+  RefreshCw,
+  Download,
+  XCircle,
+  Clock,
+  AlertTriangle,
+  Info,
+  Calendar,
+  User,
+  Building2,
+  HelpCircle,
+  FileSignature,
+  ChevronRight,
+  Check,
+  X,
+  AlertCircle,
+  FileSpreadsheet,
+  Star,
+  PowerOff,
+  Archive,
+  Mail,
+  Eye,
 } from "lucide-react";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { hrms, newId, useHrms } from "@/lib/hrms/store";
 import { useAurix } from "@/lib/aurix-store";
-import type { ExitCase, ExitStage, ExitAssetReturn, ExitDepartmentClearance, ExitSettlementDetails, ExitInterviewDetails, ExitTimelineEvent } from "@/lib/hrms/types";
+import type {
+  ExitCase,
+  ExitStage,
+  ExitAssetReturn,
+  ExitDepartmentClearance,
+  ExitSettlementDetails,
+  ExitInterviewDetails,
+  ExitTimelineEvent,
+} from "@/lib/hrms/types";
 import { toast } from "sonner";
 import {
-  Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis,
-  Pie, PieChart, Cell
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+  Pie,
+  PieChart,
+  Cell,
 } from "recharts";
-
-
-
 
 // ----------------------------------------------------
 // CONSTANTS
@@ -71,9 +132,19 @@ const STATS_CARDS = [
   { key: "total", title: "Total Requests", color: "text-blue-500", bg: "bg-blue-500/10" },
   { key: "approvals", title: "Pending Approvals", color: "text-amber-500", bg: "bg-amber-500/10" },
   { key: "notice", title: "Notice Period", color: "text-purple-500", bg: "bg-purple-500/10" },
-  { key: "clearance", title: "Clearance Pending", color: "text-orange-500", bg: "bg-orange-500/10" },
+  {
+    key: "clearance",
+    title: "Clearance Pending",
+    color: "text-orange-500",
+    bg: "bg-orange-500/10",
+  },
   { key: "settlement", title: "Settlement Pending", color: "text-pink-500", bg: "bg-pink-500/10" },
-  { key: "completed", title: "Completed Exits", color: "text-emerald-500", bg: "bg-emerald-500/10" },
+  {
+    key: "completed",
+    title: "Completed Exits",
+    color: "text-emerald-500",
+    bg: "bg-emerald-500/10",
+  },
 ];
 
 const COLORS = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
@@ -149,18 +220,20 @@ export function ExitManagementPage() {
       return;
     }
 
-    const selectedEmp = authWs.employees.find(x => x.fullName === empName) || {
+    const selectedEmp = authWs.employees.find((x) => x.fullName === empName) || {
       id: newId("emp"),
       fullName: empName,
       employeeId: `AUR-${Math.floor(1000 + Math.random() * 9000)}`,
       department: "Platform Operations",
       designation: "Associate Member",
       joiningDate: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      managerName: "Maya Chen"
+      managerName: "Maya Chen",
     };
 
     // Auto calculate LWD (resignedAt + noticeDays)
-    const lwd = new Date(new Date(resignDate).getTime() + noticeDays * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    const lwd = new Date(new Date(resignDate).getTime() + noticeDays * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0];
 
     const newCaseId = newId("ex");
     const newCase: ExitCase = {
@@ -178,13 +251,13 @@ export function ExitManagementPage() {
         { key: "manager", label: "Manager approval", done: false },
         { key: "hr", label: "HR approval", done: false },
         { key: "it", label: "IT clearance", done: false },
-        { key: "finance", label: "Finance clearance", done: false }
+        { key: "finance", label: "Finance clearance", done: false },
       ],
       documents: [
         { name: "Experience Letter", issued: false },
         { name: "Relieving Letter", issued: false },
         { name: "Final Settlement Letter", issued: false },
-        { name: "No Dues Certificate", issued: false }
+        { name: "No Dues Certificate", issued: false },
       ],
       employeeId: selectedEmp.employeeId,
       department: selectedEmp.department,
@@ -214,7 +287,7 @@ export function ExitManagementPage() {
         { department: "IT", status: "pending" },
         { department: "Finance", status: "pending" },
         { department: "Admin", status: "pending" },
-        { department: "Manager", status: "pending" }
+        { department: "Manager", status: "pending" },
       ],
       settlementDetails: {
         pendingSalary: 35000,
@@ -224,11 +297,17 @@ export function ExitManagementPage() {
         deductions: 0,
         assetRecovery: 0,
         totalAmount: 43000,
-        status: "pending"
+        status: "pending",
       },
       timeline: [
-        { id: newId("tl"), event: "Exit Requested", performedBy: selectedEmp.fullName, timestamp: new Date().toISOString(), notes: "Submitted resignation request." }
-      ]
+        {
+          id: newId("tl"),
+          event: "Exit Requested",
+          performedBy: selectedEmp.fullName,
+          timestamp: new Date().toISOString(),
+          notes: "Submitted resignation request.",
+        },
+      ],
     };
 
     hrms.upsertExit(newCase);
@@ -267,20 +346,29 @@ export function ExitManagementPage() {
       event: stageType === "manager" ? "Manager Approved" : "HR Approved",
       performedBy: author,
       timestamp: new Date().toISOString(),
-      notes: stageType === "manager" ? "Manager signed off resignation approval." : "HR approved compliance check."
+      notes:
+        stageType === "manager"
+          ? "Manager signed off resignation approval."
+          : "HR approved compliance check.",
     };
 
     updated.timeline = [...(updated.timeline || []), newTimeline];
 
     // Update clearance checklists
-    updated.checklist = updated.checklist.map(chk => {
+    updated.checklist = updated.checklist.map((chk) => {
       if (chk.key === stageType) return { ...chk, done: true, doneAt: new Date().toISOString() };
       return chk;
     });
 
-    updated.clearanceWorkflow = updated.clearanceWorkflow?.map(c => {
+    updated.clearanceWorkflow = updated.clearanceWorkflow?.map((c) => {
       if (c.department.toLowerCase() === stageType) {
-        return { ...c, status: "approved", approvedBy: author, approvedAt: new Date().toISOString(), comments: "Approved resignation." };
+        return {
+          ...c,
+          status: "approved",
+          approvedBy: author,
+          approvedAt: new Date().toISOString(),
+          comments: "Approved resignation.",
+        };
       }
       return c;
     });
@@ -318,9 +406,9 @@ export function ExitManagementPage() {
           event: "Rejected",
           performedBy: author,
           timestamp: new Date().toISOString(),
-          notes: `Resignation request cancelled: ${rejectionReason}`
-        }
-      ]
+          notes: `Resignation request cancelled: ${rejectionReason}`,
+        },
+      ],
     };
 
     hrms.upsertExit(updated);
@@ -342,9 +430,9 @@ export function ExitManagementPage() {
           event: "Notice Started",
           performedBy: authWs.user?.fullName || "HR Admin",
           timestamp: new Date().toISOString(),
-          notes: "Initiated department clearances checklist."
-        }
-      ]
+          notes: "Initiated department clearances checklist.",
+        },
+      ],
     };
     hrms.upsertExit(updated);
     toast.info("Clearance process started.");
@@ -352,29 +440,39 @@ export function ExitManagementPage() {
   };
 
   // 5. Asset Clearances
-  const handleAssetReturnStatus = (exit: ExitCase, recordId: string, status: "returned" | "damaged" | "missing", remarks: string) => {
+  const handleAssetReturnStatus = (
+    exit: ExitCase,
+    recordId: string,
+    status: "returned" | "damaged" | "missing",
+    remarks: string,
+  ) => {
     const assetsCopy = exit.assignedAssets || [];
-    const updatedAssets = assetsCopy.map(ast => {
+    const updatedAssets = assetsCopy.map((ast) => {
       if (ast.id === recordId) {
         return {
           ...ast,
           status,
           remarks,
-          returnDate: status === "returned" ? new Date().toISOString().split("T")[0] : undefined
+          returnDate: status === "returned" ? new Date().toISOString().split("T")[0] : undefined,
         };
       }
       return ast;
     });
 
-    const allReturned = updatedAssets.every(a => a.status === "returned");
+    const allReturned = updatedAssets.every((a) => a.status === "returned");
 
-    let updatedChecklist = exit.checklist.map(c => {
-      if (c.key === "assets") return { ...c, done: allReturned, doneAt: allReturned ? new Date().toISOString() : undefined };
+    let updatedChecklist = exit.checklist.map((c) => {
+      if (c.key === "assets")
+        return {
+          ...c,
+          done: allReturned,
+          doneAt: allReturned ? new Date().toISOString() : undefined,
+        };
       return c;
     });
 
     let updatedTimeline = exit.timeline || [];
-    if (allReturned && !exit.checklist.find(c => c.key === "assets")?.done) {
+    if (allReturned && !exit.checklist.find((c) => c.key === "assets")?.done) {
       updatedTimeline = [
         ...updatedTimeline,
         {
@@ -382,22 +480,28 @@ export function ExitManagementPage() {
           event: "Asset Returned",
           performedBy: authWs.user?.fullName || "IT Admin",
           timestamp: new Date().toISOString(),
-          notes: "All 3 assigned hardware devices returned to vault."
-        }
+          notes: "All 3 assigned hardware devices returned to vault.",
+        },
       ];
     }
 
     // Auto-approve IT clearance department when assets are fully returned
     let updatedClearance = exit.clearanceWorkflow || [];
     if (allReturned) {
-      updatedClearance = updatedClearance.map(c => {
+      updatedClearance = updatedClearance.map((c) => {
         if (c.department === "IT") {
-          return { ...c, status: "approved" as const, approvedBy: "IT Support", approvedAt: new Date().toISOString(), comments: "Assets returned clean." };
+          return {
+            ...c,
+            status: "approved" as const,
+            approvedBy: "IT Support",
+            approvedAt: new Date().toISOString(),
+            comments: "Assets returned clean.",
+          };
         }
         return c;
       });
       // Toggle IT checklist
-      updatedChecklist = updatedChecklist.map(chk => {
+      updatedChecklist = updatedChecklist.map((chk) => {
         if (chk.key === "it") return { ...chk, done: true, doneAt: new Date().toISOString() };
         return chk;
       });
@@ -408,7 +512,7 @@ export function ExitManagementPage() {
       assignedAssets: updatedAssets,
       checklist: updatedChecklist,
       clearanceWorkflow: updatedClearance,
-      timeline: updatedTimeline
+      timeline: updatedTimeline,
     };
 
     hrms.upsertExit(updated);
@@ -417,29 +521,39 @@ export function ExitManagementPage() {
   };
 
   // 6. Department Clearance Action (HR, Finance, Admin, Manager, IT)
-  const handleDeptClearanceStatus = (exit: ExitCase, dept: "HR" | "IT" | "Finance" | "Admin" | "Manager", status: "approved" | "rejected", comments: string) => {
+  const handleDeptClearanceStatus = (
+    exit: ExitCase,
+    dept: "HR" | "IT" | "Finance" | "Admin" | "Manager",
+    status: "approved" | "rejected",
+    comments: string,
+  ) => {
     const clearanceCopy = exit.clearanceWorkflow || [];
-    const updatedClearance = clearanceCopy.map(c => {
+    const updatedClearance = clearanceCopy.map((c) => {
       if (c.department === dept) {
         return {
           ...c,
           status,
           approvedBy: authWs.user?.fullName || "HR Admin",
           approvedAt: new Date().toISOString(),
-          comments
+          comments,
         };
       }
       return c;
     });
 
     const chkKey = dept.toLowerCase() as any;
-    const updatedChecklist = exit.checklist.map(c => {
-      if (c.key === chkKey) return { ...c, done: status === "approved", doneAt: status === "approved" ? new Date().toISOString() : undefined };
+    const updatedChecklist = exit.checklist.map((c) => {
+      if (c.key === chkKey)
+        return {
+          ...c,
+          done: status === "approved",
+          doneAt: status === "approved" ? new Date().toISOString() : undefined,
+        };
       return c;
     });
 
     // Check if ALL department clearance are approved
-    const allApproved = updatedClearance.every(c => c.status === "approved");
+    const allApproved = updatedClearance.every((c) => c.status === "approved");
 
     let updatedTimeline = exit.timeline || [];
     let nextStage = exit.stage;
@@ -453,8 +567,8 @@ export function ExitManagementPage() {
           event: "Clearance Completed",
           performedBy: authWs.user?.fullName || "HR Admin",
           timestamp: new Date().toISOString(),
-          notes: "All 5 departments signed off clearance certifications."
-        }
+          notes: "All 5 departments signed off clearance certifications.",
+        },
       ];
     }
 
@@ -463,7 +577,7 @@ export function ExitManagementPage() {
       stage: nextStage,
       clearanceWorkflow: updatedClearance,
       checklist: updatedChecklist,
-      timeline: updatedTimeline
+      timeline: updatedTimeline,
     };
 
     hrms.upsertExit(updated);
@@ -490,10 +604,10 @@ export function ExitManagementPage() {
       deductions: deductionVal,
       assetRecovery: recoveryVal,
       totalAmount: total,
-      status: "approved"
+      status: "approved",
     };
 
-    const updatedChecklist = exit.checklist.map(c => {
+    const updatedChecklist = exit.checklist.map((c) => {
       if (c.key === "finance") return { ...c, done: true, doneAt: new Date().toISOString() };
       return c;
     });
@@ -509,9 +623,9 @@ export function ExitManagementPage() {
           event: "Settlement Completed",
           performedBy: authWs.user?.fullName || "Finance Ops",
           timestamp: new Date().toISOString(),
-          notes: `Settlement values audited: total $${total} calculated.`
-        }
-      ]
+          notes: `Settlement values audited: total $${total} calculated.`,
+        },
+      ],
     };
 
     hrms.upsertExit(updated);
@@ -525,7 +639,7 @@ export function ExitManagementPage() {
 
     const updatedSettlement: ExitSettlementDetails = {
       ...exit.settlementDetails,
-      status: "paid"
+      status: "paid",
     };
 
     const updated: ExitCase = {
@@ -538,9 +652,9 @@ export function ExitManagementPage() {
           event: "Settlement Completed",
           performedBy: authWs.user?.fullName || "Finance Partner",
           timestamp: new Date().toISOString(),
-          notes: "Wire transfer processed. Final dues paid."
-        }
-      ]
+          notes: "Wire transfer processed. Final dues paid.",
+        },
+      ],
     };
 
     hrms.upsertExit(updated);
@@ -550,7 +664,7 @@ export function ExitManagementPage() {
 
   // 9. Generate Document
   const handleGenerateDoc = (exit: ExitCase, docName: string) => {
-    const updatedDocs = exit.documents.map(d => {
+    const updatedDocs = exit.documents.map((d) => {
       if (d.name === docName) return { ...d, issued: true };
       return d;
     });
@@ -565,9 +679,9 @@ export function ExitManagementPage() {
           event: "Documents Generated",
           performedBy: authWs.user?.fullName || "HR Partner",
           timestamp: new Date().toISOString(),
-          notes: `Generated document: ${docName}`
-        }
-      ]
+          notes: `Generated document: ${docName}`,
+        },
+      ],
     };
 
     hrms.upsertExit(updated);
@@ -629,9 +743,9 @@ Finance Operations Partner`;
           event: "Employee Deactivated",
           performedBy: authWs.user?.fullName || "HR Admin",
           timestamp: new Date().toISOString(),
-          notes: "Revoked SSO login, de-activated credentials, archived profile."
-        }
-      ]
+          notes: "Revoked SSO login, de-activated credentials, archived profile.",
+        },
+      ],
     };
 
     hrms.upsertExit(updated);
@@ -648,7 +762,7 @@ Finance Operations Partner`;
       rating: intRating,
       managerFeedback: intMgrFeedback,
       companyFeedback: intCompFeedback,
-      suggestions: intSuggestions
+      suggestions: intSuggestions,
     };
 
     const updated: ExitCase = {
@@ -661,9 +775,9 @@ Finance Operations Partner`;
           event: "Notice Started", // map interviews to timeline
           performedBy: authWs.user?.fullName || "HR Partner",
           timestamp: new Date().toISOString(),
-          notes: "Recorded exit interview questionnaire responses."
-        }
-      ]
+          notes: "Recorded exit interview questionnaire responses.",
+        },
+      ],
     };
 
     hrms.upsertExit(updated);
@@ -678,42 +792,66 @@ Finance Operations Partner`;
   // Metrics
   const stats = useMemo(() => {
     const total = exits.length;
-    const approvals = exits.filter(e => e.stage === "requested" || e.stage === "under-review").length;
-    const notice = exits.filter(e => e.stage === "notice" || e.stage === "clearance").length;
-    
+    const approvals = exits.filter(
+      (e) => e.stage === "requested" || e.stage === "under-review",
+    ).length;
+    const notice = exits.filter((e) => e.stage === "notice" || e.stage === "clearance").length;
+
     // Check clearance pending
-    const clearance = exits.filter(e => {
+    const clearance = exits.filter((e) => {
       if (e.stage !== "clearance") return false;
-      const allDone = e.checklist.every(c => c.done);
+      const allDone = e.checklist.every((c) => c.done);
       return !allDone;
     }).length;
 
     // Settlement Pending
-    const settlement = exits.filter(e => {
-      return e.stage === "settlement" || (e.settlementDetails && e.settlementDetails.status !== "paid");
+    const settlement = exits.filter((e) => {
+      return (
+        e.stage === "settlement" || (e.settlementDetails && e.settlementDetails.status !== "paid")
+      );
     }).length;
 
-    const completed = exits.filter(e => e.stage === "completed" || e.stage === "settled").length;
+    const completed = exits.filter((e) => e.stage === "completed" || e.stage === "settled").length;
 
     return { total, approvals, notice, clearance, settlement, completed };
   }, [exits]);
 
   // Notifications
   const alertsList = useMemo(() => {
-    const alerts: { id: string; type: "warning" | "error" | "info"; message: string; exitCase?: ExitCase }[] = [];
+    const alerts: {
+      id: string;
+      type: "warning" | "error" | "info";
+      message: string;
+      exitCase?: ExitCase;
+    }[] = [];
 
-    exits.forEach(e => {
+    exits.forEach((e) => {
       if (e.stage === "requested") {
-        alerts.push({ id: `app_${e.id}`, type: "warning", message: `Approval required: ${e.employee} submitted resignation request.`, exitCase: e });
+        alerts.push({
+          id: `app_${e.id}`,
+          type: "warning",
+          message: `Approval required: ${e.employee} submitted resignation request.`,
+          exitCase: e,
+        });
       }
       if (e.stage === "clearance") {
-        const missingAssets = (e.assignedAssets || []).filter(a => a.status === "pending").length;
+        const missingAssets = (e.assignedAssets || []).filter((a) => a.status === "pending").length;
         if (missingAssets > 0) {
-          alerts.push({ id: `ast_${e.id}`, type: "error", message: `Asset return pending: ${e.employee} has ${missingAssets} hardware devices un-returned.`, exitCase: e });
+          alerts.push({
+            id: `ast_${e.id}`,
+            type: "error",
+            message: `Asset return pending: ${e.employee} has ${missingAssets} hardware devices un-returned.`,
+            exitCase: e,
+          });
         }
       }
       if (e.stage === "notice" && e.remainingDays && e.remainingDays <= 15) {
-        alerts.push({ id: `not_${e.id}`, type: "warning", message: `Notice period ending soon for ${e.employee} (${e.remainingDays} days left).`, exitCase: e });
+        alerts.push({
+          id: `not_${e.id}`,
+          type: "warning",
+          message: `Notice period ending soon for ${e.employee} (${e.remainingDays} days left).`,
+          exitCase: e,
+        });
       }
     });
 
@@ -722,8 +860,9 @@ Finance Operations Partner`;
 
   // Filter Table
   const filteredExits = useMemo(() => {
-    return exits.filter(e => {
-      const matchQ = !q ||
+    return exits.filter((e) => {
+      const matchQ =
+        !q ||
         e.employee.toLowerCase().includes(q.toLowerCase()) ||
         (e.employeeId && e.employeeId.toLowerCase().includes(q.toLowerCase())) ||
         e.role.toLowerCase().includes(q.toLowerCase()) ||
@@ -765,13 +904,13 @@ Finance Operations Partner`;
   // Recharts Department-wise attrition counts
   const attritionChartData = useMemo(() => {
     const counts: Record<string, number> = {};
-    exits.forEach(e => {
+    exits.forEach((e) => {
       const dept = e.department || "Operations";
       counts[dept] = (counts[dept] || 0) + 1;
     });
-    return Object.keys(counts).map(k => ({
+    return Object.keys(counts).map((k) => ({
       department: k,
-      "Exit Count": counts[k]
+      "Exit Count": counts[k],
     }));
   }, [exits]);
 
@@ -792,59 +931,77 @@ Finance Operations Partner`;
 
   return (
     <div className="space-y-6">
-      {/* 1. PAGE HEADER */}
-      <PageHeader
-        title="Exit Management"
-        description="Oversee exit notice periods, clearance checklists, final pay settlements, and de-activations."
-        actions={
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                const headers = ["Employee ID", "Employee Name", "Department", "Role", "Resignation Date", "Last Working Day", "Exit Stage"];
-                const rows = exits.map(e => [
-                  e.employeeId || "", e.employee, e.department || "", e.role, e.resignedAt, e.lastWorkingDay, e.stage
-                ].map(v => `"${v.replace(/"/g, '""')}"`).join(","));
-                const csv = [headers.join(","), ...rows].join("\n");
-                const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-                const link = document.createElement("a");
-                link.href = url;
-                link.download = "HR_Exit_Management_Report.csv";
-                link.click();
-                URL.revokeObjectURL(url);
-                toast.success("Exit report exported as CSV");
-              }}
-              className="h-9 gap-2 border-border bg-card/60 hover:bg-accent/60 cursor-pointer"
-            >
-              <Download className="h-4 w-4" />
-              Export
-            </Button>
-            <Button
-              onClick={() => setCreateOpen(true)}
-              className="h-9 gap-2 bg-gradient-brand text-brand-foreground hover:opacity-90 transition-opacity cursor-pointer"
-            >
-              <Plus className="h-4 w-4" />
-              Create Exit Request
-            </Button>
-          </div>
-        }
-      />
+      {/* Action buttons */}
+      <div className="flex items-center justify-end gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            const headers = [
+              "Employee ID",
+              "Employee Name",
+              "Department",
+              "Role",
+              "Resignation Date",
+              "Last Working Day",
+              "Exit Stage",
+            ];
+            const rows = exits.map((e) =>
+              [
+                e.employeeId || "",
+                e.employee,
+                e.department || "",
+                e.role,
+                e.resignedAt,
+                e.lastWorkingDay,
+                e.stage,
+              ]
+                .map((v) => `"${v.replace(/"/g, '""')}"`)
+                .join(","),
+            );
+            const csv = [headers.join(","), ...rows].join("\n");
+            const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "HR_Exit_Management_Report.csv";
+            link.click();
+            URL.revokeObjectURL(url);
+            toast.success("Exit report exported as CSV");
+          }}
+          className="h-8 gap-1.5 text-xs border-border bg-card/60 hover:bg-accent/60 cursor-pointer"
+        >
+          <Download className="h-3.5 w-3.5" />
+          Export
+        </Button>
+        <Button
+          size="sm"
+          onClick={() => setCreateOpen(true)}
+          className="h-8 gap-1.5 text-xs bg-gradient-brand text-brand-foreground hover:opacity-90 transition-opacity cursor-pointer"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Create Exit Request
+        </Button>
+      </div>
 
       {/* 2. STATS CARDS */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-        {STATS_CARDS.map(card => {
+        {STATS_CARDS.map((card) => {
           const count = stats[card.key as keyof typeof stats];
           return (
             <Card key={card.key} className="border-border bg-card/40 backdrop-blur-xl">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-muted-foreground truncate leading-none">{card.title}</span>
+                  <span className="text-[11px] font-semibold text-muted-foreground truncate leading-none">
+                    {card.title}
+                  </span>
                   <span className={`grid h-7 w-7 place-items-center rounded-lg ${card.bg}`}>
                     <LogOut className={`h-3.5 w-3.5 ${card.color}`} />
                   </span>
                 </div>
                 <div className="mt-2.5 flex items-baseline gap-1">
-                  <span className="text-2xl font-bold font-display tracking-tight leading-none">{count}</span>
+                  <span className="text-2xl font-bold font-display tracking-tight leading-none">
+                    {count}
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -855,10 +1012,16 @@ Finance Operations Partner`;
       {/* 3. TABS CONTAINER */}
       <Tabs defaultValue="requests" className="space-y-4">
         <TabsList className="bg-card/60 border border-border p-1 rounded-xl h-10 w-fit shrink-0">
-          <TabsTrigger value="requests" className="text-xs h-8 px-4 font-medium rounded-lg cursor-pointer">
+          <TabsTrigger
+            value="requests"
+            className="text-xs h-8 px-4 font-medium rounded-lg cursor-pointer"
+          >
             Exit Requests Pipeline
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="text-xs h-8 px-4 font-medium rounded-lg cursor-pointer">
+          <TabsTrigger
+            value="analytics"
+            className="text-xs h-8 px-4 font-medium rounded-lg cursor-pointer"
+          >
             Attrition Analytics
           </TabsTrigger>
         </TabsList>
@@ -874,17 +1037,23 @@ Finance Operations Partner`;
                     <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       value={q}
-                      onChange={e => { setQ(e.target.value); setCurrentPage(1); }}
+                      onChange={(e) => {
+                        setQ(e.target.value);
+                        setCurrentPage(1);
+                      }}
                       placeholder="Search employee, ID, designation..."
                       className="h-9 pl-9 border-border bg-background/50 focus-visible:ring-1 focus-visible:ring-ring"
                     />
                   </div>
 
                   <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none">
-                    {STAGE_FILTERS.map(tab => (
+                    {STAGE_FILTERS.map((tab) => (
                       <button
                         key={tab.id}
-                        onClick={() => { setActiveFilter(tab.id); setCurrentPage(1); }}
+                        onClick={() => {
+                          setActiveFilter(tab.id);
+                          setCurrentPage(1);
+                        }}
                         className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold border transition-colors cursor-pointer ${
                           activeFilter === tab.id
                             ? "bg-foreground text-background border-foreground"
@@ -926,8 +1095,12 @@ Finance Operations Partner`;
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {paginatedExits.map(exit => {
-                          const badge = STAGE_BADGES[exit.stage] || { label: exit.stage, color: "text-muted-foreground", bg: "bg-muted" };
+                        {paginatedExits.map((exit) => {
+                          const badge = STAGE_BADGES[exit.stage] || {
+                            label: exit.stage,
+                            color: "text-muted-foreground",
+                            bg: "bg-muted",
+                          };
                           return (
                             <TableRow
                               key={exit.id}
@@ -935,12 +1108,22 @@ Finance Operations Partner`;
                               onClick={() => {
                                 setDetailCase(exit);
                                 // Prepopulate settlement costs
-                                setSettleSalary(exit.settlementDetails?.pendingSalary?.toString() || "35000");
-                                setSettleLeave(exit.settlementDetails?.leaveEncashment?.toString() || "8000");
+                                setSettleSalary(
+                                  exit.settlementDetails?.pendingSalary?.toString() || "35000",
+                                );
+                                setSettleLeave(
+                                  exit.settlementDetails?.leaveEncashment?.toString() || "8000",
+                                );
                                 setSettleBonus(exit.settlementDetails?.bonus?.toString() || "0");
-                                setSettleIncentive(exit.settlementDetails?.incentives?.toString() || "0");
-                                setSettleDeduction(exit.settlementDetails?.deductions?.toString() || "0");
-                                setSettleRecovery(exit.settlementDetails?.assetRecovery?.toString() || "0");
+                                setSettleIncentive(
+                                  exit.settlementDetails?.incentives?.toString() || "0",
+                                );
+                                setSettleDeduction(
+                                  exit.settlementDetails?.deductions?.toString() || "0",
+                                );
+                                setSettleRecovery(
+                                  exit.settlementDetails?.assetRecovery?.toString() || "0",
+                                );
                                 // Prepopulate interview
                                 setIntRating(exit.interviewDetails?.rating || 4);
                                 setIntReason(exit.interviewDetails?.reason || exit.reason || "");
@@ -952,9 +1135,15 @@ Finance Operations Partner`;
                               <TableCell className="px-4 py-3">
                                 <div className="flex items-center gap-2.5">
                                   <span className="grid h-8 w-8 place-items-center rounded-lg bg-accent text-accent-foreground font-bold text-xs">
-                                    {exit.employee.split(" ").map(n => n[0]).slice(0,2).join("")}
+                                    {exit.employee
+                                      .split(" ")
+                                      .map((n) => n[0])
+                                      .slice(0, 2)
+                                      .join("")}
                                   </span>
-                                  <div className="font-semibold text-foreground truncate max-w-[150px]">{exit.employee}</div>
+                                  <div className="font-semibold text-foreground truncate max-w-[150px]">
+                                    {exit.employee}
+                                  </div>
                                 </div>
                               </TableCell>
                               <TableCell className="px-4 py-3 font-mono text-xs text-foreground/80">
@@ -977,17 +1166,30 @@ Finance Operations Partner`;
                               </TableCell>
                               <TableCell className="px-4 py-3 text-center text-xs font-semibold">
                                 {exit.remainingDays !== undefined ? (
-                                  <span className={exit.remainingDays <= 15 && exit.remainingDays > 0 ? "text-purple-500 font-bold" : "text-foreground"}>
+                                  <span
+                                    className={
+                                      exit.remainingDays <= 15 && exit.remainingDays > 0
+                                        ? "text-purple-500 font-bold"
+                                        : "text-foreground"
+                                    }
+                                  >
                                     {exit.remainingDays} days
                                   </span>
-                                ) : "—"}
+                                ) : (
+                                  "—"
+                                )}
                               </TableCell>
                               <TableCell className="px-4 py-3 text-center">
-                                <Badge className={`${badge.bg} ${badge.color} border-none shadow-none text-[11px] font-semibold`}>
+                                <Badge
+                                  className={`${badge.bg} ${badge.color} border-none shadow-none text-[11px] font-semibold`}
+                                >
                                   {badge.label}
                                 </Badge>
                               </TableCell>
-                              <TableCell className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
+                              <TableCell
+                                className="px-4 py-3 text-right"
+                                onClick={(e) => e.stopPropagation()}
+                              >
                                 <div className="flex justify-end gap-1 opacity-80 group-hover:opacity-100">
                                   <Button
                                     size="sm"
@@ -1052,14 +1254,16 @@ Finance Operations Partner`;
                 {totalPages > 1 && (
                   <div className="flex items-center justify-between border-t border-border px-4 py-3">
                     <span className="text-xs text-muted-foreground">
-                      Showing Page <strong className="font-semibold text-foreground">{currentPage}</strong> of <strong className="font-semibold text-foreground">{totalPages}</strong>
+                      Showing Page{" "}
+                      <strong className="font-semibold text-foreground">{currentPage}</strong> of{" "}
+                      <strong className="font-semibold text-foreground">{totalPages}</strong>
                     </span>
                     <div className="flex gap-1.5">
                       <Button
                         variant="outline"
                         size="sm"
                         disabled={currentPage === 1}
-                        onClick={() => setCurrentPage(c => Math.max(1, c - 1))}
+                        onClick={() => setCurrentPage((c) => Math.max(1, c - 1))}
                         className="h-8 border-border hover:bg-accent/60 cursor-pointer"
                       >
                         Previous
@@ -1068,7 +1272,7 @@ Finance Operations Partner`;
                         variant="outline"
                         size="sm"
                         disabled={currentPage === totalPages}
-                        onClick={() => setCurrentPage(c => Math.min(totalPages, c + 1))}
+                        onClick={() => setCurrentPage((c) => Math.min(totalPages, c + 1))}
                         className="h-8 border-border hover:bg-accent/60 cursor-pointer"
                       >
                         Next
@@ -1087,7 +1291,9 @@ Finance Operations Partner`;
             <Card className="border-border bg-card/40 backdrop-blur-xl">
               <CardHeader>
                 <CardTitle className="text-sm font-bold">Department-wise Exits</CardTitle>
-                <CardDescription className="text-xs">Count of offboardings logged per department</CardDescription>
+                <CardDescription className="text-xs">
+                  Count of offboardings logged per department
+                </CardDescription>
               </CardHeader>
               <CardContent className="h-[250px]">
                 <ResponsiveContainer width="100%" height="100%">
@@ -1107,7 +1313,9 @@ Finance Operations Partner`;
             <Card className="border-border bg-card/40 backdrop-blur-xl">
               <CardHeader>
                 <CardTitle className="text-sm font-bold">Monthly Exit Trends</CardTitle>
-                <CardDescription className="text-xs">Timeline attrition count from real exit records</CardDescription>
+                <CardDescription className="text-xs">
+                  Timeline attrition count from real exit records
+                </CardDescription>
               </CardHeader>
               <CardContent className="h-[250px] flex items-center justify-center">
                 {monthlyExitTrends.length === 0 ? (
@@ -1148,7 +1356,9 @@ Finance Operations Partner`;
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="sm:max-w-md bg-background border-border shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="font-display font-bold text-lg">Submit Resignation Request</DialogTitle>
+            <DialogTitle className="font-display font-bold text-lg">
+              Submit Resignation Request
+            </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreateSubmit} className="space-y-4">
             <div className="space-y-1.5">
@@ -1158,8 +1368,10 @@ Finance Operations Partner`;
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {authWs.employees.map(emp => (
-                    <SelectItem key={emp.id} value={emp.fullName}>{emp.fullName} ({emp.employeeId})</SelectItem>
+                  {authWs.employees.map((emp) => (
+                    <SelectItem key={emp.id} value={emp.fullName}>
+                      {emp.fullName} ({emp.employeeId})
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -1167,31 +1379,55 @@ Finance Operations Partner`;
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-muted-foreground">Resignation Date</Label>
-                <Input type="date" value={resignDate} onChange={e => setResignDate(e.target.value)} className="bg-background/50 border-border text-xs" />
+                <Label className="text-xs font-semibold text-muted-foreground">
+                  Resignation Date
+                </Label>
+                <Input
+                  type="date"
+                  value={resignDate}
+                  onChange={(e) => setResignDate(e.target.value)}
+                  className="bg-background/50 border-border text-xs"
+                />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-muted-foreground">Notice Period (Days)</Label>
-                <Input type="number" value={noticeDays} onChange={e => setNoticeDays(parseInt(e.target.value) || 30)} className="bg-background/50 border-border text-xs" />
+                <Label className="text-xs font-semibold text-muted-foreground">
+                  Notice Period (Days)
+                </Label>
+                <Input
+                  type="number"
+                  value={noticeDays}
+                  onChange={(e) => setNoticeDays(parseInt(e.target.value) || 30)}
+                  className="bg-background/50 border-border text-xs"
+                />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground">Reason for Leaving</Label>
+              <Label className="text-xs font-semibold text-muted-foreground">
+                Reason for Leaving
+              </Label>
               <Textarea
                 value={resignReason}
-                onChange={e => setResignReason(e.target.value)}
+                onChange={(e) => setResignReason(e.target.value)}
                 placeholder="State resignation reasons..."
                 className="min-h-[100px] bg-background/50 border-border text-xs"
               />
             </div>
 
             <DialogFooter className="pt-2 border-t border-border">
-              <Button type="button" variant="outline" onClick={() => setCreateOpen(false)} className="h-9 border-border bg-transparent hover:bg-accent/60 cursor-pointer">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setCreateOpen(false)}
+                className="h-9 border-border bg-transparent hover:bg-accent/60 cursor-pointer"
+              >
                 Cancel
               </Button>
-              <Button type="submit" className="h-9 bg-gradient-brand text-brand-foreground hover:opacity-90 cursor-pointer">
+              <Button
+                type="submit"
+                className="h-9 bg-gradient-brand text-brand-foreground hover:opacity-90 cursor-pointer"
+              >
                 Create Request
               </Button>
             </DialogFooter>
@@ -1205,7 +1441,9 @@ Finance Operations Partner`;
       <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
         <DialogContent className="sm:max-w-md bg-background border-border">
           <DialogHeader>
-            <DialogTitle className="font-display font-bold text-rose-500">Cancel/Reject Resignation</DialogTitle>
+            <DialogTitle className="font-display font-bold text-rose-500">
+              Cancel/Reject Resignation
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <p className="text-xs text-muted-foreground">
@@ -1213,16 +1451,23 @@ Finance Operations Partner`;
             </p>
             <Textarea
               value={rejectionReason}
-              onChange={e => setRejectionReason(e.target.value)}
+              onChange={(e) => setRejectionReason(e.target.value)}
               placeholder="e.g. Agreement signed, key personnel retention, resignation withdrawn..."
               className="min-h-[100px] border-border text-xs"
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRejectOpen(false)} className="h-9 border-border bg-transparent cursor-pointer">
+            <Button
+              variant="outline"
+              onClick={() => setRejectOpen(false)}
+              className="h-9 border-border bg-transparent cursor-pointer"
+            >
               Cancel
             </Button>
-            <Button onClick={handleRejectSubmit} className="h-9 bg-rose-600 text-white hover:bg-rose-750 cursor-pointer">
+            <Button
+              onClick={handleRejectSubmit}
+              className="h-9 bg-rose-600 text-white hover:bg-rose-750 cursor-pointer"
+            >
               Confirm Rejection
             </Button>
           </DialogFooter>
@@ -1242,7 +1487,8 @@ Finance Operations Partner`;
           </DialogHeader>
           <div className="py-3 space-y-2 text-xs text-muted-foreground text-left">
             <p>
-              Confirming final offboarding completion for <strong>{targetCase?.employee}</strong> will automatically trigger:
+              Confirming final offboarding completion for <strong>{targetCase?.employee}</strong>{" "}
+              will automatically trigger:
             </p>
             <ul className="list-disc pl-5 space-y-1 bg-muted/30 p-2.5 rounded-lg border border-border">
               <li>Revoking SSO credentials & workspace account access.</li>
@@ -1252,10 +1498,17 @@ Finance Operations Partner`;
             </ul>
           </div>
           <DialogFooter className="pt-2 border-t border-border">
-            <Button variant="outline" onClick={() => setDeactivateOpen(false)} className="h-9 border-border bg-transparent hover:bg-accent/60 cursor-pointer">
+            <Button
+              variant="outline"
+              onClick={() => setDeactivateOpen(false)}
+              className="h-9 border-border bg-transparent hover:bg-accent/60 cursor-pointer"
+            >
               Cancel
             </Button>
-            <Button onClick={handleDeactivateConfirm} className="h-9 bg-rose-600 text-white hover:bg-rose-750 cursor-pointer gap-1.5">
+            <Button
+              onClick={handleDeactivateConfirm}
+              className="h-9 bg-rose-600 text-white hover:bg-rose-750 cursor-pointer gap-1.5"
+            >
               <Archive className="h-4 w-4" />
               Deactivate & Archive
             </Button>
@@ -1266,7 +1519,7 @@ Finance Operations Partner`;
       {/* ----------------------------------------------------
           DOCUMENT PREVIEW MODAL
          ---------------------------------------------------- */}
-      <Dialog open={!!previewDocText} onOpenChange={open => !open && setPreviewDocText(null)}>
+      <Dialog open={!!previewDocText} onOpenChange={(open) => !open && setPreviewDocText(null)}>
         <DialogContent className="sm:max-w-lg bg-background border-border">
           <DialogHeader>
             <DialogTitle className="font-display font-bold flex items-center gap-1.5">
@@ -1278,7 +1531,11 @@ Finance Operations Partner`;
             {previewDocText}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPreviewDocText(null)} className="h-9 border-border bg-transparent cursor-pointer">
+            <Button
+              variant="outline"
+              onClick={() => setPreviewDocText(null)}
+              className="h-9 border-border bg-transparent cursor-pointer"
+            >
               Close Preview
             </Button>
           </DialogFooter>
@@ -1288,26 +1545,38 @@ Finance Operations Partner`;
       {/* ----------------------------------------------------
           SLIDE-OUT EXIT DETAILS SHEET
          ---------------------------------------------------- */}
-      <Sheet open={!!detailCase} onOpenChange={open => !open && setDetailCase(null)}>
+      <Sheet open={!!detailCase} onOpenChange={(open) => !open && setDetailCase(null)}>
         <SheetContent className="sm:max-w-xl flex flex-col h-full bg-background border-l border-border p-0 shadow-2xl">
           {detailCase && (
             <>
               {/* Header */}
               <SheetHeader className="p-5 border-b border-border bg-muted/10 shrink-0 text-left">
                 <div className="flex items-center justify-between">
-                  <Badge variant="outline" className="text-[10px] uppercase font-bold text-muted-foreground border-border">
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] uppercase font-bold text-muted-foreground border-border"
+                  >
                     {detailCase.department || "Operations"}
                   </Badge>
                   {(() => {
-                    const badge = STAGE_BADGES[detailCase.stage] || { label: detailCase.stage, color: "text-muted", bg: "bg-muted" };
+                    const badge = STAGE_BADGES[detailCase.stage] || {
+                      label: detailCase.stage,
+                      color: "text-muted",
+                      bg: "bg-muted",
+                    };
                     return (
-                      <Badge className={`${badge.bg} ${badge.color} border-none shadow-none text-xs font-bold`}>
+                      <Badge
+                        className={`${badge.bg} ${badge.color} border-none shadow-none text-xs font-bold`}
+                      >
                         {badge.label}
                       </Badge>
                     );
                   })()}
                 </div>
-                <SheetTitle className="font-display text-base font-bold text-foreground mt-2 truncate text-left" title={detailCase.employee}>
+                <SheetTitle
+                  className="font-display text-base font-bold text-foreground mt-2 truncate text-left"
+                  title={detailCase.employee}
+                >
                   {detailCase.employee} ({detailCase.employeeId})
                 </SheetTitle>
                 <SheetDescription className="text-xs text-muted-foreground text-left mt-0.5">
@@ -1319,10 +1588,30 @@ Finance Operations Partner`;
               <Tabs defaultValue="overview" className="flex-1 flex flex-col min-h-0">
                 <div className="px-5 border-b border-border bg-muted/5 shrink-0">
                   <TabsList className="bg-transparent border-none p-0 flex gap-2 h-10">
-                    <TabsTrigger value="overview" className="text-xs h-9 font-semibold rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent shadow-none cursor-pointer">Overview</TabsTrigger>
-                    <TabsTrigger value="clearance" className="text-xs h-9 font-semibold rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent shadow-none cursor-pointer">Clearance</TabsTrigger>
-                    <TabsTrigger value="settlement" className="text-xs h-9 font-semibold rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent shadow-none cursor-pointer">Settlement</TabsTrigger>
-                    <TabsTrigger value="interview" className="text-xs h-9 font-semibold rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent shadow-none cursor-pointer">Interview</TabsTrigger>
+                    <TabsTrigger
+                      value="overview"
+                      className="text-xs h-9 font-semibold rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent shadow-none cursor-pointer"
+                    >
+                      Overview
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="clearance"
+                      className="text-xs h-9 font-semibold rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent shadow-none cursor-pointer"
+                    >
+                      Clearance
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="settlement"
+                      className="text-xs h-9 font-semibold rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent shadow-none cursor-pointer"
+                    >
+                      Settlement
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="interview"
+                      className="text-xs h-9 font-semibold rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent shadow-none cursor-pointer"
+                    >
+                      Interview
+                    </TabsTrigger>
                   </TabsList>
                 </div>
 
@@ -1338,7 +1627,9 @@ Finance Operations Partner`;
                       <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                         <div
                           className="h-full rounded-full transition-all bg-gradient-brand"
-                          style={{ width: `${Math.max(0, Math.min(100, ((detailCase.noticeDays - (detailCase.remainingDays || 0)) / detailCase.noticeDays) * 100))}%` }}
+                          style={{
+                            width: `${Math.max(0, Math.min(100, ((detailCase.noticeDays - (detailCase.remainingDays || 0)) / detailCase.noticeDays) * 100))}%`,
+                          }}
                         />
                       </div>
                       <div className="flex justify-between text-[10px] text-muted-foreground">
@@ -1349,36 +1640,61 @@ Finance Operations Partner`;
 
                     {/* Employee specifications */}
                     <div className="rounded-xl border border-border bg-card/40 p-4 space-y-3 text-left">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Employee Profile</h4>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        Employee Profile
+                      </h4>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
                         <div>
-                          <span className="text-muted-foreground block text-[10px]">Joining Date</span>
-                          <strong className="text-foreground mt-0.5 block">{detailCase.joiningDate || "—"}</strong>
+                          <span className="text-muted-foreground block text-[10px]">
+                            Joining Date
+                          </span>
+                          <strong className="text-foreground mt-0.5 block">
+                            {detailCase.joiningDate || "—"}
+                          </strong>
                         </div>
                         <div>
-                          <span className="text-muted-foreground block text-[10px]">Designation Designation</span>
-                          <strong className="text-foreground mt-0.5 block">{detailCase.designation || detailCase.role}</strong>
+                          <span className="text-muted-foreground block text-[10px]">
+                            Designation Designation
+                          </span>
+                          <strong className="text-foreground mt-0.5 block">
+                            {detailCase.designation || detailCase.role}
+                          </strong>
                         </div>
                         <div>
-                          <span className="text-muted-foreground block text-[10px]">Reporting Manager</span>
-                          <strong className="text-foreground mt-0.5 block">{detailCase.managerName || "Maya Chen"}</strong>
+                          <span className="text-muted-foreground block text-[10px]">
+                            Reporting Manager
+                          </span>
+                          <strong className="text-foreground mt-0.5 block">
+                            {detailCase.managerName || "Maya Chen"}
+                          </strong>
                         </div>
                         <div className="col-span-2">
-                          <span className="text-muted-foreground block text-[10px]">Statement Reason for leaving</span>
-                          <p className="text-foreground mt-0.5 leading-relaxed italic">"{detailCase.reason || "No reason specified."}"</p>
+                          <span className="text-muted-foreground block text-[10px]">
+                            Statement Reason for leaving
+                          </span>
+                          <p className="text-foreground mt-0.5 leading-relaxed italic">
+                            "{detailCase.reason || "No reason specified."}"
+                          </p>
                         </div>
                       </div>
                     </div>
 
                     {/* TIMELINE */}
                     <div className="space-y-2 text-left">
-                      <Label className="text-xs font-semibold text-muted-foreground">Resignation timeline logs</Label>
+                      <Label className="text-xs font-semibold text-muted-foreground">
+                        Resignation timeline logs
+                      </Label>
                       <div className="rounded-xl border border-border bg-card/40 p-4 space-y-3.5">
                         {(detailCase.timeline || []).length === 0 ? (
-                          <p className="text-xs text-muted-foreground italic">No timelines logged for this exit.</p>
+                          <p className="text-xs text-muted-foreground italic">
+                            No timelines logged for this exit.
+                          </p>
                         ) : (
                           (detailCase.timeline || []).map((tl, idx) => (
-                            <div key={tl.id} className={`flex gap-3 text-xs relative ${idx < (detailCase.timeline || []).length - 1 ? 'before:absolute before:left-2 before:top-4 before:bottom-0 before:w-[1px] before:bg-border pb-3' : ''}`}>
+                            <div
+                              key={tl.id}
+                              className={`flex gap-3 text-xs relative ${idx < (detailCase.timeline || []).length - 1 ? "before:absolute before:left-2 before:top-4 before:bottom-0 before:w-[1px] before:bg-border pb-3" : ""}`}
+                            >
                               <span className="grid h-4 w-4 place-items-center rounded-full bg-indigo-500 text-white shrink-0">
                                 <Check className="h-2 w-2" />
                               </span>
@@ -1387,7 +1703,9 @@ Finance Operations Partner`;
                                 <p className="text-[10px] text-muted-foreground mt-0.5">
                                   By {tl.performedBy} on {new Date(tl.timestamp).toLocaleString()}
                                 </p>
-                                {tl.notes && <p className="text-[10px] text-foreground/80 mt-1">{tl.notes}</p>}
+                                {tl.notes && (
+                                  <p className="text-[10px] text-foreground/80 mt-1">{tl.notes}</p>
+                                )}
                               </div>
                             </div>
                           ))
@@ -1400,19 +1718,31 @@ Finance Operations Partner`;
                   <TabsContent value="clearance" className="space-y-6 mt-0">
                     {/* Manager & HR Resignation Approval Status */}
                     <div className="rounded-xl border border-border bg-card/40 p-4 space-y-3 text-left">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Resignation Signoff Approvals</h4>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        Resignation Signoff Approvals
+                      </h4>
                       <div className="grid grid-cols-2 gap-3 text-xs pt-1.5">
                         {/* Manager approval box */}
                         <div className="rounded-lg border border-border p-3 space-y-1">
-                          <span className="text-muted-foreground block text-[10px]">Reporting Manager</span>
-                          <strong className="text-foreground block">{detailCase.managerName || "Maya Chen"}</strong>
+                          <span className="text-muted-foreground block text-[10px]">
+                            Reporting Manager
+                          </span>
+                          <strong className="text-foreground block">
+                            {detailCase.managerName || "Maya Chen"}
+                          </strong>
                           <div className="pt-2 flex items-center justify-between">
                             {detailCase.managerApprovalStatus === "approved" ? (
-                              <Badge className="bg-emerald-500/10 text-emerald-500 border-none text-[10px]">Approved</Badge>
+                              <Badge className="bg-emerald-500/10 text-emerald-500 border-none text-[10px]">
+                                Approved
+                              </Badge>
                             ) : detailCase.managerApprovalStatus === "rejected" ? (
-                              <Badge className="bg-rose-500/10 text-rose-500 border-none text-[10px]">Rejected</Badge>
+                              <Badge className="bg-rose-500/10 text-rose-500 border-none text-[10px]">
+                                Rejected
+                              </Badge>
                             ) : (
-                              <Badge className="bg-amber-500/10 text-amber-500 border-none text-[10px]">Pending Approval</Badge>
+                              <Badge className="bg-amber-500/10 text-amber-500 border-none text-[10px]">
+                                Pending Approval
+                              </Badge>
                             )}
                             {detailCase.managerApprovalStatus === "pending" && (
                               <Button
@@ -1429,15 +1759,23 @@ Finance Operations Partner`;
 
                         {/* HR approval box */}
                         <div className="rounded-lg border border-border p-3 space-y-1">
-                          <span className="text-muted-foreground block text-[10px]">HR Business Partner</span>
+                          <span className="text-muted-foreground block text-[10px]">
+                            HR Business Partner
+                          </span>
                           <strong className="text-foreground block">Priya Nair</strong>
                           <div className="pt-2 flex items-center justify-between">
                             {detailCase.hrApprovalStatus === "approved" ? (
-                              <Badge className="bg-emerald-500/10 text-emerald-500 border-none text-[10px]">Approved</Badge>
+                              <Badge className="bg-emerald-500/10 text-emerald-500 border-none text-[10px]">
+                                Approved
+                              </Badge>
                             ) : detailCase.hrApprovalStatus === "rejected" ? (
-                              <Badge className="bg-rose-500/10 text-rose-500 border-none text-[10px]">Rejected</Badge>
+                              <Badge className="bg-rose-500/10 text-rose-500 border-none text-[10px]">
+                                Rejected
+                              </Badge>
                             ) : (
-                              <Badge className="bg-amber-500/10 text-amber-500 border-none text-[10px]">Pending Approval</Badge>
+                              <Badge className="bg-amber-500/10 text-amber-500 border-none text-[10px]">
+                                Pending Approval
+                              </Badge>
                             )}
                             {detailCase.hrApprovalStatus === "pending" && (
                               <Button
@@ -1457,8 +1795,12 @@ Finance Operations Partner`;
                     {/* ASSIGNED ASSETS LIST */}
                     <div className="space-y-2 text-left">
                       <div className="flex justify-between items-center">
-                        <Label className="text-xs font-semibold text-muted-foreground">Assigned hardware inventory clearance</Label>
-                        {(detailCase.assignedAssets || []).every(a => a.status === "returned") && (
+                        <Label className="text-xs font-semibold text-muted-foreground">
+                          Assigned hardware inventory clearance
+                        </Label>
+                        {(detailCase.assignedAssets || []).every(
+                          (a) => a.status === "returned",
+                        ) && (
                           <span className="text-[11px] font-bold text-emerald-500 flex items-center gap-1">
                             <CheckCircle2 className="h-3.5 w-3.5" /> Asset Clearance Completed
                           </span>
@@ -1477,27 +1819,42 @@ Finance Operations Partner`;
                           <TableBody>
                             {(detailCase.assignedAssets || []).length === 0 ? (
                               <TableRow>
-                                <TableCell colSpan={4} className="text-center py-4 text-muted-foreground italic">
+                                <TableCell
+                                  colSpan={4}
+                                  className="text-center py-4 text-muted-foreground italic"
+                                >
                                   No assets registered under checkout.
                                 </TableCell>
                               </TableRow>
                             ) : (
-                              (detailCase.assignedAssets || []).map(ast => (
+                              (detailCase.assignedAssets || []).map((ast) => (
                                 <TableRow key={ast.id} className="border-t border-border">
                                   <TableCell className="px-3 py-2">
                                     <div className="font-semibold">{ast.assetName}</div>
-                                    <span className="text-[10px] text-muted-foreground capitalize">{ast.category}</span>
+                                    <span className="text-[10px] text-muted-foreground capitalize">
+                                      {ast.category}
+                                    </span>
                                   </TableCell>
-                                  <TableCell className="px-3 py-2 font-mono text-[11px] text-muted-foreground">{ast.serial}</TableCell>
+                                  <TableCell className="px-3 py-2 font-mono text-[11px] text-muted-foreground">
+                                    {ast.serial}
+                                  </TableCell>
                                   <TableCell className="px-3 py-2 text-center">
                                     {ast.status === "returned" ? (
-                                      <Badge className="bg-emerald-500/10 text-emerald-500 border-none font-semibold text-[10px]">Returned</Badge>
+                                      <Badge className="bg-emerald-500/10 text-emerald-500 border-none font-semibold text-[10px]">
+                                        Returned
+                                      </Badge>
                                     ) : ast.status === "damaged" ? (
-                                      <Badge className="bg-rose-500/10 text-rose-500 border-none font-semibold text-[10px]">Damaged</Badge>
+                                      <Badge className="bg-rose-500/10 text-rose-500 border-none font-semibold text-[10px]">
+                                        Damaged
+                                      </Badge>
                                     ) : ast.status === "missing" ? (
-                                      <Badge className="bg-rose-500/10 text-rose-500 border-none font-semibold text-[10px]">Missing</Badge>
+                                      <Badge className="bg-rose-500/10 text-rose-500 border-none font-semibold text-[10px]">
+                                        Missing
+                                      </Badge>
                                     ) : (
-                                      <Badge className="bg-amber-500/10 text-amber-500 border-none font-semibold text-[10px]">Pending Return</Badge>
+                                      <Badge className="bg-amber-500/10 text-amber-500 border-none font-semibold text-[10px]">
+                                        Pending Return
+                                      </Badge>
                                     )}
                                   </TableCell>
                                   <TableCell className="px-3 py-2 text-right">
@@ -1506,7 +1863,14 @@ Finance Operations Partner`;
                                         <Button
                                           size="sm"
                                           variant="outline"
-                                          onClick={() => handleAssetReturnStatus(detailCase, ast.id, "returned", "Good condition.")}
+                                          onClick={() =>
+                                            handleAssetReturnStatus(
+                                              detailCase,
+                                              ast.id,
+                                              "returned",
+                                              "Good condition.",
+                                            )
+                                          }
                                           className="h-6 text-[9px] px-1.5 border-border cursor-pointer hover:bg-emerald-500/15"
                                         >
                                           Return
@@ -1514,7 +1878,14 @@ Finance Operations Partner`;
                                         <Button
                                           size="sm"
                                           variant="outline"
-                                          onClick={() => handleAssetReturnStatus(detailCase, ast.id, "damaged", "Screen scratch")}
+                                          onClick={() =>
+                                            handleAssetReturnStatus(
+                                              detailCase,
+                                              ast.id,
+                                              "damaged",
+                                              "Screen scratch",
+                                            )
+                                          }
                                           className="h-6 text-[9px] px-1.5 border-border cursor-pointer hover:bg-rose-500/15 text-rose-500"
                                         >
                                           Damage
@@ -1532,7 +1903,9 @@ Finance Operations Partner`;
 
                     {/* Department clearance logs */}
                     <div className="space-y-2 text-left">
-                      <Label className="text-xs font-semibold text-muted-foreground">Department-wise clearance sign-offs</Label>
+                      <Label className="text-xs font-semibold text-muted-foreground">
+                        Department-wise clearance sign-offs
+                      </Label>
                       <div className="rounded-xl border border-border bg-card/40 p-0 overflow-hidden">
                         <Table className="text-xs border-collapse">
                           <TableHeader className="bg-muted/10 border-b border-border">
@@ -1544,19 +1917,30 @@ Finance Operations Partner`;
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {(detailCase.clearanceWorkflow || []).map(clear => (
+                            {(detailCase.clearanceWorkflow || []).map((clear) => (
                               <TableRow key={clear.department} className="border-t border-border">
-                                <TableCell className="px-3 py-2 font-bold">{clear.department}</TableCell>
+                                <TableCell className="px-3 py-2 font-bold">
+                                  {clear.department}
+                                </TableCell>
                                 <TableCell className="px-3 py-2">
                                   {clear.status === "approved" ? (
-                                    <Badge className="bg-emerald-500/10 text-emerald-500 border-none font-semibold text-[10px]">Cleared</Badge>
+                                    <Badge className="bg-emerald-500/10 text-emerald-500 border-none font-semibold text-[10px]">
+                                      Cleared
+                                    </Badge>
                                   ) : clear.status === "rejected" ? (
-                                    <Badge className="bg-rose-500/10 text-rose-500 border-none font-semibold text-[10px]">Flagged</Badge>
+                                    <Badge className="bg-rose-500/10 text-rose-500 border-none font-semibold text-[10px]">
+                                      Flagged
+                                    </Badge>
                                   ) : (
-                                    <Badge className="bg-amber-500/10 text-amber-500 border-none font-semibold text-[10px]">Clearance Pending</Badge>
+                                    <Badge className="bg-amber-500/10 text-amber-500 border-none font-semibold text-[10px]">
+                                      Clearance Pending
+                                    </Badge>
                                   )}
                                 </TableCell>
-                                <TableCell className="px-3 py-2 text-muted-foreground text-[11px] truncate max-w-[150px]" title={clear.comments}>
+                                <TableCell
+                                  className="px-3 py-2 text-muted-foreground text-[11px] truncate max-w-[150px]"
+                                  title={clear.comments}
+                                >
                                   {clear.comments || "—"}
                                 </TableCell>
                                 <TableCell className="px-3 py-2 text-right">
@@ -1564,7 +1948,14 @@ Finance Operations Partner`;
                                     <Button
                                       size="sm"
                                       variant="outline"
-                                      onClick={() => handleDeptClearanceStatus(detailCase, clear.department, "approved", "Dues checks compiled.")}
+                                      onClick={() =>
+                                        handleDeptClearanceStatus(
+                                          detailCase,
+                                          clear.department,
+                                          "approved",
+                                          "Dues checks compiled.",
+                                        )
+                                      }
                                       className="h-6 text-[9px] px-1.5 border-border cursor-pointer hover:bg-emerald-500/10"
                                     >
                                       Approve
@@ -1584,40 +1975,86 @@ Finance Operations Partner`;
                     {/* Calculations Form */}
                     <div className="rounded-xl border border-border bg-card/40 p-4 space-y-4 text-left">
                       <div className="flex justify-between items-center">
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Final Settlement Calculations</h4>
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                          Final Settlement Calculations
+                        </h4>
                         {detailCase.settlementDetails?.status === "paid" && (
-                          <Badge className="bg-emerald-500/10 text-emerald-500 border-none font-bold">PAID OUT</Badge>
+                          <Badge className="bg-emerald-500/10 text-emerald-500 border-none font-bold">
+                            PAID OUT
+                          </Badge>
                         )}
                       </div>
                       <div className="grid grid-cols-2 gap-3 text-xs">
                         <div className="space-y-1">
-                          <Label className="text-[10px] text-muted-foreground">Pending Salary ($)</Label>
-                          <Input type="number" value={settleSalary} onChange={e => setSettleSalary(e.target.value)} className="h-8 bg-background border-border text-xs" />
+                          <Label className="text-[10px] text-muted-foreground">
+                            Pending Salary ($)
+                          </Label>
+                          <Input
+                            type="number"
+                            value={settleSalary}
+                            onChange={(e) => setSettleSalary(e.target.value)}
+                            className="h-8 bg-background border-border text-xs"
+                          />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-[10px] text-muted-foreground">Leave Encashment ($)</Label>
-                          <Input type="number" value={settleLeave} onChange={e => setSettleLeave(e.target.value)} className="h-8 bg-background border-border text-xs" />
+                          <Label className="text-[10px] text-muted-foreground">
+                            Leave Encashment ($)
+                          </Label>
+                          <Input
+                            type="number"
+                            value={settleLeave}
+                            onChange={(e) => setSettleLeave(e.target.value)}
+                            className="h-8 bg-background border-border text-xs"
+                          />
                         </div>
                         <div className="space-y-1">
                           <Label className="text-[10px] text-muted-foreground">Bonus ($)</Label>
-                          <Input type="number" value={settleBonus} onChange={e => setSettleBonus(e.target.value)} className="h-8 bg-background border-border text-xs" />
+                          <Input
+                            type="number"
+                            value={settleBonus}
+                            onChange={(e) => setSettleBonus(e.target.value)}
+                            className="h-8 bg-background border-border text-xs"
+                          />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-[10px] text-muted-foreground">Incentives ($)</Label>
-                          <Input type="number" value={settleIncentive} onChange={e => setSettleIncentive(e.target.value)} className="h-8 bg-background border-border text-xs" />
+                          <Label className="text-[10px] text-muted-foreground">
+                            Incentives ($)
+                          </Label>
+                          <Input
+                            type="number"
+                            value={settleIncentive}
+                            onChange={(e) => setSettleIncentive(e.target.value)}
+                            className="h-8 bg-background border-border text-xs"
+                          />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-[10px] text-muted-foreground">Deductions ($)</Label>
-                          <Input type="number" value={settleDeduction} onChange={e => setSettleDeduction(e.target.value)} className="h-8 bg-background border-border text-xs" />
+                          <Label className="text-[10px] text-muted-foreground">
+                            Deductions ($)
+                          </Label>
+                          <Input
+                            type="number"
+                            value={settleDeduction}
+                            onChange={(e) => setSettleDeduction(e.target.value)}
+                            className="h-8 bg-background border-border text-xs"
+                          />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-[10px] text-muted-foreground">Asset Recovery Charges ($)</Label>
-                          <Input type="number" value={settleRecovery} onChange={e => setSettleRecovery(e.target.value)} className="h-8 bg-background border-border text-xs" />
+                          <Label className="text-[10px] text-muted-foreground">
+                            Asset Recovery Charges ($)
+                          </Label>
+                          <Input
+                            type="number"
+                            value={settleRecovery}
+                            onChange={(e) => setSettleRecovery(e.target.value)}
+                            className="h-8 bg-background border-border text-xs"
+                          />
                         </div>
 
                         <div className="col-span-2 pt-2 border-t border-border flex justify-between items-center text-xs">
                           <div>
-                            <span className="text-muted-foreground text-[10px] block">Calculated Settlement Payout</span>
+                            <span className="text-muted-foreground text-[10px] block">
+                              Calculated Settlement Payout
+                            </span>
                             <strong className="text-lg text-foreground font-display font-semibold">
                               ${detailCase.settlementDetails?.totalAmount || 0}
                             </strong>
@@ -1631,15 +2068,16 @@ Finance Operations Partner`;
                             >
                               Update calculations
                             </Button>
-                            {detailCase.settlementDetails && detailCase.settlementDetails.status === "approved" && (
-                              <Button
-                                type="button"
-                                onClick={() => handlePaySettlement(detailCase)}
-                                className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
-                              >
-                                Pay Out Wire
-                              </Button>
-                            )}
+                            {detailCase.settlementDetails &&
+                              detailCase.settlementDetails.status === "approved" && (
+                                <Button
+                                  type="button"
+                                  onClick={() => handlePaySettlement(detailCase)}
+                                  className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
+                                >
+                                  Pay Out Wire
+                                </Button>
+                              )}
                           </div>
                         </div>
                       </div>
@@ -1647,25 +2085,33 @@ Finance Operations Partner`;
 
                     {/* Exit Documents Generation */}
                     <div className="space-y-2 text-left">
-                      <Label className="text-xs font-semibold text-muted-foreground">Auto-generated offboarding certificates</Label>
+                      <Label className="text-xs font-semibold text-muted-foreground">
+                        Auto-generated offboarding certificates
+                      </Label>
                       <div className="rounded-xl border border-border bg-card/40 p-0 overflow-hidden">
                         <Table className="text-xs border-collapse">
                           <TableHeader className="bg-muted/10 border-b border-border">
                             <TableRow>
-                              <TableHead className="px-3 py-2 w-[220px]">Certificate Title</TableHead>
+                              <TableHead className="px-3 py-2 w-[220px]">
+                                Certificate Title
+                              </TableHead>
                               <TableHead className="px-3 py-2">Generation Status</TableHead>
                               <TableHead className="px-3 py-2 text-right"></TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {detailCase.documents.map(doc => (
+                            {detailCase.documents.map((doc) => (
                               <TableRow key={doc.name} className="border-t border-border">
                                 <TableCell className="px-3 py-2 font-bold">{doc.name}</TableCell>
                                 <TableCell className="px-3 py-2">
                                   {doc.issued ? (
-                                    <Badge className="bg-emerald-500/10 text-emerald-500 border-none text-[10px] font-semibold">Issued & Signed</Badge>
+                                    <Badge className="bg-emerald-500/10 text-emerald-500 border-none text-[10px] font-semibold">
+                                      Issued & Signed
+                                    </Badge>
                                   ) : (
-                                    <Badge className="bg-amber-500/10 text-amber-500 border-none text-[10px] font-semibold">Not Generated</Badge>
+                                    <Badge className="bg-amber-500/10 text-amber-500 border-none text-[10px] font-semibold">
+                                      Not Generated
+                                    </Badge>
                                   )}
                                 </TableCell>
                                 <TableCell className="px-3 py-2 text-right">
@@ -1693,7 +2139,9 @@ Finance Operations Partner`;
                                         size="icon"
                                         variant="ghost"
                                         onClick={() => {
-                                          toast.success(`Sent PDF document to ${detailCase.employee}'s personal email.`);
+                                          toast.success(
+                                            `Sent PDF document to ${detailCase.employee}'s personal email.`,
+                                          );
                                         }}
                                         className="h-6 w-6 text-indigo-500 hover:bg-indigo-500/10 cursor-pointer"
                                         title="Email PDF to employee"
@@ -1713,37 +2161,72 @@ Finance Operations Partner`;
 
                   {/* INTERVIEW TAB */}
                   <TabsContent value="interview" className="space-y-4 mt-0 text-left">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Exit Interview Feedback Report</h4>
-                    
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      Exit Interview Feedback Report
+                    </h4>
+
                     <div className="space-y-1">
                       <Label className="text-xs text-muted-foreground">Reason for departure</Label>
-                      <Input value={intReason} onChange={e => setIntReason(e.target.value)} className="bg-background/50 border-border text-xs h-8" />
+                      <Input
+                        value={intReason}
+                        onChange={(e) => setIntReason(e.target.value)}
+                        className="bg-background/50 border-border text-xs h-8"
+                      />
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Work Experience Rating (1-5)</Label>
+                      <Label className="text-xs text-muted-foreground">
+                        Work Experience Rating (1-5)
+                      </Label>
                       <div className="flex gap-1.5 items-center">
-                        {[1, 2, 3, 4, 5].map(star => (
-                          <button key={star} onClick={() => setIntRating(star)} className="cursor-pointer">
-                            <Star className={`h-5 w-5 ${star <= intRating ? 'text-amber-500 fill-amber-500' : 'text-muted-foreground'}`} />
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            onClick={() => setIntRating(star)}
+                            className="cursor-pointer"
+                          >
+                            <Star
+                              className={`h-5 w-5 ${star <= intRating ? "text-amber-500 fill-amber-500" : "text-muted-foreground"}`}
+                            />
                           </button>
                         ))}
                       </div>
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Reporting Manager Feedback</Label>
-                      <Textarea value={intMgrFeedback} onChange={e => setIntMgrFeedback(e.target.value)} placeholder="Review management and transitions..." className="min-h-[50px] bg-background/50 border-border text-xs" />
+                      <Label className="text-xs text-muted-foreground">
+                        Reporting Manager Feedback
+                      </Label>
+                      <Textarea
+                        value={intMgrFeedback}
+                        onChange={(e) => setIntMgrFeedback(e.target.value)}
+                        placeholder="Review management and transitions..."
+                        className="min-h-[50px] bg-background/50 border-border text-xs"
+                      />
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Company Work Environment Feedback</Label>
-                      <Textarea value={intCompFeedback} onChange={e => setIntCompFeedback(e.target.value)} placeholder="Review culture, growth opportunities..." className="min-h-[50px] bg-background/50 border-border text-xs" />
+                      <Label className="text-xs text-muted-foreground">
+                        Company Work Environment Feedback
+                      </Label>
+                      <Textarea
+                        value={intCompFeedback}
+                        onChange={(e) => setIntCompFeedback(e.target.value)}
+                        placeholder="Review culture, growth opportunities..."
+                        className="min-h-[50px] bg-background/50 border-border text-xs"
+                      />
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Suggestions for Improvement</Label>
-                      <Textarea value={intSuggestions} onChange={e => setIntSuggestions(e.target.value)} placeholder="How can OFC360 retain talent better?" className="min-h-[50px] bg-background/50 border-border text-xs" />
+                      <Label className="text-xs text-muted-foreground">
+                        Suggestions for Improvement
+                      </Label>
+                      <Textarea
+                        value={intSuggestions}
+                        onChange={(e) => setIntSuggestions(e.target.value)}
+                        placeholder="How can OFC360 retain talent better?"
+                        className="min-h-[50px] bg-background/50 border-border text-xs"
+                      />
                     </div>
 
                     <div className="pt-2 flex justify-end">

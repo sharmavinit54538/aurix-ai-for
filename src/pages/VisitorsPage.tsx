@@ -7,12 +7,22 @@ import type { Visitor, VisitorStatus } from "@/lib/hrms/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
-  Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from "recharts";
-
-
 
 const STATUS_TONE: Record<VisitorStatus, "info" | "success" | "warning" | "danger" | "muted"> = {
   pending: "warning",
@@ -44,18 +54,32 @@ export function VisitorsPage() {
   const [draft, setDraft] = useState<Visitor>(emptyVisitor());
   const [pass, setPass] = useState<Visitor | null>(null);
 
-  const stats = useMemo(() => ({
-    total: visitors.length,
-    checkedIn: visitors.filter((v) => v.status === "checked-in").length,
-    pending: visitors.filter((v) => v.status === "pending").length,
-    today: visitors.filter((v) => new Date(v.createdAt).toDateString() === new Date().toDateString()).length,
-  }), [visitors]);
+  const stats = useMemo(
+    () => ({
+      total: visitors.length,
+      checkedIn: visitors.filter((v) => v.status === "checked-in").length,
+      pending: visitors.filter((v) => v.status === "pending").length,
+      today: visitors.filter(
+        (v) => new Date(v.createdAt).toDateString() === new Date().toDateString(),
+      ).length,
+    }),
+    [visitors],
+  );
 
-  const filtered = useMemo(() => visitors
-    .filter((v) => (filter === "all" ? true : v.status === filter))
-    .filter((v) => query.trim() === "" ? true : `${v.name} ${v.company ?? ""} ${v.hostEmployee} ${v.purpose}`.toLowerCase().includes(query.toLowerCase()))
-    .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt)),
-  [visitors, filter, query]);
+  const filtered = useMemo(
+    () =>
+      visitors
+        .filter((v) => (filter === "all" ? true : v.status === filter))
+        .filter((v) =>
+          query.trim() === ""
+            ? true
+            : `${v.name} ${v.company ?? ""} ${v.hostEmployee} ${v.purpose}`
+                .toLowerCase()
+                .includes(query.toLowerCase()),
+        )
+        .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt)),
+    [visitors, filter, query],
+  );
 
   const hourly = useMemo(() => {
     const buckets = Array.from({ length: 12 }, (_, i) => ({ hour: `${i + 8}:00`, visitors: 0 }));
@@ -78,7 +102,14 @@ export function VisitorsPage() {
   return (
     <>
       <div className="mb-6 flex items-center justify-end">
-        <Button size="sm" onClick={() => { setDraft(emptyVisitor()); setOpen(true); }} className="gap-2">
+        <Button
+          size="sm"
+          onClick={() => {
+            setDraft(emptyVisitor());
+            setOpen(true);
+          }}
+          className="gap-2"
+        >
           <UserPlus className="h-4 w-4" /> New visitor
         </Button>
       </div>
@@ -86,7 +117,12 @@ export function VisitorsPage() {
       <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Visitors today" value={stats.today} icon={UserPlus} />
         <StatCard label="Checked-in" value={stats.checkedIn} icon={LogIn} accent="success" />
-        <StatCard label="Pending approval" value={stats.pending} icon={CheckCircle2} accent="warning" />
+        <StatCard
+          label="Pending approval"
+          value={stats.pending}
+          icon={CheckCircle2}
+          accent="warning"
+        />
         <StatCard label="All-time" value={stats.total} icon={UserPlus} accent="muted" />
       </div>
 
@@ -113,9 +149,17 @@ export function VisitorsPage() {
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <SearchBox value={query} onChange={setQuery} placeholder="Search visitors…" />
-        <select value={filter} onChange={(e) => setFilter(e.target.value as any)} className="h-9 rounded-md border border-border bg-background px-3 text-sm">
+        <select
+          value={filter}
+          onChange={(e) => setFilter(e.target.value as any)}
+          className="h-9 rounded-md border border-border bg-background px-3 text-sm"
+        >
           <option value="all">All</option>
-          {(["pending", "approved", "checked-in", "checked-out", "rejected"] as VisitorStatus[]).map((s) => <option key={s}>{s}</option>)}
+          {(
+            ["pending", "approved", "checked-in", "checked-out", "rejected"] as VisitorStatus[]
+          ).map((s) => (
+            <option key={s}>{s}</option>
+          ))}
         </select>
       </div>
 
@@ -139,18 +183,48 @@ export function VisitorsPage() {
                 </div>
               </div>
               <div className="flex flex-col items-end gap-2">
-                <Button variant="ghost" size="icon" onClick={() => setPass(v)} aria-label="Show pass"><QrCode className="h-4 w-4" /></Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setPass(v)}
+                  aria-label="Show pass"
+                >
+                  <QrCode className="h-4 w-4" />
+                </Button>
                 {v.status === "pending" ? (
                   <div className="flex gap-1">
-                    <Button size="sm" onClick={() => hrms.setVisitorStatus(v.id, "approved")}>Approve</Button>
-                    <Button variant="outline" size="sm" onClick={() => hrms.setVisitorStatus(v.id, "rejected")}>Reject</Button>
+                    <Button size="sm" onClick={() => hrms.setVisitorStatus(v.id, "approved")}>
+                      Approve
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => hrms.setVisitorStatus(v.id, "rejected")}
+                    >
+                      Reject
+                    </Button>
                   </div>
                 ) : v.status === "approved" ? (
-                  <Button size="sm" onClick={() => hrms.checkInVisitor(v.id)} className="gap-1"><LogIn className="h-3.5 w-3.5" /> Check in</Button>
+                  <Button size="sm" onClick={() => hrms.checkInVisitor(v.id)} className="gap-1">
+                    <LogIn className="h-3.5 w-3.5" /> Check in
+                  </Button>
                 ) : v.status === "checked-in" ? (
-                  <Button size="sm" variant="outline" onClick={() => hrms.checkOutVisitor(v.id)} className="gap-1"><LogOutIcon className="h-3.5 w-3.5" /> Check out</Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => hrms.checkOutVisitor(v.id)}
+                    className="gap-1"
+                  >
+                    <LogOutIcon className="h-3.5 w-3.5" /> Check out
+                  </Button>
                 ) : (
-                  <span className="text-xs text-muted-foreground">{v.status === "rejected" ? <XCircle className="h-4 w-4 text-rose-500" /> : "Done"}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {v.status === "rejected" ? (
+                      <XCircle className="h-4 w-4 text-rose-500" />
+                    ) : (
+                      "Done"
+                    )}
+                  </span>
                 )}
               </div>
             </div>
@@ -160,19 +234,74 @@ export function VisitorsPage() {
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>New visitor</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>New visitor</DialogTitle>
+          </DialogHeader>
           <div className="grid grid-cols-2 gap-3">
-            <div className="col-span-2"><Label>Visitor name</Label><Input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} /></div>
-            <div><Label>Company</Label><Input value={draft.company} onChange={(e) => setDraft({ ...draft, company: e.target.value })} /></div>
-            <div><Label>Phone</Label><Input value={draft.phone ?? ""} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} /></div>
-            <div><Label>Email</Label><Input value={draft.email ?? ""} onChange={(e) => setDraft({ ...draft, email: e.target.value })} /></div>
-            <div><Label>Host employee</Label><Input value={draft.hostEmployee} onChange={(e) => setDraft({ ...draft, hostEmployee: e.target.value })} /></div>
-            <div className="col-span-2"><Label>Purpose</Label><Input value={draft.purpose} onChange={(e) => setDraft({ ...draft, purpose: e.target.value })} /></div>
-            <div><Label>Duration (mins)</Label><Input type="number" value={draft.expectedDurationMins} onChange={(e) => setDraft({ ...draft, expectedDurationMins: Number(e.target.value) })} /></div>
-            <div><Label>Photo URL</Label><Input value={draft.photoUrl ?? ""} onChange={(e) => setDraft({ ...draft, photoUrl: e.target.value })} /></div>
+            <div className="col-span-2">
+              <Label>Visitor name</Label>
+              <Input
+                value={draft.name}
+                onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Company</Label>
+              <Input
+                value={draft.company}
+                onChange={(e) => setDraft({ ...draft, company: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Phone</Label>
+              <Input
+                value={draft.phone ?? ""}
+                onChange={(e) => setDraft({ ...draft, phone: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Email</Label>
+              <Input
+                value={draft.email ?? ""}
+                onChange={(e) => setDraft({ ...draft, email: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Host employee</Label>
+              <Input
+                value={draft.hostEmployee}
+                onChange={(e) => setDraft({ ...draft, hostEmployee: e.target.value })}
+              />
+            </div>
+            <div className="col-span-2">
+              <Label>Purpose</Label>
+              <Input
+                value={draft.purpose}
+                onChange={(e) => setDraft({ ...draft, purpose: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Duration (mins)</Label>
+              <Input
+                type="number"
+                value={draft.expectedDurationMins}
+                onChange={(e) =>
+                  setDraft({ ...draft, expectedDurationMins: Number(e.target.value) })
+                }
+              />
+            </div>
+            <div>
+              <Label>Photo URL</Label>
+              <Input
+                value={draft.photoUrl ?? ""}
+                onChange={(e) => setDraft({ ...draft, photoUrl: e.target.value })}
+              />
+            </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
             <Button onClick={save}>Create pass</Button>
           </DialogFooter>
         </DialogContent>
@@ -180,13 +309,17 @@ export function VisitorsPage() {
 
       <Dialog open={!!pass} onOpenChange={(o) => !o && setPass(null)}>
         <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>Visitor Pass</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Visitor Pass</DialogTitle>
+          </DialogHeader>
           {pass ? (
             <div className="flex flex-col items-center gap-3 text-center">
               <div className="text-lg font-semibold">{pass.name}</div>
               <div className="text-xs text-muted-foreground">Host: {pass.hostEmployee}</div>
               <QrTile value={`OFC360-VISITOR:${pass.passCode}`} label={pass.passCode} size={170} />
-              <Button variant="outline" size="sm" onClick={() => window.print()}>Print pass</Button>
+              <Button variant="outline" size="sm" onClick={() => window.print()}>
+                Print pass
+              </Button>
             </div>
           ) : null}
         </DialogContent>

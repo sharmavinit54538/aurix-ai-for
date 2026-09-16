@@ -16,7 +16,6 @@ import {
   Plane,
   Plus,
   Printer,
-  RefreshCw,
   Search,
   ShieldAlert,
   Sparkles,
@@ -48,7 +47,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import { useHrms } from "@/lib/hrms/store";
 
 export type TimelineKind =
@@ -219,10 +217,18 @@ export function TimelinePage() {
       if (empRes.status === "fulfilled" && empRes.value.data?.data) {
         const empItems = empRes.value.data.data.items ?? empRes.value.data.data ?? [];
         empItems.forEach((e: any, idx: number) => {
-          const empName = [e.first_name, e.last_name].filter(Boolean).join(" ").trim() || e.full_name || e.name || `Employee #${e.employee_id || idx + 1}`;
+          const empName =
+            [e.first_name, e.last_name].filter(Boolean).join(" ").trim() ||
+            e.full_name ||
+            e.name ||
+            `Employee #${e.employee_id || idx + 1}`;
           const desig = e.designation || e.role || "Specialist";
           const dept = e.department || e.department_name || "General";
-          const joinDate = e.joining_date ? String(e.joining_date).split("T")[0] : (e.created_at ? String(e.created_at).split("T")[0] : "2026-07-21");
+          const joinDate = e.joining_date
+            ? String(e.joining_date).split("T")[0]
+            : e.created_at
+              ? String(e.created_at).split("T")[0]
+              : "2026-07-21";
 
           liveList.push({
             id: `api_emp_join_${e.id ?? idx}`,
@@ -257,7 +263,10 @@ export function TimelinePage() {
 
       // 3. Live Internal Announcements & News
       if (intRes.status === "fulfilled" && intRes.value.data?.data) {
-        const announcements = intRes.value.data.data.pinned_announcements ?? intRes.value.data.data.recent_announcements ?? [];
+        const announcements =
+          intRes.value.data.data.pinned_announcements ??
+          intRes.value.data.data.recent_announcements ??
+          [];
         announcements.forEach((a: any, idx: number) => {
           liveList.push({
             id: `api_ann_${a.id ?? idx}`,
@@ -266,7 +275,8 @@ export function TimelinePage() {
             employeeName: a.author_name ?? "Leadership Office",
             department: "Enterprise",
             date: a.created_at ? String(a.created_at).split("T")[0] : "2026-07-15",
-            description: a.content ?? a.summary ?? "Official company announcement logged in timeline history.",
+            description:
+              a.content ?? a.summary ?? "Official company announcement logged in timeline history.",
             performedBy: a.author_name ?? "Executive Team",
           });
         });
@@ -349,7 +359,9 @@ export function TimelinePage() {
   const totalEventsCount = events.length;
   const joiningCount = events.filter((e) => e.kind === "joining").length;
   const promotionCount = events.filter((e) => e.kind === "promotion" || e.kind === "award").length;
-  const transferCount = events.filter((e) => e.kind === "department-change" || e.kind === "salary-revision").length;
+  const transferCount = events.filter(
+    (e) => e.kind === "department-change" || e.kind === "salary-revision",
+  ).length;
 
   function handleCreateEvent() {
     if (!newTitle.trim() || !newEmployee.trim()) {
@@ -390,7 +402,7 @@ export function TimelinePage() {
           e.date,
           `"${(e.performedBy || "").replace(/"/g, '""')}"`,
           `"${(e.description || "").replace(/"/g, '""')}"`,
-        ].join(",")
+        ].join(","),
       )
       .join("\n");
 
@@ -406,31 +418,18 @@ export function TimelinePage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <PageHeader
-        title="Employee Lifecycle & Activity Timeline"
-        description="Comprehensive real-time activity log tracking employee milestones, promotions, transfers, and achievements."
-        actions={
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={fetchLiveTimelineEvents} disabled={loading} className="gap-1.5 text-xs">
-              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Sync Live
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleExportCSV} className="gap-1.5 text-xs">
-              <Download className="h-3.5 w-3.5" /> Export CSV
-            </Button>
-            <Button size="sm" onClick={() => setAddModalOpen(true)} className="gap-1.5 text-xs bg-primary text-primary-foreground">
-              <Plus className="h-3.5 w-3.5" /> Log New Event
-            </Button>
-          </div>
-        }
-      />
-
       {/* KPI Stats Cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl shadow-sm">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Events</span>
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Total Events
+              </span>
               <div className="grid h-8 w-8 place-items-center rounded-lg bg-blue-500/10 text-blue-500">
                 <Calendar className="h-4 w-4" />
               </div>
@@ -440,10 +439,16 @@ export function TimelinePage() {
           </div>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.05 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.05 }}
+        >
           <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl shadow-sm">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Onboarding & Joins</span>
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Onboarding & Joins
+              </span>
               <div className="grid h-8 w-8 place-items-center rounded-lg bg-emerald-500/10 text-emerald-500">
                 <UserCheck className="h-4 w-4" />
               </div>
@@ -453,10 +458,16 @@ export function TimelinePage() {
           </div>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.1 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+        >
           <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl shadow-sm">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Promotions & Awards</span>
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Promotions & Awards
+              </span>
               <div className="grid h-8 w-8 place-items-center rounded-lg bg-amber-500/10 text-amber-500">
                 <Award className="h-4 w-4" />
               </div>
@@ -466,10 +477,16 @@ export function TimelinePage() {
           </div>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.15 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.15 }}
+        >
           <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl shadow-sm">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Transfers & Salaries</span>
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Transfers & Salaries
+              </span>
               <div className="grid h-8 w-8 place-items-center rounded-lg bg-violet-500/10 text-violet-500">
                 <TrendingUp className="h-4 w-4" />
               </div>
@@ -543,6 +560,25 @@ export function TimelinePage() {
               <X className="h-3 w-3" /> Reset
             </Button>
           )}
+
+          {/* Action buttons */}
+          <div className="ml-auto flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCSV}
+              className="h-8 text-xs gap-1.5"
+            >
+              <Download className="h-3.5 w-3.5" /> Export CSV
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => setAddModalOpen(true)}
+              className="h-8 text-xs gap-1.5 bg-primary text-primary-foreground"
+            >
+              <Plus className="h-3.5 w-3.5" /> Log New Event
+            </Button>
+          </div>
         </div>
 
         {/* Single-Row Horizontal Scroll Pills (No Multi-Line Wrapping) */}
@@ -592,7 +628,9 @@ export function TimelinePage() {
             <Calendar className="h-6 w-6" />
           </div>
           <h3 className="text-base font-semibold">No Timeline Events Found</h3>
-          <p className="text-xs text-muted-foreground mt-1">Try resetting your search parameters or category filters.</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Try resetting your search parameters or category filters.
+          </p>
           <Button
             variant="outline"
             size="sm"
@@ -612,7 +650,9 @@ export function TimelinePage() {
             <div key={groupName} className="space-y-4">
               {/* Group Header */}
               <div className="flex items-center gap-3">
-                <span className="font-display text-sm font-semibold tracking-tight text-foreground">{groupName}</span>
+                <span className="font-display text-sm font-semibold tracking-tight text-foreground">
+                  {groupName}
+                </span>
                 <span className="h-px flex-1 bg-border/60" />
                 <Badge variant="outline" className="text-[10px] rounded-full px-2">
                   {groupItems.length} {groupItems.length === 1 ? "event" : "events"}
@@ -645,12 +685,18 @@ export function TimelinePage() {
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div className="space-y-1">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <h3 className="font-display text-sm font-semibold text-foreground">{evt.title}</h3>
-                              <Badge className={`text-[10px] font-medium border ${meta.bg}`}>{meta.label}</Badge>
+                              <h3 className="font-display text-sm font-semibold text-foreground">
+                                {evt.title}
+                              </h3>
+                              <Badge className={`text-[10px] font-medium border ${meta.bg}`}>
+                                {meta.label}
+                              </Badge>
                             </div>
 
                             <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-                              <span className="font-medium text-foreground">{evt.employeeName}</span>
+                              <span className="font-medium text-foreground">
+                                {evt.employeeName}
+                              </span>
                               {evt.employeeId && (
                                 <>
                                   <span>·</span>
@@ -676,7 +722,10 @@ export function TimelinePage() {
 
                           {evt.performedBy && (
                             <span className="text-[11px] text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-md border border-border/40">
-                              Logged by: <strong className="font-medium text-foreground">{evt.performedBy}</strong>
+                              Logged by:{" "}
+                              <strong className="font-medium text-foreground">
+                                {evt.performedBy}
+                              </strong>
                             </span>
                           )}
                         </div>
@@ -700,7 +749,9 @@ export function TimelinePage() {
       <Dialog open={addModalOpen} onOpenChange={setAddModalOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle className="font-display text-lg">Log Lifecycle & Activity Event</DialogTitle>
+            <DialogTitle className="font-display text-lg">
+              Log Lifecycle & Activity Event
+            </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
               Record an official milestone event into the employee timeline history.
             </DialogDescription>
@@ -789,7 +840,12 @@ export function TimelinePage() {
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" size="sm" onClick={() => setAddModalOpen(false)} className="text-xs">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setAddModalOpen(false)}
+              className="text-xs"
+            >
               Cancel
             </Button>
             <Button size="sm" onClick={handleCreateEvent} className="text-xs">
