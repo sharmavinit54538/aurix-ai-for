@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { selectAuditLogs, selectSettingsLoading } from "@/store/settings/settingsSelectors";
-import { fetchAuditLogs } from "@/store/settings/settingsThunk";
+import { exportAuditLogs, fetchAuditLogs } from "@/store/settings/settingsThunk";
 
 export const Route = createFileRoute("/dashboard/settings/audit-logs")({
   head: () => ({ meta: [{ title: "Audit Logs — OFC360" }] }),
@@ -24,13 +24,28 @@ function AuditLogsPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [moduleFilter, setModuleFilter] = useState("all");
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     dispatch(fetchAuditLogs({ page, limit: 10, search, module: moduleFilter }));
   }, [dispatch, page, search, moduleFilter]);
 
-  const handleExport = () => {
-    toast.success("Audit log export started. File will download shortly.");
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      await dispatch(
+        exportAuditLogs({
+          search,
+          module: moduleFilter !== "all" ? moduleFilter : undefined,
+          format: "csv",
+        }),
+      ).unwrap();
+      toast.success("Audit logs exported and downloaded successfully!");
+    } catch (err: any) {
+      toast.error(typeof err === "string" ? err : "Failed to export audit logs");
+    } finally {
+      setExporting(false);
+    }
   };
 
   const logs = auditData?.items || [];
@@ -44,8 +59,9 @@ function AuditLogsPage() {
           <h2 className="text-lg font-semibold tracking-tight">Audit Trail & Activity Logs</h2>
           <p className="text-xs text-muted-foreground">Trace every admin action, security event, and system modification in real time.</p>
         </div>
-        <Button size="sm" variant="outline" onClick={handleExport}>
-          <Download className="mr-2 h-4 w-4" /> Export CSV
+        <Button size="sm" variant="outline" onClick={handleExport} disabled={exporting}>
+          <Download className={`mr-2 h-4 w-4 ${exporting ? "animate-spin" : ""}`} />
+          {exporting ? "Exporting..." : "Export CSV"}
         </Button>
       </div>
 

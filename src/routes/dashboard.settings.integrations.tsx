@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { selectIntegrations, selectSettingsLoading } from "@/store/settings/settingsSelectors";
-import { fetchIntegrations, toggleIntegration } from "@/store/settings/settingsThunk";
+import { selectIntegrations, selectSettingsErrors, selectSettingsLoading } from "@/store/settings/settingsSelectors";
+import { fetchIntegrationSettings, updateIntegrationSettings } from "@/store/settings/settingsThunk";
 import type { IntegrationItem } from "@/store/settings/settingsTypes";
 
 export const Route = createFileRoute("/dashboard/settings/integrations")({
@@ -27,14 +27,17 @@ function IntegrationsPage() {
   const dispatch = useAppDispatch();
   const integrations = useAppSelector(selectIntegrations);
   const loading = useAppSelector(selectSettingsLoading);
+  const errors = useAppSelector(selectSettingsErrors);
 
   useEffect(() => {
-    dispatch(fetchIntegrations());
+    dispatch(fetchIntegrationSettings());
   }, [dispatch]);
 
   const handleToggle = async (item: IntegrationItem) => {
     try {
-      await dispatch(toggleIntegration({ id: item.id, connected: !item.connected })).unwrap();
+      await dispatch(
+        updateIntegrationSettings({ id: item.id, connected: !item.connected }),
+      ).unwrap();
       toast.success(`${item.name} ${!item.connected ? "connected" : "disconnected"}`);
     } catch {
       toast.error(`Failed to update ${item.name} integration`);

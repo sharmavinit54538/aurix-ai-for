@@ -5,6 +5,7 @@ import managersReducer from "@/features/admin/managers/managersSlice";
 import performanceReducer from "@/features/admin/performance/performanceSlice";
 import recruitmentReducer from "@/features/admin/recruitment/recruitmentSlice";
 import aiInsightsReducer from "@/store/aiInsights/aiInsightsSlice";
+import profileReducer from "@/store/profile/profileSlice";
 import settingsReducer from "@/store/settings/settingsSlice";
 import sidebarReducer from "@/store/sidebar/sidebarSlice";
 import employeeHierarchyReducer from "@/store/employeeHierarchy/employeeHierarchySlice";
@@ -18,6 +19,7 @@ export const store = configureStore({
     recruitment: recruitmentReducer,
     aiInsights: aiInsightsReducer,
     settings: settingsReducer,
+    profile: profileReducer,
     sidebar: sidebarReducer,
     employeeHierarchy: employeeHierarchyReducer,
   },

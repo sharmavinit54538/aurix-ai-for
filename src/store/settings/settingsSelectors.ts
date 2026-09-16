@@ -18,6 +18,60 @@ export const selectSettingsError = createSelector(
   (state) => state?.error ?? null,
 );
 
+export const selectSettingsErrors = createSelector(
+  [selectSettingsState],
+  (state) => state?.operationErrors ?? {},
+);
+
+export const selectSettingsOperationLoading = createSelector(
+  [selectSettingsState],
+  (state) => state?.operationLoading ?? {},
+);
+
+export const selectSettingsOperationSuccess = createSelector(
+  [selectSettingsState],
+  (state) => state?.operationSuccess ?? {},
+);
+
+export const selectSecuritySettings = createSelector(
+  [selectSettingsState],
+  (state) => state?.security ?? null,
+);
+
+export const selectNotificationSettings = createSelector(
+  [selectSettingsState],
+  (state) => state?.notifications ?? null,
+);
+
+export const selectBrandingSettings = createSelector(
+  [selectSettingsState],
+  (state) => state?.branding ?? null,
+);
+
+export const selectIntegrationSettings = createSelector(
+  [selectSettingsState],
+  (state) => state?.integrations ?? [],
+);
+
+export const selectIntegrations = selectIntegrationSettings;
+
+export const selectBillingSettings = createSelector(
+  [selectSettingsState],
+  (state) => state?.billing ?? null,
+);
+
+export const selectBillingData = selectBillingSettings;
+
+export const selectSubscriptionPlans = createSelector(
+  [selectSettingsState],
+  (state) => state?.subscriptionPlans ?? [],
+);
+
+export const selectAuditLogs = createSelector(
+  [selectSettingsState],
+  (state) => state?.auditLogs ?? null,
+);
+
 export const selectGeneralSettings = createSelector(
   [selectSettingsState],
   (state) => state?.generalSettings ?? null,
@@ -36,31 +90,6 @@ export const selectRoles = createSelector(
 export const selectPermissions = createSelector(
   [selectSettingsState],
   (state) => state?.permissions ?? [],
-);
-
-export const selectAuditLogs = createSelector(
-  [selectSettingsState],
-  (state) => state?.auditLogs ?? null,
-);
-
-export const selectBillingData = createSelector(
-  [selectSettingsState],
-  (state) => state?.billing ?? null,
-);
-
-export const selectSecuritySettings = createSelector(
-  [selectSettingsState],
-  (state) => state?.security ?? null,
-);
-
-export const selectNotificationSettings = createSelector(
-  [selectSettingsState],
-  (state) => state?.notifications ?? null,
-);
-
-export const selectIntegrations = createSelector(
-  [selectSettingsState],
-  (state) => state?.integrations ?? [],
 );
 
 export const selectProfileSettings = createSelector(

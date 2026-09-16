@@ -1,14 +1,26 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { CheckCircle2, CreditCard, Download, Zap } from "lucide-react";
+import { CheckCircle2, CreditCard, Download, RefreshCw, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { selectBillingData, selectSettingsLoading } from "@/store/settings/settingsSelectors";
-import { fetchBilling } from "@/store/settings/settingsThunk";
+import {
+  selectBillingSettings,
+  selectSettingsErrors,
+  selectSettingsLoading,
+  selectSettingsOperationLoading,
+  selectSubscriptionPlans,
+} from "@/store/settings/settingsSelectors";
+import {
+  cancelSubscription,
+  fetchBillingSettings,
+  fetchSubscriptionPlans,
+  upgradeSubscription,
+} from "@/store/settings/settingsThunk";
+import type { SubscriptionPlan } from "@/store/settings/settingsTypes";
 
 export const Route = createFileRoute("/dashboard/settings/billing")({
   head: () => ({ meta: [{ title: "Billing & Subscriptions — OFC360" }] }),
@@ -17,15 +29,36 @@ export const Route = createFileRoute("/dashboard/settings/billing")({
 
 function BillingPage() {
   const dispatch = useAppDispatch();
-  const billing = useAppSelector(selectBillingData);
+  const billing = useAppSelector(selectBillingSettings);
+  const subscriptionPlans = useAppSelector(selectSubscriptionPlans);
   const loading = useAppSelector(selectSettingsLoading);
+  const errors = useAppSelector(selectSettingsErrors);
+  const opLoading = useAppSelector(selectSettingsOperationLoading);
 
   useEffect(() => {
-    dispatch(fetchBilling());
+    dispatch(fetchBillingSettings());
+    dispatch(fetchSubscriptionPlans());
   }, [dispatch]);
 
-  const handleUpgrade = () => {
-    toast.info("Subscription plan upgrade request initiated.");
+  const handleUpgrade = async (plan: SubscriptionPlan) => {
+    try {
+      await dispatch(upgradeSubscription({ planId: plan.id })).unwrap();
+      toast.success(`Upgraded to ${plan.name} plan successfully!`);
+      dispatch(fetchBillingSettings());
+    } catch (err: any) {
+      toast.error(typeof err === "string" ? err : "Failed to upgrade subscription");
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!window.confirm("Are you sure you want to cancel your current subscription?")) return;
+    try {
+      await dispatch(cancelSubscription({ reason: "User cancelled from billing page" })).unwrap();
+      toast.info("Subscription cancelled successfully.");
+      dispatch(fetchBillingSettings());
+    } catch (err: any) {
+      toast.error(typeof err === "string" ? err : "Failed to cancel subscription");
+    }
   };
 
   if (loading && !billing) {
@@ -38,12 +71,12 @@ function BillingPage() {
     );
   }
 
-  const planName = billing?.currentPlan || "Enterprise AI Tier";
-  const billingCycle = billing?.billingCycle || "Annual";
-  const amount = billing?.amount || "₹ 49,999 / mo";
-  const seats = billing?.seats || 350;
-  const usedSeats = billing?.usedSeats || 142;
-  const seatPct = Math.round((usedSeats / seats) * 100);
+  const planName = billing?.currentPlan || "No Active Plan";
+  const billingCycle = billing?.billingCycle || "N/A";
+  const amount = billing?.amount || "N/A";
+  const seats = billing?.seats || 0;
+  const usedSeats = billing?.usedSeats || 0;
+  const seatPct = seats > 0 ? Math.min(100, Math.round((usedSeats / seats) * 100)) : 0;
   const invoices = billing?.invoices || [];
 
   return (
@@ -53,9 +86,16 @@ function BillingPage() {
           <h2 className="text-lg font-semibold tracking-tight">Billing & Enterprise Plan</h2>
           <p className="text-xs text-muted-foreground">Manage your subscription, seat allocation, payment methods, and invoice history.</p>
         </div>
-        <Badge variant="secondary" className="px-3 py-1 text-xs">
-          <CheckCircle2 className="mr-1.5 h-3.5 w-3.5 text-emerald-500" /> Active Subscription
-        </Badge>
+        <div className="flex items-center gap-2">
+          {errors.billing && (
+            <Button size="sm" variant="outline" onClick={() => dispatch(fetchBillingSettings())}>
+              <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Retry
+            </Button>
+          )}
+          <Badge variant="secondary" className="px-3 py-1 text-xs">
+            <CheckCircle2 className="mr-1.5 h-3.5 w-3.5 text-emerald-500" /> Active Subscription
+          </Badge>
+        </div>
       </div>
 
       {/* Plan Card */}
@@ -82,9 +122,15 @@ function BillingPage() {
           </div>
 
           <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-border/60 pt-4 text-xs text-muted-foreground">
-            <div>Next renewal date: <span className="font-medium text-foreground">{billing?.nextBillingDate || "2026-12-31"}</span></div>
-            <Button size="sm" onClick={handleUpgrade}>
-              <Zap className="mr-2 h-4 w-4" /> Upgrade Seats
+            <div>Next renewal date: <span className="font-medium text-foreground">{billing?.nextBillingDate || "N/A"}</span></div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-destructive hover:bg-destructive/10"
+              onClick={handleCancel}
+              disabled={opLoading.cancelSubscription}
+            >
+              Cancel Subscription
             </Button>
           </div>
         </div>
@@ -95,13 +141,76 @@ function BillingPage() {
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <CreditCard className="h-4 w-4" /> Payment Method
             </div>
-            <div className="mt-4 font-medium text-foreground">{billing?.paymentMethod || "Visa ending in •••• 4821"}</div>
-            <div className="mt-1 text-xs text-muted-foreground">Auto-debit enabled for annual renewals.</div>
+            <div className="mt-4 font-medium text-foreground">{billing?.paymentMethod || "No payment method configured"}</div>
+            <div className="mt-1 text-xs text-muted-foreground">Auto-debit enabled for scheduled renewals.</div>
           </div>
-          <Button variant="outline" size="sm" className="mt-6 w-full" onClick={() => toast.success("Payment method update opened")}>
+          <Button variant="outline" size="sm" className="mt-6 w-full" onClick={() => toast.info("Payment method update opened")}>
             Update Payment Method
           </Button>
         </div>
+      </div>
+
+      {/* Subscription Plans Selection */}
+      <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-xl space-y-4">
+        <h3 className="text-sm font-semibold tracking-tight">Available Subscription Plans</h3>
+        {subscriptionPlans.length === 0 ? (
+          <div className="py-6 text-center text-xs text-muted-foreground">No subscription plans available.</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {subscriptionPlans.map((plan) => (
+              <div
+                key={plan.id}
+                className={`relative flex flex-col justify-between rounded-2xl border p-5 transition-all ${
+                  plan.current
+                    ? "border-primary bg-primary/5 shadow-md"
+                    : "border-border/60 bg-background/40 hover:border-primary/40"
+                }`}
+              >
+                {plan.isPopular && (
+                  <span className="absolute -top-2.5 right-4 rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                    Popular
+                  </span>
+                )}
+                <div>
+                  <div className="font-semibold text-sm text-foreground">{plan.name}</div>
+                  <div className="mt-2 font-display text-2xl font-bold text-foreground">
+                    {typeof plan.price === "number" ? `₹ ${plan.price.toLocaleString()}` : plan.price}
+                    <span className="text-xs font-normal text-muted-foreground">/{plan.billingCycle || "mo"}</span>
+                  </div>
+                  {plan.seats && (
+                    <div className="text-xs text-muted-foreground mt-1">Up to {plan.seats} employee seats</div>
+                  )}
+
+                  <ul className="mt-4 space-y-2 text-xs text-muted-foreground">
+                    {plan.features?.map((f, i) => (
+                      <li key={i} className="flex items-center gap-2">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                        <span>{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="mt-6 pt-3 border-t border-border/60">
+                  {plan.current ? (
+                    <Button size="sm" variant="secondary" className="w-full" disabled>
+                      Current Plan
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      className="w-full"
+                      onClick={() => handleUpgrade(plan)}
+                      disabled={opLoading.upgradeSubscription}
+                    >
+                      <Zap className="mr-1.5 h-3.5 w-3.5" /> Upgrade Plan
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Invoice History */}

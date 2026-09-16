@@ -1,16 +1,26 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { KeyRound, LogOut, Shield } from "lucide-react";
+import { KeyRound, LogOut, RefreshCw, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import { aurix } from "@/lib/aurix-store";
 import { logout } from "@/lib/auth-bootstrap";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { selectSecuritySettings, selectSettingsLoading, selectSettingsSubmitting } from "@/store/settings/settingsSelectors";
-import { fetchSecurity, updateSecurity } from "@/store/settings/settingsThunk";
+import {
+  selectSecuritySettings,
+  selectSettingsErrors,
+  selectSettingsLoading,
+  selectSettingsSubmitting,
+} from "@/store/settings/settingsSelectors";
+import { fetchSecuritySettings, updateSecuritySettings } from "@/store/settings/settingsThunk";
+import { selectUserSessions } from "@/store/profile/profileSelectors";
+import {
+  changeCurrentUserPassword,
+  fetchUserSessions,
+  revokeUserSession,
+} from "@/store/profile/profileThunk";
 
 export const Route = createFileRoute("/dashboard/settings/security")({
   head: () => ({ meta: [{ title: "Security Settings — OFC360" }] }),
@@ -23,6 +33,8 @@ function SecuritySettingsPage() {
   const security = useAppSelector(selectSecuritySettings);
   const loading = useAppSelector(selectSettingsLoading);
   const submitting = useAppSelector(selectSettingsSubmitting);
+  const errors = useAppSelector(selectSettingsErrors);
+  const sessions = useAppSelector(selectUserSessions);
 
   const [form, setForm] = useState({
     twoFactorEnabled: true,
@@ -35,9 +47,11 @@ function SecuritySettingsPage() {
     newPass: "",
     confirm: "",
   });
+  const [updatingPassword, setUpdatingPassword] = useState(false);
 
   useEffect(() => {
-    dispatch(fetchSecurity());
+    dispatch(fetchSecuritySettings());
+    dispatch(fetchUserSessions());
   }, [dispatch]);
 
   useEffect(() => {
@@ -53,22 +67,53 @@ function SecuritySettingsPage() {
   const handleToggle2FA = async (val: boolean) => {
     setForm({ ...form, twoFactorEnabled: val });
     try {
-      await dispatch(updateSecurity({ ...form, twoFactorEnabled: val })).unwrap();
+      await dispatch(updateSecuritySettings({ ...form, twoFactorEnabled: val })).unwrap();
       toast.success(val ? "Two-factor authentication enabled" : "Two-factor authentication disabled");
-    } catch {
-      toast.error("Failed to update 2FA setting");
+    } catch (err: any) {
+      toast.error(typeof err === "string" ? err : "Failed to update 2FA setting");
     }
   };
 
-  const handlePasswordUpdate = (e: React.FormEvent) => {
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!passwords.newPass) return;
+    if (!passwords.current) {
+      toast.error("Current password is required");
+      return;
+    }
+    if (!passwords.newPass || passwords.newPass.length < 8) {
+      toast.error("New password must be at least 8 characters");
+      return;
+    }
     if (passwords.newPass !== passwords.confirm) {
       toast.error("New passwords do not match!");
       return;
     }
-    toast.success("Password updated successfully!");
-    setPasswords({ current: "", newPass: "", confirm: "" });
+
+    setUpdatingPassword(true);
+    try {
+      const res = await dispatch(
+        changeCurrentUserPassword({
+          currentPassword: passwords.current,
+          newPassword: passwords.newPass,
+          confirmPassword: passwords.confirm,
+        }),
+      ).unwrap();
+      toast.success(res.message || "Password updated successfully!");
+      setPasswords({ current: "", newPass: "", confirm: "" });
+    } catch (err: any) {
+      toast.error(typeof err === "string" ? err : "Failed to change password");
+    } finally {
+      setUpdatingPassword(false);
+    }
+  };
+
+  const handleRevokeSession = async (sessionId: string) => {
+    try {
+      await dispatch(revokeUserSession(sessionId)).unwrap();
+      toast.success("Session revoked successfully");
+    } catch (err: any) {
+      toast.error(typeof err === "string" ? err : "Failed to revoke session");
+    }
   };
 
   const handleSignOut = () => {
@@ -86,7 +131,7 @@ function SecuritySettingsPage() {
     );
   }
 
-  const sessions = security?.activeSessions || [];
+  const activeSessionsList = sessions.length > 0 ? sessions : security?.activeSessions || [];
 
   return (
     <div className="space-y-6">
@@ -97,7 +142,14 @@ function SecuritySettingsPage() {
             <h2 className="text-lg font-semibold tracking-tight">Security & Authentication</h2>
             <p className="text-xs text-muted-foreground">Manage multi-factor authentication, active sessions, and password security.</p>
           </div>
-          <Shield className="h-5 w-5 text-muted-foreground" />
+          <div className="flex items-center gap-2">
+            {errors.security && (
+              <Button size="sm" variant="outline" onClick={() => dispatch(fetchSecuritySettings())}>
+                <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Retry
+              </Button>
+            )}
+            <Shield className="h-5 w-5 text-muted-foreground" />
+          </div>
         </div>
 
         <div className="flex items-center justify-between">
@@ -124,32 +176,51 @@ function SecuritySettingsPage() {
               placeholder="Current password"
               value={passwords.current}
               onChange={(e) => setPasswords({ ...passwords, current: e.target.value })}
+              disabled={updatingPassword}
+              autoComplete="current-password"
             />
             <Input
               type="password"
               placeholder="New password"
               value={passwords.newPass}
               onChange={(e) => setPasswords({ ...passwords, newPass: e.target.value })}
+              disabled={updatingPassword}
+              autoComplete="new-password"
             />
             <Input
               type="password"
               placeholder="Confirm new password"
               value={passwords.confirm}
               onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
+              disabled={updatingPassword}
+              autoComplete="new-password"
             />
           </div>
-          <Button type="submit" size="sm" className="mt-2">
-            <KeyRound className="mr-2 h-4 w-4" /> Update Password
+          <Button type="submit" size="sm" className="mt-2" disabled={updatingPassword}>
+            {updatingPassword ? (
+              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <KeyRound className="mr-2 h-4 w-4" />
+            )}
+            Update Password
           </Button>
         </form>
       </div>
 
       {/* Active Sessions */}
       <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-xl">
-        <h3 className="text-sm font-semibold tracking-tight">Active Sessions</h3>
-        <p className="text-xs text-muted-foreground">Devices currently logged into your account.</p>
-        <div className="mt-4 space-y-3">
-          {sessions.map((sess) => (
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-sm font-semibold tracking-tight">Active Sessions</h3>
+            <p className="text-xs text-muted-foreground">Devices currently logged into your account.</p>
+          </div>
+          <Button size="sm" variant="ghost" onClick={() => dispatch(fetchUserSessions())}>
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="space-y-3">
+          {activeSessionsList.map((sess) => (
             <div key={sess.id} className="flex items-center justify-between rounded-xl border border-border/60 bg-background/40 p-3 text-xs">
               <div>
                 <div className="font-medium text-foreground">{sess.device}</div>
@@ -158,7 +229,12 @@ function SecuritySettingsPage() {
               {sess.current ? (
                 <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-500">Current Session</span>
               ) : (
-                <Button size="sm" variant="ghost" className="h-7 text-xs text-destructive hover:bg-destructive/10" onClick={() => toast.success("Session revoked")}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 text-xs text-destructive hover:bg-destructive/10"
+                  onClick={() => handleRevokeSession(sess.id)}
+                >
                   Revoke Session
                 </Button>
               )}
