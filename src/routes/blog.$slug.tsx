@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowLeft, MessageSquare } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { Section } from "@/components/site/Section";
 import { CTA } from "@/components/site/CTA";
@@ -42,10 +42,7 @@ function BlogPost() {
   return (
     <SiteLayout>
       <Section className="max-w-3xl">
-        <Link to="/blog" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" /> Back to blog
-        </Link>
-        <div className="mt-8 text-xs uppercase tracking-widest text-brand font-medium">{post.category}</div>
+        <div className="text-xs uppercase tracking-widest text-brand font-medium">{post.category}</div>
         <h1 className="mt-3 font-display text-4xl sm:text-5xl font-bold tracking-tight leading-tight">{post.title}</h1>
         <div className="mt-6 flex items-center gap-3 text-sm text-muted-foreground">
           <div className="h-9 w-9 rounded-full bg-gradient-brand grid place-items-center text-brand-foreground font-medium text-xs">

@@ -1,6 +1,7 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { memo, Suspense, useEffect, useMemo, useState } from "react";
 import { PageSkeleton } from "@/components/common/PageSkeleton";
+import { BackButton } from "@/components/common/BackButton";
 // Executive Dashboards Navigation Enabled
 import {
   Activity, AlertCircle, Archive, Award, Banknote, BarChart3, Bell, BookOpen, Bot, Brain,
@@ -804,6 +805,7 @@ export function DashboardShell() {
           </header>
 
           <main className="min-w-0 flex-1 overflow-x-hidden p-4 sm:p-6 lg:p-8">
+            <BackButton className="mb-4" />
             <Suspense fallback={<PageSkeleton />}>
               <Outlet />
             </Suspense>

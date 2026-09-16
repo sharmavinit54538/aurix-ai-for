@@ -2,7 +2,7 @@ import { Link, useNavigate, useParams } from "@tanstack/react-router";
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  Archive, ArrowLeft, Briefcase, Copy, MapPin, Pencil, Save, Trash2, Users, X,
+  Archive, Briefcase, Copy, MapPin, Pencil, Save, Trash2, Users, X,
   Globe, Share2, ExternalLink, QrCode, Download, Search, Filter, ArrowRight,
   Lock, Wand2, Pause, Play, AlertCircle, Building, Award, BookOpen, Heart,
   Calendar, DollarSign, CheckCircle2, XCircle, CalendarClock, FileCheck2, Clock,
@@ -480,11 +480,6 @@ export function JobDetailPage() {
 
   return (
     <>
-      <div className="mb-4">
-        <Button variant="ghost" size="sm" asChild>
-          <Link to="/dashboard/recruitment/jobs"><ArrowLeft className="mr-2 h-4 w-4" />All Jobs</Link>
-        </Button>
-      </div>
 
       {/* Greenhouse Enterprise Header */}
       <div className="relative mb-6 rounded-2xl border border-border bg-card/40 p-6 backdrop-blur-xl">

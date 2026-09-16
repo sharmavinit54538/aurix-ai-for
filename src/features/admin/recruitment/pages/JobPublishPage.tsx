@@ -1,7 +1,7 @@
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import {
-  ArrowLeft, CheckCircle2, ChevronRight, Globe, Lock, Mail, ShieldAlert, Sparkles,
+  CheckCircle2, ChevronRight, Globe, Lock, Mail, ShieldAlert, Sparkles,
   AlertCircle
 } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
@@ -69,13 +69,6 @@ export function JobPublishPage() {
 
   return (
     <>
-      <div className="mb-4">
-        <Button variant="ghost" size="sm" asChild>
-          <Link to="/dashboard/recruitment/jobs/$jobId" params={{ jobId }}>
-            <ArrowLeft className="mr-2 h-4 w-4" />Back to Job details
-          </Link>
-        </Button>
-      </div>
 
       <PageHeader
         title={`Publish: ${job.title}`}

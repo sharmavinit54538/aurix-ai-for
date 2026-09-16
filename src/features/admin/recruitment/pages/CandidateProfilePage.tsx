@@ -2,7 +2,7 @@ import { Link, useParams } from "@tanstack/react-router";
 
 import { useState, useEffect } from "react";
 import {
-  Activity, ArrowLeft, Award, Briefcase, Calendar, CheckCircle2, Download, FileText, Globe2,
+  Activity, Award, Briefcase, Calendar, CheckCircle2, Download, FileText, Globe2,
   GraduationCap, Mail, MapPin, MessageSquare, Phone, Send, Sparkles, Star, Tag, X,
 } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
@@ -195,9 +195,6 @@ export function CandidateProfilePage() {
 
   return (
     <>
-      <div className="mb-4">
-        <Button variant="ghost" size="sm" asChild><Link to="/dashboard/recruitment/candidates"><ArrowLeft className="mr-2 h-4 w-4" />All Candidates</Link></Button>
-      </div>
 
       <PageHeader
         title={candidate.name}
