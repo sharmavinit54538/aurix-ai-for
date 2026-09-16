@@ -1,6 +1,68 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 
-export type Role = "admin" | "manager" | "employee";
+export type Role =
+  | "admin"
+  | "hr"
+  | "manager"
+  | "interviewer"
+  | "employee"
+  | "candidate"
+  | "ceo"
+  | "cto"
+  | "cio";
+
+export interface RoleConfig {
+  role: Role;
+  label: string;
+  badge: string;
+  description: string;
+  defaultPath: string;
+}
+
+export const AVAILABLE_ROLES: RoleConfig[] = [
+  {
+    role: "admin",
+    label: "Super Admin",
+    badge: "Full Control",
+    description: "Complete system governance, security, and global config",
+    defaultPath: "/dashboard",
+  },
+  {
+    role: "hr",
+    label: "HR Executive",
+    badge: "Recruitment",
+    description: "End-to-end talent pipelines, requisitions, offers & BGV",
+    defaultPath: "/dashboard/recruitment",
+  },
+  {
+    role: "manager",
+    label: "Hiring Manager",
+    badge: "Department",
+    description: "Role requisitions, approvals, team pipeline & interviews",
+    defaultPath: "/dashboard/recruitment/hiring-manager",
+  },
+  {
+    role: "interviewer",
+    label: "Interviewer / Panel",
+    badge: "Evaluator",
+    description: "Assigned rounds, AI interview monitoring & scorecards",
+    defaultPath: "/dashboard/recruitment/interviews",
+  },
+  {
+    role: "employee",
+    label: "Employee",
+    badge: "Self-Service",
+    description: "Personal portal, KT onboarding, attendance & documents",
+    defaultPath: "/dashboard/employee",
+  },
+  {
+    role: "candidate",
+    label: "Candidate Portal",
+    badge: "Applicant",
+    description: "Application tracking, AI interview room, offers & preboarding",
+    defaultPath: "/dashboard/recruitment/candidates",
+  },
+];
 
 export interface AurixUser {
   id: string;
@@ -169,6 +231,37 @@ export const aurix = {
   },
   reset: () => {
     state = defaultState;
+    persist();
+    emit();
+  },
+  switchRole: (role: Role) => {
+    if (state.user) {
+      state = { ...state, user: { ...state.user, role } };
+    } else {
+      state = {
+        ...state,
+        user: {
+          id: "usr_demo",
+          fullName:
+            role === "candidate"
+              ? "Sarah Jenkins"
+              : role === "interviewer"
+              ? "Devon Vance"
+              : role === "manager"
+              ? "Marcus Brody"
+              : role === "hr"
+              ? "Priya Sharma"
+              : "Alex Morgan",
+          email: `${role}@ofc360.io`,
+          phone: "+1 555 019 2834",
+          role,
+          companyId: "comp_1",
+          emailVerified: true,
+          onboardingComplete: true,
+          createdAt: new Date().toISOString(),
+        },
+      };
+    }
     persist();
     emit();
   },

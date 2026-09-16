@@ -1,10 +1,11 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { memo, Suspense, useEffect, useMemo, useState } from "react";
+import { PageSkeleton } from "@/components/common/PageSkeleton";
 // Executive Dashboards Navigation Enabled
 import {
   Activity, AlertCircle, Archive, Award, Banknote, BarChart3, Bell, BookOpen, Bot, Brain,
-  Briefcase, Building2, CalendarDays, CalendarCheck, CheckCircle2, ChevronLeft, PanelLeft,
-  ChevronDown, ClipboardCheck, Clock, CreditCard, Crown, Download, FileCheck, FileText, FilePlus2,
+  Briefcase, Building2, CalendarDays, CalendarCheck, CalendarClock, CheckCircle2, ChevronLeft, PanelLeft,
+  ChevronDown, ClipboardCheck, Clock, Compass, CreditCard, Crown, Download, FileCheck, FileSearch, FileText, FilePlus2,
   FileSignature, Folder, FolderOpen, Gauge, Gift, Globe, HandCoins, HeartPulse, History,
   Info, Languages, LayoutDashboard, LineChart as LineChartIcon, Lock, Mail, Medal,
   Menu, MessageCircle, MessageSquare, Mic, MinusCircle, Moon, Package, Palmtree, Percent,
@@ -16,8 +17,8 @@ import {
   BookMarked, PenLine, FileEdit, Landmark, Coins, Building, Hash, Sliders, Shield, Layers, PackageCheck,
   GitPullRequest, Send, ShieldAlert, Scale, Cpu, Home, Rocket,
 } from "lucide-react";
-import { useAurix, type Role } from "@/lib/aurix-store";
-import { useAuthReady } from "@/lib/auth-bootstrap";
+import { useAurix, aurix, AVAILABLE_ROLES, type Role } from "@/lib/aurix-store";
+import { logout, useAuthReady } from "@/lib/auth-bootstrap";
 import { AuthLoadingScreen } from "@/features/auth/components/AuthLoadingScreen";
 import { Input } from "@/components/ui/input";
 import {
@@ -30,15 +31,16 @@ import {
 } from "@/components/ui/command";
 import { useTheme } from "@/components/site/ThemeProvider";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { fetchSidebarPermissions } from "@/store/sidebar/sidebarActions";
 import {
   selectExpandedSections,
   selectUserPermissions,
   filterNavTree,
 } from "@/store/sidebar/sidebarSelectors";
 import {
+  fetchSidebarPermissions,
   setActiveRoute,
   setSectionExpand,
+  setUserRole,
   toggleSectionExpand,
 } from "@/store/sidebar/sidebarSlice";
 import type {
@@ -234,9 +236,20 @@ const MANAGER_NAV_SECTIONS: SidebarNavSection[] = [
         icon: Receipt,
       },
       {
-        to: "/dashboard/talent",
-        label: "Recruitment",
-        icon: Briefcase,
+        to: "/dashboard/recruitment/hiring-manager",
+        label: "Hiring Manager Hub",
+        icon: UserCheck,
+        badge: "Hot",
+      },
+      {
+        to: "/dashboard/recruitment/requisitions",
+        label: "Team Requisitions",
+        icon: FileSignature,
+      },
+      {
+        to: "/dashboard/recruitment/interviews",
+        label: "Interviews",
+        icon: CalendarClock,
       },
       {
         to: "/dashboard/performance",
@@ -256,6 +269,93 @@ const MANAGER_NAV_SECTIONS: SidebarNavSection[] = [
       {
         to: "/dashboard/settings",
         label: "Settings",
+        icon: Settings,
+      },
+    ],
+  },
+];
+
+const INTERVIEWER_NAV_SECTIONS: SidebarNavSection[] = [
+  {
+    title: "INTERVIEWER PORTAL",
+    items: [
+      {
+        to: "/dashboard/recruitment/interviews",
+        label: "My Interviews",
+        icon: CalendarClock,
+        exact: true,
+      },
+      {
+        to: "/dashboard/recruitment/ai-interview",
+        label: "AI Interview & Integrity",
+        icon: Video,
+        badge: "AI",
+      },
+      {
+        to: "/dashboard/recruitment/candidates",
+        label: "Candidate Profiles",
+        icon: Users,
+      },
+      {
+        to: "/dashboard/recruitment/ai-screening",
+        label: "Resume Screening",
+        icon: FileSearch,
+      },
+      {
+        to: "/dashboard/recruitment/scorecards",
+        label: "Scorecards & Notes",
+        icon: ClipboardCheck,
+      },
+      {
+        to: "/dashboard/ai-hub",
+        label: "AI Assistant",
+        icon: Brain,
+      },
+      {
+        to: "/dashboard/settings/profile",
+        label: "My Settings",
+        icon: Settings,
+      },
+    ],
+  },
+];
+
+const CANDIDATE_NAV_SECTIONS: SidebarNavSection[] = [
+  {
+    title: "CANDIDATE PORTAL",
+    items: [
+      {
+        to: "/dashboard/recruitment/candidates",
+        label: "Application Status",
+        icon: Users,
+        exact: true,
+      },
+      {
+        to: "/dashboard/recruitment/ai-interview",
+        label: "AI Interview Room",
+        icon: Video,
+        badge: "Live",
+      },
+      {
+        to: "/dashboard/recruitment/offers",
+        label: "Offer Letters & Sign",
+        icon: FileText,
+        badge: "Hot",
+      },
+      {
+        to: "/dashboard/recruitment/preboarding",
+        label: "Preboarding & Day 1",
+        icon: Compass,
+        badge: "New",
+      },
+      {
+        to: "/dashboard/recruitment/communication",
+        label: "Notices & Updates",
+        icon: Send,
+      },
+      {
+        to: "/dashboard/settings/profile",
+        label: "Candidate Profile",
         icon: Settings,
       },
     ],
@@ -354,12 +454,19 @@ export function DashboardShell() {
   const isDemo = false;
 
   useEffect(() => {
-    dispatch(fetchSidebarPermissions());
-  }, [dispatch]);
+    if (authReady && ws.user) {
+      dispatch(fetchSidebarPermissions(role));
+    }
+  }, [dispatch, authReady, Boolean(ws.user), role]);
 
   // ── Auth & Role guard ────────────────────────────────────────
   useEffect(() => {
-    if (!authReady || ws.isRestoring || !ws.user) return;
+    if (!authReady || ws.isRestoring) return;
+
+    if (!ws.user) {
+      navigate({ to: "/login", replace: true });
+      return;
+    }
 
     const normalizedRole = (role || "").toLowerCase();
     const isExecutive = normalizedRole === "cto" || normalizedRole === "ceo" || normalizedRole === "cio";
@@ -384,6 +491,14 @@ export function DashboardShell() {
       }
       if (normalizedRole === "manager") {
         navigate({ to: "/dashboard/manager" });
+        return;
+      }
+      if (normalizedRole === "interviewer") {
+        navigate({ to: "/dashboard/recruitment/interviews" });
+        return;
+      }
+      if (normalizedRole === "candidate") {
+        navigate({ to: "/dashboard/recruitment/candidates" });
         return;
       }
       if (isAdminOrHr) {
@@ -437,6 +552,12 @@ export function DashboardShell() {
     const isCeoPortalPath = pathname === "/dashboard/executive/ceo" || pathname.startsWith("/dashboard/executive/ceo");
     const isCioPortalPath = pathname === "/dashboard/executive/cio" || pathname.startsWith("/dashboard/executive/cio");
 
+    if (normalizedRole === "candidate") {
+      return filterNavTree(CANDIDATE_NAV_SECTIONS, role, userPermissions);
+    }
+    if (normalizedRole === "interviewer") {
+      return filterNavTree(INTERVIEWER_NAV_SECTIONS, role, userPermissions);
+    }
     if (normalizedRole === "cio" || isCioPortalPath) {
       return filterNavTree(CIO_NAV_SECTIONS, role, userPermissions);
     }
@@ -455,8 +576,12 @@ export function DashboardShell() {
     return filterNavTree(NAV_SECTIONS, role, userPermissions);
   }, [role, pathname, userPermissions]);
 
-  if (!authReady || ws.isRestoring || !ws.user) {
+  if (!authReady || ws.isRestoring) {
     return <AuthLoadingScreen />;
+  }
+
+  if (!ws.user) {
+    return null;
   }
 
   const initials = ws.user.fullName?.split(" ").map((p) => p[0]).slice(0, 2).join("") || "A";
@@ -473,9 +598,13 @@ export function DashboardShell() {
       : isCtoMode
       ? "/dashboard/executive/cto"
       : role === "manager"
-      ? "/dashboard/manager"
+      ? "/dashboard/recruitment/hiring-manager"
       : role === "employee"
       ? "/dashboard/employee"
+      : role === "interviewer"
+      ? "/dashboard/recruitment/interviews"
+      : role === "candidate"
+      ? "/dashboard/recruitment/candidates"
       : "/dashboard";
 
   return (
@@ -493,27 +622,27 @@ export function DashboardShell() {
         <aside
           className={`fixed left-0 z-40 flex flex-col border-r border-border bg-card/60 backdrop-blur-xl transition-[width,transform] duration-200 ${
             isDemo ? "top-9 bottom-0" : "inset-y-0"
-          } ${collapsed ? "w-[68px]" : "w-[260px]"} ${
+          } ${collapsed ? "w-[60px]" : "w-[200px]"} ${
             mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
           }`}
         >
-          <div className={`flex h-16 shrink-0 items-center border-b border-border px-3 ${collapsed ? "justify-center" : "justify-between"}`}>
+          <div className={`flex h-16 shrink-0 items-center border-b border-border px-2.5 ${collapsed ? "justify-center" : "justify-between"}`}>
             {!collapsed ? (
               <>
                 <Link to={homeLink as any} className="flex items-center gap-2 min-w-0">
-                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-brand-foreground shadow-glow" style={{ background: "var(--gradient-brand)" }}>
-                    <Sparkles className="h-4 w-4" />
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-brand-foreground shadow-glow" style={{ background: "var(--gradient-brand)" }}>
+                    <Sparkles className="h-3.5 w-3.5" />
                   </span>
-                  <span className="font-display text-lg font-semibold tracking-tight truncate">OFC360</span>
+                  <span className="font-display text-base font-semibold tracking-tight truncate">OFC360</span>
                 </Link>
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="flex items-center gap-0.5 shrink-0">
                   <button
                     onClick={() => setSearchOpen(true)}
                     className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer transition-colors"
                     aria-label="Search"
                     title="Search (Ctrl+K)"
                   >
-                    <Search className="h-4 w-4" />
+                    <Search className="h-3.5 w-3.5" />
                   </button>
                   <button
                     onClick={() => setCollapsed(true)}
@@ -521,7 +650,7 @@ export function DashboardShell() {
                     aria-label="Collapse sidebar"
                     title="Collapse sidebar"
                   >
-                    <PanelLeft className="h-4 w-4" />
+                    <PanelLeft className="h-3.5 w-3.5" />
                   </button>
                 </div>
               </>
@@ -537,11 +666,11 @@ export function DashboardShell() {
             )}
           </div>
 
-          <nav className="flex-1 space-y-2 overflow-y-auto overflow-x-hidden p-2">
+          <nav className="flex-1 space-y-1.5 overflow-y-auto overflow-x-hidden p-2">
             {visibleNav.map((section, sIdx) => (
               <div key={section.id || sIdx} className="space-y-0.5">
                 {section.title && !collapsed ? (
-                  <div className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                  <div className="px-2 pb-1 pt-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 truncate">
                     {section.title}
                   </div>
                 ) : null}
@@ -565,15 +694,16 @@ export function DashboardShell() {
                     <Link
                       key={item.to}
                       to={item.to as any}
-                      className={`group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                      title={collapsed ? item.label : undefined}
+                      className={`group relative flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors ${
                         active ? "bg-accent text-foreground font-semibold" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
-                      }`}
+                      } ${collapsed ? "justify-center px-0" : ""}`}
                     >
                       {active ? <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r bg-foreground" /> : null}
                       <Icon className="h-4 w-4 shrink-0" />
                       {!collapsed ? (
                         <>
-                          <span className="flex-1 whitespace-nowrap">{item.label}</span>
+                          <span className="flex-1 truncate whitespace-nowrap text-[13px]">{item.label}</span>
                           {item.badge && <NavBadge kind={item.badge} />}
                           {item.count !== undefined && !item.badge && <NavCount count={item.count} />}
                         </>
@@ -585,14 +715,41 @@ export function DashboardShell() {
             ))}
           </nav>
 
-          <div className="shrink-0 border-t border-border p-3">
-            <div className={`flex items-center gap-3 ${collapsed ? "justify-center" : ""}`}>
-              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-foreground text-sm font-semibold text-background">{initials}</div>
+          <div className="shrink-0 border-t border-border p-2">
+            <div
+              onClick={() => logout()}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  logout();
+                }
+              }}
+              className={`flex items-center gap-2.5 cursor-pointer rounded-lg p-1 hover:bg-accent/60 transition-colors ${collapsed ? "justify-center" : ""}`}
+              title={`${ws.user?.fullName || "Admin User"} (${ws.user?.role || "Hr_admin"}) — Click to logout`}
+              aria-label="User profile, click to logout"
+            >
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-foreground text-xs font-semibold text-background">{initials}</div>
               {!collapsed ? (
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium">{ws.user?.fullName}</div>
-                  <div className="truncate text-xs capitalize text-muted-foreground">
-                    {isCeoMode ? "Chief Executive Officer" : isCioMode ? "Chief Information Officer" : isCtoMode ? "Chief Technology Officer" : ws.user?.role}
+                  <div className="truncate text-xs font-medium">{ws.user?.fullName}</div>
+                  <div className="truncate text-[11px] capitalize text-muted-foreground">
+                    {isCeoMode
+                      ? "Chief Executive Officer"
+                      : isCioMode
+                      ? "Chief Information Officer"
+                      : isCtoMode
+                      ? "Chief Technology Officer"
+                      : role === "hr"
+                      ? "HR Executive"
+                      : role === "interviewer"
+                      ? "Interviewer"
+                      : role === "candidate"
+                      ? "Candidate Portal"
+                      : role === "manager"
+                      ? "Hiring Manager"
+                      : ws.user?.role}
                   </div>
                 </div>
               ) : null}
@@ -604,7 +761,7 @@ export function DashboardShell() {
 
         <div
           className={`flex min-h-screen min-w-0 flex-1 flex-col overflow-x-hidden transition-[margin] duration-200 ${
-            collapsed ? "lg:ml-[68px]" : "lg:ml-[260px]"
+            collapsed ? "lg:ml-[60px]" : "lg:ml-[200px]"
           }`}
         >
           {/* Topbar */}
@@ -646,7 +803,9 @@ export function DashboardShell() {
           </header>
 
           <main className="min-w-0 flex-1 overflow-x-hidden p-4 sm:p-6 lg:p-8">
-            <Outlet />
+            <Suspense fallback={<PageSkeleton />}>
+              <Outlet />
+            </Suspense>
           </main>
         </div>
       </div>
@@ -714,7 +873,7 @@ export function DashboardShell() {
   );
 }
 
-function NavGroup({
+const NavGroup = memo(function NavGroup({
   item,
   pathname,
   collapsed,
@@ -741,9 +900,10 @@ function NavGroup({
     return (
       <Link
         to={item.basePath as any}
-        className={`group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+        className={`group relative flex items-center justify-center rounded-lg py-1.5 text-sm font-medium transition-colors ${
           isActive ? "bg-accent text-foreground font-semibold" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
         }`}
+        title={item.label}
         aria-label={item.label}
       >
         {isActive ? <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r bg-foreground" /> : null}
@@ -765,16 +925,16 @@ function NavGroup({
           onClick={() => {
             dispatch(toggleSectionExpand(item.id));
           }}
-          className="flex flex-1 items-center gap-3 rounded-lg px-3 py-2"
+          className="flex flex-1 items-center gap-2.5 rounded-lg px-2.5 py-1.5 min-w-0"
         >
           <Icon className="h-4 w-4 shrink-0" />
-          <span className="flex-1 text-left whitespace-nowrap">{item.label}</span>
+          <span className="flex-1 text-left truncate whitespace-nowrap text-[13px]">{item.label}</span>
           {item.badge && !item.count && <NavBadge kind={item.badge} />}
           {item.count !== undefined && !item.badge && <NavCount count={item.count} />}
         </Link>
       </div>
       {isExpanded ? (
-        <div className="ml-4 mt-1 space-y-0.5 border-l border-border pl-2 transition-all duration-200">
+        <div className="ml-3 mt-0.5 space-y-0.5 border-l border-border pl-2 transition-all duration-200">
           {item.children.map((child) => {
             const childActive = child.exact ? pathname === child.to : pathname === child.to || pathname.startsWith(child.to + "/");
             const ChildIcon = child.icon;
@@ -782,12 +942,12 @@ function NavGroup({
               <Link
                 key={child.to}
                 to={child.to as any}
-                className={`flex items-center gap-2.5 rounded-md px-3 py-1.5 text-sm transition-colors ${
+                className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-xs transition-colors min-w-0 ${
                   childActive ? "bg-accent text-foreground font-medium" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
                 }`}
               >
                 <ChildIcon className="h-3.5 w-3.5 shrink-0" />
-                <span className="flex-1 whitespace-nowrap">{child.label}</span>
+                <span className="flex-1 truncate whitespace-nowrap">{child.label}</span>
                 {child.badge && <NavBadge kind={child.badge} />}
                 {child.count !== undefined && !child.badge && <NavCount count={child.count} />}
               </Link>
@@ -797,7 +957,7 @@ function NavGroup({
       ) : null}
     </div>
   );
-}
+});
 
 export function PageHeader({
   title,

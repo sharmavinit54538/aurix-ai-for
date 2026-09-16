@@ -20,6 +20,7 @@ import { BulkEmailModal } from "@/features/admin/payroll/components/payslips/Bul
 import { PayslipAuditLogsModal } from "@/features/admin/payroll/components/payslips/PayslipAuditLogsModal";
 import { ShieldAlert, Lock, AlertCircle, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard/payroll/payslips")({
   head: () => ({ meta: [{ title: "Payslips Management — OFC360" }] }),
@@ -430,4 +431,3 @@ function AdminPayslipsPage() {
   );
 }
 
-export default AdminPayslipsPage;

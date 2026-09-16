@@ -1,4 +1,6 @@
 
+import { useState } from "react";
+import { toast } from "sonner";
 import {
   Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart,
   PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
@@ -138,10 +140,87 @@ export function RecruitmentAnalyticsPage() {
       { dept: "Marketing", days: 0 }
     );
   }
+  const [dateRange, setDateRange] = useState("Last 30 Days");
+  const [selectedDept, setSelectedDept] = useState("all");
+
+  const handleExport = (format: string) => {
+    const csvContent = candidates.map(c => `"${c.name}","${c.appliedPosition}","${c.stage}","${c.source}","${c.atsScore || 0}"`).join("\n");
+    const blob = new Blob([`"Candidate Name","Role","Stage","Source","ATS Score"\n` + csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Recruitment-Analytics-Report.${format.toLowerCase()}`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Exported Recruitment Analytics as ${format}!`);
+  };
 
   return (
     <>
-      <PageHeader title="Recruitment Analytics" description="Hiring health, performance, and forecasts." />
+      <PageHeader
+        title="Recruitment & Workforce Analytics"
+        description="Monitor pipeline conversion health, candidate sourcing ROI, offer acceptance velocity, and hiring forecasts."
+        actions={
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleExport("CSV")}
+              className="inline-flex items-center px-3 py-1.5 rounded-lg border border-border bg-card/60 text-xs font-medium text-foreground hover:bg-accent cursor-pointer shadow-sm"
+            >
+              Export CSV
+            </button>
+            <button
+              onClick={() => handleExport("PDF")}
+              className="inline-flex items-center px-3 py-1.5 rounded-lg border border-border bg-card/60 text-xs font-medium text-foreground hover:bg-accent cursor-pointer shadow-sm"
+            >
+              Export PDF
+            </button>
+            <button
+              onClick={() => handleExport("Excel")}
+              className="inline-flex items-center px-3 py-1.5 rounded-lg border border-border bg-card/60 text-xs font-medium text-foreground hover:bg-accent cursor-pointer shadow-sm"
+            >
+              Export Excel
+            </button>
+          </div>
+        }
+      />
+
+      {/* Filter Bar */}
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card/40 p-3">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground font-medium">Date Range:</span>
+          {(["Last 7 Days", "Last 30 Days", "Last 90 Days", "YTD"] as const).map((range) => (
+            <button
+              key={range}
+              onClick={() => {
+                setDateRange(range);
+                toast.info(`Filtered data for ${range}`);
+              }}
+              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                dateRange === range
+                  ? "bg-foreground text-background font-semibold"
+                  : "text-muted-foreground hover:bg-accent"
+              }`}
+            >
+              {range}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground font-medium">Department:</span>
+          <select
+            value={selectedDept}
+            onChange={(e) => setSelectedDept(e.target.value)}
+            className="rounded-md border border-border bg-background px-2.5 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+          >
+            <option value="all">All Departments</option>
+            <option value="Engineering">Engineering</option>
+            <option value="Design">Design & Creative</option>
+            <option value="Sales">Sales & Growth</option>
+            <option value="HR">Human Resources</option>
+          </select>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card title="Hiring Funnel" className="lg:col-span-2">

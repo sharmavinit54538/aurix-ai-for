@@ -35,7 +35,7 @@ export interface ExecutiveTableRow {
   status: string;
   owner: string;
   value: string;
-  date: string;
+  date?: string;
   progress?: number;
 }
 

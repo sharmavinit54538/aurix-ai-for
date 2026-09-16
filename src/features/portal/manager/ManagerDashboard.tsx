@@ -45,6 +45,7 @@ import {
   YAxis,
 } from "recharts";
 import { useAurix } from "@/lib/aurix-store";
+import { logout } from "@/lib/auth-bootstrap";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -173,9 +174,15 @@ function ManagerHeader({ greeting, userName, companyName }: { greeting: string; 
       className="rounded-2xl border border-border bg-card/60 p-5 backdrop-blur-xl"
     >
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
+        <div
+          onClick={() => logout()}
+          role="button"
+          tabIndex={0}
+          className="flex items-center gap-4 cursor-pointer group/prof hover:opacity-90 transition-opacity"
+          title="Click to logout"
+        >
           <div
-            className="grid h-12 w-12 shrink-0 place-items-center rounded-xl shadow-lg"
+            className="grid h-12 w-12 shrink-0 place-items-center rounded-xl shadow-lg transition-transform group-hover/prof:scale-105"
             style={{ background: "var(--gradient-brand)" }}
           >
             <Users className="h-6 w-6 text-white" />

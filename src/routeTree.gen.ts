@@ -125,29 +125,40 @@ import { Route as DashboardSettingsAuditLogsRouteImport } from './routes/dashboa
 import { Route as DashboardResourcesDocumentsRouteImport } from './routes/dashboard.resources.documents'
 import { Route as DashboardResourcesAssetsRouteImport } from './routes/dashboard.resources.assets'
 import { Route as DashboardResourcesAssetManagementRouteImport } from './routes/dashboard.resources.asset-management'
+import { Route as DashboardRecruitmentWorkforcePlanningRouteImport } from './routes/dashboard/recruitment/workforce-planning'
+import { Route as DashboardRecruitmentVerificationRouteImport } from './routes/dashboard/recruitment/verification'
 import { Route as DashboardRecruitmentVendorsRouteImport } from './routes/dashboard/recruitment/vendors'
 import { Route as DashboardRecruitmentTemplatesRouteImport } from './routes/dashboard/recruitment/templates'
 import { Route as DashboardRecruitmentTalentPoolRouteImport } from './routes/dashboard/recruitment/talent-pool'
+import { Route as DashboardRecruitmentSourcingRouteImport } from './routes/dashboard/recruitment/sourcing'
 import { Route as DashboardRecruitmentSearchRouteImport } from './routes/dashboard/recruitment/search'
 import { Route as DashboardRecruitmentScorecardsRouteImport } from './routes/dashboard/recruitment/scorecards'
 import { Route as DashboardRecruitmentResumeIntelligenceRouteImport } from './routes/dashboard/recruitment/resume-intelligence'
 import { Route as DashboardRecruitmentRequisitionsRouteImport } from './routes/dashboard/recruitment/requisitions'
 import { Route as DashboardRecruitmentReportsRouteImport } from './routes/dashboard/recruitment/reports'
 import { Route as DashboardRecruitmentReferralsRouteImport } from './routes/dashboard/recruitment/referrals'
+import { Route as DashboardRecruitmentPreboardingRouteImport } from './routes/dashboard/recruitment/preboarding'
 import { Route as DashboardRecruitmentPipelineRouteImport } from './routes/dashboard/recruitment/pipeline'
 import { Route as DashboardRecruitmentOnboardingRouteImport } from './routes/dashboard/recruitment/onboarding'
 import { Route as DashboardRecruitmentOffersRouteImport } from './routes/dashboard/recruitment/offers'
 import { Route as DashboardRecruitmentNotificationsRouteImport } from './routes/dashboard/recruitment/notifications'
+import { Route as DashboardRecruitmentKtProbationRouteImport } from './routes/dashboard/recruitment/kt-probation'
 import { Route as DashboardRecruitmentInterviewsRouteImport } from './routes/dashboard/recruitment/interviews'
 import { Route as DashboardRecruitmentImportExportRouteImport } from './routes/dashboard/recruitment/import-export'
+import { Route as DashboardRecruitmentHiringManagerRouteImport } from './routes/dashboard/recruitment/hiring-manager'
+import { Route as DashboardRecruitmentEmployeeOnboardingRouteImport } from './routes/dashboard/recruitment/employee-onboarding'
 import { Route as DashboardRecruitmentCrmRouteImport } from './routes/dashboard/recruitment/crm'
 import { Route as DashboardRecruitmentCopilotRouteImport } from './routes/dashboard/recruitment/copilot'
 import { Route as DashboardRecruitmentComplianceRouteImport } from './routes/dashboard/recruitment/compliance'
+import { Route as DashboardRecruitmentCompensationRouteImport } from './routes/dashboard/recruitment/compensation'
+import { Route as DashboardRecruitmentCommunicationRouteImport } from './routes/dashboard/recruitment/communication'
 import { Route as DashboardRecruitmentCareerSiteRouteImport } from './routes/dashboard/recruitment/career-site'
 import { Route as DashboardRecruitmentCandidatesRouteImport } from './routes/dashboard/recruitment/candidates'
 import { Route as DashboardRecruitmentCalendarRouteImport } from './routes/dashboard/recruitment/calendar'
 import { Route as DashboardRecruitmentAutomationRouteImport } from './routes/dashboard/recruitment/automation'
 import { Route as DashboardRecruitmentAnalyticsRouteImport } from './routes/dashboard/recruitment/analytics'
+import { Route as DashboardRecruitmentAiScreeningRouteImport } from './routes/dashboard/recruitment/ai-screening'
+import { Route as DashboardRecruitmentAiInterviewRouteImport } from './routes/dashboard/recruitment/ai-interview'
 import { Route as DashboardRecruitmentAiRouteImport } from './routes/dashboard/recruitment/ai'
 import { Route as DashboardPayrollTravelRequestsRouteImport } from './routes/dashboard.payroll.travel-requests'
 import { Route as DashboardPayrollTaxRouteImport } from './routes/dashboard.payroll.tax'
@@ -827,6 +838,18 @@ const DashboardResourcesAssetManagementRoute =
     path: '/asset-management',
     getParentRoute: () => DashboardResourcesRoute,
   } as any)
+const DashboardRecruitmentWorkforcePlanningRoute =
+  DashboardRecruitmentWorkforcePlanningRouteImport.update({
+    id: '/workforce-planning',
+    path: '/workforce-planning',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentVerificationRoute =
+  DashboardRecruitmentVerificationRouteImport.update({
+    id: '/verification',
+    path: '/verification',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
 const DashboardRecruitmentVendorsRoute =
   DashboardRecruitmentVendorsRouteImport.update({
     id: '/vendors',
@@ -843,6 +866,12 @@ const DashboardRecruitmentTalentPoolRoute =
   DashboardRecruitmentTalentPoolRouteImport.update({
     id: '/talent-pool',
     path: '/talent-pool',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentSourcingRoute =
+  DashboardRecruitmentSourcingRouteImport.update({
+    id: '/sourcing',
+    path: '/sourcing',
     getParentRoute: () => DashboardRecruitmentRoute,
   } as any)
 const DashboardRecruitmentSearchRoute =
@@ -881,6 +910,12 @@ const DashboardRecruitmentReferralsRoute =
     path: '/referrals',
     getParentRoute: () => DashboardRecruitmentRoute,
   } as any)
+const DashboardRecruitmentPreboardingRoute =
+  DashboardRecruitmentPreboardingRouteImport.update({
+    id: '/preboarding',
+    path: '/preboarding',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
 const DashboardRecruitmentPipelineRoute =
   DashboardRecruitmentPipelineRouteImport.update({
     id: '/pipeline',
@@ -905,6 +940,12 @@ const DashboardRecruitmentNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => DashboardRecruitmentRoute,
   } as any)
+const DashboardRecruitmentKtProbationRoute =
+  DashboardRecruitmentKtProbationRouteImport.update({
+    id: '/kt-probation',
+    path: '/kt-probation',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
 const DashboardRecruitmentInterviewsRoute =
   DashboardRecruitmentInterviewsRouteImport.update({
     id: '/interviews',
@@ -915,6 +956,18 @@ const DashboardRecruitmentImportExportRoute =
   DashboardRecruitmentImportExportRouteImport.update({
     id: '/import-export',
     path: '/import-export',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentHiringManagerRoute =
+  DashboardRecruitmentHiringManagerRouteImport.update({
+    id: '/hiring-manager',
+    path: '/hiring-manager',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentEmployeeOnboardingRoute =
+  DashboardRecruitmentEmployeeOnboardingRouteImport.update({
+    id: '/employee-onboarding',
+    path: '/employee-onboarding',
     getParentRoute: () => DashboardRecruitmentRoute,
   } as any)
 const DashboardRecruitmentCrmRoute = DashboardRecruitmentCrmRouteImport.update({
@@ -932,6 +985,18 @@ const DashboardRecruitmentComplianceRoute =
   DashboardRecruitmentComplianceRouteImport.update({
     id: '/compliance',
     path: '/compliance',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentCompensationRoute =
+  DashboardRecruitmentCompensationRouteImport.update({
+    id: '/compensation',
+    path: '/compensation',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentCommunicationRoute =
+  DashboardRecruitmentCommunicationRouteImport.update({
+    id: '/communication',
+    path: '/communication',
     getParentRoute: () => DashboardRecruitmentRoute,
   } as any)
 const DashboardRecruitmentCareerSiteRoute =
@@ -962,6 +1027,18 @@ const DashboardRecruitmentAnalyticsRoute =
   DashboardRecruitmentAnalyticsRouteImport.update({
     id: '/analytics',
     path: '/analytics',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentAiScreeningRoute =
+  DashboardRecruitmentAiScreeningRouteImport.update({
+    id: '/ai-screening',
+    path: '/ai-screening',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentAiInterviewRoute =
+  DashboardRecruitmentAiInterviewRouteImport.update({
+    id: '/ai-interview',
+    path: '/ai-interview',
     getParentRoute: () => DashboardRecruitmentRoute,
   } as any)
 const DashboardRecruitmentAiRoute = DashboardRecruitmentAiRouteImport.update({
@@ -1519,29 +1596,40 @@ export interface FileRoutesByFullPath {
   '/dashboard/payroll/tax': typeof DashboardPayrollTaxRoute
   '/dashboard/payroll/travel-requests': typeof DashboardPayrollTravelRequestsRoute
   '/dashboard/recruitment/ai': typeof DashboardRecruitmentAiRoute
+  '/dashboard/recruitment/ai-interview': typeof DashboardRecruitmentAiInterviewRoute
+  '/dashboard/recruitment/ai-screening': typeof DashboardRecruitmentAiScreeningRoute
   '/dashboard/recruitment/analytics': typeof DashboardRecruitmentAnalyticsRoute
   '/dashboard/recruitment/automation': typeof DashboardRecruitmentAutomationRoute
   '/dashboard/recruitment/calendar': typeof DashboardRecruitmentCalendarRoute
   '/dashboard/recruitment/candidates': typeof DashboardRecruitmentCandidatesRouteWithChildren
   '/dashboard/recruitment/career-site': typeof DashboardRecruitmentCareerSiteRoute
+  '/dashboard/recruitment/communication': typeof DashboardRecruitmentCommunicationRoute
+  '/dashboard/recruitment/compensation': typeof DashboardRecruitmentCompensationRoute
   '/dashboard/recruitment/compliance': typeof DashboardRecruitmentComplianceRoute
   '/dashboard/recruitment/copilot': typeof DashboardRecruitmentCopilotRoute
   '/dashboard/recruitment/crm': typeof DashboardRecruitmentCrmRoute
+  '/dashboard/recruitment/employee-onboarding': typeof DashboardRecruitmentEmployeeOnboardingRoute
+  '/dashboard/recruitment/hiring-manager': typeof DashboardRecruitmentHiringManagerRoute
   '/dashboard/recruitment/import-export': typeof DashboardRecruitmentImportExportRoute
   '/dashboard/recruitment/interviews': typeof DashboardRecruitmentInterviewsRoute
+  '/dashboard/recruitment/kt-probation': typeof DashboardRecruitmentKtProbationRoute
   '/dashboard/recruitment/notifications': typeof DashboardRecruitmentNotificationsRoute
   '/dashboard/recruitment/offers': typeof DashboardRecruitmentOffersRoute
   '/dashboard/recruitment/onboarding': typeof DashboardRecruitmentOnboardingRoute
   '/dashboard/recruitment/pipeline': typeof DashboardRecruitmentPipelineRoute
+  '/dashboard/recruitment/preboarding': typeof DashboardRecruitmentPreboardingRoute
   '/dashboard/recruitment/referrals': typeof DashboardRecruitmentReferralsRoute
   '/dashboard/recruitment/reports': typeof DashboardRecruitmentReportsRoute
   '/dashboard/recruitment/requisitions': typeof DashboardRecruitmentRequisitionsRoute
   '/dashboard/recruitment/resume-intelligence': typeof DashboardRecruitmentResumeIntelligenceRoute
   '/dashboard/recruitment/scorecards': typeof DashboardRecruitmentScorecardsRoute
   '/dashboard/recruitment/search': typeof DashboardRecruitmentSearchRoute
+  '/dashboard/recruitment/sourcing': typeof DashboardRecruitmentSourcingRoute
   '/dashboard/recruitment/talent-pool': typeof DashboardRecruitmentTalentPoolRoute
   '/dashboard/recruitment/templates': typeof DashboardRecruitmentTemplatesRoute
   '/dashboard/recruitment/vendors': typeof DashboardRecruitmentVendorsRoute
+  '/dashboard/recruitment/verification': typeof DashboardRecruitmentVerificationRoute
+  '/dashboard/recruitment/workforce-planning': typeof DashboardRecruitmentWorkforcePlanningRoute
   '/dashboard/resources/asset-management': typeof DashboardResourcesAssetManagementRoute
   '/dashboard/resources/assets': typeof DashboardResourcesAssetsRoute
   '/dashboard/resources/documents': typeof DashboardResourcesDocumentsRoute
@@ -1718,28 +1806,39 @@ export interface FileRoutesByTo {
   '/dashboard/payroll/tax': typeof DashboardPayrollTaxRoute
   '/dashboard/payroll/travel-requests': typeof DashboardPayrollTravelRequestsRoute
   '/dashboard/recruitment/ai': typeof DashboardRecruitmentAiRoute
+  '/dashboard/recruitment/ai-interview': typeof DashboardRecruitmentAiInterviewRoute
+  '/dashboard/recruitment/ai-screening': typeof DashboardRecruitmentAiScreeningRoute
   '/dashboard/recruitment/analytics': typeof DashboardRecruitmentAnalyticsRoute
   '/dashboard/recruitment/automation': typeof DashboardRecruitmentAutomationRoute
   '/dashboard/recruitment/calendar': typeof DashboardRecruitmentCalendarRoute
   '/dashboard/recruitment/career-site': typeof DashboardRecruitmentCareerSiteRoute
+  '/dashboard/recruitment/communication': typeof DashboardRecruitmentCommunicationRoute
+  '/dashboard/recruitment/compensation': typeof DashboardRecruitmentCompensationRoute
   '/dashboard/recruitment/compliance': typeof DashboardRecruitmentComplianceRoute
   '/dashboard/recruitment/copilot': typeof DashboardRecruitmentCopilotRoute
   '/dashboard/recruitment/crm': typeof DashboardRecruitmentCrmRoute
+  '/dashboard/recruitment/employee-onboarding': typeof DashboardRecruitmentEmployeeOnboardingRoute
+  '/dashboard/recruitment/hiring-manager': typeof DashboardRecruitmentHiringManagerRoute
   '/dashboard/recruitment/import-export': typeof DashboardRecruitmentImportExportRoute
   '/dashboard/recruitment/interviews': typeof DashboardRecruitmentInterviewsRoute
+  '/dashboard/recruitment/kt-probation': typeof DashboardRecruitmentKtProbationRoute
   '/dashboard/recruitment/notifications': typeof DashboardRecruitmentNotificationsRoute
   '/dashboard/recruitment/offers': typeof DashboardRecruitmentOffersRoute
   '/dashboard/recruitment/onboarding': typeof DashboardRecruitmentOnboardingRoute
   '/dashboard/recruitment/pipeline': typeof DashboardRecruitmentPipelineRoute
+  '/dashboard/recruitment/preboarding': typeof DashboardRecruitmentPreboardingRoute
   '/dashboard/recruitment/referrals': typeof DashboardRecruitmentReferralsRoute
   '/dashboard/recruitment/reports': typeof DashboardRecruitmentReportsRoute
   '/dashboard/recruitment/requisitions': typeof DashboardRecruitmentRequisitionsRoute
   '/dashboard/recruitment/resume-intelligence': typeof DashboardRecruitmentResumeIntelligenceRoute
   '/dashboard/recruitment/scorecards': typeof DashboardRecruitmentScorecardsRoute
   '/dashboard/recruitment/search': typeof DashboardRecruitmentSearchRoute
+  '/dashboard/recruitment/sourcing': typeof DashboardRecruitmentSourcingRoute
   '/dashboard/recruitment/talent-pool': typeof DashboardRecruitmentTalentPoolRoute
   '/dashboard/recruitment/templates': typeof DashboardRecruitmentTemplatesRoute
   '/dashboard/recruitment/vendors': typeof DashboardRecruitmentVendorsRoute
+  '/dashboard/recruitment/verification': typeof DashboardRecruitmentVerificationRoute
+  '/dashboard/recruitment/workforce-planning': typeof DashboardRecruitmentWorkforcePlanningRoute
   '/dashboard/resources/asset-management': typeof DashboardResourcesAssetManagementRoute
   '/dashboard/resources/assets': typeof DashboardResourcesAssetsRoute
   '/dashboard/resources/documents': typeof DashboardResourcesDocumentsRoute
@@ -1933,29 +2032,40 @@ export interface FileRoutesById {
   '/dashboard/payroll/tax': typeof DashboardPayrollTaxRoute
   '/dashboard/payroll/travel-requests': typeof DashboardPayrollTravelRequestsRoute
   '/dashboard/recruitment/ai': typeof DashboardRecruitmentAiRoute
+  '/dashboard/recruitment/ai-interview': typeof DashboardRecruitmentAiInterviewRoute
+  '/dashboard/recruitment/ai-screening': typeof DashboardRecruitmentAiScreeningRoute
   '/dashboard/recruitment/analytics': typeof DashboardRecruitmentAnalyticsRoute
   '/dashboard/recruitment/automation': typeof DashboardRecruitmentAutomationRoute
   '/dashboard/recruitment/calendar': typeof DashboardRecruitmentCalendarRoute
   '/dashboard/recruitment/candidates': typeof DashboardRecruitmentCandidatesRouteWithChildren
   '/dashboard/recruitment/career-site': typeof DashboardRecruitmentCareerSiteRoute
+  '/dashboard/recruitment/communication': typeof DashboardRecruitmentCommunicationRoute
+  '/dashboard/recruitment/compensation': typeof DashboardRecruitmentCompensationRoute
   '/dashboard/recruitment/compliance': typeof DashboardRecruitmentComplianceRoute
   '/dashboard/recruitment/copilot': typeof DashboardRecruitmentCopilotRoute
   '/dashboard/recruitment/crm': typeof DashboardRecruitmentCrmRoute
+  '/dashboard/recruitment/employee-onboarding': typeof DashboardRecruitmentEmployeeOnboardingRoute
+  '/dashboard/recruitment/hiring-manager': typeof DashboardRecruitmentHiringManagerRoute
   '/dashboard/recruitment/import-export': typeof DashboardRecruitmentImportExportRoute
   '/dashboard/recruitment/interviews': typeof DashboardRecruitmentInterviewsRoute
+  '/dashboard/recruitment/kt-probation': typeof DashboardRecruitmentKtProbationRoute
   '/dashboard/recruitment/notifications': typeof DashboardRecruitmentNotificationsRoute
   '/dashboard/recruitment/offers': typeof DashboardRecruitmentOffersRoute
   '/dashboard/recruitment/onboarding': typeof DashboardRecruitmentOnboardingRoute
   '/dashboard/recruitment/pipeline': typeof DashboardRecruitmentPipelineRoute
+  '/dashboard/recruitment/preboarding': typeof DashboardRecruitmentPreboardingRoute
   '/dashboard/recruitment/referrals': typeof DashboardRecruitmentReferralsRoute
   '/dashboard/recruitment/reports': typeof DashboardRecruitmentReportsRoute
   '/dashboard/recruitment/requisitions': typeof DashboardRecruitmentRequisitionsRoute
   '/dashboard/recruitment/resume-intelligence': typeof DashboardRecruitmentResumeIntelligenceRoute
   '/dashboard/recruitment/scorecards': typeof DashboardRecruitmentScorecardsRoute
   '/dashboard/recruitment/search': typeof DashboardRecruitmentSearchRoute
+  '/dashboard/recruitment/sourcing': typeof DashboardRecruitmentSourcingRoute
   '/dashboard/recruitment/talent-pool': typeof DashboardRecruitmentTalentPoolRoute
   '/dashboard/recruitment/templates': typeof DashboardRecruitmentTemplatesRoute
   '/dashboard/recruitment/vendors': typeof DashboardRecruitmentVendorsRoute
+  '/dashboard/recruitment/verification': typeof DashboardRecruitmentVerificationRoute
+  '/dashboard/recruitment/workforce-planning': typeof DashboardRecruitmentWorkforcePlanningRoute
   '/dashboard/resources/asset-management': typeof DashboardResourcesAssetManagementRoute
   '/dashboard/resources/assets': typeof DashboardResourcesAssetsRoute
   '/dashboard/resources/documents': typeof DashboardResourcesDocumentsRoute
@@ -2150,29 +2260,40 @@ export interface FileRouteTypes {
     | '/dashboard/payroll/tax'
     | '/dashboard/payroll/travel-requests'
     | '/dashboard/recruitment/ai'
+    | '/dashboard/recruitment/ai-interview'
+    | '/dashboard/recruitment/ai-screening'
     | '/dashboard/recruitment/analytics'
     | '/dashboard/recruitment/automation'
     | '/dashboard/recruitment/calendar'
     | '/dashboard/recruitment/candidates'
     | '/dashboard/recruitment/career-site'
+    | '/dashboard/recruitment/communication'
+    | '/dashboard/recruitment/compensation'
     | '/dashboard/recruitment/compliance'
     | '/dashboard/recruitment/copilot'
     | '/dashboard/recruitment/crm'
+    | '/dashboard/recruitment/employee-onboarding'
+    | '/dashboard/recruitment/hiring-manager'
     | '/dashboard/recruitment/import-export'
     | '/dashboard/recruitment/interviews'
+    | '/dashboard/recruitment/kt-probation'
     | '/dashboard/recruitment/notifications'
     | '/dashboard/recruitment/offers'
     | '/dashboard/recruitment/onboarding'
     | '/dashboard/recruitment/pipeline'
+    | '/dashboard/recruitment/preboarding'
     | '/dashboard/recruitment/referrals'
     | '/dashboard/recruitment/reports'
     | '/dashboard/recruitment/requisitions'
     | '/dashboard/recruitment/resume-intelligence'
     | '/dashboard/recruitment/scorecards'
     | '/dashboard/recruitment/search'
+    | '/dashboard/recruitment/sourcing'
     | '/dashboard/recruitment/talent-pool'
     | '/dashboard/recruitment/templates'
     | '/dashboard/recruitment/vendors'
+    | '/dashboard/recruitment/verification'
+    | '/dashboard/recruitment/workforce-planning'
     | '/dashboard/resources/asset-management'
     | '/dashboard/resources/assets'
     | '/dashboard/resources/documents'
@@ -2349,28 +2470,39 @@ export interface FileRouteTypes {
     | '/dashboard/payroll/tax'
     | '/dashboard/payroll/travel-requests'
     | '/dashboard/recruitment/ai'
+    | '/dashboard/recruitment/ai-interview'
+    | '/dashboard/recruitment/ai-screening'
     | '/dashboard/recruitment/analytics'
     | '/dashboard/recruitment/automation'
     | '/dashboard/recruitment/calendar'
     | '/dashboard/recruitment/career-site'
+    | '/dashboard/recruitment/communication'
+    | '/dashboard/recruitment/compensation'
     | '/dashboard/recruitment/compliance'
     | '/dashboard/recruitment/copilot'
     | '/dashboard/recruitment/crm'
+    | '/dashboard/recruitment/employee-onboarding'
+    | '/dashboard/recruitment/hiring-manager'
     | '/dashboard/recruitment/import-export'
     | '/dashboard/recruitment/interviews'
+    | '/dashboard/recruitment/kt-probation'
     | '/dashboard/recruitment/notifications'
     | '/dashboard/recruitment/offers'
     | '/dashboard/recruitment/onboarding'
     | '/dashboard/recruitment/pipeline'
+    | '/dashboard/recruitment/preboarding'
     | '/dashboard/recruitment/referrals'
     | '/dashboard/recruitment/reports'
     | '/dashboard/recruitment/requisitions'
     | '/dashboard/recruitment/resume-intelligence'
     | '/dashboard/recruitment/scorecards'
     | '/dashboard/recruitment/search'
+    | '/dashboard/recruitment/sourcing'
     | '/dashboard/recruitment/talent-pool'
     | '/dashboard/recruitment/templates'
     | '/dashboard/recruitment/vendors'
+    | '/dashboard/recruitment/verification'
+    | '/dashboard/recruitment/workforce-planning'
     | '/dashboard/resources/asset-management'
     | '/dashboard/resources/assets'
     | '/dashboard/resources/documents'
@@ -2563,29 +2695,40 @@ export interface FileRouteTypes {
     | '/dashboard/payroll/tax'
     | '/dashboard/payroll/travel-requests'
     | '/dashboard/recruitment/ai'
+    | '/dashboard/recruitment/ai-interview'
+    | '/dashboard/recruitment/ai-screening'
     | '/dashboard/recruitment/analytics'
     | '/dashboard/recruitment/automation'
     | '/dashboard/recruitment/calendar'
     | '/dashboard/recruitment/candidates'
     | '/dashboard/recruitment/career-site'
+    | '/dashboard/recruitment/communication'
+    | '/dashboard/recruitment/compensation'
     | '/dashboard/recruitment/compliance'
     | '/dashboard/recruitment/copilot'
     | '/dashboard/recruitment/crm'
+    | '/dashboard/recruitment/employee-onboarding'
+    | '/dashboard/recruitment/hiring-manager'
     | '/dashboard/recruitment/import-export'
     | '/dashboard/recruitment/interviews'
+    | '/dashboard/recruitment/kt-probation'
     | '/dashboard/recruitment/notifications'
     | '/dashboard/recruitment/offers'
     | '/dashboard/recruitment/onboarding'
     | '/dashboard/recruitment/pipeline'
+    | '/dashboard/recruitment/preboarding'
     | '/dashboard/recruitment/referrals'
     | '/dashboard/recruitment/reports'
     | '/dashboard/recruitment/requisitions'
     | '/dashboard/recruitment/resume-intelligence'
     | '/dashboard/recruitment/scorecards'
     | '/dashboard/recruitment/search'
+    | '/dashboard/recruitment/sourcing'
     | '/dashboard/recruitment/talent-pool'
     | '/dashboard/recruitment/templates'
     | '/dashboard/recruitment/vendors'
+    | '/dashboard/recruitment/verification'
+    | '/dashboard/recruitment/workforce-planning'
     | '/dashboard/resources/asset-management'
     | '/dashboard/resources/assets'
     | '/dashboard/resources/documents'
@@ -3502,6 +3645,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardResourcesAssetManagementRouteImport
       parentRoute: typeof DashboardResourcesRoute
     }
+    '/dashboard/recruitment/workforce-planning': {
+      id: '/dashboard/recruitment/workforce-planning'
+      path: '/workforce-planning'
+      fullPath: '/dashboard/recruitment/workforce-planning'
+      preLoaderRoute: typeof DashboardRecruitmentWorkforcePlanningRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/verification': {
+      id: '/dashboard/recruitment/verification'
+      path: '/verification'
+      fullPath: '/dashboard/recruitment/verification'
+      preLoaderRoute: typeof DashboardRecruitmentVerificationRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
     '/dashboard/recruitment/vendors': {
       id: '/dashboard/recruitment/vendors'
       path: '/vendors'
@@ -3521,6 +3678,13 @@ declare module '@tanstack/react-router' {
       path: '/talent-pool'
       fullPath: '/dashboard/recruitment/talent-pool'
       preLoaderRoute: typeof DashboardRecruitmentTalentPoolRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/sourcing': {
+      id: '/dashboard/recruitment/sourcing'
+      path: '/sourcing'
+      fullPath: '/dashboard/recruitment/sourcing'
+      preLoaderRoute: typeof DashboardRecruitmentSourcingRouteImport
       parentRoute: typeof DashboardRecruitmentRoute
     }
     '/dashboard/recruitment/search': {
@@ -3565,6 +3729,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRecruitmentReferralsRouteImport
       parentRoute: typeof DashboardRecruitmentRoute
     }
+    '/dashboard/recruitment/preboarding': {
+      id: '/dashboard/recruitment/preboarding'
+      path: '/preboarding'
+      fullPath: '/dashboard/recruitment/preboarding'
+      preLoaderRoute: typeof DashboardRecruitmentPreboardingRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
     '/dashboard/recruitment/pipeline': {
       id: '/dashboard/recruitment/pipeline'
       path: '/pipeline'
@@ -3593,6 +3764,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRecruitmentNotificationsRouteImport
       parentRoute: typeof DashboardRecruitmentRoute
     }
+    '/dashboard/recruitment/kt-probation': {
+      id: '/dashboard/recruitment/kt-probation'
+      path: '/kt-probation'
+      fullPath: '/dashboard/recruitment/kt-probation'
+      preLoaderRoute: typeof DashboardRecruitmentKtProbationRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
     '/dashboard/recruitment/interviews': {
       id: '/dashboard/recruitment/interviews'
       path: '/interviews'
@@ -3605,6 +3783,20 @@ declare module '@tanstack/react-router' {
       path: '/import-export'
       fullPath: '/dashboard/recruitment/import-export'
       preLoaderRoute: typeof DashboardRecruitmentImportExportRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/hiring-manager': {
+      id: '/dashboard/recruitment/hiring-manager'
+      path: '/hiring-manager'
+      fullPath: '/dashboard/recruitment/hiring-manager'
+      preLoaderRoute: typeof DashboardRecruitmentHiringManagerRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/employee-onboarding': {
+      id: '/dashboard/recruitment/employee-onboarding'
+      path: '/employee-onboarding'
+      fullPath: '/dashboard/recruitment/employee-onboarding'
+      preLoaderRoute: typeof DashboardRecruitmentEmployeeOnboardingRouteImport
       parentRoute: typeof DashboardRecruitmentRoute
     }
     '/dashboard/recruitment/crm': {
@@ -3626,6 +3818,20 @@ declare module '@tanstack/react-router' {
       path: '/compliance'
       fullPath: '/dashboard/recruitment/compliance'
       preLoaderRoute: typeof DashboardRecruitmentComplianceRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/compensation': {
+      id: '/dashboard/recruitment/compensation'
+      path: '/compensation'
+      fullPath: '/dashboard/recruitment/compensation'
+      preLoaderRoute: typeof DashboardRecruitmentCompensationRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/communication': {
+      id: '/dashboard/recruitment/communication'
+      path: '/communication'
+      fullPath: '/dashboard/recruitment/communication'
+      preLoaderRoute: typeof DashboardRecruitmentCommunicationRouteImport
       parentRoute: typeof DashboardRecruitmentRoute
     }
     '/dashboard/recruitment/career-site': {
@@ -3661,6 +3867,20 @@ declare module '@tanstack/react-router' {
       path: '/analytics'
       fullPath: '/dashboard/recruitment/analytics'
       preLoaderRoute: typeof DashboardRecruitmentAnalyticsRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/ai-screening': {
+      id: '/dashboard/recruitment/ai-screening'
+      path: '/ai-screening'
+      fullPath: '/dashboard/recruitment/ai-screening'
+      preLoaderRoute: typeof DashboardRecruitmentAiScreeningRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/ai-interview': {
+      id: '/dashboard/recruitment/ai-interview'
+      path: '/ai-interview'
+      fullPath: '/dashboard/recruitment/ai-interview'
+      preLoaderRoute: typeof DashboardRecruitmentAiInterviewRouteImport
       parentRoute: typeof DashboardRecruitmentRoute
     }
     '/dashboard/recruitment/ai': {
@@ -4393,29 +4613,40 @@ const DashboardRecruitmentJobsJobIdRouteWithChildren =
 
 interface DashboardRecruitmentRouteChildren {
   DashboardRecruitmentAiRoute: typeof DashboardRecruitmentAiRoute
+  DashboardRecruitmentAiInterviewRoute: typeof DashboardRecruitmentAiInterviewRoute
+  DashboardRecruitmentAiScreeningRoute: typeof DashboardRecruitmentAiScreeningRoute
   DashboardRecruitmentAnalyticsRoute: typeof DashboardRecruitmentAnalyticsRoute
   DashboardRecruitmentAutomationRoute: typeof DashboardRecruitmentAutomationRoute
   DashboardRecruitmentCalendarRoute: typeof DashboardRecruitmentCalendarRoute
   DashboardRecruitmentCandidatesRoute: typeof DashboardRecruitmentCandidatesRouteWithChildren
   DashboardRecruitmentCareerSiteRoute: typeof DashboardRecruitmentCareerSiteRoute
+  DashboardRecruitmentCommunicationRoute: typeof DashboardRecruitmentCommunicationRoute
+  DashboardRecruitmentCompensationRoute: typeof DashboardRecruitmentCompensationRoute
   DashboardRecruitmentComplianceRoute: typeof DashboardRecruitmentComplianceRoute
   DashboardRecruitmentCopilotRoute: typeof DashboardRecruitmentCopilotRoute
   DashboardRecruitmentCrmRoute: typeof DashboardRecruitmentCrmRoute
+  DashboardRecruitmentEmployeeOnboardingRoute: typeof DashboardRecruitmentEmployeeOnboardingRoute
+  DashboardRecruitmentHiringManagerRoute: typeof DashboardRecruitmentHiringManagerRoute
   DashboardRecruitmentImportExportRoute: typeof DashboardRecruitmentImportExportRoute
   DashboardRecruitmentInterviewsRoute: typeof DashboardRecruitmentInterviewsRoute
+  DashboardRecruitmentKtProbationRoute: typeof DashboardRecruitmentKtProbationRoute
   DashboardRecruitmentNotificationsRoute: typeof DashboardRecruitmentNotificationsRoute
   DashboardRecruitmentOffersRoute: typeof DashboardRecruitmentOffersRoute
   DashboardRecruitmentOnboardingRoute: typeof DashboardRecruitmentOnboardingRoute
   DashboardRecruitmentPipelineRoute: typeof DashboardRecruitmentPipelineRoute
+  DashboardRecruitmentPreboardingRoute: typeof DashboardRecruitmentPreboardingRoute
   DashboardRecruitmentReferralsRoute: typeof DashboardRecruitmentReferralsRoute
   DashboardRecruitmentReportsRoute: typeof DashboardRecruitmentReportsRoute
   DashboardRecruitmentRequisitionsRoute: typeof DashboardRecruitmentRequisitionsRoute
   DashboardRecruitmentResumeIntelligenceRoute: typeof DashboardRecruitmentResumeIntelligenceRoute
   DashboardRecruitmentScorecardsRoute: typeof DashboardRecruitmentScorecardsRoute
   DashboardRecruitmentSearchRoute: typeof DashboardRecruitmentSearchRoute
+  DashboardRecruitmentSourcingRoute: typeof DashboardRecruitmentSourcingRoute
   DashboardRecruitmentTalentPoolRoute: typeof DashboardRecruitmentTalentPoolRoute
   DashboardRecruitmentTemplatesRoute: typeof DashboardRecruitmentTemplatesRoute
   DashboardRecruitmentVendorsRoute: typeof DashboardRecruitmentVendorsRoute
+  DashboardRecruitmentVerificationRoute: typeof DashboardRecruitmentVerificationRoute
+  DashboardRecruitmentWorkforcePlanningRoute: typeof DashboardRecruitmentWorkforcePlanningRoute
   DashboardRecruitmentIndexRoute: typeof DashboardRecruitmentIndexRoute
   DashboardRecruitmentJobsJobIdRoute: typeof DashboardRecruitmentJobsJobIdRouteWithChildren
   DashboardRecruitmentJobsNewRoute: typeof DashboardRecruitmentJobsNewRoute
@@ -4424,22 +4655,33 @@ interface DashboardRecruitmentRouteChildren {
 
 const DashboardRecruitmentRouteChildren: DashboardRecruitmentRouteChildren = {
   DashboardRecruitmentAiRoute: DashboardRecruitmentAiRoute,
+  DashboardRecruitmentAiInterviewRoute: DashboardRecruitmentAiInterviewRoute,
+  DashboardRecruitmentAiScreeningRoute: DashboardRecruitmentAiScreeningRoute,
   DashboardRecruitmentAnalyticsRoute: DashboardRecruitmentAnalyticsRoute,
   DashboardRecruitmentAutomationRoute: DashboardRecruitmentAutomationRoute,
   DashboardRecruitmentCalendarRoute: DashboardRecruitmentCalendarRoute,
   DashboardRecruitmentCandidatesRoute:
     DashboardRecruitmentCandidatesRouteWithChildren,
   DashboardRecruitmentCareerSiteRoute: DashboardRecruitmentCareerSiteRoute,
+  DashboardRecruitmentCommunicationRoute:
+    DashboardRecruitmentCommunicationRoute,
+  DashboardRecruitmentCompensationRoute: DashboardRecruitmentCompensationRoute,
   DashboardRecruitmentComplianceRoute: DashboardRecruitmentComplianceRoute,
   DashboardRecruitmentCopilotRoute: DashboardRecruitmentCopilotRoute,
   DashboardRecruitmentCrmRoute: DashboardRecruitmentCrmRoute,
+  DashboardRecruitmentEmployeeOnboardingRoute:
+    DashboardRecruitmentEmployeeOnboardingRoute,
+  DashboardRecruitmentHiringManagerRoute:
+    DashboardRecruitmentHiringManagerRoute,
   DashboardRecruitmentImportExportRoute: DashboardRecruitmentImportExportRoute,
   DashboardRecruitmentInterviewsRoute: DashboardRecruitmentInterviewsRoute,
+  DashboardRecruitmentKtProbationRoute: DashboardRecruitmentKtProbationRoute,
   DashboardRecruitmentNotificationsRoute:
     DashboardRecruitmentNotificationsRoute,
   DashboardRecruitmentOffersRoute: DashboardRecruitmentOffersRoute,
   DashboardRecruitmentOnboardingRoute: DashboardRecruitmentOnboardingRoute,
   DashboardRecruitmentPipelineRoute: DashboardRecruitmentPipelineRoute,
+  DashboardRecruitmentPreboardingRoute: DashboardRecruitmentPreboardingRoute,
   DashboardRecruitmentReferralsRoute: DashboardRecruitmentReferralsRoute,
   DashboardRecruitmentReportsRoute: DashboardRecruitmentReportsRoute,
   DashboardRecruitmentRequisitionsRoute: DashboardRecruitmentRequisitionsRoute,
@@ -4447,9 +4689,13 @@ const DashboardRecruitmentRouteChildren: DashboardRecruitmentRouteChildren = {
     DashboardRecruitmentResumeIntelligenceRoute,
   DashboardRecruitmentScorecardsRoute: DashboardRecruitmentScorecardsRoute,
   DashboardRecruitmentSearchRoute: DashboardRecruitmentSearchRoute,
+  DashboardRecruitmentSourcingRoute: DashboardRecruitmentSourcingRoute,
   DashboardRecruitmentTalentPoolRoute: DashboardRecruitmentTalentPoolRoute,
   DashboardRecruitmentTemplatesRoute: DashboardRecruitmentTemplatesRoute,
   DashboardRecruitmentVendorsRoute: DashboardRecruitmentVendorsRoute,
+  DashboardRecruitmentVerificationRoute: DashboardRecruitmentVerificationRoute,
+  DashboardRecruitmentWorkforcePlanningRoute:
+    DashboardRecruitmentWorkforcePlanningRoute,
   DashboardRecruitmentIndexRoute: DashboardRecruitmentIndexRoute,
   DashboardRecruitmentJobsJobIdRoute:
     DashboardRecruitmentJobsJobIdRouteWithChildren,

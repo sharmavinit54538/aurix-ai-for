@@ -20,4 +20,3 @@ function HierarchyPage() {
   );
 }
 
-export default HierarchyPage;

@@ -2,6 +2,8 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { SidebarState } from "./sidebarTypes";
 import { fetchSidebarPermissions } from "./sidebarActions";
 
+export { fetchSidebarPermissions };
+
 const STORAGE_KEY = "AURIX_SIDEBAR_EXPANDED";
 
 function loadExpandedState(): Record<string, boolean> {

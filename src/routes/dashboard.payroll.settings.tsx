@@ -235,7 +235,7 @@ const SETTINGS_HUB_CARDS: HubCardDef[] = [
   },
 ];
 
-export function PayrollSettingsPage() {
+function PayrollSettingsPage() {
   const { user } = useAurix();
   const queryClient = useQueryClient();
   const navigate = useNavigate({ from: "/dashboard/payroll/settings" });

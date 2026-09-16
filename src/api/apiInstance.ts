@@ -181,4 +181,104 @@ apiInstance.interceptors.response.use(
   },
 );
 
+// ── In-flight request deduplication & TTL Cache ───────────────
+interface CacheEntry {
+  response: any;
+  expiresAt: number;
+}
+
+const responseCache = new Map<string, CacheEntry>();
+const inFlightRequests = new Map<string, Promise<any>>();
+const DEFAULT_CACHE_TTL_MS = 30_000; // 30 seconds
+
+export function clearApiCache(urlPattern?: string) {
+  if (!urlPattern) {
+    responseCache.clear();
+    return;
+  }
+  for (const key of responseCache.keys()) {
+    if (key.includes(urlPattern)) {
+      responseCache.delete(key);
+    }
+  }
+}
+
+function getRequestKey(config: any): string {
+  const method = (config.method || "get").toLowerCase();
+  const url = config.url || "";
+  let paramsStr = "";
+  if (config.params) {
+    try {
+      paramsStr = typeof config.params === "string" ? config.params : JSON.stringify(config.params);
+    } catch {
+      paramsStr = String(config.params);
+    }
+  }
+  return `${method}:${url}:${paramsStr}`;
+}
+
+const rawRequest = apiInstance.request.bind(apiInstance);
+
+apiInstance.request = async function <T = any, R = any, D = any>(config: any): Promise<R> {
+  const method = (config?.method || "get").toLowerCase();
+
+  // On any mutating method, clear cached GET data to ensure freshness
+  if (method === "post" || method === "put" || method === "patch" || method === "delete") {
+    clearApiCache();
+    return rawRequest(config);
+  }
+
+  // Deduplicate and cache GET requests
+  if (method === "get") {
+    const skipCache =
+      config.headers?.["x-skip-cache"] === "true" ||
+      config.headers?.["Cache-Control"] === "no-cache" ||
+      config.skipCache;
+
+    const key = getRequestKey(config);
+
+    if (!skipCache) {
+      const cached = responseCache.get(key);
+      if (cached && Date.now() < cached.expiresAt) {
+        // Return shallow clone so caller modifications do not affect cached object
+        return Promise.resolve({
+          ...cached.response,
+          data: typeof cached.response.data === "object" && cached.response.data !== null
+            ? Array.isArray(cached.response.data)
+              ? [...cached.response.data]
+              : { ...cached.response.data }
+            : cached.response.data,
+        });
+      }
+
+      if (inFlightRequests.has(key)) {
+        return inFlightRequests.get(key)!;
+      }
+    }
+
+    const promise = rawRequest(config)
+      .then((response: any) => {
+        if (!skipCache && response && response.status >= 200 && response.status < 300) {
+          responseCache.set(key, {
+            response,
+            expiresAt: Date.now() + DEFAULT_CACHE_TTL_MS,
+          });
+        }
+        return response;
+      })
+      .finally(() => {
+        inFlightRequests.delete(key);
+      });
+
+    if (!skipCache) {
+      inFlightRequests.set(key, promise);
+    }
+
+    return promise;
+  }
+
+  return rawRequest(config);
+};
+
 export default apiInstance;
+

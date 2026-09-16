@@ -15,4 +15,3 @@ function SettingsLayout() {
   );
 }
 
-export default SettingsLayout;

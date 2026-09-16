@@ -10,8 +10,9 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, Suspense, type ReactNode } from "react";
 import { bootstrapAuth } from "../lib/auth-bootstrap";
+import { PageSkeleton } from "../components/common/PageSkeleton";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -134,7 +135,9 @@ function RootComponent() {
       <Provider store={store}>
         <QueryClientProvider client={queryClient}>
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-          <Outlet />
+          <Suspense fallback={<PageSkeleton />}>
+            <Outlet />
+          </Suspense>
           <Toaster richColors position="top-right" />
         </QueryClientProvider>
       </Provider>

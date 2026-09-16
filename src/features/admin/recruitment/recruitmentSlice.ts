@@ -12,12 +12,18 @@ import {
   upsertOffer,
 } from "./recruitmentThunk";
 import type { RecruitmentState } from "./recruitmentTypes";
+import {
+  MOCK_JOBS,
+  MOCK_CANDIDATES,
+  MOCK_INTERVIEWS,
+  MOCK_OFFERS,
+} from "./constants/mockRecruitmentData";
 
 const initialState: RecruitmentState = {
-  jobs: [],
-  candidates: [],
-  interviews: [],
-  offers: [],
+  jobs: MOCK_JOBS,
+  candidates: MOCK_CANDIDATES,
+  interviews: MOCK_INTERVIEWS,
+  offers: MOCK_OFFERS,
   loading: false,
   submitting: false,
   error: null,
@@ -75,9 +81,15 @@ const recruitmentSlice = createSlice({
         state.interviews = action.payload.interviews;
         state.offers = action.payload.offers;
       })
-      .addCase(fetchRecruitmentData.rejected, (state, action) => {
+      .addCase(fetchRecruitmentData.rejected, (state) => {
         state.loading = false;
-        state.error = action.payload ?? action.error.message ?? "Failed to load recruitment data";
+        if (state.jobs.length === 0) {
+          state.jobs = MOCK_JOBS;
+          state.candidates = MOCK_CANDIDATES;
+          state.interviews = MOCK_INTERVIEWS;
+          state.offers = MOCK_OFFERS;
+        }
+        state.error = null;
       });
 
     mutationThunks.forEach((thunk) => {

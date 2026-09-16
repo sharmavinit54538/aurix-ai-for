@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { aurix } from "@/lib/aurix-store";
+import { logout } from "@/lib/auth-bootstrap";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { selectSecuritySettings, selectSettingsLoading, selectSettingsSubmitting } from "@/store/settings/settingsSelectors";
 import { fetchSecurity, updateSecurity } from "@/store/settings/settingsThunk";
@@ -71,9 +72,8 @@ function SecuritySettingsPage() {
   };
 
   const handleSignOut = () => {
-    aurix.reset();
     toast.info("Signed out and cleared session");
-    navigate({ to: "/login" });
+    logout();
   };
 
   if (loading && !security) {

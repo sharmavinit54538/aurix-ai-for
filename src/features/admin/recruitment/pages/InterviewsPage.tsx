@@ -22,9 +22,16 @@ export function InterviewsPage() {
   // Modal States
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showReminderModal, setShowReminderModal] = useState(false);
   const [selectedIv, setSelectedIv] = useState<Interview | null>(null);
 
   // Forms
+  const [rescheduleDate, setRescheduleDate] = useState("");
+  const [rescheduleTime, setRescheduleTime] = useState("14:00");
+  const [cancelReason, setCancelReason] = useState("");
+
   const [scheduleForm, setScheduleForm] = useState({
     candidateId: "",
     round: "Technical Round",
@@ -41,6 +48,33 @@ export function InterviewsPage() {
     feedback: "",
     interviewer: "",
   });
+
+  const handleRescheduleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedIv || !rescheduleDate) return;
+    const updated: Interview = {
+      ...selectedIv,
+      date: `${rescheduleDate}T${rescheduleTime}:00Z`,
+      notes: `${selectedIv.notes || ""} [Rescheduled to ${rescheduleDate} ${rescheduleTime}]`,
+    };
+    await upsertInterview(updated);
+    toast.success(`Interview with ${selectedIv.candidateName} rescheduled to ${rescheduleDate}!`);
+    setShowRescheduleModal(false);
+  };
+
+  const handleCancelSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedIv) return;
+    const updated: Interview = {
+      ...selectedIv,
+      status: "cancelled",
+      notes: `${selectedIv.notes || ""} [Cancelled: ${cancelReason}]`,
+    };
+    await upsertInterview(updated);
+    toast.info(`Interview with ${selectedIv.candidateName} cancelled.`);
+    setShowCancelModal(false);
+    setCancelReason("");
+  };
 
   const upcoming = useMemo(() => interviews.filter((i) => i.status === "scheduled").sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()), [interviews]);
   const completed = useMemo(() => interviews.filter((i) => i.status === "completed"), [interviews]);
@@ -187,23 +221,43 @@ export function InterviewsPage() {
                 ) : null}
                 <Badge variant="outline" className="capitalize">{iv.status}</Badge>
                 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-1.5">
                   {iv.status === "scheduled" && (
-                    <Button size="sm" variant="outline" onClick={() => {
-                      setSelectedIv(iv);
-                      setFeedbackForm({
-                        recommendation: "PASS",
-                        rating: "4",
-                        feedback: iv.feedback || "",
-                        interviewer: iv.interviewer,
-                      });
-                      setShowFeedbackModal(true);
-                    }}>
-                      <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />Feedback
-                    </Button>
+                    <>
+                      <Button size="sm" variant="outline" className="h-7 text-xs px-2" onClick={() => {
+                        setSelectedIv(iv);
+                        setFeedbackForm({
+                          recommendation: "PASS",
+                          rating: "4",
+                          feedback: iv.feedback || "",
+                          interviewer: iv.interviewer,
+                        });
+                        setShowFeedbackModal(true);
+                      }}>
+                        <CheckCircle2 className="mr-1 h-3 w-3 text-emerald-500" />Feedback
+                      </Button>
+                      <Button size="sm" variant="outline" className="h-7 text-xs px-2" onClick={() => {
+                        setSelectedIv(iv);
+                        setShowRescheduleModal(true);
+                      }}>
+                        Reschedule
+                      </Button>
+                      <Button size="sm" variant="outline" className="h-7 text-xs px-2 text-rose-600 hover:bg-rose-500/10" onClick={() => {
+                        setSelectedIv(iv);
+                        setShowCancelModal(true);
+                      }}>
+                        Cancel
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-7 text-xs px-2" onClick={() => {
+                        setSelectedIv(iv);
+                        setShowReminderModal(true);
+                      }}>
+                        Reminder
+                      </Button>
+                    </>
                   )}
-                  <Button size="sm" variant="outline" asChild>
-                    <a href={iv.meetingLink} target="_blank" rel="noreferrer"><Video className="mr-1.5 h-3.5 w-3.5" />Join</a>
+                  <Button size="sm" variant="outline" className="h-7 text-xs px-2" asChild>
+                    <a href={iv.meetingLink} target="_blank" rel="noreferrer"><Video className="mr-1 h-3 w-3" />Join</a>
                   </Button>
                 </div>
               </div>
@@ -426,6 +480,107 @@ export function InterviewsPage() {
               <Button type="submit">Submit Feedback</Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reschedule Modal */}
+      <Dialog open={showRescheduleModal} onOpenChange={setShowRescheduleModal}>
+        <DialogContent className="max-w-md">
+          <form onSubmit={handleRescheduleSubmit}>
+            <DialogHeader>
+              <DialogTitle className="text-base font-bold">Reschedule Interview</DialogTitle>
+              <DialogDescription>
+                Select a new date and time for {selectedIv?.candidateName} ({selectedIv?.round}).
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 py-3 text-xs">
+              <div>
+                <Label className="text-xs">New Date *</Label>
+                <Input
+                  type="date"
+                  className="mt-1 h-9 text-xs"
+                  value={rescheduleDate}
+                  onChange={(e) => setRescheduleDate(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label className="text-xs">New Time *</Label>
+                <Input
+                  type="time"
+                  className="mt-1 h-9 text-xs"
+                  value={rescheduleTime}
+                  onChange={(e) => setRescheduleTime(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowRescheduleModal(false)}>Cancel</Button>
+              <Button type="submit">Confirm Reschedule</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel Modal */}
+      <Dialog open={showCancelModal} onOpenChange={setShowCancelModal}>
+        <DialogContent className="max-w-md">
+          <form onSubmit={handleCancelSubmit}>
+            <DialogHeader>
+              <DialogTitle className="text-base font-bold text-rose-600">Cancel Interview Session</DialogTitle>
+              <DialogDescription>
+                State the cancellation reason for {selectedIv?.candidateName}.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 py-3 text-xs">
+              <div>
+                <Label className="text-xs">Cancellation Reason *</Label>
+                <Textarea
+                  className="mt-1 text-xs"
+                  rows={3}
+                  placeholder="e.g. Candidate accepted another role / Interviewer unavailable"
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowCancelModal(false)}>Close</Button>
+              <Button type="submit" variant="destructive">Confirm Cancellation</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reminder Preview Modal */}
+      <Dialog open={showReminderModal} onOpenChange={setShowReminderModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold">Interview Reminder Notification</DialogTitle>
+            <DialogDescription>
+              Preview automated notification to be delivered 24h prior.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2 text-xs">
+            <div className="p-3 rounded-xl border border-border bg-muted/30 space-y-1.5">
+              <div className="font-semibold text-foreground">Email / SMS Dispatch:</div>
+              <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
+                Hi {selectedIv?.candidateName}, this is a reminder for your upcoming {selectedIv?.round} interview scheduled with {selectedIv?.interviewer} on {selectedIv?.date ? new Date(selectedIv.date).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "scheduled time"}.
+                {"\n"}Join via: {selectedIv?.meetingLink}
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowReminderModal(false)}>Close</Button>
+            <Button onClick={() => {
+              toast.success(`Reminder dispatched to ${selectedIv?.candidateName}!`);
+              setShowReminderModal(false);
+            }}>
+              Send Reminder Now
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

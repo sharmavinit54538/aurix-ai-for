@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import React, { useState, useEffect, Component, type ReactNode } from "react";
+import React, { useState, useEffect, Component, memo, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertTriangle,
@@ -214,7 +214,7 @@ const QUICK_ACTIONS = [
   { label: "AI Copilot", icon: GeminiIcon, link: "/ai/chat-assistant", color: "from-pink-600 to-rose-600" },
 ];
 
-function QuickActions() {
+const QuickActions = memo(function QuickActions() {
   return (
     <div className="mb-6">
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
@@ -241,10 +241,10 @@ function QuickActions() {
       </div>
     </div>
   );
-}
+});
 
 // ── 3. KPI Cards ─────────────────────────────────────────────
-function KpiCards({ cards }: { cards?: ReturnType<typeof useExecutiveDashboardData>["kpiCards"] }) {
+const KpiCards = memo(function KpiCards({ cards }: { cards?: ReturnType<typeof useExecutiveDashboardData>["kpiCards"] }) {
   const items = cards && cards.length > 0 ? cards : KPI_CARDS;
   return (
     <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
@@ -317,7 +317,7 @@ function KpiCards({ cards }: { cards?: ReturnType<typeof useExecutiveDashboardDa
       ))}
     </div>
   );
-}
+});
 
 // ── 4. HR Operations Center (Approvals) ──────────────────────
 const APPROVAL_TABS = ["Leave", "Attendance", "Recruitment", "Onboarding", "Exit", "Assets", "Documents", "Expenses"] as const;
@@ -496,7 +496,7 @@ function RecruitmentDashboard() {
 }
 
 // ── 6. Attendance Analytics ───────────────────────────────────
-function AttendanceAnalytics() {
+const AttendanceAnalytics = memo(function AttendanceAnalytics() {
   const COLORS = ["#6366f1", "#f59e0b", "#10b981", "#06b6d4", "#ec4899", "#f97316"];
   return (
     <motion.div {...fadeUp}>
@@ -551,10 +551,10 @@ function AttendanceAnalytics() {
       </Card>
     </motion.div>
   );
-}
+});
 
 // ── 7. Payroll Overview ───────────────────────────────────────
-function PayrollOverview({ data }: { data?: ReturnType<typeof useExecutiveDashboardData>["payrollOverview"] }) {
+const PayrollOverview = memo(function PayrollOverview({ data }: { data?: ReturnType<typeof useExecutiveDashboardData>["payrollOverview"] }) {
   const statusItems = data?.payrollStatus && data.payrollStatus.length > 0 ? data.payrollStatus : PAYROLL_STATUS;
   const totalCostText = data?.totalCostFormatted ?? "₹0.0L";
   const chartData = data?.monthlySalaryCostChart && data.monthlySalaryCostChart.length > 0
@@ -615,7 +615,7 @@ function PayrollOverview({ data }: { data?: ReturnType<typeof useExecutiveDashbo
       </Card>
     </motion.div>
   );
-}
+});
 
 // ── 8. Asset Management Overview ─────────────────────────────
 function AssetOverview() {

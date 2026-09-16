@@ -93,16 +93,6 @@ export function useDepartmentsPage() {
 
   const [allDeptsForStats, setAllDeptsForStats] = useState<Department[]>([]);
 
-  const fetchStatsData = useCallback(async () => {
-    try {
-      const response = await apiInstance.get("/departments", { params: { limit: 100 } });
-      const items = response.data?.data?.items ?? [];
-      setAllDeptsForStats(items.map(mapBackendToFrontend));
-    } catch (err) {
-      console.error("Failed to fetch stats", err);
-    }
-  }, []);
-
   const reloadDepartments = useCallback(() => {
     fetchDepartments({
       page: 1,
@@ -114,11 +104,10 @@ export function useDepartmentsPage() {
   useEffect(() => {
     if (!initialLoaded.current) {
       initialLoaded.current = true;
-      fetchStatsData();
       fetchManagersList({ limit: 100 });
       reloadDepartments();
     }
-  }, [fetchStatsData, fetchManagersList, reloadDepartments]);
+  }, [fetchManagersList, reloadDepartments]);
 
   const processedDepartments = useMemo(() => {
     let list = departments && departments.length > 0 ? departments : allDeptsForStats;

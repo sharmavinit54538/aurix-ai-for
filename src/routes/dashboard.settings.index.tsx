@@ -203,4 +203,3 @@ function SettingsHubPage() {
   );
 }
 
-export default SettingsHubPage;

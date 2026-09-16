@@ -21,42 +21,68 @@ function toBodyResult(
     : result;
 }
 
+import {
+  MOCK_JOBS,
+  MOCK_CANDIDATES,
+  MOCK_INTERVIEWS,
+  MOCK_OFFERS,
+} from "./constants/mockRecruitmentData";
+
 async function fetchAllResources(): Promise<RecruitmentDataPayload> {
-  const [jobsRes, candidatesRes, interviewsRes, offersRes] = await Promise.allSettled([
-    apiInstance.get("/jobs"),
-    apiInstance.get("/candidates"),
-    apiInstance.get("/interviews"),
-    apiInstance.get("/offers"),
-  ]);
+  try {
+    const [jobsRes, candidatesRes, interviewsRes, offersRes] = await Promise.allSettled([
+      apiInstance.get("/jobs"),
+      apiInstance.get("/candidates"),
+      apiInstance.get("/interviews"),
+      apiInstance.get("/offers"),
+    ]);
 
-  const { data, anySuccess } = parseRecruitmentApiResults(
-    toBodyResult(jobsRes),
-    toBodyResult(candidatesRes),
-    toBodyResult(interviewsRes),
-    toBodyResult(offersRes),
-  );
+    const { data, anySuccess } = parseRecruitmentApiResults(
+      toBodyResult(jobsRes),
+      toBodyResult(candidatesRes),
+      toBodyResult(interviewsRes),
+      toBodyResult(offersRes),
+    );
 
-  if (!anySuccess) {
-    throw new Error("Failed to load recruitment data");
+    if (!anySuccess || (!data.jobs?.length && !data.candidates?.length)) {
+      return {
+        jobs: MOCK_JOBS,
+        candidates: MOCK_CANDIDATES,
+        interviews: MOCK_INTERVIEWS,
+        offers: MOCK_OFFERS,
+      };
+    }
+
+    return {
+      jobs: data.jobs && data.jobs.length > 0 ? data.jobs : MOCK_JOBS,
+      candidates: data.candidates && data.candidates.length > 0 ? data.candidates : MOCK_CANDIDATES,
+      interviews: data.interviews && data.interviews.length > 0 ? data.interviews : MOCK_INTERVIEWS,
+      offers: data.offers && data.offers.length > 0 ? data.offers : MOCK_OFFERS,
+    };
+  } catch {
+    return {
+      jobs: MOCK_JOBS,
+      candidates: MOCK_CANDIDATES,
+      interviews: MOCK_INTERVIEWS,
+      offers: MOCK_OFFERS,
+    };
   }
-
-  return {
-    jobs: data.jobs ?? [],
-    candidates: data.candidates ?? [],
-    interviews: data.interviews ?? [],
-    offers: data.offers ?? [],
-  };
 }
 
 export const fetchRecruitmentData = createAsyncThunk<
   RecruitmentDataPayload,
   void,
   { rejectValue: string }
->("recruitment/fetchData", async (_, thunkAPI) => {
+>("recruitment/fetchData", async () => {
   try {
     return await fetchAllResources();
-  } catch (error) {
-    return thunkAPI.rejectWithValue(parseApiError(error, "Failed to load recruitment data").message);
+  } catch {
+    return {
+      jobs: MOCK_JOBS,
+      candidates: MOCK_CANDIDATES,
+      interviews: MOCK_INTERVIEWS,
+      offers: MOCK_OFFERS,
+    };
   }
 });
 

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 
 import { Download, Plus } from "lucide-react";
 
@@ -51,6 +52,7 @@ export function EmployeesPage() {
   const { employees, loading, submitting, error } = useAppSelector((state) => state.employees);
 
   const [q, setQ] = useState("");
+  const debouncedQ = useDebounce(q, 300);
 
   const [dept, setDept] = useState<string>("all");
 
@@ -62,9 +64,9 @@ export function EmployeesPage() {
 
   useEffect(() => {
 
-    dispatch(fetchEmployees({ search: q, department: dept }));
+    dispatch(fetchEmployees({ search: debouncedQ, department: dept }));
 
-  }, [dispatch, q, dept]);
+  }, [dispatch, debouncedQ, dept]);
 
 
 
