@@ -1829,7 +1829,7 @@ Acknowledged and Signed electronically.`;
 
               <ScrollArea className="flex-1 p-5 min-h-0">
                 <div className="space-y-6">
-                  {/* CANVAS GRAPHICAL VISUAL MOCKUP PREVIEW */}
+                  {/* DOCUMENT PREVIEW */}
                   <div className="space-y-1.5">
                     <Label className="text-xs font-semibold text-muted-foreground">Inline Verification View</Label>
                     <div className="overflow-hidden rounded-2xl border border-border bg-card/60 min-h-[440px] relative flex flex-col items-center justify-center p-1">
