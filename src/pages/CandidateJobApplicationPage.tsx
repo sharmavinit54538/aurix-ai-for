@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { Link, useParams } from "@tanstack/react-router";
 import { useEffect, useState, useMemo, useRef } from "react";
 import axios from "axios";
 import { 
@@ -6,6 +6,7 @@ import {
   MapPin, 
   Clock, 
   DollarSign,
+  IndianRupee,
   CheckCircle2,
   AlertCircle, 
   UploadCloud, 
@@ -51,16 +52,6 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { toast } from "sonner";
-
-export const Route = createFileRoute("/jobs/apply/$ukey")({
-  head: () => ({
-    meta: [
-      { title: "Apply for Position — Careers | OFC360" },
-      { name: "description", content: "Submit your application and join our world-class engineering and enterprise intelligence teams." },
-    ],
-  }),
-  component: JobApplyPage,
-});
 
 // Rich fallback job data when running locally or if API payload is incomplete
 const DEFAULT_JOB = {
@@ -142,6 +133,17 @@ const NOTICE_PERIOD_OPTIONS = [
   "90 Days (3 Months)",
 ];
 
+const getPublicCareersApiUrl = () => {
+  let rawApiUrl = ((import.meta.env.VITE_API_URL as string) || "https://api.ofc360.com").trim().replace(/\/$/, "");
+  if (!rawApiUrl.startsWith("http://") && !rawApiUrl.startsWith("https://")) {
+    rawApiUrl = `https://${rawApiUrl}`;
+  }
+  rawApiUrl = rawApiUrl.replace(/www\.api\.ofc360\.com/g, "api.ofc360.com");
+  return `${rawApiUrl}/api/public/careers`;
+};
+
+const PUBLIC_API_URL = getPublicCareersApiUrl();
+
 export default function JobApplyPage() {
   const { ukey } = useParams({ strict: false }) as { ukey?: string };
   
@@ -188,13 +190,6 @@ export default function JobApplyPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  let rawApiUrl = ((import.meta.env.VITE_API_URL as string) || "https://api.ofc360.com").trim().replace(/\/$/, "");
-  if (!rawApiUrl.startsWith("http://") && !rawApiUrl.startsWith("https://")) {
-    rawApiUrl = `https://${rawApiUrl}`;
-  }
-  rawApiUrl = rawApiUrl.replace(/www\.api\.ofc360\.com/g, "api.ofc360.com");
-  const PUBLIC_API_URL = `${rawApiUrl}/api/public/careers`;
-
   useEffect(() => {
     async function fetchJobDetails() {
       try {
@@ -223,6 +218,51 @@ export default function JobApplyPage() {
     }
     fetchJobDetails();
   }, [ukey]);
+
+  const formattedSalary = useMemo(() => {
+    const min = typeof job?.salaryMin === "number" ? job.salaryMin : Number(job?.salaryMin) || 0;
+    const max = typeof job?.salaryMax === "number" ? job.salaryMax : Number(job?.salaryMax) || 0;
+    if (!min && !max) return null;
+
+    const formatAmount = (num: number) => {
+      if (!num) return "";
+      if (num >= 100000) return `${(num / 100000).toFixed(1)}L`;
+      if (num >= 1000) return `${(num / 1000).toFixed(0)}K`;
+      return `${num}L`;
+    };
+
+    if (min && max) {
+      return `₹${formatAmount(min)} - ₹${formatAmount(max)} CTC`;
+    }
+    if (min) {
+      return `₹${formatAmount(min)}+ CTC`;
+    }
+    return null;
+  }, [job?.salaryMin, job?.salaryMax]);
+
+  const responsibilitiesList: string[] = useMemo(() => {
+    if (Array.isArray(job?.responsibilities)) return job.responsibilities;
+    if (typeof job?.responsibilities === "string") {
+      return job.responsibilities.split("\n").filter((s: string) => s.trim().length > 0);
+    }
+    return DEFAULT_JOB.responsibilities;
+  }, [job?.responsibilities]);
+
+  const requirementsList: string[] = useMemo(() => {
+    if (Array.isArray(job?.requirements)) return job.requirements;
+    if (typeof job?.requirements === "string") {
+      return job.requirements.split("\n").filter((s: string) => s.trim().length > 0);
+    }
+    return DEFAULT_JOB.requirements;
+  }, [job?.requirements]);
+
+  const benefitsList: string[] = useMemo(() => {
+    if (Array.isArray(job?.benefits)) return job.benefits;
+    if (typeof job?.benefits === "string") {
+      return job.benefits.split("\n").filter((s: string) => s.trim().length > 0);
+    }
+    return DEFAULT_JOB.benefits;
+  }, [job?.benefits]);
 
   const validateFile = (file: File): boolean => {
     const ext = file.name.split(".").pop()?.toLowerCase();
@@ -501,23 +541,6 @@ export default function JobApplyPage() {
     );
   }
 
-  const responsibilitiesList: string[] = Array.isArray(job?.responsibilities)
-    ? job.responsibilities
-    : typeof job?.responsibilities === "string"
-    ? job.responsibilities.split("\n").filter((s: string) => s.trim().length > 0)
-    : DEFAULT_JOB.responsibilities;
-
-  const requirementsList: string[] = Array.isArray(job?.requirements)
-    ? job.requirements
-    : typeof job?.requirements === "string"
-    ? job.requirements.split("\n").filter((s: string) => s.trim().length > 0)
-    : DEFAULT_JOB.requirements;
-
-  const benefitsList: string[] = Array.isArray(job?.benefits)
-    ? job.benefits
-    : typeof job?.benefits === "string"
-    ? job.benefits.split("\n").filter((s: string) => s.trim().length > 0)
-    : DEFAULT_JOB.benefits;
 
   return (
     <Sheet>
@@ -537,11 +560,7 @@ export default function JobApplyPage() {
                 className="h-8 w-8 object-contain drop-shadow-[0_0_10px_rgba(99,102,241,0.4)]"
               />
             </Link>
-            <div className="h-4 w-px bg-slate-800" />
-            <span className="text-xs font-semibold text-slate-400">Careers Portal</span>
           </div>
-
-
         </header>
 
         {/* Slide-out Role Details Drawer */}
@@ -675,33 +694,32 @@ export default function JobApplyPage() {
             className="rounded-3xl border border-slate-800/80 bg-gradient-to-b from-[#131B2E] via-[#101626] to-[#0D1220] p-6 sm:p-7 backdrop-blur-xl shadow-xl shadow-black/40 relative overflow-hidden"
           >
             {/* Ambient accent top bar */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400" />
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400" />
             
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
               <div className="space-y-3 flex-1 min-w-0">
-
-
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white tracking-tight font-display leading-tight">
+                <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight leading-snug">
                   {job?.title || "Senior Full Stack Cloud Engineer"}
                 </h1>
 
                 {/* Metadata Pills */}
-                <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
-                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-900/90 border border-slate-800/90 text-slate-300">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 text-xs">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/70 border border-slate-700/60 text-slate-200 shadow-xs">
                     <MapPin className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
                     <span>{job?.location || "Bangalore, India (Hybrid)"}</span>
                   </div>
-                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-900/90 border border-slate-800/90 text-slate-300">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/70 border border-slate-700/60 text-slate-200 shadow-xs">
                     <Briefcase className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
                     <span>{job?.employmentType || "Full-time"}</span>
                   </div>
-                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-900/90 border border-slate-800/90 text-slate-300">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/70 border border-slate-700/60 text-slate-200 shadow-xs">
                     <Clock className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
                     <span>{job?.experienceRequired || "4 - 8 Years"}</span>
                   </div>
-                  {job?.salaryMin > 0 && (
-                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 font-semibold">
-                      <span>₹{(job.salaryMin / 100000).toFixed(1)}L - ₹{(job.salaryMax / 100000).toFixed(1)}L CTC</span>
+                  {formattedSalary && (
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-semibold shadow-xs">
+                      <IndianRupee className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                      <span>{formattedSalary}</span>
                     </div>
                   )}
                 </div>
@@ -710,11 +728,11 @@ export default function JobApplyPage() {
               <SheetTrigger asChild>
                 <button 
                   type="button"
-                  className="inline-flex items-center justify-center gap-2 text-xs font-semibold text-indigo-200 hover:text-white bg-indigo-600/15 hover:bg-indigo-600/30 border border-indigo-500/30 hover:border-indigo-500/60 px-4 py-2.5 rounded-xl transition-all cursor-pointer shrink-0 shadow-sm active:scale-95"
+                  className="inline-flex items-center justify-center gap-2 text-xs font-semibold text-indigo-200 hover:text-white bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/30 hover:border-indigo-500/60 px-4 py-2.5 rounded-xl transition-all cursor-pointer shrink-0 shadow-sm hover:shadow-indigo-500/10 active:scale-95 group/btn"
                 >
-                  <FileText className="h-4 w-4 text-indigo-400" />
+                  <FileText className="h-4 w-4 text-indigo-400 group-hover/btn:text-indigo-300 transition-colors" />
                   <span>View Full Details</span>
-                  <ChevronRight className="h-3.5 w-3.5 text-indigo-400" />
+                  <ChevronRight className="h-3.5 w-3.5 text-indigo-400/80 group-hover/btn:translate-x-0.5 transition-transform" />
                 </button>
               </SheetTrigger>
             </div>
@@ -1381,25 +1399,24 @@ export default function JobApplyPage() {
               </div>
 
               {/* ── SECTION 8: Submit Action Button ─────────────────── */}
-              <div className="pt-2">
+              <div className="pt-2 flex justify-end">
                 <Button 
                   type="submit" 
                   disabled={submitting}
-                  className="w-full h-12 bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold rounded-xl shadow-xl shadow-indigo-600/20 active:scale-[0.99] transition-all duration-200 flex items-center justify-center gap-2.5 cursor-pointer text-sm tracking-wide disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-auto h-10 px-6 bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold rounded-xl shadow-lg shadow-indigo-600/20 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer text-xs sm:text-sm tracking-wide disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {submitting ? (
                     <>
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                      <span>Submitting Application...</span>
+                      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      <span>Submitting...</span>
                     </>
                   ) : (
                     <>
-                      <Send className="h-4 w-4" />
+                      <Send className="h-3.5 w-3.5" />
                       <span>Submit Application</span>
                     </>
                   )}
                 </Button>
-
               </div>
 
             </form>
