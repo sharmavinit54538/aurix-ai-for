@@ -11,7 +11,7 @@ import type {
 
 export function getProfileThunkErrorMessage(err: unknown, fallbackMessage: string): string {
   const parsed = parseApiError(err, fallbackMessage);
-  let msg = parsed.message;
+  const msg = parsed.message;
 
   if (!msg || msg === "An error occurred" || msg === "Network error" || msg === fallbackMessage) {
     switch (parsed.status) {
@@ -45,21 +45,26 @@ export const fetchCurrentUser = createAsyncThunk<UserProfile, void, { rejectValu
     try {
       return await profileApi.getCurrentUser();
     } catch (err) {
-      return thunkAPI.rejectWithValue(getProfileThunkErrorMessage(err, "Failed to load user profile"));
+      return thunkAPI.rejectWithValue(
+        getProfileThunkErrorMessage(err, "Failed to load user profile"),
+      );
     }
   },
 );
 
-export const updateCurrentUser = createAsyncThunk<UserProfile, UpdateCurrentUserPayload, { rejectValue: string }>(
-  "profile/updateCurrentUser",
-  async (payload, thunkAPI) => {
-    try {
-      return await profileApi.updateCurrentUser(payload);
-    } catch (err) {
-      return thunkAPI.rejectWithValue(getProfileThunkErrorMessage(err, "Failed to update profile information"));
-    }
-  },
-);
+export const updateCurrentUser = createAsyncThunk<
+  UserProfile,
+  UpdateCurrentUserPayload,
+  { rejectValue: string }
+>("profile/updateCurrentUser", async (payload, thunkAPI) => {
+  try {
+    return await profileApi.updateCurrentUser(payload);
+  } catch (err) {
+    return thunkAPI.rejectWithValue(
+      getProfileThunkErrorMessage(err, "Failed to update profile information"),
+    );
+  }
+});
 
 // ── Avatar Thunks ───────────────────────────────────────────────
 export const uploadProfileAvatar = createAsyncThunk<
@@ -70,20 +75,23 @@ export const uploadProfileAvatar = createAsyncThunk<
   try {
     return await profileApi.uploadAvatar(file);
   } catch (err) {
-    return thunkAPI.rejectWithValue(getProfileThunkErrorMessage(err, "Failed to upload avatar image"));
+    return thunkAPI.rejectWithValue(
+      getProfileThunkErrorMessage(err, "Failed to upload avatar image"),
+    );
   }
 });
 
-export const deleteProfileAvatar = createAsyncThunk<{ success: boolean; avatarUrl?: string }, void, { rejectValue: string }>(
-  "profile/deleteProfileAvatar",
-  async (_, thunkAPI) => {
-    try {
-      return await profileApi.deleteAvatar();
-    } catch (err) {
-      return thunkAPI.rejectWithValue(getProfileThunkErrorMessage(err, "Failed to delete avatar"));
-    }
-  },
-);
+export const deleteProfileAvatar = createAsyncThunk<
+  { success: boolean; avatarUrl?: string },
+  void,
+  { rejectValue: string }
+>("profile/deleteProfileAvatar", async (_, thunkAPI) => {
+  try {
+    return await profileApi.deleteAvatar();
+  } catch (err) {
+    return thunkAPI.rejectWithValue(getProfileThunkErrorMessage(err, "Failed to delete avatar"));
+  }
+});
 
 // ── Password Management Thunk ───────────────────────────────────
 export const changeCurrentUserPassword = createAsyncThunk<
@@ -106,7 +114,9 @@ export const fetchUserSessions = createAsyncThunk<UserSession[], void, { rejectV
     try {
       return await profileApi.getSessions();
     } catch (err) {
-      return thunkAPI.rejectWithValue(getProfileThunkErrorMessage(err, "Failed to fetch active sessions"));
+      return thunkAPI.rejectWithValue(
+        getProfileThunkErrorMessage(err, "Failed to fetch active sessions"),
+      );
     }
   },
 );
@@ -124,16 +134,19 @@ export const revokeUserSession = createAsyncThunk<
 });
 
 // ── User Preferences Thunks ─────────────────────────────────────
-export const fetchUserPreferences = createAsyncThunk<UserPreferences, void, { rejectValue: string }>(
-  "profile/fetchUserPreferences",
-  async (_, thunkAPI) => {
-    try {
-      return await profileApi.getPreferences();
-    } catch (err) {
-      return thunkAPI.rejectWithValue(getProfileThunkErrorMessage(err, "Failed to fetch user preferences"));
-    }
-  },
-);
+export const fetchUserPreferences = createAsyncThunk<
+  UserPreferences,
+  void,
+  { rejectValue: string }
+>("profile/fetchUserPreferences", async (_, thunkAPI) => {
+  try {
+    return await profileApi.getPreferences();
+  } catch (err) {
+    return thunkAPI.rejectWithValue(
+      getProfileThunkErrorMessage(err, "Failed to fetch user preferences"),
+    );
+  }
+});
 
 export const updateUserPreferences = createAsyncThunk<
   UserPreferences,
@@ -143,6 +156,8 @@ export const updateUserPreferences = createAsyncThunk<
   try {
     return await profileApi.updatePreferences(payload);
   } catch (err) {
-    return thunkAPI.rejectWithValue(getProfileThunkErrorMessage(err, "Failed to update preferences"));
+    return thunkAPI.rejectWithValue(
+      getProfileThunkErrorMessage(err, "Failed to update preferences"),
+    );
   }
 });

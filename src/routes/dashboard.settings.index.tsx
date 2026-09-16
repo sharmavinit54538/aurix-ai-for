@@ -34,7 +34,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -180,7 +186,9 @@ function SettingsHubPage() {
 
   // Audit logs query effect
   useEffect(() => {
-    dispatch(fetchAuditLogs({ page: auditPage, limit: 10, search: auditSearch, module: auditModule }));
+    dispatch(
+      fetchAuditLogs({ page: auditPage, limit: 10, search: auditSearch, module: auditModule }),
+    );
   }, [dispatch, auditPage, auditSearch, auditModule]);
 
   // ── Save Handlers ────────────────────────────────────────────
@@ -189,7 +197,7 @@ function SettingsHubPage() {
     try {
       await dispatch(updateSecuritySettings(securityForm)).unwrap();
       toast.success("Security settings updated successfully!");
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(typeof err === "string" ? err : "Failed to update security settings");
     }
   };
@@ -199,7 +207,7 @@ function SettingsHubPage() {
     try {
       await dispatch(updateNotificationSettings(notificationForm)).unwrap();
       toast.success("Notification preferences saved successfully!");
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(typeof err === "string" ? err : "Failed to update notification settings");
     }
   };
@@ -209,7 +217,7 @@ function SettingsHubPage() {
     try {
       await dispatch(updateBrandingSettings(brandingForm)).unwrap();
       toast.success("Branding settings saved successfully!");
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(typeof err === "string" ? err : "Failed to update branding");
     }
   };
@@ -223,7 +231,7 @@ function SettingsHubPage() {
         }),
       ).unwrap();
       toast.success(`${item.name} ${!item.connected ? "connected" : "disconnected"} successfully!`);
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(typeof err === "string" ? err : `Failed to update ${item.name}`);
     }
   };
@@ -235,7 +243,7 @@ function SettingsHubPage() {
         testEmailConfiguration(emailTestTarget ? { email: emailTestTarget } : undefined),
       ).unwrap();
       toast.success(res.message || "Test email sent successfully!");
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(typeof err === "string" ? err : "Failed to send test email");
     }
   };
@@ -246,7 +254,7 @@ function SettingsHubPage() {
         testSmsConfiguration(smsTestTarget ? { phone: smsTestTarget } : undefined),
       ).unwrap();
       toast.success(res.message || "Test SMS sent successfully!");
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(typeof err === "string" ? err : "Failed to send test SMS");
     }
   };
@@ -257,7 +265,7 @@ function SettingsHubPage() {
       await dispatch(upgradeSubscription({ planId: plan.id })).unwrap();
       toast.success(`Upgraded to ${plan.name} plan successfully!`);
       dispatch(fetchBillingSettings());
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(typeof err === "string" ? err : "Failed to upgrade subscription");
     }
   };
@@ -268,7 +276,7 @@ function SettingsHubPage() {
       await dispatch(cancelSubscription({ reason: "User initiated cancellation" })).unwrap();
       toast.info("Subscription cancelled successfully.");
       dispatch(fetchBillingSettings());
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(typeof err === "string" ? err : "Failed to cancel subscription");
     }
   };
@@ -284,7 +292,7 @@ function SettingsHubPage() {
         }),
       ).unwrap();
       toast.success("Audit logs CSV downloaded successfully!");
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(typeof err === "string" ? err : "Failed to export audit logs");
     }
   };
@@ -307,7 +315,8 @@ function SettingsHubPage() {
             </Badge>
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
-            Configure enterprise security policies, automated notifications, workspace branding, toolchain integrations, billing tiers, and audit logs.
+            Configure enterprise security policies, automated notifications, workspace branding,
+            toolchain integrations, billing tiers, and audit logs.
           </p>
         </div>
 
@@ -380,7 +389,10 @@ function SettingsHubPage() {
               </div>
               <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between text-[11px]">
                 <span className="text-muted-foreground">Status:</span>
-                <Badge variant={security?.twoFactorEnabled ? "default" : "secondary"} className="text-[10px]">
+                <Badge
+                  variant={security?.twoFactorEnabled ? "default" : "secondary"}
+                  className="text-[10px]"
+                >
                   {security?.twoFactorEnabled ? "2FA Enabled" : "2FA Optional"}
                 </Badge>
               </div>
@@ -428,7 +440,9 @@ function SettingsHubPage() {
               </div>
               <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between text-[11px]">
                 <span className="text-muted-foreground">Company:</span>
-                <span className="font-medium text-foreground">{branding?.companyName || "Default Brand"}</span>
+                <span className="font-medium text-foreground">
+                  {branding?.companyName || "Default Brand"}
+                </span>
               </div>
             </div>
 
@@ -474,7 +488,9 @@ function SettingsHubPage() {
               </div>
               <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between text-[11px]">
                 <span className="text-muted-foreground">Plan:</span>
-                <span className="font-semibold text-emerald-400">{billing?.currentPlan || "Enterprise Tier"}</span>
+                <span className="font-semibold text-emerald-400">
+                  {billing?.currentPlan || "Enterprise Tier"}
+                </span>
               </div>
             </div>
 
@@ -507,13 +523,20 @@ function SettingsHubPage() {
           <div className="rounded-2xl border border-border/60 bg-card/60 p-6 backdrop-blur-xl space-y-6">
             <div className="flex items-center justify-between border-b border-border/60 pb-4">
               <div>
-                <h2 className="text-base font-semibold tracking-tight text-foreground">Security & 2FA Configuration</h2>
+                <h2 className="text-base font-semibold tracking-tight text-foreground">
+                  Security & 2FA Configuration
+                </h2>
                 <p className="text-xs text-muted-foreground">
-                  Manage authentication security policies, session timeout windows, and password expiration rules.
+                  Manage authentication security policies, session timeout windows, and password
+                  expiration rules.
                 </p>
               </div>
               {errors.security && (
-                <Button size="sm" variant="outline" onClick={() => dispatch(fetchSecuritySettings())}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => dispatch(fetchSecuritySettings())}
+                >
                   <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Retry
                 </Button>
               )}
@@ -530,32 +553,43 @@ function SettingsHubPage() {
               <div className="space-y-4 divide-y divide-border/60">
                 <div className="flex items-center justify-between pt-2">
                   <div>
-                    <div className="text-sm font-medium text-foreground">Two-Factor Authentication (2FA)</div>
+                    <div className="text-sm font-medium text-foreground">
+                      Two-Factor Authentication (2FA)
+                    </div>
                     <div className="text-xs text-muted-foreground">
                       Require an authenticator code or SMS OTP for workspace sign-in.
                     </div>
                   </div>
                   <Switch
                     checked={securityForm.twoFactorEnabled}
-                    onCheckedChange={(val) => setSecurityForm({ ...securityForm, twoFactorEnabled: val })}
+                    onCheckedChange={(val) =>
+                      setSecurityForm({ ...securityForm, twoFactorEnabled: val })
+                    }
                     disabled={opLoading.updateSecurity}
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium">Session Inactivity Timeout (Minutes)</Label>
+                    <Label className="text-xs font-medium">
+                      Session Inactivity Timeout (Minutes)
+                    </Label>
                     <Input
                       type="number"
                       min={5}
                       max={1440}
                       value={securityForm.sessionTimeoutMinutes}
                       onChange={(e) =>
-                        setSecurityForm({ ...securityForm, sessionTimeoutMinutes: Number(e.target.value) || 60 })
+                        setSecurityForm({
+                          ...securityForm,
+                          sessionTimeoutMinutes: Number(e.target.value) || 60,
+                        })
                       }
                       disabled={opLoading.updateSecurity}
                     />
-                    <p className="text-[11px] text-muted-foreground">Automatic sign-out when idle.</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Automatic sign-out when idle.
+                    </p>
                   </div>
 
                   <div className="space-y-1.5">
@@ -566,11 +600,16 @@ function SettingsHubPage() {
                       max={365}
                       value={securityForm.passwordExpirationDays}
                       onChange={(e) =>
-                        setSecurityForm({ ...securityForm, passwordExpirationDays: Number(e.target.value) || 90 })
+                        setSecurityForm({
+                          ...securityForm,
+                          passwordExpirationDays: Number(e.target.value) || 90,
+                        })
                       }
                       disabled={opLoading.updateSecurity}
                     />
-                    <p className="text-[11px] text-muted-foreground">Set to 0 to disable mandatory password rotation.</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Set to 0 to disable mandatory password rotation.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -594,13 +633,20 @@ function SettingsHubPage() {
           <div className="rounded-2xl border border-border/60 bg-card/60 p-6 backdrop-blur-xl space-y-6">
             <div className="flex items-center justify-between border-b border-border/60 pb-4">
               <div>
-                <h2 className="text-base font-semibold tracking-tight text-foreground">Notification Preferences</h2>
+                <h2 className="text-base font-semibold tracking-tight text-foreground">
+                  Notification Preferences
+                </h2>
                 <p className="text-xs text-muted-foreground">
-                  Control how alerts, approvals, weekly executive digests, and Slack notifications are broadcasted.
+                  Control how alerts, approvals, weekly executive digests, and Slack notifications
+                  are broadcasted.
                 </p>
               </div>
               {errors.notifications && (
-                <Button size="sm" variant="outline" onClick={() => dispatch(fetchNotificationSettings())}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => dispatch(fetchNotificationSettings())}
+                >
                   <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Retry
                 </Button>
               )}
@@ -618,23 +664,33 @@ function SettingsHubPage() {
                 <div className="flex items-center justify-between pt-2">
                   <div>
                     <div className="text-sm font-medium text-foreground">Email Notifications</div>
-                    <div className="text-xs text-muted-foreground">Send workflow approvals and shift notices via email.</div>
+                    <div className="text-xs text-muted-foreground">
+                      Send workflow approvals and shift notices via email.
+                    </div>
                   </div>
                   <Switch
                     checked={notificationForm.emailNotifications}
-                    onCheckedChange={(val) => setNotificationForm({ ...notificationForm, emailNotifications: val })}
+                    onCheckedChange={(val) =>
+                      setNotificationForm({ ...notificationForm, emailNotifications: val })
+                    }
                     disabled={opLoading.updateNotifications}
                   />
                 </div>
 
                 <div className="flex items-center justify-between pt-3">
                   <div>
-                    <div className="text-sm font-medium text-foreground">In-App Notification Center</div>
-                    <div className="text-xs text-muted-foreground">Real-time alerts, bell badges, and live banners.</div>
+                    <div className="text-sm font-medium text-foreground">
+                      In-App Notification Center
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Real-time alerts, bell badges, and live banners.
+                    </div>
                   </div>
                   <Switch
                     checked={notificationForm.inAppAlerts}
-                    onCheckedChange={(val) => setNotificationForm({ ...notificationForm, inAppAlerts: val })}
+                    onCheckedChange={(val) =>
+                      setNotificationForm({ ...notificationForm, inAppAlerts: val })
+                    }
                     disabled={opLoading.updateNotifications}
                   />
                 </div>
@@ -642,23 +698,33 @@ function SettingsHubPage() {
                 <div className="flex items-center justify-between pt-3">
                   <div>
                     <div className="text-sm font-medium text-foreground">Slack Broadcasts</div>
-                    <div className="text-xs text-muted-foreground">Deliver priority payroll alerts to the connected Slack channel.</div>
+                    <div className="text-xs text-muted-foreground">
+                      Deliver priority payroll alerts to the connected Slack channel.
+                    </div>
                   </div>
                   <Switch
                     checked={notificationForm.slackAlerts}
-                    onCheckedChange={(val) => setNotificationForm({ ...notificationForm, slackAlerts: val })}
+                    onCheckedChange={(val) =>
+                      setNotificationForm({ ...notificationForm, slackAlerts: val })
+                    }
                     disabled={opLoading.updateNotifications}
                   />
                 </div>
 
                 <div className="flex items-center justify-between pt-3">
                   <div>
-                    <div className="text-sm font-medium text-foreground">Weekly Executive Digest</div>
-                    <div className="text-xs text-muted-foreground">Automated AI summary report of metrics and workforce trends.</div>
+                    <div className="text-sm font-medium text-foreground">
+                      Weekly Executive Digest
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Automated AI summary report of metrics and workforce trends.
+                    </div>
                   </div>
                   <Switch
                     checked={notificationForm.weeklyDigest}
-                    onCheckedChange={(val) => setNotificationForm({ ...notificationForm, weeklyDigest: val })}
+                    onCheckedChange={(val) =>
+                      setNotificationForm({ ...notificationForm, weeklyDigest: val })
+                    }
                     disabled={opLoading.updateNotifications}
                   />
                 </div>
@@ -687,7 +753,9 @@ function SettingsHubPage() {
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold text-foreground">Test Email Gateway</h3>
-                  <p className="text-xs text-muted-foreground">Dispatch a test message through configured SMTP server.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Dispatch a test message through configured SMTP server.
+                  </p>
                 </div>
               </div>
 
@@ -726,7 +794,9 @@ function SettingsHubPage() {
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold text-foreground">Test SMS Gateway</h3>
-                  <p className="text-xs text-muted-foreground">Verify carrier delivery and SMS provider balance.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Verify carrier delivery and SMS provider balance.
+                  </p>
                 </div>
               </div>
 
@@ -764,13 +834,19 @@ function SettingsHubPage() {
           <div className="rounded-2xl border border-border/60 bg-card/60 p-6 backdrop-blur-xl space-y-6">
             <div className="flex items-center justify-between border-b border-border/60 pb-4">
               <div>
-                <h2 className="text-base font-semibold tracking-tight text-foreground">Branding & Workspace Customization</h2>
+                <h2 className="text-base font-semibold tracking-tight text-foreground">
+                  Branding & Workspace Customization
+                </h2>
                 <p className="text-xs text-muted-foreground">
                   Set organization legal brand name, custom portal logo, and brand color palette.
                 </p>
               </div>
               {errors.branding && (
-                <Button size="sm" variant="outline" onClick={() => dispatch(fetchBrandingSettings())}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => dispatch(fetchBrandingSettings())}
+                >
                   <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Retry
                 </Button>
               )}
@@ -789,7 +865,9 @@ function SettingsHubPage() {
                   <Label className="text-xs font-medium">Organization Legal Name</Label>
                   <Input
                     value={brandingForm.companyName}
-                    onChange={(e) => setBrandingForm({ ...brandingForm, companyName: e.target.value })}
+                    onChange={(e) =>
+                      setBrandingForm({ ...brandingForm, companyName: e.target.value })
+                    }
                     placeholder="OFC360 Technologies Pvt Ltd"
                     disabled={opLoading.updateBranding}
                   />
@@ -799,7 +877,9 @@ function SettingsHubPage() {
                   <Label className="text-xs font-medium">Portal Custom Header Title</Label>
                   <Input
                     value={brandingForm.portalTitle}
-                    onChange={(e) => setBrandingForm({ ...brandingForm, portalTitle: e.target.value })}
+                    onChange={(e) =>
+                      setBrandingForm({ ...brandingForm, portalTitle: e.target.value })
+                    }
                     placeholder="OFC360 Workspace"
                     disabled={opLoading.updateBranding}
                   />
@@ -811,13 +891,17 @@ function SettingsHubPage() {
                     <input
                       type="color"
                       value={brandingForm.primaryColor}
-                      onChange={(e) => setBrandingForm({ ...brandingForm, primaryColor: e.target.value })}
+                      onChange={(e) =>
+                        setBrandingForm({ ...brandingForm, primaryColor: e.target.value })
+                      }
                       className="h-9 w-12 rounded cursor-pointer border border-border/60 bg-transparent p-1"
                       disabled={opLoading.updateBranding}
                     />
                     <Input
                       value={brandingForm.primaryColor}
-                      onChange={(e) => setBrandingForm({ ...brandingForm, primaryColor: e.target.value })}
+                      onChange={(e) =>
+                        setBrandingForm({ ...brandingForm, primaryColor: e.target.value })
+                      }
                       className="font-mono text-xs"
                       disabled={opLoading.updateBranding}
                     />
@@ -830,13 +914,17 @@ function SettingsHubPage() {
                     <input
                       type="color"
                       value={brandingForm.accentColor}
-                      onChange={(e) => setBrandingForm({ ...brandingForm, accentColor: e.target.value })}
+                      onChange={(e) =>
+                        setBrandingForm({ ...brandingForm, accentColor: e.target.value })
+                      }
                       className="h-9 w-12 rounded cursor-pointer border border-border/60 bg-transparent p-1"
                       disabled={opLoading.updateBranding}
                     />
                     <Input
                       value={brandingForm.accentColor}
-                      onChange={(e) => setBrandingForm({ ...brandingForm, accentColor: e.target.value })}
+                      onChange={(e) =>
+                        setBrandingForm({ ...brandingForm, accentColor: e.target.value })
+                      }
                       className="font-mono text-xs"
                       disabled={opLoading.updateBranding}
                     />
@@ -873,9 +961,12 @@ function SettingsHubPage() {
           <div className="rounded-2xl border border-border/60 bg-card/60 p-6 backdrop-blur-xl space-y-6">
             <div className="flex items-center justify-between border-b border-border/60 pb-4">
               <div>
-                <h2 className="text-base font-semibold tracking-tight text-foreground">Third-Party Ecosystem Integrations</h2>
+                <h2 className="text-base font-semibold tracking-tight text-foreground">
+                  Third-Party Ecosystem Integrations
+                </h2>
                 <p className="text-xs text-muted-foreground">
-                  Connect workspace services for single sign-on, Slack broadcasts, video calls, and webhooks.
+                  Connect workspace services for single sign-on, Slack broadcasts, video calls, and
+                  webhooks.
                 </p>
               </div>
               <Button
@@ -884,7 +975,10 @@ function SettingsHubPage() {
                 onClick={() => dispatch(fetchIntegrationSettings())}
                 disabled={opLoading.integrations}
               >
-                <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${opLoading.integrations ? "animate-spin" : ""}`} /> Retry
+                <RefreshCw
+                  className={`mr-1.5 h-3.5 w-3.5 ${opLoading.integrations ? "animate-spin" : ""}`}
+                />{" "}
+                Retry
               </Button>
             </div>
 
@@ -909,7 +1003,11 @@ function SettingsHubPage() {
                       </div>
                       <Badge
                         variant={item.connected ? "default" : "secondary"}
-                        className={item.connected ? "bg-emerald-500/15 text-emerald-500 border-emerald-500/20" : ""}
+                        className={
+                          item.connected
+                            ? "bg-emerald-500/15 text-emerald-500 border-emerald-500/20"
+                            : ""
+                        }
                       >
                         {item.connected ? "Connected" : "Disconnected"}
                       </Badge>
@@ -941,9 +1039,12 @@ function SettingsHubPage() {
           <div className="rounded-2xl border border-border/60 bg-card/60 p-6 backdrop-blur-xl space-y-6">
             <div className="flex items-center justify-between border-b border-border/60 pb-4">
               <div>
-                <h2 className="text-base font-semibold tracking-tight text-foreground">Current Subscription & Seat Capacity</h2>
+                <h2 className="text-base font-semibold tracking-tight text-foreground">
+                  Current Subscription & Seat Capacity
+                </h2>
                 <p className="text-xs text-muted-foreground">
-                  Overview of current plan tier, seat allocations, billing cycle, and invoice history.
+                  Overview of current plan tier, seat allocations, billing cycle, and invoice
+                  history.
                 </p>
               </div>
               <Badge variant="secondary" className="px-3 py-1 text-xs">
@@ -956,7 +1057,9 @@ function SettingsHubPage() {
               <div className="md:col-span-2 rounded-xl border border-border/60 bg-background/40 p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-xs uppercase tracking-wider text-muted-foreground">Current Plan</span>
+                    <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                      Current Plan
+                    </span>
                     <div className="font-display text-2xl font-bold text-foreground">
                       {billing?.currentPlan || "Enterprise Plan"}
                     </div>
@@ -965,7 +1068,9 @@ function SettingsHubPage() {
                     <div className="font-display text-xl font-bold text-foreground">
                       {billing?.amount || "₹ 49,999"}
                     </div>
-                    <div className="text-xs text-muted-foreground">Billed {billing?.billingCycle || "Annual"}</div>
+                    <div className="text-xs text-muted-foreground">
+                      Billed {billing?.billingCycle || "Annual"}
+                    </div>
                   </div>
                 </div>
 
@@ -979,7 +1084,10 @@ function SettingsHubPage() {
                   <Progress
                     value={
                       billing?.seats
-                        ? Math.min(100, Math.round(((billing.usedSeats || 0) / billing.seats) * 100))
+                        ? Math.min(
+                            100,
+                            Math.round(((billing.usedSeats || 0) / billing.seats) * 100),
+                          )
                         : 50
                     }
                     className="h-2"
@@ -989,7 +1097,9 @@ function SettingsHubPage() {
                 <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-4 text-xs text-muted-foreground">
                   <div>
                     Next Renewal Date:{" "}
-                    <span className="font-medium text-foreground">{billing?.nextBillingDate || "N/A"}</span>
+                    <span className="font-medium text-foreground">
+                      {billing?.nextBillingDate || "N/A"}
+                    </span>
                   </div>
                   <Button
                     size="sm"
@@ -1028,7 +1138,9 @@ function SettingsHubPage() {
 
             {/* Available Subscription Plans */}
             <div className="pt-4 space-y-4">
-              <h3 className="text-sm font-semibold tracking-tight text-foreground">Available Subscription Plans</h3>
+              <h3 className="text-sm font-semibold tracking-tight text-foreground">
+                Available Subscription Plans
+              </h3>
               {subscriptionPlans.length === 0 ? (
                 <div className="py-8 text-center text-xs text-muted-foreground border border-dashed border-border/60 rounded-xl">
                   No subscription plans available from API.
@@ -1052,11 +1164,17 @@ function SettingsHubPage() {
                       <div>
                         <div className="font-semibold text-sm text-foreground">{plan.name}</div>
                         <div className="mt-2 font-display text-2xl font-bold text-foreground">
-                          {typeof plan.price === "number" ? `₹ ${plan.price.toLocaleString()}` : plan.price}
-                          <span className="text-xs font-normal text-muted-foreground">/{plan.billingCycle || "mo"}</span>
+                          {typeof plan.price === "number"
+                            ? `₹ ${plan.price.toLocaleString()}`
+                            : plan.price}
+                          <span className="text-xs font-normal text-muted-foreground">
+                            /{plan.billingCycle || "mo"}
+                          </span>
                         </div>
                         {plan.seats && (
-                          <div className="text-xs text-muted-foreground mt-1">Up to {plan.seats} employee seats</div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Up to {plan.seats} employee seats
+                          </div>
                         )}
 
                         <ul className="mt-4 space-y-2 text-xs text-muted-foreground">
@@ -1098,7 +1216,9 @@ function SettingsHubPage() {
           <div className="rounded-2xl border border-border/60 bg-card/60 p-6 backdrop-blur-xl space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/60 pb-4">
               <div>
-                <h2 className="text-base font-semibold tracking-tight text-foreground">System Audit Logs</h2>
+                <h2 className="text-base font-semibold tracking-tight text-foreground">
+                  System Audit Logs
+                </h2>
                 <p className="text-xs text-muted-foreground">
                   Tamper-evident activity trail tracing administrative and security operations.
                 </p>
@@ -1157,7 +1277,14 @@ function SettingsHubPage() {
                 size="sm"
                 variant="ghost"
                 onClick={() =>
-                  dispatch(fetchAuditLogs({ page: auditPage, limit: 10, search: auditSearch, module: auditModule }))
+                  dispatch(
+                    fetchAuditLogs({
+                      page: auditPage,
+                      limit: 10,
+                      search: auditSearch,
+                      module: auditModule,
+                    }),
+                  )
                 }
                 disabled={opLoading.auditLogs}
               >
@@ -1193,7 +1320,9 @@ function SettingsHubPage() {
                   <tbody className="divide-y divide-border/60">
                     {auditLogsList.map((log) => (
                       <tr key={log.id} className="hover:bg-accent/40 transition-colors">
-                        <td className="py-3 font-mono text-muted-foreground whitespace-nowrap">{log.timestamp}</td>
+                        <td className="py-3 font-mono text-muted-foreground whitespace-nowrap">
+                          {log.timestamp}
+                        </td>
                         <td>
                           <div className="font-medium text-foreground">{log.user}</div>
                           <div className="text-[10px] text-muted-foreground">{log.role}</div>
@@ -1204,7 +1333,9 @@ function SettingsHubPage() {
                           </Badge>
                         </td>
                         <td>
-                          <span className="rounded-md bg-accent/60 px-2 py-0.5 text-[10px]">{log.module}</span>
+                          <span className="rounded-md bg-accent/60 px-2 py-0.5 text-[10px]">
+                            {log.module}
+                          </span>
                         </td>
                         <td className="font-mono text-muted-foreground">{log.ip}</td>
                         <td className="max-w-xs truncate text-muted-foreground">{log.details}</td>
@@ -1218,8 +1349,8 @@ function SettingsHubPage() {
             {/* Pagination Controls */}
             <div className="flex items-center justify-between border-t border-border/60 pt-4 text-xs text-muted-foreground">
               <div>
-                Showing <span className="font-medium text-foreground">{auditLogsList.length}</span> of{" "}
-                <span className="font-medium text-foreground">{auditTotal}</span> records
+                Showing <span className="font-medium text-foreground">{auditLogsList.length}</span>{" "}
+                of <span className="font-medium text-foreground">{auditTotal}</span> records
               </div>
               <div className="flex items-center gap-2">
                 <Button

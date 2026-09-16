@@ -24,7 +24,7 @@ import type {
 
 export function getThunkErrorMessage(err: unknown, fallbackMessage: string): string {
   const parsed = parseApiError(err, fallbackMessage);
-  let msg = parsed.message;
+  const msg = parsed.message;
 
   if (!msg || msg === "An error occurred" || msg === "Network error" || msg === fallbackMessage) {
     switch (parsed.status) {
@@ -64,85 +64,100 @@ export function downloadFileBlob(blob: Blob, defaultFilename = "audit-logs.csv")
 }
 
 // ── Security Settings Thunks ────────────────────────────────────
-export const fetchSecuritySettings = createAsyncThunk<SecuritySettings, void, { rejectValue: string }>(
-  "settings/fetchSecuritySettings",
-  async (_, thunkAPI) => {
-    try {
-      return await settingsApi.getSecuritySettings();
-    } catch (err) {
-      return thunkAPI.rejectWithValue(getThunkErrorMessage(err, "Failed to fetch security settings"));
-    }
-  },
-);
+export const fetchSecuritySettings = createAsyncThunk<
+  SecuritySettings,
+  void,
+  { rejectValue: string }
+>("settings/fetchSecuritySettings", async (_, thunkAPI) => {
+  try {
+    return await settingsApi.getSecuritySettings();
+  } catch (err) {
+    return thunkAPI.rejectWithValue(getThunkErrorMessage(err, "Failed to fetch security settings"));
+  }
+});
 
-export const updateSecuritySettings = createAsyncThunk<SecuritySettings, Partial<SecuritySettings>, { rejectValue: string }>(
-  "settings/updateSecuritySettings",
-  async (payload, thunkAPI) => {
-    try {
-      return await settingsApi.updateSecuritySettings(payload);
-    } catch (err) {
-      return thunkAPI.rejectWithValue(getThunkErrorMessage(err, "Failed to update security settings"));
-    }
-  },
-);
+export const updateSecuritySettings = createAsyncThunk<
+  SecuritySettings,
+  Partial<SecuritySettings>,
+  { rejectValue: string }
+>("settings/updateSecuritySettings", async (payload, thunkAPI) => {
+  try {
+    return await settingsApi.updateSecuritySettings(payload);
+  } catch (err) {
+    return thunkAPI.rejectWithValue(
+      getThunkErrorMessage(err, "Failed to update security settings"),
+    );
+  }
+});
 
 // ── Notification Settings Thunks ────────────────────────────────
-export const fetchNotificationSettings = createAsyncThunk<NotificationSettings, void, { rejectValue: string }>(
-  "settings/fetchNotificationSettings",
-  async (_, thunkAPI) => {
-    try {
-      return await settingsApi.getNotificationSettings();
-    } catch (err) {
-      return thunkAPI.rejectWithValue(getThunkErrorMessage(err, "Failed to fetch notification settings"));
-    }
-  },
-);
+export const fetchNotificationSettings = createAsyncThunk<
+  NotificationSettings,
+  void,
+  { rejectValue: string }
+>("settings/fetchNotificationSettings", async (_, thunkAPI) => {
+  try {
+    return await settingsApi.getNotificationSettings();
+  } catch (err) {
+    return thunkAPI.rejectWithValue(
+      getThunkErrorMessage(err, "Failed to fetch notification settings"),
+    );
+  }
+});
 
-export const updateNotificationSettings = createAsyncThunk<NotificationSettings, Partial<NotificationSettings>, { rejectValue: string }>(
-  "settings/updateNotificationSettings",
-  async (payload, thunkAPI) => {
-    try {
-      return await settingsApi.updateNotificationSettings(payload);
-    } catch (err) {
-      return thunkAPI.rejectWithValue(getThunkErrorMessage(err, "Failed to update notification settings"));
-    }
-  },
-);
+export const updateNotificationSettings = createAsyncThunk<
+  NotificationSettings,
+  Partial<NotificationSettings>,
+  { rejectValue: string }
+>("settings/updateNotificationSettings", async (payload, thunkAPI) => {
+  try {
+    return await settingsApi.updateNotificationSettings(payload);
+  } catch (err) {
+    return thunkAPI.rejectWithValue(
+      getThunkErrorMessage(err, "Failed to update notification settings"),
+    );
+  }
+});
 
 // ── Branding Settings Thunks ────────────────────────────────────
-export const fetchBrandingSettings = createAsyncThunk<BrandingSettings, void, { rejectValue: string }>(
-  "settings/fetchBrandingSettings",
-  async (_, thunkAPI) => {
-    try {
-      return await settingsApi.getBrandingSettings();
-    } catch (err) {
-      return thunkAPI.rejectWithValue(getThunkErrorMessage(err, "Failed to fetch branding settings"));
-    }
-  },
-);
+export const fetchBrandingSettings = createAsyncThunk<
+  BrandingSettings,
+  void,
+  { rejectValue: string }
+>("settings/fetchBrandingSettings", async (_, thunkAPI) => {
+  try {
+    return await settingsApi.getBrandingSettings();
+  } catch (err) {
+    return thunkAPI.rejectWithValue(getThunkErrorMessage(err, "Failed to fetch branding settings"));
+  }
+});
 
-export const updateBrandingSettings = createAsyncThunk<BrandingSettings, Partial<BrandingSettings>, { rejectValue: string }>(
-  "settings/updateBrandingSettings",
-  async (payload, thunkAPI) => {
-    try {
-      return await settingsApi.updateBrandingSettings(payload);
-    } catch (err) {
-      return thunkAPI.rejectWithValue(getThunkErrorMessage(err, "Failed to update branding settings"));
-    }
-  },
-);
+export const updateBrandingSettings = createAsyncThunk<
+  BrandingSettings,
+  Partial<BrandingSettings>,
+  { rejectValue: string }
+>("settings/updateBrandingSettings", async (payload, thunkAPI) => {
+  try {
+    return await settingsApi.updateBrandingSettings(payload);
+  } catch (err) {
+    return thunkAPI.rejectWithValue(
+      getThunkErrorMessage(err, "Failed to update branding settings"),
+    );
+  }
+});
 
 // ── Integration Settings Thunks ─────────────────────────────────
-export const fetchIntegrationSettings = createAsyncThunk<IntegrationItem[], void, { rejectValue: string }>(
-  "settings/fetchIntegrationSettings",
-  async (_, thunkAPI) => {
-    try {
-      return await settingsApi.getIntegrationSettings();
-    } catch (err) {
-      return thunkAPI.rejectWithValue(getThunkErrorMessage(err, "Failed to fetch integrations"));
-    }
-  },
-);
+export const fetchIntegrationSettings = createAsyncThunk<
+  IntegrationItem[],
+  void,
+  { rejectValue: string }
+>("settings/fetchIntegrationSettings", async (_, thunkAPI) => {
+  try {
+    return await settingsApi.getIntegrationSettings();
+  } catch (err) {
+    return thunkAPI.rejectWithValue(getThunkErrorMessage(err, "Failed to fetch integrations"));
+  }
+});
 
 export const updateIntegrationSettings = createAsyncThunk<
   IntegrationItem[],
@@ -181,16 +196,19 @@ export const updateBillingSettings = createAsyncThunk<
 });
 
 // ── Subscription Plans & Lifecycle Thunks ───────────────────────
-export const fetchSubscriptionPlans = createAsyncThunk<SubscriptionPlan[], void, { rejectValue: string }>(
-  "settings/fetchSubscriptionPlans",
-  async (_, thunkAPI) => {
-    try {
-      return await settingsApi.getSubscriptionPlans();
-    } catch (err) {
-      return thunkAPI.rejectWithValue(getThunkErrorMessage(err, "Failed to fetch subscription plans"));
-    }
-  },
-);
+export const fetchSubscriptionPlans = createAsyncThunk<
+  SubscriptionPlan[],
+  void,
+  { rejectValue: string }
+>("settings/fetchSubscriptionPlans", async (_, thunkAPI) => {
+  try {
+    return await settingsApi.getSubscriptionPlans();
+  } catch (err) {
+    return thunkAPI.rejectWithValue(
+      getThunkErrorMessage(err, "Failed to fetch subscription plans"),
+    );
+  }
+});
 
 export const upgradeSubscription = createAsyncThunk<
   BillingData,
@@ -200,7 +218,9 @@ export const upgradeSubscription = createAsyncThunk<
   try {
     return await settingsApi.upgradeSubscription(payload);
   } catch (err) {
-    return thunkAPI.rejectWithValue(getThunkErrorMessage(err, "Failed to upgrade subscription plan"));
+    return thunkAPI.rejectWithValue(
+      getThunkErrorMessage(err, "Failed to upgrade subscription plan"),
+    );
   }
 });
 
@@ -281,49 +301,53 @@ export const fetchBilling = fetchBillingSettings;
 export const updateBilling = updateBillingSettings;
 
 // ── General & Company Settings ──────────────────────────────────
-export const fetchGeneralSettings = createAsyncThunk<GeneralSettings, void, { rejectValue: string }>(
-  "settings/fetchGeneral",
-  async (_, thunkAPI) => {
-    try {
-      return await settingsApi.getGeneralSettings();
-    } catch (err) {
-      return thunkAPI.rejectWithValue(getThunkErrorMessage(err, "Failed to fetch general settings"));
-    }
-  },
-);
+export const fetchGeneralSettings = createAsyncThunk<
+  GeneralSettings,
+  void,
+  { rejectValue: string }
+>("settings/fetchGeneral", async (_, thunkAPI) => {
+  try {
+    return await settingsApi.getGeneralSettings();
+  } catch (err) {
+    return thunkAPI.rejectWithValue(getThunkErrorMessage(err, "Failed to fetch general settings"));
+  }
+});
 
-export const updateGeneralSettings = createAsyncThunk<GeneralSettings, Partial<GeneralSettings>, { rejectValue: string }>(
-  "settings/updateGeneral",
-  async (payload, thunkAPI) => {
-    try {
-      return await settingsApi.updateGeneralSettings(payload);
-    } catch (err) {
-      return thunkAPI.rejectWithValue(getThunkErrorMessage(err, "Failed to update general settings"));
-    }
-  },
-);
+export const updateGeneralSettings = createAsyncThunk<
+  GeneralSettings,
+  Partial<GeneralSettings>,
+  { rejectValue: string }
+>("settings/updateGeneral", async (payload, thunkAPI) => {
+  try {
+    return await settingsApi.updateGeneralSettings(payload);
+  } catch (err) {
+    return thunkAPI.rejectWithValue(getThunkErrorMessage(err, "Failed to update general settings"));
+  }
+});
 
-export const fetchCompanySettings = createAsyncThunk<CompanySettings, void, { rejectValue: string }>(
-  "settings/fetchCompany",
-  async (_, thunkAPI) => {
-    try {
-      return await settingsApi.getCompanySettings();
-    } catch (err) {
-      return thunkAPI.rejectWithValue(getThunkErrorMessage(err, "Failed to fetch company settings"));
-    }
-  },
-);
+export const fetchCompanySettings = createAsyncThunk<
+  CompanySettings,
+  void,
+  { rejectValue: string }
+>("settings/fetchCompany", async (_, thunkAPI) => {
+  try {
+    return await settingsApi.getCompanySettings();
+  } catch (err) {
+    return thunkAPI.rejectWithValue(getThunkErrorMessage(err, "Failed to fetch company settings"));
+  }
+});
 
-export const updateCompanySettings = createAsyncThunk<CompanySettings, Partial<CompanySettings>, { rejectValue: string }>(
-  "settings/updateCompany",
-  async (payload, thunkAPI) => {
-    try {
-      return await settingsApi.updateCompanySettings(payload);
-    } catch (err) {
-      return thunkAPI.rejectWithValue(getThunkErrorMessage(err, "Failed to update company settings"));
-    }
-  },
-);
+export const updateCompanySettings = createAsyncThunk<
+  CompanySettings,
+  Partial<CompanySettings>,
+  { rejectValue: string }
+>("settings/updateCompany", async (payload, thunkAPI) => {
+  try {
+    return await settingsApi.updateCompanySettings(payload);
+  } catch (err) {
+    return thunkAPI.rejectWithValue(getThunkErrorMessage(err, "Failed to update company settings"));
+  }
+});
 
 // ── Roles & Permissions ─────────────────────────────────────────
 export const fetchRoles = createAsyncThunk<Role[], void, { rejectValue: string }>(
@@ -337,27 +361,29 @@ export const fetchRoles = createAsyncThunk<Role[], void, { rejectValue: string }
   },
 );
 
-export const createRole = createAsyncThunk<Role, { name: string; description?: string; permissions?: string[] }, { rejectValue: string }>(
-  "settings/createRole",
-  async (payload, thunkAPI) => {
-    try {
-      return await settingsApi.createRole(payload);
-    } catch (err) {
-      return thunkAPI.rejectWithValue(getThunkErrorMessage(err, "Failed to create role"));
-    }
-  },
-);
+export const createRole = createAsyncThunk<
+  Role,
+  { name: string; description?: string; permissions?: string[] },
+  { rejectValue: string }
+>("settings/createRole", async (payload, thunkAPI) => {
+  try {
+    return await settingsApi.createRole(payload);
+  } catch (err) {
+    return thunkAPI.rejectWithValue(getThunkErrorMessage(err, "Failed to create role"));
+  }
+});
 
-export const updateRole = createAsyncThunk<Role, { id: string; name: string; description?: string; permissions?: string[] }, { rejectValue: string }>(
-  "settings/updateRole",
-  async ({ id, ...payload }, thunkAPI) => {
-    try {
-      return await settingsApi.updateRole(id, payload);
-    } catch (err) {
-      return thunkAPI.rejectWithValue(getThunkErrorMessage(err, "Failed to update role"));
-    }
-  },
-);
+export const updateRole = createAsyncThunk<
+  Role,
+  { id: string; name: string; description?: string; permissions?: string[] },
+  { rejectValue: string }
+>("settings/updateRole", async ({ id, ...payload }, thunkAPI) => {
+  try {
+    return await settingsApi.updateRole(id, payload);
+  } catch (err) {
+    return thunkAPI.rejectWithValue(getThunkErrorMessage(err, "Failed to update role"));
+  }
+});
 
 export const deleteRole = createAsyncThunk<string, string, { rejectValue: string }>(
   "settings/deleteRole",
@@ -383,24 +409,26 @@ export const fetchPermissions = createAsyncThunk<PermissionItem[], void, { rejec
 );
 
 // ── Legacy Profile in Settings ──────────────────────────────────
-export const fetchProfileSettings = createAsyncThunk<ProfileSettings, void, { rejectValue: string }>(
-  "settings/fetchProfile",
-  async (_, thunkAPI) => {
-    try {
-      return await settingsApi.getProfile();
-    } catch (err) {
-      return thunkAPI.rejectWithValue(getThunkErrorMessage(err, "Failed to fetch user profile"));
-    }
-  },
-);
+export const fetchProfileSettings = createAsyncThunk<
+  ProfileSettings,
+  void,
+  { rejectValue: string }
+>("settings/fetchProfile", async (_, thunkAPI) => {
+  try {
+    return await settingsApi.getProfile();
+  } catch (err) {
+    return thunkAPI.rejectWithValue(getThunkErrorMessage(err, "Failed to fetch user profile"));
+  }
+});
 
-export const updateProfileSettings = createAsyncThunk<ProfileSettings, Partial<ProfileSettings>, { rejectValue: string }>(
-  "settings/updateProfile",
-  async (payload, thunkAPI) => {
-    try {
-      return await settingsApi.updateProfile(payload);
-    } catch (err) {
-      return thunkAPI.rejectWithValue(getThunkErrorMessage(err, "Failed to update profile settings"));
-    }
-  },
-);
+export const updateProfileSettings = createAsyncThunk<
+  ProfileSettings,
+  Partial<ProfileSettings>,
+  { rejectValue: string }
+>("settings/updateProfile", async (payload, thunkAPI) => {
+  try {
+    return await settingsApi.updateProfile(payload);
+  } catch (err) {
+    return thunkAPI.rejectWithValue(getThunkErrorMessage(err, "Failed to update profile settings"));
+  }
+});

@@ -45,7 +45,7 @@ function BillingPage() {
       await dispatch(upgradeSubscription({ planId: plan.id })).unwrap();
       toast.success(`Upgraded to ${plan.name} plan successfully!`);
       dispatch(fetchBillingSettings());
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(typeof err === "string" ? err : "Failed to upgrade subscription");
     }
   };
@@ -56,7 +56,7 @@ function BillingPage() {
       await dispatch(cancelSubscription({ reason: "User cancelled from billing page" })).unwrap();
       toast.info("Subscription cancelled successfully.");
       dispatch(fetchBillingSettings());
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(typeof err === "string" ? err : "Failed to cancel subscription");
     }
   };
@@ -84,7 +84,9 @@ function BillingPage() {
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-xl">
         <div>
           <h2 className="text-lg font-semibold tracking-tight">Billing & Enterprise Plan</h2>
-          <p className="text-xs text-muted-foreground">Manage your subscription, seat allocation, payment methods, and invoice history.</p>
+          <p className="text-xs text-muted-foreground">
+            Manage your subscription, seat allocation, payment methods, and invoice history.
+          </p>
         </div>
         <div className="flex items-center gap-2">
           {errors.billing && (
@@ -101,10 +103,15 @@ function BillingPage() {
       {/* Plan Card */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="relative overflow-hidden rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-xl lg:col-span-2">
-          <div className="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full opacity-20" style={{ background: "var(--gradient-brand)" }} />
+          <div
+            className="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full opacity-20"
+            style={{ background: "var(--gradient-brand)" }}
+          />
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Current Plan</div>
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Current Plan
+              </div>
               <div className="font-display text-2xl font-bold tracking-tight">{planName}</div>
             </div>
             <div className="text-right">
@@ -116,13 +123,20 @@ function BillingPage() {
           <div className="mt-6 space-y-2">
             <div className="flex justify-between text-xs font-medium">
               <span>Employee Seat Allocation</span>
-              <span>{usedSeats} / {seats} Seats Used ({seatPct}%)</span>
+              <span>
+                {usedSeats} / {seats} Seats Used ({seatPct}%)
+              </span>
             </div>
             <Progress value={seatPct} className="h-2" />
           </div>
 
           <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-border/60 pt-4 text-xs text-muted-foreground">
-            <div>Next renewal date: <span className="font-medium text-foreground">{billing?.nextBillingDate || "N/A"}</span></div>
+            <div>
+              Next renewal date:{" "}
+              <span className="font-medium text-foreground">
+                {billing?.nextBillingDate || "N/A"}
+              </span>
+            </div>
             <Button
               size="sm"
               variant="outline"
@@ -141,10 +155,19 @@ function BillingPage() {
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <CreditCard className="h-4 w-4" /> Payment Method
             </div>
-            <div className="mt-4 font-medium text-foreground">{billing?.paymentMethod || "No payment method configured"}</div>
-            <div className="mt-1 text-xs text-muted-foreground">Auto-debit enabled for scheduled renewals.</div>
+            <div className="mt-4 font-medium text-foreground">
+              {billing?.paymentMethod || "No payment method configured"}
+            </div>
+            <div className="mt-1 text-xs text-muted-foreground">
+              Auto-debit enabled for scheduled renewals.
+            </div>
           </div>
-          <Button variant="outline" size="sm" className="mt-6 w-full" onClick={() => toast.info("Payment method update opened")}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-6 w-full"
+            onClick={() => toast.info("Payment method update opened")}
+          >
             Update Payment Method
           </Button>
         </div>
@@ -154,7 +177,9 @@ function BillingPage() {
       <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-xl space-y-4">
         <h3 className="text-sm font-semibold tracking-tight">Available Subscription Plans</h3>
         {subscriptionPlans.length === 0 ? (
-          <div className="py-6 text-center text-xs text-muted-foreground">No subscription plans available.</div>
+          <div className="py-6 text-center text-xs text-muted-foreground">
+            No subscription plans available.
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {subscriptionPlans.map((plan) => (
@@ -174,11 +199,17 @@ function BillingPage() {
                 <div>
                   <div className="font-semibold text-sm text-foreground">{plan.name}</div>
                   <div className="mt-2 font-display text-2xl font-bold text-foreground">
-                    {typeof plan.price === "number" ? `₹ ${plan.price.toLocaleString()}` : plan.price}
-                    <span className="text-xs font-normal text-muted-foreground">/{plan.billingCycle || "mo"}</span>
+                    {typeof plan.price === "number"
+                      ? `₹ ${plan.price.toLocaleString()}`
+                      : plan.price}
+                    <span className="text-xs font-normal text-muted-foreground">
+                      /{plan.billingCycle || "mo"}
+                    </span>
                   </div>
                   {plan.seats && (
-                    <div className="text-xs text-muted-foreground mt-1">Up to {plan.seats} employee seats</div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Up to {plan.seats} employee seats
+                    </div>
                   )}
 
                   <ul className="mt-4 space-y-2 text-xs text-muted-foreground">
@@ -236,10 +267,17 @@ function BillingPage() {
                   <td className="text-muted-foreground">{inv.date}</td>
                   <td className="font-semibold text-foreground">{inv.amount}</td>
                   <td>
-                    <Badge className="bg-emerald-500/15 text-emerald-500 hover:bg-emerald-500/20">{inv.status}</Badge>
+                    <Badge className="bg-emerald-500/15 text-emerald-500 hover:bg-emerald-500/20">
+                      {inv.status}
+                    </Badge>
                   </td>
                   <td className="text-right">
-                    <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => toast.success(`Downloaded ${inv.id}`)}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-xs"
+                      onClick={() => toast.success(`Downloaded ${inv.id}`)}
+                    >
                       <Download className="mr-1 h-3.5 w-3.5" /> PDF
                     </Button>
                   </td>

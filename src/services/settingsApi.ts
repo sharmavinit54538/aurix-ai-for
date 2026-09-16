@@ -20,17 +20,17 @@ import type {
   UpgradeSubscriptionPayload,
 } from "@/store/settings/settingsTypes";
 
-function extractData<T>(res: any, fallback?: T): T {
+function extractData<T>(res: unknown, fallback?: T): T {
+  const r = res as { data?: unknown; status?: number; headers?: unknown } | undefined;
   const body =
-    res?.data !== undefined && (res?.status !== undefined || res?.headers !== undefined)
-      ? res.data
-      : res;
+    r?.data !== undefined && (r?.status !== undefined || r?.headers !== undefined) ? r.data : res;
 
   if (body == null) return fallback as T;
 
   if (typeof body === "object") {
-    if ("data" in body && body.data !== undefined) return body.data as T;
-    if ("result" in body && body.result !== undefined) return body.result as T;
+    const b = body as Record<string, unknown>;
+    if ("data" in b && b.data !== undefined) return b.data as T;
+    if ("result" in b && b.result !== undefined) return b.result as T;
   }
 
   return (body ?? fallback) as T;
@@ -54,7 +54,9 @@ export const settingsApi = {
     return extractData<NotificationSettings>(res);
   },
 
-  async updateNotificationSettings(payload: Partial<NotificationSettings>): Promise<NotificationSettings> {
+  async updateNotificationSettings(
+    payload: Partial<NotificationSettings>,
+  ): Promise<NotificationSettings> {
     const res = await apiInstance.patch("/settings/notifications", payload);
     return extractData<NotificationSettings>(res);
   },
@@ -73,21 +75,31 @@ export const settingsApi = {
   // ── Integration Settings ───────────────────────────────────────
   async getIntegrationSettings(): Promise<IntegrationItem[]> {
     const res = await apiInstance.get("/settings/integrations");
-    const data = extractData<any>(res, []);
+    const data = extractData<
+      IntegrationItem[] | { items?: IntegrationItem[]; integrations?: IntegrationItem[] }
+    >(res, []);
     if (Array.isArray(data)) return data;
-    if (data && typeof data === "object" && Array.isArray(data.items)) return data.items;
-    if (data && typeof data === "object" && Array.isArray(data.integrations)) return data.integrations;
+    if (data && typeof data === "object") {
+      if (Array.isArray(data.items)) return data.items;
+      if (Array.isArray(data.integrations)) return data.integrations;
+    }
     return [];
   },
 
   async updateIntegrationSettings(
-    payload: { id?: string; connected?: boolean; integrations?: IntegrationItem[] } | Partial<IntegrationItem>,
+    payload:
+      | { id?: string; connected?: boolean; integrations?: IntegrationItem[] }
+      | Partial<IntegrationItem>,
   ): Promise<IntegrationItem[]> {
     const res = await apiInstance.patch("/settings/integrations", payload);
-    const data = extractData<any>(res, []);
+    const data = extractData<
+      IntegrationItem[] | { items?: IntegrationItem[]; integrations?: IntegrationItem[] }
+    >(res, []);
     if (Array.isArray(data)) return data;
-    if (data && typeof data === "object" && Array.isArray(data.items)) return data.items;
-    if (data && typeof data === "object" && Array.isArray(data.integrations)) return data.integrations;
+    if (data && typeof data === "object") {
+      if (Array.isArray(data.items)) return data.items;
+      if (Array.isArray(data.integrations)) return data.integrations;
+    }
     return [];
   },
 
@@ -97,7 +109,9 @@ export const settingsApi = {
     return extractData<BillingData>(res);
   },
 
-  async updateBillingSettings(payload: Partial<BillingData> | Record<string, unknown>): Promise<BillingData> {
+  async updateBillingSettings(
+    payload: Partial<BillingData> | Record<string, unknown>,
+  ): Promise<BillingData> {
     const res = await apiInstance.patch("/settings/billing", payload);
     return extractData<BillingData>(res);
   },
@@ -105,10 +119,14 @@ export const settingsApi = {
   // ── Subscription Plans & Actions ──────────────────────────────
   async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
     const res = await apiInstance.get("/settings/subscription/plans");
-    const data = extractData<any>(res, []);
+    const data = extractData<
+      SubscriptionPlan[] | { plans?: SubscriptionPlan[]; items?: SubscriptionPlan[] }
+    >(res, []);
     if (Array.isArray(data)) return data;
-    if (data && typeof data === "object" && Array.isArray(data.plans)) return data.plans;
-    if (data && typeof data === "object" && Array.isArray(data.items)) return data.items;
+    if (data && typeof data === "object") {
+      if (Array.isArray(data.plans)) return data.plans;
+      if (Array.isArray(data.items)) return data.items;
+    }
     return [];
   },
 
@@ -134,8 +152,8 @@ export const settingsApi = {
 
     const query = searchParams.toString();
     const res = await apiInstance.get(`/settings/audit-logs${query ? `?${query}` : ""}`);
-    const data = extractData<any>(res);
-    if (data && Array.isArray(data.items)) {
+    const data = extractData<AuditLogResponse | AuditLog[]>(res);
+    if (data && "items" in data && Array.isArray(data.items)) {
       return {
         items: data.items,
         total: data.total ?? data.items.length,
@@ -171,9 +189,12 @@ export const settingsApi = {
     if (params?.endDate) searchParams.set("endDate", params.endDate);
 
     const query = searchParams.toString();
-    const res = await apiInstance.get(`/settings/audit-logs/export${query ? `?${query}` : ""}`, {
-      responseType: "blob",
-    });
+    const res = await apiInstance.get<Blob>(
+      `/settings/audit-logs/export${query ? `?${query}` : ""}`,
+      {
+        responseType: "blob",
+      },
+    );
     return res.data;
   },
 
@@ -245,11 +266,18 @@ export const settingsApi = {
     const res = await apiInstance.get("/settings/roles");
     return extractData<Role[]>(res, []);
   },
-  async createRole(payload: { name: string; description?: string; permissions?: string[] }): Promise<Role> {
+  async createRole(payload: {
+    name: string;
+    description?: string;
+    permissions?: string[];
+  }): Promise<Role> {
     const res = await apiInstance.post("/settings/roles", payload);
     return extractData<Role>(res);
   },
-  async updateRole(id: string, payload: { name: string; description?: string; permissions?: string[] }): Promise<Role> {
+  async updateRole(
+    id: string,
+    payload: { name: string; description?: string; permissions?: string[] },
+  ): Promise<Role> {
     const res = await apiInstance.put(`/settings/roles/${id}`, payload);
     return extractData<Role>(res);
   },

@@ -4,7 +4,13 @@ import { Download, RefreshCw, ScrollText, Search } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
@@ -41,7 +47,7 @@ function AuditLogsPage() {
         }),
       ).unwrap();
       toast.success("Audit logs exported and downloaded successfully!");
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(typeof err === "string" ? err : "Failed to export audit logs");
     } finally {
       setExporting(false);
@@ -57,7 +63,9 @@ function AuditLogsPage() {
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-xl">
         <div>
           <h2 className="text-lg font-semibold tracking-tight">Audit Trail & Activity Logs</h2>
-          <p className="text-xs text-muted-foreground">Trace every admin action, security event, and system modification in real time.</p>
+          <p className="text-xs text-muted-foreground">
+            Trace every admin action, security event, and system modification in real time.
+          </p>
         </div>
         <Button size="sm" variant="outline" onClick={handleExport} disabled={exporting}>
           <Download className={`mr-2 h-4 w-4 ${exporting ? "animate-spin" : ""}`} />
@@ -103,7 +111,9 @@ function AuditLogsPage() {
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => dispatch(fetchAuditLogs({ page, limit: 10, search, module: moduleFilter }))}
+            onClick={() =>
+              dispatch(fetchAuditLogs({ page, limit: 10, search, module: moduleFilter }))
+            }
             disabled={loading}
           >
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />

@@ -82,10 +82,7 @@ export const selectCompanySettings = createSelector(
   (state) => state?.companySettings ?? null,
 );
 
-export const selectRoles = createSelector(
-  [selectSettingsState],
-  (state) => state?.roles ?? [],
-);
+export const selectRoles = createSelector([selectSettingsState], (state) => state?.roles ?? []);
 
 export const selectPermissions = createSelector(
   [selectSettingsState],

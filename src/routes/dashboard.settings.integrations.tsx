@@ -6,8 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { selectIntegrations, selectSettingsErrors, selectSettingsLoading } from "@/store/settings/settingsSelectors";
-import { fetchIntegrationSettings, updateIntegrationSettings } from "@/store/settings/settingsThunk";
+import {
+  selectIntegrations,
+  selectSettingsErrors,
+  selectSettingsLoading,
+} from "@/store/settings/settingsSelectors";
+import {
+  fetchIntegrationSettings,
+  updateIntegrationSettings,
+} from "@/store/settings/settingsThunk";
 import type { IntegrationItem } from "@/store/settings/settingsTypes";
 
 export const Route = createFileRoute("/dashboard/settings/integrations")({
@@ -62,7 +69,10 @@ function IntegrationsPage() {
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-xl">
         <div>
           <h2 className="text-lg font-semibold tracking-tight">Integrations & Ecosystem</h2>
-          <p className="text-xs text-muted-foreground">Connect OFC360 with your enterprise toolstack for automated communications, single sign-on, and sync.</p>
+          <p className="text-xs text-muted-foreground">
+            Connect OFC360 with your enterprise toolstack for automated communications, single
+            sign-on, and sync.
+          </p>
         </div>
         <Layers className="h-5 w-5 text-muted-foreground" />
       </div>
@@ -83,13 +93,19 @@ function IntegrationsPage() {
                     </div>
                     <div>
                       <div className="font-semibold text-foreground">{item.name}</div>
-                      <Badge variant="outline" className="text-[10px]">{item.category}</Badge>
+                      <Badge variant="outline" className="text-[10px]">
+                        {item.category}
+                      </Badge>
                     </div>
                   </div>
                   {item.connected ? (
-                    <Badge className="bg-emerald-500/15 text-emerald-500 hover:bg-emerald-500/20">Connected</Badge>
+                    <Badge className="bg-emerald-500/15 text-emerald-500 hover:bg-emerald-500/20">
+                      Connected
+                    </Badge>
                   ) : (
-                    <Badge variant="secondary" className="text-[10px]">Disconnected</Badge>
+                    <Badge variant="secondary" className="text-[10px]">
+                      Disconnected
+                    </Badge>
                   )}
                 </div>
               </div>

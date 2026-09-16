@@ -65,7 +65,7 @@ function NotificationSettingsPage() {
     try {
       await dispatch(updateNotificationSettings(form)).unwrap();
       toast.success("Notification preferences saved successfully!");
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(typeof err === "string" ? err : "Failed to save notification preferences");
     }
   };
@@ -76,7 +76,7 @@ function NotificationSettingsPage() {
         testEmailConfiguration(testEmail ? { email: testEmail } : undefined),
       ).unwrap();
       toast.success(res.message || "Test email dispatched successfully!");
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(typeof err === "string" ? err : "Failed to send test email");
     }
   };
@@ -87,7 +87,7 @@ function NotificationSettingsPage() {
         testSmsConfiguration(testPhone ? { phone: testPhone } : undefined),
       ).unwrap();
       toast.success(res.message || "Test SMS dispatched successfully!");
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(typeof err === "string" ? err : "Failed to send test SMS");
     }
   };
@@ -110,12 +110,20 @@ function NotificationSettingsPage() {
       <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-xl space-y-6">
         <div className="flex items-center justify-between border-b border-border/60 pb-4">
           <div>
-            <h2 className="text-lg font-semibold tracking-tight">Notification & Digest Preferences</h2>
-            <p className="text-xs text-muted-foreground">Manage how and when you receive automated alerts, email updates, and AI digests.</p>
+            <h2 className="text-lg font-semibold tracking-tight">
+              Notification & Digest Preferences
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Manage how and when you receive automated alerts, email updates, and AI digests.
+            </p>
           </div>
           <div className="flex items-center gap-2">
             {errors.notifications && (
-              <Button size="sm" variant="outline" onClick={() => dispatch(fetchNotificationSettings())}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => dispatch(fetchNotificationSettings())}
+              >
                 <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Retry
               </Button>
             )}
@@ -128,7 +136,9 @@ function NotificationSettingsPage() {
             <div className="flex items-center justify-between pt-2">
               <div>
                 <div className="text-sm font-medium">Email Notifications</div>
-                <div className="text-xs text-muted-foreground">Receive critical workforce alerts and approval requests via email.</div>
+                <div className="text-xs text-muted-foreground">
+                  Receive critical workforce alerts and approval requests via email.
+                </div>
               </div>
               <Switch
                 checked={form.emailNotifications}
@@ -140,7 +150,9 @@ function NotificationSettingsPage() {
             <div className="flex items-center justify-between pt-4">
               <div>
                 <div className="text-sm font-medium">In-App Notification Center</div>
-                <div className="text-xs text-muted-foreground">Show real-time toast alerts and badges inside the OFC360 dashboard header.</div>
+                <div className="text-xs text-muted-foreground">
+                  Show real-time toast alerts and badges inside the OFC360 dashboard header.
+                </div>
               </div>
               <Switch
                 checked={form.inAppAlerts}
@@ -152,7 +164,10 @@ function NotificationSettingsPage() {
             <div className="flex items-center justify-between pt-4">
               <div>
                 <div className="text-sm font-medium">Slack Channel Broadcasts</div>
-                <div className="text-xs text-muted-foreground">Send high-priority alerts and hiring updates directly to your connected Slack channel.</div>
+                <div className="text-xs text-muted-foreground">
+                  Send high-priority alerts and hiring updates directly to your connected Slack
+                  channel.
+                </div>
               </div>
               <Switch
                 checked={form.slackAlerts}
@@ -164,7 +179,9 @@ function NotificationSettingsPage() {
             <div className="flex items-center justify-between pt-4">
               <div>
                 <div className="text-sm font-medium">Weekly Executive Digest</div>
-                <div className="text-xs text-muted-foreground">Receive a weekly AI summary report on workforce metrics, attrition, and payroll.</div>
+                <div className="text-xs text-muted-foreground">
+                  Receive a weekly AI summary report on workforce metrics, attrition, and payroll.
+                </div>
               </div>
               <Switch
                 checked={form.weeklyDigest}
@@ -176,7 +193,11 @@ function NotificationSettingsPage() {
 
           <div className="flex justify-end pt-2">
             <Button type="submit" disabled={submitting}>
-              {submitting ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              {submitting ? (
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
               Save Notification Settings
             </Button>
           </div>
@@ -190,7 +211,9 @@ function NotificationSettingsPage() {
             <Mail className="h-5 w-5 text-blue-400" />
             <div>
               <h3 className="text-sm font-semibold">Test Email Gateway</h3>
-              <p className="text-xs text-muted-foreground">Dispatch test verification to ensure SMTP delivery.</p>
+              <p className="text-xs text-muted-foreground">
+                Dispatch test verification to ensure SMTP delivery.
+              </p>
             </div>
           </div>
 
@@ -226,7 +249,9 @@ function NotificationSettingsPage() {
             <MessageSquare className="h-5 w-5 text-emerald-400" />
             <div>
               <h3 className="text-sm font-semibold">Test SMS Gateway</h3>
-              <p className="text-xs text-muted-foreground">Verify SMS gateway credentials and gateway routing.</p>
+              <p className="text-xs text-muted-foreground">
+                Verify SMS gateway credentials and gateway routing.
+              </p>
             </div>
           </div>
 

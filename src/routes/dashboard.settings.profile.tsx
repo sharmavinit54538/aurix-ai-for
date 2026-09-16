@@ -23,7 +23,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -141,7 +147,7 @@ function UserProfilePage() {
     try {
       await dispatch(updateCurrentUser(profileForm)).unwrap();
       toast.success("Profile updated successfully!");
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(typeof err === "string" ? err : "Failed to update profile");
     }
   };
@@ -164,7 +170,7 @@ function UserProfilePage() {
     try {
       await dispatch(uploadProfileAvatar(file)).unwrap();
       toast.success("Avatar image uploaded successfully!");
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(typeof err === "string" ? err : "Failed to upload avatar");
     } finally {
       if (fileInputRef.current) {
@@ -177,7 +183,7 @@ function UserProfilePage() {
     try {
       await dispatch(deleteProfileAvatar()).unwrap();
       toast.success("Profile avatar removed");
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(typeof err === "string" ? err : "Failed to remove avatar");
     }
   };
@@ -210,7 +216,7 @@ function UserProfilePage() {
       ).unwrap();
       toast.success(res.message || "Password updated successfully!");
       setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
-    } catch (err: any) {
+    } catch (err: unknown) {
       const errorMsg = typeof err === "string" ? err : "Failed to change password";
       setPasswordError(errorMsg);
       toast.error(errorMsg);
@@ -222,7 +228,7 @@ function UserProfilePage() {
     try {
       await dispatch(revokeUserSession(sessionId)).unwrap();
       toast.success("Session revoked successfully");
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(typeof err === "string" ? err : "Failed to revoke session");
     }
   };
@@ -233,7 +239,7 @@ function UserProfilePage() {
     try {
       await dispatch(updateUserPreferences(prefForm)).unwrap();
       toast.success("Preferences saved successfully!");
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(typeof err === "string" ? err : "Failed to save preferences");
     }
   };
@@ -288,7 +294,8 @@ function UserProfilePage() {
             User Profile & Preferences
           </h1>
           <p className="mt-1 text-xs text-muted-foreground">
-            Manage your personal identity, contact details, authentication security, active sessions, and workspace preferences.
+            Manage your personal identity, contact details, authentication security, active
+            sessions, and workspace preferences.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -311,7 +318,12 @@ function UserProfilePage() {
             <AlertCircle className="h-4 w-4 shrink-0" />
             <span>{errors.currentUser}</span>
           </div>
-          <Button size="sm" variant="outline" className="h-7 text-xs border-destructive/30" onClick={handleRetryLoad}>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-xs border-destructive/30"
+            onClick={handleRetryLoad}
+          >
             Retry Load
           </Button>
         </div>
@@ -323,7 +335,10 @@ function UserProfilePage() {
           <div className="flex items-center gap-4">
             <div className="relative group">
               <Avatar className="h-20 w-20 border-2 border-border/80 shadow-md">
-                <AvatarImage src={currentUser?.avatarUrl} alt={currentUser?.fullName || "User Avatar"} />
+                <AvatarImage
+                  src={currentUser?.avatarUrl}
+                  alt={currentUser?.fullName || "User Avatar"}
+                />
                 <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-lg font-bold text-primary">
                   {getInitials(currentUser?.fullName || currentUser?.name)}
                 </AvatarFallback>
@@ -335,7 +350,11 @@ function UserProfilePage() {
                 className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 text-white opacity-0 transition-opacity group-hover:opacity-100 disabled:cursor-not-allowed"
                 title="Change Avatar"
               >
-                {opLoading.avatar ? <RefreshCw className="h-5 w-5 animate-spin" /> : <Camera className="h-5 w-5" />}
+                {opLoading.avatar ? (
+                  <RefreshCw className="h-5 w-5 animate-spin" />
+                ) : (
+                  <Camera className="h-5 w-5" />
+                )}
               </button>
               <input
                 ref={fileInputRef}
@@ -350,7 +369,9 @@ function UserProfilePage() {
               <h2 className="text-base font-semibold text-foreground">
                 {currentUser?.fullName || currentUser?.name || "Your Name"}
               </h2>
-              <p className="text-xs text-muted-foreground">{currentUser?.email || "user@ofc360.ai"}</p>
+              <p className="text-xs text-muted-foreground">
+                {currentUser?.email || "user@ofc360.ai"}
+              </p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <Button
                   type="button"
@@ -381,13 +402,17 @@ function UserProfilePage() {
 
           <div className="text-right">
             <span className="text-[11px] text-muted-foreground">User ID:</span>
-            <div className="font-mono text-xs font-semibold text-foreground">{currentUser?.id || "USR-AUTO"}</div>
+            <div className="font-mono text-xs font-semibold text-foreground">
+              {currentUser?.id || "USR-AUTO"}
+            </div>
           </div>
         </div>
 
         {/* Profile Information Form */}
         <form onSubmit={handleProfileSubmit} className="space-y-4">
-          <h3 className="text-sm font-semibold tracking-tight text-foreground">Personal Information</h3>
+          <h3 className="text-sm font-semibold tracking-tight text-foreground">
+            Personal Information
+          </h3>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label className="text-xs font-medium">Full Name *</Label>
@@ -469,9 +494,12 @@ function UserProfilePage() {
       <div className="rounded-2xl border border-border/60 bg-card/60 p-6 backdrop-blur-xl space-y-4">
         <div className="flex items-center justify-between border-b border-border/60 pb-4">
           <div>
-            <h2 className="text-base font-semibold tracking-tight text-foreground">Change Password</h2>
+            <h2 className="text-base font-semibold tracking-tight text-foreground">
+              Change Password
+            </h2>
             <p className="text-xs text-muted-foreground">
-              Update your account password. Strong passwords contain at least 8 characters with letters, numbers, and symbols.
+              Update your account password. Strong passwords contain at least 8 characters with
+              letters, numbers, and symbols.
             </p>
           </div>
           <KeyRound className="h-5 w-5 text-muted-foreground" />
@@ -491,7 +519,9 @@ function UserProfilePage() {
               <Input
                 type="password"
                 value={passwordForm.currentPassword}
-                onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                onChange={(e) =>
+                  setPasswordForm({ ...passwordForm, currentPassword: e.target.value })
+                }
                 placeholder="••••••••"
                 disabled={opLoading.password}
                 autoComplete="current-password"
@@ -515,7 +545,9 @@ function UserProfilePage() {
               <Input
                 type="password"
                 value={passwordForm.confirmPassword}
-                onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                onChange={(e) =>
+                  setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })
+                }
                 placeholder="••••••••"
                 disabled={opLoading.password}
                 autoComplete="new-password"
@@ -540,9 +572,12 @@ function UserProfilePage() {
       <div className="rounded-2xl border border-border/60 bg-card/60 p-6 backdrop-blur-xl space-y-6">
         <div className="flex items-center justify-between border-b border-border/60 pb-4">
           <div>
-            <h2 className="text-base font-semibold tracking-tight text-foreground">User Preferences</h2>
+            <h2 className="text-base font-semibold tracking-tight text-foreground">
+              User Preferences
+            </h2>
             <p className="text-xs text-muted-foreground">
-              Configure your personal theme, notification preferences, language, and regional formats.
+              Configure your personal theme, notification preferences, language, and regional
+              formats.
             </p>
           </div>
           <Globe className="h-5 w-5 text-muted-foreground" />
@@ -554,7 +589,9 @@ function UserProfilePage() {
               <Label className="text-xs font-medium">Interface Theme</Label>
               <Select
                 value={prefForm.theme}
-                onValueChange={(val: "light" | "dark" | "system") => setPrefForm({ ...prefForm, theme: val })}
+                onValueChange={(val: "light" | "dark" | "system") =>
+                  setPrefForm({ ...prefForm, theme: val })
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Theme" />
@@ -609,7 +646,9 @@ function UserProfilePage() {
             <div className="flex items-center justify-between pt-2">
               <div>
                 <div className="text-sm font-medium">Email Notifications</div>
-                <div className="text-xs text-muted-foreground">Receive daily digests and critical workspace notices.</div>
+                <div className="text-xs text-muted-foreground">
+                  Receive daily digests and critical workspace notices.
+                </div>
               </div>
               <Switch
                 checked={prefForm.emailNotifications}
@@ -621,7 +660,9 @@ function UserProfilePage() {
             <div className="flex items-center justify-between pt-3">
               <div>
                 <div className="text-sm font-medium">Push & In-App Notifications</div>
-                <div className="text-xs text-muted-foreground">Real-time alerts for approvals, chats, and assignments.</div>
+                <div className="text-xs text-muted-foreground">
+                  Real-time alerts for approvals, chats, and assignments.
+                </div>
               </div>
               <Switch
                 checked={prefForm.pushNotifications}
@@ -633,7 +674,9 @@ function UserProfilePage() {
             <div className="flex items-center justify-between pt-3">
               <div>
                 <div className="text-sm font-medium">Sound Effects & Chimes</div>
-                <div className="text-xs text-muted-foreground">Play subtle chime sounds on receiving notifications.</div>
+                <div className="text-xs text-muted-foreground">
+                  Play subtle chime sounds on receiving notifications.
+                </div>
               </div>
               <Switch
                 checked={prefForm.soundEnabled}
@@ -660,9 +703,12 @@ function UserProfilePage() {
       <div className="rounded-2xl border border-border/60 bg-card/60 p-6 backdrop-blur-xl space-y-4">
         <div className="flex items-center justify-between border-b border-border/60 pb-4">
           <div>
-            <h2 className="text-base font-semibold tracking-tight text-foreground">Active Sessions</h2>
+            <h2 className="text-base font-semibold tracking-tight text-foreground">
+              Active Sessions
+            </h2>
             <p className="text-xs text-muted-foreground">
-              Devices currently signed in to your account. Revoke any unrecognized sessions immediately.
+              Devices currently signed in to your account. Revoke any unrecognized sessions
+              immediately.
             </p>
           </div>
           <Button
@@ -709,7 +755,8 @@ function UserProfilePage() {
                         )}
                       </div>
                       <div className="mt-0.5 text-[11px] text-muted-foreground">
-                        {sess.ip} {sess.location ? `· ${sess.location}` : ""} · Last active: {sess.lastActive}
+                        {sess.ip} {sess.location ? `· ${sess.location}` : ""} · Last active:{" "}
+                        {sess.lastActive}
                       </div>
                     </div>
                   </div>
