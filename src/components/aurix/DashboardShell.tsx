@@ -121,7 +121,7 @@ const NAV_SECTIONS: SidebarNavSection[] = [
         label: "Payroll",
         icon: Banknote,
         permission: "payroll.view",
-        roles: ["admin", "hr"],
+        roles: ["admin", "hr", "hr_admin", "hradmin", "hr-admin", "super_admin", "superadmin"],
       },
       {
         to: "/dashboard/analytics",

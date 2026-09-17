@@ -150,6 +150,10 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<string, string[]> = {
   ],
 };
 
+DEFAULT_ROLE_PERMISSIONS.hr_admin = DEFAULT_ROLE_PERMISSIONS.admin;
+DEFAULT_ROLE_PERMISSIONS.hradmin = DEFAULT_ROLE_PERMISSIONS.admin;
+DEFAULT_ROLE_PERMISSIONS["hr-admin"] = DEFAULT_ROLE_PERMISSIONS.admin;
+
 export const sidebarApi = {
   async getPermissions(userRole?: string): Promise<SidebarPermissionsResponse> {
     try {
@@ -171,8 +175,12 @@ export const sidebarApi = {
       // Fallback permissions based on user role when API endpoint returns error or dev mock
     }
 
-    const fallbackRole = userRole || "admin";
-    const permissions = DEFAULT_ROLE_PERMISSIONS[fallbackRole] || DEFAULT_ROLE_PERMISSIONS.admin;
+    const fallbackRole = (userRole || "admin").toLowerCase();
+    const permissions =
+      DEFAULT_ROLE_PERMISSIONS[fallbackRole] ||
+      (fallbackRole.includes("admin") ? DEFAULT_ROLE_PERMISSIONS.admin : null) ||
+      (fallbackRole.includes("hr") ? DEFAULT_ROLE_PERMISSIONS.hr : null) ||
+      DEFAULT_ROLE_PERMISSIONS.admin;
     return {
       role: fallbackRole,
       permissions,

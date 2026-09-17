@@ -37,6 +37,10 @@ export function filterNavTree(
     normalizedRole === "admin" ||
     normalizedRole === "super_admin" ||
     normalizedRole === "superadmin" ||
+    normalizedRole === "hr_admin" ||
+    normalizedRole === "hradmin" ||
+    normalizedRole === "hr-admin" ||
+    normalizedRole.includes("admin") ||
     !role;
 
   const isAllowedByRole = (roles?: string[]) =>

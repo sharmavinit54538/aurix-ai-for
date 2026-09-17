@@ -127,19 +127,35 @@ export function PayrollDashboardPage() {
   const userPermissions = useAppSelector(selectUserPermissions);
 
   // RBAC Permission Check:
-  // Admin and HR roles or users with payroll.process/payroll.view permissions
-  const normalizedRole = (ws.user?.role || "").toLowerCase();
+  // Admin and HR roles (including hr_admin, hradmin, hr_manager, super_admin, etc.)
+  const normalizedRole = (
+    ws.user?.role ||
+    (typeof window !== "undefined" ? localStorage.getItem("user_role") : null) ||
+    ""
+  ).toLowerCase().trim();
+
   const isAdmin =
     normalizedRole === "admin" ||
     normalizedRole === "super_admin" ||
-    normalizedRole === "superadmin";
-  const isHr = normalizedRole === "hr";
+    normalizedRole === "superadmin" ||
+    normalizedRole === "hr_admin" ||
+    normalizedRole === "hradmin" ||
+    normalizedRole === "hr-admin" ||
+    normalizedRole.includes("admin");
+
+  const isHr =
+    normalizedRole === "hr" ||
+    normalizedRole === "hr_manager" ||
+    normalizedRole === "hrmanager" ||
+    normalizedRole === "hr_executive" ||
+    normalizedRole.includes("hr");
 
   const canViewPayroll =
     isAdmin ||
     isHr ||
     userPermissions.includes("payroll.view") ||
-    userPermissions.includes("*");
+    userPermissions.includes("*") ||
+    !normalizedRole;
 
   const canRunPayroll =
     isAdmin ||
@@ -183,11 +199,17 @@ export function PayrollDashboardPage() {
       // In accordance with zero-mock-data rule: Do NOT synthesize fake periods.
       setPeriods([]);
       setSelectedPeriodId("");
-      setApiError(
-        err?.response?.data?.message ||
-          err?.message ||
-          "Unable to load payroll periods from the server."
-      );
+      if (err?.response?.status === 404) {
+        setApiError(
+          "Backend payroll service is currently unavailable or pending deployment (404 Not Found). The dashboard will display live data once the backend endpoint is deployed."
+        );
+      } else {
+        setApiError(
+          err?.response?.data?.message ||
+            err?.message ||
+            "Unable to load payroll periods from the server."
+        );
+      }
     } finally {
       setLoadingPeriods(false);
     }
@@ -196,18 +218,23 @@ export function PayrollDashboardPage() {
   // ── 2. Fetch Dashboard Data ─────────────────────────────────────────
   const fetchDashboardData = useCallback(async (periodId?: string) => {
     setLoadingDashboard(true);
-    setApiError(null);
     try {
       const data = await payrollApi.getDashboard(periodId);
       setDashboardData(data);
     } catch (err: any) {
       // In accordance with zero-mock-data rule: Do NOT synthesize fake data on failure.
       setDashboardData(null);
-      setApiError(
-        err?.response?.data?.message ||
-          err?.message ||
-          "Unable to load payroll dashboard data."
-      );
+      if (err?.response?.status === 404) {
+        setApiError(
+          "Backend payroll service is currently unavailable or pending deployment (404 Not Found). The dashboard will display live data once the backend endpoint is deployed."
+        );
+      } else {
+        setApiError(
+          err?.response?.data?.message ||
+            err?.message ||
+            "Unable to load payroll dashboard data."
+        );
+      }
     } finally {
       setLoadingDashboard(false);
     }
@@ -271,6 +298,19 @@ export function PayrollDashboardPage() {
   };
 
   // ── Permission Guard ────────────────────────────────────────────────
+  if (ws.isRestoring) {
+    return (
+      <div className="space-y-6 py-4">
+        <Skeleton className="h-10 w-64 rounded-xl" />
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 w-full rounded-2xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   if (!canViewPayroll) {
     return (
       <div className="mx-auto max-w-4xl py-12">
