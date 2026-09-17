@@ -263,6 +263,96 @@ export interface PayrollPreviewEmployee {
   earnings?: PayrollEmployeeEarnings;
   deductions?: PayrollEmployeeDeductions;
   attendance?: PayrollEmployeeAttendance;
+  joiningDate?: string | null;
+  employmentStatus?: string | null;
+  financialYear?: string | null;
+  periodName?: string | null;
+  periodId?: string | null;
+  runStatus?: string | null;
+  calculationStatus?: string | null;
+  statutory?: {
+    employee?: {
+      epf?: number | null;
+      esi?: number | null;
+      pt?: number | null;
+      other?: number | null;
+    };
+    employer?: {
+      epf?: number | null;
+      esi?: number | null;
+      eps?: number | null;
+      edli?: number | null;
+      other?: number | null;
+    };
+  } | null;
+  salaryStructure?: {
+    name?: string;
+    effectiveDate?: string;
+    basic?: number | null;
+    allowances?: number | null;
+    components?: Record<string, any>;
+  } | null;
+  ytd?: {
+    gross?: number | null;
+    deductions?: number | null;
+    tax?: number | null;
+    employeeContributions?: number | null;
+    employerContributions?: number | null;
+    netPay?: number | null;
+  } | null;
+  previousComparison?: {
+    previousGross?: number | null;
+    currentGross?: number | null;
+    previousDeductions?: number | null;
+    currentDeductions?: number | null;
+    previousNetPay?: number | null;
+    currentNetPay?: number | null;
+  } | null;
+  audit?: {
+    calculatedAt?: string | null;
+    lastRecalculatedAt?: string | null;
+    version?: string | null;
+    source?: string | null;
+  } | null;
+  bankInfo?: {
+    bankName?: string;
+    accountNumber?: string;
+    ifscCode?: string;
+    paymentMode?: string;
+  } | null;
+  [key: string]: unknown;
+}
+
+export interface PayrollValidationIssue {
+  id: string;
+  severity: "critical" | "error" | "warning" | "info" | string;
+  category?: string;
+  code?: string;
+  message: string;
+  employeeId?: string;
+  employeeName?: string;
+  department?: string;
+  component?: string;
+  blocking?: boolean;
+  status?: string;
+  detectedAt?: string;
+  resolved?: boolean;
+  [key: string]: unknown;
+}
+
+export interface PayrollValidationSummary {
+  runId: string;
+  status: string;
+  periodName?: string | null;
+  periodId?: string | null;
+  runStatus?: string | null;
+  totalIssues: number;
+  errorsCount: number;
+  warningsCount: number;
+  affectedEmployeesCount: number;
+  blockingCount: number;
+  lastValidatedAt?: string | null;
+  issues: PayrollValidationIssue[];
   [key: string]: unknown;
 }
 
@@ -694,6 +784,27 @@ export function normalizePayrollEmployee(item: any): PayrollPreviewEmployee {
     earnings,
     deductions,
     attendance,
+    joiningDate:
+      item.joiningDate || item.joining_date || item.doj || item.date_of_joining || null,
+    employmentStatus:
+      item.employmentStatus ||
+      item.employment_status ||
+      item.employee_type ||
+      item.employment_type ||
+      null,
+    financialYear: item.financialYear || item.financial_year || item.fy || null,
+    periodName: item.periodName || item.period_name || item.cycle_name || null,
+    periodId: item.periodId || item.period_id || item.cycle_id || null,
+    runStatus: item.runStatus || item.run_status || item.payroll_status || null,
+    calculationStatus:
+      item.calculationStatus || item.calculation_status || null,
+    statutory: item.statutory || item.statutory_contributions || null,
+    salaryStructure: item.salaryStructure || item.salary_structure || null,
+    ytd: item.ytd || item.year_to_date || null,
+    previousComparison:
+      item.previousComparison || item.previous_comparison || item.comparison || null,
+    audit: item.audit || item.calculation_metadata || null,
+    bankInfo: item.bankInfo || item.bank_details || item.bank || null,
     ...item,
   };
 }
@@ -774,6 +885,136 @@ export function normalizePayrollPreviewData(
     generatedAt,
     summary,
     validation,
+    ...raw,
+  };
+}
+
+export function normalizePayrollValidationSummary(
+  runId: string,
+  raw: any
+): PayrollValidationSummary {
+  if (!raw || typeof raw !== "object") {
+    return {
+      runId,
+      status: "Not Started",
+      totalIssues: 0,
+      errorsCount: 0,
+      warningsCount: 0,
+      affectedEmployeesCount: 0,
+      blockingCount: 0,
+      issues: [],
+    };
+  }
+
+  let rawList: any[] = [];
+  if (Array.isArray(raw)) {
+    rawList = raw;
+  } else if (Array.isArray(raw.issues)) {
+    rawList = raw.issues;
+  } else if (Array.isArray(raw.items)) {
+    rawList = raw.items;
+  } else if (Array.isArray(raw.validation_issues)) {
+    rawList = raw.validation_issues;
+  } else if (Array.isArray(raw.validationIssues)) {
+    rawList = raw.validationIssues;
+  } else if (raw.validation && typeof raw.validation === "object") {
+    const errs = Array.isArray(raw.validation.errors)
+      ? raw.validation.errors.map((e: any) => ({ ...e, severity: "error", blocking: true }))
+      : [];
+    const warns = Array.isArray(raw.validation.warnings)
+      ? raw.validation.warnings.map((w: any) => ({ ...w, severity: "warning", blocking: false }))
+      : [];
+    rawList = [...errs, ...warns];
+  }
+
+  const issues: PayrollValidationIssue[] = rawList.map((item, idx) => {
+    const sev = (item.severity || item.level || "warning").toLowerCase();
+    const isError =
+      sev === "error" || sev === "critical" || sev === "fatal" || Boolean(item.blocking);
+    return {
+      id: String(item.id || item.issue_id || `issue-${idx}`),
+      severity: isError ? "error" : "warning",
+      category: item.category || item.type || item.module || "General",
+      code: item.code || item.error_code || item.rule_id || undefined,
+      message:
+        item.message || item.description || item.detail || "Validation issue detected",
+      employeeId: item.employeeId || item.employee_id || item.emp_id || undefined,
+      employeeName:
+        item.employeeName || item.employee_name || item.name || undefined,
+      department: item.department || item.dept || undefined,
+      component:
+        item.component || item.field || item.salary_component || undefined,
+      blocking: item.blocking !== undefined ? Boolean(item.blocking) : isError,
+      status: item.status || (item.resolved ? "resolved" : "open"),
+      detectedAt:
+        item.detectedAt ||
+        item.detected_at ||
+        item.created_at ||
+        item.createdAt ||
+        undefined,
+      resolved: Boolean(item.resolved),
+      ...item,
+    };
+  });
+
+  const errorsCount = Number(
+    raw.errorsCount ??
+      raw.errors_count ??
+      raw.errors?.length ??
+      issues.filter((i) => i.severity === "error").length
+  );
+  const warningsCount = Number(
+    raw.warningsCount ??
+      raw.warnings_count ??
+      raw.warnings?.length ??
+      issues.filter((i) => i.severity === "warning").length
+  );
+  const totalIssues = Number(
+    raw.totalIssues ?? raw.total_issues ?? raw.total ?? issues.length
+  );
+  const blockingCount = Number(
+    raw.blockingCount ??
+      raw.blocking_count ??
+      issues.filter((i) => i.blocking).length
+  );
+
+  const affectedEmps = new Set<string>();
+  issues.forEach((i) => {
+    if (i.employeeId) affectedEmps.add(i.employeeId);
+  });
+  const affectedEmployeesCount = Number(
+    raw.affectedEmployeesCount ??
+      raw.affected_employees ??
+      raw.affectedEmployees ??
+      (affectedEmps.size || 0)
+  );
+
+  let status = raw.status || raw.validation_status || raw.state;
+  if (!status) {
+    if (errorsCount > 0) status = "Failed";
+    else if (warningsCount > 0) status = "Warning";
+    else if (issues.length === 0) status = "Passed";
+    else status = "Completed";
+  }
+
+  return {
+    runId,
+    status,
+    periodName: raw.periodName || raw.period_name || null,
+    periodId: raw.periodId || raw.period_id || null,
+    runStatus: raw.runStatus || raw.run_status || null,
+    totalIssues,
+    errorsCount,
+    warningsCount,
+    affectedEmployeesCount,
+    blockingCount,
+    lastValidatedAt:
+      raw.lastValidatedAt ||
+      raw.last_validated_at ||
+      raw.validatedAt ||
+      raw.validated_at ||
+      null,
+    issues,
     ...raw,
   };
 }
@@ -1310,6 +1551,109 @@ export const payrollApi = {
     runId: string
   ): Promise<{ success: boolean; message?: string }> {
     return this.retryPayrollRun(runId);
+  },
+
+  /**
+   * Fetch validation summary and issues for a payroll run.
+   * GET /api/v2/payroll/runs/{runId}/validation
+   */
+  async getPayrollValidation(
+    runId: string
+  ): Promise<PayrollValidationSummary> {
+    try {
+      const res = await apiInstance.get(
+        `/api/v2/payroll/runs/${runId}/validation`,
+        { headers: { "Cache-Control": "no-cache" }, skipCache: true }
+      );
+      const data = extractData<any>(res);
+      return normalizePayrollValidationSummary(runId, data);
+    } catch (err: any) {
+      if (err?.response?.status === 404) {
+        // Try fallback to validation-issues endpoint
+        try {
+          const fbRes = await apiInstance.get(
+            `/api/v2/payroll/runs/${runId}/validation-issues`,
+            { headers: { "Cache-Control": "no-cache" }, skipCache: true }
+          );
+          const fbData = extractData<any>(fbRes);
+          if (fbData) {
+            return normalizePayrollValidationSummary(runId, fbData);
+          }
+        } catch {
+          // Fall through
+        }
+
+        // Try preview endpoint fallback if validation is embedded
+        try {
+          const previewRes = await apiInstance.get(
+            `/api/v2/payroll/runs/${runId}/preview`,
+            { headers: { "Cache-Control": "no-cache" }, skipCache: true }
+          );
+          const previewData = extractData<any>(previewRes);
+          if (previewData?.validation) {
+            return normalizePayrollValidationSummary(runId, {
+              ...previewData,
+              issues: [
+                ...(previewData.validation.errors || []).map((e: any) => ({
+                  ...e,
+                  severity: "error",
+                  blocking: true,
+                })),
+                ...(previewData.validation.warnings || []).map((w: any) => ({
+                  ...w,
+                  severity: "warning",
+                  blocking: false,
+                })),
+              ],
+            });
+          }
+        } catch {
+          // Fall through
+        }
+      }
+      throw err;
+    }
+  },
+
+  /**
+   * Run or trigger fresh backend validation for a payroll run.
+   * POST /api/v2/payroll/runs/{runId}/validate
+   */
+  async runPayrollValidation(
+    runId: string
+  ): Promise<{ success: boolean; message?: string; status?: string }> {
+    try {
+      const res = await apiInstance.post(
+        `/api/v2/payroll/runs/${runId}/validate`,
+        {},
+        { headers: { "Cache-Control": "no-cache" } }
+      );
+      const data = extractData<any>(res);
+      return {
+        success: Boolean(data?.success ?? true),
+        message: data?.message || "Payroll validation completed successfully.",
+        status: data?.status || "Completed",
+      };
+    } catch (err: any) {
+      if (err?.response?.status === 404) {
+        // Fallback to /revalidate
+        try {
+          const fbRes = await apiInstance.post(
+            `/api/v2/payroll/runs/${runId}/revalidate`,
+            {}
+          );
+          const fbData = extractData<any>(fbRes);
+          return {
+            success: Boolean(fbData?.success ?? true),
+            message: fbData?.message || "Payroll validation completed.",
+            status: fbData?.status || "Completed",
+          };
+        } catch {
+          // Re-throw
+        }
+      }
+      throw err;
+    }
   },
 };
 

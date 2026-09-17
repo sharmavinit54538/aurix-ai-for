@@ -547,6 +547,21 @@ export function PayrollPreviewPage() {
             <span>Refresh</span>
           </Button>
 
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              navigate({
+                to: `/dashboard/payroll/runs/${runId}/validation` as any,
+              })
+            }
+            className="h-9 gap-1.5 text-xs shadow-sm text-primary border-primary/30 hover:bg-primary/5"
+            title="View validation findings and rule violations"
+          >
+            <ShieldCheck className="h-3.5 w-3.5" />
+            <span>Validation & Issues</span>
+          </Button>
+
           {canRunPayroll ? (
             <Button
               variant="outline"
@@ -708,6 +723,19 @@ export function PayrollPreviewPage() {
                   <Badge variant="secondary" className="text-[10px]">
                     {previewData.validation.warnings.length} Warnings
                   </Badge>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      navigate({
+                        to: `/dashboard/payroll/runs/${runId}/validation` as any,
+                      })
+                    }
+                    className="h-7 text-xs gap-1 ml-1"
+                  >
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    <span>Open Validation Center</span>
+                  </Button>
                 </div>
               </div>
 
@@ -974,8 +1002,12 @@ export function PayrollPreviewPage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleViewEmployeeDetail(emp)}
-                              className="h-7 text-xs text-muted-foreground hover:text-foreground gap-1"
+                              onClick={() =>
+                                navigate({
+                                  to: `/dashboard/payroll/runs/${runId}/employees/${emp.employeeId || emp.id}` as any,
+                                })
+                              }
+                              className="h-7 text-xs text-primary hover:text-primary gap-1"
                             >
                               <Eye className="h-3.5 w-3.5" />
                               <span>View</span>
@@ -1100,6 +1132,25 @@ export function PayrollPreviewPage() {
               ) : null}
             </div>
           </SheetHeader>
+
+          {selectedEmployee ? (
+            <div className="mt-4">
+              <Button
+                size="sm"
+                onClick={() => {
+                  setDetailSheetOpen(false);
+                  navigate({
+                    to: `/dashboard/payroll/runs/${runId}/employees/${selectedEmployee.employeeId || selectedEmployee.id}` as any,
+                  });
+                }}
+                className="w-full gap-1.5 text-xs shadow-sm"
+                style={{ background: "var(--gradient-brand)" }}
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                <span>Open Dedicated Employee Payroll Page</span>
+              </Button>
+            </div>
+          ) : null}
 
           {loadingDetail ? (
             <div className="space-y-4 py-6">
