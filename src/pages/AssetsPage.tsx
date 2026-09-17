@@ -132,7 +132,33 @@ export function AssetsPage() {
     queryFn: () => api.get<any>("assets/analytics")
   });
 
-  const assets: Asset[] = listData?.data?.items || [];
+  const assets: Asset[] = useMemo(() => {
+    const raw = listData?.data?.items ?? listData?.data ?? listData?.items ?? (Array.isArray(listData) ? listData : []);
+    const items = Array.isArray(raw) ? raw : [];
+    return items.map((a: any) => ({
+      id: a.id || a._id || "",
+      tag: a.tag || a.asset_tag || `AST-${String(a.id || "").slice(-4)}`,
+      name: a.name || a.asset_name || "Unnamed Asset",
+      category: a.category || "other",
+      serial: a.serial || a.serial_number || "N/A",
+      vendor: a.vendor || "N/A",
+      purchaseDate: a.purchaseDate || a.purchase_date || "",
+      warrantyUntil: a.warrantyUntil || a.warranty_until || "",
+      status: a.status || "available",
+      assignedTo: a.assignedTo || a.assigned_to || a.assigned_to_name || a.assigned_employee_name || "",
+      assignedAt: a.assignedAt || a.assigned_at || "",
+      brand: a.brand || "",
+      model: a.model || "",
+      purchaseCost: Number(a.purchaseCost ?? a.purchase_cost ?? 0),
+      location: a.location || "",
+      notes: a.notes || "",
+      nextMaintenance: a.nextMaintenance || a.next_maintenance || "",
+      assignmentHistory: a.assignmentHistory || a.assignment_history || [],
+      maintenanceHistory: a.maintenanceHistory || a.maintenance_history || [],
+      timeline: a.timeline || [],
+    }));
+  }, [listData]);
+
   const apiStats = analyticsData?.data || {
     total_assets: 0,
     available_assets: 0,
@@ -494,15 +520,29 @@ export function AssetsPage() {
   // ----------------------------------------------------
 
   const stats = useMemo(() => {
-    return {
-      total: apiStats.total_assets ?? 0,
-      available: apiStats.available_assets ?? 0,
-      assigned: apiStats.assigned_assets ?? 0,
-      repair: apiStats.under_repair_assets ?? 0,
-      lost: apiStats.lost_assets ?? 0,
-      expiring: apiStats.expiring_warranty_assets ?? 0
-    };
-  }, [apiStats]);
+    const total = apiStats.total_assets || assets.length;
+    const available = apiStats.available_assets !== undefined && apiStats.available_assets !== null && apiStats.available_assets > 0
+      ? apiStats.available_assets
+      : assets.filter(a => a.status === "available").length;
+    const assigned = apiStats.assigned_assets !== undefined && apiStats.assigned_assets !== null && apiStats.assigned_assets > 0
+      ? apiStats.assigned_assets
+      : assets.filter(a => a.status === "assigned").length;
+    const repair = apiStats.under_repair_assets !== undefined && apiStats.under_repair_assets !== null && apiStats.under_repair_assets > 0
+      ? apiStats.under_repair_assets
+      : assets.filter(a => a.status === "under-repair").length;
+    const lost = apiStats.lost_assets !== undefined && apiStats.lost_assets !== null && apiStats.lost_assets > 0
+      ? apiStats.lost_assets
+      : assets.filter(a => a.status === "lost").length;
+    const expiring = apiStats.expiring_warranty_assets !== undefined && apiStats.expiring_warranty_assets !== null && apiStats.expiring_warranty_assets > 0
+      ? apiStats.expiring_warranty_assets
+      : assets.filter(a => {
+          if (!a.warrantyUntil) return false;
+          const diff = new Date(a.warrantyUntil).getTime() - Date.now();
+          return diff > 0 && diff < 30 * 24 * 60 * 60 * 1000;
+        }).length;
+
+    return { total, available, assigned, repair, lost, expiring };
+  }, [apiStats, assets]);
 
   const notifications = useMemo(() => {
     const alerts: { id: string; type: "warning" | "error" | "info"; message: string; asset?: Asset }[] = [];
@@ -575,7 +615,7 @@ export function AssetsPage() {
 
   // If viewing in Employee Portal self-service mode, render dedicated EmployeeMyAssetsView
   if (isEmployee) {
-    return <EmployeeMyAssetsView apiAssets={assets} />;
+    return <EmployeeMyAssetsView apiAssets={assets} isLoading={isLoading} />;
   }
 
   return (

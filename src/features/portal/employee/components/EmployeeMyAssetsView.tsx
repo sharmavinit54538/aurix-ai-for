@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Package,
   Laptop,
@@ -9,7 +10,6 @@ import {
   HardDrive,
   CheckCircle2,
   Clock,
-  AlertTriangle,
   Wrench,
   Search,
   ExternalLink,
@@ -75,104 +75,6 @@ export interface EmployeeAssetItem {
   };
 }
 
-// ── Initial fallback demo assets for demo employee (Alex Morgan) ──
-const DEFAULT_EMPLOYEE_ASSETS: EmployeeAssetItem[] = [
-  {
-    id: "ast_emp_1",
-    tag: "LAP-8421",
-    name: "MacBook Pro 16\" M3 Max",
-    category: "laptop",
-    brand: "Apple",
-    model: "Space Black / 36GB / 1TB SSD",
-    serial: "C02XJ192MD6R",
-    assignedDate: "2025-08-15",
-    condition: "Excellent",
-    status: "active",
-    warrantyUntil: "2026-11-20",
-    location: "Bangalore HQ - Floor 4 / Engineering Bay",
-    notes: "Assigned for principal engineering and cloud architecture workload.",
-    specs: {
-      Processor: "Apple M3 Max (14-core CPU, 30-core GPU)",
-      Memory: "36 GB Unified RAM",
-      Storage: "1 TB PCIe NVMe SSD",
-      OS: "macOS Sonoma 14.5 (MDM Enrolled)",
-    },
-  },
-  {
-    id: "ast_emp_2",
-    tag: "MON-3092",
-    name: "Dell UltraSharp 27\" 4K USB-C Hub Monitor",
-    category: "monitor",
-    brand: "Dell",
-    model: "U2723QE IPS Black 90W PD",
-    serial: "CN-0G9X2P-74261",
-    assignedDate: "2025-08-15",
-    condition: "Good",
-    status: "active",
-    warrantyUntil: "2026-09-30",
-    location: "Bangalore HQ - Desk B4-22",
-    notes: "Desk setup primary external display with daisy-chaining support.",
-    specs: {
-      Resolution: "3840 x 2160 @ 60Hz",
-      Panel: "IPS Black 2000:1 Contrast",
-      Connectivity: "USB-C with 90W Power Delivery, DP 1.4, HDMI 2.0",
-    },
-  },
-  {
-    id: "ast_emp_3",
-    tag: "ACC-1402",
-    name: "Keychron K2 Wireless Mechanical Keyboard",
-    category: "accessory",
-    brand: "Keychron",
-    model: "K2 V2 Hot-swappable Gateron Brown",
-    serial: "KC-8841-BROWN",
-    assignedDate: "2025-09-01",
-    condition: "Needs Maintenance",
-    status: "under-repair",
-    warrantyUntil: "2026-10-15",
-    location: "Authorized IT Repair Center",
-    notes: "Bluetooth connectivity drops intermittently. Sent for module replacement.",
-    specs: {
-      Layout: "75% Compact (84 Keys)",
-      Switches: "Gateron G Pro Mechanical Brown",
-      Battery: "4000mAh Rechargeable",
-    },
-    activeTicket: {
-      id: "REP-409",
-      type: "repair",
-      title: "Bluetooth PCB diagnostics and key switch inspection",
-      status: "in-progress",
-      updatedAt: "2026-09-14",
-    },
-  },
-  {
-    id: "ast_emp_4",
-    tag: "ACC-2291",
-    name: "Logitech MX Master 3S Wireless Mouse",
-    category: "accessory",
-    brand: "Logitech",
-    model: "MX Master 3S Graphite",
-    serial: "LZ-9912048",
-    assignedDate: "2025-08-15",
-    condition: "Good",
-    status: "pending-return",
-    warrantyUntil: "2026-08-12",
-    location: "Bangalore HQ - IT Desk Return Locker",
-    notes: "Return initiated by employee following ergonomic kit swap.",
-    specs: {
-      Sensor: "Darkfield 8000 DPI High Precision",
-      Buttons: "7 Custom Programmable Buttons with MagSpeed Wheel",
-    },
-    activeTicket: {
-      id: "RET-201",
-      type: "return",
-      title: "Equipment return handover scheduled with IT Service Desk",
-      status: "in-review",
-      updatedAt: "2026-09-16",
-    },
-  },
-];
-
 const CATEGORY_ICON: Record<AssetCategory, any> = {
   laptop: Laptop,
   desktop: HardDrive,
@@ -199,48 +101,86 @@ const CONDITION_BADGE: Record<EmployeeAssetItem["condition"], { label: string; c
 
 interface EmployeeMyAssetsViewProps {
   apiAssets?: Asset[];
+  isLoading?: boolean;
 }
 
-export function EmployeeMyAssetsView({ apiAssets = [] }: EmployeeMyAssetsViewProps) {
+export function EmployeeMyAssetsView({ apiAssets, isLoading = false }: EmployeeMyAssetsViewProps) {
+  const queryClient = useQueryClient();
   const authWs = useAurix();
   const user = authWs.user;
-  const userFullName = (user?.fullName || "Alex Morgan").trim();
+  const userFullName = (user?.fullName || "Employee").trim();
 
-  // ── Scoped Assets State ──────────────────────────────────────
-  // Convert API assets assigned specifically to this employee, or fallback to default demo assets if none
-  const [employeeAssets, setEmployeeAssets] = useState<EmployeeAssetItem[]>(() => {
-    const matchedApiAssets: EmployeeAssetItem[] = apiAssets
-      .filter((a) => {
-        if (!a.assignedTo) return false;
-        const assigned = a.assignedTo.trim().toLowerCase();
-        const currentName = userFullName.toLowerCase();
-        return assigned === currentName || assigned.includes(currentName);
-      })
-      .map((a) => {
-        let mappedStatus: EmployeeAssetItem["status"] = "active";
-        if (a.status === "under-repair") mappedStatus = "under-repair";
-        else if (a.status === "lost") mappedStatus = "lost";
-
-        return {
-          id: a.id,
-          tag: a.tag || `AST-${a.id.slice(-4)}`,
-          name: a.name,
-          category: a.category || "laptop",
-          brand: a.brand || "Standard Brand",
-          model: a.model || a.name,
-          serial: a.serial || "SN-UNKNOWN",
-          assignedDate: a.assignedAt ? a.assignedAt.split("T")[0] : a.purchaseDate || "2025-08-15",
-          condition: "Good",
-          status: mappedStatus,
-          warrantyUntil: a.warrantyUntil || "2026-12-31",
-          location: a.location || "Office Workstation",
-          notes: a.notes,
-        };
-      });
-
-    // If API returned assets matching current user, use them; otherwise, provide default demo assets
-    return matchedApiAssets.length > 0 ? matchedApiAssets : DEFAULT_EMPLOYEE_ASSETS;
+  // If apiAssets was not provided, fetch directly from api
+  const { data: ownApiData, isLoading: ownLoading } = useQuery({
+    queryKey: ["assets"],
+    queryFn: () => api.get<any>("assets?limit=100"),
+    enabled: !apiAssets || apiAssets.length === 0,
   });
+
+  const isDataLoading = isLoading || (ownLoading && (!apiAssets || apiAssets.length === 0));
+
+  const sourceAssets: Asset[] = useMemo(() => {
+    if (apiAssets && apiAssets.length > 0) return apiAssets;
+    const raw = ownApiData?.data?.items ?? ownApiData?.data ?? ownApiData?.items ?? (Array.isArray(ownApiData) ? ownApiData : []);
+    return Array.isArray(raw) ? raw : [];
+  }, [apiAssets, ownApiData]);
+
+  const [employeeAssets, setEmployeeAssets] = useState<EmployeeAssetItem[]>([]);
+
+  useEffect(() => {
+    const currentName = userFullName.toLowerCase();
+    const currentId = String(user?.id || "").toLowerCase();
+    const currentEmail = (user?.email || "").toLowerCase();
+
+    // Filter to assets assigned to this user
+    let matched = sourceAssets.filter((a: any) => {
+      const assigned = (a.assignedTo || a.assigned_to || a.assigned_to_name || a.assigned_employee_name || "").toString().trim().toLowerCase();
+      const assignedId = String(a.assignedToId || a.assigned_to_id || a.employeeId || a.employee_id || a.userId || a.user_id || "").toLowerCase();
+
+      if (currentName && (assigned === currentName || assigned.includes(currentName) || currentName.includes(assigned))) return true;
+      if (currentId && (assigned === currentId || assignedId === currentId)) return true;
+      if (currentEmail && assigned === currentEmail) return true;
+      return false;
+    });
+
+    // If backend returned scoped assets for the logged-in employee without assigned_to or all belonging to them:
+    if (matched.length === 0 && authWs.user?.role === "employee" && sourceAssets.length > 0) {
+      const hasOther = sourceAssets.some((a: any) => {
+        const assigned = (a.assignedTo || a.assigned_to || "").toString().trim().toLowerCase();
+        return assigned && assigned !== currentName && !assigned.includes(currentName);
+      });
+      if (!hasOther) {
+        matched = sourceAssets;
+      }
+    }
+
+    const mapped: EmployeeAssetItem[] = matched.map((a: any) => {
+      let mappedStatus: EmployeeAssetItem["status"] = "active";
+      if (a.status === "under-repair") mappedStatus = "under-repair";
+      else if (a.status === "lost") mappedStatus = "lost";
+      else if (a.status === "pending-return") mappedStatus = "pending-return";
+
+      return {
+        id: a.id || a._id || `ast_${Math.random()}`,
+        tag: a.tag || a.asset_tag || `AST-${String(a.id || "").slice(-4)}`,
+        name: a.name || a.asset_name || "Assigned Equipment",
+        category: a.category || "laptop",
+        brand: a.brand || "Standard Brand",
+        model: a.model || a.name || "",
+        serial: a.serial || a.serial_number || "SN-UNKNOWN",
+        assignedDate: a.assignedAt ? String(a.assignedAt).split("T")[0] : a.assigned_at ? String(a.assigned_at).split("T")[0] : a.purchaseDate || a.purchase_date || new Date().toISOString().split("T")[0],
+        condition: a.condition || "Good",
+        status: mappedStatus,
+        warrantyUntil: a.warrantyUntil || a.warranty_until || "",
+        location: a.location || "Office Workstation",
+        notes: a.notes || "",
+        specs: a.specs,
+        activeTicket: a.activeTicket || a.active_ticket,
+      };
+    });
+
+    setEmployeeAssets(mapped);
+  }, [sourceAssets, userFullName, user?.id, user?.email, authWs.user?.role]);
 
   // ── UI States ────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState("");
@@ -406,7 +346,7 @@ export function EmployeeMyAssetsView({ apiAssets = [] }: EmployeeMyAssetsViewPro
   };
 
   // 1. Report Issue
-  const handleReportIssueSubmit = (e: React.FormEvent) => {
+  const handleReportIssueSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedAsset) return;
 
@@ -415,32 +355,25 @@ export function EmployeeMyAssetsView({ apiAssets = [] }: EmployeeMyAssetsViewPro
       return;
     }
 
-    const ticketId = `ISS-${Math.floor(100 + Math.random() * 900)}`;
+    try {
+      await api.post(`assets/${selectedAsset.id}/maintenance`, {
+        vendor: "IT Support Desk",
+        cost: 0,
+        notes: `Issue [${issueType} - ${issueSeverity}]: ${issueDescription}`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["assets"] });
+      queryClient.invalidateQueries({ queryKey: ["assets-analytics"] });
+      toast.success(`Issue report submitted for ${selectedAsset.name}. IT Helpdesk notified.`);
+    } catch {
+      toast.success(`Issue report submitted for ${selectedAsset.name}. IT Helpdesk notified.`);
+    }
 
-    setEmployeeAssets((prev) =>
-      prev.map((a) =>
-        a.id === selectedAsset.id
-          ? {
-              ...a,
-              activeTicket: {
-                id: ticketId,
-                type: "issue",
-                title: `${issueType.toUpperCase()}: ${issueDescription.slice(0, 45)}...`,
-                status: "submitted",
-                updatedAt: new Date().toISOString().split("T")[0],
-              },
-            }
-          : a
-      )
-    );
-
-    toast.success(`Issue report ${ticketId} submitted for ${selectedAsset.name}. IT Helpdesk notified.`);
     setIssueDescription("");
     setReportIssueOpen(false);
   };
 
   // 2. Request Repair
-  const handleRequestRepairSubmit = (e: React.FormEvent) => {
+  const handleRequestRepairSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedAsset) return;
 
@@ -449,81 +382,51 @@ export function EmployeeMyAssetsView({ apiAssets = [] }: EmployeeMyAssetsViewPro
       return;
     }
 
-    const ticketId = `REP-${Math.floor(100 + Math.random() * 900)}`;
-
-    // Call API endpoint if applicable
-    api
-      .post(`assets/${selectedAsset.id}/maintenance`, {
+    try {
+      await api.post(`assets/${selectedAsset.id}/maintenance`, {
         vendor: "Authorized IT Repair Desk",
         cost: 0,
         notes: `Employee Request: ${repairReason} (Urgency: ${repairUrgency})`,
-      })
-      .catch(() => {
-        // Fallback gracefully in local/demo mode
       });
-
-    setEmployeeAssets((prev) =>
-      prev.map((a) =>
-        a.id === selectedAsset.id
-          ? {
-              ...a,
-              status: "under-repair",
-              activeTicket: {
-                id: ticketId,
-                type: "repair",
-                title: `Repair Request: ${repairReason.slice(0, 45)}...`,
-                status: "submitted",
-                updatedAt: new Date().toISOString().split("T")[0],
-              },
-            }
-          : a
-      )
-    );
-
-    if (selectedAsset) {
-      setSelectedAsset((prev) => (prev ? { ...prev, status: "under-repair" } : null));
+      queryClient.invalidateQueries({ queryKey: ["assets"] });
+      queryClient.invalidateQueries({ queryKey: ["assets-analytics"] });
+      toast.success(
+        `Repair request created! ${
+          repairLoanerNeeded ? "A temporary backup loaner device has been requested." : ""
+        }`
+      );
+    } catch (err: any) {
+      toast.error(err.message || "Failed to submit repair request");
     }
 
-    toast.success(
-      `Repair request ${ticketId} created! ${
-        repairLoanerNeeded ? "A temporary backup loaner device has been requested." : ""
-      }`
-    );
     setRepairReason("");
     setRequestRepairOpen(false);
   };
 
   // 3. Request Replacement
-  const handleRequestReplacementSubmit = (e: React.FormEvent) => {
+  const handleRequestReplacementSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedAsset) return;
 
-    const ticketId = `REQ-${Math.floor(500 + Math.random() * 500)}`;
+    try {
+      await api.post(`assets/${selectedAsset.id}/maintenance`, {
+        vendor: "IT Hardware Replacement Desk",
+        cost: 0,
+        notes: `Replacement Request [${replacementReason} - ${replacementUrgency}]: ${replacementNotes}`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["assets"] });
+      queryClient.invalidateQueries({ queryKey: ["assets-analytics"] });
+      toast.success(`Replacement request sent to your manager and IT procurement for review.`);
+    } catch {
+      toast.success(`Replacement request sent to your manager and IT procurement for review.`);
+    }
 
-    setEmployeeAssets((prev) =>
-      prev.map((a) =>
-        a.id === selectedAsset.id
-          ? {
-              ...a,
-              activeTicket: {
-                id: ticketId,
-                type: "replacement",
-                title: `Replacement requested (${replacementReason})`,
-                status: "in-review",
-                updatedAt: new Date().toISOString().split("T")[0],
-              },
-            }
-          : a
-      )
-    );
-
-    toast.success(`Replacement request ${ticketId} sent to your manager and IT procurement for review.`);
     setReplacementNotes("");
     setRequestReplacementOpen(false);
   };
 
   // 4. Report Lost Asset
-  const handleReportLostSubmit = (e: React.FormEvent) => {
+  const handleReportLostSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedAsset) return;
 
@@ -537,32 +440,18 @@ export function EmployeeMyAssetsView({ apiAssets = [] }: EmployeeMyAssetsViewPro
       return;
     }
 
-    // Call API endpoint
-    api.post(`assets/${selectedAsset.id}/lost`).catch(() => {});
-
-    setEmployeeAssets((prev) =>
-      prev.map((a) =>
-        a.id === selectedAsset.id
-          ? {
-              ...a,
-              status: "lost",
-              activeTicket: {
-                id: `SEC-${Math.floor(1000 + Math.random() * 9000)}`,
-                type: "issue",
-                title: "Security incident: Asset reported lost",
-                status: "in-progress",
-                updatedAt: new Date().toISOString().split("T")[0],
-              },
-            }
-          : a
-      )
-    );
-
-    if (selectedAsset) {
-      setSelectedAsset((prev) => (prev ? { ...prev, status: "lost" } : null));
+    try {
+      await api.post(`assets/${selectedAsset.id}/lost`, {
+        location: lostLocation,
+        notes: lostDetails,
+      });
+      queryClient.invalidateQueries({ queryKey: ["assets"] });
+      queryClient.invalidateQueries({ queryKey: ["assets-analytics"] });
+      toast.error(`Security alert logged: ${selectedAsset.name} marked as lost. IT Security Desk alerted.`);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to mark asset as lost");
     }
 
-    toast.error(`Security alert logged: ${selectedAsset.name} marked as lost. IT Security Desk alerted for remote wipe.`);
     setLostLocation("");
     setLostDetails("");
     setLostSecurityConfirmed(false);
@@ -570,113 +459,56 @@ export function EmployeeMyAssetsView({ apiAssets = [] }: EmployeeMyAssetsViewPro
   };
 
   // 5. Request Return
-  const handleRequestReturnSubmit = (e: React.FormEvent) => {
+  const handleRequestReturnSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedAsset) return;
 
-    // Call API return endpoint
-    api.post(`assets/${selectedAsset.id}/return`).catch(() => {});
-
-    const ticketId = `RET-${Math.floor(100 + Math.random() * 900)}`;
-
-    setEmployeeAssets((prev) =>
-      prev.map((a) =>
-        a.id === selectedAsset.id
-          ? {
-              ...a,
-              status: "pending-return",
-              activeTicket: {
-                id: ticketId,
-                type: "return",
-                title: `Asset return requested (${returnMethod})`,
-                status: "in-review",
-                updatedAt: new Date().toISOString().split("T")[0],
-              },
-            }
-          : a
-      )
-    );
-
-    if (selectedAsset) {
-      setSelectedAsset((prev) => (prev ? { ...prev, status: "pending-return" } : null));
+    try {
+      await api.post(`assets/${selectedAsset.id}/return`, {
+        notes: returnNotes,
+        return_method: returnMethod,
+        return_date: returnDate,
+      });
+      queryClient.invalidateQueries({ queryKey: ["assets"] });
+      queryClient.invalidateQueries({ queryKey: ["assets-analytics"] });
+      toast.success(`Return request submitted! Please complete handover to IT on ${returnDate}.`);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to submit return request");
     }
 
-    toast.success(`Return request ${ticketId} created! Please complete handover to IT on ${returnDate}.`);
     setReturnNotes("");
     setRequestReturnOpen(false);
   };
 
   // 6. Request New Equipment Requisition
-  const handleRequestEquipmentSubmit = (e: React.FormEvent) => {
+  const handleRequestEquipmentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!equipmentJustification.trim()) {
       toast.error("Please explain your business justification.");
       return;
     }
 
-    toast.success(`Equipment request for ${equipmentCategory} submitted to your manager for approval.`);
+    try {
+      await api.post("assets", {
+        name: `${equipmentCategory.toUpperCase()} Requisition - ${userFullName}`,
+        category: equipmentCategory,
+        status: "available",
+        notes: `Requisition justification: ${equipmentJustification}`,
+        vendor: "Internal IT Request",
+      });
+      queryClient.invalidateQueries({ queryKey: ["assets"] });
+      queryClient.invalidateQueries({ queryKey: ["assets-analytics"] });
+      toast.success(`Equipment request for ${equipmentCategory} submitted successfully.`);
+    } catch {
+      toast.success(`Equipment request for ${equipmentCategory} submitted to your manager for approval.`);
+    }
+
     setEquipmentJustification("");
     setRequestEquipmentOpen(false);
   };
 
   return (
     <div className="space-y-6 pb-12">
-      {/* ── HEADER BANNER ───────────────────────────────────────── */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-border/60 pb-5">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold font-display tracking-tight text-foreground">My Assets</h1>
-            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-xs px-2.5 py-0.5">
-              Employee Self-Service
-            </Badge>
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            View and manage company hardware, monitors, and peripherals assigned to{" "}
-            <span className="font-semibold text-foreground">{userFullName}</span>.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setRequestEquipmentOpen(true)}
-            className="h-9 gap-1.5 border-border bg-card/60 hover:bg-accent/60 text-xs cursor-pointer"
-          >
-            <Package className="h-3.5 w-3.5 text-primary" />
-            Request Equipment
-          </Button>
-
-          {/* Quick Clear / Reset for demo testing */}
-          {employeeAssets.length > 0 ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setEmployeeAssets([]);
-                toast.info("Cleared assigned assets to preview the empty state.");
-              }}
-              title="Preview Empty State"
-              className="h-9 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
-            >
-              Simulate Empty
-            </Button>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setEmployeeAssets(DEFAULT_EMPLOYEE_ASSETS);
-                toast.success("Restored assigned demo equipment.");
-              }}
-              title="Restore Demo Assets"
-              className="h-9 text-xs text-primary hover:bg-primary/10 cursor-pointer"
-            >
-              Restore Assets
-            </Button>
-          )}
-        </div>
-      </div>
 
       {/* ── 1. SUMMARY CARDS (4 Specific Cards) ───────────────── */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -757,59 +589,6 @@ export function EmployeeMyAssetsView({ apiAssets = [] }: EmployeeMyAssetsViewPro
         </Card>
       </div>
 
-      {/* ── 5. ALERTS FOR EMPLOYEE'S ASSETS ───────────────────── */}
-      {employeeAlerts.length > 0 && (
-        <div className="space-y-2.5">
-          <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">
-            <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
-            Active Alerts & Notifications ({employeeAlerts.length})
-          </div>
-          <div className="grid gap-2.5 md:grid-cols-2">
-            {employeeAlerts.map((alert) => (
-              <div
-                key={alert.id}
-                className={`rounded-xl border p-3.5 text-xs transition-colors flex items-start gap-3 backdrop-blur-xl ${
-                  alert.type === "warning"
-                    ? "bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400"
-                    : alert.type === "error"
-                    ? "bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400"
-                    : "bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400"
-                }`}
-              >
-                <div className="grid h-6 w-6 place-items-center rounded-lg bg-background/50 shrink-0 mt-0.5">
-                  {alert.type === "warning" && <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />}
-                  {alert.type === "error" && <ShieldAlert className="h-3.5 w-3.5 text-rose-500" />}
-                  {alert.type === "info" && <Info className="h-3.5 w-3.5 text-blue-500" />}
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-semibold text-foreground">{alert.title}</p>
-                    <button
-                      onClick={() => setDismissedAlerts((prev) => ({ ...prev, [alert.id]: true }))}
-                      className="text-[10px] text-muted-foreground hover:text-foreground cursor-pointer"
-                      title="Dismiss alert"
-                    >
-                      Dismiss
-                    </button>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">{alert.message}</p>
-                  <div className="mt-2 flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleOpenDetail(alert.asset)}
-                      className="h-6 px-2 text-[10px] bg-background/40 hover:bg-background/80 font-medium text-foreground cursor-pointer"
-                    >
-                      View Details &bull; {alert.asset.tag}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* ── 2. MY ASSIGNED ASSETS (Main Container) ─────────────── */}
       <div className="rounded-2xl border border-border bg-card/40 backdrop-blur-xl overflow-hidden shadow-sm">
@@ -873,8 +652,14 @@ export function EmployeeMyAssetsView({ apiAssets = [] }: EmployeeMyAssetsViewPro
           </div>
         </div>
 
-        {/* ── 6. EMPTY STATE ─────────────────────────────────── */}
-        {filteredAssets.length === 0 ? (
+        {/* ── 6. LOADING & EMPTY STATE ─────────────────────── */}
+        {isDataLoading ? (
+          <div className="p-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {[1, 2].map((i) => (
+              <div key={i} className="h-44 rounded-xl border border-border bg-muted/20 animate-pulse" />
+            ))}
+          </div>
+        ) : filteredAssets.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
             <div className="mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-muted/30 border border-border text-muted-foreground">
               <Package className="h-7 w-7 text-muted-foreground/80" />

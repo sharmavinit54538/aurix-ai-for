@@ -4,6 +4,8 @@
 // ============================================================
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/api";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertTriangle,
@@ -463,21 +465,48 @@ function MyDocuments() {
 
 // ── 8. My Assets ─────────────────────────────────────────────
 function MyAssets() {
+  const ws = useAurix();
+  const userName = (ws.user?.fullName || "").trim().toLowerCase();
+  const userId = String(ws.user?.id || "").toLowerCase();
+
+  const { data: listData, isLoading } = useQuery({
+    queryKey: ["assets"],
+    queryFn: () => api.get<any>("assets?limit=100"),
+  });
+
+  const raw = listData?.data?.items ?? listData?.data ?? listData?.items ?? (Array.isArray(listData) ? listData : []);
+  const allItems: any[] = Array.isArray(raw) ? raw : [];
+  const assignedAssets = allItems.filter((a: any) => {
+    const assigned = (a.assignedTo || a.assigned_to || a.assigned_to_name || a.assigned_employee_name || "").toString().trim().toLowerCase();
+    const assignedId = String(a.assignedToId || a.assigned_to_id || a.employeeId || a.employee_id || a.userId || a.user_id || "").toLowerCase();
+    if (userName && (assigned === userName || assigned.includes(userName) || userName.includes(assigned))) return true;
+    if (userId && (assigned === userId || assignedId === userId)) return true;
+    return false;
+  });
+
   return (
     <motion.div {...fadeUp}>
       <Card>
         <SectionHeader title="My Assets" subtitle="Assigned company equipment" link="/dashboard/assets" />
         <div className="space-y-2">
-          {MY_ASSETS.map((a) => (
-            <div key={a.tag} className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-2.5">
-              <Package className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <div className="min-w-0 flex-1">
-                <div className="text-sm font-medium">{a.name}</div>
-                <div className="text-xs text-muted-foreground">Tag: {a.tag} · Since {a.assigned}</div>
-              </div>
-              <Badge variant="secondary" className="text-[10px]">{a.status}</Badge>
+          {isLoading ? (
+            <div className="py-6 text-center text-xs text-muted-foreground">Loading assigned equipment...</div>
+          ) : assignedAssets.length === 0 ? (
+            <div className="py-6 text-center text-xs text-muted-foreground">
+              No company equipment currently assigned.
             </div>
-          ))}
+          ) : (
+            assignedAssets.slice(0, 4).map((a: any) => (
+              <div key={a.id || a.tag} className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-2.5">
+                <Package className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-medium">{a.name || a.asset_name}</div>
+                  <div className="text-xs text-muted-foreground">Tag: {a.tag || a.asset_tag || "AST"} · {a.brand || "Hardware"}</div>
+                </div>
+                <Badge variant="secondary" className="text-[10px] capitalize">{a.status || "active"}</Badge>
+              </div>
+            ))
+          )}
         </div>
       </Card>
     </motion.div>
