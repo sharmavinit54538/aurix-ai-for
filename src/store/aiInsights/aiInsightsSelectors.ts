@@ -77,24 +77,6 @@ export const selectAIInsightsSkillGap = createSelector(
   },
 );
 
-export const selectAIInsightsPayroll = createSelector(
-  [selectAIInsightsState],
-  (state) => state?.payroll ?? null,
-);
-
-export const selectAIInsightsPayrollAlerts = createSelector(
-  [selectAIInsightsPayroll],
-  (payroll) => (Array.isArray(payroll?.alerts) ? payroll.alerts : []),
-);
-
-export const selectAIInsightsPayrollTrend = createSelector(
-  [selectAIInsightsState, selectAIInsightsPayroll],
-  (state, payroll) => {
-    if (Array.isArray(state?.charts?.payrollTrend)) return state.charts.payrollTrend;
-    if (Array.isArray(payroll?.trend)) return payroll.trend;
-    return [];
-  },
-);
 
 export const selectAIInsightsCharts = createSelector(
   [selectAIInsightsState],

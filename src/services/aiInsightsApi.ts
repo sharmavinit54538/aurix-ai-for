@@ -20,7 +20,6 @@ export function normalizeDashboardData(data: Partial<AIInsightsDashboardData> | 
       attendance: [],
       recruitment: undefined,
       performance: undefined,
-      payroll: undefined,
       charts: undefined,
       alerts: [],
       recommendations: [],
@@ -49,19 +48,9 @@ export function normalizeDashboardData(data: Partial<AIInsightsDashboardData> | 
           skillGap: Array.isArray(data.performance.skillGap) ? data.performance.skillGap : [],
         }
       : undefined,
-    payroll: data.payroll
-      ? {
-          payrollHealth: data.payroll.payrollHealth ?? 0,
-          savingsOpportunities: data.payroll.savingsOpportunities ?? "",
-          anomaliesDetected: data.payroll.anomaliesDetected ?? 0,
-          alerts: Array.isArray(data.payroll.alerts) ? data.payroll.alerts : [],
-          trend: Array.isArray(data.payroll.trend) ? data.payroll.trend : [],
-        }
-      : undefined,
     charts: data.charts
       ? {
           skillGap: Array.isArray(data.charts.skillGap) ? data.charts.skillGap : [],
-          payrollTrend: Array.isArray(data.charts.payrollTrend) ? data.charts.payrollTrend : [],
           headcountForecast: Array.isArray(data.charts.headcountForecast) ? data.charts.headcountForecast : [],
           hiringDemand: Array.isArray(data.charts.hiringDemand) ? data.charts.hiringDemand : [],
           satisfactionTrend: Array.isArray(data.charts.satisfactionTrend) ? data.charts.satisfactionTrend : [],
@@ -130,7 +119,6 @@ export const aiInsightsApi = {
     const data = response.data?.data ?? response.data ?? {};
     return {
       skillGap: Array.isArray(data.skillGap) ? data.skillGap : [],
-      payrollTrend: Array.isArray(data.payrollTrend) ? data.payrollTrend : [],
       headcountForecast: Array.isArray(data.headcountForecast) ? data.headcountForecast : [],
       hiringDemand: Array.isArray(data.hiringDemand) ? data.hiringDemand : [],
       satisfactionTrend: Array.isArray(data.satisfactionTrend) ? data.satisfactionTrend : [],

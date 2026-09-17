@@ -62,18 +62,6 @@ export interface SkillGapItem {
   need: number;
 }
 
-export interface PayrollAlertItem {
-  id?: string;
-  title: string;
-  who: string;
-  severity: "Critical" | "Medium" | "Low" | string;
-  delta: string;
-}
-
-export interface PayrollTrendItem {
-  m: string;
-  cost: number;
-}
 
 export interface HeadcountForecastItem {
   month: string;
@@ -108,7 +96,6 @@ export interface DocumentItem {
 
 export interface AIInsightsCharts {
   skillGap: SkillGapItem[];
-  payrollTrend: PayrollTrendItem[];
   headcountForecast: HeadcountForecastItem[];
   hiringDemand: HiringDemandItem[];
   satisfactionTrend: SatisfactionTrendItem[];
@@ -127,13 +114,6 @@ export interface PerformanceData {
   skillGap: SkillGapItem[];
 }
 
-export interface PayrollData {
-  payrollHealth: number;
-  savingsOpportunities: string;
-  anomaliesDetected: number;
-  alerts: PayrollAlertItem[];
-  trend: PayrollTrendItem[];
-}
 
 export interface SummaryData {
   totalInsights: number;
@@ -150,7 +130,6 @@ export interface AIInsightsDashboardData {
   attendance?: AttendanceInsightItem[];
   recruitment?: RecruitmentData;
   performance?: PerformanceData;
-  payroll?: PayrollData;
   charts?: AIInsightsCharts;
   alerts?: AlertItem[];
   recommendations?: string[];
@@ -168,7 +147,6 @@ export interface AIInsightsState {
   attendance: AttendanceInsightItem[];
   recruitment: RecruitmentData | null;
   performance: PerformanceData | null;
-  payroll: PayrollData | null;
   charts: AIInsightsCharts | null;
   alerts: AlertItem[];
   recommendations: string[];

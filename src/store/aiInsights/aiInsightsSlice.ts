@@ -23,7 +23,6 @@ const initialState: AIInsightsState = {
   attendance: [],
   recruitment: null,
   performance: null,
-  payroll: null,
   charts: null,
   alerts: [],
   recommendations: [],
@@ -72,17 +71,9 @@ export const aiInsightsSlice = createSlice({
             skillGap: Array.isArray(data.performance.skillGap) ? data.performance.skillGap : [],
           };
         }
-        if (data.payroll) {
-          state.payroll = {
-            ...data.payroll,
-            alerts: Array.isArray(data.payroll.alerts) ? data.payroll.alerts : [],
-            trend: Array.isArray(data.payroll.trend) ? data.payroll.trend : [],
-          };
-        }
         if (data.charts) {
           state.charts = {
             skillGap: Array.isArray(data.charts.skillGap) ? data.charts.skillGap : [],
-            payrollTrend: Array.isArray(data.charts.payrollTrend) ? data.charts.payrollTrend : [],
             headcountForecast: Array.isArray(data.charts.headcountForecast) ? data.charts.headcountForecast : [],
             hiringDemand: Array.isArray(data.charts.hiringDemand) ? data.charts.hiringDemand : [],
             satisfactionTrend: Array.isArray(data.charts.satisfactionTrend) ? data.charts.satisfactionTrend : [],
@@ -139,7 +130,6 @@ export const aiInsightsSlice = createSlice({
       if (action.payload) {
         state.charts = {
           skillGap: Array.isArray(action.payload.skillGap) ? action.payload.skillGap : [],
-          payrollTrend: Array.isArray(action.payload.payrollTrend) ? action.payload.payrollTrend : [],
           headcountForecast: Array.isArray(action.payload.headcountForecast) ? action.payload.headcountForecast : [],
           hiringDemand: Array.isArray(action.payload.hiringDemand) ? action.payload.hiringDemand : [],
           satisfactionTrend: Array.isArray(action.payload.satisfactionTrend) ? action.payload.satisfactionTrend : [],
