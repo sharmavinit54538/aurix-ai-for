@@ -716,10 +716,9 @@ export function PayrollPeriodsPage() {
                             </Badge>
                           ) : null}
                           {period.isLocked ? (
-                            <Lock
-                              className="h-3 w-3 text-amber-500 shrink-0"
-                              title="Locked period"
-                            />
+                            <span title="Locked period">
+                              <Lock className="h-3 w-3 text-amber-500 shrink-0" />
+                            </span>
                           ) : null}
                         </div>
                       </TableCell>
