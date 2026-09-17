@@ -30,6 +30,7 @@ import {
 } from "recharts";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/api";
+import { EmployeeMyAssetsView } from "@/features/portal/employee/components/EmployeeMyAssetsView";
 
 
 
@@ -529,19 +530,11 @@ export function AssetsPage() {
     return alerts;
   }, [assets]);
 
-  const isEmployee = authWs.user?.role === "employee";
+  const isEmployee = authWs.user?.role === "employee" || searchParams?.view === "my";
 
-  // Search & Status filters
+  // Search & Status filters (Admin/HR view)
   const filteredAssets = useMemo(() => {
     return assets.filter(a => {
-      if (isEmployee) {
-        const userFullName = (authWs.user?.fullName || "").toLowerCase();
-        const isMyAsset =
-          (a.assignedTo && a.assignedTo.toLowerCase().includes(userFullName)) ||
-          a.status === "assigned";
-        if (!isMyAsset) return false;
-      }
-
       const matchQ = !q ||
         a.name.toLowerCase().includes(q.toLowerCase()) ||
         a.tag.toLowerCase().includes(q.toLowerCase()) ||
@@ -560,7 +553,7 @@ export function AssetsPage() {
 
       return matchQ && matchStatus;
     });
-  }, [assets, q, statusFilter, isEmployee, authWs.user]);
+  }, [assets, q, statusFilter]);
 
   // Paginated assets
   const paginatedAssets = useMemo(() => {
@@ -579,6 +572,11 @@ export function AssetsPage() {
   const repairCostChartData = useMemo(() => {
     return apiStats.repair_costs_by_category || [];
   }, [apiStats]);
+
+  // If viewing in Employee Portal self-service mode, render dedicated EmployeeMyAssetsView
+  if (isEmployee) {
+    return <EmployeeMyAssetsView apiAssets={assets} />;
+  }
 
   return (
     <div className="space-y-6">
