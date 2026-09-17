@@ -477,6 +477,63 @@ export interface RejectPayrollResponse {
   [key: string]: unknown;
 }
 
+export interface PayrollFinalizationInfo {
+  isFinalized?: boolean;
+  isLocked?: boolean;
+  finalizedBy?: string | null;
+  finalizedByName?: string | null;
+  finalizedAt?: string | null;
+  finalizationNotes?: string | null;
+  referenceNumber?: string | null;
+  canFinalize?: boolean;
+  blockingReasons?: string[];
+  [key: string]: unknown;
+}
+
+export interface FinalizePayrollPayload {
+  notes?: string;
+  lock?: boolean;
+}
+
+export interface FinalizePayrollResponse {
+  success: boolean;
+  message?: string;
+  status?: PayrollStatus;
+  isFinalized?: boolean;
+  isLocked?: boolean;
+  finalizedAt?: string | null;
+  finalizedBy?: string | null;
+  finalization?: PayrollFinalizationInfo;
+  [key: string]: unknown;
+}
+
+export interface PayrollFinalizationData {
+  runId: string;
+  periodId?: string | null;
+  periodName?: string | null;
+  status: PayrollStatus;
+  isLocked?: boolean;
+  isFinalized?: boolean;
+  validationStatus?: string | null;
+  approvalStatus?: string | null;
+  runDate?: string | null;
+  generatedAt?: string | null;
+  lastUpdatedAt?: string | null;
+  summary: PayrollPreviewSummary | null;
+  validation: {
+    status?: string | null;
+    totalIssues: number;
+    errorsCount: number;
+    warningsCount: number;
+    affectedEmployeesCount: number;
+    blockingCount?: number | null;
+  } | null;
+  approval: PayrollApprovalInfo | null;
+  finalization: PayrollFinalizationInfo | null;
+  auditLog?: PayrollAuditRecord[] | null;
+  [key: string]: unknown;
+}
+
 // ── Helper to extract API data safely ─────────────────────────────────
 
 function extractData<T>(res: unknown): T {
@@ -1292,6 +1349,124 @@ export function normalizePayrollReviewData(
   };
 }
 
+export function normalizePayrollFinalizationData(
+  runId: string,
+  raw: any,
+  reviewFallback?: PayrollReviewData | null,
+): PayrollFinalizationData {
+  const periodId =
+    raw?.periodId ||
+    raw?.period_id ||
+    raw?.cycleId ||
+    raw?.cycle_id ||
+    reviewFallback?.periodId ||
+    null;
+
+  const periodName =
+    raw?.periodName ||
+    raw?.period_name ||
+    raw?.cycleName ||
+    raw?.cycle_name ||
+    reviewFallback?.periodName ||
+    null;
+
+  const rawStatus =
+    raw?.status ||
+    raw?.run_status ||
+    raw?.state ||
+    reviewFallback?.status ||
+    "Approved";
+
+  const isLocked = Boolean(
+    raw?.isLocked ||
+    raw?.is_locked ||
+    String(rawStatus).toLowerCase() === "locked" ||
+    String(rawStatus).toLowerCase() === "finalized" ||
+    String(rawStatus).toLowerCase() === "closed",
+  );
+
+  const isFinalized = Boolean(
+    raw?.isFinalized ||
+    raw?.is_finalized ||
+    String(rawStatus).toLowerCase() === "finalized" ||
+    String(rawStatus).toLowerCase() === "closed",
+  );
+
+  const summary = raw?.summary || reviewFallback?.summary || null;
+  const validation = raw?.validation || reviewFallback?.validation || null;
+  const approval = raw?.approval || reviewFallback?.approval || null;
+
+  const rawFin = raw?.finalization || raw?.finalized || raw;
+  let finalization: PayrollFinalizationInfo | null = null;
+  if (rawFin && typeof rawFin === "object") {
+    finalization = {
+      isFinalized: isFinalized || Boolean(rawFin.isFinalized || rawFin.is_finalized),
+      isLocked: isLocked || Boolean(rawFin.isLocked || rawFin.is_locked),
+      finalizedBy:
+        rawFin.finalizedBy ||
+        rawFin.finalized_by ||
+        raw?.finalizedBy ||
+        raw?.finalized_by ||
+        null,
+      finalizedByName:
+        rawFin.finalizedByName ||
+        rawFin.finalized_by_name ||
+        raw?.finalizedByName ||
+        raw?.finalized_by_name ||
+        null,
+      finalizedAt:
+        rawFin.finalizedAt ||
+        rawFin.finalized_at ||
+        raw?.finalizedAt ||
+        raw?.finalized_at ||
+        null,
+      finalizationNotes:
+        rawFin.finalizationNotes ||
+        rawFin.finalization_notes ||
+        rawFin.notes ||
+        raw?.finalizationNotes ||
+        raw?.finalization_notes ||
+        null,
+      referenceNumber:
+        rawFin.referenceNumber ||
+        rawFin.reference_number ||
+        rawFin.ref ||
+        raw?.referenceNumber ||
+        raw?.reference_number ||
+        null,
+      canFinalize: rawFin.canFinalize ?? rawFin.can_finalize ?? true,
+      blockingReasons: rawFin.blockingReasons || rawFin.blocking_reasons || [],
+      ...rawFin,
+    };
+  }
+
+  const auditLog = raw?.auditLog || raw?.audit_log || reviewFallback?.auditLog || null;
+
+  return {
+    runId,
+    periodId,
+    periodName,
+    status: rawStatus,
+    isLocked,
+    isFinalized,
+    validationStatus: validation?.status || null,
+    approvalStatus: approval?.status || null,
+    runDate: raw?.runDate || raw?.run_date || reviewFallback?.runDate || null,
+    generatedAt: raw?.generatedAt || raw?.generated_at || reviewFallback?.generatedAt || null,
+    lastUpdatedAt:
+      raw?.lastUpdatedAt ||
+      raw?.last_updated_at ||
+      reviewFallback?.lastUpdatedAt ||
+      null,
+    summary,
+    validation,
+    approval,
+    finalization,
+    auditLog,
+    ...raw,
+  };
+}
+
 // ── Real API Service ─────────────────────────────────────────────────
 
 export const payrollApi = {
@@ -2084,6 +2259,115 @@ export const payrollApi = {
             success: Boolean(fbData2?.success ?? true),
             message: fbData2?.message || "Payroll run returned for correction.",
             status: fbData2?.status || "Rejected",
+            ...fbData2,
+          };
+        } catch {
+          // Fall through
+        }
+      }
+      throw err;
+    }
+  },
+
+  /**
+   * Fetch comprehensive payroll finalization data for a run.
+   * GET /api/v2/payroll/runs/{runId}/finalization with fallback to getPayrollReview.
+   * ZERO MOCK DATA: throws if backend cannot be reached so UI displays authentic error state.
+   */
+  async getPayrollFinalization(runId: string): Promise<PayrollFinalizationData> {
+    const requestConfig = {
+      headers: { "Cache-Control": "no-cache" },
+      skipCache: true,
+    };
+
+    // Primary: /api/v2/payroll/runs/{runId}/finalization
+    try {
+      const res = await apiInstance.get(
+        `/api/v2/payroll/runs/${runId}/finalization`,
+        requestConfig,
+      );
+      const data = extractData<any>(res);
+      if (data && typeof data === "object") {
+        return normalizePayrollFinalizationData(runId, data);
+      }
+    } catch (err: any) {
+      if (err?.response?.status !== 404) {
+        throw err;
+      }
+    }
+
+    // Fallback: Use getPayrollReview to get authoritative calculation, validation, and approval state
+    const reviewData = await this.getPayrollReview(runId);
+    return normalizePayrollFinalizationData(runId, {}, reviewData);
+  },
+
+  /**
+   * Finalize and lock a payroll run through the real backend API.
+   * POST /api/v2/payroll/runs/{runId}/finalize
+   * Finalization freezes figures and locks the run. It does NOT execute payment.
+   */
+  async finalizePayroll(
+    runId: string,
+    payload?: FinalizePayrollPayload,
+  ): Promise<FinalizePayrollResponse> {
+    const body: Record<string, any> = {
+      notes: payload?.notes || undefined,
+      lock: payload?.lock ?? true,
+    };
+
+    try {
+      const res = await apiInstance.post(
+        `/api/v2/payroll/runs/${runId}/finalize`,
+        body,
+        { headers: { "Cache-Control": "no-cache" } },
+      );
+      const data = extractData<any>(res);
+      return {
+        success: Boolean(data?.success ?? true),
+        message: data?.message || "Payroll run finalized and locked successfully.",
+        status: data?.status || "Finalized",
+        isFinalized: true,
+        isLocked: true,
+        finalizedAt: data?.finalizedAt || data?.finalized_at || undefined,
+        finalizedBy: data?.finalizedBy || data?.finalized_by || undefined,
+        ...data,
+      };
+    } catch (err: any) {
+      if (err?.response?.status === 404) {
+        // Fallback 1: POST /payroll/runs/{runId}/finalize
+        try {
+          const fbRes = await apiInstance.post(
+            `/payroll/runs/${runId}/finalize`,
+            body,
+            { headers: { "Cache-Control": "no-cache" } },
+          );
+          const fbData = extractData<any>(fbRes);
+          return {
+            success: Boolean(fbData?.success ?? true),
+            message: fbData?.message || "Payroll run finalized and locked successfully.",
+            status: fbData?.status || "Finalized",
+            isFinalized: true,
+            isLocked: true,
+            ...fbData,
+          };
+        } catch {
+          // Continue to fallback 2
+        }
+
+        // Fallback 2: POST /api/v2/payroll/runs/{runId}/lock
+        try {
+          const fbRes2 = await apiInstance.post(
+            `/api/v2/payroll/runs/${runId}/lock`,
+            body,
+            { headers: { "Cache-Control": "no-cache" } },
+          );
+          const fbData2 = extractData<any>(fbRes2);
+          return {
+            success: Boolean(fbData2?.success ?? true),
+            message: fbData2?.message || "Payroll run locked and finalized.",
+            status: fbData2?.status || "Finalized",
+            isFinalized: true,
+            isLocked: true,
             ...fbData2,
           };
         } catch {

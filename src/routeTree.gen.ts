@@ -188,6 +188,7 @@ import { Route as PayrollRunsRunIdValidationRouteImport } from './routes/payroll
 import { Route as PayrollRunsRunIdReviewRouteImport } from './routes/payroll.runs.$runId.review'
 import { Route as PayrollRunsRunIdProcessingRouteImport } from './routes/payroll.runs.$runId.processing'
 import { Route as PayrollRunsRunIdPreviewRouteImport } from './routes/payroll.runs.$runId.preview'
+import { Route as PayrollRunsRunIdFinalizeRouteImport } from './routes/payroll.runs.$runId.finalize'
 import { Route as PayrollRunsRunIdApprovalRouteImport } from './routes/payroll.runs.$runId.approval'
 import { Route as DashboardRecruitmentJobsNewRouteImport } from './routes/dashboard/recruitment/jobs/new'
 import { Route as DashboardRecruitmentJobsJobIdRouteImport } from './routes/dashboard/recruitment/jobs/$jobId'
@@ -225,6 +226,7 @@ import { Route as DashboardPayrollRunsRunIdValidationRouteImport } from './route
 import { Route as DashboardPayrollRunsRunIdReviewRouteImport } from './routes/dashboard.payroll.runs.$runId.review'
 import { Route as DashboardPayrollRunsRunIdProcessingRouteImport } from './routes/dashboard.payroll.runs.$runId.processing'
 import { Route as DashboardPayrollRunsRunIdPreviewRouteImport } from './routes/dashboard.payroll.runs.$runId.preview'
+import { Route as DashboardPayrollRunsRunIdFinalizeRouteImport } from './routes/dashboard.payroll.runs.$runId.finalize'
 import { Route as DashboardPayrollRunsRunIdApprovalRouteImport } from './routes/dashboard.payroll.runs.$runId.approval'
 import { Route as DashboardPayrollRunsRunIdEmployeesEmployeeIdRouteImport } from './routes/dashboard.payroll.runs.$runId.employees.$employeeId'
 
@@ -1200,6 +1202,12 @@ const PayrollRunsRunIdPreviewRoute = PayrollRunsRunIdPreviewRouteImport.update({
   path: '/payroll/runs/$runId/preview',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PayrollRunsRunIdFinalizeRoute =
+  PayrollRunsRunIdFinalizeRouteImport.update({
+    id: '/payroll/runs/$runId/finalize',
+    path: '/payroll/runs/$runId/finalize',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const PayrollRunsRunIdApprovalRoute =
   PayrollRunsRunIdApprovalRouteImport.update({
     id: '/payroll/runs/$runId/approval',
@@ -1421,6 +1429,12 @@ const DashboardPayrollRunsRunIdPreviewRoute =
     path: '/runs/$runId/preview',
     getParentRoute: () => DashboardPayrollRoute,
   } as any)
+const DashboardPayrollRunsRunIdFinalizeRoute =
+  DashboardPayrollRunsRunIdFinalizeRouteImport.update({
+    id: '/runs/$runId/finalize',
+    path: '/runs/$runId/finalize',
+    getParentRoute: () => DashboardPayrollRoute,
+  } as any)
 const DashboardPayrollRunsRunIdApprovalRoute =
   DashboardPayrollRunsRunIdApprovalRouteImport.update({
     id: '/runs/$runId/approval',
@@ -1636,6 +1650,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/recruitment/jobs/$jobId': typeof DashboardRecruitmentJobsJobIdRouteWithChildren
   '/dashboard/recruitment/jobs/new': typeof DashboardRecruitmentJobsNewRoute
   '/payroll/runs/$runId/approval': typeof PayrollRunsRunIdApprovalRoute
+  '/payroll/runs/$runId/finalize': typeof PayrollRunsRunIdFinalizeRoute
   '/payroll/runs/$runId/preview': typeof PayrollRunsRunIdPreviewRoute
   '/payroll/runs/$runId/processing': typeof PayrollRunsRunIdProcessingRoute
   '/payroll/runs/$runId/review': typeof PayrollRunsRunIdReviewRoute
@@ -1646,6 +1661,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/recruitment/candidates/': typeof DashboardRecruitmentCandidatesIndexRoute
   '/dashboard/recruitment/jobs/': typeof DashboardRecruitmentJobsIndexRoute
   '/dashboard/payroll/runs/$runId/approval': typeof DashboardPayrollRunsRunIdApprovalRoute
+  '/dashboard/payroll/runs/$runId/finalize': typeof DashboardPayrollRunsRunIdFinalizeRoute
   '/dashboard/payroll/runs/$runId/preview': typeof DashboardPayrollRunsRunIdPreviewRoute
   '/dashboard/payroll/runs/$runId/processing': typeof DashboardPayrollRunsRunIdProcessingRoute
   '/dashboard/payroll/runs/$runId/review': typeof DashboardPayrollRunsRunIdReviewRoute
@@ -1839,6 +1855,7 @@ export interface FileRoutesByTo {
   '/dashboard/recruitment/jobs/$jobId': typeof DashboardRecruitmentJobsJobIdRouteWithChildren
   '/dashboard/recruitment/jobs/new': typeof DashboardRecruitmentJobsNewRoute
   '/payroll/runs/$runId/approval': typeof PayrollRunsRunIdApprovalRoute
+  '/payroll/runs/$runId/finalize': typeof PayrollRunsRunIdFinalizeRoute
   '/payroll/runs/$runId/preview': typeof PayrollRunsRunIdPreviewRoute
   '/payroll/runs/$runId/processing': typeof PayrollRunsRunIdProcessingRoute
   '/payroll/runs/$runId/review': typeof PayrollRunsRunIdReviewRoute
@@ -1849,6 +1866,7 @@ export interface FileRoutesByTo {
   '/dashboard/recruitment/candidates': typeof DashboardRecruitmentCandidatesIndexRoute
   '/dashboard/recruitment/jobs': typeof DashboardRecruitmentJobsIndexRoute
   '/dashboard/payroll/runs/$runId/approval': typeof DashboardPayrollRunsRunIdApprovalRoute
+  '/dashboard/payroll/runs/$runId/finalize': typeof DashboardPayrollRunsRunIdFinalizeRoute
   '/dashboard/payroll/runs/$runId/preview': typeof DashboardPayrollRunsRunIdPreviewRoute
   '/dashboard/payroll/runs/$runId/processing': typeof DashboardPayrollRunsRunIdProcessingRoute
   '/dashboard/payroll/runs/$runId/review': typeof DashboardPayrollRunsRunIdReviewRoute
@@ -2060,6 +2078,7 @@ export interface FileRoutesById {
   '/dashboard/recruitment/jobs/$jobId': typeof DashboardRecruitmentJobsJobIdRouteWithChildren
   '/dashboard/recruitment/jobs/new': typeof DashboardRecruitmentJobsNewRoute
   '/payroll/runs/$runId/approval': typeof PayrollRunsRunIdApprovalRoute
+  '/payroll/runs/$runId/finalize': typeof PayrollRunsRunIdFinalizeRoute
   '/payroll/runs/$runId/preview': typeof PayrollRunsRunIdPreviewRoute
   '/payroll/runs/$runId/processing': typeof PayrollRunsRunIdProcessingRoute
   '/payroll/runs/$runId/review': typeof PayrollRunsRunIdReviewRoute
@@ -2070,6 +2089,7 @@ export interface FileRoutesById {
   '/dashboard/recruitment/candidates/': typeof DashboardRecruitmentCandidatesIndexRoute
   '/dashboard/recruitment/jobs/': typeof DashboardRecruitmentJobsIndexRoute
   '/dashboard/payroll/runs/$runId/approval': typeof DashboardPayrollRunsRunIdApprovalRoute
+  '/dashboard/payroll/runs/$runId/finalize': typeof DashboardPayrollRunsRunIdFinalizeRoute
   '/dashboard/payroll/runs/$runId/preview': typeof DashboardPayrollRunsRunIdPreviewRoute
   '/dashboard/payroll/runs/$runId/processing': typeof DashboardPayrollRunsRunIdProcessingRoute
   '/dashboard/payroll/runs/$runId/review': typeof DashboardPayrollRunsRunIdReviewRoute
@@ -2282,6 +2302,7 @@ export interface FileRouteTypes {
     | '/dashboard/recruitment/jobs/$jobId'
     | '/dashboard/recruitment/jobs/new'
     | '/payroll/runs/$runId/approval'
+    | '/payroll/runs/$runId/finalize'
     | '/payroll/runs/$runId/preview'
     | '/payroll/runs/$runId/processing'
     | '/payroll/runs/$runId/review'
@@ -2292,6 +2313,7 @@ export interface FileRouteTypes {
     | '/dashboard/recruitment/candidates/'
     | '/dashboard/recruitment/jobs/'
     | '/dashboard/payroll/runs/$runId/approval'
+    | '/dashboard/payroll/runs/$runId/finalize'
     | '/dashboard/payroll/runs/$runId/preview'
     | '/dashboard/payroll/runs/$runId/processing'
     | '/dashboard/payroll/runs/$runId/review'
@@ -2485,6 +2507,7 @@ export interface FileRouteTypes {
     | '/dashboard/recruitment/jobs/$jobId'
     | '/dashboard/recruitment/jobs/new'
     | '/payroll/runs/$runId/approval'
+    | '/payroll/runs/$runId/finalize'
     | '/payroll/runs/$runId/preview'
     | '/payroll/runs/$runId/processing'
     | '/payroll/runs/$runId/review'
@@ -2495,6 +2518,7 @@ export interface FileRouteTypes {
     | '/dashboard/recruitment/candidates'
     | '/dashboard/recruitment/jobs'
     | '/dashboard/payroll/runs/$runId/approval'
+    | '/dashboard/payroll/runs/$runId/finalize'
     | '/dashboard/payroll/runs/$runId/preview'
     | '/dashboard/payroll/runs/$runId/processing'
     | '/dashboard/payroll/runs/$runId/review'
@@ -2705,6 +2729,7 @@ export interface FileRouteTypes {
     | '/dashboard/recruitment/jobs/$jobId'
     | '/dashboard/recruitment/jobs/new'
     | '/payroll/runs/$runId/approval'
+    | '/payroll/runs/$runId/finalize'
     | '/payroll/runs/$runId/preview'
     | '/payroll/runs/$runId/processing'
     | '/payroll/runs/$runId/review'
@@ -2715,6 +2740,7 @@ export interface FileRouteTypes {
     | '/dashboard/recruitment/candidates/'
     | '/dashboard/recruitment/jobs/'
     | '/dashboard/payroll/runs/$runId/approval'
+    | '/dashboard/payroll/runs/$runId/finalize'
     | '/dashboard/payroll/runs/$runId/preview'
     | '/dashboard/payroll/runs/$runId/processing'
     | '/dashboard/payroll/runs/$runId/review'
@@ -2754,6 +2780,7 @@ export interface RootRouteChildren {
   AuthVerifyResetOtpRoute: typeof AuthVerifyResetOtpRoute
   JobsApplyUkeyRoute: typeof JobsApplyUkeyRoute
   PayrollRunsRunIdApprovalRoute: typeof PayrollRunsRunIdApprovalRoute
+  PayrollRunsRunIdFinalizeRoute: typeof PayrollRunsRunIdFinalizeRoute
   PayrollRunsRunIdPreviewRoute: typeof PayrollRunsRunIdPreviewRoute
   PayrollRunsRunIdProcessingRoute: typeof PayrollRunsRunIdProcessingRoute
   PayrollRunsRunIdReviewRoute: typeof PayrollRunsRunIdReviewRoute
@@ -4016,6 +4043,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PayrollRunsRunIdPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/payroll/runs/$runId/finalize': {
+      id: '/payroll/runs/$runId/finalize'
+      path: '/payroll/runs/$runId/finalize'
+      fullPath: '/payroll/runs/$runId/finalize'
+      preLoaderRoute: typeof PayrollRunsRunIdFinalizeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/payroll/runs/$runId/approval': {
       id: '/payroll/runs/$runId/approval'
       path: '/payroll/runs/$runId/approval'
@@ -4275,6 +4309,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardPayrollRunsRunIdPreviewRouteImport
       parentRoute: typeof DashboardPayrollRoute
     }
+    '/dashboard/payroll/runs/$runId/finalize': {
+      id: '/dashboard/payroll/runs/$runId/finalize'
+      path: '/runs/$runId/finalize'
+      fullPath: '/dashboard/payroll/runs/$runId/finalize'
+      preLoaderRoute: typeof DashboardPayrollRunsRunIdFinalizeRouteImport
+      parentRoute: typeof DashboardPayrollRoute
+    }
     '/dashboard/payroll/runs/$runId/approval': {
       id: '/dashboard/payroll/runs/$runId/approval'
       path: '/runs/$runId/approval'
@@ -4423,6 +4464,7 @@ interface DashboardPayrollRouteChildren {
   DashboardPayrollPeriodsRoute: typeof DashboardPayrollPeriodsRoute
   DashboardPayrollIndexRoute: typeof DashboardPayrollIndexRoute
   DashboardPayrollRunsRunIdApprovalRoute: typeof DashboardPayrollRunsRunIdApprovalRoute
+  DashboardPayrollRunsRunIdFinalizeRoute: typeof DashboardPayrollRunsRunIdFinalizeRoute
   DashboardPayrollRunsRunIdPreviewRoute: typeof DashboardPayrollRunsRunIdPreviewRoute
   DashboardPayrollRunsRunIdProcessingRoute: typeof DashboardPayrollRunsRunIdProcessingRoute
   DashboardPayrollRunsRunIdReviewRoute: typeof DashboardPayrollRunsRunIdReviewRoute
@@ -4435,6 +4477,8 @@ const DashboardPayrollRouteChildren: DashboardPayrollRouteChildren = {
   DashboardPayrollIndexRoute: DashboardPayrollIndexRoute,
   DashboardPayrollRunsRunIdApprovalRoute:
     DashboardPayrollRunsRunIdApprovalRoute,
+  DashboardPayrollRunsRunIdFinalizeRoute:
+    DashboardPayrollRunsRunIdFinalizeRoute,
   DashboardPayrollRunsRunIdPreviewRoute: DashboardPayrollRunsRunIdPreviewRoute,
   DashboardPayrollRunsRunIdProcessingRoute:
     DashboardPayrollRunsRunIdProcessingRoute,
@@ -4894,6 +4938,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthVerifyResetOtpRoute: AuthVerifyResetOtpRoute,
   JobsApplyUkeyRoute: JobsApplyUkeyRoute,
   PayrollRunsRunIdApprovalRoute: PayrollRunsRunIdApprovalRoute,
+  PayrollRunsRunIdFinalizeRoute: PayrollRunsRunIdFinalizeRoute,
   PayrollRunsRunIdPreviewRoute: PayrollRunsRunIdPreviewRoute,
   PayrollRunsRunIdProcessingRoute: PayrollRunsRunIdProcessingRoute,
   PayrollRunsRunIdReviewRoute: PayrollRunsRunIdReviewRoute,

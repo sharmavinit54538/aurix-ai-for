@@ -14,6 +14,7 @@ import {
   History,
   Layers,
   ListChecks,
+  Lock,
   RefreshCw,
   RotateCcw,
   ShieldAlert,
@@ -520,6 +521,12 @@ export function PayrollApprovalPage() {
           <span className="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm">
             Review & Approval
           </span>
+          <Link
+            to={`/dashboard/payroll/runs/${runId}/finalize` as any}
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
+          >
+            Finalization
+          </Link>
         </div>
 
         {/* Back to Preview Link */}
@@ -649,6 +656,24 @@ export function PayrollApprovalPage() {
               <span>Approve Payroll</span>
             </Button>
           ) : null}
+
+          {/* Proceed to Finalize Action (When Approved) */}
+          {isApproved ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                navigate({
+                  to: `/dashboard/payroll/runs/${runId}/finalize` as any,
+                })
+              }
+              className="h-9 gap-1.5 text-xs shadow-sm border-violet-500/30 text-violet-600 hover:bg-violet-500/10 dark:text-violet-400"
+              title="Proceed to Step 8 Payroll Finalization"
+            >
+              <Lock className="h-3.5 w-3.5" />
+              <span>Finalize Payroll (Step 8)</span>
+            </Button>
+          ) : null}
         </div>
       </div>
 
@@ -769,12 +794,28 @@ export function PayrollApprovalPage() {
                     ) : null}
                   </div>
                 </div>
-                <Badge
-                  variant="outline"
-                  className="border-emerald-500/40 bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-semibold uppercase text-[10px] px-2.5 py-1"
-                >
-                  Status: Approved
-                </Badge>
+                <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2">
+                  <Badge
+                    variant="outline"
+                    className="border-emerald-500/40 bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-semibold uppercase text-[10px] px-2.5 py-1"
+                  >
+                    Status: Approved
+                  </Badge>
+                  <Button
+                    size="sm"
+                    onClick={() =>
+                      navigate({
+                        to: `/dashboard/payroll/runs/${runId}/finalize` as any,
+                      })
+                    }
+                    className="h-8 gap-1.5 text-xs font-semibold"
+                    style={{ background: "var(--gradient-brand)" }}
+                    title="Proceed to Step 8 Payroll Finalization"
+                  >
+                    <Lock className="h-3.5 w-3.5" />
+                    <span>Proceed to Finalization (Step 8)</span>
+                  </Button>
+                </div>
               </div>
             </GlassCard>
           ) : null}

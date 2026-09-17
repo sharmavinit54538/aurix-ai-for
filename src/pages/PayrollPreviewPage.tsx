@@ -501,6 +501,12 @@ export function PayrollPreviewPage() {
           >
             Review & Approval
           </Link>
+          <Link
+            to={`/dashboard/payroll/runs/${runId}/finalize` as any}
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
+          >
+            Finalization
+          </Link>
         </div>
 
         {/* Back Link */}
