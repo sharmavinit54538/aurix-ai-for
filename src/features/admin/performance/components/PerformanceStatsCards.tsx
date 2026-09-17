@@ -7,7 +7,6 @@ import {
   TrendingUp,
   CheckCircle,
   UserCheck,
-  TrendingDown,
 } from "lucide-react";
 import type { PerformanceReview, Goal } from "../types";
 import { Card, CardContent } from "@/components/ui/card";
@@ -46,26 +45,20 @@ export function PerformanceStatsCards({ reviews, goals }: PerformanceStatsCardsP
       label: "Employees Reviewed",
       value: totalReviewed,
       icon: Users,
-      trend: "+5%",
-      isPositive: true,
-      desc: "Compared to Q1 cycles",
+      desc: "Total evaluations",
       color: "from-blue-500/20 to-indigo-500/20 text-blue-500 border-blue-500/20",
     },
     {
       label: "Pending Reviews",
       value: pendingReviews,
       icon: Clock,
-      trend: "-12%",
-      isPositive: true,
-      desc: "Closing cycles active",
+      desc: "Awaiting review",
       color: "from-amber-500/20 to-orange-500/20 text-amber-500 border-amber-500/20",
     },
     {
       label: "High Performers",
       value: highPerformers,
       icon: Award,
-      trend: "+8%",
-      isPositive: true,
       desc: "Score >= 4.5 rating",
       color: "from-emerald-500/20 to-teal-500/20 text-emerald-500 border-emerald-500/20",
     },
@@ -73,8 +66,6 @@ export function PerformanceStatsCards({ reviews, goals }: PerformanceStatsCardsP
       label: "Needing Improvement",
       value: needingImprovement,
       icon: AlertTriangle,
-      trend: "+1 row",
-      isPositive: false,
       desc: "Score <= 2.5 rating",
       color: "from-rose-500/20 to-red-500/20 text-rose-500 border-rose-500/20",
     },
@@ -82,8 +73,6 @@ export function PerformanceStatsCards({ reviews, goals }: PerformanceStatsCardsP
       label: "Avg. Performance Score",
       value: `${avgScore} / 5`,
       icon: TrendingUp,
-      trend: "+2.4%",
-      isPositive: true,
       desc: "Company rating baseline",
       color: "from-purple-500/20 to-pink-500/20 text-purple-500 border-purple-500/20",
     },
@@ -91,8 +80,6 @@ export function PerformanceStatsCards({ reviews, goals }: PerformanceStatsCardsP
       label: "Goals Completed %",
       value: `${goalsCompletedPct}%`,
       icon: CheckCircle,
-      trend: "+14%",
-      isPositive: true,
       desc: "OKRs objectives met",
       color: "from-cyan-500/20 to-sky-500/20 text-cyan-500 border-cyan-500/20",
     },
@@ -100,18 +87,14 @@ export function PerformanceStatsCards({ reviews, goals }: PerformanceStatsCardsP
       label: "Promotion Eligible",
       value: promotionEligible,
       icon: UserCheck,
-      trend: "+3 candidates",
-      isPositive: true,
-      desc: "Recommended for increment",
+      desc: "Recommended for promotion",
       color: "from-teal-500/20 to-emerald-500/20 text-teal-500 border-teal-500/20",
     },
     {
       label: "Performance Trend",
-      value: "Good",
+      value: totalReviewed > 0 ? (parseFloat(avgScore) >= 4 ? "Excellent" : parseFloat(avgScore) >= 3 ? "Good" : "Needs Review") : "—",
       icon: TrendingUp,
-      trend: "+3.2%",
-      isPositive: true,
-      desc: "Continuous feedback uplift",
+      desc: totalReviewed > 0 ? "Based on active reviews" : "No evaluations yet",
       color: "from-slate-500/20 to-gray-500/20 text-slate-500 border-slate-500/20",
     },
   ];
@@ -135,16 +118,8 @@ export function PerformanceStatsCards({ reviews, goals }: PerformanceStatsCardsP
               </div>
               <div className="mt-2">
                 <div className="text-xl font-bold tracking-tight text-foreground truncate">{stat.value}</div>
-                <div className="flex items-center gap-0.5 mt-1">
-                  {stat.isPositive ? (
-                    <TrendingUp className="h-2.5 w-2.5 text-emerald-500" />
-                  ) : (
-                    <TrendingDown className="h-2.5 w-2.5 text-rose-500" />
-                  )}
-                  <span className={`text-[9px] font-bold ${stat.isPositive ? "text-emerald-500" : "text-rose-500"}`}>
-                    {stat.trend}
-                  </span>
-                  <span className="text-[8px] text-muted-foreground truncate max-w-[50px] ml-0.5">{stat.desc}</span>
+                <div className="mt-1">
+                  <span className="text-[9px] text-muted-foreground line-clamp-1">{stat.desc}</span>
                 </div>
               </div>
             </CardContent>
