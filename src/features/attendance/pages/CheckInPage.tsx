@@ -5,7 +5,7 @@ import {
   Fingerprint, HelpCircle, History, Laptop, LogIn, LogOut,
   MapPin, MessageSquare, Monitor, Play, RefreshCw, Send,
   ShieldCheck, Timer, BarChart3, Wifi, X, Zap,
-  CameraOff, Video,
+  CameraOff, Video, User,
 } from "lucide-react";
 import { useAurix } from "@/lib/aurix-store";
 import { Button } from "@/components/ui/button";
@@ -831,7 +831,7 @@ function CheckInPage() {
                 {[
                   {
                     label: "Shift Name",
-                    value: assignedShift?.currentShift?.name || "General Shift",
+                    value: assignedShift?.currentShift?.shiftName || "General Shift",
                   },
                   {
                     label: "Timing",
@@ -846,7 +846,7 @@ function CheckInPage() {
                   },
                   {
                     label: "Expected Hours",
-                    value: `${assignedShift?.currentShift?.workHours || 9}h 00m`,
+                    value: `${assignedShift?.currentShift?.totalWorkingHours || 9}h 00m`,
                   },
                   {
                     label: "Grace Time",
@@ -854,7 +854,7 @@ function CheckInPage() {
                   },
                   {
                     label: "Break Duration",
-                    value: `${assignedShift?.currentShift?.breakDurationMinutes || 60} minutes`,
+                    value: assignedShift?.currentShift?.breakDuration || "60 minutes",
                   },
                 ].map((row) => (
                   <div key={row.label} className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-muted/40 transition-colors">
