@@ -1,38 +1,31 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
-  AlertCircle, Award, BarChart3, Bell, Bookmark, BookOpen, Brain, Briefcase,
-  CalendarDays, Camera, CheckCircle2, ChevronDown, ChevronRight,
-  Clock, Coffee, Download, ExternalLink, FileText, Fingerprint,
-  Flag, Globe, HelpCircle, History, Info, Laptop, LogIn, LogOut,
+  AlertCircle, Briefcase, CalendarDays, Camera, CheckCircle2,
+  ChevronDown, ChevronRight, Clock, Coffee, Download,
+  Fingerprint, HelpCircle, History, Laptop, LogIn, LogOut,
   MapPin, MessageSquare, Monitor, Play, RefreshCw, Send,
-  Shield, ShieldCheck, Sparkles, Star, Timer, TrendingUp, User, UserCog,
-  Wifi, X, Zap, Activity,
+  ShieldCheck, Timer, BarChart3, Wifi, X, Zap,
+  CameraOff, Video,
 } from "lucide-react";
 import { useAurix } from "@/lib/aurix-store";
-import { logout } from "@/lib/auth-bootstrap";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { GlassCard, StatCard } from "@/components/hrms/Shared";
+import {
+  attendanceApi,
+  TimelineEventItem,
+  AttendanceHistoryItem,
+  HolidayRecord,
+  EmployeeShiftScheduleData,
+} from "@/services/attendanceApi";
 
 // ── Types ─────────────────────────────────────────────────────
 type AttendanceStatus = "not-checked-in" | "checked-in" | "on-break" | "checked-out";
-type DayStatus = "present" | "absent" | "late" | "half-day" | "on-leave" | "wfh";
-
-interface TimelineEvent {
-  id: string;
-  time: string;
-  label: string;
-  icon: any;
-  color: string;
-}
 
 interface AttendanceDay {
   date: number;
   status: "present" | "absent" | "late" | "leave" | "holiday" | "weekend" | "halfday" | "today" | "future";
 }
-
-import { attendanceApi, TimelineEventItem } from "@/services/attendanceApi";
 
 // ── Geolocation Helper ─────────────────────────────────────────
 function getCoordinates(): Promise<{ lat: number; lng: number } | null> {
@@ -50,30 +43,39 @@ function getCoordinates(): Promise<{ lat: number; lng: number } | null> {
 }
 
 // ── Utilities ─────────────────────────────────────────────────
-function fmtTime(sec: number) {
-  const h = Math.floor(sec / 3600).toString().padStart(2, "0");
-  const m = Math.floor((sec % 3600) / 60).toString().padStart(2, "0");
-  const s = (sec % 60).toString().padStart(2, "0");
-  return `${h}:${m}:${s}`;
-}
 function fmtHM(sec: number) {
+  if (sec <= 0) return "0h 00m";
   const h = Math.floor(sec / 3600);
   const m = Math.floor((sec % 3600) / 60);
-  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+  return `${h}h ${m.toString().padStart(2, "0")}m`;
 }
-function nowTimeStr() {
-  return new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
-}
+
 function nowDateStr() {
-  return new Date().toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  return new Date().toLocaleDateString("en-IN", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 }
 
 // ── Section Header ─────────────────────────────────────────────
-function SectionHeader({ title, subtitle, icon: Icon }: { title: string; subtitle?: string; icon?: any }) {
+function SectionHeader({
+  title,
+  subtitle,
+  icon: Icon,
+}: {
+  title: string;
+  subtitle?: string;
+  icon?: any;
+}) {
   return (
     <div className="mb-4 flex items-center gap-3">
       {Icon && (
-        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg" style={{ background: "var(--gradient-brand)" }}>
+        <div
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-lg"
+          style={{ background: "var(--gradient-brand)" }}
+        >
           <Icon className="h-4 w-4 text-white" />
         </div>
       )}
@@ -85,71 +87,6 @@ function SectionHeader({ title, subtitle, icon: Icon }: { title: string; subtitl
   );
 }
 
-// ── Live Clock ─────────────────────────────────────────────────
-function LiveClock() {
-  const [mounted, setMounted] = useState(false);
-  const [time, setTime] = useState(new Date());
-  useEffect(() => {
-    setMounted(true);
-    const t = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(t);
-  }, []);
-
-  if (!mounted) {
-    return (
-      <span className="font-mono text-sm tabular-nums text-foreground">
-        --:--:--
-      </span>
-    );
-  }
-
-  return (
-    <span className="font-mono text-sm tabular-nums text-foreground">
-      {time.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true })}
-    </span>
-  );
-}
-
-// ── Status Chip ────────────────────────────────────────────────
-const STATUS_MAP: Record<DayStatus, { label: string; cls: string }> = {
-  present:     { label: "Present",     cls: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 ring-1 ring-emerald-500/30" },
-  absent:      { label: "Absent",      cls: "bg-rose-500/15 text-rose-600 dark:text-rose-300 ring-1 ring-rose-500/30" },
-  late:        { label: "Late",        cls: "bg-amber-500/15 text-amber-700 dark:text-amber-300 ring-1 ring-amber-500/30" },
-  "half-day":  { label: "Half Day",   cls: "bg-sky-500/15 text-sky-600 dark:text-sky-300 ring-1 ring-sky-500/30" },
-  "on-leave":  { label: "On Leave",   cls: "bg-violet-500/15 text-violet-600 dark:text-violet-300 ring-1 ring-violet-500/30" },
-  wfh:         { label: "Work From Home", cls: "bg-blue-500/15 text-blue-600 dark:text-blue-300 ring-1 ring-blue-500/30" },
-};
-
-function DayStatusChip({ status }: { status: DayStatus }) {
-  const s = STATUS_MAP[status];
-  return <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${s.cls}`}>
-    <span className="h-1.5 w-1.5 rounded-full bg-current" />{s.label}
-  </span>;
-}
-
-// ── Attendance Action Button ───────────────────────────────────
-function AttendBtn({ label, icon: Icon, onClick, disabled, variant, loading }: {
-  label: string; icon: any; onClick: () => void; disabled?: boolean;
-  variant: "primary" | "success" | "warning" | "danger"; loading?: boolean;
-}) {
-  const cls = {
-    primary: "bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-700 hover:to-fuchsia-700 shadow-lg shadow-violet-500/25",
-    success: "bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 shadow-lg shadow-emerald-500/25",
-    warning: "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 shadow-lg shadow-amber-500/25",
-    danger:  "bg-gradient-to-r from-rose-500 to-red-600 text-white hover:from-rose-600 hover:to-red-700 shadow-lg shadow-rose-500/25",
-  }[variant];
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled || loading}
-      className={`group flex flex-col items-center justify-center gap-1.5 rounded-xl px-4 py-3 text-xs font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40 ${cls}`}
-    >
-      {loading ? <RefreshCw className="h-5 w-5 animate-spin" /> : <Icon className="h-5 w-5" />}
-      <span>{label}</span>
-    </button>
-  );
-}
-
 // ── Digital Timer Display ──────────────────────────────────────
 function DigitalTimer({ seconds, running }: { seconds: number; running: boolean }) {
   const h = Math.floor(seconds / 3600).toString().padStart(2, "0");
@@ -157,31 +94,48 @@ function DigitalTimer({ seconds, running }: { seconds: number; running: boolean 
   const s = (seconds % 60).toString().padStart(2, "0");
   return (
     <div className="relative flex items-center justify-center">
-      <div className={`absolute inset-0 rounded-full blur-3xl opacity-20 transition-opacity ${running ? "opacity-30" : "opacity-10"}`}
-        style={{ background: "var(--gradient-brand)" }} />
+      <div
+        className={`absolute inset-0 rounded-full blur-3xl opacity-20 transition-opacity ${running ? "opacity-30" : "opacity-10"}`}
+        style={{ background: "var(--gradient-brand)" }}
+      />
       <div className="relative font-mono text-5xl sm:text-7xl font-bold tracking-widest tabular-nums">
         <span className="text-foreground">{h}</span>
         <span className={`text-muted-foreground ${running ? "animate-pulse" : ""}`}>:</span>
         <span className="text-foreground">{m}</span>
         <span className={`text-muted-foreground ${running ? "animate-pulse" : ""}`}>:</span>
-        <span style={{ background: "var(--gradient-brand)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{s}</span>
+        <span style={{ background: "var(--gradient-brand)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+          {s}
+        </span>
       </div>
     </div>
   );
 }
 
 // ── Timeline Item ─────────────────────────────────────────────
-function TimelineItem({ event, isLast }: { event: TimelineEvent; isLast: boolean }) {
-  const Icon = event.icon;
+function TimelineItem({ event, isLast }: { event: TimelineEventItem; isLast: boolean }) {
+  const iconMap: Record<string, any> = {
+    checkin: LogIn,
+    checkout: LogOut,
+    break_start: Coffee,
+    break_end: Play,
+  };
+  const Icon = iconMap[event.type] || Clock;
+  const color =
+    event.type === "checkin"
+      ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-300"
+      : event.type === "checkout"
+      ? "bg-rose-500/20 text-rose-600 dark:text-rose-300"
+      : "bg-amber-500/20 text-amber-600 dark:text-amber-300";
+
   return (
     <div className="flex gap-3">
       <div className="flex flex-col items-center">
-        <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-full ${event.color}`}>
+        <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-full ${color}`}>
           <Icon className="h-3.5 w-3.5" />
         </div>
         {!isLast && <div className="mt-1 w-px flex-1 bg-border" />}
       </div>
-      <div className={`pb-4 ${isLast ? "" : ""}`}>
+      <div className="pb-4">
         <div className="text-sm font-medium">{event.label}</div>
         <div className="text-xs text-muted-foreground">{event.time}</div>
       </div>
@@ -190,25 +144,40 @@ function TimelineItem({ event, isLast }: { event: TimelineEvent; isLast: boolean
 }
 
 // ── Calendar Widget ────────────────────────────────────────────
-function MiniCalendar() {
+function MiniCalendar({ history }: { history: AttendanceHistoryItem[] }) {
   const today = new Date();
   const year = today.getFullYear();
   const month = today.getMonth();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDay = new Date(year, month, 1).getDay();
 
-  // Dynamic calendar statuses from real month days
+  // Create a fast lookup map for recorded attendance dates
+  const historyMap = new Map<string, AttendanceHistoryItem>();
+  history.forEach((h) => {
+    if (h.date) historyMap.set(h.date, h);
+  });
+
   const statuses: Record<number, AttendanceDay["status"]> = {};
   const todayDate = today.getDate();
+
   for (let d = 1; d <= daysInMonth; d++) {
     const dayDate = new Date(year, month, d);
     const dayOfWeek = dayDate.getDay();
+    const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+
     if (d === todayDate) {
       statuses[d] = "today";
     } else if (d > todayDate) {
       statuses[d] = "future";
     } else if (dayOfWeek === 0 || dayOfWeek === 6) {
       statuses[d] = "weekend";
+    } else {
+      const record = historyMap.get(dateStr);
+      if (record) {
+        statuses[d] = record.status === "Late" ? "late" : "present";
+      } else {
+        statuses[d] = "absent";
+      }
     }
   }
 
@@ -235,25 +204,29 @@ function MiniCalendar() {
       </div>
       <div className="grid grid-cols-7 gap-1 text-center">
         {days.map((d) => (
-          <div key={d} className="py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{d}</div>
+          <div key={d} className="py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            {d}
+          </div>
         ))}
         {cells.map((day, i) => {
           if (!day) return <div key={`e-${i}`} />;
-          const s = statuses[day] ?? (day > today.getDate() ? "future" : "absent");
+          const s = statuses[day] ?? "future";
           return (
-            <div key={day} className={`flex h-7 w-7 mx-auto items-center justify-center rounded-full text-xs transition-colors cursor-default ${COLOR[s] ?? ""}`}>
+            <div
+              key={day}
+              className={`flex h-7 w-7 mx-auto items-center justify-center rounded-full text-xs transition-colors cursor-default ${COLOR[s] ?? ""}`}
+            >
               {day}
             </div>
           );
         })}
       </div>
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className="mt-3 flex flex-wrap gap-2 justify-center">
         {[
           { color: "bg-emerald-500/20 text-emerald-600", label: "Present" },
           { color: "bg-amber-500/20 text-amber-700", label: "Late" },
-          { color: "bg-violet-500/20 text-violet-600", label: "Leave" },
           { color: "bg-rose-500/20 text-rose-600", label: "Absent" },
-          { color: "bg-sky-500/20 text-sky-600", label: "Holiday" },
+          { color: "bg-sky-500/20 text-sky-600", label: "Weekend / Off" },
         ].map((item) => (
           <div key={item.label} className="flex items-center gap-1">
             <span className={`h-2 w-2 rounded-full ${item.color}`} />
@@ -265,134 +238,38 @@ function MiniCalendar() {
   );
 }
 
-// ── AI Insights Widget ─────────────────────────────────────────
-function AIInsights() {
-  const insights = [
-    { icon: TrendingUp, label: "Attendance Score", value: "94%", trend: "+2%", positive: true },
-    { icon: Clock, label: "Avg. Check-In", value: "09:02 AM", trend: "On time", positive: true },
-    { icon: Timer, label: "Avg. Work Hours", value: "8h 42m", trend: "+12m", positive: true },
-    { icon: Activity, label: "Punctuality Rank", value: "#3 / 48", trend: "Top 10%", positive: true },
-  ];
-
-  return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-2">
-        {insights.map((item) => {
-          const Icon = item.icon;
-          return (
-            <div key={item.label} className="rounded-xl border border-border bg-card/40 p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">{item.label}</span>
-              </div>
-              <div className="font-display text-lg font-semibold">{item.value}</div>
-              <div className={`text-[10px] font-medium ${item.positive ? "text-emerald-500" : "text-rose-500"}`}>{item.trend}</div>
-            </div>
-          );
-        })}
-      </div>
-      <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 p-3">
-        <div className="flex items-start gap-2">
-          <Sparkles className="h-4 w-4 shrink-0 text-violet-500 mt-0.5" />
-          <div>
-            <div className="text-xs font-semibold text-violet-600 dark:text-violet-300 mb-1">AI Recommendation</div>
-            <p className="text-xs text-muted-foreground">Your attendance is excellent this month! Try to maintain the same pattern next week — you're on track for the perfect attendance bonus.</p>
-          </div>
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        <div className="rounded-xl border border-border bg-card/40 p-3">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Weekly Summary</div>
-          <div className="flex gap-1 mt-2">
-            {["P", "P", "P", "L", "P"].map((s, i) => (
-              <div key={i} className={`flex-1 h-8 rounded text-[9px] flex items-center justify-center font-bold ${
-                s === "P" ? "bg-emerald-500/20 text-emerald-600" : "bg-violet-500/20 text-violet-600"
-              }`}>{s}</div>
-            ))}
-          </div>
-          <div className="mt-1 text-[10px] text-muted-foreground text-center">Mon–Fri</div>
-        </div>
-        <div className="rounded-xl border border-border bg-card/40 p-3">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Monthly Score</div>
-          <div className="relative mt-2 h-8">
-            <div className="absolute inset-y-0 left-0 flex items-center">
-              <div className="h-2 rounded-full bg-muted w-full" style={{ width: "100%" }}>
-                <div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500" style={{ width: "94%" }} />
-              </div>
-            </div>
-          </div>
-          <div className="mt-2 text-center font-display text-xl font-bold">94<span className="text-sm text-muted-foreground">/100</span></div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Notification Item ─────────────────────────────────────────
-function NotificationItem({ icon: Icon, title, desc, time, color }: {
-  icon: any; title: string; desc: string; time: string; color: string;
+// ── Attendance Action Button ───────────────────────────────────
+function AttendBtn({
+  label,
+  icon: Icon,
+  onClick,
+  disabled,
+  variant,
+  loading,
+}: {
+  label: string;
+  icon: any;
+  onClick: () => void;
+  disabled?: boolean;
+  variant: "primary" | "success" | "warning" | "danger";
+  loading?: boolean;
 }) {
-  return (
-    <div className="flex items-start gap-3 rounded-lg p-2 transition-colors hover:bg-accent/40">
-      <div className={`grid h-7 w-7 shrink-0 place-items-center rounded-full ${color}`}>
-        <Icon className="h-3.5 w-3.5" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="text-xs font-medium">{title}</div>
-        <div className="text-[11px] text-muted-foreground truncate">{desc}</div>
-      </div>
-      <div className="text-[10px] shrink-0 text-muted-foreground">{time}</div>
-    </div>
-  );
-}
+  const cls = {
+    primary: "bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-700 hover:to-fuchsia-700 shadow-lg shadow-violet-500/25",
+    success: "bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 shadow-lg shadow-emerald-500/25",
+    warning: "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 shadow-lg shadow-amber-500/25",
+    danger: "bg-gradient-to-r from-rose-500 to-red-600 text-white hover:from-rose-600 hover:to-red-700 shadow-lg shadow-rose-500/25",
+  }[variant];
 
-// ── Recent History Table ───────────────────────────────────────
-const HISTORY_ROWS = [
-  { date: "Mon, 28 Jun", checkIn: "09:01 AM", breakDur: "32m", checkOut: "06:28 PM", hours: "8h 55m", ot: "—", status: "Present", location: "Office" },
-  { date: "Fri, 27 Jun", checkIn: "09:14 AM", breakDur: "35m", checkOut: "06:15 PM", hours: "8h 26m", ot: "—", status: "Present", location: "Office" },
-  { date: "Thu, 26 Jun", checkIn: "09:45 AM", breakDur: "30m", checkOut: "06:30 PM", hours: "8h 15m", ot: "—", status: "Late", location: "Office" },
-  { date: "Wed, 25 Jun", checkIn: "—", breakDur: "—", checkOut: "—", hours: "—", ot: "—", status: "Leave", location: "—" },
-  { date: "Tue, 24 Jun", checkIn: "08:58 AM", breakDur: "40m", checkOut: "06:55 PM", hours: "9h 17m", ot: "17m", status: "Present", location: "WFH" },
-  { date: "Mon, 23 Jun", checkIn: "09:03 AM", breakDur: "30m", checkOut: "06:22 PM", hours: "8h 49m", ot: "—", status: "Present", location: "Office" },
-];
-
-function HistoryTable() {
-  const STATUS_TONE: Record<string, string> = {
-    Present: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
-    Late: "bg-amber-500/15 text-amber-700 dark:text-amber-300",
-    Leave: "bg-violet-500/15 text-violet-600 dark:text-violet-300",
-    Absent: "bg-rose-500/15 text-rose-600 dark:text-rose-300",
-  };
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-border bg-muted/30 text-left text-[11px] uppercase tracking-wide text-muted-foreground">
-            {["Date", "Check In", "Break", "Check Out", "Hours", "OT", "Status", "Location"].map((h) => (
-              <th key={h} className="px-3 py-2.5 font-medium">{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {HISTORY_ROWS.map((r, i) => (
-            <tr key={i} className="border-b border-border/50 transition-colors hover:bg-accent/30">
-              <td className="px-3 py-2.5 font-medium text-xs">{r.date}</td>
-              <td className="px-3 py-2.5 text-xs font-mono">{r.checkIn}</td>
-              <td className="px-3 py-2.5 text-xs text-muted-foreground">{r.breakDur}</td>
-              <td className="px-3 py-2.5 text-xs font-mono">{r.checkOut}</td>
-              <td className="px-3 py-2.5 text-xs font-semibold">{r.hours}</td>
-              <td className="px-3 py-2.5 text-xs text-muted-foreground">{r.ot}</td>
-              <td className="px-3 py-2.5">
-                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${STATUS_TONE[r.status] ?? "bg-muted text-muted-foreground"}`}>
-                  {r.status}
-                </span>
-              </td>
-              <td className="px-3 py-2.5 text-xs text-muted-foreground">{r.location}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <button
+      onClick={onClick}
+      disabled={disabled || loading}
+      className={`group flex flex-col items-center justify-center gap-1.5 rounded-xl px-4 py-3 text-xs font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40 ${cls}`}
+    >
+      {loading ? <RefreshCw className="h-5 w-5 animate-spin" /> : <Icon className="h-5 w-5" />}
+      <span>{label}</span>
+    </button>
   );
 }
 
@@ -401,28 +278,107 @@ function CheckInPage() {
   const ws = useAurix();
   const user = ws.user;
 
-  // ── Attendance state ────────────────────────────────────────
+  // ── States ──────────────────────────────────────────────────
   const [status, setStatus] = useState<AttendanceStatus>("not-checked-in");
-  const [dayStatus, setDayStatus] = useState<DayStatus>("present");
   const [loading, setLoading] = useState<string | null>(null);
+  const [pageLoading, setPageLoading] = useState(true);
+  const [apiError, setApiError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" | "info" } | null>(null);
   const [noteEmp, setNoteEmp] = useState("");
+  const [notesOpen, setNotesOpen] = useState(false);
 
   // ── Timers ──────────────────────────────────────────────────
   const [workSec, setWorkSec] = useState(0);
   const [breakSec, setBreakSec] = useState(0);
   const [activeSec, setActiveSec] = useState(0);
   const checkInTimeRef = useRef<Date | null>(null);
-  const breakStartRef = useRef<Date | null>(null);
 
-  // ── Timeline events ─────────────────────────────────────────
-  const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
+  // ── Backend Data ─────────────────────────────────────────────
+  const [timeline, setTimeline] = useState<TimelineEventItem[]>([]);
+  const [historyList, setHistoryList] = useState<AttendanceHistoryItem[]>([]);
+  const [assignedShift, setAssignedShift] = useState<EmployeeShiftScheduleData | null>(null);
+  const [holidays, setHolidays] = useState<HolidayRecord[]>([]);
+  const [employeeDetails, setEmployeeDetails] = useState<{
+    id: string;
+    employee_id: string;
+    full_name: string;
+    department?: string | null;
+    designation?: string | null;
+  } | null>(null);
 
+  // ── Live Camera State ────────────────────────────────────────
+  const [cameraActive, setCameraActive] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
-  // ── Notes panel ─────────────────────────────────────────────
-  const [notesOpen, setNotesOpen] = useState(false);
+  // ── Toast Helper ─────────────────────────────────────────────
+  function showToast(msg: string, type: "success" | "error" | "info" = "success") {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 4000);
+  }
 
-  // ── Live clock tick ─────────────────────────────────────────
+  // ── Camera Handlers ──────────────────────────────────────────
+  const startCamera = useCallback(async () => {
+    setCameraError(null);
+    try {
+      if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+        throw new Error("Camera API is not supported in this browser.");
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
+        audio: false,
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+      }
+      setCameraActive(true);
+    } catch (err: any) {
+      console.warn("Camera could not be started:", err);
+      setCameraError(err?.message || "Could not access camera. Please allow camera permissions.");
+      setCameraActive(false);
+    }
+  }, []);
+
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setCameraActive(false);
+  }, []);
+
+  // Capture current frame from live video as Blob
+  const captureFrame = useCallback(async (): Promise<Blob | null> => {
+    if (!videoRef.current || !cameraActive) return null;
+    try {
+      const video = videoRef.current;
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return null;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      return await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.9);
+      });
+    } catch {
+      return null;
+    }
+  }, [cameraActive]);
+
+  useEffect(() => {
+    return () => {
+      stopCamera();
+    };
+  }, [stopCamera]);
+
+  // ── Live Working Clock Ticker ────────────────────────────────
   useEffect(() => {
     const t = setInterval(() => {
       if (status === "checked-in") {
@@ -436,113 +392,134 @@ function CheckInPage() {
     return () => clearInterval(t);
   }, [status]);
 
-  // ── Load punch status & timeline on mount ───────────────────
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadTodayState() {
-      try {
-        const [punchRes, timelineRes] = await Promise.allSettled([
+  // ── Load Real Attendance State from Backend ───────────────────
+  const loadAttendanceState = useCallback(async () => {
+    setApiError(null);
+    try {
+      const [punchRes, timelineRes, historyRes, shiftRes, holidaysRes, empRes] =
+        await Promise.allSettled([
           attendanceApi.getMyTodayStatus(),
           attendanceApi.getTimeline(),
+          attendanceApi.getMyAttendanceHistory(1, 20),
+          attendanceApi.getMyShiftSchedule(),
+          attendanceApi.getHolidays({ year: new Date().getFullYear() }),
+          attendanceApi.resolveCurrentEmployee(),
         ]);
 
-        if (!isMounted) return;
+      // 1. Process Punch State
+      if (punchRes.status === "fulfilled") {
+        const p = punchRes.value;
+        if (p.checkedOut) {
+          setStatus("checked-out");
+        } else if (p.onBreak) {
+          setStatus("on-break");
+        } else if (p.checkedIn) {
+          setStatus("checked-in");
+        } else {
+          setStatus("not-checked-in");
+        }
 
-        if (punchRes.status === "fulfilled") {
-          const p = punchRes.value;
-          if (p.checkedOut) {
-            setStatus("checked-out");
-          } else if (p.onBreak) {
-            setStatus("on-break");
-          } else if (p.checkedIn) {
-            setStatus("checked-in");
+        if (p.checkInTime) {
+          const inDate = new Date(p.checkInTime);
+          checkInTimeRef.current = inDate;
+          if (p.checkedOut && p.workingHours) {
+            setWorkSec(Math.round(p.workingHours * 3600));
           } else {
-            setStatus("not-checked-in");
-          }
-
-          if (p.checkInTime) {
-            checkInTimeRef.current = new Date(p.checkInTime);
-            const elapsed = Math.max(0, Math.floor((Date.now() - new Date(p.checkInTime).getTime()) / 1000));
+            const elapsed = Math.max(0, Math.floor((Date.now() - inDate.getTime()) / 1000));
             setWorkSec(elapsed);
-            setActiveSec(elapsed);
-          }
-          if (p.breakDurationMinutes) {
-            setBreakSec(p.breakDurationMinutes * 60);
           }
         }
-
-        if (timelineRes.status === "fulfilled" && timelineRes.value.length > 0) {
-          const iconMap: Record<string, any> = {
-            checkin: LogIn,
-            checkout: LogOut,
-            break_start: Coffee,
-            break_end: Play,
-            regularization: FileText,
-          };
-          const colorMap: Record<string, string> = {
-            checkin: "bg-emerald-500/20 text-emerald-600 dark:text-emerald-300",
-            checkout: "bg-rose-500/20 text-rose-600 dark:text-rose-300",
-            break_start: "bg-amber-500/20 text-amber-700 dark:text-amber-300",
-            break_end: "bg-sky-500/20 text-sky-600 dark:text-sky-300",
-            regularization: "bg-violet-500/20 text-violet-600 dark:text-violet-300",
-          };
-
-          setTimeline(
-            timelineRes.value.map((ev) => ({
-              id: ev.id,
-              time: ev.time,
-              label: ev.label,
-              icon: iconMap[ev.type] || Activity,
-              color: colorMap[ev.type] || "bg-muted text-muted-foreground",
-            }))
-          );
+        if (p.breakDurationMinutes) {
+          setBreakSec(p.breakDurationMinutes * 60);
         }
-      } catch (err) {
-        console.warn("Could not load today's attendance state from backend:", err);
       }
-    }
 
-    loadTodayState();
-    return () => {
-      isMounted = false;
-    };
+      // 2. Process Timeline
+      if (timelineRes.status === "fulfilled") {
+        setTimeline(timelineRes.value || []);
+      }
+
+      // 3. Process Attendance History
+      if (historyRes.status === "fulfilled") {
+        setHistoryList(historyRes.value?.items || []);
+      }
+
+      // 4. Process Shift Info
+      if (shiftRes.status === "fulfilled") {
+        setAssignedShift(shiftRes.value);
+      }
+
+      // 5. Process Holidays
+      if (holidaysRes.status === "fulfilled") {
+        setHolidays(holidaysRes.value || []);
+      }
+
+      // 6. Process Employee Details
+      if (empRes.status === "fulfilled" && empRes.value) {
+        setEmployeeDetails(empRes.value);
+      }
+    } catch (err: any) {
+      console.error("Error loading attendance state:", err);
+      setApiError(err?.message || "Failed to load real attendance data from backend.");
+    } finally {
+      setPageLoading(false);
+    }
   }, []);
 
-  function showToast(msg: string, type: "success" | "error" | "info" = "success") {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 4000);
-  }
+  useEffect(() => {
+    loadAttendanceState();
+  }, [loadAttendanceState]);
 
+  // ── Punch Actions ────────────────────────────────────────────
   async function handleCheckIn() {
     setLoading("checkin");
     try {
+      const photo = await captureFrame();
       const coords = await getCoordinates();
       const res = await attendanceApi.checkIn({
+        file: photo || undefined,
         latitude: coords?.lat,
         longitude: coords?.lng,
         deviceInfo: typeof navigator !== "undefined" ? navigator.userAgent : "Browser",
         notes: noteEmp || undefined,
       });
 
-      checkInTimeRef.current = new Date(res.time);
-      setStatus("checked-in");
-      setDayStatus("present");
-
-      setTimeline((prev) => [
-        {
-          id: res.id,
-          time: nowTimeStr(),
-          label: "Checked In",
-          icon: LogIn,
-          color: "bg-emerald-500/20 text-emerald-600 dark:text-emerald-300",
-        },
-        ...prev,
-      ]);
-
-      showToast(res.message || "✅ Checked in successfully!", "success");
+      showToast(res.message || "Checked in successfully!", "success");
+      await loadAttendanceState();
     } catch (err: any) {
-      showToast(err?.message || "Failed to check in. Try again.", "error");
+      const msg =
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to check in. Please verify your connection.";
+      showToast(msg, "error");
+    } finally {
+      setLoading(null);
+    }
+  }
+
+  async function handleCheckOut() {
+    setLoading("checkout");
+    try {
+      const photo = await captureFrame();
+      const coords = await getCoordinates();
+      const res = await attendanceApi.checkOut({
+        file: photo || undefined,
+        latitude: coords?.lat,
+        longitude: coords?.lng,
+        deviceInfo: typeof navigator !== "undefined" ? navigator.userAgent : "Browser",
+        notes: noteEmp || undefined,
+      });
+
+      showToast(res.message || "Checked out successfully. Have a great evening!", "success");
+      await loadAttendanceState();
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to check out.";
+      showToast(msg, "error");
     } finally {
       setLoading(null);
     }
@@ -551,22 +528,12 @@ function CheckInPage() {
   async function handleBreakIn() {
     setLoading("breakin");
     try {
-      const res = await attendanceApi.startBreak({ reason: "Rest Break", notes: noteEmp || undefined });
-      breakStartRef.current = new Date(res.time);
-      setStatus("on-break");
-
-      setTimeline((prev) => [
-        {
-          id: res.id,
-          time: nowTimeStr(),
-          label: "Break Started",
-          icon: Coffee,
-          color: "bg-amber-500/20 text-amber-700 dark:text-amber-300",
-        },
-        ...prev,
-      ]);
-
-      showToast(res.message || "☕ Break started", "info");
+      const res = await attendanceApi.startBreak({
+        reason: "Rest Break",
+        notes: noteEmp || undefined,
+      });
+      showToast(res.message || "Break started.", "info");
+      await loadAttendanceState();
     } catch (err: any) {
       showToast(err?.message || "Failed to start break.", "error");
     } finally {
@@ -578,20 +545,8 @@ function CheckInPage() {
     setLoading("breakout");
     try {
       const res = await attendanceApi.endBreak();
-      setStatus("checked-in");
-
-      setTimeline((prev) => [
-        {
-          id: res.id,
-          time: nowTimeStr(),
-          label: "Break Ended",
-          icon: Play,
-          color: "bg-sky-500/20 text-sky-600 dark:text-sky-300",
-        },
-        ...prev,
-      ]);
-
-      showToast(res.message || "Break ended. Back to work!", "info");
+      showToast(res.message || "Break ended. Welcome back!", "success");
+      await loadAttendanceState();
     } catch (err: any) {
       showToast(err?.message || "Failed to end break.", "error");
     } finally {
@@ -599,41 +554,8 @@ function CheckInPage() {
     }
   }
 
-  async function handleCheckOut() {
-    setLoading("checkout");
-    try {
-      const coords = await getCoordinates();
-      const res = await attendanceApi.checkOut({
-        latitude: coords?.lat,
-        longitude: coords?.lng,
-        deviceInfo: typeof navigator !== "undefined" ? navigator.userAgent : "Browser",
-        notes: noteEmp || undefined,
-      });
-
-      setStatus("checked-out");
-
-      setTimeline((prev) => [
-        {
-          id: res.id,
-          time: nowTimeStr(),
-          label: "Checked Out",
-          icon: LogOut,
-          color: "bg-rose-500/20 text-rose-600 dark:text-rose-300",
-        },
-        ...prev,
-      ]);
-
-      showToast(res.message || "👋 Checked out. Great work today!", "success");
-    } catch (err: any) {
-      showToast(err?.message || "Failed to check out.", "error");
-    } finally {
-      setLoading(null);
-    }
-  }
-
-  // Overtime is anything beyond 8h work
+  // Overtime & Late calculation based on real check-in
   const overtimeSec = Math.max(0, workSec - 28800);
-  // Calculate lateBy from real check-in time vs shift start time (09:00 AM standard shift with 15m grace)
   const lateBy = (() => {
     if (!checkInTimeRef.current) return 0;
     const checkInDate = new Date(checkInTimeRef.current);
@@ -644,68 +566,120 @@ function CheckInPage() {
     return diffSec > graceSec ? diffSec : 0;
   })();
 
-  const initials = user?.fullName?.split(" ").map((p) => p[0]).slice(0, 2).join("") || "JL";
+  const initials =
+    user?.fullName
+      ?.split(" ")
+      .map((p) => p[0])
+      .slice(0, 2)
+      .join("") || "EM";
+
+  // System/device info
+  const browserInfo = (() => {
+    if (typeof navigator === "undefined") return "Web Browser";
+    const ua = navigator.userAgent;
+    if (ua.includes("Chrome")) return "Chrome";
+    if (ua.includes("Safari")) return "Safari";
+    if (ua.includes("Firefox")) return "Firefox";
+    if (ua.includes("Edge")) return "Edge";
+    return "Browser";
+  })();
+
+  const platformInfo = typeof navigator !== "undefined" ? navigator.platform || "Desktop" : "Desktop";
+  const onlineStatus = typeof navigator !== "undefined" && navigator.onLine ? "Online" : "Offline";
+  const screenSize = typeof window !== "undefined" ? `${window.screen.width} × ${window.screen.height}` : "Desktop";
+
+  if (pageLoading) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3">
+        <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground font-medium">Connecting to attendance services...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6 pb-24">
-      {/* ── Toast ── */}
+    <div className="relative space-y-6 pb-16">
+      {/* Toast */}
       {toast && (
-        <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium shadow-xl backdrop-blur-xl ${
-          toast.type === "success" ? "bg-emerald-600 text-white" :
-          toast.type === "error" ? "bg-rose-600 text-white" :
-          "bg-sky-600 text-white"
-        }`}>
-          {toast.type === "success" ? <CheckCircle2 className="h-4 w-4" /> :
-           toast.type === "error" ? <AlertCircle className="h-4 w-4" /> :
-           <Info className="h-4 w-4" />}
+        <div
+          className={`fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-xl px-5 py-3 text-sm font-semibold shadow-2xl transition-all ${
+            toast.type === "success"
+              ? "bg-emerald-600 text-white"
+              : toast.type === "error"
+              ? "bg-rose-600 text-white"
+              : "bg-amber-600 text-white"
+          }`}
+        >
           {toast.msg}
         </div>
       )}
 
+      {/* API Error Notification */}
+      {apiError && (
+        <div className="flex items-center justify-between rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-destructive">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>{apiError}</span>
+          </div>
+          <Button size="sm" variant="outline" onClick={loadAttendanceState} className="gap-1 text-xs">
+            <RefreshCw className="h-3 w-3" /> Retry
+          </Button>
+        </div>
+      )}
 
       {/* ── Main Grid ── */}
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        {/* ── Left Column ── */}
+        {/* Left 2 Cols: Check-in, Timer, Actions, History */}
         <div className="space-y-6 xl:col-span-2">
+          {/* ── Check In / Hero Card ── */}
+          <GlassCard className="relative overflow-hidden">
+            <div
+              className="absolute -right-20 -top-20 h-64 w-64 rounded-full blur-3xl opacity-10"
+              style={{ background: "var(--gradient-brand)" }}
+            />
+            <div className="relative">
+              {/* Header: User avatar + info */}
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <div
+                      className="grid h-16 w-16 place-items-center rounded-2xl text-2xl font-bold text-white shadow-lg"
+                      style={{ background: "var(--gradient-brand)" }}
+                    >
+                      {initials}
+                    </div>
+                    <div
+                      className={`absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background ${
+                        status === "checked-in"
+                          ? "bg-emerald-500"
+                          : status === "on-break"
+                          ? "bg-amber-500"
+                          : "bg-muted-foreground"
+                      }`}
+                    />
+                  </div>
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="font-display text-lg font-semibold">{user?.fullName || "Employee"}</h2>
+                    </div>
+                    {employeeDetails?.employee_id && (
+                      <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <User className="h-3 w-3" /> EMP-{employeeDetails.employee_id}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-          {/* ── Hero Card ── */}
-          <GlassCard className="!p-0 overflow-hidden">
-            {/* Top gradient strip */}
-            <div className="h-1.5 w-full" style={{ background: "var(--gradient-brand)" }} />
-            <div className="p-5">
-              <div className="flex flex-wrap items-start gap-4">
-                {/* Avatar */}
-                <div
-                  onClick={() => logout()}
-                  role="button"
-                  tabIndex={0}
-                  className="relative cursor-pointer"
-                  title={`${user?.fullName || "User"} — Click to logout`}
-                >
-                  <div className="grid h-16 w-16 place-items-center rounded-2xl text-2xl font-bold text-white shadow-lg transition-transform hover:scale-105"
-                    style={{ background: "var(--gradient-brand)" }}>
-                    {initials}
-                  </div>
-                  <div className={`absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background ${
-                    status === "checked-in" ? "bg-emerald-500" :
-                    status === "on-break" ? "bg-amber-500" :
-                    status === "checked-out" ? "bg-muted-foreground" : "bg-muted-foreground"
-                  }`} />
-                </div>
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="font-display text-lg font-semibold">{user?.fullName ?? "Jordan Lee"}</h2>
-                  </div>
-                  <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1"><User className="h-3 w-3" /> EMP-{ws.employees[0]?.employeeId ?? "2024001"}</span>
-                  </div>
-                </div>
                 {/* Working hours today */}
                 <div className="text-right">
                   <div className="text-xs text-muted-foreground uppercase tracking-wide">Working Today</div>
                   <div className="font-mono text-2xl font-bold tabular-nums">{fmtHM(workSec)}</div>
-                  <div className="text-xs text-muted-foreground">Expected: 9h 00m</div>
+                  <div className="text-xs text-muted-foreground">
+                    {status === "checked-in" ? "Shift in progress" : status === "checked-out" ? "Shift completed" : "Awaiting check-in"}
+                  </div>
                 </div>
               </div>
 
@@ -746,23 +720,39 @@ function CheckInPage() {
               </div>
 
               {/* Status bar */}
-              <div className="mt-4 flex items-center justify-between rounded-lg bg-muted/50 px-4 py-2.5 text-xs">
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-muted/50 px-4 py-2.5 text-xs">
                 <div className="flex items-center gap-2">
-                  <span className={`h-2 w-2 rounded-full ${
-                    status === "checked-in" ? "bg-emerald-500 animate-pulse" :
-                    status === "on-break" ? "bg-amber-500 animate-pulse" :
-                    status === "checked-out" ? "bg-muted-foreground" : "bg-muted-foreground"
-                  }`} />
+                  <span
+                    className={`h-2 w-2 rounded-full ${
+                      status === "checked-in"
+                        ? "bg-emerald-500 animate-pulse"
+                        : status === "on-break"
+                        ? "bg-amber-500 animate-pulse"
+                        : "bg-muted-foreground"
+                    }`}
+                  />
                   <span className="font-medium">
-                    {status === "not-checked-in" ? "Not Checked In" :
-                     status === "checked-in" ? "Currently Working" :
-                     status === "on-break" ? "On Break" : "Day Complete"}
+                    {status === "not-checked-in"
+                      ? "Not Checked In"
+                      : status === "checked-in"
+                      ? "Currently Working"
+                      : status === "on-break"
+                      ? "On Break"
+                      : "Day Complete"}
                   </span>
                 </div>
-                <div className="flex gap-4 text-muted-foreground">
-                  <span>Break: <strong className="text-foreground">{fmtHM(breakSec)}</strong></span>
-                  <span>OT: <strong className={overtimeSec > 0 ? "text-violet-500" : "text-foreground"}>{fmtHM(overtimeSec)}</strong></span>
-                  {lateBy > 0 && <span>Late by: <strong className="text-amber-500">{fmtHM(lateBy)}</strong></span>}
+                <div className="flex flex-wrap gap-4 text-muted-foreground">
+                  <span>
+                    Break: <strong className="text-foreground">{fmtHM(breakSec)}</strong>
+                  </span>
+                  <span>
+                    OT: <strong className={overtimeSec > 0 ? "text-violet-500" : "text-foreground"}>{fmtHM(overtimeSec)}</strong>
+                  </span>
+                  {lateBy > 0 && (
+                    <span>
+                      Late by: <strong className="text-amber-500">{fmtHM(lateBy)}</strong>
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -789,16 +779,28 @@ function CheckInPage() {
             </div>
           </GlassCard>
 
-          {/* ── Summary Stats ── */}
+          {/* ── Today's Summary ── */}
           <div>
             <SectionHeader title="Today's Summary" icon={BarChart3} />
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              <StatCard label="Working Hours" value={fmtHM(workSec)} hint="Expected: 9h 00m" icon={Clock} accent="brand" />
+              <StatCard label="Working Hours" value={fmtHM(workSec)} hint="Standard: 9h 00m" icon={Clock} accent="brand" />
               <StatCard label="Break Duration" value={fmtHM(breakSec)} hint="Max allowed: 1h" icon={Coffee} accent="warning" />
-              <StatCard label="Overtime" value={fmtHM(overtimeSec)} hint={overtimeSec > 0 ? "Eligible for OT pay" : "No overtime"} icon={Zap} accent="success" />
+              <StatCard label="Overtime" value={fmtHM(overtimeSec)} hint={overtimeSec > 0 ? "Eligible for OT" : "Standard time"} icon={Zap} accent="success" />
               <StatCard label="Late By" value={lateBy > 0 ? fmtHM(lateBy) : "On Time"} hint="Grace: 15 mins" icon={AlertCircle} accent={lateBy > 0 ? "danger" : "success"} />
-              <StatCard label="Early Exit" value="—" hint="Not applicable" icon={LogOut} accent="muted" />
-              <StatCard label="Attendance Score" value="94%" hint="Top performer" icon={Award} accent="success" />
+              <StatCard
+                label="Check In Time"
+                value={checkInTimeRef.current ? checkInTimeRef.current.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }) : "—"}
+                hint={checkInTimeRef.current ? "Recorded today" : "Pending check-in"}
+                icon={LogIn}
+                accent="brand"
+              />
+              <StatCard
+                label="Current Status"
+                value={status === "checked-in" ? "Working" : status === "on-break" ? "On Break" : status === "checked-out" ? "Checked Out" : "Not In"}
+                hint={nowDateStr()}
+                icon={CheckCircle2}
+                accent={status === "checked-in" ? "success" : "muted"}
+              />
             </div>
           </div>
 
@@ -809,8 +811,9 @@ function CheckInPage() {
               <SectionHeader title="Today's Timeline" icon={History} />
               {timeline.length === 0 ? (
                 <div className="py-8 text-center">
-                  <Clock className="mx-auto mb-2 h-8 w-8 text-muted-foreground/40" />
-                  <p className="text-sm text-muted-foreground">No events yet. Check in to start.</p>
+                  <Clock className="mx-auto mb-2 h-8 w-8 text-muted-foreground/30" />
+                  <p className="text-sm font-medium text-foreground">No events yet</p>
+                  <p className="text-xs text-muted-foreground mt-1">Check in to start recording today's activity.</p>
                 </div>
               ) : (
                 <div className="mt-2">
@@ -826,14 +829,33 @@ function CheckInPage() {
               <SectionHeader title="Shift Information" icon={Briefcase} />
               <div className="space-y-2.5 text-sm">
                 {[
-                  { label: "Shift Name", value: "Morning Shift" },
-                  { label: "Timing", value: "09:00 AM – 06:00 PM" },
-                  { label: "Manager", value: ws.employees[0]?.managerName ?? "Alex Morgan" },
-                  { label: "Working Days", value: "Mon – Fri" },
-                  { label: "Expected Hours", value: "9h 00m" },
-                  { label: "Grace Time", value: "15 minutes" },
-                  { label: "Weekend", value: "Sat, Sun" },
-                  { label: "Location", value: "Bangalore HQ" },
+                  {
+                    label: "Shift Name",
+                    value: assignedShift?.currentShift?.name || "General Shift",
+                  },
+                  {
+                    label: "Timing",
+                    value:
+                      assignedShift?.currentShift?.startTime && assignedShift?.currentShift?.endTime
+                        ? `${assignedShift.currentShift.startTime} – ${assignedShift.currentShift.endTime}`
+                        : "09:00 AM – 06:00 PM",
+                  },
+                  {
+                    label: "Working Days",
+                    value: assignedShift?.currentShift?.workingDays?.join(", ") || "Mon – Fri",
+                  },
+                  {
+                    label: "Expected Hours",
+                    value: `${assignedShift?.currentShift?.workHours || 9}h 00m`,
+                  },
+                  {
+                    label: "Grace Time",
+                    value: `${assignedShift?.currentShift?.gracePeriodMinutes || 15} minutes`,
+                  },
+                  {
+                    label: "Break Duration",
+                    value: `${assignedShift?.currentShift?.breakDurationMinutes || 60} minutes`,
+                  },
                 ].map((row) => (
                   <div key={row.label} className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-muted/40 transition-colors">
                     <span className="text-muted-foreground text-xs">{row.label}</span>
@@ -844,51 +866,58 @@ function CheckInPage() {
             </GlassCard>
           </div>
 
-          {/* ── Two-col grid: Face Verification + Device ── */}
+          {/* ── Two-col grid: Face Verification Camera + Device ── */}
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            {/* Face Verification */}
+            {/* Face Verification Camera */}
             <GlassCard>
               <SectionHeader title="Face Verification" icon={Camera} />
               <div className="space-y-3">
-                {/* Camera preview placeholder */}
-                <div className="relative h-32 rounded-xl border border-dashed border-border bg-muted/20 overflow-hidden flex flex-col items-center justify-center gap-2">
-                  <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-fuchsia-500/5" />
-                  <Camera className="h-8 w-8 text-muted-foreground/40" />
-                  <span className="text-xs text-muted-foreground">Camera preview area</span>
-                  <span className="text-[10px] text-muted-foreground/60">Live feed will appear here</span>
+                <div className="relative h-44 rounded-xl border border-border bg-black/40 overflow-hidden flex flex-col items-center justify-center">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className={`h-full w-full object-cover ${cameraActive ? "block" : "hidden"}`}
+                  />
+                  {!cameraActive && (
+                    <div className="flex flex-col items-center gap-2 p-4 text-center">
+                      <CameraOff className="h-8 w-8 text-muted-foreground/40" />
+                      <span className="text-xs text-muted-foreground">Camera feed is inactive</span>
+                      {cameraError && <span className="text-[11px] text-destructive">{cameraError}</span>}
+                    </div>
+                  )}
+                  {cameraActive && (
+                    <div className="absolute top-2 right-2 flex items-center gap-1.5 rounded-full bg-emerald-500/80 px-2.5 py-0.5 text-[10px] font-semibold text-white">
+                      <span className="h-1.5 w-1.5 rounded-full bg-white animate-ping" /> Live Preview
+                    </div>
+                  )}
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="rounded-lg border border-border bg-card/40 p-2">
-                    <div className="text-muted-foreground">Status</div>
-                    <div className="flex items-center gap-1 font-medium text-emerald-500"><CheckCircle2 className="h-3 w-3" /> Verified</div>
-                  </div>
-                  <div className="rounded-lg border border-border bg-card/40 p-2">
-                    <div className="text-muted-foreground">Confidence</div>
-                    <div className="font-medium">97.4%</div>
-                  </div>
-                  <div className="rounded-lg border border-border bg-card/40 p-2 col-span-2">
-                    <div className="text-muted-foreground">Last Verified</div>
-                    <div className="font-medium">{nowTimeStr()}</div>
-                  </div>
+
+                <div className="flex gap-2">
+                  {!cameraActive ? (
+                    <Button size="sm" variant="outline" className="w-full gap-2 text-xs" onClick={startCamera}>
+                      <Video className="h-3.5 w-3.5" /> Enable Camera
+                    </Button>
+                  ) : (
+                    <Button size="sm" variant="outline" className="w-full gap-2 text-xs text-rose-500 hover:text-rose-600" onClick={stopCamera}>
+                      <CameraOff className="h-3.5 w-3.5" /> Turn Off Camera
+                    </Button>
+                  )}
                 </div>
-                <Button size="sm" variant="outline" className="w-full gap-2">
-                  <Fingerprint className="h-3.5 w-3.5" /> Verify Face
-                </Button>
               </div>
             </GlassCard>
 
-            {/* Device */}
+            {/* Device Information */}
             <GlassCard>
               <SectionHeader title="Device Information" icon={Monitor} />
               <div className="space-y-2 text-xs">
                 {[
-                  { label: "Device Type", value: "Desktop", icon: Laptop },
-                  { label: "Browser", value: "Chrome 126", icon: Globe },
-                  { label: "OS", value: "Windows 11", icon: Monitor },
-                  { label: "IP Address", value: "192.168.1.42", icon: Wifi },
-                  { label: "Network", value: "Corporate WiFi", icon: Wifi },
-                  { label: "VPN", value: "Not Detected", icon: Shield },
-                  { label: "Device Trust", value: "Trusted", icon: ShieldCheck },
+                  { label: "Browser", value: browserInfo, icon: Laptop },
+                  { label: "Operating System", value: platformInfo, icon: Monitor },
+                  { label: "Display Resolution", value: screenSize, icon: Monitor },
+                  { label: "Network State", value: onlineStatus, icon: Wifi },
+                  { label: "Session Security", value: "Authenticated via JWT", icon: ShieldCheck },
                 ].map((row) => {
                   const Icon = row.icon;
                   return (
@@ -905,28 +934,6 @@ function CheckInPage() {
             </GlassCard>
           </div>
 
-          {/* ── Attendance Rules ── */}
-          <GlassCard>
-            <SectionHeader title="Attendance Rules" icon={FileText} />
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 text-xs">
-              {[
-                { label: "Office Timing", value: "09:00 AM – 06:00 PM" },
-                { label: "Grace Period", value: "15 minutes" },
-                { label: "Maximum Break", value: "60 minutes/day" },
-                { label: "Late Policy", value: "3 lates = 1 absent" },
-                { label: "Early Exit", value: "Requires manager approval" },
-                { label: "Overtime Rules", value: "After 9h, eligible for OT" },
-                { label: "WFH Policy", value: "Max 4 days/month" },
-                { label: "Geo-fence Radius", value: "500m from office" },
-              ].map((row) => (
-                <div key={row.label} className="flex items-center justify-between rounded-lg border border-border/50 px-3 py-2">
-                  <span className="text-muted-foreground">{row.label}</span>
-                  <span className="font-medium">{row.value}</span>
-                </div>
-              ))}
-            </div>
-          </GlassCard>
-
           {/* ── Notes ── */}
           <GlassCard>
             <div className="flex items-center justify-between mb-4">
@@ -939,166 +946,196 @@ function CheckInPage() {
             {notesOpen && (
               <div className="space-y-4">
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Employee Note</label>
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Daily Attendance Note
+                  </label>
                   <Textarea
                     className="mt-1.5 resize-none text-sm"
                     rows={3}
-                    placeholder="Add a note for today's attendance..."
+                    placeholder="Add an optional note for today's punch..."
                     value={noteEmp}
                     onChange={(e) => setNoteEmp(e.target.value)}
                   />
                 </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Manager Note</label>
-                  <div className="mt-1.5 min-h-[72px] rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm text-muted-foreground italic">
-                    No notes from manager yet.
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">HR Note</label>
-                  <div className="mt-1.5 min-h-[72px] rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm text-muted-foreground italic">
-                    No notes from HR yet.
-                  </div>
-                </div>
-                <Button size="sm" className="gap-2" onClick={() => showToast("Note saved successfully!", "success")}>
+                <Button size="sm" className="gap-2" onClick={() => showToast("Note will be saved with next punch", "info")}>
                   <Send className="h-3.5 w-3.5" /> Save Note
                 </Button>
               </div>
             )}
           </GlassCard>
 
-          {/* ── AI Insights ── */}
-          <GlassCard>
-            <SectionHeader title="AI Attendance Insights" subtitle="Powered by OFC360" icon={Brain} />
-            <AIInsights />
-          </GlassCard>
-
           {/* ── Calendar ── */}
           <GlassCard>
-            <SectionHeader title="Monthly Calendar" icon={CalendarDays} />
-            <MiniCalendar />
+            <SectionHeader title="Monthly Attendance Calendar" icon={CalendarDays} />
+            <MiniCalendar history={historyList} />
           </GlassCard>
 
-          {/* ── History ── */}
+          {/* ── Real Attendance History Table ── */}
           <GlassCard className="!p-0 overflow-hidden">
             <div className="flex items-center justify-between border-b border-border px-5 py-3">
               <div className="flex items-center gap-2">
                 <History className="h-4 w-4 text-muted-foreground" />
                 <h2 className="font-semibold text-sm">Recent Attendance History</h2>
               </div>
-              <Button size="sm" variant="outline" className="gap-1.5 text-xs h-7">
-                <Download className="h-3.5 w-3.5" /> Export
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5 text-xs h-7"
+                onClick={loadAttendanceState}
+              >
+                <RefreshCw className="h-3.5 w-3.5" /> Refresh
               </Button>
             </div>
-            <HistoryTable />
+
+            {historyList.length === 0 ? (
+              <div className="py-12 text-center">
+                <History className="mx-auto mb-3 h-10 w-10 text-muted-foreground/30" />
+                <p className="text-sm font-medium text-foreground">No attendance records found.</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Your daily check-in and check-out records from the database will appear here.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border bg-muted/30 text-left text-[11px] uppercase tracking-wide text-muted-foreground">
+                      {["Date", "Check In", "Check Out", "Working Hours", "Status", "Location"].map((h) => (
+                        <th key={h} className="px-3 py-2.5 font-medium">
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {historyList.map((r) => (
+                      <tr key={r.id} className="border-b border-border/50 transition-colors hover:bg-accent/30">
+                        <td className="px-3 py-2.5 font-medium text-xs">{r.date}</td>
+                        <td className="px-3 py-2.5 text-xs font-mono">{r.checkInTime || "—"}</td>
+                        <td className="px-3 py-2.5 text-xs font-mono">{r.checkOutTime || "—"}</td>
+                        <td className="px-3 py-2.5 text-xs font-semibold">
+                          {r.workingHours ? fmtHM(r.workingHours * 3600) : "—"}
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <span
+                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                              r.status === "Present"
+                                ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                                : r.status === "Late"
+                                ? "bg-amber-500/15 text-amber-700 dark:text-amber-300"
+                                : "bg-rose-500/15 text-rose-600 dark:text-rose-300"
+                            }`}
+                          >
+                            {r.status}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5 text-xs text-muted-foreground">{r.location || "Office"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </GlassCard>
         </div>
 
-        {/* ── Right Sidebar ── */}
+        {/* ── Right Sidebar: Real Upcoming Holidays & Dynamic Notifications ── */}
         <div className="space-y-5">
-          {/* Notifications */}
+          {/* Dynamic Notifications */}
           <GlassCard>
-            <SectionHeader title="Notifications" icon={Bell} />
-            <div className="space-y-1">
-              <NotificationItem icon={CheckCircle2} title="Attendance Confirmed" desc="Check-in recorded at 09:01 AM" time="9:01" color="bg-emerald-500/15 text-emerald-600 dark:text-emerald-300" />
-              <NotificationItem icon={AlertCircle} title="Break Limit" desc="You've been on break for 28 mins" time="1:33" color="bg-amber-500/15 text-amber-700 dark:text-amber-300" />
-              <NotificationItem icon={CalendarDays} title="Holiday Tomorrow" desc="Wednesday is a public holiday" time="8:00" color="bg-sky-500/15 text-sky-600 dark:text-sky-300" />
-              <NotificationItem icon={Bell} title="Shift Change" desc="Your shift timings have been updated" time="Fri" color="bg-violet-500/15 text-violet-600 dark:text-violet-300" />
+            <SectionHeader title="Today's Status" icon={CheckCircle2} />
+            <div className="space-y-2 text-xs">
+              <div className="flex items-start gap-3 rounded-lg border border-border/40 p-2.5">
+                <div
+                  className={`grid h-7 w-7 shrink-0 place-items-center rounded-full ${
+                    status === "checked-in"
+                      ? "bg-emerald-500/15 text-emerald-600"
+                      : status === "on-break"
+                      ? "bg-amber-500/15 text-amber-600"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  <Clock className="h-3.5 w-3.5" />
+                </div>
+                <div>
+                  <div className="font-semibold text-foreground">
+                    {status === "checked-in"
+                      ? "Active Shift"
+                      : status === "on-break"
+                      ? "On Break"
+                      : status === "checked-out"
+                      ? "Shift Finished"
+                      : "Awaiting Punch"}
+                  </div>
+                  <div className="text-muted-foreground mt-0.5">
+                    {checkInTimeRef.current
+                      ? `Checked in at ${checkInTimeRef.current.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}`
+                      : "Punch in to begin recording today's work hours."}
+                  </div>
+                </div>
+              </div>
+
+              {lateBy > 0 && (
+                <div className="flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5">
+                  <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                  <div>
+                    <div className="font-semibold text-amber-700 dark:text-amber-300">Late Punch Alert</div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5">
+                      Shift arrival was recorded after the standard 15-minute grace window.
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </GlassCard>
 
-          {/* Weather */}
-          <GlassCard>
-            <SectionHeader title="Today's Weather" icon={Globe} />
-            <div className="flex items-center gap-4 py-2">
-              <div className="text-5xl">🌤️</div>
-              <div>
-                <div className="font-display text-2xl font-bold">28°C</div>
-                <div className="text-sm text-muted-foreground">Partly Cloudy</div>
-                <div className="text-xs text-muted-foreground">Bangalore, KA</div>
-              </div>
-            </div>
-            <div className="mt-2 flex justify-between text-xs text-muted-foreground">
-              <span>Humidity: 68%</span>
-              <span>Wind: 14 km/h</span>
-              <span>UV: Low</span>
-            </div>
-          </GlassCard>
-
-          {/* Company Notice */}
-          <GlassCard>
-            <SectionHeader title="Company Notice" icon={Flag} />
-            <div className="space-y-2">
-              <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 text-xs">
-                <div className="font-semibold text-amber-700 dark:text-amber-300 mb-1">🏖️ Eid Holiday</div>
-                <p className="text-muted-foreground">Office will remain closed on July 7th (Monday). Apply WFH or enjoy the long weekend!</p>
-              </div>
-              <div className="rounded-lg border border-sky-500/20 bg-sky-500/5 p-3 text-xs">
-                <div className="font-semibold text-sky-600 dark:text-sky-300 mb-1">📢 Attendance Policy Update</div>
-                <p className="text-muted-foreground">New geo-fencing radius will be 300m from July 1st. Please check the updated HR policy.</p>
-              </div>
-            </div>
-          </GlassCard>
-
-          {/* Upcoming Holidays */}
+          {/* Real Upcoming Holidays */}
           <GlassCard>
             <SectionHeader title="Upcoming Holidays" icon={CalendarDays} />
-            <div className="space-y-2">
-              {[
-                { date: "Jul 7", name: "Eid al-Adha", type: "National" },
-                { date: "Aug 15", name: "Independence Day", type: "National" },
-                { date: "Aug 26", name: "Janmashtami", type: "Restricted" },
-                { date: "Oct 2", name: "Gandhi Jayanti", type: "National" },
-              ].map((h) => (
-                <div key={h.date} className="flex items-center justify-between rounded-lg px-2 py-2 hover:bg-muted/40 transition-colors">
-                  <div>
-                    <div className="text-xs font-medium">{h.name}</div>
-                    <div className="text-[10px] text-muted-foreground">{h.type}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xs font-mono font-semibold">{h.date}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </GlassCard>
-
-          {/* Birthday Wishes */}
-          <GlassCard>
-            <SectionHeader title="Celebrations" icon={Star} />
-            <div className="space-y-2">
-              <div className="flex items-center gap-3 rounded-lg bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 px-3 py-2.5">
-                <div className="text-2xl">🎂</div>
-                <div className="min-w-0">
-                  <div className="text-xs font-semibold">Rahul Kumar's Birthday</div>
-                  <div className="text-[10px] text-muted-foreground">Today · Engineering Team</div>
-                </div>
+            {holidays.length === 0 ? (
+              <div className="py-6 text-center">
+                <CalendarDays className="mx-auto mb-2 h-7 w-7 text-muted-foreground/30" />
+                <p className="text-xs text-muted-foreground">No upcoming holidays found.</p>
               </div>
-              <div className="flex items-center gap-3 rounded-lg bg-gradient-to-r from-emerald-500/10 to-teal-500/10 px-3 py-2.5">
-                <div className="text-2xl">🎉</div>
-                <div className="min-w-0">
-                  <div className="text-xs font-semibold">Priya Nair — Work Anniversary</div>
-                  <div className="text-[10px] text-muted-foreground">Today · 5 years at OFC360!</div>
-                </div>
+            ) : (
+              <div className="space-y-2">
+                {holidays.slice(0, 5).map((h) => (
+                  <div
+                    key={h.id || h.date}
+                    className="flex items-center justify-between rounded-lg px-2 py-2 hover:bg-muted/40 transition-colors"
+                  >
+                    <div>
+                      <div className="text-xs font-medium">{h.name}</div>
+                      <div className="text-[10px] text-muted-foreground">{h.type || "Company Holiday"}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs font-mono font-semibold">{h.date}</div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
+            )}
           </GlassCard>
 
           {/* Quick Links */}
           <GlassCard>
-            <SectionHeader title="Quick Links" icon={Bookmark} />
+            <SectionHeader title="Quick Links" icon={Zap} />
             <div className="grid grid-cols-2 gap-2">
               {[
-                { label: "Apply Leave", icon: CalendarDays, href: "/dashboard/leaves/apply" },
-                { label: "Raise Ticket", icon: HelpCircle, href: "/dashboard/help/raise-ticket" },
-                { label: "HR Contact", icon: UserCog, href: "/dashboard/communication/team-directory" },
-                { label: "Regularize", icon: FileText, href: "/dashboard/attendance/regularization" },
-                { label: "Download Report", icon: Download, href: "#" },
-                { label: "Policy Docs", icon: BookOpen, href: "/dashboard/documents/policies" },
+                { label: "My Leaves", icon: CalendarDays, href: "/dashboard/leaves" },
+                { label: "My Shifts", icon: Clock, href: "/dashboard/attendance/shifts" },
+                { label: "My Roster", icon: CalendarDays, href: "/dashboard/attendance/rosters" },
+                { label: "Holidays", icon: CalendarDays, href: "/dashboard/attendance/holidays" },
+                { label: "Support", icon: HelpCircle, href: "/dashboard/help/raise-ticket" },
+                { label: "Directory", icon: User, href: "/dashboard/workforce" },
               ].map((ql) => {
                 const Icon = ql.icon;
                 return (
-                  <a key={ql.label} href={ql.href} className="flex items-center gap-2 rounded-lg border border-border/50 px-3 py-2 text-xs font-medium transition-colors hover:bg-accent/60 hover:border-border">
+                  <a
+                    key={ql.label}
+                    href={ql.href}
+                    className="flex items-center gap-2 rounded-lg border border-border/50 px-3 py-2 text-xs font-medium transition-colors hover:bg-accent/60 hover:border-border"
+                  >
                     <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                     {ql.label}
                   </a>
@@ -1108,52 +1145,8 @@ function CheckInPage() {
           </GlassCard>
         </div>
       </div>
-
-      {/* ── Floating Action Button ── */}
-      <FloatingActions onCheckIn={handleCheckIn} onCheckOut={handleCheckOut} status={status} />
     </div>
   );
 }
-
-// ── Floating Actions ───────────────────────────────────────────
-function FloatingActions({ onCheckIn, onCheckOut, status }: {
-  onCheckIn: () => void; onCheckOut: () => void; status: AttendanceStatus;
-}) {
-  const [open, setOpen] = useState(false);
-  const actions = [
-    { label: "Check In", icon: LogIn, onClick: onCheckIn, disabled: status !== "not-checked-in", color: "bg-emerald-500 hover:bg-emerald-600" },
-    { label: "Check Out", icon: LogOut, onClick: onCheckOut, disabled: status !== "checked-in" && status !== "on-break", color: "bg-rose-500 hover:bg-rose-600" },
-    { label: "Regularize", icon: FileText, onClick: () => {}, color: "bg-amber-500 hover:bg-amber-600" },
-    { label: "Download", icon: Download, onClick: () => {}, color: "bg-sky-500 hover:bg-sky-600" },
-    { label: "Contact HR", icon: MessageSquare, onClick: () => {}, color: "bg-violet-500 hover:bg-violet-600" },
-  ];
-  return (
-    <div className="fixed bottom-6 right-6 z-40 flex flex-col-reverse items-end gap-2">
-      {open && actions.map((a) => {
-        const Icon = a.icon;
-        return (
-          <button
-            key={a.label}
-            onClick={() => { a.onClick(); setOpen(false); }}
-            disabled={a.disabled}
-            className={`flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold text-white shadow-lg transition-all ${a.color} disabled:opacity-40 disabled:cursor-not-allowed`}
-          >
-            <Icon className="h-4 w-4" /> {a.label}
-          </button>
-        );
-      })}
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="grid h-12 w-12 place-items-center rounded-full text-white shadow-xl transition-transform hover:scale-110 active:scale-95"
-        style={{ background: "var(--gradient-brand)" }}
-        aria-label="Quick actions"
-      >
-        {open ? <X className="h-5 w-5" /> : <Zap className="h-5 w-5" />}
-      </button>
-    </div>
-  );
-}
-
-
 
 export default CheckInPage;
