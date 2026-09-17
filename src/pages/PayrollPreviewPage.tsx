@@ -489,6 +489,18 @@ export function PayrollPreviewPage() {
           <span className="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm">
             Payroll Preview
           </span>
+          <Link
+            to={`/dashboard/payroll/runs/${runId}/validation` as any}
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
+          >
+            Validation & Issues
+          </Link>
+          <Link
+            to={`/dashboard/payroll/runs/${runId}/approval` as any}
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
+          >
+            Review & Approval
+          </Link>
         </div>
 
         {/* Back Link */}
@@ -560,6 +572,21 @@ export function PayrollPreviewPage() {
           >
             <ShieldCheck className="h-3.5 w-3.5" />
             <span>Validation & Issues</span>
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              navigate({
+                to: `/dashboard/payroll/runs/${runId}/approval` as any,
+              })
+            }
+            className="h-9 gap-1.5 text-xs shadow-sm text-foreground hover:bg-muted/60"
+            title="Proceed to Step 7 Review & Approval"
+          >
+            <UserCheck className="h-3.5 w-3.5 text-primary" />
+            <span>Review & Approval</span>
           </Button>
 
           {canRunPayroll ? (

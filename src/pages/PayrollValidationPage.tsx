@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useParams, useNavigate } from "@tanstack/react-router";
+import { Link, useParams, useNavigate } from "@tanstack/react-router";
 import {
   AlertCircle,
   AlertTriangle,
@@ -19,6 +19,7 @@ import {
   Search,
   ShieldAlert,
   ShieldCheck,
+  UserCheck,
   Users,
   X,
   XCircle,
@@ -504,6 +505,48 @@ export function PayrollValidationPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 pb-16">
+      {/* ── Top Subnav Breadcrumb Pills ──────────────────────────────── */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-3">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <Link
+            to="/dashboard/payroll/periods"
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
+          >
+            Payroll Periods
+          </Link>
+          <Link
+            to={`/dashboard/payroll/runs/${runId}/processing` as any}
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
+          >
+            Processing Status
+          </Link>
+          <Link
+            to={`/dashboard/payroll/runs/${runId}/preview` as any}
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
+          >
+            Payroll Preview
+          </Link>
+          <span className="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm">
+            Validation & Issues
+          </span>
+          <Link
+            to={`/dashboard/payroll/runs/${runId}/approval` as any}
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
+          >
+            Review & Approval
+          </Link>
+        </div>
+
+        {/* Back Link */}
+        <Link
+          to={`/dashboard/payroll/runs/${runId}/preview` as any}
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          <span>Back to Payroll Preview</span>
+        </Link>
+      </div>
+
       {/* ── Top Navigation Bar ───────────────────────────────────────── */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -543,6 +586,21 @@ export function PayrollValidationPage() {
               className={`h-3.5 w-3.5 ${isRefreshing || isLoading ? "animate-spin" : ""}`}
             />
             <span>Refresh</span>
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              navigate({
+                to: `/dashboard/payroll/runs/${runId}/approval` as any,
+              })
+            }
+            className="h-9 gap-1.5 text-xs text-foreground hover:bg-muted/50"
+            title="Proceed to Step 7 Payroll Review & Approval"
+          >
+            <UserCheck className="h-3.5 w-3.5 text-primary" />
+            <span>Review & Approval</span>
           </Button>
 
           {canRunPayroll ? (
@@ -712,31 +770,48 @@ export function PayrollValidationPage() {
                 </div>
               </div>
 
-              {canRunPayroll ? (
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setRecalculateModalOpen(true)}
-                    disabled={isRecalculating}
-                    className="gap-1.5 text-xs shadow-sm"
-                  >
-                    <RotateCcw className="h-3.5 w-3.5" />
-                    <span>Recalculate Run</span>
-                  </Button>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    navigate({
+                      to: `/dashboard/payroll/runs/${runId}/approval` as any,
+                    })
+                  }
+                  className="gap-1.5 text-xs shadow-sm"
+                  title="Proceed to Step 7 Review & Approval"
+                >
+                  <UserCheck className="h-3.5 w-3.5 text-primary" />
+                  <span>Review & Approval (Step 7)</span>
+                </Button>
 
-                  <Button
-                    size="sm"
-                    onClick={() => setRevalidateModalOpen(true)}
-                    disabled={isValidating}
-                    className="gap-1.5 text-xs shadow-sm"
-                    style={{ background: "var(--gradient-brand)" }}
-                  >
-                    <FileCheck className="h-3.5 w-3.5" />
-                    <span>Run Validation Check</span>
-                  </Button>
-                </div>
-              ) : null}
+                {canRunPayroll ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setRecalculateModalOpen(true)}
+                      disabled={isRecalculating}
+                      className="gap-1.5 text-xs shadow-sm"
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" />
+                      <span>Recalculate Run</span>
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      onClick={() => setRevalidateModalOpen(true)}
+                      disabled={isValidating}
+                      className="gap-1.5 text-xs shadow-sm"
+                      style={{ background: "var(--gradient-brand)" }}
+                    >
+                      <FileCheck className="h-3.5 w-3.5" />
+                      <span>Run Validation Check</span>
+                    </Button>
+                  </>
+                ) : null}
+              </div>
             </div>
           </GlassCard>
 

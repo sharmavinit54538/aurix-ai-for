@@ -401,6 +401,82 @@ export interface PayrollPreviewData {
   [key: string]: unknown;
 }
 
+export interface PayrollApprovalInfo {
+  status?: string | null;
+  approvedBy?: string | null;
+  approvedByName?: string | null;
+  approvedAt?: string | null;
+  rejectedBy?: string | null;
+  rejectedByName?: string | null;
+  rejectedAt?: string | null;
+  rejectionReason?: string | null;
+  comments?: string | null;
+  canApprove?: boolean;
+  canReject?: boolean;
+  blockingReasons?: string[];
+  [key: string]: unknown;
+}
+
+export interface PayrollAuditRecord {
+  action: string;
+  user?: string | null;
+  userName?: string | null;
+  timestamp?: string | null;
+  comment?: string | null;
+  previousStatus?: string | null;
+  newStatus?: string | null;
+  [key: string]: unknown;
+}
+
+export interface PayrollReviewData {
+  runId: string;
+  periodId?: string | null;
+  periodName?: string | null;
+  status: PayrollStatus;
+  validationStatus?: string | null;
+  runDate?: string | null;
+  generatedAt?: string | null;
+  lastUpdatedAt?: string | null;
+  summary: PayrollPreviewSummary | null;
+  validation: {
+    status?: string | null;
+    totalIssues: number;
+    errorsCount: number;
+    warningsCount: number;
+    affectedEmployeesCount: number;
+    blockingCount?: number | null;
+    issues?: PayrollValidationIssue[];
+  } | null;
+  approval: PayrollApprovalInfo | null;
+  auditLog?: PayrollAuditRecord[] | null;
+  [key: string]: unknown;
+}
+
+export interface ApprovePayrollPayload {
+  comments?: string;
+  notes?: string;
+}
+
+export interface ApprovePayrollResponse {
+  success: boolean;
+  message?: string;
+  status?: PayrollStatus;
+  approval?: PayrollApprovalInfo;
+  [key: string]: unknown;
+}
+
+export interface RejectPayrollPayload {
+  reason: string;
+  comments?: string;
+}
+
+export interface RejectPayrollResponse {
+  success: boolean;
+  message?: string;
+  status?: PayrollStatus;
+  [key: string]: unknown;
+}
+
 // ── Helper to extract API data safely ─────────────────────────────────
 
 function extractData<T>(res: unknown): T {
@@ -947,6 +1023,271 @@ export function normalizePayrollValidationSummary(
     lastValidatedAt:
       raw.lastValidatedAt || raw.last_validated_at || raw.validatedAt || raw.validated_at || null,
     issues,
+    ...raw,
+  };
+}
+
+export function normalizePayrollReviewData(
+  runId: string,
+  raw: any,
+  previewFallback?: PayrollPreviewData | null,
+  validationFallback?: PayrollValidationSummary | null,
+  statusFallback?: PayrollRunStatus | null,
+): PayrollReviewData {
+  const periodId =
+    raw?.periodId ||
+    raw?.period_id ||
+    raw?.cycleId ||
+    raw?.cycle_id ||
+    previewFallback?.periodId ||
+    statusFallback?.periodId ||
+    null;
+
+  const periodName =
+    raw?.periodName ||
+    raw?.period_name ||
+    raw?.cycleName ||
+    raw?.cycle_name ||
+    previewFallback?.periodName ||
+    statusFallback?.periodName ||
+    null;
+
+  const rawStatus =
+    raw?.status ||
+    raw?.run_status ||
+    raw?.state ||
+    previewFallback?.status ||
+    statusFallback?.status ||
+    "Under Review";
+
+  const runDate =
+    raw?.runDate ||
+    raw?.run_date ||
+    raw?.createdAt ||
+    raw?.created_at ||
+    previewFallback?.runDate ||
+    null;
+
+  const generatedAt =
+    raw?.generatedAt ||
+    raw?.generated_at ||
+    raw?.calculatedAt ||
+    raw?.calculated_at ||
+    previewFallback?.generatedAt ||
+    null;
+
+  const lastUpdatedAt =
+    raw?.lastUpdatedAt ||
+    raw?.last_updated_at ||
+    raw?.updatedAt ||
+    raw?.updated_at ||
+    raw?.approvedAt ||
+    raw?.approved_at ||
+    null;
+
+  // Summary extraction
+  let summary: PayrollPreviewSummary | null = null;
+  const rawSummary = raw?.summary || raw?.totals || raw?.stats || previewFallback?.summary;
+  if (rawSummary && typeof rawSummary === "object") {
+    summary = {
+      employeeCount:
+        rawSummary.employeeCount ??
+        rawSummary.employee_count ??
+        rawSummary.totalEmployees ??
+        rawSummary.total_employees ??
+        previewFallback?.summary?.employeeCount ??
+        statusFallback?.employees?.total ??
+        null,
+      grossPayroll:
+        rawSummary.grossPayroll ??
+        rawSummary.gross_payroll ??
+        rawSummary.totalGross ??
+        rawSummary.total_gross ??
+        previewFallback?.summary?.grossPayroll ??
+        null,
+      totalEarnings:
+        rawSummary.totalEarnings ??
+        rawSummary.total_earnings ??
+        rawSummary.grossPayroll ??
+        rawSummary.gross_payroll ??
+        previewFallback?.summary?.totalEarnings ??
+        null,
+      totalDeductions:
+        rawSummary.totalDeductions ??
+        rawSummary.total_deductions ??
+        rawSummary.deductions ??
+        previewFallback?.summary?.totalDeductions ??
+        null,
+      netPayroll:
+        rawSummary.netPayroll ??
+        rawSummary.net_payroll ??
+        rawSummary.totalNet ??
+        rawSummary.total_net ??
+        previewFallback?.summary?.netPayroll ??
+        null,
+      employerCost:
+        rawSummary.employerCost ??
+        rawSummary.employer_cost ??
+        rawSummary.totalCost ??
+        rawSummary.total_cost ??
+        previewFallback?.summary?.employerCost ??
+        null,
+      employerContribution:
+        rawSummary.employerContribution ??
+        rawSummary.employer_contribution ??
+        previewFallback?.summary?.employerContribution ??
+        null,
+    };
+  }
+
+  // Validation details extraction
+  let validation: PayrollReviewData["validation"] = null;
+  const rawVal = raw?.validation || raw?.validation_summary || validationFallback;
+  if (rawVal && typeof rawVal === "object") {
+    validation = {
+      status: rawVal.status || rawVal.validation_status || validationFallback?.status || null,
+      totalIssues: Number(
+        rawVal.totalIssues ??
+          rawVal.total_issues ??
+          validationFallback?.totalIssues ??
+          (rawVal.issues?.length || 0),
+      ),
+      errorsCount: Number(
+        rawVal.errorsCount ??
+          rawVal.errors_count ??
+          validationFallback?.errorsCount ??
+          (rawVal.errors?.length || 0),
+      ),
+      warningsCount: Number(
+        rawVal.warningsCount ??
+          rawVal.warnings_count ??
+          validationFallback?.warningsCount ??
+          (rawVal.warnings?.length || 0),
+      ),
+      affectedEmployeesCount: Number(
+        rawVal.affectedEmployeesCount ??
+          rawVal.affected_employees ??
+          validationFallback?.affectedEmployeesCount ??
+          0,
+      ),
+      blockingCount:
+        rawVal.blockingCount != null
+          ? Number(rawVal.blockingCount)
+          : rawVal.blocking_count != null
+            ? Number(rawVal.blocking_count)
+            : validationFallback?.blockingCount != null
+              ? Number(validationFallback.blockingCount)
+              : null,
+      issues: Array.isArray(rawVal.issues)
+        ? rawVal.issues
+        : Array.isArray(validationFallback?.issues)
+          ? validationFallback.issues
+          : undefined,
+    };
+  }
+
+  // Approval details extraction
+  const rawApp = raw?.approval || raw?.approval_status || raw;
+  let approval: PayrollApprovalInfo | null = null;
+  if (rawApp && typeof rawApp === "object") {
+    const appStatus =
+      rawApp.status ||
+      rawApp.approval_status ||
+      (String(rawStatus).toLowerCase() === "approved"
+        ? "approved"
+        : String(rawStatus).toLowerCase() === "rejected"
+          ? "rejected"
+          : "pending");
+
+    approval = {
+      status: appStatus,
+      approvedBy:
+        rawApp.approvedBy ||
+        rawApp.approved_by ||
+        rawApp.approver_id ||
+        raw?.approvedBy ||
+        raw?.approved_by ||
+        null,
+      approvedByName:
+        rawApp.approvedByName ||
+        rawApp.approved_by_name ||
+        rawApp.approver_name ||
+        raw?.approvedByName ||
+        raw?.approved_by_name ||
+        null,
+      approvedAt:
+        rawApp.approvedAt ||
+        rawApp.approved_at ||
+        raw?.approvedAt ||
+        raw?.approved_at ||
+        null,
+      rejectedBy:
+        rawApp.rejectedBy ||
+        rawApp.rejected_by ||
+        raw?.rejectedBy ||
+        raw?.rejected_by ||
+        null,
+      rejectedByName:
+        rawApp.rejectedByName ||
+        rawApp.rejected_by_name ||
+        raw?.rejectedByName ||
+        raw?.rejected_by_name ||
+        null,
+      rejectedAt:
+        rawApp.rejectedAt ||
+        rawApp.rejected_at ||
+        raw?.rejectedAt ||
+        raw?.rejected_at ||
+        null,
+      rejectionReason:
+        rawApp.rejectionReason ||
+        rawApp.rejection_reason ||
+        raw?.rejectionReason ||
+        raw?.rejection_reason ||
+        null,
+      comments:
+        rawApp.comments ||
+        rawApp.comment ||
+        rawApp.notes ||
+        raw?.approvalComments ||
+        raw?.approval_comments ||
+        null,
+      canApprove: rawApp.canApprove ?? rawApp.can_approve ?? true,
+      canReject: rawApp.canReject ?? rawApp.can_reject ?? true,
+      blockingReasons: rawApp.blockingReasons || rawApp.blocking_reasons || [],
+      ...rawApp,
+    };
+  }
+
+  // Audit log extraction
+  let auditLog: PayrollAuditRecord[] | null = null;
+  const rawAudit = raw?.auditLog || raw?.audit_log || raw?.history || raw?.timeline;
+  if (Array.isArray(rawAudit)) {
+    auditLog = rawAudit.map((item: any) => ({
+      action: String(item.action || item.event || "Update"),
+      user: item.user || item.user_id || null,
+      userName: item.userName || item.user_name || item.name || null,
+      timestamp: item.timestamp || item.created_at || item.createdAt || null,
+      comment: item.comment || item.message || item.notes || null,
+      previousStatus: item.previousStatus || item.previous_status || null,
+      newStatus: item.newStatus || item.new_status || null,
+      ...item,
+    }));
+  }
+
+  return {
+    runId,
+    periodId,
+    periodName,
+    status: rawStatus,
+    validationStatus: validation?.status || null,
+    runDate,
+    generatedAt,
+    lastUpdatedAt,
+    summary,
+    validation,
+    approval,
+    auditLog,
     ...raw,
   };
 }
@@ -1562,6 +1903,191 @@ export const payrollApi = {
           };
         } catch {
           // Re-throw
+        }
+      }
+      throw err;
+    }
+  },
+
+  /**
+   * Fetch comprehensive payroll review & approval data for a completed/provision run.
+   * GET /api/v2/payroll/runs/{runId}/approval or fallback to aggregating preview and validation.
+   * ZERO MOCK DATA: throws if backend cannot be reached so UI displays authentic error state.
+   */
+  async getPayrollReview(runId: string): Promise<PayrollReviewData> {
+    const requestConfig = {
+      headers: { "Cache-Control": "no-cache" },
+      skipCache: true,
+    };
+
+    // Primary: /api/v2/payroll/runs/{runId}/approval
+    try {
+      const res = await apiInstance.get(
+        `/api/v2/payroll/runs/${runId}/approval`,
+        requestConfig,
+      );
+      const data = extractData<any>(res);
+      if (data && typeof data === "object") {
+        return normalizePayrollReviewData(runId, data);
+      }
+    } catch (err: any) {
+      if (err?.response?.status !== 404) {
+        throw err;
+      }
+      // If 404, check alternative /review endpoint
+      try {
+        const reviewRes = await apiInstance.get(
+          `/api/v2/payroll/runs/${runId}/review`,
+          requestConfig,
+        );
+        const reviewData = extractData<any>(reviewRes);
+        if (reviewData && typeof reviewData === "object") {
+          return normalizePayrollReviewData(runId, reviewData);
+        }
+      } catch (reviewErr: any) {
+        if (reviewErr?.response?.status !== 404) {
+          throw reviewErr;
+        }
+      }
+    }
+
+    // Fallback: Aggregate authentic backend data from preview, validation, and run status
+    const [previewRes, validationRes, statusRes] = await Promise.allSettled([
+      this.getPayrollPreview(runId),
+      this.getPayrollValidation(runId),
+      this.getPayrollRunStatus(runId),
+    ]);
+
+    const preview = previewRes.status === "fulfilled" ? previewRes.value : null;
+    const validation = validationRes.status === "fulfilled" ? validationRes.value : null;
+    const runStatus = statusRes.status === "fulfilled" ? statusRes.value : null;
+
+    // If all three calls failed, backend is unreachable for this run: throw authentic error
+    if (!preview && !validation && !runStatus) {
+      const rejectedReason =
+        (previewRes as PromiseRejectedResult).reason ||
+        (validationRes as PromiseRejectedResult).reason ||
+        (statusRes as PromiseRejectedResult).reason;
+      throw rejectedReason || new Error(`Payroll run ${runId} not found on backend.`);
+    }
+
+    return normalizePayrollReviewData(runId, {}, preview, validation, runStatus);
+  },
+
+  /**
+   * Approve a processed & validated payroll run through the real backend API.
+   * POST /api/v2/payroll/runs/{runId}/approve
+   * Approving transitions the run to 'Approved'. It does NOT finalize or disburse funds.
+   */
+  async approvePayroll(
+    runId: string,
+    payload?: ApprovePayrollPayload,
+  ): Promise<ApprovePayrollResponse> {
+    const body: Record<string, any> = {
+      comments: payload?.comments || payload?.notes || undefined,
+    };
+
+    try {
+      const res = await apiInstance.post(
+        `/api/v2/payroll/runs/${runId}/approve`,
+        body,
+        { headers: { "Cache-Control": "no-cache" } },
+      );
+      const data = extractData<any>(res);
+      return {
+        success: Boolean(data?.success ?? true),
+        message: data?.message || "Payroll run approved successfully.",
+        status: data?.status || "Approved",
+        approval: data?.approval || undefined,
+        ...data,
+      };
+    } catch (err: any) {
+      if (err?.response?.status === 404) {
+        // Fallback POST /payroll/runs/{runId}/approve
+        try {
+          const fbRes = await apiInstance.post(
+            `/payroll/runs/${runId}/approve`,
+            body,
+            { headers: { "Cache-Control": "no-cache" } },
+          );
+          const fbData = extractData<any>(fbRes);
+          return {
+            success: Boolean(fbData?.success ?? true),
+            message: fbData?.message || "Payroll run approved successfully.",
+            status: fbData?.status || "Approved",
+            approval: fbData?.approval || undefined,
+            ...fbData,
+          };
+        } catch {
+          // Fall through and throw original
+        }
+      }
+      throw err;
+    }
+  },
+
+  /**
+   * Reject / Send back a payroll run for correction through the real backend API.
+   * POST /api/v2/payroll/runs/{runId}/reject
+   */
+  async rejectPayroll(
+    runId: string,
+    payload: RejectPayrollPayload,
+  ): Promise<RejectPayrollResponse> {
+    const body: Record<string, any> = {
+      reason: payload.reason,
+      comments: payload.comments || undefined,
+    };
+
+    try {
+      const res = await apiInstance.post(
+        `/api/v2/payroll/runs/${runId}/reject`,
+        body,
+        { headers: { "Cache-Control": "no-cache" } },
+      );
+      const data = extractData<any>(res);
+      return {
+        success: Boolean(data?.success ?? true),
+        message: data?.message || "Payroll run returned for correction.",
+        status: data?.status || "Rejected",
+        ...data,
+      };
+    } catch (err: any) {
+      if (err?.response?.status === 404) {
+        // Fallback 1: POST /api/v2/payroll/runs/{runId}/send-back
+        try {
+          const fbRes = await apiInstance.post(
+            `/api/v2/payroll/runs/${runId}/send-back`,
+            body,
+            { headers: { "Cache-Control": "no-cache" } },
+          );
+          const fbData = extractData<any>(fbRes);
+          return {
+            success: Boolean(fbData?.success ?? true),
+            message: fbData?.message || "Payroll run returned for correction.",
+            status: fbData?.status || "Rejected",
+            ...fbData,
+          };
+        } catch {
+          // Continue to fallback 2
+        }
+
+        // Fallback 2: POST /payroll/runs/{runId}/reject
+        try {
+          const fbRes2 = await apiInstance.post(
+            `/payroll/runs/${runId}/reject`,
+            body,
+            { headers: { "Cache-Control": "no-cache" } },
+          );
+          const fbData2 = extractData<any>(fbRes2);
+          return {
+            success: Boolean(fbData2?.success ?? true),
+            message: fbData2?.message || "Payroll run returned for correction.",
+            status: fbData2?.status || "Rejected",
+            ...fbData2,
+          };
+        } catch {
+          // Fall through
         }
       }
       throw err;
