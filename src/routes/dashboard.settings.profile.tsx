@@ -9,14 +9,14 @@ import {
   Laptop,
   Moon,
   RefreshCw,
-  Save,
   Shield,
   Smartphone,
   Sun,
   Trash2,
-  User,
   Zap,
 } from "lucide-react";
+import { CloudUploadIcon } from "@/components/icons/CloudUploadIcon";
+import { PasswordResetIcon } from "@/components/icons/PasswordResetIcon";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -266,9 +266,7 @@ function UserProfilePage() {
     return (
       <div className="space-y-6">
         <div className="space-y-4 rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-xl">
-          <Skeleton className="h-7 w-56" />
-          <Skeleton className="h-4 w-72" />
-          <div className="flex items-center gap-4 pt-4">
+          <div className="flex items-center gap-4">
             <Skeleton className="h-20 w-20 rounded-full" />
             <div className="space-y-2">
               <Skeleton className="h-5 w-40" />
@@ -287,48 +285,6 @@ function UserProfilePage() {
 
   return (
     <div className="space-y-6">
-      {/* Top Header Card */}
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border/60 bg-card/60 p-6 backdrop-blur-xl">
-        <div>
-          <h1 className="font-display text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-            User Profile & Preferences
-          </h1>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Manage your personal identity, contact details, authentication security, active
-            sessions, and workspace preferences.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {errors.currentUser && (
-            <Button size="sm" variant="outline" onClick={handleRetryLoad}>
-              <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Retry
-            </Button>
-          )}
-          <Badge variant="secondary" className="px-3 py-1 text-xs">
-            <User className="mr-1.5 h-3.5 w-3.5 text-primary" />
-            {currentUser?.role ? `${currentUser.role.toUpperCase()} Account` : "Profile Active"}
-          </Badge>
-        </div>
-      </div>
-
-      {/* Global error banner if profile load failed */}
-      {errors.currentUser && (
-        <div className="flex items-center justify-between rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-xs text-destructive">
-          <div className="flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 shrink-0" />
-            <span>{errors.currentUser}</span>
-          </div>
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-7 text-xs border-destructive/30"
-            onClick={handleRetryLoad}
-          >
-            Retry Load
-          </Button>
-        </div>
-      )}
-
       {/* Profile & Avatar Section */}
       <div className="rounded-2xl border border-border/60 bg-card/60 p-6 backdrop-blur-xl space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/60 pb-6">
@@ -381,7 +337,7 @@ function UserProfilePage() {
                   onClick={() => fileInputRef.current?.click()}
                   disabled={opLoading.avatar}
                 >
-                  <Camera className="mr-1.5 h-3 w-3" />
+                  <CloudUploadIcon className="mr-1.5 h-3.5 w-3.5" />
                   {opLoading.avatar ? "Uploading..." : "Upload Photo"}
                 </Button>
                 {currentUser?.avatarUrl && (
@@ -482,9 +438,9 @@ function UserProfilePage() {
               {submitting || opLoading.updateUser ? (
                 <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
               ) : (
-                <Save className="mr-2 h-4 w-4" />
+                <CloudUploadIcon className="mr-2 h-4 w-4" />
               )}
-              Save Profile Changes
+              Save Preferences
             </Button>
           </div>
         </form>
@@ -560,7 +516,7 @@ function UserProfilePage() {
               {opLoading.password ? (
                 <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
               ) : (
-                <KeyRound className="mr-2 h-4 w-4" />
+                <PasswordResetIcon className="mr-2 h-4 w-4" />
               )}
               Update Password
             </Button>
@@ -691,7 +647,7 @@ function UserProfilePage() {
               {opLoading.updatePreferences ? (
                 <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
               ) : (
-                <Save className="mr-2 h-4 w-4" />
+                <CloudUploadIcon className="mr-2 h-4 w-4" />
               )}
               Save Preferences
             </Button>

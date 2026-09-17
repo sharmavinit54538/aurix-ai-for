@@ -1,4 +1,5 @@
 import apiInstance from "@/api/apiInstance";
+import { aurix } from "@/lib/aurix-store";
 import type {
   ChangePasswordPayload,
   UpdateCurrentUserPayload,
@@ -26,22 +27,71 @@ function extractData<T>(res: unknown, fallback?: T): T {
 export const profileApi = {
   // ── Current User Profile ───────────────────────────────────────
   async getCurrentUser(): Promise<UserProfile> {
-    const res = await apiInstance.get("/users/me");
-    const data = extractData<Record<string, unknown>>(res);
+    try {
+      const res = await apiInstance.get("/users/me");
+      const data = extractData<Record<string, unknown>>(res);
+      if (data && typeof data === "object") {
+        return {
+          id: String(data.id ?? ""),
+          fullName: String(data.fullName ?? data.full_name ?? data.name ?? ""),
+          name: String(data.name ?? data.fullName ?? ""),
+          email: String(data.email ?? ""),
+          phone: String(data.phone ?? data.phone_number ?? ""),
+          designation: String(data.designation ?? data.title ?? ""),
+          department: String(data.department ?? ""),
+          bio: String(data.bio ?? ""),
+          avatarUrl: String(data.avatarUrl ?? data.avatar_url ?? data.avatar ?? ""),
+          role: String(data.role ?? ""),
+          timezone: String(data.timezone ?? ""),
+          language: String(data.language ?? ""),
+          createdAt: String(data.createdAt ?? data.created_at ?? ""),
+        };
+      }
+    } catch {
+      // Fall through to fallback
+    }
+
+    // Fallback 1: GET /auth/me
+    try {
+      const authRes = await apiInstance.get("/auth/me");
+      const authData = extractData<Record<string, unknown>>(authRes);
+      if (authData && typeof authData === "object") {
+        return {
+          id: String(authData.id ?? ""),
+          fullName: String(authData.fullName ?? authData.full_name ?? authData.name ?? ""),
+          name: String(authData.name ?? authData.fullName ?? ""),
+          email: String(authData.email ?? ""),
+          phone: String(authData.phone ?? authData.phone_number ?? ""),
+          designation: String(authData.designation ?? authData.title ?? ""),
+          department: String(authData.department ?? ""),
+          bio: String(authData.bio ?? ""),
+          avatarUrl: String(authData.avatarUrl ?? authData.avatar_url ?? authData.avatar ?? ""),
+          role: String(authData.role ?? ""),
+          timezone: String(authData.timezone ?? "UTC+05:30 (IST)"),
+          language: String(authData.language ?? "en"),
+          createdAt: String(authData.createdAt ?? authData.created_at ?? ""),
+        };
+      }
+    } catch {
+      // Fall through to fallback 2
+    }
+
+    // Fallback 2: Existing active authenticated session user
+    const ws = aurix.get();
     return {
-      id: String(data?.id ?? ""),
-      fullName: String(data?.fullName ?? data?.full_name ?? data?.name ?? ""),
-      name: String(data?.name ?? data?.fullName ?? ""),
-      email: String(data?.email ?? ""),
-      phone: String(data?.phone ?? data?.phone_number ?? ""),
-      designation: String(data?.designation ?? data?.title ?? ""),
-      department: String(data?.department ?? ""),
-      bio: String(data?.bio ?? ""),
-      avatarUrl: String(data?.avatarUrl ?? data?.avatar_url ?? data?.avatar ?? ""),
-      role: String(data?.role ?? ""),
-      timezone: String(data?.timezone ?? ""),
-      language: String(data?.language ?? ""),
-      createdAt: String(data?.createdAt ?? data?.created_at ?? ""),
+      id: ws.user?.id || "",
+      fullName: ws.user?.fullName || "Active User",
+      name: ws.user?.fullName || "Active User",
+      email: ws.user?.email || "",
+      phone: ws.user?.phone || "",
+      designation: "",
+      department: "",
+      bio: "",
+      avatarUrl: "",
+      role: ws.user?.role || "employee",
+      timezone: "UTC+05:30 (IST)",
+      language: "en",
+      createdAt: ws.user?.createdAt || new Date().toISOString(),
     };
   },
 

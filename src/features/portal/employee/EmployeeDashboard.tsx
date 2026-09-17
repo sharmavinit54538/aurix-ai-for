@@ -22,7 +22,6 @@ import {
   Target,
   TrendingDown,
   TrendingUp,
-  UserCircle,
   X,
   Zap,
 } from "lucide-react";
@@ -145,10 +144,7 @@ const EMP_QUICK_ACTIONS = [
 ];
 
 // ── 1. Employee Header ────────────────────────────────────────
-function EmployeeHeader({ firstName, companyName }: { firstName: string; companyName: string }) {
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
-
+function EmployeeHeader({ firstName: _firstName, companyName }: { firstName?: string; companyName: string }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: -16 }}
@@ -156,40 +152,16 @@ function EmployeeHeader({ firstName, companyName }: { firstName: string; company
       transition={{ duration: 0.45, ease: "easeOut" }}
       className="rounded-2xl border border-border bg-card/60 p-5 backdrop-blur-xl"
     >
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div
-          onClick={() => logout()}
-          role="button"
-          tabIndex={0}
-          className="flex items-center gap-4 cursor-pointer group/prof hover:opacity-90 transition-opacity"
-          title="Click to logout"
+      <div className="flex items-center justify-end gap-3">
+        <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+          <RefreshCw className="h-3.5 w-3.5" /> Refresh
+        </Button>
+        <Link
+          to="/ai/chat-assistant"
+          className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 px-3 py-2 text-xs font-semibold text-white shadow transition-all hover:shadow-md hover:-translate-y-0.5"
         >
-          <div
-            className="grid h-12 w-12 shrink-0 place-items-center rounded-xl shadow-lg transition-transform group-hover/prof:scale-105"
-            style={{ background: "var(--gradient-brand)" }}
-          >
-            <UserCircle className="h-6 w-6 text-white" />
-          </div>
-          <div>
-            <h1 className="font-display text-xl font-semibold tracking-tight">
-              {greeting}, {firstName} 👋
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {companyName} · Employee Self-Service Portal
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" className="gap-1.5 text-xs">
-            <RefreshCw className="h-3.5 w-3.5" /> Refresh
-          </Button>
-          <Link
-            to="/ai/chat-assistant"
-            className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 px-3 py-2 text-xs font-semibold text-white shadow transition-all hover:shadow-md hover:-translate-y-0.5"
-          >
-            <Sparkles className="h-3.5 w-3.5" /> AI Assistant
-          </Link>
-        </div>
+          <Sparkles className="h-3.5 w-3.5" /> AI Assistant
+        </Link>
       </div>
 
       {/* Quick Actions */}

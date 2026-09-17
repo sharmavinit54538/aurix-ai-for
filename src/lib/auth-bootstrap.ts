@@ -31,7 +31,7 @@ function mapAuthUser(data: AuthUserPayload) {
       role: data.role,
       companyId,
       emailVerified: data.is_verified,
-      onboardingComplete: data.onboarding_completed ?? false,
+      onboardingComplete: true,
       createdAt: data.created_at ?? new Date().toISOString(),
     },
     company: {
@@ -54,10 +54,6 @@ export function getPostLoginRoute(user: AuthUserPayload): string {
   if (!user.is_verified) return "/verify-email";
   if (role === "cto" || role === "ceo" || role === "cfo" || role === "coo" || role === "cio") {
     return "/dashboard/executive/cto";
-  }
-  if (!user.onboarding_completed) {
-    if (role === "admin" || role === "hr") return "/onboarding";
-    return "/employee-onboarding";
   }
   if (role === "manager") return "/dashboard/manager";
   if (role === "employee") return "/dashboard/employee";

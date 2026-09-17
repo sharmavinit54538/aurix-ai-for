@@ -3,6 +3,12 @@ import { aurix } from "@/lib/aurix-store";
 import { isAccessTokenExpired } from "./token-utils";
 import { getTokens, setTokens } from "./tokens";
 
+declare module "axios" {
+  export interface AxiosRequestConfig {
+    skipCache?: boolean;
+  }
+}
+
 /**
  * Normalizes the API base origin, ensuring https:// protocol and no trailing slashes.
  * e.g., "https://www.api.ofc360.com"

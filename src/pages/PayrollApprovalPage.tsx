@@ -12,6 +12,7 @@ import {
   Eye,
   FileCheck,
   History,
+  Info,
   Layers,
   ListChecks,
   Lock,
