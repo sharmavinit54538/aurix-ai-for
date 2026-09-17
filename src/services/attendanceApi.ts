@@ -656,43 +656,38 @@ export const attendanceApi = {
    */
   getTimeline: async (): Promise<TimelineEventItem[]> => {
     try {
-      const res = await api.get("attendance/timeline");
-      const list = extractListPayload(res);
-      return list.map((item: any) => ({
-        id: item.id || item._id,
-        time: item.time || item.created_at,
-        label: item.label || item.event_name,
-        type: item.type || "checkin",
-        notes: item.notes,
-      }));
-    } catch (err: any) {
-      if (err?.status === 404) {
-        // Fallback: derive recent timeline from personal attendance history
-        const histRes = await api.get("attendance/face/history?limit=1");
-        const list = extractListPayload(histRes);
-        const latest = list[0] as any;
-        if (!latest) return [];
+      // Query personal face attendance history to build today's timeline events
+      const histRes: any = await api.get("attendance/face/history?limit=10");
+      const list = extractListPayload(histRes);
+      const todayStr = new Date().toISOString().split("T")[0];
+      const todayItems = list.filter((item: any) => {
+        const dStr = item.date ? item.date.split("T")[0] : "";
+        return dStr === todayStr;
+      });
 
-        const events: TimelineEventItem[] = [];
-        if (latest.check_in_time) {
+      const events: TimelineEventItem[] = [];
+      todayItems.forEach((item: any) => {
+        if (item.check_in_time) {
           events.push({
-            id: `${latest.id}-in`,
-            time: new Date(latest.check_in_time).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }),
+            id: `${item.id}-in`,
+            time: new Date(item.check_in_time).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }),
             label: "Checked In",
             type: "checkin",
           });
         }
-        if (latest.check_out_time) {
+        if (item.check_out_time) {
           events.push({
-            id: `${latest.id}-out`,
-            time: new Date(latest.check_out_time).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }),
+            id: `${item.id}-out`,
+            time: new Date(item.check_out_time).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }),
             label: "Checked Out",
             type: "checkout",
           });
         }
-        return events;
-      }
-      throw err;
+      });
+
+      return events;
+    } catch {
+      return [];
     }
   },
 
@@ -1256,6 +1251,24 @@ export const attendanceApi = {
     const user = ws.user;
     if (!user) return null;
 
+    // For employee self-service, avoid calling restricted admin-only /employees endpoint
+    if (user.role === "employee") {
+      const localMatch = ws.employees?.find(
+        (e) => e.email === user.email || e.id === user.id
+      );
+      return {
+        id: user.id,
+        employee_id: localMatch?.employeeId || `EMP-${user.id.slice(0, 6).toUpperCase()}`,
+        full_name: user.fullName || "Employee",
+        email: user.email,
+        shift: localMatch?.shift || "General Shift",
+        branch: ws.company?.city || null,
+        work_location: "Office",
+        department: localMatch?.department || "General",
+        designation: localMatch?.designation || "Employee",
+      };
+    }
+
     try {
       const res: any = await apiInstance.get("/employees", {
         params: { search: user.email || user.fullName, limit: 10 },
@@ -1283,8 +1296,8 @@ export const attendanceApi = {
           designation: match.designation || "Staff",
         };
       }
-    } catch (err) {
-      console.warn("Could not query /employees:", err);
+    } catch {
+      // 403 or network error: fall back to local workspace user profile
     }
 
     // Fallback: check workspace employee cache if available
