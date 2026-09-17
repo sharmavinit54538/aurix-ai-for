@@ -474,6 +474,12 @@ export function PayrollProcessingPage() {
           <span className="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm">
             Processing Run
           </span>
+          <Link
+            to={`/dashboard/payroll/runs/${runId}/preview` as any}
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
+          >
+            Payroll Preview
+          </Link>
         </div>
 
         {/* Back Link */}
@@ -996,15 +1002,27 @@ export function PayrollProcessingPage() {
                     Provisional calculations are ready. Return to the Payroll Dashboard to review summary figures and audit records.
                   </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button
                     size="sm"
-                    onClick={() => navigate({ to: "/dashboard/payroll" as any })}
+                    onClick={() =>
+                      navigate({
+                        to: `/dashboard/payroll/runs/${runId}/preview` as any,
+                      })
+                    }
                     style={{ background: "var(--gradient-brand)" }}
                     className="gap-1.5 text-xs shadow-sm"
                   >
-                    <span>View Payroll Dashboard</span>
+                    <span>View Payroll Preview</span>
                     <ExternalLink className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate({ to: "/dashboard/payroll" as any })}
+                    className="gap-1.5 text-xs shadow-sm"
+                  >
+                    <span>Payroll Dashboard</span>
                   </Button>
                 </div>
               </div>

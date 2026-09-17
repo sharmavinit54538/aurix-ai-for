@@ -194,6 +194,119 @@ export interface RetryRunResponse {
   [key: string]: unknown;
 }
 
+export interface PayrollPreviewSummary {
+  employeeCount: number | null;
+  grossPayroll: number | null;
+  totalEarnings?: number | null;
+  totalDeductions: number | null;
+  netPayroll: number | null;
+  employerCost: number | null;
+  employerContribution?: number | null;
+  [key: string]: unknown;
+}
+
+export interface PayrollEmployeeEarnings {
+  basic?: number | null;
+  hra?: number | null;
+  allowances?: number | null;
+  specialAllowance?: number | null;
+  conveyance?: number | null;
+  overtime?: number | null;
+  bonus?: number | null;
+  incentives?: number | null;
+  other?: number | null;
+  [key: string]: unknown;
+}
+
+export interface PayrollEmployeeDeductions {
+  pf?: number | null;
+  esi?: number | null;
+  pt?: number | null; // Professional Tax
+  tds?: number | null; // Income Tax
+  incomeTax?: number | null;
+  loan?: number | null;
+  advance?: number | null;
+  other?: number | null;
+  [key: string]: unknown;
+}
+
+export interface PayrollEmployeeAttendance {
+  workingDays?: number | null;
+  paidDays?: number | null;
+  unpaidDays?: number | null;
+  leaveDays?: number | null;
+  overtimeHours?: number | null;
+  lopDays?: number | null;
+  [key: string]: unknown;
+}
+
+export interface PayrollPreviewEmployee {
+  id: string;
+  employeeId: string;
+  name: string;
+  email?: string;
+  designation?: string;
+  department?: string;
+  location?: string;
+  grossEarnings: number | null;
+  totalDeductions: number | null;
+  netPay: number | null;
+  employerContribution?: number | null;
+  status?: string;
+  validationStatus?: "valid" | "warning" | "error" | string;
+  issuesCount?: number;
+  issues?: Array<{
+    id?: string;
+    severity?: string;
+    message: string;
+  }>;
+  earnings?: PayrollEmployeeEarnings;
+  deductions?: PayrollEmployeeDeductions;
+  attendance?: PayrollEmployeeAttendance;
+  [key: string]: unknown;
+}
+
+export interface GetRunEmployeesParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  department?: string;
+  validationStatus?: string;
+  sortBy?: string;
+  sortDir?: "asc" | "desc";
+}
+
+export interface GetRunEmployeesResponse {
+  items: PayrollPreviewEmployee[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface PayrollPreviewValidationIssue {
+  id: string;
+  category?: string;
+  message: string;
+  employeeId?: string;
+  employeeName?: string;
+}
+
+export interface PayrollPreviewData {
+  runId: string;
+  periodId?: string | null;
+  periodName?: string | null;
+  status: PayrollStatus;
+  runDate?: string | null;
+  generatedAt?: string | null;
+  summary: PayrollPreviewSummary | null;
+  validation?: {
+    errors: PayrollPreviewValidationIssue[];
+    warnings: PayrollPreviewValidationIssue[];
+  } | null;
+  [key: string]: unknown;
+}
+
 // ── Helper to extract API data safely ─────────────────────────────────
 
 function extractData<T>(res: unknown): T {
@@ -401,6 +514,266 @@ export function normalizePayrollRunStatus(runId: string, raw: any): PayrollRunSt
     validationIssues,
     startedAt: raw.startedAt || raw.started_at || null,
     completedAt: raw.completedAt || raw.completed_at || null,
+    ...raw,
+  };
+}
+
+export function normalizePayrollEmployee(item: any): PayrollPreviewEmployee {
+  if (!item || typeof item !== "object") {
+    return {
+      id: "",
+      employeeId: "",
+      name: "Unknown Employee",
+      grossEarnings: null,
+      totalDeductions: null,
+      netPay: null,
+    };
+  }
+
+  const id = String(
+    item.id || item._id || item.employee_id || item.employeeId || ""
+  );
+  const employeeId = String(
+    item.employeeId ||
+      item.employee_id ||
+      item.emp_id ||
+      item.employee_code ||
+      item.code ||
+      id
+  );
+  const name =
+    item.name ||
+    item.employee_name ||
+    item.employeeName ||
+    (item.first_name ? `${item.first_name} ${item.last_name || ""}`.trim() : "") ||
+    "Unnamed Employee";
+  const email = item.email || item.work_email || undefined;
+  const designation =
+    item.designation || item.job_title || item.role || undefined;
+  const department =
+    item.department || item.dept || item.department_name || undefined;
+  const location = item.location || item.branch || item.city || undefined;
+
+  const grossEarnings =
+    item.grossEarnings ??
+    item.gross_earnings ??
+    item.grossSalary ??
+    item.gross_salary ??
+    item.gross ??
+    null;
+  const totalDeductions =
+    item.totalDeductions ??
+    item.total_deductions ??
+    item.deductions_total ??
+    item.deductions ??
+    null;
+  const netPay =
+    item.netPay ??
+    item.net_pay ??
+    item.netSalary ??
+    item.net_salary ??
+    item.net ??
+    null;
+  const employerContribution =
+    item.employerContribution ??
+    item.employer_contribution ??
+    item.employer_cost ??
+    null;
+
+  const status = item.status || item.payroll_status || "Processed";
+  const validationStatus =
+    item.validationStatus ||
+    item.validation_status ||
+    (item.has_issues ? "warning" : "valid");
+
+  // Earnings breakdown if present
+  const rawEarnings =
+    item.earnings ||
+    item.salary_breakdown?.earnings ||
+    item.components?.earnings;
+  const earnings: PayrollEmployeeEarnings | undefined = rawEarnings
+    ? {
+        basic: rawEarnings.basic ?? rawEarnings.basic_monthly ?? null,
+        hra: rawEarnings.hra ?? rawEarnings.hra_monthly ?? null,
+        allowances:
+          rawEarnings.allowances ?? rawEarnings.other_allowances ?? null,
+        specialAllowance:
+          rawEarnings.specialAllowance ??
+          rawEarnings.special_allowance ??
+          null,
+        conveyance:
+          rawEarnings.conveyance ?? rawEarnings.conveyance_monthly ?? null,
+        overtime:
+          rawEarnings.overtime ?? rawEarnings.overtime_amount ?? null,
+        bonus: rawEarnings.bonus ?? rawEarnings.bonus_amount ?? null,
+        incentives: rawEarnings.incentives ?? null,
+        other: rawEarnings.other ?? null,
+        ...rawEarnings,
+      }
+    : undefined;
+
+  // Deductions breakdown if present
+  const rawDeductions =
+    item.deductions ||
+    item.salary_breakdown?.deductions ||
+    item.components?.deductions;
+  const deductions: PayrollEmployeeDeductions | undefined = rawDeductions
+    ? {
+        pf:
+          rawDeductions.pf ??
+          rawDeductions.epf ??
+          rawDeductions.provident_fund ??
+          null,
+        esi: rawDeductions.esi ?? rawDeductions.esic ?? null,
+        pt: rawDeductions.pt ?? rawDeductions.professional_tax ?? null,
+        tds:
+          rawDeductions.tds ??
+          rawDeductions.tax ??
+          rawDeductions.income_tax ??
+          null,
+        incomeTax:
+          rawDeductions.incomeTax ?? rawDeductions.income_tax ?? null,
+        loan: rawDeductions.loan ?? rawDeductions.loan_deduction ?? null,
+        advance:
+          rawDeductions.advance ?? rawDeductions.advance_salary ?? null,
+        other: rawDeductions.other ?? null,
+        ...rawDeductions,
+      }
+    : undefined;
+
+  // Attendance metrics if present
+  const rawAtt = item.attendance || item.attendance_metrics;
+  const attendance: PayrollEmployeeAttendance | undefined = rawAtt
+    ? {
+        workingDays:
+          rawAtt.workingDays ??
+          rawAtt.working_days ??
+          rawAtt.total_days ??
+          null,
+        paidDays: rawAtt.paidDays ?? rawAtt.paid_days ?? null,
+        unpaidDays:
+          rawAtt.unpaidDays ??
+          rawAtt.unpaid_days ??
+          rawAtt.loss_of_pay_days ??
+          null,
+        leaveDays: rawAtt.leaveDays ?? rawAtt.leave_days ?? null,
+        overtimeHours:
+          rawAtt.overtimeHours ?? rawAtt.overtime_hours ?? null,
+        lopDays: rawAtt.lopDays ?? rawAtt.lop_days ?? null,
+        ...rawAtt,
+      }
+    : undefined;
+
+  // Issues if present
+  const rawIssues = item.issues || item.validation_issues || [];
+  const issues = Array.isArray(rawIssues)
+    ? rawIssues.map((iss: any) => ({
+        id: iss.id,
+        severity: iss.severity || "warning",
+        message: iss.message || String(iss),
+      }))
+    : undefined;
+
+  return {
+    id,
+    employeeId,
+    name,
+    email,
+    designation,
+    department,
+    location,
+    grossEarnings: grossEarnings != null ? Number(grossEarnings) : null,
+    totalDeductions: totalDeductions != null ? Number(totalDeductions) : null,
+    netPay: netPay != null ? Number(netPay) : null,
+    employerContribution:
+      employerContribution != null ? Number(employerContribution) : null,
+    status,
+    validationStatus,
+    issuesCount: issues ? issues.length : item.issues_count ?? 0,
+    issues,
+    earnings,
+    deductions,
+    attendance,
+    ...item,
+  };
+}
+
+export function normalizePayrollPreviewData(
+  runId: string,
+  raw: any
+): PayrollPreviewData {
+  if (!raw || typeof raw !== "object") {
+    return {
+      runId,
+      status: "Provision Generated",
+      summary: null,
+    };
+  }
+
+  const periodId =
+    raw.periodId || raw.period_id || raw.cycleId || raw.cycle_id || null;
+  const periodName =
+    raw.periodName || raw.period_name || raw.cycle_name || raw.name || null;
+  const status = raw.status || raw.run_status || "Provision Generated";
+  const runDate =
+    raw.runDate || raw.run_date || raw.createdAt || raw.created_at || null;
+  const generatedAt =
+    raw.generatedAt ||
+    raw.generated_at ||
+    raw.updatedAt ||
+    raw.updated_at ||
+    null;
+
+  // Raw summary
+  const s = raw.summary || raw.totals || raw.stats || raw;
+  const summary: PayrollPreviewSummary = {
+    employeeCount:
+      s.employeeCount ??
+      s.employee_count ??
+      s.totalEmployees ??
+      s.total_employees ??
+      null,
+    grossPayroll:
+      s.grossPayroll ??
+      s.gross_payroll ??
+      s.totalGross ??
+      s.total_gross ??
+      null,
+    totalEarnings:
+      s.totalEarnings ??
+      s.total_earnings ??
+      s.grossPayroll ??
+      s.gross_payroll ??
+      null,
+    totalDeductions:
+      s.totalDeductions ?? s.total_deductions ?? s.deductions ?? null,
+    netPayroll:
+      s.netPayroll ?? s.net_payroll ?? s.totalNet ?? s.total_net ?? null,
+    employerCost:
+      s.employerCost ?? s.employer_cost ?? s.totalCost ?? s.total_cost ?? null,
+    employerContribution:
+      s.employerContribution ?? s.employer_contribution ?? null,
+  };
+
+  // Raw validation
+  let validation: PayrollPreviewData["validation"] = null;
+  const v = raw.validation || raw.validation_results;
+  if (v && typeof v === "object") {
+    validation = {
+      errors: Array.isArray(v.errors) ? v.errors : [],
+      warnings: Array.isArray(v.warnings) ? v.warnings : [],
+    };
+  }
+
+  return {
+    runId,
+    periodId,
+    periodName,
+    status,
+    runDate,
+    generatedAt,
+    summary,
+    validation,
     ...raw,
   };
 }
@@ -776,6 +1149,167 @@ export const payrollApi = {
     } catch {
       return [];
     }
+  },
+
+  /**
+   * Fetch comprehensive payroll preview for a completed/provision run.
+   * GET /api/v2/payroll/runs/{runId}/preview
+   * Zero mock data: raises error if backend is unavailable so UI renders proper state.
+   */
+  async getPayrollPreview(runId: string): Promise<PayrollPreviewData> {
+    try {
+      const res = await apiInstance.get(
+        `/api/v2/payroll/runs/${runId}/preview`,
+        { headers: { "Cache-Control": "no-cache" }, skipCache: true }
+      );
+      const data = extractData<any>(res);
+      return normalizePayrollPreviewData(runId, data);
+    } catch (err: any) {
+      if (err?.response?.status === 404) {
+        // Fallback to /payroll/runs/{runId}/preview or /payroll/runs/{runId}
+        try {
+          const fallbackRes = await apiInstance.get(
+            `/payroll/runs/${runId}/preview`,
+            { headers: { "Cache-Control": "no-cache" }, skipCache: true }
+          );
+          const fallbackData = extractData<any>(fallbackRes);
+          if (fallbackData) {
+            return normalizePayrollPreviewData(runId, fallbackData);
+          }
+        } catch {
+          // Fall through and throw original error
+        }
+      }
+      throw err;
+    }
+  },
+
+  /**
+   * Fetch paginated employee payroll rows for a run.
+   * GET /api/v2/payroll/runs/{runId}/employees
+   */
+  async getRunEmployees(
+    runId: string,
+    params?: GetRunEmployeesParams
+  ): Promise<GetRunEmployeesResponse> {
+    const queryParams: Record<string, any> = {};
+    if (params?.page) queryParams.page = params.page;
+    if (params?.limit) queryParams.limit = params.limit;
+    if (params?.search) queryParams.search = params.search;
+    if (params?.department && params.department !== "all") {
+      queryParams.department = params.department;
+    }
+    if (params?.validationStatus && params.validationStatus !== "all") {
+      queryParams.validationStatus = params.validationStatus;
+    }
+    if (params?.sortBy) queryParams.sortBy = params.sortBy;
+    if (params?.sortDir) queryParams.sortDir = params.sortDir;
+
+    try {
+      const res = await apiInstance.get(
+        `/api/v2/payroll/runs/${runId}/employees`,
+        {
+          params: queryParams,
+          headers: { "Cache-Control": "no-cache" },
+          skipCache: true,
+        }
+      );
+      const data = extractData<any>(res);
+
+      let rawList: any[] = [];
+      let total = 0;
+      let page = params?.page || 1;
+      let limit = params?.limit || 10;
+      let totalPages = 1;
+
+      if (Array.isArray(data)) {
+        rawList = data;
+        total = data.length;
+      } else if (data && typeof data === "object") {
+        if (Array.isArray(data.items)) rawList = data.items;
+        else if (Array.isArray(data.employees)) rawList = data.employees;
+        else if (Array.isArray(data.data)) rawList = data.data;
+
+        total =
+          Number(data.total ?? data.count ?? rawList.length) || rawList.length;
+        page = Number(data.page ?? params?.page ?? 1) || 1;
+        limit = Number(data.limit ?? params?.limit ?? 10) || 10;
+        totalPages =
+          Number(data.pages ?? data.total_pages ?? Math.ceil(total / limit)) || 1;
+      }
+
+      const items = rawList.map(normalizePayrollEmployee);
+      return { items, total, page, limit, totalPages };
+    } catch (err: any) {
+      if (err?.response?.status === 404) {
+        // Fallback /payroll/runs/{runId}/employees
+        try {
+          const fbRes = await apiInstance.get(
+            `/payroll/runs/${runId}/employees`,
+            { params: queryParams, skipCache: true }
+          );
+          const fbData = extractData<any>(fbRes);
+          let rawList: any[] = [];
+          if (Array.isArray(fbData)) rawList = fbData;
+          else if (fbData?.items && Array.isArray(fbData.items))
+            rawList = fbData.items;
+          const items = rawList.map(normalizePayrollEmployee);
+          return {
+            items,
+            total: items.length,
+            page: 1,
+            limit: items.length || 10,
+            totalPages: 1,
+          };
+        } catch {
+          // Re-throw
+        }
+      }
+      throw err;
+    }
+  },
+
+  /**
+   * Fetch single employee detailed payroll calculation for a run.
+   * GET /api/v2/payroll/runs/{runId}/employees/{employeeId}
+   */
+  async getRunEmployeeDetail(
+    runId: string,
+    employeeId: string
+  ): Promise<PayrollPreviewEmployee | null> {
+    try {
+      const res = await apiInstance.get(
+        `/api/v2/payroll/runs/${runId}/employees/${employeeId}`,
+        { headers: { "Cache-Control": "no-cache" }, skipCache: true }
+      );
+      const data = extractData<any>(res);
+      return data ? normalizePayrollEmployee(data) : null;
+    } catch (err: any) {
+      if (err?.response?.status === 404) {
+        // Fallback /payroll/runs/{runId}/employees/{employeeId}
+        try {
+          const fbRes = await apiInstance.get(
+            `/payroll/runs/${runId}/employees/${employeeId}`,
+            { skipCache: true }
+          );
+          const fbData = extractData<any>(fbRes);
+          return fbData ? normalizePayrollEmployee(fbData) : null;
+        } catch {
+          return null;
+        }
+      }
+      throw err;
+    }
+  },
+
+  /**
+   * Trigger recalculation of a payroll run.
+   * POST /api/v2/payroll/runs/{runId}/process
+   */
+  async recalculatePayroll(
+    runId: string
+  ): Promise<{ success: boolean; message?: string }> {
+    return this.retryPayrollRun(runId);
   },
 };
 

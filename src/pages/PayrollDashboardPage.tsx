@@ -845,9 +845,22 @@ export function PayrollDashboardPage() {
                           className="h-7 text-xs text-muted-foreground hover:text-foreground"
                           onClick={() => {
                             if (run.id) {
-                              navigate({
-                                to: `/dashboard/payroll/runs/${run.id}/processing` as any,
-                              });
+                              const s = (run.status || "").toLowerCase();
+                              if (
+                                s.includes("provision") ||
+                                s.includes("completed") ||
+                                s.includes("final") ||
+                                s.includes("approved") ||
+                                s.includes("review")
+                              ) {
+                                navigate({
+                                  to: `/dashboard/payroll/runs/${run.id}/preview` as any,
+                                });
+                              } else {
+                                navigate({
+                                  to: `/dashboard/payroll/runs/${run.id}/processing` as any,
+                                });
+                              }
                             } else {
                               toast.info(
                                 `Viewing payroll details for ${run.periodName}`
