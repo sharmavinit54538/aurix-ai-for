@@ -186,23 +186,8 @@ export function AttendancePage() {
         </div>
       </div>
 
-      {/* ERROR BANNER */}
-      {error && (
-        <div className="flex items-center justify-between rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-xs text-destructive text-left">
-          <div className="flex items-center gap-2.5">
-            <AlertCircle className="h-4 w-4 shrink-0" />
-            <span>Backend Attendance API Notice: {error}</span>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => loadData(true)}
-            className="h-7 text-xs border-destructive/40 hover:bg-destructive/15"
-          >
-            Retry
-          </Button>
-        </div>
-      )}
+
+
 
       {viewMode === "modules" ? (
         <div className="space-y-6 animate-in fade-in duration-300">

@@ -272,21 +272,7 @@ export function LeavesPage() {
 
   return (
     <>
-      <div className="flex justify-end gap-2">
-        <Button
-          variant="outline"
-          onClick={() => {
-            loadBalances();
-            loadHistory();
-            if (userRole === "admin" || userRole === "manager") {
-              loadPendingApprovals();
-            }
-            toast.info("Refreshed leave data.");
-          }}
-          className="gap-2 border-border text-muted-foreground hover:text-foreground"
-        >
-          <RefreshCw className="h-4 w-4" /> Refresh
-        </Button>
+      <div className="flex justify-end mb-4">
         <Button
           onClick={() => setApplyOpen(true)}
           className="gap-2 bg-indigo-600 hover:bg-indigo-500 text-white"
