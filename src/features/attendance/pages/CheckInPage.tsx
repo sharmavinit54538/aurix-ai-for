@@ -696,17 +696,9 @@ function CheckInPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="font-display text-lg font-semibold">{user?.fullName ?? "Jordan Lee"}</h2>
-                    <DayStatusChip status={dayStatus} />
                   </div>
                   <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1"><User className="h-3 w-3" /> EMP-{ws.employees[0]?.employeeId ?? "2024001"}</span>
-                    <span className="flex items-center gap-1"><Briefcase className="h-3 w-3" /> {ws.employees[0]?.department ?? "Engineering"}</span>
-                    <span className="flex items-center gap-1"><Star className="h-3 w-3" /> {ws.employees[0]?.designation ?? "Senior Engineer"}</span>
-                    <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> Bangalore Office</span>
-                  </div>
-                  <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-                    <UserCog className="h-3 w-3" />
-                    <span>Reports to: {ws.employees[0]?.managerName ?? "Alex Morgan"}</span>
                   </div>
                 </div>
                 {/* Working hours today */}
