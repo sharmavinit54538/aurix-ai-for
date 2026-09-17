@@ -1,4 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
+import { useRouterState } from "@tanstack/react-router";
+import { useAurix } from "@/lib/aurix-store";
+import { EmployeeRostersView } from "@/features/portal/employee/components/EmployeeRostersView";
 import {
   ScrollText,
   Plus,
@@ -61,6 +64,23 @@ export interface EmployeeItem {
 const SHIFT_TYPES = ["Morning", "Evening", "Night", "Off Day", "Leave", "Holiday", "Training", "WFH", "Overtime"] as const;
 
 export default function RostersPage() {
+  const ws = useAurix();
+  const router = useRouterState();
+  const pathname = router.location.pathname;
+  const searchParams = new URLSearchParams(router.location.search);
+  const viewParam = searchParams.get("view");
+  const employeeIdParam = searchParams.get("employeeId");
+
+  const normalizedRole = (ws.user?.role || "").toLowerCase();
+  const isEmployee =
+    normalizedRole === "employee" ||
+    viewParam === "my" ||
+    pathname.startsWith("/dashboard/employee");
+
+  if (isEmployee) {
+    return <EmployeeRostersView employeeId={employeeIdParam || undefined} />;
+  }
+
   const [rosters, setRosters] = useState<RosterEntry[]>([]);
   const [employees, setEmployees] = useState<EmployeeItem[]>([]);
   const [loading, setLoading] = useState(true);

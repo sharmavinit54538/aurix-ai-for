@@ -1,5 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouterState } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
+import { useAurix } from "@/lib/aurix-store";
+import { EmployeeShiftsView } from "@/features/portal/employee/components/EmployeeShiftsView";
 import {
   Clock, Plus, Search, Users, Moon, Sun, Edit, Trash2, UserPlus,
   CheckCircle2, AlertCircle, RefreshCw, ChevronLeft, Calendar,
@@ -35,7 +37,7 @@ import {
 } from "@/services/attendanceApi";
 
 export const Route = createFileRoute("/dashboard/attendance/shifts")({
-  head: () => ({ meta: [{ title: "Shifts Management — OFC360" }] }),
+  head: () => ({ meta: [{ title: "Shifts — OFC360" }] }),
   component: ShiftsPage,
 });
 
@@ -50,6 +52,23 @@ interface SimpleEmployee {
 const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 function ShiftsPage() {
+  const ws = useAurix();
+  const router = useRouterState();
+  const pathname = router.location.pathname;
+  const searchParams = new URLSearchParams(router.location.search);
+  const viewParam = searchParams.get("view");
+  const employeeIdParam = searchParams.get("employeeId");
+
+  const normalizedRole = (ws.user?.role || "").toLowerCase();
+  const isEmployee =
+    normalizedRole === "employee" ||
+    viewParam === "my" ||
+    pathname.startsWith("/dashboard/employee");
+
+  if (isEmployee) {
+    return <EmployeeShiftsView employeeId={employeeIdParam || undefined} />;
+  }
+
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
