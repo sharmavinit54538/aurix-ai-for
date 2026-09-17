@@ -173,33 +173,9 @@ const EMPLOYEE_NAV_SECTIONS: SidebarNavSection[] = [
         exact: true,
       },
       {
-        id: "attendance",
+        to: "/dashboard/attendance",
         label: "Attendance",
         icon: Clock,
-        basePath: "/dashboard/attendance",
-        children: [
-          {
-            to: "/dashboard/attendance",
-            label: "Overview",
-            icon: Clock,
-            exact: true,
-          },
-          {
-            to: "/dashboard/attendance/shifts",
-            label: "My Shifts",
-            icon: CalendarClock,
-          },
-          {
-            to: "/dashboard/attendance/rosters",
-            label: "My Roster",
-            icon: ScrollText,
-          },
-          {
-            to: "/dashboard/attendance/holidays",
-            label: "Holidays",
-            icon: Palmtree,
-          },
-        ],
       },
       {
         to: "/dashboard/leaves",
