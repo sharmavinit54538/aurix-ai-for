@@ -14,14 +14,6 @@ import { logout } from "@/lib/auth-bootstrap";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { GlassCard, StatCard } from "@/components/hrms/Shared";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 
 // ── Types ─────────────────────────────────────────────────────
 type AttendanceStatus = "not-checked-in" | "checked-in" | "on-break" | "checked-out";
@@ -670,44 +662,6 @@ function CheckInPage() {
         </div>
       )}
 
-      {/* ── Page Header ── */}
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <Breadcrumb className="mb-1">
-            <BreadcrumbList className="text-xs">
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link to="/dashboard/workforce">Workforce</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link to="/dashboard/workforce/attendance">Attendance</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage className="font-medium">Check In</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-          <h1 className="font-display text-2xl font-semibold tracking-tight">Check In / Check Out</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{nowDateStr()}</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 rounded-xl border border-border bg-card/60 px-3 py-2 backdrop-blur-xl">
-            <Clock className="h-4 w-4 text-muted-foreground" />
-            <LiveClock />
-          </div>
-          <DayStatusChip status={dayStatus} />
-          <div className="flex items-center gap-2 rounded-xl border border-border bg-card/60 px-3 py-2 text-xs">
-            <Briefcase className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="font-medium">Morning Shift</span>
-            <span className="text-muted-foreground">09:00 – 18:00</span>
-          </div>
-        </div>
-      </div>
 
       {/* ── Main Grid ── */}
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">

@@ -14,7 +14,7 @@ import {
   Star, Sun, Target, Timer, TrendingUp, Trophy, User, UserCheck, UserCog, UserPlus, Users, Video,
   Wallet, Workflow, X, Zap, Clock3, ListTodo, CalendarRange, FileBarChart, Lightbulb,
   ClipboardList, BadgeCheck, Headphones, HelpCircle, TicketCheck, Map, Laptop, Printer,
-  Repeat, Wrench, TrendingDown, BrainCircuit, Fingerprint, Coffee, HeartHandshake, GraduationCap,
+  Repeat, Wrench, TrendingDown, BrainCircuit, Coffee, HeartHandshake, GraduationCap,
   BookMarked, PenLine, FileEdit, Landmark, Coins, Building, Hash, Sliders, Shield, Layers, PackageCheck,
   GitPullRequest, Send, ShieldAlert, Scale, Cpu, Home, Rocket,
 } from "lucide-react";
@@ -183,11 +183,6 @@ const EMPLOYEE_NAV_SECTIONS: SidebarNavSection[] = [
             label: "Overview",
             icon: Clock,
             exact: true,
-          },
-          {
-            to: "/dashboard/attendance/checkin",
-            label: "Check In / Out",
-            icon: Fingerprint,
           },
           {
             to: "/dashboard/attendance/shifts",
