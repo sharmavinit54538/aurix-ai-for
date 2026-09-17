@@ -44,7 +44,6 @@ import { Route as DashboardResourcesRouteImport } from './routes/dashboard.resou
 import { Route as DashboardReportsRouteImport } from './routes/dashboard.reports'
 import { Route as DashboardRecruitmentRouteImport } from './routes/dashboard/recruitment'
 import { Route as DashboardPerformanceRouteImport } from './routes/dashboard.performance'
-import { Route as DashboardPayrollRouteImport } from './routes/dashboard.payroll'
 import { Route as DashboardOnboardingChecklistRouteImport } from './routes/dashboard.onboarding-checklist'
 import { Route as DashboardOffboardingRouteImport } from './routes/dashboard.offboarding'
 import { Route as DashboardManagersRouteImport } from './routes/dashboard.managers'
@@ -76,14 +75,12 @@ import { Route as AuthResetPasswordRouteImport } from './routes/auth/reset-passw
 import { Route as AuthRegisterRouteImport } from './routes/auth/register'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
-import { Route as ApiPayrollCopilotRouteImport } from './routes/api/payroll-copilot'
 import { Route as ApiAiBrainRouteImport } from './routes/api/ai-brain'
 import { Route as AiWorkforcePlanningRouteImport } from './routes/ai.workforce-planning'
 import { Route as AiWorkforceInsightsRouteImport } from './routes/ai.workforce-insights'
 import { Route as AiRecruiterRouteImport } from './routes/ai.recruiter'
 import { Route as AiPolicyAssistantRouteImport } from './routes/ai.policy-assistant'
 import { Route as AiPerformanceCoachRouteImport } from './routes/ai.performance-coach'
-import { Route as AiPayrollInsightsRouteImport } from './routes/ai.payroll-insights'
 import { Route as AiMeetingIntelligenceRouteImport } from './routes/ai.meeting-intelligence'
 import { Route as AiLeaveAssistantRouteImport } from './routes/ai.leave-assistant'
 import { Route as AiEmployeeHealthRouteImport } from './routes/ai.employee-health'
@@ -99,7 +96,6 @@ import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard.s
 import { Route as DashboardResourcesIndexRouteImport } from './routes/dashboard.resources.index'
 import { Route as DashboardRecruitmentIndexRouteImport } from './routes/dashboard/recruitment/index'
 import { Route as DashboardPeopleIndexRouteImport } from './routes/dashboard.people.index'
-import { Route as DashboardPayrollIndexRouteImport } from './routes/dashboard.payroll.index'
 import { Route as DashboardHrOperationsIndexRouteImport } from './routes/dashboard.hr-operations.index'
 import { Route as DashboardExecutiveIndexRouteImport } from './routes/dashboard.executive.index'
 import { Route as DashboardAttendanceIndexRouteImport } from './routes/dashboard.attendance.index'
@@ -160,23 +156,6 @@ import { Route as DashboardRecruitmentAnalyticsRouteImport } from './routes/dash
 import { Route as DashboardRecruitmentAiScreeningRouteImport } from './routes/dashboard/recruitment/ai-screening'
 import { Route as DashboardRecruitmentAiInterviewRouteImport } from './routes/dashboard/recruitment/ai-interview'
 import { Route as DashboardRecruitmentAiRouteImport } from './routes/dashboard/recruitment/ai'
-import { Route as DashboardPayrollTravelRequestsRouteImport } from './routes/dashboard.payroll.travel-requests'
-import { Route as DashboardPayrollTaxRouteImport } from './routes/dashboard.payroll.tax'
-import { Route as DashboardPayrollSettingsRouteImport } from './routes/dashboard.payroll.settings'
-import { Route as DashboardPayrollSalaryStructureRouteImport } from './routes/dashboard.payroll.salary-structure'
-import { Route as DashboardPayrollSalaryProcessingRouteImport } from './routes/dashboard.payroll.salary-processing'
-import { Route as DashboardPayrollReportsRouteImport } from './routes/dashboard.payroll.reports'
-import { Route as DashboardPayrollReimbursementsRouteImport } from './routes/dashboard.payroll.reimbursements'
-import { Route as DashboardPayrollPayslipsRouteImport } from './routes/dashboard.payroll.payslips'
-import { Route as DashboardPayrollOvertimeRouteImport } from './routes/dashboard.payroll.overtime'
-import { Route as DashboardPayrollExpenseClaimsRouteImport } from './routes/dashboard.payroll.expense-claims'
-import { Route as DashboardPayrollDeductionsRouteImport } from './routes/dashboard.payroll.deductions'
-import { Route as DashboardPayrollCopilotRouteImport } from './routes/dashboard.payroll.copilot'
-import { Route as DashboardPayrollComplianceRouteImport } from './routes/dashboard.payroll.compliance'
-import { Route as DashboardPayrollBonusesRouteImport } from './routes/dashboard.payroll.bonuses'
-import { Route as DashboardPayrollBankTransfersRouteImport } from './routes/dashboard.payroll.bank-transfers'
-import { Route as DashboardPayrollApprovalsRouteImport } from './routes/dashboard.payroll.approvals'
-import { Route as DashboardPayrollAdvancesRouteImport } from './routes/dashboard.payroll.advances'
 import { Route as DashboardHrOperationsVisitorManagementRouteImport } from './routes/dashboard.hr-operations.visitor-management'
 import { Route as DashboardHrOperationsTimelineRouteImport } from './routes/dashboard.hr-operations.timeline'
 import { Route as DashboardHrOperationsOnboardingRouteImport } from './routes/dashboard.hr-operations.onboarding'
@@ -409,11 +388,6 @@ const DashboardPerformanceRoute = DashboardPerformanceRouteImport.update({
   path: '/performance',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardPayrollRoute = DashboardPayrollRouteImport.update({
-  id: '/payroll',
-  path: '/payroll',
-  getParentRoute: () => DashboardRoute,
-} as any)
 const DashboardOnboardingChecklistRoute =
   DashboardOnboardingChecklistRouteImport.update({
     id: '/onboarding-checklist',
@@ -571,11 +545,6 @@ const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
   path: '/auth/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPayrollCopilotRoute = ApiPayrollCopilotRouteImport.update({
-  id: '/api/payroll-copilot',
-  path: '/api/payroll-copilot',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiAiBrainRoute = ApiAiBrainRouteImport.update({
   id: '/api/ai-brain',
   path: '/api/ai-brain',
@@ -604,11 +573,6 @@ const AiPolicyAssistantRoute = AiPolicyAssistantRouteImport.update({
 const AiPerformanceCoachRoute = AiPerformanceCoachRouteImport.update({
   id: '/performance-coach',
   path: '/performance-coach',
-  getParentRoute: () => AiRoute,
-} as any)
-const AiPayrollInsightsRoute = AiPayrollInsightsRouteImport.update({
-  id: '/payroll-insights',
-  path: '/payroll-insights',
   getParentRoute: () => AiRoute,
 } as any)
 const AiMeetingIntelligenceRoute = AiMeetingIntelligenceRouteImport.update({
@@ -686,11 +650,6 @@ const DashboardPeopleIndexRoute = DashboardPeopleIndexRouteImport.update({
   id: '/people/',
   path: '/people/',
   getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardPayrollIndexRoute = DashboardPayrollIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => DashboardPayrollRoute,
 } as any)
 const DashboardHrOperationsIndexRoute =
   DashboardHrOperationsIndexRouteImport.update({
@@ -1046,104 +1005,6 @@ const DashboardRecruitmentAiRoute = DashboardRecruitmentAiRouteImport.update({
   path: '/ai',
   getParentRoute: () => DashboardRecruitmentRoute,
 } as any)
-const DashboardPayrollTravelRequestsRoute =
-  DashboardPayrollTravelRequestsRouteImport.update({
-    id: '/travel-requests',
-    path: '/travel-requests',
-    getParentRoute: () => DashboardPayrollRoute,
-  } as any)
-const DashboardPayrollTaxRoute = DashboardPayrollTaxRouteImport.update({
-  id: '/tax',
-  path: '/tax',
-  getParentRoute: () => DashboardPayrollRoute,
-} as any)
-const DashboardPayrollSettingsRoute =
-  DashboardPayrollSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => DashboardPayrollRoute,
-  } as any)
-const DashboardPayrollSalaryStructureRoute =
-  DashboardPayrollSalaryStructureRouteImport.update({
-    id: '/salary-structure',
-    path: '/salary-structure',
-    getParentRoute: () => DashboardPayrollRoute,
-  } as any)
-const DashboardPayrollSalaryProcessingRoute =
-  DashboardPayrollSalaryProcessingRouteImport.update({
-    id: '/salary-processing',
-    path: '/salary-processing',
-    getParentRoute: () => DashboardPayrollRoute,
-  } as any)
-const DashboardPayrollReportsRoute = DashboardPayrollReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
-  getParentRoute: () => DashboardPayrollRoute,
-} as any)
-const DashboardPayrollReimbursementsRoute =
-  DashboardPayrollReimbursementsRouteImport.update({
-    id: '/reimbursements',
-    path: '/reimbursements',
-    getParentRoute: () => DashboardPayrollRoute,
-  } as any)
-const DashboardPayrollPayslipsRoute =
-  DashboardPayrollPayslipsRouteImport.update({
-    id: '/payslips',
-    path: '/payslips',
-    getParentRoute: () => DashboardPayrollRoute,
-  } as any)
-const DashboardPayrollOvertimeRoute =
-  DashboardPayrollOvertimeRouteImport.update({
-    id: '/overtime',
-    path: '/overtime',
-    getParentRoute: () => DashboardPayrollRoute,
-  } as any)
-const DashboardPayrollExpenseClaimsRoute =
-  DashboardPayrollExpenseClaimsRouteImport.update({
-    id: '/expense-claims',
-    path: '/expense-claims',
-    getParentRoute: () => DashboardPayrollRoute,
-  } as any)
-const DashboardPayrollDeductionsRoute =
-  DashboardPayrollDeductionsRouteImport.update({
-    id: '/deductions',
-    path: '/deductions',
-    getParentRoute: () => DashboardPayrollRoute,
-  } as any)
-const DashboardPayrollCopilotRoute = DashboardPayrollCopilotRouteImport.update({
-  id: '/copilot',
-  path: '/copilot',
-  getParentRoute: () => DashboardPayrollRoute,
-} as any)
-const DashboardPayrollComplianceRoute =
-  DashboardPayrollComplianceRouteImport.update({
-    id: '/compliance',
-    path: '/compliance',
-    getParentRoute: () => DashboardPayrollRoute,
-  } as any)
-const DashboardPayrollBonusesRoute = DashboardPayrollBonusesRouteImport.update({
-  id: '/bonuses',
-  path: '/bonuses',
-  getParentRoute: () => DashboardPayrollRoute,
-} as any)
-const DashboardPayrollBankTransfersRoute =
-  DashboardPayrollBankTransfersRouteImport.update({
-    id: '/bank-transfers',
-    path: '/bank-transfers',
-    getParentRoute: () => DashboardPayrollRoute,
-  } as any)
-const DashboardPayrollApprovalsRoute =
-  DashboardPayrollApprovalsRouteImport.update({
-    id: '/approvals',
-    path: '/approvals',
-    getParentRoute: () => DashboardPayrollRoute,
-  } as any)
-const DashboardPayrollAdvancesRoute =
-  DashboardPayrollAdvancesRouteImport.update({
-    id: '/advances',
-    path: '/advances',
-    getParentRoute: () => DashboardPayrollRoute,
-  } as any)
 const DashboardHrOperationsVisitorManagementRoute =
   DashboardHrOperationsVisitorManagementRouteImport.update({
     id: '/visitor-management',
@@ -1503,14 +1364,12 @@ export interface FileRoutesByFullPath {
   '/ai/employee-health': typeof AiEmployeeHealthRoute
   '/ai/leave-assistant': typeof AiLeaveAssistantRoute
   '/ai/meeting-intelligence': typeof AiMeetingIntelligenceRoute
-  '/ai/payroll-insights': typeof AiPayrollInsightsRoute
   '/ai/performance-coach': typeof AiPerformanceCoachRoute
   '/ai/policy-assistant': typeof AiPolicyAssistantRoute
   '/ai/recruiter': typeof AiRecruiterRoute
   '/ai/workforce-insights': typeof AiWorkforceInsightsRoute
   '/ai/workforce-planning': typeof AiWorkforcePlanningRoute
   '/api/ai-brain': typeof ApiAiBrainRoute
-  '/api/payroll-copilot': typeof ApiPayrollCopilotRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
@@ -1542,7 +1401,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/managers': typeof DashboardManagersRoute
   '/dashboard/offboarding': typeof DashboardOffboardingRoute
   '/dashboard/onboarding-checklist': typeof DashboardOnboardingChecklistRoute
-  '/dashboard/payroll': typeof DashboardPayrollRouteWithChildren
   '/dashboard/performance': typeof DashboardPerformanceRoute
   '/dashboard/recruitment': typeof DashboardRecruitmentRouteWithChildren
   '/dashboard/reports': typeof DashboardReportsRoute
@@ -1578,23 +1436,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/hr-operations/onboarding': typeof DashboardHrOperationsOnboardingRoute
   '/dashboard/hr-operations/timeline': typeof DashboardHrOperationsTimelineRoute
   '/dashboard/hr-operations/visitor-management': typeof DashboardHrOperationsVisitorManagementRoute
-  '/dashboard/payroll/advances': typeof DashboardPayrollAdvancesRoute
-  '/dashboard/payroll/approvals': typeof DashboardPayrollApprovalsRoute
-  '/dashboard/payroll/bank-transfers': typeof DashboardPayrollBankTransfersRoute
-  '/dashboard/payroll/bonuses': typeof DashboardPayrollBonusesRoute
-  '/dashboard/payroll/compliance': typeof DashboardPayrollComplianceRoute
-  '/dashboard/payroll/copilot': typeof DashboardPayrollCopilotRoute
-  '/dashboard/payroll/deductions': typeof DashboardPayrollDeductionsRoute
-  '/dashboard/payroll/expense-claims': typeof DashboardPayrollExpenseClaimsRoute
-  '/dashboard/payroll/overtime': typeof DashboardPayrollOvertimeRoute
-  '/dashboard/payroll/payslips': typeof DashboardPayrollPayslipsRoute
-  '/dashboard/payroll/reimbursements': typeof DashboardPayrollReimbursementsRoute
-  '/dashboard/payroll/reports': typeof DashboardPayrollReportsRoute
-  '/dashboard/payroll/salary-processing': typeof DashboardPayrollSalaryProcessingRoute
-  '/dashboard/payroll/salary-structure': typeof DashboardPayrollSalaryStructureRoute
-  '/dashboard/payroll/settings': typeof DashboardPayrollSettingsRoute
-  '/dashboard/payroll/tax': typeof DashboardPayrollTaxRoute
-  '/dashboard/payroll/travel-requests': typeof DashboardPayrollTravelRequestsRoute
   '/dashboard/recruitment/ai': typeof DashboardRecruitmentAiRoute
   '/dashboard/recruitment/ai-interview': typeof DashboardRecruitmentAiInterviewRoute
   '/dashboard/recruitment/ai-screening': typeof DashboardRecruitmentAiScreeningRoute
@@ -1655,7 +1496,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/attendance/': typeof DashboardAttendanceIndexRoute
   '/dashboard/executive/': typeof DashboardExecutiveIndexRoute
   '/dashboard/hr-operations/': typeof DashboardHrOperationsIndexRoute
-  '/dashboard/payroll/': typeof DashboardPayrollIndexRoute
   '/dashboard/people/': typeof DashboardPeopleIndexRoute
   '/dashboard/recruitment/': typeof DashboardRecruitmentIndexRoute
   '/dashboard/resources/': typeof DashboardResourcesIndexRoute
@@ -1726,14 +1566,12 @@ export interface FileRoutesByTo {
   '/ai/employee-health': typeof AiEmployeeHealthRoute
   '/ai/leave-assistant': typeof AiLeaveAssistantRoute
   '/ai/meeting-intelligence': typeof AiMeetingIntelligenceRoute
-  '/ai/payroll-insights': typeof AiPayrollInsightsRoute
   '/ai/performance-coach': typeof AiPerformanceCoachRoute
   '/ai/policy-assistant': typeof AiPolicyAssistantRoute
   '/ai/recruiter': typeof AiRecruiterRoute
   '/ai/workforce-insights': typeof AiWorkforceInsightsRoute
   '/ai/workforce-planning': typeof AiWorkforcePlanningRoute
   '/api/ai-brain': typeof ApiAiBrainRoute
-  '/api/payroll-copilot': typeof ApiPayrollCopilotRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
@@ -1788,23 +1626,6 @@ export interface FileRoutesByTo {
   '/dashboard/hr-operations/onboarding': typeof DashboardHrOperationsOnboardingRoute
   '/dashboard/hr-operations/timeline': typeof DashboardHrOperationsTimelineRoute
   '/dashboard/hr-operations/visitor-management': typeof DashboardHrOperationsVisitorManagementRoute
-  '/dashboard/payroll/advances': typeof DashboardPayrollAdvancesRoute
-  '/dashboard/payroll/approvals': typeof DashboardPayrollApprovalsRoute
-  '/dashboard/payroll/bank-transfers': typeof DashboardPayrollBankTransfersRoute
-  '/dashboard/payroll/bonuses': typeof DashboardPayrollBonusesRoute
-  '/dashboard/payroll/compliance': typeof DashboardPayrollComplianceRoute
-  '/dashboard/payroll/copilot': typeof DashboardPayrollCopilotRoute
-  '/dashboard/payroll/deductions': typeof DashboardPayrollDeductionsRoute
-  '/dashboard/payroll/expense-claims': typeof DashboardPayrollExpenseClaimsRoute
-  '/dashboard/payroll/overtime': typeof DashboardPayrollOvertimeRoute
-  '/dashboard/payroll/payslips': typeof DashboardPayrollPayslipsRoute
-  '/dashboard/payroll/reimbursements': typeof DashboardPayrollReimbursementsRoute
-  '/dashboard/payroll/reports': typeof DashboardPayrollReportsRoute
-  '/dashboard/payroll/salary-processing': typeof DashboardPayrollSalaryProcessingRoute
-  '/dashboard/payroll/salary-structure': typeof DashboardPayrollSalaryStructureRoute
-  '/dashboard/payroll/settings': typeof DashboardPayrollSettingsRoute
-  '/dashboard/payroll/tax': typeof DashboardPayrollTaxRoute
-  '/dashboard/payroll/travel-requests': typeof DashboardPayrollTravelRequestsRoute
   '/dashboard/recruitment/ai': typeof DashboardRecruitmentAiRoute
   '/dashboard/recruitment/ai-interview': typeof DashboardRecruitmentAiInterviewRoute
   '/dashboard/recruitment/ai-screening': typeof DashboardRecruitmentAiScreeningRoute
@@ -1864,7 +1685,6 @@ export interface FileRoutesByTo {
   '/dashboard/attendance': typeof DashboardAttendanceIndexRoute
   '/dashboard/executive': typeof DashboardExecutiveIndexRoute
   '/dashboard/hr-operations': typeof DashboardHrOperationsIndexRoute
-  '/dashboard/payroll': typeof DashboardPayrollIndexRoute
   '/dashboard/people': typeof DashboardPeopleIndexRoute
   '/dashboard/recruitment': typeof DashboardRecruitmentIndexRoute
   '/dashboard/resources': typeof DashboardResourcesIndexRoute
@@ -1939,14 +1759,12 @@ export interface FileRoutesById {
   '/ai/employee-health': typeof AiEmployeeHealthRoute
   '/ai/leave-assistant': typeof AiLeaveAssistantRoute
   '/ai/meeting-intelligence': typeof AiMeetingIntelligenceRoute
-  '/ai/payroll-insights': typeof AiPayrollInsightsRoute
   '/ai/performance-coach': typeof AiPerformanceCoachRoute
   '/ai/policy-assistant': typeof AiPolicyAssistantRoute
   '/ai/recruiter': typeof AiRecruiterRoute
   '/ai/workforce-insights': typeof AiWorkforceInsightsRoute
   '/ai/workforce-planning': typeof AiWorkforcePlanningRoute
   '/api/ai-brain': typeof ApiAiBrainRoute
-  '/api/payroll-copilot': typeof ApiPayrollCopilotRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
@@ -1978,7 +1796,6 @@ export interface FileRoutesById {
   '/dashboard/managers': typeof DashboardManagersRoute
   '/dashboard/offboarding': typeof DashboardOffboardingRoute
   '/dashboard/onboarding-checklist': typeof DashboardOnboardingChecklistRoute
-  '/dashboard/payroll': typeof DashboardPayrollRouteWithChildren
   '/dashboard/performance': typeof DashboardPerformanceRoute
   '/dashboard/recruitment': typeof DashboardRecruitmentRouteWithChildren
   '/dashboard/reports': typeof DashboardReportsRoute
@@ -2014,23 +1831,6 @@ export interface FileRoutesById {
   '/dashboard/hr-operations/onboarding': typeof DashboardHrOperationsOnboardingRoute
   '/dashboard/hr-operations/timeline': typeof DashboardHrOperationsTimelineRoute
   '/dashboard/hr-operations/visitor-management': typeof DashboardHrOperationsVisitorManagementRoute
-  '/dashboard/payroll/advances': typeof DashboardPayrollAdvancesRoute
-  '/dashboard/payroll/approvals': typeof DashboardPayrollApprovalsRoute
-  '/dashboard/payroll/bank-transfers': typeof DashboardPayrollBankTransfersRoute
-  '/dashboard/payroll/bonuses': typeof DashboardPayrollBonusesRoute
-  '/dashboard/payroll/compliance': typeof DashboardPayrollComplianceRoute
-  '/dashboard/payroll/copilot': typeof DashboardPayrollCopilotRoute
-  '/dashboard/payroll/deductions': typeof DashboardPayrollDeductionsRoute
-  '/dashboard/payroll/expense-claims': typeof DashboardPayrollExpenseClaimsRoute
-  '/dashboard/payroll/overtime': typeof DashboardPayrollOvertimeRoute
-  '/dashboard/payroll/payslips': typeof DashboardPayrollPayslipsRoute
-  '/dashboard/payroll/reimbursements': typeof DashboardPayrollReimbursementsRoute
-  '/dashboard/payroll/reports': typeof DashboardPayrollReportsRoute
-  '/dashboard/payroll/salary-processing': typeof DashboardPayrollSalaryProcessingRoute
-  '/dashboard/payroll/salary-structure': typeof DashboardPayrollSalaryStructureRoute
-  '/dashboard/payroll/settings': typeof DashboardPayrollSettingsRoute
-  '/dashboard/payroll/tax': typeof DashboardPayrollTaxRoute
-  '/dashboard/payroll/travel-requests': typeof DashboardPayrollTravelRequestsRoute
   '/dashboard/recruitment/ai': typeof DashboardRecruitmentAiRoute
   '/dashboard/recruitment/ai-interview': typeof DashboardRecruitmentAiInterviewRoute
   '/dashboard/recruitment/ai-screening': typeof DashboardRecruitmentAiScreeningRoute
@@ -2091,7 +1891,6 @@ export interface FileRoutesById {
   '/dashboard/attendance/': typeof DashboardAttendanceIndexRoute
   '/dashboard/executive/': typeof DashboardExecutiveIndexRoute
   '/dashboard/hr-operations/': typeof DashboardHrOperationsIndexRoute
-  '/dashboard/payroll/': typeof DashboardPayrollIndexRoute
   '/dashboard/people/': typeof DashboardPeopleIndexRoute
   '/dashboard/recruitment/': typeof DashboardRecruitmentIndexRoute
   '/dashboard/resources/': typeof DashboardResourcesIndexRoute
@@ -2167,14 +1966,12 @@ export interface FileRouteTypes {
     | '/ai/employee-health'
     | '/ai/leave-assistant'
     | '/ai/meeting-intelligence'
-    | '/ai/payroll-insights'
     | '/ai/performance-coach'
     | '/ai/policy-assistant'
     | '/ai/recruiter'
     | '/ai/workforce-insights'
     | '/ai/workforce-planning'
     | '/api/ai-brain'
-    | '/api/payroll-copilot'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/register'
@@ -2206,7 +2003,6 @@ export interface FileRouteTypes {
     | '/dashboard/managers'
     | '/dashboard/offboarding'
     | '/dashboard/onboarding-checklist'
-    | '/dashboard/payroll'
     | '/dashboard/performance'
     | '/dashboard/recruitment'
     | '/dashboard/reports'
@@ -2242,23 +2038,6 @@ export interface FileRouteTypes {
     | '/dashboard/hr-operations/onboarding'
     | '/dashboard/hr-operations/timeline'
     | '/dashboard/hr-operations/visitor-management'
-    | '/dashboard/payroll/advances'
-    | '/dashboard/payroll/approvals'
-    | '/dashboard/payroll/bank-transfers'
-    | '/dashboard/payroll/bonuses'
-    | '/dashboard/payroll/compliance'
-    | '/dashboard/payroll/copilot'
-    | '/dashboard/payroll/deductions'
-    | '/dashboard/payroll/expense-claims'
-    | '/dashboard/payroll/overtime'
-    | '/dashboard/payroll/payslips'
-    | '/dashboard/payroll/reimbursements'
-    | '/dashboard/payroll/reports'
-    | '/dashboard/payroll/salary-processing'
-    | '/dashboard/payroll/salary-structure'
-    | '/dashboard/payroll/settings'
-    | '/dashboard/payroll/tax'
-    | '/dashboard/payroll/travel-requests'
     | '/dashboard/recruitment/ai'
     | '/dashboard/recruitment/ai-interview'
     | '/dashboard/recruitment/ai-screening'
@@ -2319,7 +2098,6 @@ export interface FileRouteTypes {
     | '/dashboard/attendance/'
     | '/dashboard/executive/'
     | '/dashboard/hr-operations/'
-    | '/dashboard/payroll/'
     | '/dashboard/people/'
     | '/dashboard/recruitment/'
     | '/dashboard/resources/'
@@ -2390,14 +2168,12 @@ export interface FileRouteTypes {
     | '/ai/employee-health'
     | '/ai/leave-assistant'
     | '/ai/meeting-intelligence'
-    | '/ai/payroll-insights'
     | '/ai/performance-coach'
     | '/ai/policy-assistant'
     | '/ai/recruiter'
     | '/ai/workforce-insights'
     | '/ai/workforce-planning'
     | '/api/ai-brain'
-    | '/api/payroll-copilot'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/register'
@@ -2452,23 +2228,6 @@ export interface FileRouteTypes {
     | '/dashboard/hr-operations/onboarding'
     | '/dashboard/hr-operations/timeline'
     | '/dashboard/hr-operations/visitor-management'
-    | '/dashboard/payroll/advances'
-    | '/dashboard/payroll/approvals'
-    | '/dashboard/payroll/bank-transfers'
-    | '/dashboard/payroll/bonuses'
-    | '/dashboard/payroll/compliance'
-    | '/dashboard/payroll/copilot'
-    | '/dashboard/payroll/deductions'
-    | '/dashboard/payroll/expense-claims'
-    | '/dashboard/payroll/overtime'
-    | '/dashboard/payroll/payslips'
-    | '/dashboard/payroll/reimbursements'
-    | '/dashboard/payroll/reports'
-    | '/dashboard/payroll/salary-processing'
-    | '/dashboard/payroll/salary-structure'
-    | '/dashboard/payroll/settings'
-    | '/dashboard/payroll/tax'
-    | '/dashboard/payroll/travel-requests'
     | '/dashboard/recruitment/ai'
     | '/dashboard/recruitment/ai-interview'
     | '/dashboard/recruitment/ai-screening'
@@ -2528,7 +2287,6 @@ export interface FileRouteTypes {
     | '/dashboard/attendance'
     | '/dashboard/executive'
     | '/dashboard/hr-operations'
-    | '/dashboard/payroll'
     | '/dashboard/people'
     | '/dashboard/recruitment'
     | '/dashboard/resources'
@@ -2602,14 +2360,12 @@ export interface FileRouteTypes {
     | '/ai/employee-health'
     | '/ai/leave-assistant'
     | '/ai/meeting-intelligence'
-    | '/ai/payroll-insights'
     | '/ai/performance-coach'
     | '/ai/policy-assistant'
     | '/ai/recruiter'
     | '/ai/workforce-insights'
     | '/ai/workforce-planning'
     | '/api/ai-brain'
-    | '/api/payroll-copilot'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/register'
@@ -2641,7 +2397,6 @@ export interface FileRouteTypes {
     | '/dashboard/managers'
     | '/dashboard/offboarding'
     | '/dashboard/onboarding-checklist'
-    | '/dashboard/payroll'
     | '/dashboard/performance'
     | '/dashboard/recruitment'
     | '/dashboard/reports'
@@ -2677,23 +2432,6 @@ export interface FileRouteTypes {
     | '/dashboard/hr-operations/onboarding'
     | '/dashboard/hr-operations/timeline'
     | '/dashboard/hr-operations/visitor-management'
-    | '/dashboard/payroll/advances'
-    | '/dashboard/payroll/approvals'
-    | '/dashboard/payroll/bank-transfers'
-    | '/dashboard/payroll/bonuses'
-    | '/dashboard/payroll/compliance'
-    | '/dashboard/payroll/copilot'
-    | '/dashboard/payroll/deductions'
-    | '/dashboard/payroll/expense-claims'
-    | '/dashboard/payroll/overtime'
-    | '/dashboard/payroll/payslips'
-    | '/dashboard/payroll/reimbursements'
-    | '/dashboard/payroll/reports'
-    | '/dashboard/payroll/salary-processing'
-    | '/dashboard/payroll/salary-structure'
-    | '/dashboard/payroll/settings'
-    | '/dashboard/payroll/tax'
-    | '/dashboard/payroll/travel-requests'
     | '/dashboard/recruitment/ai'
     | '/dashboard/recruitment/ai-interview'
     | '/dashboard/recruitment/ai-screening'
@@ -2754,7 +2492,6 @@ export interface FileRouteTypes {
     | '/dashboard/attendance/'
     | '/dashboard/executive/'
     | '/dashboard/hr-operations/'
-    | '/dashboard/payroll/'
     | '/dashboard/people/'
     | '/dashboard/recruitment/'
     | '/dashboard/resources/'
@@ -2821,7 +2558,6 @@ export interface RootRouteChildren {
   VerifyEmailRoute: typeof VerifyEmailRoute
   VerifyResetOtpRoute: typeof VerifyResetOtpRoute
   ApiAiBrainRoute: typeof ApiAiBrainRoute
-  ApiPayrollCopilotRoute: typeof ApiPayrollCopilotRoute
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
@@ -3078,13 +2814,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardPerformanceRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/dashboard/payroll': {
-      id: '/dashboard/payroll'
-      path: '/payroll'
-      fullPath: '/dashboard/payroll'
-      preLoaderRoute: typeof DashboardPayrollRouteImport
-      parentRoute: typeof DashboardRoute
-    }
     '/dashboard/onboarding-checklist': {
       id: '/dashboard/onboarding-checklist'
       path: '/onboarding-checklist'
@@ -3302,13 +3031,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/payroll-copilot': {
-      id: '/api/payroll-copilot'
-      path: '/api/payroll-copilot'
-      fullPath: '/api/payroll-copilot'
-      preLoaderRoute: typeof ApiPayrollCopilotRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/ai-brain': {
       id: '/api/ai-brain'
       path: '/api/ai-brain'
@@ -3349,13 +3071,6 @@ declare module '@tanstack/react-router' {
       path: '/performance-coach'
       fullPath: '/ai/performance-coach'
       preLoaderRoute: typeof AiPerformanceCoachRouteImport
-      parentRoute: typeof AiRoute
-    }
-    '/ai/payroll-insights': {
-      id: '/ai/payroll-insights'
-      path: '/payroll-insights'
-      fullPath: '/ai/payroll-insights'
-      preLoaderRoute: typeof AiPayrollInsightsRouteImport
       parentRoute: typeof AiRoute
     }
     '/ai/meeting-intelligence': {
@@ -3462,13 +3177,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/people/'
       preLoaderRoute: typeof DashboardPeopleIndexRouteImport
       parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/payroll/': {
-      id: '/dashboard/payroll/'
-      path: '/'
-      fullPath: '/dashboard/payroll/'
-      preLoaderRoute: typeof DashboardPayrollIndexRouteImport
-      parentRoute: typeof DashboardPayrollRoute
     }
     '/dashboard/hr-operations/': {
       id: '/dashboard/hr-operations/'
@@ -3890,125 +3598,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRecruitmentAiRouteImport
       parentRoute: typeof DashboardRecruitmentRoute
     }
-    '/dashboard/payroll/travel-requests': {
-      id: '/dashboard/payroll/travel-requests'
-      path: '/travel-requests'
-      fullPath: '/dashboard/payroll/travel-requests'
-      preLoaderRoute: typeof DashboardPayrollTravelRequestsRouteImport
-      parentRoute: typeof DashboardPayrollRoute
-    }
-    '/dashboard/payroll/tax': {
-      id: '/dashboard/payroll/tax'
-      path: '/tax'
-      fullPath: '/dashboard/payroll/tax'
-      preLoaderRoute: typeof DashboardPayrollTaxRouteImport
-      parentRoute: typeof DashboardPayrollRoute
-    }
-    '/dashboard/payroll/settings': {
-      id: '/dashboard/payroll/settings'
-      path: '/settings'
-      fullPath: '/dashboard/payroll/settings'
-      preLoaderRoute: typeof DashboardPayrollSettingsRouteImport
-      parentRoute: typeof DashboardPayrollRoute
-    }
-    '/dashboard/payroll/salary-structure': {
-      id: '/dashboard/payroll/salary-structure'
-      path: '/salary-structure'
-      fullPath: '/dashboard/payroll/salary-structure'
-      preLoaderRoute: typeof DashboardPayrollSalaryStructureRouteImport
-      parentRoute: typeof DashboardPayrollRoute
-    }
-    '/dashboard/payroll/salary-processing': {
-      id: '/dashboard/payroll/salary-processing'
-      path: '/salary-processing'
-      fullPath: '/dashboard/payroll/salary-processing'
-      preLoaderRoute: typeof DashboardPayrollSalaryProcessingRouteImport
-      parentRoute: typeof DashboardPayrollRoute
-    }
-    '/dashboard/payroll/reports': {
-      id: '/dashboard/payroll/reports'
-      path: '/reports'
-      fullPath: '/dashboard/payroll/reports'
-      preLoaderRoute: typeof DashboardPayrollReportsRouteImport
-      parentRoute: typeof DashboardPayrollRoute
-    }
-    '/dashboard/payroll/reimbursements': {
-      id: '/dashboard/payroll/reimbursements'
-      path: '/reimbursements'
-      fullPath: '/dashboard/payroll/reimbursements'
-      preLoaderRoute: typeof DashboardPayrollReimbursementsRouteImport
-      parentRoute: typeof DashboardPayrollRoute
-    }
-    '/dashboard/payroll/payslips': {
-      id: '/dashboard/payroll/payslips'
-      path: '/payslips'
-      fullPath: '/dashboard/payroll/payslips'
-      preLoaderRoute: typeof DashboardPayrollPayslipsRouteImport
-      parentRoute: typeof DashboardPayrollRoute
-    }
-    '/dashboard/payroll/overtime': {
-      id: '/dashboard/payroll/overtime'
-      path: '/overtime'
-      fullPath: '/dashboard/payroll/overtime'
-      preLoaderRoute: typeof DashboardPayrollOvertimeRouteImport
-      parentRoute: typeof DashboardPayrollRoute
-    }
-    '/dashboard/payroll/expense-claims': {
-      id: '/dashboard/payroll/expense-claims'
-      path: '/expense-claims'
-      fullPath: '/dashboard/payroll/expense-claims'
-      preLoaderRoute: typeof DashboardPayrollExpenseClaimsRouteImport
-      parentRoute: typeof DashboardPayrollRoute
-    }
-    '/dashboard/payroll/deductions': {
-      id: '/dashboard/payroll/deductions'
-      path: '/deductions'
-      fullPath: '/dashboard/payroll/deductions'
-      preLoaderRoute: typeof DashboardPayrollDeductionsRouteImport
-      parentRoute: typeof DashboardPayrollRoute
-    }
-    '/dashboard/payroll/copilot': {
-      id: '/dashboard/payroll/copilot'
-      path: '/copilot'
-      fullPath: '/dashboard/payroll/copilot'
-      preLoaderRoute: typeof DashboardPayrollCopilotRouteImport
-      parentRoute: typeof DashboardPayrollRoute
-    }
-    '/dashboard/payroll/compliance': {
-      id: '/dashboard/payroll/compliance'
-      path: '/compliance'
-      fullPath: '/dashboard/payroll/compliance'
-      preLoaderRoute: typeof DashboardPayrollComplianceRouteImport
-      parentRoute: typeof DashboardPayrollRoute
-    }
-    '/dashboard/payroll/bonuses': {
-      id: '/dashboard/payroll/bonuses'
-      path: '/bonuses'
-      fullPath: '/dashboard/payroll/bonuses'
-      preLoaderRoute: typeof DashboardPayrollBonusesRouteImport
-      parentRoute: typeof DashboardPayrollRoute
-    }
-    '/dashboard/payroll/bank-transfers': {
-      id: '/dashboard/payroll/bank-transfers'
-      path: '/bank-transfers'
-      fullPath: '/dashboard/payroll/bank-transfers'
-      preLoaderRoute: typeof DashboardPayrollBankTransfersRouteImport
-      parentRoute: typeof DashboardPayrollRoute
-    }
-    '/dashboard/payroll/approvals': {
-      id: '/dashboard/payroll/approvals'
-      path: '/approvals'
-      fullPath: '/dashboard/payroll/approvals'
-      preLoaderRoute: typeof DashboardPayrollApprovalsRouteImport
-      parentRoute: typeof DashboardPayrollRoute
-    }
-    '/dashboard/payroll/advances': {
-      id: '/dashboard/payroll/advances'
-      path: '/advances'
-      fullPath: '/dashboard/payroll/advances'
-      preLoaderRoute: typeof DashboardPayrollAdvancesRouteImport
-      parentRoute: typeof DashboardPayrollRoute
-    }
     '/dashboard/hr-operations/visitor-management': {
       id: '/dashboard/hr-operations/visitor-management'
       path: '/visitor-management'
@@ -4414,7 +4003,6 @@ interface AiRouteChildren {
   AiEmployeeHealthRoute: typeof AiEmployeeHealthRoute
   AiLeaveAssistantRoute: typeof AiLeaveAssistantRoute
   AiMeetingIntelligenceRoute: typeof AiMeetingIntelligenceRoute
-  AiPayrollInsightsRoute: typeof AiPayrollInsightsRoute
   AiPerformanceCoachRoute: typeof AiPerformanceCoachRoute
   AiPolicyAssistantRoute: typeof AiPolicyAssistantRoute
   AiRecruiterRoute: typeof AiRecruiterRoute
@@ -4433,7 +4021,6 @@ const AiRouteChildren: AiRouteChildren = {
   AiEmployeeHealthRoute: AiEmployeeHealthRoute,
   AiLeaveAssistantRoute: AiLeaveAssistantRoute,
   AiMeetingIntelligenceRoute: AiMeetingIntelligenceRoute,
-  AiPayrollInsightsRoute: AiPayrollInsightsRoute,
   AiPerformanceCoachRoute: AiPerformanceCoachRoute,
   AiPolicyAssistantRoute: AiPolicyAssistantRoute,
   AiRecruiterRoute: AiRecruiterRoute,
@@ -4532,51 +4119,6 @@ const DashboardHrOperationsRouteWithChildren =
   DashboardHrOperationsRoute._addFileChildren(
     DashboardHrOperationsRouteChildren,
   )
-
-interface DashboardPayrollRouteChildren {
-  DashboardPayrollAdvancesRoute: typeof DashboardPayrollAdvancesRoute
-  DashboardPayrollApprovalsRoute: typeof DashboardPayrollApprovalsRoute
-  DashboardPayrollBankTransfersRoute: typeof DashboardPayrollBankTransfersRoute
-  DashboardPayrollBonusesRoute: typeof DashboardPayrollBonusesRoute
-  DashboardPayrollComplianceRoute: typeof DashboardPayrollComplianceRoute
-  DashboardPayrollCopilotRoute: typeof DashboardPayrollCopilotRoute
-  DashboardPayrollDeductionsRoute: typeof DashboardPayrollDeductionsRoute
-  DashboardPayrollExpenseClaimsRoute: typeof DashboardPayrollExpenseClaimsRoute
-  DashboardPayrollOvertimeRoute: typeof DashboardPayrollOvertimeRoute
-  DashboardPayrollPayslipsRoute: typeof DashboardPayrollPayslipsRoute
-  DashboardPayrollReimbursementsRoute: typeof DashboardPayrollReimbursementsRoute
-  DashboardPayrollReportsRoute: typeof DashboardPayrollReportsRoute
-  DashboardPayrollSalaryProcessingRoute: typeof DashboardPayrollSalaryProcessingRoute
-  DashboardPayrollSalaryStructureRoute: typeof DashboardPayrollSalaryStructureRoute
-  DashboardPayrollSettingsRoute: typeof DashboardPayrollSettingsRoute
-  DashboardPayrollTaxRoute: typeof DashboardPayrollTaxRoute
-  DashboardPayrollTravelRequestsRoute: typeof DashboardPayrollTravelRequestsRoute
-  DashboardPayrollIndexRoute: typeof DashboardPayrollIndexRoute
-}
-
-const DashboardPayrollRouteChildren: DashboardPayrollRouteChildren = {
-  DashboardPayrollAdvancesRoute: DashboardPayrollAdvancesRoute,
-  DashboardPayrollApprovalsRoute: DashboardPayrollApprovalsRoute,
-  DashboardPayrollBankTransfersRoute: DashboardPayrollBankTransfersRoute,
-  DashboardPayrollBonusesRoute: DashboardPayrollBonusesRoute,
-  DashboardPayrollComplianceRoute: DashboardPayrollComplianceRoute,
-  DashboardPayrollCopilotRoute: DashboardPayrollCopilotRoute,
-  DashboardPayrollDeductionsRoute: DashboardPayrollDeductionsRoute,
-  DashboardPayrollExpenseClaimsRoute: DashboardPayrollExpenseClaimsRoute,
-  DashboardPayrollOvertimeRoute: DashboardPayrollOvertimeRoute,
-  DashboardPayrollPayslipsRoute: DashboardPayrollPayslipsRoute,
-  DashboardPayrollReimbursementsRoute: DashboardPayrollReimbursementsRoute,
-  DashboardPayrollReportsRoute: DashboardPayrollReportsRoute,
-  DashboardPayrollSalaryProcessingRoute: DashboardPayrollSalaryProcessingRoute,
-  DashboardPayrollSalaryStructureRoute: DashboardPayrollSalaryStructureRoute,
-  DashboardPayrollSettingsRoute: DashboardPayrollSettingsRoute,
-  DashboardPayrollTaxRoute: DashboardPayrollTaxRoute,
-  DashboardPayrollTravelRequestsRoute: DashboardPayrollTravelRequestsRoute,
-  DashboardPayrollIndexRoute: DashboardPayrollIndexRoute,
-}
-
-const DashboardPayrollRouteWithChildren =
-  DashboardPayrollRoute._addFileChildren(DashboardPayrollRouteChildren)
 
 interface DashboardRecruitmentCandidatesRouteChildren {
   DashboardRecruitmentCandidatesCandidateIdRoute: typeof DashboardRecruitmentCandidatesCandidateIdRoute
@@ -4917,7 +4459,6 @@ interface DashboardRouteChildren {
   DashboardManagersRoute: typeof DashboardManagersRoute
   DashboardOffboardingRoute: typeof DashboardOffboardingRoute
   DashboardOnboardingChecklistRoute: typeof DashboardOnboardingChecklistRoute
-  DashboardPayrollRoute: typeof DashboardPayrollRouteWithChildren
   DashboardPerformanceRoute: typeof DashboardPerformanceRoute
   DashboardRecruitmentRoute: typeof DashboardRecruitmentRouteWithChildren
   DashboardReportsRoute: typeof DashboardReportsRoute
@@ -4966,7 +4507,6 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardManagersRoute: DashboardManagersRoute,
   DashboardOffboardingRoute: DashboardOffboardingRoute,
   DashboardOnboardingChecklistRoute: DashboardOnboardingChecklistRoute,
-  DashboardPayrollRoute: DashboardPayrollRouteWithChildren,
   DashboardPerformanceRoute: DashboardPerformanceRoute,
   DashboardRecruitmentRoute: DashboardRecruitmentRouteWithChildren,
   DashboardReportsRoute: DashboardReportsRoute,
@@ -5016,7 +4556,6 @@ const rootRouteChildren: RootRouteChildren = {
   VerifyEmailRoute: VerifyEmailRoute,
   VerifyResetOtpRoute: VerifyResetOtpRoute,
   ApiAiBrainRoute: ApiAiBrainRoute,
-  ApiPayrollCopilotRoute: ApiPayrollCopilotRoute,
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,

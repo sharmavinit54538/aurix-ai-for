@@ -21,7 +21,6 @@ function loadExpandedState(): Record<string, boolean> {
   return {
     workforce: true,
     talent: true,
-    payroll: true,
     hrops: true,
     resources: true,
     analytics: true,

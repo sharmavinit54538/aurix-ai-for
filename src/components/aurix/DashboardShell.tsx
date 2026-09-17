@@ -104,12 +104,6 @@ const NAV_SECTIONS: SidebarNavSection[] = [
         roles: ["admin", "hr", "manager"],
       },
       {
-        to: "/dashboard/payroll",
-        label: "Payroll",
-        icon: CreditCard,
-        permission: "payroll.view",
-      },
-      {
         to: "/dashboard/hr-operations",
         label: "HR Operations",
         icon: Activity,
@@ -173,11 +167,6 @@ const EMPLOYEE_NAV_SECTIONS: SidebarNavSection[] = [
         to: "/dashboard/expenses",
         label: "Expense Claims",
         icon: Receipt,
-      },
-      {
-        to: "/dashboard/payroll",
-        label: "Payslips & Salary",
-        icon: Wallet,
       },
       {
         to: "/dashboard/documents",
@@ -841,16 +830,6 @@ export function DashboardShell() {
             </CommandItem>
             <CommandItem
               onSelect={() => {
-                navigate({ to: "/dashboard/payroll" as any });
-                setSearchOpen(false);
-              }}
-              className="cursor-pointer"
-            >
-              <Banknote className="mr-2 h-4 w-4" />
-              <span>Payroll</span>
-            </CommandItem>
-            <CommandItem
-              onSelect={() => {
                 navigate({ to: "/dashboard/leaves" as any });
                 setSearchOpen(false);
               }}
@@ -984,10 +963,6 @@ export function PageHeader({
     pathname.startsWith("/dashboard/recruitment/") &&
     pathname !== "/dashboard/recruitment" &&
     pathname !== "/dashboard/recruitment/";
-  const isPayrollSubPage =
-    pathname.startsWith("/dashboard/payroll/") &&
-    pathname !== "/dashboard/payroll" &&
-    pathname !== "/dashboard/payroll/";
   const isAttendanceSubPage =
     pathname.startsWith("/dashboard/attendance/") &&
     pathname !== "/dashboard/attendance" &&
