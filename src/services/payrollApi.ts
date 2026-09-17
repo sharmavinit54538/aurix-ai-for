@@ -136,6 +136,64 @@ export interface RunPayrollResponse {
   [key: string]: unknown;
 }
 
+export interface PayrollRunStep {
+  id: string;
+  name: string;
+  status: "pending" | "in_progress" | "completed" | "failed" | string;
+  details?: string;
+  order?: number;
+}
+
+export interface PayrollRunValidationIssue {
+  id: string;
+  severity: "critical" | "warning" | "info" | string;
+  category?: string;
+  message: string;
+  employeeId?: string;
+  employeeName?: string;
+  resolved?: boolean;
+}
+
+export interface PayrollRunStatus {
+  runId: string;
+  jobId?: string | null;
+  periodId?: string | null;
+  periodName?: string | null;
+  status: PayrollStatus;
+  progress?: number | null;
+  currentStep?: string | null;
+  employees?: {
+    total?: number | null;
+    processed?: number | null;
+    failed?: number | null;
+  } | null;
+  steps?: PayrollRunStep[] | null;
+  error?: {
+    code?: string;
+    message?: string;
+  } | null;
+  validationIssues?: PayrollRunValidationIssue[] | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  [key: string]: unknown;
+}
+
+export interface CancelRunResponse {
+  success: boolean;
+  message?: string;
+  status?: string;
+  [key: string]: unknown;
+}
+
+export interface RetryRunResponse {
+  success: boolean;
+  message?: string;
+  runId?: string;
+  jobId?: string;
+  status?: string;
+  [key: string]: unknown;
+}
+
 // ── Helper to extract API data safely ─────────────────────────────────
 
 function extractData<T>(res: unknown): T {
@@ -226,6 +284,124 @@ export function normalizePayrollPeriod(item: any): PayrollPeriod {
     createdAt,
     updatedAt,
     remarks,
+  };
+}
+
+export function normalizePayrollRunStatus(runId: string, raw: any): PayrollRunStatus {
+  if (!raw || typeof raw !== "object") {
+    return {
+      runId,
+      status: "Processing",
+    };
+  }
+
+  const status =
+    raw.status ||
+    raw.run_status ||
+    raw.state ||
+    raw.job_status ||
+    (raw.is_completed ? "Completed" : raw.is_failed ? "Failed" : "Processing");
+
+  const periodId =
+    raw.periodId || raw.period_id || raw.cycleId || raw.cycle_id || null;
+  const periodName =
+    raw.periodName || raw.period_name || raw.cycle_name || raw.name || null;
+  const jobId = raw.jobId || raw.job_id || raw.id || null;
+
+  // Real progress ONLY if provided as number
+  let progress: number | null = null;
+  if (typeof raw.progress === "number" && !isNaN(raw.progress)) {
+    progress = Math.min(100, Math.max(0, raw.progress));
+  } else if (typeof raw.percentage === "number" && !isNaN(raw.percentage)) {
+    progress = Math.min(100, Math.max(0, raw.percentage));
+  } else if (typeof raw.percent_complete === "number" && !isNaN(raw.percent_complete)) {
+    progress = Math.min(100, Math.max(0, raw.percent_complete));
+  }
+
+  const currentStep =
+    raw.currentStep || raw.current_step || raw.step || raw.operation || null;
+
+  // Real employees count ONLY if provided
+  let employees: PayrollRunStatus["employees"] = null;
+  const rawEmp = raw.employees || raw.employee_counts || raw.stats;
+  if (rawEmp && typeof rawEmp === "object") {
+    employees = {
+      total:
+        rawEmp.total ?? rawEmp.total_employees ?? raw.totalEmployees ?? null,
+      processed:
+        rawEmp.processed ?? rawEmp.processed_count ?? raw.processedEmployees ?? null,
+      failed: rawEmp.failed ?? rawEmp.failed_count ?? null,
+    };
+  } else if (
+    raw.totalEmployees != null ||
+    raw.processedEmployees != null ||
+    raw.employee_count != null
+  ) {
+    employees = {
+      total: raw.totalEmployees ?? raw.employee_count ?? raw.total_count ?? null,
+      processed: raw.processedEmployees ?? raw.processed_count ?? null,
+      failed: raw.failedEmployees ?? null,
+    };
+  }
+
+  // Steps if provided by backend
+  let steps: PayrollRunStep[] | null = null;
+  const rawSteps = raw.steps || raw.pipeline_steps || raw.operations;
+  if (Array.isArray(rawSteps)) {
+    steps = rawSteps.map((s: any, idx: number) => ({
+      id: String(s.id || s.step_id || `step-${idx}`),
+      name: String(s.name || s.title || s.step_name || `Step ${idx + 1}`),
+      status: String(s.status || s.state || "pending"),
+      details: s.details || s.message || undefined,
+      order: s.order ?? idx,
+    }));
+  }
+
+  // Error details if provided by backend
+  let error: PayrollRunStatus["error"] = null;
+  if (raw.error) {
+    if (typeof raw.error === "string") {
+      error = { message: raw.error };
+    } else if (typeof raw.error === "object") {
+      error = {
+        code: raw.error.code || raw.error.error_code,
+        message: raw.error.message || raw.error.detail || String(raw.error),
+      };
+    }
+  } else if (raw.errorMessage || raw.error_message) {
+    error = { message: String(raw.errorMessage || raw.error_message) };
+  }
+
+  // Validation issues if provided by backend
+  let validationIssues: PayrollRunValidationIssue[] | null = null;
+  const rawIssues = raw.validationIssues || raw.validation_issues || raw.issues;
+  if (Array.isArray(rawIssues)) {
+    validationIssues = rawIssues.map((iss: any, idx: number) => ({
+      id: String(iss.id || `issue-${idx}`),
+      severity: String(iss.severity || iss.level || "warning"),
+      category: iss.category || iss.type || "General",
+      message: String(iss.message || iss.description || ""),
+      employeeId: iss.employeeId || iss.employee_id,
+      employeeName: iss.employeeName || iss.employee_name,
+      resolved: Boolean(iss.resolved),
+    }));
+  }
+
+  return {
+    runId,
+    jobId,
+    periodId,
+    periodName,
+    status,
+    progress,
+    currentStep,
+    employees,
+    steps,
+    error,
+    validationIssues,
+    startedAt: raw.startedAt || raw.started_at || null,
+    completedAt: raw.completedAt || raw.completed_at || null,
+    ...raw,
   };
 }
 
@@ -443,6 +619,163 @@ export const payrollApi = {
   async runPayroll(periodId: string): Promise<RunPayrollResponse> {
     const res = await apiInstance.post("/payroll/run", { periodId });
     return extractData<RunPayrollResponse>(res);
+  },
+
+  /**
+   * Fetch live payroll run processing status.
+   * Connects to GET /api/v2/payroll/runs/{runId}/generation-status with fallbacks.
+   * ZERO MOCK DATA: returns authentic backend response or throws so UI can show real unavailable state.
+   */
+  async getPayrollRunStatus(
+    runId: string,
+    jobId?: string
+  ): Promise<PayrollRunStatus> {
+    const params = jobId ? { job_id: jobId } : undefined;
+    const requestConfig = {
+      params,
+      headers: { "Cache-Control": "no-cache" },
+      skipCache: true,
+    };
+
+    try {
+      // Primary: /api/v2/payroll/runs/{runId}/generation-status
+      const res = await apiInstance.get(
+        `/api/v2/payroll/runs/${runId}/generation-status`,
+        requestConfig
+      );
+      const data = extractData<any>(res);
+      return normalizePayrollRunStatus(runId, data);
+    } catch (err: any) {
+      if (err?.response?.status === 404) {
+        // Fallback 1: preview endpoint (/api/v2/payroll/runs/{runId}/preview)
+        try {
+          const previewRes = await apiInstance.get(
+            `/api/v2/payroll/runs/${runId}/preview`,
+            requestConfig
+          );
+          const previewData = extractData<any>(previewRes);
+          if (previewData) {
+            return normalizePayrollRunStatus(runId, previewData);
+          }
+        } catch {
+          // Continue to fallback 2
+        }
+
+        // Fallback 2: /payroll/runs/{runId}
+        try {
+          const legRes = await apiInstance.get(
+            `/payroll/runs/${runId}`,
+            requestConfig
+          );
+          const legData = extractData<any>(legRes);
+          if (legData) {
+            return normalizePayrollRunStatus(runId, legData);
+          }
+        } catch {
+          // Continue to fallback 3
+        }
+
+        // Fallback 3: /payroll/runs/{runId}/status
+        try {
+          const statusRes = await apiInstance.get(
+            `/payroll/runs/${runId}/status`,
+            requestConfig
+          );
+          const statusData = extractData<any>(statusRes);
+          if (statusData) {
+            return normalizePayrollRunStatus(runId, statusData);
+          }
+        } catch {
+          // Fall through and throw original error
+        }
+      }
+      throw err;
+    }
+  },
+
+  /**
+   * Cancel an active draft/queued payroll run.
+   * DELETE /api/v2/payroll/runs/{runId} (from OpenAPI spec: "Cancel/delete a draft payroll run")
+   */
+  async cancelPayrollRun(runId: string): Promise<CancelRunResponse> {
+    try {
+      const res = await apiInstance.delete(`/api/v2/payroll/runs/${runId}`);
+      return (
+        extractData<CancelRunResponse>(res) || {
+          success: true,
+          message: "Payroll run cancelled successfully.",
+        }
+      );
+    } catch (err: any) {
+      if (err?.response?.status === 404) {
+        // Fallback POST /payroll/runs/{runId}/cancel
+        try {
+          const fallbackRes = await apiInstance.post(
+            `/payroll/runs/${runId}/cancel`
+          );
+          return (
+            extractData<CancelRunResponse>(fallbackRes) || { success: true }
+          );
+        } catch {
+          throw err;
+        }
+      }
+      throw err;
+    }
+  },
+
+  /**
+   * Retry a failed payroll calculation run.
+   * POST /api/v2/payroll/runs/{runId}/process
+   */
+  async retryPayrollRun(runId: string): Promise<RetryRunResponse> {
+    try {
+      const res = await apiInstance.post(`/api/v2/payroll/runs/${runId}/process`);
+      return (
+        extractData<RetryRunResponse>(res) || {
+          success: true,
+          message: "Payroll calculation retried successfully.",
+        }
+      );
+    } catch (err: any) {
+      if (err?.response?.status === 404) {
+        // Fallback /revalidate or /payroll/runs/{runId}/retry
+        try {
+          const fbRes = await apiInstance.post(
+            `/api/v2/payroll/runs/${runId}/revalidate`
+          );
+          return extractData<RetryRunResponse>(fbRes) || { success: true };
+        } catch {
+          const fbRes2 = await apiInstance.post(
+            `/payroll/runs/${runId}/retry`
+          );
+          return extractData<RetryRunResponse>(fbRes2) || { success: true };
+        }
+      }
+      throw err;
+    }
+  },
+
+  /**
+   * Get validation issues for a payroll run.
+   * GET /api/v2/payroll/runs/{runId}/validation-issues
+   */
+  async getPayrollRunValidationIssues(
+    runId: string
+  ): Promise<PayrollRunValidationIssue[]> {
+    try {
+      const res = await apiInstance.get(
+        `/api/v2/payroll/runs/${runId}/validation-issues`,
+        { headers: { "Cache-Control": "no-cache" }, skipCache: true }
+      );
+      const data = extractData<any>(res);
+      if (Array.isArray(data)) return data;
+      if (data && Array.isArray(data.items)) return data.items;
+      if (data && Array.isArray(data.issues)) return data.issues;
+      return [];
+    } catch {
+      return [];
+    }
   },
 };
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import {
   AlertCircle,
   AlertTriangle,
@@ -125,6 +125,7 @@ const REQUIRED_READINESS_AREAS: PayrollReadinessArea[] = [
 export function PayrollDashboardPage() {
   const ws = useAurix();
   const userPermissions = useAppSelector(selectUserPermissions);
+  const navigate = useNavigate();
 
   // RBAC Permission Check:
   // Admin and HR roles (including hr_admin, hradmin, hr_manager, super_admin, etc.)
@@ -276,8 +277,25 @@ export function PayrollDashboardPage() {
           result.message || "Provisional payroll processing initiated successfully."
         );
         setConfirmModalOpen(false);
-        // Refresh live data
-        await fetchDashboardData(selectedPeriodId);
+
+        const runId =
+          result.runId ||
+          (result as any).run_id ||
+          (result as any).id ||
+          (result as any).cycleId ||
+          (result as any).cycle_id ||
+          (result as any).data?.runId ||
+          (result as any).data?.run_id ||
+          (result as any).data?.id;
+
+        if (runId) {
+          navigate({
+            to: `/dashboard/payroll/runs/${runId}/processing` as any,
+          });
+        } else {
+          // Refresh live data
+          await fetchDashboardData(selectedPeriodId);
+        }
       } else {
         toast.warning(
           result?.message || "Payroll processing responded with an unexpected status."
@@ -826,9 +844,15 @@ export function PayrollDashboardPage() {
                           size="sm"
                           className="h-7 text-xs text-muted-foreground hover:text-foreground"
                           onClick={() => {
-                            toast.info(
-                              `Viewing payroll details for ${run.periodName}`
-                            );
+                            if (run.id) {
+                              navigate({
+                                to: `/dashboard/payroll/runs/${run.id}/processing` as any,
+                              });
+                            } else {
+                              toast.info(
+                                `Viewing payroll details for ${run.periodName}`
+                              );
+                            }
                           }}
                         >
                           View
