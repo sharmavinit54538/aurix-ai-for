@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
+import { useAurix } from "@/lib/aurix-store";
 import {
   CalendarDays, Check, Clock, X, RefreshCw, Fingerprint, ScrollText, Palmtree, ChevronLeft,
   AlertCircle, Loader2
@@ -60,11 +61,53 @@ export const ATTENDANCE_MODULES_LIST: AttendanceModuleDef[] = [
 type ViewMode = "modules" | "analytics";
 
 export function AttendancePage() {
+  const ws = useAurix();
+  const isEmployee = (ws.user?.role || "").toLowerCase() === "employee";
   const [viewMode, setViewMode] = useState<ViewMode>("modules");
   const [todayEmployees, setTodayEmployees] = useState<TodayAttendanceEmployee[]>([]);
   const [analytics, setAnalytics] = useState<AttendanceAnalyticsSummary | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  const modulesList = useMemo(() => {
+    if (isEmployee) {
+      return [
+        {
+          id: "checkin",
+          title: "Check In / Check Out",
+          description: "Punch daily shift entries, view real-time break counters, and verify geofenced zones.",
+          icon: Fingerprint,
+          to: "/dashboard/attendance/checkin",
+          color: "from-blue-500/20 to-cyan-500/20 text-blue-400 border-blue-500/30",
+        },
+        {
+          id: "shifts",
+          title: "My Shifts",
+          description: "View your assigned work timings, shift specifications, and schedule history.",
+          icon: Clock,
+          to: "/dashboard/attendance/shifts",
+          color: "from-indigo-500/20 to-purple-500/20 text-indigo-400 border-indigo-500/30",
+        },
+        {
+          id: "rosters",
+          title: "My Roster",
+          description: "View your personal planned work schedule and shift assignment calendar.",
+          icon: ScrollText,
+          to: "/dashboard/attendance/rosters",
+          color: "from-emerald-500/20 to-teal-500/20 text-emerald-400 border-emerald-500/30",
+        },
+        {
+          id: "holidays",
+          title: "Holidays",
+          description: "View official public, regional, and company holidays for your branch.",
+          icon: Palmtree,
+          to: "/dashboard/attendance/holidays",
+          color: "from-amber-500/20 to-yellow-500/20 text-amber-400 border-amber-500/30",
+        },
+      ];
+    }
+    return ATTENDANCE_MODULES_LIST;
+  }, [isEmployee]);
 
   const today = useMemo(() => {
     return new Date().toLocaleDateString("en-US", {
@@ -192,7 +235,7 @@ export function AttendancePage() {
       {viewMode === "modules" ? (
         <div className="space-y-6 animate-in fade-in duration-300">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {ATTENDANCE_MODULES_LIST.map((module) => {
+            {modulesList.map((module) => {
               const Icon = module.icon;
               return (
                 <Link

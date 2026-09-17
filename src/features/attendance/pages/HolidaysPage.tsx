@@ -1,4 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
+import { useRouterState } from "@tanstack/react-router";
+import { useAurix } from "@/lib/aurix-store";
+import { EmployeeHolidaysView } from "@/features/portal/employee/components/EmployeeHolidaysView";
 import {
   Palmtree,
   Plus,
@@ -87,6 +90,22 @@ const MONTH_NAMES = [
 ];
 
 export default function HolidaysPage() {
+  const ws = useAurix();
+  const router = useRouterState();
+  const pathname = router.location.pathname;
+  const searchParams = new URLSearchParams(router.location.search);
+  const viewParam = searchParams.get("view");
+
+  const normalizedRole = (ws.user?.role || "").toLowerCase();
+  const isEmployee =
+    normalizedRole === "employee" ||
+    viewParam === "my" ||
+    pathname.startsWith("/dashboard/employee");
+
+  if (isEmployee) {
+    return <EmployeeHolidaysView branch={ws.company?.city || undefined} />;
+  }
+
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
