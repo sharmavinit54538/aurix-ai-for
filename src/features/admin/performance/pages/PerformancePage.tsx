@@ -81,10 +81,6 @@ function EmployeePerformanceView() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="My Performance & Growth"
-        description="View your quarterly performance ratings, OKR goals, 360 feedback, and skill development."
-      />
       {/* KPI Overview */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="border-border bg-card/40 backdrop-blur-xl p-4">

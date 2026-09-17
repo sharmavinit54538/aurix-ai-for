@@ -459,38 +459,30 @@ export function TimesheetsPage() {
 
   return (
     <>
-      <PageHeader 
-        showBack={true}
-        backText="Back"
-        title="Timesheets" 
-        description="Log your daily work hours, categorize by projects, and track approval processes."
-        actions={
-          <div className="flex gap-2">
-            {userRole !== "admin" && userRole !== "manager" && (
-              <Button 
-                variant="outline"
-                className="gap-2 border-dashed border-indigo-500/50 hover:bg-indigo-500/10 text-indigo-400"
-                onClick={() => {
-                  toast.info("Switched view to simulated Manager context.");
-                  setActiveTab(activeTab === "approvals" ? "my-timesheet" : "approvals");
-                }}
-              >
-                <RefreshCw className="h-4 w-4 animate-spin-slow" />
-                {activeTab === "approvals" ? "Show Employee Grid" : "Simulate Manager Approvals"}
-              </Button>
-            )}
-            
-            <Button
-              onClick={() => setAiAutofillOpen(true)}
-              disabled={timesheetStatus === "pending" || timesheetStatus === "approved"}
-              className="gap-2 bg-gradient-to-r from-pink-600 to-violet-600 hover:from-pink-500 hover:to-violet-500 text-white shadow-lg shadow-pink-500/20"
-            >
-              <Sparkles className="h-4 w-4 text-pink-200 animate-pulse" />
-              AI Copilot Autofill
-            </Button>
-          </div>
-        }
-      />
+      <div className="flex justify-end gap-2">
+        {userRole !== "admin" && userRole !== "manager" && (
+          <Button 
+            variant="outline"
+            className="gap-2 border-dashed border-indigo-500/50 hover:bg-indigo-500/10 text-indigo-400"
+            onClick={() => {
+              toast.info("Switched view to simulated Manager context.");
+              setActiveTab(activeTab === "approvals" ? "my-timesheet" : "approvals");
+            }}
+          >
+            <RefreshCw className="h-4 w-4 animate-spin-slow" />
+            {activeTab === "approvals" ? "Show Employee Grid" : "Simulate Manager Approvals"}
+          </Button>
+        )}
+        
+        <Button
+          onClick={() => setAiAutofillOpen(true)}
+          disabled={timesheetStatus === "pending" || timesheetStatus === "approved"}
+          className="gap-2 bg-gradient-to-r from-pink-600 to-violet-600 hover:from-pink-500 hover:to-violet-500 text-white shadow-lg shadow-pink-500/20"
+        >
+          <Sparkles className="h-4 w-4 text-pink-200 animate-pulse" />
+          AI Copilot Autofill
+        </Button>
+      </div>
 
       {/* Tabs Layout */}
       <div className="mb-6 flex border-b border-border bg-muted/20 p-1 rounded-xl max-w-md">

@@ -72,18 +72,12 @@ export function ExpensesPage() {
 
   return (
     <>
-      <PageHeader
-        title="Expense Claims"
-        description="Submit, review, and reimburse employee expenses."
-        actions={
-          <>
-            <CsvButton rows={expenses} filename="expenses.csv" />
-            <Button size="sm" onClick={() => { setDraft(emptyExpense()); setOpen(true); }} className="gap-2">
-              <Plus className="h-4 w-4" /> Submit claim
-            </Button>
-          </>
-        }
-      />
+      <div className="flex justify-end gap-2">
+        <CsvButton rows={expenses} filename="expenses.csv" />
+        <Button size="sm" onClick={() => { setDraft(emptyExpense()); setOpen(true); }} className="gap-2">
+          <Plus className="h-4 w-4" /> Submit claim
+        </Button>
+      </div>
 
       <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Pending" value={stats.pending} icon={Clock} accent="warning" />

@@ -272,48 +272,28 @@ export function LeavesPage() {
 
   return (
     <>
-      <PageHeader 
-        showBack={true}
-        backText="Back"
-        title={
-          userRole === "admin" 
-            ? "Enterprise Leave Dashboard" 
-            : userRole === "manager" 
-            ? "Team Leaves & Approvals" 
-            : "My Leave Applications"
-        } 
-        description={
-          userRole === "admin"
-            ? "Track organizational leaves, adjust balances, and approve time-off requests company-wide."
-            : userRole === "manager"
-            ? "Approve your team's leaves and manage your own time-off records."
-            : "Submit leave requests, view active balances, and track approvals history."
-        }
-        actions={
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                loadBalances();
-                loadHistory();
-                if (userRole === "admin" || userRole === "manager") {
-                  loadPendingApprovals();
-                }
-                toast.info("Refreshed leave data.");
-              }}
-              className="gap-2 border-border text-muted-foreground hover:text-foreground"
-            >
-              <RefreshCw className="h-4 w-4" /> Refresh
-            </Button>
-            <Button
-              onClick={() => setApplyOpen(true)}
-              className="gap-2 bg-indigo-600 hover:bg-indigo-500 text-white"
-            >
-              <Plus className="h-4 w-4" /> Apply for Leave
-            </Button>
-          </div>
-        }
-      />
+      <div className="flex justify-end gap-2">
+        <Button
+          variant="outline"
+          onClick={() => {
+            loadBalances();
+            loadHistory();
+            if (userRole === "admin" || userRole === "manager") {
+              loadPendingApprovals();
+            }
+            toast.info("Refreshed leave data.");
+          }}
+          className="gap-2 border-border text-muted-foreground hover:text-foreground"
+        >
+          <RefreshCw className="h-4 w-4" /> Refresh
+        </Button>
+        <Button
+          onClick={() => setApplyOpen(true)}
+          className="gap-2 bg-indigo-600 hover:bg-indigo-500 text-white"
+        >
+          <Plus className="h-4 w-4" /> Apply for Leave
+        </Button>
+      </div>
 
       {/* Tabs navigation - dynamically visible based on user role */}
       {userRole !== "employee" && (

@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useAurix, aurix, AVAILABLE_ROLES, type Role } from "@/lib/aurix-store";
 import { logout, useAuthReady } from "@/lib/auth-bootstrap";
+import { hasValidAccessToken } from "@/api";
 import { AuthLoadingScreen } from "@/features/auth/components/AuthLoadingScreen";
 import { Input } from "@/components/ui/input";
 import {
