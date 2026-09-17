@@ -17,7 +17,6 @@ import {
   FileText,
   Info,
   Package,
-  RefreshCw,
   Sparkles,
   Target,
   TrendingDown,
@@ -37,10 +36,8 @@ import {
   YAxis,
 } from "recharts";
 import { useAurix } from "@/lib/aurix-store";
-import { logout } from "@/lib/auth-bootstrap";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   COMPANY_EVENTS,
   EMP_KPI,
@@ -144,7 +141,7 @@ const EMP_QUICK_ACTIONS = [
 ];
 
 // ── 1. Employee Header ────────────────────────────────────────
-function EmployeeHeader({ firstName: _firstName, companyName }: { firstName?: string; companyName: string }) {
+function EmployeeHeader({ firstName: _firstName, companyName: _companyName }: { firstName?: string; companyName?: string } = {}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: -16 }}
@@ -153,9 +150,6 @@ function EmployeeHeader({ firstName: _firstName, companyName }: { firstName?: st
       className="rounded-2xl border border-border bg-card/60 p-5 backdrop-blur-xl"
     >
       <div className="flex items-center justify-end gap-3">
-        <Button variant="outline" size="sm" className="gap-1.5 text-xs">
-          <RefreshCw className="h-3.5 w-3.5" /> Refresh
-        </Button>
         <Link
           to="/ai/chat-assistant"
           className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 px-3 py-2 text-xs font-semibold text-white shadow transition-all hover:shadow-md hover:-translate-y-0.5"
