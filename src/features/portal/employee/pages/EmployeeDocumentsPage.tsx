@@ -33,9 +33,29 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAurix } from "@/lib/aurix-store";
 import { toast } from "sonner";
@@ -53,11 +73,29 @@ import {
 const CATEGORY_MAP: Record<string, string[]> = {
   Identity: ["Aadhaar Card", "PAN Card", "Passport", "Voter ID", "Driving License", "National ID"],
   Address: ["Electricity Bill", "Rent Agreement", "Utility Bill", "Bank Statement", "Ration Card"],
-  Education: ["10th Certificate", "12th Certificate", "Graduation Degree", "Post Graduation", "Diploma / Certification"],
+  Education: [
+    "10th Certificate",
+    "12th Certificate",
+    "Graduation Degree",
+    "Post Graduation",
+    "Diploma / Certification",
+  ],
   Bank: ["Cancelled Cheque", "Bank Passbook", "Bank Statement"],
   Tax: ["Form 16", "PAN Verification", "Tax Declaration", "ITR Acknowledgement"],
-  Employment: ["Offer Letter", "Appointment Letter", "Relieving Letter", "Experience Letter", "Previous Payslip"],
-  Other: ["Medical Certificate", "Background Verification", "NDA", "Policy Acknowledgment", "Miscellaneous"],
+  Employment: [
+    "Offer Letter",
+    "Appointment Letter",
+    "Relieving Letter",
+    "Experience Letter",
+    "Previous Payslip",
+  ],
+  Other: [
+    "Medical Certificate",
+    "Background Verification",
+    "NDA",
+    "Policy Acknowledgment",
+    "Miscellaneous",
+  ],
 };
 
 type ActiveTab =
@@ -129,7 +167,10 @@ export function EmployeeDocumentsPage() {
     let isMounted = true;
     async function resolveEmployee() {
       // If we already have a UUID in currentUserId, use it
-      if (currentUserId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(currentUserId)) {
+      if (
+        currentUserId &&
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(currentUserId)
+      ) {
         setEmployeeId(currentUserId);
         return;
       }
@@ -183,7 +224,12 @@ export function EmployeeDocumentsPage() {
     setIsLoadingDocs(true);
     setLoadError(null);
     try {
-      const data = await myDocumentsApi.listMyDocuments(employeeId || undefined);
+      if (!employeeId) {
+        setDocuments([]);
+        setLoadError("Unable to identify the authenticated employee.");
+        return;
+      }
+      const data = await myDocumentsApi.listMyDocuments(employeeId);
       setDocuments(data);
     } catch (err: any) {
       console.error("Failed to fetch employee documents:", err);
@@ -197,7 +243,7 @@ export function EmployeeDocumentsPage() {
   const fetchSalarySlips = useCallback(async () => {
     setIsLoadingSalary(true);
     try {
-      const data = await myDocumentsApi.listMySalarySlips(employeeId || undefined);
+      const data = await myDocumentsApi.listMySalarySlips();
       setSalarySlips(data);
     } catch (err) {
       console.error("Failed to fetch salary slips:", err);
@@ -363,12 +409,13 @@ export function EmployeeDocumentsPage() {
       (c) => c.name.toLowerCase() === uploadCategory.toLowerCase(),
     );
     const categoryId = resolvedCat ? resolvedCat.id : uploadCategory.toLowerCase();
-    const finalType = uploadType === "Other" && uploadCustomType.trim() ? uploadCustomType.trim() : uploadType;
+    const finalType =
+      uploadType === "Other" && uploadCustomType.trim() ? uploadCustomType.trim() : uploadType;
 
     setIsSubmittingUpload(true);
     try {
       await myDocumentsApi.uploadMyDocument({
-        employeeId: employeeId || undefined,
+        employeeId,
         categoryId,
         name: uploadName.trim(),
         type: finalType,
@@ -476,7 +523,10 @@ export function EmployeeDocumentsPage() {
     try {
       const blob = await myDocumentsApi.downloadMyDocument(doc.id);
       const ext = (doc.fileName || "").split(".").pop() || "pdf";
-      const downloadName = (doc.fileName || `${doc.title || "document"}.${ext}`).replace(/[/\\?%*:|"<>]/g, "-");
+      const downloadName = (doc.fileName || `${doc.title || "document"}.${ext}`).replace(
+        /[/\\?%*:|"<>]/g,
+        "-",
+      );
       triggerFileDownload(blob, downloadName);
       toast.success("Document downloaded successfully.", { id: toastId });
     } catch (err) {
@@ -509,7 +559,10 @@ export function EmployeeDocumentsPage() {
   const handleDownloadSalarySlip = async (slip: SalarySlipRecord) => {
     const toastId = toast.loading(`Downloading payslip for ${slip.periodName}...`);
     try {
-      const blob = await myDocumentsApi.downloadMySalarySlip(slip.runId || "", slip.employeeId || employeeId);
+      const blob = await myDocumentsApi.downloadMySalarySlip(
+        slip.runId || "",
+        slip.employeeId || employeeId,
+      );
       const filename = `Payslip_${slip.periodName?.replace(/\s+/g, "_") || "slip"}_${slip.payslipNumber || ""}.pdf`;
       triggerFileDownload(blob, filename);
       toast.success("Salary slip downloaded successfully.", { id: toastId });
@@ -539,10 +592,12 @@ export function EmployeeDocumentsPage() {
     const now = new Date();
     const in90Days = new Date();
     in90Days.setDate(now.getDate() + 90);
-    const isExpiring = expiryDate ? (() => {
-      const exp = new Date(expiryDate);
-      return !isNaN(exp.getTime()) && exp >= now && exp <= in90Days;
-    })() : false;
+    const isExpiring = expiryDate
+      ? (() => {
+          const exp = new Date(expiryDate);
+          return !isNaN(exp.getTime()) && exp >= now && exp <= in90Days;
+        })()
+      : false;
 
     if (s === "VERIFIED" || s === "APPROVED") {
       return (
@@ -774,8 +829,8 @@ export function EmployeeDocumentsPage() {
                 activeTab === "salary-slips"
                   ? "Search salary slips by month or number..."
                   : activeTab === "provision-slips"
-                  ? "Search provision slips by month or number..."
-                  : "Search document name, category, type..."
+                    ? "Search provision slips by month or number..."
+                    : "Search document name, category, type..."
               }
               className="pl-9 text-xs bg-background/50"
             />
@@ -813,7 +868,8 @@ export function EmployeeDocumentsPage() {
                 <FileSpreadsheet className="h-10 w-10 text-muted-foreground/40 mx-auto" />
                 <h3 className="font-semibold text-base">No Salary Slips Available</h3>
                 <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                  Your salary slips will appear here once official payroll runs are finalized and disbursed.
+                  Your salary slips will appear here once official payroll runs are finalized and
+                  disbursed.
                 </p>
               </div>
             ) : (
@@ -823,7 +879,9 @@ export function EmployeeDocumentsPage() {
                     <TableRow>
                       <TableHead className="text-xs font-semibold">Pay Period / Month</TableHead>
                       <TableHead className="text-xs font-semibold">Payslip Number</TableHead>
-                      <TableHead className="text-xs font-semibold text-right">Gross Salary</TableHead>
+                      <TableHead className="text-xs font-semibold text-right">
+                        Gross Salary
+                      </TableHead>
                       <TableHead className="text-xs font-semibold text-right">Deductions</TableHead>
                       <TableHead className="text-xs font-semibold text-right">Net Salary</TableHead>
                       <TableHead className="text-xs font-semibold">Generated Date</TableHead>
@@ -844,16 +902,28 @@ export function EmployeeDocumentsPage() {
                           {slip.payslipNumber || "—"}
                         </TableCell>
                         <TableCell className="text-xs text-right font-medium">
-                          {slip.grossSalary != null ? `₹${slip.grossSalary.toLocaleString("en-IN")}` : "—"}
+                          {slip.grossSalary != null
+                            ? `₹${slip.grossSalary.toLocaleString("en-IN")}`
+                            : "—"}
                         </TableCell>
                         <TableCell className="text-xs text-right font-medium text-rose-500">
-                          {slip.deductions != null ? `₹${slip.deductions.toLocaleString("en-IN")}` : "—"}
+                          {slip.deductions != null
+                            ? `₹${slip.deductions.toLocaleString("en-IN")}`
+                            : "—"}
                         </TableCell>
                         <TableCell className="text-xs text-right font-bold text-emerald-500">
-                          {slip.netSalary != null ? `₹${slip.netSalary.toLocaleString("en-IN")}` : "—"}
+                          {slip.netSalary != null
+                            ? `₹${slip.netSalary.toLocaleString("en-IN")}`
+                            : "—"}
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">
-                          {slip.generatedDate ? new Date(slip.generatedDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                          {slip.generatedDate
+                            ? new Date(slip.generatedDate).toLocaleDateString("en-IN", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              })
+                            : "—"}
                         </TableCell>
                         <TableCell className="text-xs">
                           <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[11px] capitalize">
@@ -914,7 +984,9 @@ export function EmployeeDocumentsPage() {
                       <TableHead className="text-xs font-semibold">Provision Slip Number</TableHead>
                       <TableHead className="text-xs font-semibold">Pay Period / Month</TableHead>
                       <TableHead className="text-xs font-semibold">Employee Name</TableHead>
-                      <TableHead className="text-xs font-semibold text-right">Provisioned Amount</TableHead>
+                      <TableHead className="text-xs font-semibold text-right">
+                        Provisioned Amount
+                      </TableHead>
                       <TableHead className="text-xs font-semibold">Generated Date</TableHead>
                       <TableHead className="text-xs font-semibold">Status</TableHead>
                       <TableHead className="text-xs font-semibold text-right">Actions</TableHead>
@@ -926,13 +998,25 @@ export function EmployeeDocumentsPage() {
                         <TableCell className="font-mono text-xs font-medium">
                           {slip.slipNumber || `PRV-${slip.id.slice(0, 8).toUpperCase()}`}
                         </TableCell>
-                        <TableCell className="text-xs font-medium">{slip.periodName || "—"}</TableCell>
-                        <TableCell className="text-xs text-muted-foreground">{slip.employeeName || currentUserName}</TableCell>
-                        <TableCell className="text-xs text-right font-bold text-amber-500">
-                          {slip.provisionedAmount != null ? `₹${slip.provisionedAmount.toLocaleString("en-IN")}` : "—"}
+                        <TableCell className="text-xs font-medium">
+                          {slip.periodName || "—"}
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">
-                          {slip.generatedAt ? new Date(slip.generatedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                          {slip.employeeName || currentUserName}
+                        </TableCell>
+                        <TableCell className="text-xs text-right font-bold text-amber-500">
+                          {slip.provisionedAmount != null
+                            ? `₹${slip.provisionedAmount.toLocaleString("en-IN")}`
+                            : "—"}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {slip.generatedAt
+                            ? new Date(slip.generatedAt).toLocaleDateString("en-IN", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              })
+                            : "—"}
                         </TableCell>
                         <TableCell className="text-xs">
                           <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[11px] capitalize">
@@ -968,173 +1052,183 @@ export function EmployeeDocumentsPage() {
                 </Table>
               </div>
             )
+          ) : /* 3. Personal Documents Table (All, Employment, Pending, Verified, Rejected) */
+          isLoadingDocs ? (
+            <div className="py-16 text-center text-sm text-muted-foreground flex flex-col items-center justify-center gap-2">
+              <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+              Loading your documents from the backend...
+            </div>
+          ) : filteredDocuments.length === 0 ? (
+            <div className="py-16 text-center space-y-3">
+              <FileText className="h-10 w-10 text-muted-foreground/40 mx-auto" />
+              {documents.length === 0 ? (
+                <>
+                  <h3 className="font-semibold text-base">No documents yet</h3>
+                  <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                    Upload your employment documents to keep your records up to date.
+                  </p>
+                  <div className="pt-2">
+                    <Button
+                      onClick={handleOpenUploadModal}
+                      size="sm"
+                      className="gap-1.5 bg-primary text-primary-foreground"
+                    >
+                      <Upload className="h-3.5 w-3.5" /> Upload Document
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h3 className="font-semibold text-base">No documents found</h3>
+                  <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                    No documents match this filter or search query.
+                  </p>
+                </>
+              )}
+            </div>
           ) : (
-            /* 3. Personal Documents Table (All, Employment, Pending, Verified, Rejected) */
-            isLoadingDocs ? (
-              <div className="py-16 text-center text-sm text-muted-foreground flex flex-col items-center justify-center gap-2">
-                <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
-                Loading your documents from the backend...
-              </div>
-            ) : filteredDocuments.length === 0 ? (
-              <div className="py-16 text-center space-y-3">
-                <FileText className="h-10 w-10 text-muted-foreground/40 mx-auto" />
-                {documents.length === 0 ? (
-                  <>
-                    <h3 className="font-semibold text-base">No documents yet</h3>
-                    <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                      Upload your employment documents to keep your records up to date.
-                    </p>
-                    <div className="pt-2">
-                      <Button
-                        onClick={handleOpenUploadModal}
-                        size="sm"
-                        className="gap-1.5 bg-primary text-primary-foreground"
-                      >
-                        <Upload className="h-3.5 w-3.5" /> Upload Document
-                      </Button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <h3 className="font-semibold text-base">No documents found</h3>
-                    <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                      No documents match this filter or search query.
-                    </p>
-                  </>
-                )}
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader className="bg-muted/30">
-                    <TableRow>
-                      <TableHead className="text-xs font-semibold">Document</TableHead>
-                      <TableHead className="text-xs font-semibold">Category</TableHead>
-                      <TableHead className="text-xs font-semibold">Type</TableHead>
-                      <TableHead className="text-xs font-semibold">Uploaded Date</TableHead>
-                      <TableHead className="text-xs font-semibold">Status</TableHead>
-                      <TableHead className="text-xs font-semibold text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredDocuments.map((doc) => {
-                      const isRejected = doc.status.toUpperCase() === "REJECTED";
-                      return (
-                        <TableRow key={doc.id} className="hover:bg-muted/20">
-                          {/* Document Name & Description */}
-                          <TableCell className="font-medium text-xs max-w-xs">
-                            <div className="flex items-start gap-2.5">
-                              <div className="mt-0.5 rounded-lg bg-blue-500/10 p-2 text-blue-500 shrink-0">
-                                <FileText className="h-4 w-4" />
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-muted/30">
+                  <TableRow>
+                    <TableHead className="text-xs font-semibold">Document</TableHead>
+                    <TableHead className="text-xs font-semibold">Category</TableHead>
+                    <TableHead className="text-xs font-semibold">Type</TableHead>
+                    <TableHead className="text-xs font-semibold">Uploaded Date</TableHead>
+                    <TableHead className="text-xs font-semibold">Status</TableHead>
+                    <TableHead className="text-xs font-semibold text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredDocuments.map((doc) => {
+                    const isRejected = doc.status.toUpperCase() === "REJECTED";
+                    return (
+                      <TableRow key={doc.id} className="hover:bg-muted/20">
+                        {/* Document Name & Description */}
+                        <TableCell className="font-medium text-xs max-w-xs">
+                          <div className="flex items-start gap-2.5">
+                            <div className="mt-0.5 rounded-lg bg-blue-500/10 p-2 text-blue-500 shrink-0">
+                              <FileText className="h-4 w-4" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-semibold text-foreground truncate">
+                                {doc.title || doc.fileName || "Employment Document"}
                               </div>
-                              <div className="min-w-0">
-                                <div className="font-semibold text-foreground truncate">
-                                  {doc.title || doc.fileName || "Employment Document"}
+                              {doc.fileName && (
+                                <div className="text-[11px] text-muted-foreground truncate">
+                                  {doc.fileName}{" "}
+                                  {doc.fileSize
+                                    ? `(${((doc.fileSize || 0) / 1024).toFixed(0)} KB)`
+                                    : ""}
                                 </div>
-                                {doc.fileName && (
-                                  <div className="text-[11px] text-muted-foreground truncate">
-                                    {doc.fileName} {doc.fileSize ? `(${((doc.fileSize || 0) / 1024).toFixed(0)} KB)` : ""}
-                                  </div>
-                                )}
-                                {doc.expiryDate && (
-                                  <div className="mt-0.5 text-[10px] text-muted-foreground flex items-center gap-1">
-                                    <Calendar className="h-3 w-3" />
-                                    Expires: {new Date(doc.expiryDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                                  </div>
-                                )}
-                                {isRejected && doc.rejectionReason && (
-                                  <div className="mt-1 text-[11px] text-rose-400 bg-rose-500/10 p-1.5 rounded border border-rose-500/20">
-                                    <span className="font-semibold">Reason:</span> {doc.rejectionReason}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </TableCell>
-
-                          {/* Category */}
-                          <TableCell className="text-xs">
-                            <Badge variant="outline" className="text-[11px] capitalize bg-background/50">
-                              {doc.category || "General"}
-                            </Badge>
-                          </TableCell>
-
-                          {/* Type */}
-                          <TableCell className="text-xs text-muted-foreground">
-                            {doc.type || "Document"}
-                          </TableCell>
-
-                          {/* Uploaded Date */}
-                          <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                            {doc.uploadedAt
-                              ? new Date(doc.uploadedAt).toLocaleDateString("en-IN", {
-                                  day: "numeric",
-                                  month: "short",
-                                  year: "numeric",
-                                })
-                              : "—"}
-                          </TableCell>
-
-                          {/* Status */}
-                          <TableCell className="text-xs whitespace-nowrap">
-                            {renderStatusBadge(doc.status, doc.expiryDate)}
-                          </TableCell>
-
-                          {/* Actions */}
-                          <TableCell className="text-right whitespace-nowrap">
-                            <div className="flex items-center justify-end gap-1">
-                              <Button
-                                onClick={() => handleViewDocument(doc)}
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
-                                title="View Document"
-                              >
-                                <Eye className="h-3.5 w-3.5 mr-1" /> View
-                              </Button>
-
-                              <Button
-                                onClick={() => handleDownloadDocument(doc)}
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
-                                title="Download File"
-                              >
-                                <Download className="h-3.5 w-3.5 mr-1" /> Download
-                              </Button>
-
-                              {isRejected && (
-                                <Button
-                                  onClick={() => handleOpenReupload(doc)}
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-8 px-2 text-xs border-rose-500/30 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20"
-                                  title="Re-upload Revised Document"
-                                >
-                                  <RefreshCw className="h-3.5 w-3.5 mr-1" /> Re-upload
-                                </Button>
                               )}
-
-                              <Button
-                                onClick={() => {
-                                  setSelectedDoc(doc);
-                                  setDeleteOpen(true);
-                                }}
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0 text-muted-foreground hover:text-rose-400"
-                                title="Delete Document"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
+                              {doc.expiryDate && (
+                                <div className="mt-0.5 text-[10px] text-muted-foreground flex items-center gap-1">
+                                  <Calendar className="h-3 w-3" />
+                                  Expires:{" "}
+                                  {new Date(doc.expiryDate).toLocaleDateString("en-IN", {
+                                    day: "numeric",
+                                    month: "short",
+                                    year: "numeric",
+                                  })}
+                                </div>
+                              )}
+                              {isRejected && doc.rejectionReason && (
+                                <div className="mt-1 text-[11px] text-rose-400 bg-rose-500/10 p-1.5 rounded border border-rose-500/20">
+                                  <span className="font-semibold">Reason:</span>{" "}
+                                  {doc.rejectionReason}
+                                </div>
+                              )}
                             </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            )
+                          </div>
+                        </TableCell>
+
+                        {/* Category */}
+                        <TableCell className="text-xs">
+                          <Badge
+                            variant="outline"
+                            className="text-[11px] capitalize bg-background/50"
+                          >
+                            {doc.category || "General"}
+                          </Badge>
+                        </TableCell>
+
+                        {/* Type */}
+                        <TableCell className="text-xs text-muted-foreground">
+                          {doc.type || "Document"}
+                        </TableCell>
+
+                        {/* Uploaded Date */}
+                        <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                          {doc.uploadedAt
+                            ? new Date(doc.uploadedAt).toLocaleDateString("en-IN", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              })
+                            : "—"}
+                        </TableCell>
+
+                        {/* Status */}
+                        <TableCell className="text-xs whitespace-nowrap">
+                          {renderStatusBadge(doc.status, doc.expiryDate)}
+                        </TableCell>
+
+                        {/* Actions */}
+                        <TableCell className="text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              onClick={() => handleViewDocument(doc)}
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
+                              title="View Document"
+                            >
+                              <Eye className="h-3.5 w-3.5 mr-1" /> View
+                            </Button>
+
+                            <Button
+                              onClick={() => handleDownloadDocument(doc)}
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
+                              title="Download File"
+                            >
+                              <Download className="h-3.5 w-3.5 mr-1" /> Download
+                            </Button>
+
+                            {isRejected && (
+                              <Button
+                                onClick={() => handleOpenReupload(doc)}
+                                variant="outline"
+                                size="sm"
+                                className="h-8 px-2 text-xs border-rose-500/30 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20"
+                                title="Re-upload Revised Document"
+                              >
+                                <RefreshCw className="h-3.5 w-3.5 mr-1" /> Re-upload
+                              </Button>
+                            )}
+
+                            <Button
+                              onClick={() => {
+                                setSelectedDoc(doc);
+                                setDeleteOpen(true);
+                              }}
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-muted-foreground hover:text-rose-400"
+                              title="Delete Document"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -1145,7 +1239,8 @@ export function EmployeeDocumentsPage() {
           <DialogHeader>
             <DialogTitle>Upload Document</DialogTitle>
             <DialogDescription>
-              Upload your personal employment document. Once submitted, it will be marked as Pending Verification.
+              Upload your personal employment document. Once submitted, it will be marked as Pending
+              Verification.
             </DialogDescription>
           </DialogHeader>
 
@@ -1289,7 +1384,8 @@ export function EmployeeDocumentsPage() {
           <DialogHeader>
             <DialogTitle>Re-upload Document</DialogTitle>
             <DialogDescription>
-              This document was rejected by HR. Please review the reason below and upload a corrected file.
+              This document was rejected by HR. Please review the reason below and upload a
+              corrected file.
             </DialogDescription>
           </DialogHeader>
 
@@ -1309,7 +1405,8 @@ export function EmployeeDocumentsPage() {
                 {selectedDoc?.title || selectedDoc?.fileName}
               </div>
               <div className="text-[11px] text-muted-foreground">
-                Category: {selectedDoc?.category || "General"} · Type: {selectedDoc?.type || "Document"}
+                Category: {selectedDoc?.category || "General"} · Type:{" "}
+                {selectedDoc?.type || "Document"}
               </div>
             </div>
 
@@ -1377,8 +1474,10 @@ export function EmployeeDocumentsPage() {
               )}
             </DialogTitle>
             <DialogDescription>
-              Category: {selectedDoc?.category || "General"} · Type: {selectedDoc?.type || "Document"}
-              {selectedDoc?.uploadedAt && ` · Uploaded: ${new Date(selectedDoc.uploadedAt).toLocaleDateString()}`}
+              Category: {selectedDoc?.category || "General"} · Type:{" "}
+              {selectedDoc?.type || "Document"}
+              {selectedDoc?.uploadedAt &&
+                ` · Uploaded: ${new Date(selectedDoc.uploadedAt).toLocaleDateString()}`}
             </DialogDescription>
           </DialogHeader>
 
@@ -1389,7 +1488,9 @@ export function EmployeeDocumentsPage() {
                 <span>Loading document stream from backend storage...</span>
               </div>
             ) : previewBlobUrl ? (
-              (selectedDoc?.fileName?.toLowerCase().endsWith(".pdf") || selectedDoc?.fileUrl?.toLowerCase().endsWith(".pdf") || !selectedDoc?.fileName?.match(/\.(png|jpe?g|webp|gif)$/i)) ? (
+              selectedDoc?.fileName?.toLowerCase().endsWith(".pdf") ||
+              selectedDoc?.fileUrl?.toLowerCase().endsWith(".pdf") ||
+              !selectedDoc?.fileName?.match(/\.(png|jpe?g|webp|gif)$/i) ? (
                 <iframe
                   src={previewBlobUrl}
                   title="Document Preview"
@@ -1405,7 +1506,9 @@ export function EmployeeDocumentsPage() {
             ) : (
               <div className="text-center py-12 space-y-2">
                 <FileText className="h-12 w-12 text-muted-foreground/40 mx-auto" />
-                <p className="text-sm text-muted-foreground">Preview not directly displayable in browser.</p>
+                <p className="text-sm text-muted-foreground">
+                  Preview not directly displayable in browser.
+                </p>
                 {selectedDoc && (
                   <Button
                     onClick={() => handleDownloadDocument(selectedDoc)}
@@ -1453,24 +1556,42 @@ export function EmployeeDocumentsPage() {
                 </div>
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-muted-foreground">Generated Date:</span>
-                  <span>{selectedSlip.generatedDate ? new Date(selectedSlip.generatedDate).toLocaleDateString() : "—"}</span>
+                  <span>
+                    {selectedSlip.generatedDate
+                      ? new Date(selectedSlip.generatedDate).toLocaleDateString()
+                      : "—"}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-muted-foreground">Status:</span>
-                  <Badge className="bg-emerald-500/10 text-emerald-500 text-[10px]">{selectedSlip.status}</Badge>
+                  <Badge className="bg-emerald-500/10 text-emerald-500 text-[10px]">
+                    {selectedSlip.status}
+                  </Badge>
                 </div>
                 <div className="border-t border-border pt-3 space-y-2">
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-muted-foreground">Gross Earnings:</span>
-                    <span className="font-semibold">{selectedSlip.grossSalary != null ? `₹${selectedSlip.grossSalary.toLocaleString("en-IN")}` : "—"}</span>
+                    <span className="font-semibold">
+                      {selectedSlip.grossSalary != null
+                        ? `₹${selectedSlip.grossSalary.toLocaleString("en-IN")}`
+                        : "—"}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-muted-foreground">Total Deductions:</span>
-                    <span className="font-semibold text-rose-400">{selectedSlip.deductions != null ? `₹${selectedSlip.deductions.toLocaleString("en-IN")}` : "—"}</span>
+                    <span className="font-semibold text-rose-400">
+                      {selectedSlip.deductions != null
+                        ? `₹${selectedSlip.deductions.toLocaleString("en-IN")}`
+                        : "—"}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center text-sm font-bold border-t border-border/50 pt-2">
                     <span>Net Disbursed Salary:</span>
-                    <span className="text-emerald-500">{selectedSlip.netSalary != null ? `₹${selectedSlip.netSalary.toLocaleString("en-IN")}` : "—"}</span>
+                    <span className="text-emerald-500">
+                      {selectedSlip.netSalary != null
+                        ? `₹${selectedSlip.netSalary.toLocaleString("en-IN")}`
+                        : "—"}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1507,7 +1628,10 @@ export function EmployeeDocumentsPage() {
               <div className="rounded-xl border border-border bg-card/60 p-4 space-y-3">
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-muted-foreground">Provision Slip Number:</span>
-                  <span className="font-mono font-medium">{selectedProvision.slipNumber || `PRV-${selectedProvision.id.slice(0, 8).toUpperCase()}`}</span>
+                  <span className="font-mono font-medium">
+                    {selectedProvision.slipNumber ||
+                      `PRV-${selectedProvision.id.slice(0, 8).toUpperCase()}`}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-muted-foreground">Pay Period:</span>
@@ -1519,17 +1643,25 @@ export function EmployeeDocumentsPage() {
                 </div>
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-muted-foreground">Generated Date:</span>
-                  <span>{selectedProvision.generatedAt ? new Date(selectedProvision.generatedAt).toLocaleDateString() : "—"}</span>
+                  <span>
+                    {selectedProvision.generatedAt
+                      ? new Date(selectedProvision.generatedAt).toLocaleDateString()
+                      : "—"}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-muted-foreground">Status:</span>
-                  <Badge className="bg-amber-500/10 text-amber-500 text-[10px]">{selectedProvision.status || "Provisional"}</Badge>
+                  <Badge className="bg-amber-500/10 text-amber-500 text-[10px]">
+                    {selectedProvision.status || "Provisional"}
+                  </Badge>
                 </div>
                 <div className="border-t border-border pt-3">
                   <div className="flex justify-between items-center text-sm font-bold">
                     <span>Provisioned Amount:</span>
                     <span className="text-amber-500">
-                      {selectedProvision.provisionedAmount != null ? `₹${selectedProvision.provisionedAmount.toLocaleString("en-IN")}` : "—"}
+                      {selectedProvision.provisionedAmount != null
+                        ? `₹${selectedProvision.provisionedAmount.toLocaleString("en-IN")}`
+                        : "—"}
                     </span>
                   </div>
                 </div>
@@ -1560,7 +1692,11 @@ export function EmployeeDocumentsPage() {
               <AlertTriangle className="h-5 w-5" /> Confirm Document Deletion
             </DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete <span className="font-semibold text-foreground">"{selectedDoc?.title || selectedDoc?.fileName}"</span>? This will remove the document permanently from your employee records.
+              Are you sure you want to delete{" "}
+              <span className="font-semibold text-foreground">
+                "{selectedDoc?.title || selectedDoc?.fileName}"
+              </span>
+              ? This will remove the document permanently from your employee records.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0 pt-2">
