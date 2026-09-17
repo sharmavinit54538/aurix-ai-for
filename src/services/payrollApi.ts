@@ -337,6 +337,10 @@ export interface PayrollValidationIssue {
   status?: string;
   detectedAt?: string;
   resolved?: boolean;
+  resolution?: string;
+  resolvedAt?: string;
+  resolvedBy?: string;
+  source?: string;
   [key: string]: unknown;
 }
 
@@ -350,7 +354,7 @@ export interface PayrollValidationSummary {
   errorsCount: number;
   warningsCount: number;
   affectedEmployeesCount: number;
-  blockingCount: number;
+  blockingCount?: number | null;
   lastValidatedAt?: string | null;
   issues: PayrollValidationIssue[];
   [key: string]: unknown;
@@ -402,9 +406,7 @@ export interface PayrollPreviewData {
 function extractData<T>(res: unknown): T {
   const r = res as { data?: unknown; status?: number; headers?: unknown } | undefined;
   const body =
-    r?.data !== undefined && (r?.status !== undefined || r?.headers !== undefined)
-      ? r.data
-      : res;
+    r?.data !== undefined && (r?.status !== undefined || r?.headers !== undefined) ? r.data : res;
 
   if (body == null) return null as unknown as T;
 
@@ -458,14 +460,13 @@ export function normalizePayrollPeriod(item: any): PayrollPeriod {
   const endDate = item.endDate || item.end_date || "";
   const payDate = item.payDate || item.pay_date || "";
   const rawStatus = item.status || (item.is_locked ? "Locked" : "Open");
-  const employeeCount =
-    item.employeeCount ?? item.employee_count ?? item.total_employees ?? null;
+  const employeeCount = item.employeeCount ?? item.employee_count ?? item.total_employees ?? null;
   const isLocked = Boolean(
     item.is_locked ||
-      item.isLocked ||
-      String(rawStatus).toLowerCase() === "locked" ||
-      String(rawStatus).toLowerCase() === "finalized" ||
-      String(rawStatus).toLowerCase() === "closed"
+    item.isLocked ||
+    String(rawStatus).toLowerCase() === "locked" ||
+    String(rawStatus).toLowerCase() === "finalized" ||
+    String(rawStatus).toLowerCase() === "closed",
   );
   const isCurrent = Boolean(item.isCurrent || item.is_current);
   const createdAt = item.createdAt || item.created_at || "";
@@ -505,10 +506,8 @@ export function normalizePayrollRunStatus(runId: string, raw: any): PayrollRunSt
     raw.job_status ||
     (raw.is_completed ? "Completed" : raw.is_failed ? "Failed" : "Processing");
 
-  const periodId =
-    raw.periodId || raw.period_id || raw.cycleId || raw.cycle_id || null;
-  const periodName =
-    raw.periodName || raw.period_name || raw.cycle_name || raw.name || null;
+  const periodId = raw.periodId || raw.period_id || raw.cycleId || raw.cycle_id || null;
+  const periodName = raw.periodName || raw.period_name || raw.cycle_name || raw.name || null;
   const jobId = raw.jobId || raw.job_id || raw.id || null;
 
   // Real progress ONLY if provided as number
@@ -521,18 +520,15 @@ export function normalizePayrollRunStatus(runId: string, raw: any): PayrollRunSt
     progress = Math.min(100, Math.max(0, raw.percent_complete));
   }
 
-  const currentStep =
-    raw.currentStep || raw.current_step || raw.step || raw.operation || null;
+  const currentStep = raw.currentStep || raw.current_step || raw.step || raw.operation || null;
 
   // Real employees count ONLY if provided
   let employees: PayrollRunStatus["employees"] = null;
   const rawEmp = raw.employees || raw.employee_counts || raw.stats;
   if (rawEmp && typeof rawEmp === "object") {
     employees = {
-      total:
-        rawEmp.total ?? rawEmp.total_employees ?? raw.totalEmployees ?? null,
-      processed:
-        rawEmp.processed ?? rawEmp.processed_count ?? raw.processedEmployees ?? null,
+      total: rawEmp.total ?? rawEmp.total_employees ?? raw.totalEmployees ?? null,
+      processed: rawEmp.processed ?? rawEmp.processed_count ?? raw.processedEmployees ?? null,
       failed: rawEmp.failed ?? rawEmp.failed_count ?? null,
     };
   } else if (
@@ -620,16 +616,9 @@ export function normalizePayrollEmployee(item: any): PayrollPreviewEmployee {
     };
   }
 
-  const id = String(
-    item.id || item._id || item.employee_id || item.employeeId || ""
-  );
+  const id = String(item.id || item._id || item.employee_id || item.employeeId || "");
   const employeeId = String(
-    item.employeeId ||
-      item.employee_id ||
-      item.emp_id ||
-      item.employee_code ||
-      item.code ||
-      id
+    item.employeeId || item.employee_id || item.emp_id || item.employee_code || item.code || id,
   );
   const name =
     item.name ||
@@ -638,10 +627,8 @@ export function normalizePayrollEmployee(item: any): PayrollPreviewEmployee {
     (item.first_name ? `${item.first_name} ${item.last_name || ""}`.trim() : "") ||
     "Unnamed Employee";
   const email = item.email || item.work_email || undefined;
-  const designation =
-    item.designation || item.job_title || item.role || undefined;
-  const department =
-    item.department || item.dept || item.department_name || undefined;
+  const designation = item.designation || item.job_title || item.role || undefined;
+  const department = item.department || item.dept || item.department_name || undefined;
   const location = item.location || item.branch || item.city || undefined;
 
   const grossEarnings =
@@ -658,43 +645,24 @@ export function normalizePayrollEmployee(item: any): PayrollPreviewEmployee {
     item.deductions ??
     null;
   const netPay =
-    item.netPay ??
-    item.net_pay ??
-    item.netSalary ??
-    item.net_salary ??
-    item.net ??
-    null;
+    item.netPay ?? item.net_pay ?? item.netSalary ?? item.net_salary ?? item.net ?? null;
   const employerContribution =
-    item.employerContribution ??
-    item.employer_contribution ??
-    item.employer_cost ??
-    null;
+    item.employerContribution ?? item.employer_contribution ?? item.employer_cost ?? null;
 
   const status = item.status || item.payroll_status || "Processed";
   const validationStatus =
-    item.validationStatus ||
-    item.validation_status ||
-    (item.has_issues ? "warning" : "valid");
+    item.validationStatus || item.validation_status || (item.has_issues ? "warning" : "valid");
 
   // Earnings breakdown if present
-  const rawEarnings =
-    item.earnings ||
-    item.salary_breakdown?.earnings ||
-    item.components?.earnings;
+  const rawEarnings = item.earnings || item.salary_breakdown?.earnings || item.components?.earnings;
   const earnings: PayrollEmployeeEarnings | undefined = rawEarnings
     ? {
         basic: rawEarnings.basic ?? rawEarnings.basic_monthly ?? null,
         hra: rawEarnings.hra ?? rawEarnings.hra_monthly ?? null,
-        allowances:
-          rawEarnings.allowances ?? rawEarnings.other_allowances ?? null,
-        specialAllowance:
-          rawEarnings.specialAllowance ??
-          rawEarnings.special_allowance ??
-          null,
-        conveyance:
-          rawEarnings.conveyance ?? rawEarnings.conveyance_monthly ?? null,
-        overtime:
-          rawEarnings.overtime ?? rawEarnings.overtime_amount ?? null,
+        allowances: rawEarnings.allowances ?? rawEarnings.other_allowances ?? null,
+        specialAllowance: rawEarnings.specialAllowance ?? rawEarnings.special_allowance ?? null,
+        conveyance: rawEarnings.conveyance ?? rawEarnings.conveyance_monthly ?? null,
+        overtime: rawEarnings.overtime ?? rawEarnings.overtime_amount ?? null,
         bonus: rawEarnings.bonus ?? rawEarnings.bonus_amount ?? null,
         incentives: rawEarnings.incentives ?? null,
         other: rawEarnings.other ?? null,
@@ -704,28 +672,16 @@ export function normalizePayrollEmployee(item: any): PayrollPreviewEmployee {
 
   // Deductions breakdown if present
   const rawDeductions =
-    item.deductions ||
-    item.salary_breakdown?.deductions ||
-    item.components?.deductions;
+    item.deductions || item.salary_breakdown?.deductions || item.components?.deductions;
   const deductions: PayrollEmployeeDeductions | undefined = rawDeductions
     ? {
-        pf:
-          rawDeductions.pf ??
-          rawDeductions.epf ??
-          rawDeductions.provident_fund ??
-          null,
+        pf: rawDeductions.pf ?? rawDeductions.epf ?? rawDeductions.provident_fund ?? null,
         esi: rawDeductions.esi ?? rawDeductions.esic ?? null,
         pt: rawDeductions.pt ?? rawDeductions.professional_tax ?? null,
-        tds:
-          rawDeductions.tds ??
-          rawDeductions.tax ??
-          rawDeductions.income_tax ??
-          null,
-        incomeTax:
-          rawDeductions.incomeTax ?? rawDeductions.income_tax ?? null,
+        tds: rawDeductions.tds ?? rawDeductions.tax ?? rawDeductions.income_tax ?? null,
+        incomeTax: rawDeductions.incomeTax ?? rawDeductions.income_tax ?? null,
         loan: rawDeductions.loan ?? rawDeductions.loan_deduction ?? null,
-        advance:
-          rawDeductions.advance ?? rawDeductions.advance_salary ?? null,
+        advance: rawDeductions.advance ?? rawDeductions.advance_salary ?? null,
         other: rawDeductions.other ?? null,
         ...rawDeductions,
       }
@@ -735,20 +691,11 @@ export function normalizePayrollEmployee(item: any): PayrollPreviewEmployee {
   const rawAtt = item.attendance || item.attendance_metrics;
   const attendance: PayrollEmployeeAttendance | undefined = rawAtt
     ? {
-        workingDays:
-          rawAtt.workingDays ??
-          rawAtt.working_days ??
-          rawAtt.total_days ??
-          null,
+        workingDays: rawAtt.workingDays ?? rawAtt.working_days ?? rawAtt.total_days ?? null,
         paidDays: rawAtt.paidDays ?? rawAtt.paid_days ?? null,
-        unpaidDays:
-          rawAtt.unpaidDays ??
-          rawAtt.unpaid_days ??
-          rawAtt.loss_of_pay_days ??
-          null,
+        unpaidDays: rawAtt.unpaidDays ?? rawAtt.unpaid_days ?? rawAtt.loss_of_pay_days ?? null,
         leaveDays: rawAtt.leaveDays ?? rawAtt.leave_days ?? null,
-        overtimeHours:
-          rawAtt.overtimeHours ?? rawAtt.overtime_hours ?? null,
+        overtimeHours: rawAtt.overtimeHours ?? rawAtt.overtime_hours ?? null,
         lopDays: rawAtt.lopDays ?? rawAtt.lop_days ?? null,
         ...rawAtt,
       }
@@ -775,17 +722,15 @@ export function normalizePayrollEmployee(item: any): PayrollPreviewEmployee {
     grossEarnings: grossEarnings != null ? Number(grossEarnings) : null,
     totalDeductions: totalDeductions != null ? Number(totalDeductions) : null,
     netPay: netPay != null ? Number(netPay) : null,
-    employerContribution:
-      employerContribution != null ? Number(employerContribution) : null,
+    employerContribution: employerContribution != null ? Number(employerContribution) : null,
     status,
     validationStatus,
-    issuesCount: issues ? issues.length : item.issues_count ?? 0,
+    issuesCount: issues ? issues.length : (item.issues_count ?? 0),
     issues,
     earnings,
     deductions,
     attendance,
-    joiningDate:
-      item.joiningDate || item.joining_date || item.doj || item.date_of_joining || null,
+    joiningDate: item.joiningDate || item.joining_date || item.doj || item.date_of_joining || null,
     employmentStatus:
       item.employmentStatus ||
       item.employment_status ||
@@ -796,8 +741,7 @@ export function normalizePayrollEmployee(item: any): PayrollPreviewEmployee {
     periodName: item.periodName || item.period_name || item.cycle_name || null,
     periodId: item.periodId || item.period_id || item.cycle_id || null,
     runStatus: item.runStatus || item.run_status || item.payroll_status || null,
-    calculationStatus:
-      item.calculationStatus || item.calculation_status || null,
+    calculationStatus: item.calculationStatus || item.calculation_status || null,
     statutory: item.statutory || item.statutory_contributions || null,
     salaryStructure: item.salaryStructure || item.salary_structure || null,
     ytd: item.ytd || item.year_to_date || null,
@@ -809,10 +753,7 @@ export function normalizePayrollEmployee(item: any): PayrollPreviewEmployee {
   };
 }
 
-export function normalizePayrollPreviewData(
-  runId: string,
-  raw: any
-): PayrollPreviewData {
+export function normalizePayrollPreviewData(runId: string, raw: any): PayrollPreviewData {
   if (!raw || typeof raw !== "object") {
     return {
       runId,
@@ -821,49 +762,24 @@ export function normalizePayrollPreviewData(
     };
   }
 
-  const periodId =
-    raw.periodId || raw.period_id || raw.cycleId || raw.cycle_id || null;
-  const periodName =
-    raw.periodName || raw.period_name || raw.cycle_name || raw.name || null;
+  const periodId = raw.periodId || raw.period_id || raw.cycleId || raw.cycle_id || null;
+  const periodName = raw.periodName || raw.period_name || raw.cycle_name || raw.name || null;
   const status = raw.status || raw.run_status || "Provision Generated";
-  const runDate =
-    raw.runDate || raw.run_date || raw.createdAt || raw.created_at || null;
+  const runDate = raw.runDate || raw.run_date || raw.createdAt || raw.created_at || null;
   const generatedAt =
-    raw.generatedAt ||
-    raw.generated_at ||
-    raw.updatedAt ||
-    raw.updated_at ||
-    null;
+    raw.generatedAt || raw.generated_at || raw.updatedAt || raw.updated_at || null;
 
   // Raw summary
   const s = raw.summary || raw.totals || raw.stats || raw;
   const summary: PayrollPreviewSummary = {
     employeeCount:
-      s.employeeCount ??
-      s.employee_count ??
-      s.totalEmployees ??
-      s.total_employees ??
-      null,
-    grossPayroll:
-      s.grossPayroll ??
-      s.gross_payroll ??
-      s.totalGross ??
-      s.total_gross ??
-      null,
-    totalEarnings:
-      s.totalEarnings ??
-      s.total_earnings ??
-      s.grossPayroll ??
-      s.gross_payroll ??
-      null,
-    totalDeductions:
-      s.totalDeductions ?? s.total_deductions ?? s.deductions ?? null,
-    netPayroll:
-      s.netPayroll ?? s.net_payroll ?? s.totalNet ?? s.total_net ?? null,
-    employerCost:
-      s.employerCost ?? s.employer_cost ?? s.totalCost ?? s.total_cost ?? null,
-    employerContribution:
-      s.employerContribution ?? s.employer_contribution ?? null,
+      s.employeeCount ?? s.employee_count ?? s.totalEmployees ?? s.total_employees ?? null,
+    grossPayroll: s.grossPayroll ?? s.gross_payroll ?? s.totalGross ?? s.total_gross ?? null,
+    totalEarnings: s.totalEarnings ?? s.total_earnings ?? s.grossPayroll ?? s.gross_payroll ?? null,
+    totalDeductions: s.totalDeductions ?? s.total_deductions ?? s.deductions ?? null,
+    netPayroll: s.netPayroll ?? s.net_payroll ?? s.totalNet ?? s.total_net ?? null,
+    employerCost: s.employerCost ?? s.employer_cost ?? s.totalCost ?? s.total_cost ?? null,
+    employerContribution: s.employerContribution ?? s.employer_contribution ?? null,
   };
 
   // Raw validation
@@ -891,7 +807,7 @@ export function normalizePayrollPreviewData(
 
 export function normalizePayrollValidationSummary(
   runId: string,
-  raw: any
+  raw: any,
 ): PayrollValidationSummary {
   if (!raw || typeof raw !== "object") {
     return {
@@ -901,7 +817,7 @@ export function normalizePayrollValidationSummary(
       errorsCount: 0,
       warningsCount: 0,
       affectedEmployeesCount: 0,
-      blockingCount: 0,
+      blockingCount: null,
       issues: [],
     };
   }
@@ -928,31 +844,38 @@ export function normalizePayrollValidationSummary(
   }
 
   const issues: PayrollValidationIssue[] = rawList.map((item, idx) => {
-    const sev = (item.severity || item.level || "warning").toLowerCase();
-    const isError =
-      sev === "error" || sev === "critical" || sev === "fatal" || Boolean(item.blocking);
+    // Preserve backend-provided severity without guessing from text
+    const rawSev =
+      item.severity || item.level || item.type || (item.blocking ? "error" : "warning");
+    const sev = String(rawSev).toLowerCase();
+
+    // Preserve blocking ONLY if provided by backend; do not infer from text
+    const blocking =
+      item.blocking !== undefined
+        ? Boolean(item.blocking)
+        : item.is_blocking !== undefined
+          ? Boolean(item.is_blocking)
+          : undefined;
+
     return {
       id: String(item.id || item.issue_id || `issue-${idx}`),
-      severity: isError ? "error" : "warning",
+      severity: sev,
       category: item.category || item.type || item.module || "General",
-      code: item.code || item.error_code || item.rule_id || undefined,
-      message:
-        item.message || item.description || item.detail || "Validation issue detected",
+      code: item.code || item.error_code || item.rule_id || item.ruleCode || undefined,
+      message: item.message || item.description || item.detail || "Validation issue detected",
       employeeId: item.employeeId || item.employee_id || item.emp_id || undefined,
-      employeeName:
-        item.employeeName || item.employee_name || item.name || undefined,
-      department: item.department || item.dept || undefined,
-      component:
-        item.component || item.field || item.salary_component || undefined,
-      blocking: item.blocking !== undefined ? Boolean(item.blocking) : isError,
+      employeeName: item.employeeName || item.employee_name || item.name || undefined,
+      department: item.department || item.dept || item.department_name || undefined,
+      component: item.component || item.field || item.salary_component || undefined,
+      blocking,
       status: item.status || (item.resolved ? "resolved" : "open"),
       detectedAt:
-        item.detectedAt ||
-        item.detected_at ||
-        item.created_at ||
-        item.createdAt ||
-        undefined,
-      resolved: Boolean(item.resolved),
+        item.detectedAt || item.detected_at || item.created_at || item.createdAt || undefined,
+      resolved: item.resolved !== undefined ? Boolean(item.resolved) : undefined,
+      resolution: item.resolution || item.resolution_notes || item.notes || undefined,
+      resolvedAt: item.resolvedAt || item.resolved_at || undefined,
+      resolvedBy: item.resolvedBy || item.resolved_by || undefined,
+      source: item.source || item.reference || item.rule || undefined,
       ...item,
     };
   });
@@ -961,22 +884,35 @@ export function normalizePayrollValidationSummary(
     raw.errorsCount ??
       raw.errors_count ??
       raw.errors?.length ??
-      issues.filter((i) => i.severity === "error").length
+      issues.filter(
+        (i) => i.severity === "error" || i.severity === "critical" || i.severity === "fatal",
+      ).length,
   );
   const warningsCount = Number(
     raw.warningsCount ??
       raw.warnings_count ??
       raw.warnings?.length ??
-      issues.filter((i) => i.severity === "warning").length
+      issues.filter(
+        (i) => i.severity === "warning" || i.severity === "advisory" || i.severity === "info",
+      ).length,
   );
-  const totalIssues = Number(
-    raw.totalIssues ?? raw.total_issues ?? raw.total ?? issues.length
-  );
-  const blockingCount = Number(
-    raw.blockingCount ??
-      raw.blocking_count ??
-      issues.filter((i) => i.blocking).length
-  );
+  const totalIssues = Number(raw.totalIssues ?? raw.total_issues ?? raw.total ?? issues.length);
+
+  // Derive blocking count ONLY if backend provides blocking flags or counts
+  const hasBlockingInfo =
+    raw.blockingCount != null ||
+    raw.blocking_count != null ||
+    raw.blockingIssuesCount != null ||
+    issues.some((i) => i.blocking !== undefined);
+
+  const blockingCount: number | null = hasBlockingInfo
+    ? Number(
+        raw.blockingCount ??
+          raw.blocking_count ??
+          raw.blockingIssuesCount ??
+          issues.filter((i) => i.blocking === true).length,
+      )
+    : null;
 
   const affectedEmps = new Set<string>();
   issues.forEach((i) => {
@@ -986,7 +922,7 @@ export function normalizePayrollValidationSummary(
     raw.affectedEmployeesCount ??
       raw.affected_employees ??
       raw.affectedEmployees ??
-      (affectedEmps.size || 0)
+      (affectedEmps.size || 0),
   );
 
   let status = raw.status || raw.validation_status || raw.state;
@@ -1009,11 +945,7 @@ export function normalizePayrollValidationSummary(
     affectedEmployeesCount,
     blockingCount,
     lastValidatedAt:
-      raw.lastValidatedAt ||
-      raw.last_validated_at ||
-      raw.validatedAt ||
-      raw.validated_at ||
-      null,
+      raw.lastValidatedAt || raw.last_validated_at || raw.validatedAt || raw.validated_at || null,
     issues,
     ...raw,
   };
@@ -1059,8 +991,7 @@ export const payrollApi = {
         total = Number(data.total ?? data.count ?? rawList.length) || rawList.length;
         page = Number(data.page ?? params?.page ?? 1) || 1;
         limit = Number(data.limit ?? params?.limit ?? 20) || 20;
-        totalPages =
-          Number(data.pages ?? data.total_pages ?? Math.ceil(total / limit)) || 1;
+        totalPages = Number(data.pages ?? data.total_pages ?? Math.ceil(total / limit)) || 1;
       }
 
       const items = rawList.map(normalizePayrollPeriod);
@@ -1108,9 +1039,7 @@ export const payrollApi = {
           typeof data === "object" &&
           Array.isArray((data as { periods: PayrollPeriod[] }).periods)
         ) {
-          return (data as { periods: PayrollPeriod[] }).periods.map(
-            normalizePayrollPeriod
-          );
+          return (data as { periods: PayrollPeriod[] }).periods.map(normalizePayrollPeriod);
         }
         return [];
       } catch {
@@ -1172,46 +1101,31 @@ export const payrollApi = {
   /**
    * Lock pay cycle — freeze computed figures.
    */
-  async lockPeriod(
-    id: string,
-    reason?: string
-  ): Promise<{ success: boolean; message?: string }> {
+  async lockPeriod(id: string, reason?: string): Promise<{ success: boolean; message?: string }> {
     const res = await apiInstance.post(`/api/v2/payroll/cycles/${id}/lock`, {
       reason: reason || null,
     });
-    return (
-      extractData<{ success: boolean; message?: string }>(res) || { success: true }
-    );
+    return extractData<{ success: boolean; message?: string }>(res) || { success: true };
   },
 
   /**
    * Reopen a locked pay cycle (Admin only).
    */
-  async reopenPeriod(
-    id: string,
-    reason: string
-  ): Promise<{ success: boolean; message?: string }> {
+  async reopenPeriod(id: string, reason: string): Promise<{ success: boolean; message?: string }> {
     const res = await apiInstance.post(`/api/v2/payroll/cycles/${id}/reopen`, {
       reason,
     });
-    return (
-      extractData<{ success: boolean; message?: string }>(res) || { success: true }
-    );
+    return extractData<{ success: boolean; message?: string }>(res) || { success: true };
   },
 
   /**
    * Void / cancel a pay cycle.
    */
-  async voidPeriod(
-    id: string,
-    reason?: string
-  ): Promise<{ success: boolean; message?: string }> {
+  async voidPeriod(id: string, reason?: string): Promise<{ success: boolean; message?: string }> {
     const res = await apiInstance.post(`/api/v2/payroll/cycles/${id}/void`, {
       reason: reason || null,
     });
-    return (
-      extractData<{ success: boolean; message?: string }>(res) || { success: true }
-    );
+    return extractData<{ success: boolean; message?: string }>(res) || { success: true };
   },
 
   /**
@@ -1240,10 +1154,7 @@ export const payrollApi = {
    * Connects to GET /api/v2/payroll/runs/{runId}/generation-status with fallbacks.
    * ZERO MOCK DATA: returns authentic backend response or throws so UI can show real unavailable state.
    */
-  async getPayrollRunStatus(
-    runId: string,
-    jobId?: string
-  ): Promise<PayrollRunStatus> {
+  async getPayrollRunStatus(runId: string, jobId?: string): Promise<PayrollRunStatus> {
     const params = jobId ? { job_id: jobId } : undefined;
     const requestConfig = {
       params,
@@ -1255,7 +1166,7 @@ export const payrollApi = {
       // Primary: /api/v2/payroll/runs/{runId}/generation-status
       const res = await apiInstance.get(
         `/api/v2/payroll/runs/${runId}/generation-status`,
-        requestConfig
+        requestConfig,
       );
       const data = extractData<any>(res);
       return normalizePayrollRunStatus(runId, data);
@@ -1265,7 +1176,7 @@ export const payrollApi = {
         try {
           const previewRes = await apiInstance.get(
             `/api/v2/payroll/runs/${runId}/preview`,
-            requestConfig
+            requestConfig,
           );
           const previewData = extractData<any>(previewRes);
           if (previewData) {
@@ -1277,10 +1188,7 @@ export const payrollApi = {
 
         // Fallback 2: /payroll/runs/{runId}
         try {
-          const legRes = await apiInstance.get(
-            `/payroll/runs/${runId}`,
-            requestConfig
-          );
+          const legRes = await apiInstance.get(`/payroll/runs/${runId}`, requestConfig);
           const legData = extractData<any>(legRes);
           if (legData) {
             return normalizePayrollRunStatus(runId, legData);
@@ -1291,10 +1199,7 @@ export const payrollApi = {
 
         // Fallback 3: /payroll/runs/{runId}/status
         try {
-          const statusRes = await apiInstance.get(
-            `/payroll/runs/${runId}/status`,
-            requestConfig
-          );
+          const statusRes = await apiInstance.get(`/payroll/runs/${runId}/status`, requestConfig);
           const statusData = extractData<any>(statusRes);
           if (statusData) {
             return normalizePayrollRunStatus(runId, statusData);
@@ -1324,12 +1229,8 @@ export const payrollApi = {
       if (err?.response?.status === 404) {
         // Fallback POST /payroll/runs/{runId}/cancel
         try {
-          const fallbackRes = await apiInstance.post(
-            `/payroll/runs/${runId}/cancel`
-          );
-          return (
-            extractData<CancelRunResponse>(fallbackRes) || { success: true }
-          );
+          const fallbackRes = await apiInstance.post(`/payroll/runs/${runId}/cancel`);
+          return extractData<CancelRunResponse>(fallbackRes) || { success: true };
         } catch {
           throw err;
         }
@@ -1355,14 +1256,10 @@ export const payrollApi = {
       if (err?.response?.status === 404) {
         // Fallback /revalidate or /payroll/runs/{runId}/retry
         try {
-          const fbRes = await apiInstance.post(
-            `/api/v2/payroll/runs/${runId}/revalidate`
-          );
+          const fbRes = await apiInstance.post(`/api/v2/payroll/runs/${runId}/revalidate`);
           return extractData<RetryRunResponse>(fbRes) || { success: true };
         } catch {
-          const fbRes2 = await apiInstance.post(
-            `/payroll/runs/${runId}/retry`
-          );
+          const fbRes2 = await apiInstance.post(`/payroll/runs/${runId}/retry`);
           return extractData<RetryRunResponse>(fbRes2) || { success: true };
         }
       }
@@ -1374,14 +1271,12 @@ export const payrollApi = {
    * Get validation issues for a payroll run.
    * GET /api/v2/payroll/runs/{runId}/validation-issues
    */
-  async getPayrollRunValidationIssues(
-    runId: string
-  ): Promise<PayrollRunValidationIssue[]> {
+  async getPayrollRunValidationIssues(runId: string): Promise<PayrollRunValidationIssue[]> {
     try {
-      const res = await apiInstance.get(
-        `/api/v2/payroll/runs/${runId}/validation-issues`,
-        { headers: { "Cache-Control": "no-cache" }, skipCache: true }
-      );
+      const res = await apiInstance.get(`/api/v2/payroll/runs/${runId}/validation-issues`, {
+        headers: { "Cache-Control": "no-cache" },
+        skipCache: true,
+      });
       const data = extractData<any>(res);
       if (Array.isArray(data)) return data;
       if (data && Array.isArray(data.items)) return data.items;
@@ -1399,20 +1294,20 @@ export const payrollApi = {
    */
   async getPayrollPreview(runId: string): Promise<PayrollPreviewData> {
     try {
-      const res = await apiInstance.get(
-        `/api/v2/payroll/runs/${runId}/preview`,
-        { headers: { "Cache-Control": "no-cache" }, skipCache: true }
-      );
+      const res = await apiInstance.get(`/api/v2/payroll/runs/${runId}/preview`, {
+        headers: { "Cache-Control": "no-cache" },
+        skipCache: true,
+      });
       const data = extractData<any>(res);
       return normalizePayrollPreviewData(runId, data);
     } catch (err: any) {
       if (err?.response?.status === 404) {
         // Fallback to /payroll/runs/{runId}/preview or /payroll/runs/{runId}
         try {
-          const fallbackRes = await apiInstance.get(
-            `/payroll/runs/${runId}/preview`,
-            { headers: { "Cache-Control": "no-cache" }, skipCache: true }
-          );
+          const fallbackRes = await apiInstance.get(`/payroll/runs/${runId}/preview`, {
+            headers: { "Cache-Control": "no-cache" },
+            skipCache: true,
+          });
           const fallbackData = extractData<any>(fallbackRes);
           if (fallbackData) {
             return normalizePayrollPreviewData(runId, fallbackData);
@@ -1431,7 +1326,7 @@ export const payrollApi = {
    */
   async getRunEmployees(
     runId: string,
-    params?: GetRunEmployeesParams
+    params?: GetRunEmployeesParams,
   ): Promise<GetRunEmployeesResponse> {
     const queryParams: Record<string, any> = {};
     if (params?.page) queryParams.page = params.page;
@@ -1447,14 +1342,11 @@ export const payrollApi = {
     if (params?.sortDir) queryParams.sortDir = params.sortDir;
 
     try {
-      const res = await apiInstance.get(
-        `/api/v2/payroll/runs/${runId}/employees`,
-        {
-          params: queryParams,
-          headers: { "Cache-Control": "no-cache" },
-          skipCache: true,
-        }
-      );
+      const res = await apiInstance.get(`/api/v2/payroll/runs/${runId}/employees`, {
+        params: queryParams,
+        headers: { "Cache-Control": "no-cache" },
+        skipCache: true,
+      });
       const data = extractData<any>(res);
 
       let rawList: any[] = [];
@@ -1471,12 +1363,10 @@ export const payrollApi = {
         else if (Array.isArray(data.employees)) rawList = data.employees;
         else if (Array.isArray(data.data)) rawList = data.data;
 
-        total =
-          Number(data.total ?? data.count ?? rawList.length) || rawList.length;
+        total = Number(data.total ?? data.count ?? rawList.length) || rawList.length;
         page = Number(data.page ?? params?.page ?? 1) || 1;
         limit = Number(data.limit ?? params?.limit ?? 10) || 10;
-        totalPages =
-          Number(data.pages ?? data.total_pages ?? Math.ceil(total / limit)) || 1;
+        totalPages = Number(data.pages ?? data.total_pages ?? Math.ceil(total / limit)) || 1;
       }
 
       const items = rawList.map(normalizePayrollEmployee);
@@ -1485,15 +1375,14 @@ export const payrollApi = {
       if (err?.response?.status === 404) {
         // Fallback /payroll/runs/{runId}/employees
         try {
-          const fbRes = await apiInstance.get(
-            `/payroll/runs/${runId}/employees`,
-            { params: queryParams, skipCache: true }
-          );
+          const fbRes = await apiInstance.get(`/payroll/runs/${runId}/employees`, {
+            params: queryParams,
+            skipCache: true,
+          });
           const fbData = extractData<any>(fbRes);
           let rawList: any[] = [];
           if (Array.isArray(fbData)) rawList = fbData;
-          else if (fbData?.items && Array.isArray(fbData.items))
-            rawList = fbData.items;
+          else if (fbData?.items && Array.isArray(fbData.items)) rawList = fbData.items;
           const items = rawList.map(normalizePayrollEmployee);
           return {
             items,
@@ -1516,23 +1405,22 @@ export const payrollApi = {
    */
   async getRunEmployeeDetail(
     runId: string,
-    employeeId: string
+    employeeId: string,
   ): Promise<PayrollPreviewEmployee | null> {
     try {
-      const res = await apiInstance.get(
-        `/api/v2/payroll/runs/${runId}/employees/${employeeId}`,
-        { headers: { "Cache-Control": "no-cache" }, skipCache: true }
-      );
+      const res = await apiInstance.get(`/api/v2/payroll/runs/${runId}/employees/${employeeId}`, {
+        headers: { "Cache-Control": "no-cache" },
+        skipCache: true,
+      });
       const data = extractData<any>(res);
       return data ? normalizePayrollEmployee(data) : null;
     } catch (err: any) {
       if (err?.response?.status === 404) {
         // Fallback /payroll/runs/{runId}/employees/{employeeId}
         try {
-          const fbRes = await apiInstance.get(
-            `/payroll/runs/${runId}/employees/${employeeId}`,
-            { skipCache: true }
-          );
+          const fbRes = await apiInstance.get(`/payroll/runs/${runId}/employees/${employeeId}`, {
+            skipCache: true,
+          });
           const fbData = extractData<any>(fbRes);
           return fbData ? normalizePayrollEmployee(fbData) : null;
         } catch {
@@ -1547,9 +1435,7 @@ export const payrollApi = {
    * Trigger recalculation of a payroll run.
    * POST /api/v2/payroll/runs/{runId}/process
    */
-  async recalculatePayroll(
-    runId: string
-  ): Promise<{ success: boolean; message?: string }> {
+  async recalculatePayroll(runId: string): Promise<{ success: boolean; message?: string }> {
     return this.retryPayrollRun(runId);
   },
 
@@ -1557,24 +1443,22 @@ export const payrollApi = {
    * Fetch validation summary and issues for a payroll run.
    * GET /api/v2/payroll/runs/{runId}/validation
    */
-  async getPayrollValidation(
-    runId: string
-  ): Promise<PayrollValidationSummary> {
+  async getPayrollValidation(runId: string): Promise<PayrollValidationSummary> {
     try {
-      const res = await apiInstance.get(
-        `/api/v2/payroll/runs/${runId}/validation`,
-        { headers: { "Cache-Control": "no-cache" }, skipCache: true }
-      );
+      const res = await apiInstance.get(`/api/v2/payroll/runs/${runId}/validation`, {
+        headers: { "Cache-Control": "no-cache" },
+        skipCache: true,
+      });
       const data = extractData<any>(res);
       return normalizePayrollValidationSummary(runId, data);
     } catch (err: any) {
       if (err?.response?.status === 404) {
-        // Try fallback to validation-issues endpoint
+        // Fallback 1: validation-issues endpoint
         try {
-          const fbRes = await apiInstance.get(
-            `/api/v2/payroll/runs/${runId}/validation-issues`,
-            { headers: { "Cache-Control": "no-cache" }, skipCache: true }
-          );
+          const fbRes = await apiInstance.get(`/api/v2/payroll/runs/${runId}/validation-issues`, {
+            headers: { "Cache-Control": "no-cache" },
+            skipCache: true,
+          });
           const fbData = extractData<any>(fbRes);
           if (fbData) {
             return normalizePayrollValidationSummary(runId, fbData);
@@ -1583,12 +1467,26 @@ export const payrollApi = {
           // Fall through
         }
 
-        // Try preview endpoint fallback if validation is embedded
+        // Fallback 2: legacy /payroll/runs/{runId}/validation
         try {
-          const previewRes = await apiInstance.get(
-            `/api/v2/payroll/runs/${runId}/preview`,
-            { headers: { "Cache-Control": "no-cache" }, skipCache: true }
-          );
+          const fbRes2 = await apiInstance.get(`/payroll/runs/${runId}/validation`, {
+            headers: { "Cache-Control": "no-cache" },
+            skipCache: true,
+          });
+          const fbData2 = extractData<any>(fbRes2);
+          if (fbData2) {
+            return normalizePayrollValidationSummary(runId, fbData2);
+          }
+        } catch {
+          // Fall through
+        }
+
+        // Fallback 3: preview endpoint if validation is embedded
+        try {
+          const previewRes = await apiInstance.get(`/api/v2/payroll/runs/${runId}/preview`, {
+            headers: { "Cache-Control": "no-cache" },
+            skipCache: true,
+          });
           const previewData = extractData<any>(previewRes);
           if (previewData?.validation) {
             return normalizePayrollValidationSummary(runId, {
@@ -1610,6 +1508,23 @@ export const payrollApi = {
         } catch {
           // Fall through
         }
+
+        // Fallback 4: generation-status endpoint if validationIssues is embedded
+        try {
+          const statusRes = await apiInstance.get(
+            `/api/v2/payroll/runs/${runId}/generation-status`,
+            { headers: { "Cache-Control": "no-cache" }, skipCache: true },
+          );
+          const statusData = extractData<any>(statusRes);
+          if (statusData?.validationIssues || statusData?.validation_issues) {
+            return normalizePayrollValidationSummary(runId, {
+              ...statusData,
+              issues: statusData.validationIssues || statusData.validation_issues || [],
+            });
+          }
+        } catch {
+          // Fall through
+        }
       }
       throw err;
     }
@@ -1620,13 +1535,13 @@ export const payrollApi = {
    * POST /api/v2/payroll/runs/{runId}/validate
    */
   async runPayrollValidation(
-    runId: string
+    runId: string,
   ): Promise<{ success: boolean; message?: string; status?: string }> {
     try {
       const res = await apiInstance.post(
         `/api/v2/payroll/runs/${runId}/validate`,
         {},
-        { headers: { "Cache-Control": "no-cache" } }
+        { headers: { "Cache-Control": "no-cache" } },
       );
       const data = extractData<any>(res);
       return {
@@ -1638,10 +1553,7 @@ export const payrollApi = {
       if (err?.response?.status === 404) {
         // Fallback to /revalidate
         try {
-          const fbRes = await apiInstance.post(
-            `/api/v2/payroll/runs/${runId}/revalidate`,
-            {}
-          );
+          const fbRes = await apiInstance.post(`/api/v2/payroll/runs/${runId}/revalidate`, {});
           const fbData = extractData<any>(fbRes);
           return {
             success: Boolean(fbData?.success ?? true),

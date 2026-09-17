@@ -88,22 +88,19 @@ function getStatusBadge(status?: string | null): {
   if (s === "completed" || s === "finalized" || s === "approved" || s === "valid") {
     return {
       label: status,
-      className:
-        "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+      className: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
     };
   }
   if (s === "failed" || s.includes("fail") || s.includes("error") || s === "invalid") {
     return {
       label: status,
-      className:
-        "border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400",
+      className: "border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400",
     };
   }
   if (s.includes("warn") || s.includes("provision")) {
     return {
       label: status,
-      className:
-        "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+      className: "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
     };
   }
   return {
@@ -129,7 +126,9 @@ export function EmployeePayrollDetailPage() {
     ws.user?.role ||
     (typeof window !== "undefined" ? localStorage.getItem("user_role") : null) ||
     ""
-  ).toLowerCase().trim();
+  )
+    .toLowerCase()
+    .trim();
 
   const isAdmin =
     normalizedRole === "admin" ||
@@ -155,10 +154,7 @@ export function EmployeePayrollDetailPage() {
     !normalizedRole;
 
   const canRunPayroll =
-    isAdmin ||
-    isHr ||
-    userPermissions.includes("payroll.process") ||
-    userPermissions.includes("*");
+    isAdmin || isHr || userPermissions.includes("payroll.process") || userPermissions.includes("*");
 
   // State
   const [employee, setEmployee] = useState<PayrollPreviewEmployee | null>(null);
@@ -201,17 +197,15 @@ export function EmployeePayrollDetailPage() {
       if (status === 404) {
         setIsNotFound(true);
         setApiError(
-          "Employee payroll calculation record was not found on the backend for this run (404 Not Found)."
+          "Employee payroll calculation record was not found on the backend for this run (404 Not Found).",
         );
       } else if (status === 401 || status === 403) {
-        setApiError(
-          "You are not authorized to view this employee's payroll details."
-        );
+        setApiError("You are not authorized to view this employee's payroll details.");
       } else {
         setApiError(
           err?.response?.data?.message ||
             err?.message ||
-            "Unable to load employee payroll detail from the server."
+            "Unable to load employee payroll detail from the server.",
         );
       }
       setEmployee(null);
@@ -236,9 +230,7 @@ export function EmployeePayrollDetailPage() {
     setIsRecalculating(true);
     try {
       const res = await payrollApi.recalculatePayroll(runId);
-      toast.success(
-        res?.message || "Payroll recalculation initiated successfully."
-      );
+      toast.success(res?.message || "Payroll recalculation initiated successfully.");
       setRecalculateModalOpen(false);
       navigate({
         to: `/dashboard/payroll/runs/${runId}/processing` as any,
@@ -310,26 +302,16 @@ export function EmployeePayrollDetailPage() {
   }
 
   // Computed display values
-  const periodName =
-    employee?.periodName ||
-    runMeta?.periodName ||
-    "Current Period";
-  const runStatus =
-    employee?.runStatus ||
-    runMeta?.status ||
-    "Provisional";
+  const periodName = employee?.periodName || runMeta?.periodName || "Current Period";
+  const runStatus = employee?.runStatus || runMeta?.status || "Provisional";
   const statusBadgeInfo = getStatusBadge(employee?.status || runStatus);
 
   // Separate errors and warnings from employee issues
   const employeeErrors = (employee?.issues || []).filter(
-    (iss) =>
-      iss.severity?.toLowerCase() === "error" ||
-      iss.severity?.toLowerCase() === "critical"
+    (iss) => iss.severity?.toLowerCase() === "error" || iss.severity?.toLowerCase() === "critical",
   );
   const employeeWarnings = (employee?.issues || []).filter(
-    (iss) =>
-      iss.severity?.toLowerCase() !== "error" &&
-      iss.severity?.toLowerCase() !== "critical"
+    (iss) => iss.severity?.toLowerCase() !== "error" && iss.severity?.toLowerCase() !== "critical",
   );
 
   return (
@@ -370,11 +352,24 @@ export function EmployeePayrollDetailPage() {
             className="h-9 gap-1.5 text-xs"
           >
             <RefreshCw
-              className={`h-3.5 w-3.5 ${
-                isRefreshing || isLoading ? "animate-spin" : ""
-              }`}
+              className={`h-3.5 w-3.5 ${isRefreshing || isLoading ? "animate-spin" : ""}`}
             />
             <span>Refresh</span>
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              navigate({
+                to: `/dashboard/payroll/runs/${runId}/validation` as any,
+              })
+            }
+            className="h-9 gap-1.5 text-xs text-primary border-primary/30 hover:bg-primary/5"
+            title="View all validation issues for this payroll run"
+          >
+            <ShieldCheck className="h-3.5 w-3.5" />
+            <span>Validation Issues</span>
           </Button>
 
           {canRunPayroll ? (
@@ -398,10 +393,9 @@ export function EmployeePayrollDetailPage() {
           PROVISIONAL PAYROLL — Pending Final Review & Authorization
         </AlertTitle>
         <AlertDescription className="text-xs text-amber-800/90 dark:text-amber-300/90 mt-1">
-          The values displayed on this screen are provisional calculations
-          generated by the payroll engine for review and auditing purposes.
-          These values are not final until formal payroll approval and
-          finalization. Salary has <strong>NOT</strong> been paid.
+          The values displayed on this screen are provisional calculations generated by the payroll
+          engine for review and auditing purposes. These values are not final until formal payroll
+          approval and finalization. Salary has <strong>NOT</strong> been paid.
         </AlertDescription>
       </Alert>
 
@@ -487,8 +481,7 @@ export function EmployeePayrollDetailPage() {
                   >
                     {statusBadgeInfo.label}
                   </Badge>
-                  {employee.validationStatus &&
-                  employee.validationStatus !== "valid" ? (
+                  {employee.validationStatus && employee.validationStatus !== "valid" ? (
                     <Badge
                       variant="outline"
                       className="border-amber-500/30 bg-amber-500/10 text-amber-600 text-xs font-medium"
@@ -508,18 +501,14 @@ export function EmployeePayrollDetailPage() {
                   <span>•</span>
                   <div>
                     Payroll Period:{" "}
-                    <span className="font-medium text-foreground">
-                      {periodName}
-                    </span>
+                    <span className="font-medium text-foreground">{periodName}</span>
                   </div>
                   {employee.department ? (
                     <>
                       <span>•</span>
                       <div>
                         Department:{" "}
-                        <span className="font-medium text-foreground">
-                          {employee.department}
-                        </span>
+                        <span className="font-medium text-foreground">{employee.department}</span>
                       </div>
                     </>
                   ) : null}
@@ -528,9 +517,7 @@ export function EmployeePayrollDetailPage() {
                       <span>•</span>
                       <div>
                         Designation:{" "}
-                        <span className="font-medium text-foreground">
-                          {employee.designation}
-                        </span>
+                        <span className="font-medium text-foreground">{employee.designation}</span>
                       </div>
                     </>
                   ) : null}
@@ -542,9 +529,7 @@ export function EmployeePayrollDetailPage() {
                 <div className="rounded-xl border border-border bg-muted/40 px-3 py-1.5 flex items-center gap-2">
                   <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                   <span className="text-muted-foreground">Period:</span>
-                  <span className="font-semibold text-foreground">
-                    {periodName}
-                  </span>
+                  <span className="font-semibold text-foreground">{periodName}</span>
                   {employee.financialYear ? (
                     <span className="text-[10px] text-muted-foreground border-l border-border pl-2">
                       FY {employee.financialYear}
@@ -593,54 +578,40 @@ export function EmployeePayrollDetailPage() {
 
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div className="rounded-xl bg-muted/30 p-2.5">
-                  <div className="text-[10px] text-muted-foreground">
-                    Full Name
-                  </div>
-                  <div className="font-medium text-foreground mt-0.5">
-                    {employee.name}
-                  </div>
+                  <div className="text-[10px] text-muted-foreground">Full Name</div>
+                  <div className="font-medium text-foreground mt-0.5">{employee.name}</div>
                 </div>
 
                 <div className="rounded-xl bg-muted/30 p-2.5">
-                  <div className="text-[10px] text-muted-foreground">
-                    Employee Code / ID
-                  </div>
+                  <div className="text-[10px] text-muted-foreground">Employee Code / ID</div>
                   <div className="font-mono font-medium text-foreground mt-0.5">
                     {employee.employeeId}
                   </div>
                 </div>
 
                 <div className="rounded-xl bg-muted/30 p-2.5">
-                  <div className="text-[10px] text-muted-foreground">
-                    Department
-                  </div>
+                  <div className="text-[10px] text-muted-foreground">Department</div>
                   <div className="font-medium text-foreground mt-0.5">
                     {employee.department || "—"}
                   </div>
                 </div>
 
                 <div className="rounded-xl bg-muted/30 p-2.5">
-                  <div className="text-[10px] text-muted-foreground">
-                    Designation
-                  </div>
+                  <div className="text-[10px] text-muted-foreground">Designation</div>
                   <div className="font-medium text-foreground mt-0.5">
                     {employee.designation || "—"}
                   </div>
                 </div>
 
                 <div className="rounded-xl bg-muted/30 p-2.5">
-                  <div className="text-[10px] text-muted-foreground">
-                    Employment Status
-                  </div>
+                  <div className="text-[10px] text-muted-foreground">Employment Status</div>
                   <div className="font-medium text-foreground mt-0.5">
                     {employee.employmentStatus || "Active"}
                   </div>
                 </div>
 
                 <div className="rounded-xl bg-muted/30 p-2.5">
-                  <div className="text-[10px] text-muted-foreground">
-                    Joining Date
-                  </div>
+                  <div className="text-[10px] text-muted-foreground">Joining Date</div>
                   <div className="font-medium text-foreground mt-0.5">
                     {formatDate(employee.joiningDate)}
                   </div>
@@ -648,12 +619,8 @@ export function EmployeePayrollDetailPage() {
 
                 {employee.location ? (
                   <div className="rounded-xl bg-muted/30 p-2.5 col-span-2">
-                    <div className="text-[10px] text-muted-foreground">
-                      Work Location
-                    </div>
-                    <div className="font-medium text-foreground mt-0.5">
-                      {employee.location}
-                    </div>
+                    <div className="text-[10px] text-muted-foreground">Work Location</div>
+                    <div className="font-medium text-foreground mt-0.5">{employee.location}</div>
                   </div>
                 ) : null}
 
@@ -700,9 +667,7 @@ export function EmployeePayrollDetailPage() {
               {employee.attendance ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
                   <div className="rounded-xl bg-muted/30 p-3">
-                    <div className="text-[10px] text-muted-foreground">
-                      Working Days
-                    </div>
+                    <div className="text-[10px] text-muted-foreground">Working Days</div>
                     <div className="mt-1 font-display text-lg font-semibold text-foreground">
                       {employee.attendance.workingDays ?? "—"}
                     </div>
@@ -718,29 +683,21 @@ export function EmployeePayrollDetailPage() {
                   </div>
 
                   <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 p-3">
-                    <div className="text-[10px] text-rose-700 dark:text-rose-300">
-                      Unpaid / LOP
-                    </div>
+                    <div className="text-[10px] text-rose-700 dark:text-rose-300">Unpaid / LOP</div>
                     <div className="mt-1 font-display text-lg font-semibold text-rose-600 dark:text-rose-400">
-                      {employee.attendance.unpaidDays ??
-                        employee.attendance.lopDays ??
-                        "—"}
+                      {employee.attendance.unpaidDays ?? employee.attendance.lopDays ?? "—"}
                     </div>
                   </div>
 
                   <div className="rounded-xl bg-muted/30 p-3">
-                    <div className="text-[10px] text-muted-foreground">
-                      Leave Days
-                    </div>
+                    <div className="text-[10px] text-muted-foreground">Leave Days</div>
                     <div className="mt-1 font-display text-lg font-semibold text-foreground">
                       {employee.attendance.leaveDays ?? "—"}
                     </div>
                   </div>
 
                   <div className="rounded-xl bg-muted/30 p-3">
-                    <div className="text-[10px] text-muted-foreground">
-                      Overtime Hours
-                    </div>
+                    <div className="text-[10px] text-muted-foreground">Overtime Hours</div>
                     <div className="mt-1 font-display text-lg font-semibold text-foreground">
                       {employee.attendance.overtimeHours ?? "—"}
                     </div>
@@ -748,9 +705,7 @@ export function EmployeePayrollDetailPage() {
 
                   {employee.attendance.lopDays != null ? (
                     <div className="rounded-xl bg-muted/30 p-3">
-                      <div className="text-[10px] text-muted-foreground">
-                        Loss of Pay Days
-                      </div>
+                      <div className="text-[10px] text-muted-foreground">Loss of Pay Days</div>
                       <div className="mt-1 font-display text-lg font-semibold text-rose-600 dark:text-rose-400">
                         {employee.attendance.lopDays}
                       </div>
@@ -759,8 +714,7 @@ export function EmployeePayrollDetailPage() {
                 </div>
               ) : (
                 <div className="py-8 text-center text-xs text-muted-foreground">
-                  Attendance metrics were not returned by the backend for this
-                  payroll run.
+                  Attendance metrics were not returned by the backend for this payroll run.
                 </div>
               )}
             </GlassCard>
@@ -786,9 +740,7 @@ export function EmployeePayrollDetailPage() {
                 <div className="space-y-2 text-xs">
                   {employee.earnings.basic != null ? (
                     <div className="flex items-center justify-between py-1.5 border-b border-border/40">
-                      <span className="text-muted-foreground">
-                        Basic Salary
-                      </span>
+                      <span className="text-muted-foreground">Basic Salary</span>
                       <span className="font-mono font-medium text-foreground">
                         {formatINR(employee.earnings.basic)}
                       </span>
@@ -797,9 +749,7 @@ export function EmployeePayrollDetailPage() {
 
                   {employee.earnings.hra != null ? (
                     <div className="flex items-center justify-between py-1.5 border-b border-border/40">
-                      <span className="text-muted-foreground">
-                        House Rent Allowance (HRA)
-                      </span>
+                      <span className="text-muted-foreground">House Rent Allowance (HRA)</span>
                       <span className="font-mono font-medium text-foreground">
                         {formatINR(employee.earnings.hra)}
                       </span>
@@ -808,9 +758,7 @@ export function EmployeePayrollDetailPage() {
 
                   {employee.earnings.specialAllowance != null ? (
                     <div className="flex items-center justify-between py-1.5 border-b border-border/40">
-                      <span className="text-muted-foreground">
-                        Special Allowance
-                      </span>
+                      <span className="text-muted-foreground">Special Allowance</span>
                       <span className="font-mono font-medium text-foreground">
                         {formatINR(employee.earnings.specialAllowance)}
                       </span>
@@ -819,9 +767,7 @@ export function EmployeePayrollDetailPage() {
 
                   {employee.earnings.conveyance != null ? (
                     <div className="flex items-center justify-between py-1.5 border-b border-border/40">
-                      <span className="text-muted-foreground">
-                        Conveyance Allowance
-                      </span>
+                      <span className="text-muted-foreground">Conveyance Allowance</span>
                       <span className="font-mono font-medium text-foreground">
                         {formatINR(employee.earnings.conveyance)}
                       </span>
@@ -830,9 +776,7 @@ export function EmployeePayrollDetailPage() {
 
                   {employee.earnings.overtime != null ? (
                     <div className="flex items-center justify-between py-1.5 border-b border-border/40">
-                      <span className="text-muted-foreground">
-                        Overtime Amount
-                      </span>
+                      <span className="text-muted-foreground">Overtime Amount</span>
                       <span className="font-mono font-medium text-foreground">
                         {formatINR(employee.earnings.overtime)}
                       </span>
@@ -859,9 +803,7 @@ export function EmployeePayrollDetailPage() {
 
                   {employee.earnings.allowances != null ? (
                     <div className="flex items-center justify-between py-1.5 border-b border-border/40">
-                      <span className="text-muted-foreground">
-                        Other Allowances
-                      </span>
+                      <span className="text-muted-foreground">Other Allowances</span>
                       <span className="font-mono font-medium text-foreground">
                         {formatINR(employee.earnings.allowances)}
                       </span>
@@ -870,9 +812,7 @@ export function EmployeePayrollDetailPage() {
 
                   {employee.earnings.other != null ? (
                     <div className="flex items-center justify-between py-1.5">
-                      <span className="text-muted-foreground">
-                        Miscellaneous Earnings
-                      </span>
+                      <span className="text-muted-foreground">Miscellaneous Earnings</span>
                       <span className="font-mono font-medium text-foreground">
                         {formatINR(employee.earnings.other)}
                       </span>
@@ -888,11 +828,8 @@ export function EmployeePayrollDetailPage() {
                 </div>
               ) : (
                 <div className="py-6 text-center text-xs text-muted-foreground">
-                  Component-level earnings were not reported by the backend.
-                  Aggregated Gross:{" "}
-                  <strong className="text-foreground">
-                    {formatINR(employee.grossEarnings)}
-                  </strong>
+                  Component-level earnings were not reported by the backend. Aggregated Gross:{" "}
+                  <strong className="text-foreground">{formatINR(employee.grossEarnings)}</strong>
                 </div>
               )}
             </GlassCard>
@@ -915,9 +852,7 @@ export function EmployeePayrollDetailPage() {
                 <div className="space-y-2 text-xs">
                   {employee.deductions.pf != null ? (
                     <div className="flex items-center justify-between py-1.5 border-b border-border/40">
-                      <span className="text-muted-foreground">
-                        Employee EPF (Provident Fund)
-                      </span>
+                      <span className="text-muted-foreground">Employee EPF (Provident Fund)</span>
                       <span className="font-mono font-medium text-foreground">
                         {formatINR(employee.deductions.pf)}
                       </span>
@@ -926,9 +861,7 @@ export function EmployeePayrollDetailPage() {
 
                   {employee.deductions.esi != null ? (
                     <div className="flex items-center justify-between py-1.5 border-b border-border/40">
-                      <span className="text-muted-foreground">
-                        Employee ESI (State Insurance)
-                      </span>
+                      <span className="text-muted-foreground">Employee ESI (State Insurance)</span>
                       <span className="font-mono font-medium text-foreground">
                         {formatINR(employee.deductions.esi)}
                       </span>
@@ -937,35 +870,25 @@ export function EmployeePayrollDetailPage() {
 
                   {employee.deductions.pt != null ? (
                     <div className="flex items-center justify-between py-1.5 border-b border-border/40">
-                      <span className="text-muted-foreground">
-                        Professional Tax (PT)
-                      </span>
+                      <span className="text-muted-foreground">Professional Tax (PT)</span>
                       <span className="font-mono font-medium text-foreground">
                         {formatINR(employee.deductions.pt)}
                       </span>
                     </div>
                   ) : null}
 
-                  {employee.deductions.tds != null ||
-                  employee.deductions.incomeTax != null ? (
+                  {employee.deductions.tds != null || employee.deductions.incomeTax != null ? (
                     <div className="flex items-center justify-between py-1.5 border-b border-border/40">
-                      <span className="text-muted-foreground">
-                        TDS / Income Tax (Sec 192)
-                      </span>
+                      <span className="text-muted-foreground">TDS / Income Tax (Sec 192)</span>
                       <span className="font-mono font-medium text-foreground">
-                        {formatINR(
-                          employee.deductions.tds ??
-                            employee.deductions.incomeTax
-                        )}
+                        {formatINR(employee.deductions.tds ?? employee.deductions.incomeTax)}
                       </span>
                     </div>
                   ) : null}
 
                   {employee.deductions.loan != null ? (
                     <div className="flex items-center justify-between py-1.5 border-b border-border/40">
-                      <span className="text-muted-foreground">
-                        Loan Deduction
-                      </span>
+                      <span className="text-muted-foreground">Loan Deduction</span>
                       <span className="font-mono font-medium text-foreground">
                         {formatINR(employee.deductions.loan)}
                       </span>
@@ -974,9 +897,7 @@ export function EmployeePayrollDetailPage() {
 
                   {employee.deductions.advance != null ? (
                     <div className="flex items-center justify-between py-1.5 border-b border-border/40">
-                      <span className="text-muted-foreground">
-                        Salary Advance Recovery
-                      </span>
+                      <span className="text-muted-foreground">Salary Advance Recovery</span>
                       <span className="font-mono font-medium text-foreground">
                         {formatINR(employee.deductions.advance)}
                       </span>
@@ -985,9 +906,7 @@ export function EmployeePayrollDetailPage() {
 
                   {employee.deductions.other != null ? (
                     <div className="flex items-center justify-between py-1.5">
-                      <span className="text-muted-foreground">
-                        Other Deductions
-                      </span>
+                      <span className="text-muted-foreground">Other Deductions</span>
                       <span className="font-mono font-medium text-foreground">
                         {formatINR(employee.deductions.other)}
                       </span>
@@ -1003,8 +922,7 @@ export function EmployeePayrollDetailPage() {
                 </div>
               ) : (
                 <div className="py-6 text-center text-xs text-muted-foreground">
-                  Component-level deductions were not reported by the backend.
-                  Total Deductions:{" "}
+                  Component-level deductions were not reported by the backend. Total Deductions:{" "}
                   <strong className="text-foreground">
                     -{formatINR(employee.totalDeductions)}
                   </strong>
@@ -1036,35 +954,24 @@ export function EmployeePayrollDetailPage() {
               <div className="grid gap-4 sm:grid-cols-2 text-xs">
                 {/* Employee Statutory */}
                 <div className="rounded-xl border border-border bg-muted/20 p-3 space-y-2">
-                  <div className="font-semibold text-foreground">
-                    Employee Statutory Deductions
-                  </div>
+                  <div className="font-semibold text-foreground">Employee Statutory Deductions</div>
                   <div className="space-y-1">
                     <div className="flex justify-between py-1 border-b border-border/40">
                       <span className="text-muted-foreground">Employee EPF</span>
                       <span className="font-mono">
-                        {formatINR(
-                          employee.statutory?.employee?.epf ??
-                            employee.deductions?.pf
-                        )}
+                        {formatINR(employee.statutory?.employee?.epf ?? employee.deductions?.pf)}
                       </span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-border/40">
                       <span className="text-muted-foreground">Employee ESI</span>
                       <span className="font-mono">
-                        {formatINR(
-                          employee.statutory?.employee?.esi ??
-                            employee.deductions?.esi
-                        )}
+                        {formatINR(employee.statutory?.employee?.esi ?? employee.deductions?.esi)}
                       </span>
                     </div>
                     <div className="flex justify-between py-1">
                       <span className="text-muted-foreground">Professional Tax</span>
                       <span className="font-mono">
-                        {formatINR(
-                          employee.statutory?.employee?.pt ??
-                            employee.deductions?.pt
-                        )}
+                        {formatINR(employee.statutory?.employee?.pt ?? employee.deductions?.pt)}
                       </span>
                     </div>
                   </div>
@@ -1196,7 +1103,9 @@ export function EmployeePayrollDetailPage() {
                     <div className="flex justify-between py-1 border-b border-border/40">
                       <span className="text-muted-foreground">Current Gross:</span>
                       <span className="font-mono">
-                        {formatINR(employee.previousComparison.currentGross ?? employee.grossEarnings)}
+                        {formatINR(
+                          employee.previousComparison.currentGross ?? employee.grossEarnings,
+                        )}
                       </span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-border/40">
@@ -1238,6 +1147,19 @@ export function EmployeePayrollDetailPage() {
                       {employeeWarnings.length} Warnings
                     </Badge>
                   ) : null}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      navigate({
+                        to: `/dashboard/payroll/runs/${runId}/validation` as any,
+                      })
+                    }
+                    className="h-7 text-xs text-primary border-primary/30 hover:bg-primary/5 gap-1 ml-1"
+                  >
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    <span>All Run Issues (Step 6)</span>
+                  </Button>
                 </div>
               </div>
 
@@ -1273,9 +1195,7 @@ export function EmployeePayrollDetailPage() {
             <GlassCard className="p-4 border-emerald-500/30 bg-emerald-500/5">
               <div className="flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-300">
                 <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                <span>
-                  No validation findings reported for this employee record.
-                </span>
+                <span>No validation findings reported for this employee record.</span>
               </div>
             </GlassCard>
           )}
@@ -1293,9 +1213,7 @@ export function EmployeePayrollDetailPage() {
                 {employee.audit.version ? (
                   <div>
                     Engine Version:{" "}
-                    <strong className="text-foreground font-mono">
-                      {employee.audit.version}
-                    </strong>
+                    <strong className="text-foreground font-mono">{employee.audit.version}</strong>
                   </div>
                 ) : null}
                 {employee.audit.lastRecalculatedAt ? (
@@ -1313,10 +1231,7 @@ export function EmployeePayrollDetailPage() {
       )}
 
       {/* ── Recalculate Payroll Confirmation Dialog ───────────────────── */}
-      <Dialog
-        open={recalculateModalOpen}
-        onOpenChange={setRecalculateModalOpen}
-      >
+      <Dialog open={recalculateModalOpen} onOpenChange={setRecalculateModalOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 font-display text-base">
@@ -1330,7 +1245,8 @@ export function EmployeePayrollDetailPage() {
 
           <div className="space-y-3 py-2 text-xs text-muted-foreground">
             <p>
-              Recalculating will re-evaluate attendance, salary components, statutory deductions (PF, ESI, TDS), and allowances for all employees in run{" "}
+              Recalculating will re-evaluate attendance, salary components, statutory deductions
+              (PF, ESI, TDS), and allowances for all employees in run{" "}
               <strong className="text-foreground font-mono">{runId}</strong>.
             </p>
           </div>

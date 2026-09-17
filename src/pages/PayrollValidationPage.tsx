@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Link, useParams, useNavigate } from "@tanstack/react-router";
+import { useParams, useNavigate } from "@tanstack/react-router";
 import {
   AlertCircle,
   AlertTriangle,
@@ -9,7 +9,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
-  ExternalLink,
   Eye,
   FileCheck,
   Filter,
@@ -20,7 +19,6 @@ import {
   Search,
   ShieldAlert,
   ShieldCheck,
-  UserCheck,
   Users,
   X,
   XCircle,
@@ -101,35 +99,69 @@ function getValidationStatusBadge(status?: string | null): {
   if (s === "passed" || s === "completed" || s === "valid") {
     return {
       label: "Passed",
-      className:
-        "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+      className: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
     };
   }
   if (s === "failed" || s.includes("fail") || s === "error") {
     return {
       label: "Failed",
-      className:
-        "border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400",
+      className: "border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400",
     };
   }
   if (s === "warning" || s.includes("warn")) {
     return {
       label: "Warning",
-      className:
-        "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+      className: "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
     };
   }
   if (s === "validating" || s === "in_progress") {
     return {
       label: "Validating",
-      className:
-        "border-sky-500/30 bg-sky-500/10 text-sky-600 dark:text-sky-400",
+      className: "border-sky-500/30 bg-sky-500/10 text-sky-600 dark:text-sky-400",
+    };
+  }
+  if (s === "not started" || s === "draft") {
+    return {
+      label: "Not Started",
+      className: "border-border bg-muted/40 text-foreground",
     };
   }
   return {
     label: status,
     className: "border-border bg-muted/40 text-foreground",
   };
+}
+
+function renderSeverityBadge(severity?: string) {
+  const s = (severity || "").toLowerCase().trim();
+  if (s === "error" || s === "critical" || s === "fatal") {
+    return (
+      <Badge variant="destructive" className="text-[10px] font-semibold gap-1 uppercase">
+        <XCircle className="h-3 w-3" />
+        <span>{s === "critical" ? "Critical" : "Error"}</span>
+      </Badge>
+    );
+  }
+  if (s === "info") {
+    return (
+      <Badge
+        variant="outline"
+        className="text-[10px] font-medium border-sky-500/30 bg-sky-500/10 text-sky-600 dark:text-sky-400 gap-1 uppercase"
+      >
+        <Info className="h-3 w-3" />
+        <span>Info</span>
+      </Badge>
+    );
+  }
+  return (
+    <Badge
+      variant="outline"
+      className="text-[10px] font-medium border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 gap-1 uppercase"
+    >
+      <AlertTriangle className="h-3 w-3" />
+      <span>{severity ? severity : "Warning"}</span>
+    </Badge>
+  );
 }
 
 export function PayrollValidationPage() {
@@ -145,7 +177,9 @@ export function PayrollValidationPage() {
     ws.user?.role ||
     (typeof window !== "undefined" ? localStorage.getItem("user_role") : null) ||
     ""
-  ).toLowerCase().trim();
+  )
+    .toLowerCase()
+    .trim();
 
   const isAdmin =
     normalizedRole === "admin" ||
@@ -171,28 +205,29 @@ export function PayrollValidationPage() {
     !normalizedRole;
 
   const canRunPayroll =
-    isAdmin ||
-    isHr ||
-    userPermissions.includes("payroll.process") ||
-    userPermissions.includes("*");
+    isAdmin || isHr || userPermissions.includes("payroll.process") || userPermissions.includes("*");
 
   // State: Validation Data
-  const [validationData, setValidationData] =
-    useState<PayrollValidationSummary | null>(null);
+  const [validationData, setValidationData] = useState<PayrollValidationSummary | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [isUnavailable, setIsUnavailable] = useState<boolean>(false);
 
   // State: Revalidation Trigger Modal
-  const [revalidateModalOpen, setRevalidateModalOpen] =
-    useState<boolean>(false);
+  const [revalidateModalOpen, setRevalidateModalOpen] = useState<boolean>(false);
   const [isValidating, setIsValidating] = useState<boolean>(false);
+
+  // State: Recalculate Trigger Modal
+  const [recalculateModalOpen, setRecalculateModalOpen] = useState<boolean>(false);
+  const [isRecalculating, setIsRecalculating] = useState<boolean>(false);
 
   // State: Search & Filters
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedSeverity, setSelectedSeverity] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [selectedBlocking, setSelectedBlocking] = useState<string>("all");
 
   // State: Pagination
@@ -200,8 +235,7 @@ export function PayrollValidationPage() {
   const [pageSize, setPageSize] = useState<number>(10);
 
   // State: Selected Issue Detail Sheet
-  const [selectedIssue, setSelectedIssue] =
-    useState<PayrollValidationIssue | null>(null);
+  const [selectedIssue, setSelectedIssue] = useState<PayrollValidationIssue | null>(null);
   const [issueSheetOpen, setIssueSheetOpen] = useState<boolean>(false);
 
   // ── Fetch Validation Summary & Issues ───────────────────────────────
@@ -219,17 +253,15 @@ export function PayrollValidationPage() {
       if (status === 404) {
         setIsUnavailable(true);
         setApiError(
-          "Payroll validation data is currently unavailable on the backend server (404 Not Found)."
+          "Payroll validation data is currently unavailable on the backend server (404 Not Found).",
         );
       } else if (status === 401 || status === 403) {
-        setApiError(
-          "You do not have permission to view validation issues for this payroll run."
-        );
+        setApiError("You do not have permission to view validation issues for this payroll run.");
       } else {
         setApiError(
           err?.response?.data?.message ||
             err?.message ||
-            "Unable to load payroll validation findings from the backend."
+            "Unable to load payroll validation findings from the backend.",
         );
       }
       setValidationData(null);
@@ -254,31 +286,65 @@ export function PayrollValidationPage() {
     setIsValidating(true);
     try {
       const res = await payrollApi.runPayrollValidation(runId);
-      toast.success(
-        res?.message || "Payroll revalidation completed successfully."
-      );
+      toast.success(res?.message || "Payroll revalidation completed successfully.");
       setRevalidateModalOpen(false);
       await fetchValidationData();
     } catch (err: any) {
       const msg =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Failed to trigger backend validation.";
+        err?.response?.data?.message || err?.message || "Failed to trigger backend validation.";
       toast.error(msg);
     } finally {
       setIsValidating(false);
     }
   };
 
-  // ── Unique Categories for Filter Dropdown ───────────────────────────
+  // ── Trigger Recalculate ─────────────────────────────────────────────
+  const handleTriggerRecalculate = async () => {
+    if (!runId) return;
+    setIsRecalculating(true);
+    try {
+      const res = await payrollApi.recalculatePayroll(runId);
+      toast.success(res?.message || "Payroll recalculation triggered successfully.");
+      setRecalculateModalOpen(false);
+      await fetchValidationData();
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message || err?.message || "Failed to trigger recalculation.";
+      toast.error(msg);
+    } finally {
+      setIsRecalculating(false);
+    }
+  };
+
+  // ── Dynamic Options for Filters ─────────────────────────────────────
   const availableCategories = useMemo(() => {
     if (!validationData?.issues) return [];
     const cats = new Set<string>();
     validationData.issues.forEach((iss) => {
       if (iss.category) cats.add(iss.category);
     });
-    return Array.from(cats);
+    return Array.from(cats).sort();
   }, [validationData?.issues]);
+
+  const availableDepartments = useMemo(() => {
+    if (!validationData?.issues) return [];
+    const depts = new Set<string>();
+    validationData.issues.forEach((iss) => {
+      if (iss.department) depts.add(iss.department);
+    });
+    return Array.from(depts).sort();
+  }, [validationData?.issues]);
+
+  const hasBlockingInfo = useMemo(() => {
+    return Boolean(
+      validationData?.blockingCount != null ||
+      validationData?.issues?.some((iss) => iss.blocking !== undefined),
+    );
+  }, [validationData]);
+
+  const hasStatusInfo = useMemo(() => {
+    return Boolean(validationData?.issues?.some((iss) => iss.status || iss.resolved !== undefined));
+  }, [validationData]);
 
   // ── Client-Side Filtered & Searched Issues ───────────────────────────
   const filteredIssues = useMemo(() => {
@@ -292,12 +358,16 @@ export function PayrollValidationPage() {
         const matchMsg = iss.message?.toLowerCase().includes(q);
         const matchCat = iss.category?.toLowerCase().includes(q);
         const matchComp = iss.component?.toLowerCase().includes(q);
+        const matchCode = iss.code?.toLowerCase().includes(q);
+        const matchDept = iss.department?.toLowerCase().includes(q);
         if (
           !matchEmpName &&
           !matchEmpId &&
           !matchMsg &&
           !matchCat &&
-          !matchComp
+          !matchComp &&
+          !matchCode &&
+          !matchDept
         ) {
           return false;
         }
@@ -305,8 +375,13 @@ export function PayrollValidationPage() {
 
       // Severity filter
       if (selectedSeverity !== "all") {
-        if (iss.severity?.toLowerCase() !== selectedSeverity.toLowerCase()) {
-          return false;
+        const s = (iss.severity || "warning").toLowerCase();
+        if (selectedSeverity === "error") {
+          if (s !== "error" && s !== "critical" && s !== "fatal") return false;
+        } else if (selectedSeverity === "warning") {
+          if (s !== "warning" && s !== "advisory") return false;
+        } else if (selectedSeverity === "info") {
+          if (s !== "info") return false;
         }
       }
 
@@ -317,8 +392,22 @@ export function PayrollValidationPage() {
         }
       }
 
+      // Department filter
+      if (selectedDepartment !== "all") {
+        if (iss.department !== selectedDepartment) {
+          return false;
+        }
+      }
+
+      // Status filter
+      if (selectedStatus !== "all") {
+        const isResolved = Boolean(iss.resolved || iss.status === "resolved");
+        if (selectedStatus === "resolved" && !isResolved) return false;
+        if (selectedStatus === "open" && isResolved) return false;
+      }
+
       // Blocking filter
-      if (selectedBlocking !== "all") {
+      if (hasBlockingInfo && selectedBlocking !== "all") {
         const isBlocking = Boolean(iss.blocking);
         if (selectedBlocking === "blocking" && !isBlocking) return false;
         if (selectedBlocking === "non_blocking" && isBlocking) return false;
@@ -331,7 +420,10 @@ export function PayrollValidationPage() {
     searchQuery,
     selectedSeverity,
     selectedCategory,
+    selectedDepartment,
+    selectedStatus,
     selectedBlocking,
+    hasBlockingInfo,
   ]);
 
   // Pagination calculation
@@ -344,7 +436,14 @@ export function PayrollValidationPage() {
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedSeverity, selectedCategory, selectedBlocking]);
+  }, [
+    searchQuery,
+    selectedSeverity,
+    selectedCategory,
+    selectedDepartment,
+    selectedStatus,
+    selectedBlocking,
+  ]);
 
   // ── Permission Guard ────────────────────────────────────────────────
   if (ws.isRestoring) {
@@ -441,24 +540,35 @@ export function PayrollValidationPage() {
             className="h-9 gap-1.5 text-xs"
           >
             <RefreshCw
-              className={`h-3.5 w-3.5 ${
-                isRefreshing || isLoading ? "animate-spin" : ""
-              }`}
+              className={`h-3.5 w-3.5 ${isRefreshing || isLoading ? "animate-spin" : ""}`}
             />
             <span>Refresh</span>
           </Button>
 
           {canRunPayroll ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setRevalidateModalOpen(true)}
-              disabled={isLoading || isValidating}
-              className="h-9 gap-1.5 text-xs text-primary border-primary/30 hover:bg-primary/5"
-            >
-              <FileCheck className="h-3.5 w-3.5" />
-              <span>Revalidate Payroll</span>
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setRecalculateModalOpen(true)}
+                disabled={isLoading || isRecalculating}
+                className="h-9 gap-1.5 text-xs text-foreground hover:bg-muted/50"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                <span>Recalculate Run</span>
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setRevalidateModalOpen(true)}
+                disabled={isLoading || isValidating}
+                className="h-9 gap-1.5 text-xs text-primary border-primary/30 hover:bg-primary/5"
+              >
+                <FileCheck className="h-3.5 w-3.5" />
+                <span>Revalidate Payroll</span>
+              </Button>
+            </>
           ) : null}
         </div>
       </div>
@@ -470,11 +580,10 @@ export function PayrollValidationPage() {
           PROVISIONAL PAYROLL AUDIT — Validation & Issues
         </AlertTitle>
         <AlertDescription className="text-xs text-amber-800/90 dark:text-amber-300/90 mt-1">
-          Validation issues are generated by the server-side payroll engine to
-          highlight inconsistencies, missing statutory numbers, or calculation
-          discrepancies. Reviewing these issues does not finalize payroll,
-          generate final payslips, or initiate bank disbursement. Salary has{" "}
-          <strong>NOT</strong> been paid.
+          Validation issues are generated by the server-side payroll engine to highlight
+          inconsistencies, missing statutory numbers, or calculation discrepancies. Reviewing these
+          issues does not finalize payroll, generate final payslips, or initiate bank disbursement.
+          Salary has <strong>NOT</strong> been paid.
         </AlertDescription>
       </Alert>
 
@@ -565,10 +674,7 @@ export function PayrollValidationPage() {
 
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                   <div>
-                    Run ID:{" "}
-                    <span className="font-mono font-medium text-foreground">
-                      {runId}
-                    </span>
+                    Run ID: <span className="font-mono font-medium text-foreground">{runId}</span>
                   </div>
                   {validationData.periodName ? (
                     <>
@@ -607,16 +713,29 @@ export function PayrollValidationPage() {
               </div>
 
               {canRunPayroll ? (
-                <Button
-                  size="sm"
-                  onClick={() => setRevalidateModalOpen(true)}
-                  disabled={isValidating}
-                  className="gap-1.5 text-xs shadow-sm"
-                  style={{ background: "var(--gradient-brand)" }}
-                >
-                  <FileCheck className="h-3.5 w-3.5" />
-                  <span>Run Validation Check</span>
-                </Button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setRecalculateModalOpen(true)}
+                    disabled={isRecalculating}
+                    className="gap-1.5 text-xs shadow-sm"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    <span>Recalculate Run</span>
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    onClick={() => setRevalidateModalOpen(true)}
+                    disabled={isValidating}
+                    className="gap-1.5 text-xs shadow-sm"
+                    style={{ background: "var(--gradient-brand)" }}
+                  >
+                    <FileCheck className="h-3.5 w-3.5" />
+                    <span>Run Validation Check</span>
+                  </Button>
+                </div>
               ) : null}
             </div>
           </GlassCard>
@@ -631,9 +750,9 @@ export function PayrollValidationPage() {
               accent="brand"
             />
             <StatCard
-              label="Blocking Errors"
+              label="Errors / Critical"
               value={validationData.errorsCount}
-              hint="Blocks formal finalization"
+              hint="Requires remediation"
               icon={XCircle}
               accent="danger"
             />
@@ -656,8 +775,8 @@ export function PayrollValidationPage() {
               value={statusBadge.label}
               hint={
                 validationData.errorsCount > 0
-                  ? "Action required to proceed"
-                  : "Audit checks completed"
+                  ? "Remediation required"
+                  : "Validation cycle completed"
               }
               icon={ShieldCheck}
               accent={validationData.errorsCount > 0 ? "danger" : "success"}
@@ -673,18 +792,23 @@ export function PayrollValidationPage() {
                 <Input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by employee name, ID, issue message, category…"
+                  placeholder="Search by employee name, ID, issue, rule code, department…"
                   className="h-9 pl-9 text-xs bg-background/50"
                 />
+                {searchQuery ? (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                ) : null}
               </div>
 
               {/* Filters */}
               <div className="flex flex-wrap items-center gap-2">
                 {/* Severity Filter */}
-                <Select
-                  value={selectedSeverity}
-                  onValueChange={setSelectedSeverity}
-                >
+                <Select value={selectedSeverity} onValueChange={setSelectedSeverity}>
                   <SelectTrigger className="h-9 w-32 text-xs bg-background/50">
                     <SelectValue placeholder="Severity" />
                   </SelectTrigger>
@@ -692,15 +816,13 @@ export function PayrollValidationPage() {
                     <SelectItem value="all">All Severity</SelectItem>
                     <SelectItem value="error">Errors Only</SelectItem>
                     <SelectItem value="warning">Warnings Only</SelectItem>
+                    <SelectItem value="info">Info Only</SelectItem>
                   </SelectContent>
                 </Select>
 
                 {/* Category Filter */}
                 {availableCategories.length > 0 ? (
-                  <Select
-                    value={selectedCategory}
-                    onValueChange={setSelectedCategory}
-                  >
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                     <SelectTrigger className="h-9 w-36 text-xs bg-background/50">
                       <SelectValue placeholder="Category" />
                     </SelectTrigger>
@@ -715,22 +837,50 @@ export function PayrollValidationPage() {
                   </Select>
                 ) : null}
 
-                {/* Blocking Status Filter */}
-                <Select
-                  value={selectedBlocking}
-                  onValueChange={setSelectedBlocking}
-                >
-                  <SelectTrigger className="h-9 w-36 text-xs bg-background/50">
-                    <SelectValue placeholder="Impact" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Impact</SelectItem>
-                    <SelectItem value="blocking">Blocking Only</SelectItem>
-                    <SelectItem value="non_blocking">
-                      Non-Blocking Only
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                {/* Department Filter (Only if department data is provided) */}
+                {availableDepartments.length > 0 ? (
+                  <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+                    <SelectTrigger className="h-9 w-36 text-xs bg-background/50">
+                      <SelectValue placeholder="Department" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Departments</SelectItem>
+                      {availableDepartments.map((dept) => (
+                        <SelectItem key={dept} value={dept}>
+                          {dept}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : null}
+
+                {/* Status Filter (Only if status/resolved data exists) */}
+                {hasStatusInfo ? (
+                  <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                    <SelectTrigger className="h-9 w-32 text-xs bg-background/50">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Statuses</SelectItem>
+                      <SelectItem value="open">Open</SelectItem>
+                      <SelectItem value="resolved">Resolved</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : null}
+
+                {/* Blocking Status Filter (Only if backend provides blocking flags) */}
+                {hasBlockingInfo ? (
+                  <Select value={selectedBlocking} onValueChange={setSelectedBlocking}>
+                    <SelectTrigger className="h-9 w-36 text-xs bg-background/50">
+                      <SelectValue placeholder="Impact" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Impact</SelectItem>
+                      <SelectItem value="blocking">Blocking Only</SelectItem>
+                      <SelectItem value="non_blocking">Non-Blocking Only</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : null}
 
                 {/* Page Size */}
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground ml-auto sm:ml-0">
@@ -772,10 +922,6 @@ export function PayrollValidationPage() {
                 <TableBody>
                   {paginatedIssues.length > 0 ? (
                     paginatedIssues.map((iss) => {
-                      const isErr =
-                        iss.severity?.toLowerCase() === "error" ||
-                        iss.severity?.toLowerCase() === "critical" ||
-                        Boolean(iss.blocking);
                       return (
                         <TableRow
                           key={iss.id}
@@ -785,30 +931,22 @@ export function PayrollValidationPage() {
                             setIssueSheetOpen(true);
                           }}
                         >
-                          <TableCell>
-                            {isErr ? (
-                              <Badge
-                                variant="destructive"
-                                className="text-[10px] font-semibold gap-1 uppercase"
-                              >
-                                <XCircle className="h-3 w-3" />
-                                <span>Error</span>
-                              </Badge>
-                            ) : (
-                              <Badge
-                                variant="outline"
-                                className="text-[10px] font-medium border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 gap-1 uppercase"
-                              >
-                                <AlertTriangle className="h-3 w-3" />
-                                <span>Warning</span>
-                              </Badge>
-                            )}
-                          </TableCell>
+                          <TableCell>{renderSeverityBadge(iss.severity)}</TableCell>
 
                           <TableCell className="font-medium text-foreground">
                             {iss.employeeName || iss.employeeId ? (
                               <div>
-                                <div>{iss.employeeName || "—"}</div>
+                                <div className="flex items-center gap-1.5">
+                                  <span>{iss.employeeName || "—"}</span>
+                                  {iss.department ? (
+                                    <Badge
+                                      variant="outline"
+                                      className="text-[9px] bg-muted/40 font-normal px-1.5 py-0"
+                                    >
+                                      {iss.department}
+                                    </Badge>
+                                  ) : null}
+                                </div>
                                 {iss.employeeId ? (
                                   <div className="font-mono text-[10px] text-muted-foreground">
                                     {iss.employeeId}
@@ -816,9 +954,7 @@ export function PayrollValidationPage() {
                                 ) : null}
                               </div>
                             ) : (
-                              <span className="text-muted-foreground italic">
-                                Run-Level Check
-                              </span>
+                              <span className="text-muted-foreground italic">Run-Level Check</span>
                             )}
                           </TableCell>
 
@@ -847,27 +983,28 @@ export function PayrollValidationPage() {
                           </TableCell>
 
                           <TableCell>
-                            {iss.blocking ? (
-                              <Badge
-                                variant="outline"
-                                className="text-[9px] border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400 font-semibold"
-                              >
-                                Blocking
-                              </Badge>
+                            {iss.blocking !== undefined ? (
+                              iss.blocking ? (
+                                <Badge
+                                  variant="outline"
+                                  className="text-[9px] border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400 font-semibold"
+                                >
+                                  Blocking
+                                </Badge>
+                              ) : (
+                                <Badge
+                                  variant="outline"
+                                  className="text-[9px] border-border bg-muted/40 text-muted-foreground"
+                                >
+                                  Non-blocking
+                                </Badge>
+                              )
                             ) : (
-                              <Badge
-                                variant="outline"
-                                className="text-[9px] border-border bg-muted/40 text-muted-foreground"
-                              >
-                                Non-blocking
-                              </Badge>
+                              <span className="text-muted-foreground">—</span>
                             )}
                           </TableCell>
 
-                          <TableCell
-                            className="text-right"
-                            onClick={(e) => e.stopPropagation()}
-                          >
+                          <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                             {iss.employeeId ? (
                               <Button
                                 variant="ghost"
@@ -913,9 +1050,9 @@ export function PayrollValidationPage() {
                               All Payroll Validations Passed
                             </h3>
                             <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                              Zero validation issues were detected by the backend
-                              payroll engine for this run. All salary, statutory,
-                              and attendance checks conform to policy rules.
+                              Zero validation issues were detected by the backend payroll engine for
+                              this run. All salary, statutory, and attendance checks conform to
+                              policy rules.
                             </p>
                           </div>
                           <div className="pt-2">
@@ -945,8 +1082,8 @@ export function PayrollValidationPage() {
                             No matching validation issues
                           </div>
                           <p className="mt-1 text-xs text-muted-foreground">
-                            No issues matched your current search and filter
-                            criteria. Try resetting your filters.
+                            No issues matched your current search and filter criteria. Try resetting
+                            your filters.
                           </p>
                           <Button
                             variant="ghost"
@@ -955,6 +1092,8 @@ export function PayrollValidationPage() {
                               setSearchQuery("");
                               setSelectedSeverity("all");
                               setSelectedCategory("all");
+                              setSelectedDepartment("all");
+                              setSelectedStatus("all");
                               setSelectedBlocking("all");
                             }}
                             className="mt-3 text-xs text-primary"
@@ -974,8 +1113,8 @@ export function PayrollValidationPage() {
               <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
                 <div>
                   Page <strong className="text-foreground">{currentPage}</strong> of{" "}
-                  <strong className="text-foreground">{totalPages}</strong> (
-                  {filteredIssues.length} total issues)
+                  <strong className="text-foreground">{totalPages}</strong> ({filteredIssues.length}{" "}
+                  total issues)
                 </div>
 
                 <div className="flex items-center gap-1">
@@ -1014,20 +1153,7 @@ export function PayrollValidationPage() {
               <SheetTitle className="font-display text-base font-bold text-foreground">
                 Validation Issue Detail
               </SheetTitle>
-              {selectedIssue ? (
-                selectedIssue.severity === "error" ? (
-                  <Badge variant="destructive" className="text-[10px] uppercase">
-                    Error
-                  </Badge>
-                ) : (
-                  <Badge
-                    variant="outline"
-                    className="text-[10px] border-amber-500/30 bg-amber-500/10 text-amber-600 uppercase"
-                  >
-                    Warning
-                  </Badge>
-                )
-              ) : null}
+              {selectedIssue ? renderSeverityBadge(selectedIssue.severity) : null}
             </div>
             <SheetDescription className="text-xs text-muted-foreground">
               Detailed breakdown of the validation finding reported by the payroll engine.
@@ -1039,13 +1165,13 @@ export function PayrollValidationPage() {
               {/* Message Banner */}
               <div
                 className={`rounded-xl border p-3.5 ${
-                  selectedIssue.severity === "error"
+                  selectedIssue.severity === "error" || selectedIssue.severity === "critical"
                     ? "border-rose-500/30 bg-rose-500/10 text-rose-900 dark:text-rose-200"
                     : "border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-200"
                 }`}
               >
                 <div className="font-semibold mb-1 flex items-center gap-1.5">
-                  {selectedIssue.severity === "error" ? (
+                  {selectedIssue.severity === "error" || selectedIssue.severity === "critical" ? (
                     <XCircle className="h-4 w-4 text-rose-500" />
                   ) : (
                     <AlertTriangle className="h-4 w-4 text-amber-500" />
@@ -1067,36 +1193,59 @@ export function PayrollValidationPage() {
                 {selectedIssue.component ? (
                   <div className="flex justify-between py-1 border-b border-border/40">
                     <span className="text-muted-foreground">Affected Component:</span>
-                    <span className="font-medium text-foreground">
-                      {selectedIssue.component}
-                    </span>
+                    <span className="font-medium text-foreground">{selectedIssue.component}</span>
                   </div>
                 ) : null}
 
                 {selectedIssue.code ? (
                   <div className="flex justify-between py-1 border-b border-border/40">
                     <span className="text-muted-foreground">Rule Code:</span>
-                    <span className="font-mono text-foreground">
-                      {selectedIssue.code}
-                    </span>
+                    <span className="font-mono text-foreground">{selectedIssue.code}</span>
                   </div>
                 ) : null}
 
                 <div className="flex justify-between py-1 border-b border-border/40">
                   <span className="text-muted-foreground">Blocking Status:</span>
                   <span className="font-semibold text-foreground">
-                    {selectedIssue.blocking
-                      ? "Yes — Prevents finalization"
-                      : "No — Advisory warning"}
+                    {selectedIssue.blocking !== undefined
+                      ? selectedIssue.blocking
+                        ? "Yes — Prevents finalization"
+                        : "No — Advisory warning"
+                      : "Not specified by backend"}
                   </span>
                 </div>
+
+                {selectedIssue.status || selectedIssue.resolved !== undefined ? (
+                  <div className="flex justify-between py-1 border-b border-border/40">
+                    <span className="text-muted-foreground">Issue Status:</span>
+                    <span className="font-medium text-foreground capitalize">
+                      {selectedIssue.status || (selectedIssue.resolved ? "Resolved" : "Open")}
+                    </span>
+                  </div>
+                ) : null}
+
+                {selectedIssue.source ? (
+                  <div className="flex justify-between py-1 border-b border-border/40">
+                    <span className="text-muted-foreground">Reference / Source:</span>
+                    <span className="font-mono text-[11px] text-foreground">
+                      {selectedIssue.source}
+                    </span>
+                  </div>
+                ) : null}
+
+                {selectedIssue.resolution ? (
+                  <div className="flex flex-col gap-1 py-1 border-b border-border/40">
+                    <span className="text-muted-foreground">Resolution Notes:</span>
+                    <span className="text-foreground leading-relaxed">
+                      {selectedIssue.resolution}
+                    </span>
+                  </div>
+                ) : null}
 
                 {selectedIssue.detectedAt ? (
                   <div className="flex justify-between py-1 border-b border-border/40">
                     <span className="text-muted-foreground">Detected At:</span>
-                    <span className="text-foreground">
-                      {formatDate(selectedIssue.detectedAt)}
-                    </span>
+                    <span className="text-foreground">{formatDate(selectedIssue.detectedAt)}</span>
                   </div>
                 ) : null}
 
@@ -1108,12 +1257,18 @@ export function PayrollValidationPage() {
                         {selectedIssue.employeeName || "—"}
                       </span>
                     </div>
-                    <div className="flex justify-between py-1">
+                    <div className="flex justify-between py-1 border-b border-border/40">
                       <span className="text-muted-foreground">Employee ID:</span>
                       <span className="font-mono text-foreground">
                         {selectedIssue.employeeId || "—"}
                       </span>
                     </div>
+                    {selectedIssue.department ? (
+                      <div className="flex justify-between py-1">
+                        <span className="text-muted-foreground">Department:</span>
+                        <span className="text-foreground">{selectedIssue.department}</span>
+                      </div>
+                    ) : null}
                   </>
                 ) : null}
               </div>
@@ -1143,10 +1298,7 @@ export function PayrollValidationPage() {
       </Sheet>
 
       {/* ── Revalidate Payroll Confirmation Dialog ────────────────────── */}
-      <Dialog
-        open={revalidateModalOpen}
-        onOpenChange={setRevalidateModalOpen}
-      >
+      <Dialog open={revalidateModalOpen} onOpenChange={setRevalidateModalOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 font-display text-base">
@@ -1160,7 +1312,8 @@ export function PayrollValidationPage() {
 
           <div className="space-y-3 py-2 text-xs text-muted-foreground">
             <p>
-              Revalidating will re-audit all statutory deductions, tax slabs (Section 192), attendance thresholds, and CTC structures for run{" "}
+              Revalidating will re-audit all statutory deductions, tax slabs (Section 192),
+              attendance thresholds, and CTC structures for run{" "}
               <strong className="text-foreground font-mono">{runId}</strong>.
             </p>
           </div>
@@ -1188,6 +1341,55 @@ export function PayrollValidationPage() {
                 <FileCheck className="h-3.5 w-3.5" />
               )}
               <span>Execute Validation</span>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Recalculate Payroll Confirmation Dialog ───────────────────── */}
+      <Dialog open={recalculateModalOpen} onOpenChange={setRecalculateModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 font-display text-base">
+              <RotateCcw className="h-4 w-4 text-primary" />
+              Recalculate Payroll Run
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Trigger a fresh calculation cycle for this payroll run on the backend engine.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2 text-xs text-muted-foreground">
+            <p>
+              Recalculating will re-evaluate attendance, salary components, statutory deductions
+              (PF, ESI, TDS), and allowances for all employees in run{" "}
+              <strong className="text-foreground font-mono">{runId}</strong>.
+            </p>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setRecalculateModalOpen(false)}
+              disabled={isRecalculating}
+              className="text-xs"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleTriggerRecalculate}
+              disabled={isRecalculating}
+              className="text-xs gap-1.5"
+            >
+              {isRecalculating ? (
+                <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <RotateCcw className="h-3.5 w-3.5" />
+              )}
+              <span>Execute Recalculation</span>
             </Button>
           </DialogFooter>
         </DialogContent>
