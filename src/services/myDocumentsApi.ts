@@ -1,4 +1,5 @@
 import { apiInstance } from "@/api";
+import { payrollApi, type PayslipHistoryItem } from "./payrollApi";
 
 export type EmployeeDocumentStatus = "PENDING" | "VERIFIED" | "REJECTED" | string;
 
@@ -17,6 +18,7 @@ export interface EmployeeDocument {
   status: EmployeeDocumentStatus;
   rejectionReason: string | null;
   tags: string | null;
+  fileUrl?: string | null;
 }
 
 export interface DocumentCategory {
@@ -33,6 +35,22 @@ export interface ProvisionSlip {
   generatedAt: string | null;
   status: string | null;
   downloadUrl: string | null;
+}
+
+/** A direct view of authentic Payroll API records for the legacy employee portal export. */
+export interface SalarySlipRecord {
+  id: string;
+  runId: string | null;
+  employeeId: string | null;
+  employeeName: string | null;
+  periodName: string | null;
+  payslipNumber: string | null;
+  grossSalary: number | null;
+  deductions: number | null;
+  netSalary: number | null;
+  generatedDate: string | null;
+  status: string;
+  hasDocument: boolean;
 }
 
 export interface UploadEmployeeDocumentPayload {
@@ -90,6 +108,7 @@ function mapEmployeeDocument(data: UnknownRecord): EmployeeDocument {
   const tags = asString(data.tags);
   const categoryValue = isRecord(data.category) ? data.category.name : data.category_name;
   const typeValue = data.document_type ?? data.type ?? tagValue(tags, "type");
+  const fileUrl = asString(data.document_url ?? data.file_path ?? data.file_url ?? data.download_url);
 
   return {
     id: String(data.id ?? ""),
@@ -103,11 +122,12 @@ function mapEmployeeDocument(data: UnknownRecord): EmployeeDocument {
     fileSize: asNumber(data.file_size ?? data.fileSize),
     expiryDate: asString(data.expiry_date ?? data.expiryDate),
     uploadedAt: asString(data.created_at ?? data.uploaded_at ?? data.uploadedAt),
-    status: String(data.status ?? data.status_field ?? "PENDING").toUpperCase(),
+    status: String(data.status ?? data.status_field ?? "").toUpperCase(),
     rejectionReason: asString(
       data.rejection_reason ?? data.rejectionReason ?? data.review_comment ?? data.comments,
     ),
     tags,
+    fileUrl,
   };
 }
 
@@ -126,20 +146,10 @@ function mapProvisionSlip(data: UnknownRecord): ProvisionSlip {
   };
 }
 
-function addDocumentMetadata(form: FormData, payload: Omit<UploadEmployeeDocumentPayload, "file">) {
-  form.append("title", payload.name);
-  form.append("description", payload.description ?? "");
-  form.append("expiry_date", payload.expiryDate ?? "");
-  form.append("visibility", "PRIVATE");
-  form.append("status_field", "PENDING");
-  // The existing document schema stores employee-entered type/category metadata in tags.
-  form.append("tags", `employee-self-service,type:${payload.type},category:${payload.categoryId}`);
-}
-
 export const myDocumentsApi = {
   /**
    * Uses the authenticated request token and scopes the query to the signed-in employee.
-   * The API must also enforce the same ownership check server-side.
+   * The API must also enforce employee ownership server-side.
    */
   async listMyDocuments(employeeId: string, search?: string): Promise<EmployeeDocument[]> {
     const response = await apiInstance.get("/documents/employees", {
@@ -153,7 +163,7 @@ export const myDocumentsApi = {
       skipCache: true,
     });
 
-    // Keep an additional client-side guard; authorization is still enforced by the API.
+    // This is a second safety guard in the client; it is not a substitute for API authorization.
     return asList(response.data)
       .map(mapEmployeeDocument)
       .filter((document) => document.id && document.employeeId === employeeId);
@@ -164,13 +174,12 @@ export const myDocumentsApi = {
       headers: { "Cache-Control": "no-cache" },
       skipCache: true,
     });
-
     return asList(response.data)
-      .map((category) => ({
-        id: String(category.id ?? category.category_id ?? ""),
-        name: String(category.name ?? category.title ?? ""),
+      .map((cat) => ({
+        id: String(cat.id ?? cat.category_id ?? ""),
+        name: String(cat.name ?? cat.title ?? ""),
       }))
-      .filter((category) => category.id && category.name);
+      .filter((cat) => cat.id && cat.name);
   },
 
   async uploadMyDocument(payload: UploadEmployeeDocumentPayload): Promise<void> {
@@ -178,7 +187,13 @@ export const myDocumentsApi = {
     form.append("file", payload.file);
     form.append("employee_id", payload.employeeId);
     form.append("category_id", payload.categoryId);
-    addDocumentMetadata(form, payload);
+    form.append("title", payload.name);
+    form.append("description", payload.description ?? "");
+    form.append("expiry_date", payload.expiryDate ?? "");
+    form.append("visibility", "PRIVATE");
+    form.append("status_field", "PENDING");
+    form.append("tags", `employee-self-service,type:${payload.type},category:${payload.categoryId}`);
+
     await apiInstance.post("/documents/employees", form, {
       headers: { "Content-Type": "multipart/form-data" },
     });
@@ -195,6 +210,7 @@ export const myDocumentsApi = {
     form.append("expiry_date", payload.expiryDate ?? "");
     form.append("status_field", "PENDING");
     form.append("tags", `employee-self-service,type:${payload.type}`);
+
     await apiInstance.put(`/documents/employees/${documentId}`, form, {
       headers: { "Content-Type": "multipart/form-data" },
     });
@@ -212,8 +228,31 @@ export const myDocumentsApi = {
     return response.data as Blob;
   },
 
-  /** The payroll API resolves the employee from the authenticated session. */
-  async listMyProvisionSlips(): Promise<ProvisionSlip[]> {
+  /** Reuses the authenticated payroll history endpoint; never synthesizes a salary-slip row. */
+  async listMySalarySlips(): Promise<SalarySlipRecord[]> {
+    const response = await payrollApi.getMyPayslips({ limit: 100 });
+    return response.items.map((item: PayslipHistoryItem) => ({
+      id: item.id,
+      runId: item.runId ?? null,
+      employeeId: item.employeeId ?? null,
+      employeeName: item.employeeName ?? null,
+      periodName: item.periodName ?? null,
+      payslipNumber: item.payslipNumber ?? null,
+      grossSalary: item.grossEarnings ?? null,
+      deductions: item.totalDeductions ?? null,
+      netSalary: item.netPay ?? null,
+      generatedDate: item.finalizedAt ?? null,
+      status: item.status ?? "",
+      hasDocument: item.hasDocument === true,
+    }));
+  },
+
+  async downloadMySalarySlip(runId: string, employeeId: string): Promise<Blob> {
+    return payrollApi.downloadPayslip(runId, employeeId);
+  },
+
+  /** The payroll service scopes this resource from the authenticated session. */
+  async listMyProvisionSlips(_employeeId?: string): Promise<ProvisionSlip[]> {
     const response = await apiInstance.get("/api/v2/payroll/my-provision-slips", {
       headers: { "Cache-Control": "no-cache" },
       skipCache: true,
@@ -232,5 +271,16 @@ export const myDocumentsApi = {
     return response.data as Blob;
   },
 };
+
+export function triggerFileDownload(blob: Blob, fileName: string) {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = fileName;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
 
 export default myDocumentsApi;
