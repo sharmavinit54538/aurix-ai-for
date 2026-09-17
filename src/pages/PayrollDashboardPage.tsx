@@ -19,7 +19,6 @@ import {
   X,
   XCircle,
 } from "lucide-react";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import { GlassCard, StatCard, EmptyState, Skeleton } from "@/components/hrms/Shared";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -46,7 +45,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAurix } from "@/lib/aurix-store";
 import { useAppSelector } from "@/redux/hooks";
@@ -330,116 +329,71 @@ export function PayrollDashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* ── Page Header ────────────────────────────────────────────── */}
-      <PageHeader
-        title="Payroll Dashboard"
-        description="Manage payroll processing, review payroll readiness, and monitor payroll status."
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Period Selector */}
-            <div className="w-52">
-              {loadingPeriods ? (
-                <Skeleton className="h-9 w-full" />
-              ) : periods.length > 0 ? (
-                <Select
-                  value={selectedPeriodId}
-                  onValueChange={handlePeriodChange}
-                  aria-label="Select payroll period"
-                >
-                  <SelectTrigger className="h-9 w-full bg-card/60 backdrop-blur-xl">
-                    <Calendar className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
-                    <SelectValue placeholder="Select period" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {periods.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.name} {p.isCurrent ? "(Current)" : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <div
-                  className="flex h-9 items-center justify-between rounded-md border border-border bg-muted/40 px-3 text-xs text-muted-foreground"
-                  title="No payroll periods available from backend"
-                >
-                  <span className="truncate">No payroll periods available</span>
-                </div>
-              )}
+      {/* ── Top Action Controls Bar ───────────────────────────────── */}
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        {/* Period Selector */}
+        <div className="w-52">
+          {loadingPeriods ? (
+            <Skeleton className="h-9 w-full" />
+          ) : periods.length > 0 ? (
+            <Select
+              value={selectedPeriodId}
+              onValueChange={handlePeriodChange}
+              aria-label="Select payroll period"
+            >
+              <SelectTrigger className="h-9 w-full bg-card/60 backdrop-blur-xl">
+                <Calendar className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
+                <SelectValue placeholder="Select period" />
+              </SelectTrigger>
+              <SelectContent>
+                {periods.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name} {p.isCurrent ? "(Current)" : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <div
+              className="flex h-9 items-center justify-between rounded-md border border-border bg-muted/40 px-3 text-xs text-muted-foreground"
+              title="No payroll periods available from backend"
+            >
+              <span className="truncate">No payroll periods available</span>
             </div>
+          )}
+        </div>
 
-            {/* Refresh Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                fetchPeriods();
-                if (selectedPeriodId) fetchDashboardData(selectedPeriodId);
-              }}
-              disabled={loadingDashboard || loadingPeriods}
-              className="h-9 gap-1.5"
-              aria-label="Refresh payroll dashboard"
-            >
-              <RefreshCw
-                className={`h-3.5 w-3.5 ${
-                  loadingDashboard || loadingPeriods ? "animate-spin" : ""
-                }`}
-              />
-              <span className="hidden sm:inline">Refresh</span>
-            </Button>
 
-            {/* Primary Action: Run Payroll */}
-            {canRunPayroll ? (
-              <Button
-                size="sm"
-                onClick={() => setConfirmModalOpen(true)}
-                disabled={
-                  loadingDashboard ||
-                  !selectedPeriodId ||
-                  hasBlockingReadinessErrors
-                }
-                className="h-9 gap-1.5 shadow-sm"
-                style={{ background: "var(--gradient-brand)" }}
-                title={
-                  hasBlockingReadinessErrors
-                    ? "Cannot run payroll while readiness errors exist"
-                    : !selectedPeriodId
-                    ? "Select a payroll period first"
-                    : "Run provisional payroll"
-                }
-              >
-                <Play className="h-3.5 w-3.5 fill-current" />
-                <span>Run Payroll</span>
-              </Button>
-            ) : null}
-          </div>
-        }
-      />
+        {/* Primary Action: Run Payroll */}
+        {canRunPayroll ? (
+          <Button
+            size="sm"
+            onClick={() => setConfirmModalOpen(true)}
+            disabled={
+              loadingDashboard ||
+              !selectedPeriodId ||
+              hasBlockingReadinessErrors
+            }
+            className="h-9 gap-1.5 shadow-sm"
+            style={
+              !selectedPeriodId || loadingDashboard || hasBlockingReadinessErrors
+                ? undefined
+                : { background: "var(--gradient-brand)" }
+            }
+            title={
+              hasBlockingReadinessErrors
+                ? "Cannot run payroll while readiness errors exist"
+                : !selectedPeriodId
+                ? "Select a payroll period first"
+                : "Run provisional payroll"
+            }
+          >
+            <Play className="h-3.5 w-3.5 fill-current" />
+            <span>Run Payroll</span>
+          </Button>
+        ) : null}
+      </div>
 
-      {/* ── API Error Alert with Retry ───────────────────────────────── */}
-      {apiError ? (
-        <Alert variant="destructive" className="border-rose-500/30 bg-rose-500/10">
-          <AlertCircle className="h-4 w-4 text-rose-600 dark:text-rose-400" />
-          <AlertTitle className="text-sm font-semibold">
-            Unable to load payroll dashboard
-          </AlertTitle>
-          <AlertDescription className="mt-1 flex flex-wrap items-center justify-between gap-3 text-xs">
-            <span>{apiError}</span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                fetchPeriods();
-                if (selectedPeriodId) fetchDashboardData(selectedPeriodId);
-              }}
-              className="h-7 border-rose-500/30 bg-background/80 px-2.5 text-xs hover:bg-rose-500/20"
-            >
-              <RefreshCw className="mr-1.5 h-3 w-3" />
-              Retry
-            </Button>
-          </AlertDescription>
-        </Alert>
-      ) : null}
 
       {/* ── Summary Cards ───────────────────────────────────────────── */}
       <section aria-labelledby="summary-cards-heading">
