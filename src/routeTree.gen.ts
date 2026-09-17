@@ -44,6 +44,7 @@ import { Route as DashboardResourcesRouteImport } from './routes/dashboard.resou
 import { Route as DashboardReportsRouteImport } from './routes/dashboard.reports'
 import { Route as DashboardRecruitmentRouteImport } from './routes/dashboard/recruitment'
 import { Route as DashboardPerformanceRouteImport } from './routes/dashboard.performance'
+import { Route as DashboardPayrollRouteImport } from './routes/dashboard.payroll'
 import { Route as DashboardOnboardingChecklistRouteImport } from './routes/dashboard.onboarding-checklist'
 import { Route as DashboardOffboardingRouteImport } from './routes/dashboard.offboarding'
 import { Route as DashboardManagersRouteImport } from './routes/dashboard.managers'
@@ -386,6 +387,11 @@ const DashboardRecruitmentRoute = DashboardRecruitmentRouteImport.update({
 const DashboardPerformanceRoute = DashboardPerformanceRouteImport.update({
   id: '/performance',
   path: '/performance',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardPayrollRoute = DashboardPayrollRouteImport.update({
+  id: '/payroll',
+  path: '/payroll',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardOnboardingChecklistRoute =
@@ -1401,6 +1407,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/managers': typeof DashboardManagersRoute
   '/dashboard/offboarding': typeof DashboardOffboardingRoute
   '/dashboard/onboarding-checklist': typeof DashboardOnboardingChecklistRoute
+  '/dashboard/payroll': typeof DashboardPayrollRoute
   '/dashboard/performance': typeof DashboardPerformanceRoute
   '/dashboard/recruitment': typeof DashboardRecruitmentRouteWithChildren
   '/dashboard/reports': typeof DashboardReportsRoute
@@ -1599,6 +1606,7 @@ export interface FileRoutesByTo {
   '/dashboard/managers': typeof DashboardManagersRoute
   '/dashboard/offboarding': typeof DashboardOffboardingRoute
   '/dashboard/onboarding-checklist': typeof DashboardOnboardingChecklistRoute
+  '/dashboard/payroll': typeof DashboardPayrollRoute
   '/dashboard/performance': typeof DashboardPerformanceRoute
   '/dashboard/reports': typeof DashboardReportsRoute
   '/dashboard/roles': typeof DashboardRolesRoute
@@ -1796,6 +1804,7 @@ export interface FileRoutesById {
   '/dashboard/managers': typeof DashboardManagersRoute
   '/dashboard/offboarding': typeof DashboardOffboardingRoute
   '/dashboard/onboarding-checklist': typeof DashboardOnboardingChecklistRoute
+  '/dashboard/payroll': typeof DashboardPayrollRoute
   '/dashboard/performance': typeof DashboardPerformanceRoute
   '/dashboard/recruitment': typeof DashboardRecruitmentRouteWithChildren
   '/dashboard/reports': typeof DashboardReportsRoute
@@ -2003,6 +2012,7 @@ export interface FileRouteTypes {
     | '/dashboard/managers'
     | '/dashboard/offboarding'
     | '/dashboard/onboarding-checklist'
+    | '/dashboard/payroll'
     | '/dashboard/performance'
     | '/dashboard/recruitment'
     | '/dashboard/reports'
@@ -2201,6 +2211,7 @@ export interface FileRouteTypes {
     | '/dashboard/managers'
     | '/dashboard/offboarding'
     | '/dashboard/onboarding-checklist'
+    | '/dashboard/payroll'
     | '/dashboard/performance'
     | '/dashboard/reports'
     | '/dashboard/roles'
@@ -2397,6 +2408,7 @@ export interface FileRouteTypes {
     | '/dashboard/managers'
     | '/dashboard/offboarding'
     | '/dashboard/onboarding-checklist'
+    | '/dashboard/payroll'
     | '/dashboard/performance'
     | '/dashboard/recruitment'
     | '/dashboard/reports'
@@ -2812,6 +2824,13 @@ declare module '@tanstack/react-router' {
       path: '/performance'
       fullPath: '/dashboard/performance'
       preLoaderRoute: typeof DashboardPerformanceRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/payroll': {
+      id: '/dashboard/payroll'
+      path: '/payroll'
+      fullPath: '/dashboard/payroll'
+      preLoaderRoute: typeof DashboardPayrollRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/onboarding-checklist': {
@@ -4459,6 +4478,7 @@ interface DashboardRouteChildren {
   DashboardManagersRoute: typeof DashboardManagersRoute
   DashboardOffboardingRoute: typeof DashboardOffboardingRoute
   DashboardOnboardingChecklistRoute: typeof DashboardOnboardingChecklistRoute
+  DashboardPayrollRoute: typeof DashboardPayrollRoute
   DashboardPerformanceRoute: typeof DashboardPerformanceRoute
   DashboardRecruitmentRoute: typeof DashboardRecruitmentRouteWithChildren
   DashboardReportsRoute: typeof DashboardReportsRoute
@@ -4507,6 +4527,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardManagersRoute: DashboardManagersRoute,
   DashboardOffboardingRoute: DashboardOffboardingRoute,
   DashboardOnboardingChecklistRoute: DashboardOnboardingChecklistRoute,
+  DashboardPayrollRoute: DashboardPayrollRoute,
   DashboardPerformanceRoute: DashboardPerformanceRoute,
   DashboardRecruitmentRoute: DashboardRecruitmentRouteWithChildren,
   DashboardReportsRoute: DashboardReportsRoute,
