@@ -478,7 +478,12 @@ export function DashboardShell() {
     if (!authReady || ws.isRestoring) return;
 
     if (!ws.user) {
-      navigate({ to: "/login", replace: true });
+      // Only redirect to login when there is no valid access token.
+      // If the token is still valid (e.g. 1-year expiry) the bootstrap
+      // will eventually restore the user — don't kick out prematurely.
+      if (!hasValidAccessToken()) {
+        navigate({ to: "/login", replace: true });
+      }
       return;
     }
 

@@ -639,13 +639,7 @@ export function EmployeeDocumentsPage() {
   return (
     <div className="min-h-screen space-y-6 p-4 sm:p-6 lg:p-8 bg-background text-foreground">
       {/* ── Page Header ────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">My Documents</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage and view your personal employment documents.
-          </p>
-        </div>
+      <div className="flex justify-end">
         <div className="flex items-center gap-3">
           <Button
             onClick={handleOpenUploadModal}

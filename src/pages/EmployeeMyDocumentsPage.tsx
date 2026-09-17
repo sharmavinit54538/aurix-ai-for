@@ -376,15 +376,11 @@ export function EmployeeMyDocumentsPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 py-2">
-      <PageHeader
-        title="My Documents"
-        description="Manage and view your personal employment documents."
-        actions={
-          <Button size="sm" onClick={() => setUploadOpen(true)}>
-            <Upload className="mr-2 h-4 w-4" /> Upload Document
-          </Button>
-        }
-      />
+      <div className="flex justify-end">
+        <Button size="sm" onClick={() => setUploadOpen(true)}>
+          <Upload className="mr-2 h-4 w-4" /> Upload Document
+        </Button>
+      </div>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <SummaryCard label="Total Documents" value={stats.total} icon={FileText} tone="blue" />
