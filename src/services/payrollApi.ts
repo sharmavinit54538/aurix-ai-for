@@ -534,6 +534,189 @@ export interface PayrollFinalizationData {
   [key: string]: unknown;
 }
 
+// ── Step 9: Final Payslip Interfaces ──────────────────────────────────
+
+export interface PayrollPayslipEmployeeInfo {
+  id: string;
+  name: string;
+  department?: string | null;
+  designation?: string | null;
+  location?: string | null;
+  joiningDate?: string | null;
+  employmentStatus?: string | null;
+  pan?: string | null;
+  uan?: string | null;
+  pfNumber?: string | null;
+  esiNumber?: string | null;
+  bankInfo?: {
+    bankName?: string | null;
+    accountNumber?: string | null;
+    ifscCode?: string | null;
+    paymentMode?: string | null;
+  } | null;
+}
+
+export interface PayrollPayslipEarnings {
+  basic?: number | null;
+  hra?: number | null;
+  conveyance?: number | null;
+  specialAllowance?: number | null;
+  medicalAllowance?: number | null;
+  otherAllowances?: number | null;
+  overtime?: number | null;
+  bonus?: number | null;
+  incentives?: number | null;
+  arrears?: number | null;
+  reimbursements?: number | null;
+  otherEarnings?: number | null;
+  grossEarnings?: number | null;
+  components?: Array<{
+    name: string;
+    amount: number | null;
+    type?: string | null;
+    frequency?: string | null;
+  }>;
+}
+
+export interface PayrollPayslipDeductions {
+  pf?: number | null;
+  esi?: number | null;
+  pt?: number | null;
+  tds?: number | null;
+  loan?: number | null;
+  advance?: number | null;
+  otherDeductions?: number | null;
+  totalDeductions?: number | null;
+  components?: Array<{
+    name: string;
+    amount: number | null;
+    type?: string | null;
+  }>;
+}
+
+export interface PayrollPayslipStatutory {
+  employeePf?: number | null;
+  employerPf?: number | null;
+  employeeEsi?: number | null;
+  employerEsi?: number | null;
+  pt?: number | null;
+  tds?: number | null;
+  eps?: number | null;
+  edli?: number | null;
+  other?: Record<string, any> | null;
+}
+
+export interface PayrollPayslipEmployerContributions {
+  pf?: number | null;
+  esi?: number | null;
+  eps?: number | null;
+  edli?: number | null;
+  total?: number | null;
+  components?: Array<{ name: string; amount: number | null }>;
+}
+
+export interface PayrollPayslipAttendance {
+  workingDays?: number | null;
+  paidDays?: number | null;
+  lopDays?: number | null;
+  leaveDays?: number | null;
+  presentDays?: number | null;
+  holidays?: number | null;
+  weeklyOffs?: number | null;
+  overtimeHours?: number | null;
+  [key: string]: unknown;
+}
+
+export interface PayrollPayslipYTD {
+  grossEarnings?: number | null;
+  taxableIncome?: number | null;
+  tds?: number | null;
+  employeePf?: number | null;
+  employerPf?: number | null;
+  esi?: number | null;
+  netPay?: number | null;
+  [key: string]: unknown;
+}
+
+export interface PayrollPayslipDocument {
+  pdfUrl?: string | null;
+  downloadUrl?: string | null;
+  documentId?: string | null;
+  hasDocument?: boolean;
+  mimeType?: string | null;
+}
+
+export interface PayrollPayslipData {
+  id: string;
+  runId: string;
+  employeeId: string;
+  payslipNumber?: string | null;
+  referenceNumber?: string | null;
+  periodName?: string | null;
+  periodId?: string | null;
+  financialYear?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  paymentDate?: string | null;
+  finalizedAt?: string | null;
+  finalizedByName?: string | null;
+  status: string;
+  isFinalized: boolean;
+  isLocked?: boolean;
+  employee: PayrollPayslipEmployeeInfo;
+  attendance: PayrollPayslipAttendance;
+  earnings: PayrollPayslipEarnings;
+  deductions: PayrollPayslipDeductions;
+  statutory?: PayrollPayslipStatutory | null;
+  employerContributions?: PayrollPayslipEmployerContributions | null;
+  netPay: number | null;
+  netPayInWords?: string | null;
+  salaryStructure?: {
+    name?: string | null;
+    effectiveDate?: string | null;
+    components?: Record<string, any> | null;
+  } | null;
+  ytd?: PayrollPayslipYTD | null;
+  document?: PayrollPayslipDocument | null;
+  notes?: string | null;
+  [key: string]: unknown;
+}
+
+export interface PayslipHistoryItem {
+  id: string;
+  runId?: string | null;
+  employeeId?: string | null;
+  employeeName?: string | null;
+  department?: string | null;
+  periodName?: string | null;
+  financialYear?: string | null;
+  payslipNumber?: string | null;
+  netPay?: number | null;
+  grossEarnings?: number | null;
+  totalDeductions?: number | null;
+  status?: string | null;
+  isFinalized?: boolean;
+  finalizedAt?: string | null;
+  paymentDate?: string | null;
+  hasDocument?: boolean;
+  [key: string]: unknown;
+}
+
+export interface GeneratePayslipsPayload {
+  employeeIds?: string[];
+  force?: boolean;
+  format?: "pdf" | "html" | string;
+}
+
+export interface GeneratePayslipsResponse {
+  success: boolean;
+  message?: string;
+  generatedCount?: number;
+  totalCount?: number;
+  documentIds?: string[];
+  [key: string]: unknown;
+}
+
 // ── Helper to extract API data safely ─────────────────────────────────
 
 function extractData<T>(res: unknown): T {
@@ -1467,6 +1650,197 @@ export function normalizePayrollFinalizationData(
   };
 }
 
+// ── Step 9: Normalize Payslip Data ────────────────────────────────────
+
+export function normalizePayrollPayslipData(
+  runId: string,
+  employeeId: string,
+  raw: any,
+  empFallback?: PayrollPreviewEmployee | null,
+  finalFallback?: PayrollFinalizationData | null,
+): PayrollPayslipData {
+  const d = raw || {};
+  const emp = d.employee || empFallback || {};
+  const att = d.attendance || empFallback?.attendance || {};
+  const earn = d.earnings || empFallback?.earnings || {};
+  const ded = d.deductions || empFallback?.deductions || {};
+  const stat = d.statutory || empFallback?.statutory || {};
+  const doc = d.document || d.payslipDocument || {};
+
+  const rawStatus =
+    d.status ||
+    d.payslipStatus ||
+    finalFallback?.status ||
+    empFallback?.runStatus ||
+    "Finalized";
+
+  const isFinalized = Boolean(
+    d.isFinalized ||
+    d.is_finalized ||
+    finalFallback?.isFinalized ||
+    String(rawStatus).toLowerCase() === "finalized" ||
+    String(rawStatus).toLowerCase() === "closed" ||
+    String(rawStatus).toLowerCase() === "locked",
+  );
+
+  const isLocked = Boolean(
+    d.isLocked ||
+    d.is_locked ||
+    finalFallback?.isLocked ||
+    String(rawStatus).toLowerCase() === "locked" ||
+    String(rawStatus).toLowerCase() === "finalized",
+  );
+
+  return {
+    id: d.id || d.payslipId || d.payslip_id || `${runId}_${employeeId}`,
+    runId: d.runId || d.run_id || runId,
+    employeeId: d.employeeId || d.employee_id || employeeId,
+    payslipNumber:
+      d.payslipNumber ||
+      d.payslip_number ||
+      d.referenceNumber ||
+      d.reference_number ||
+      d.slipNo ||
+      null,
+    referenceNumber:
+      d.referenceNumber ||
+      d.reference_number ||
+      finalFallback?.finalization?.referenceNumber ||
+      null,
+    periodName:
+      d.periodName ||
+      d.period_name ||
+      finalFallback?.periodName ||
+      empFallback?.periodName ||
+      null,
+    periodId:
+      d.periodId ||
+      d.period_id ||
+      finalFallback?.periodId ||
+      empFallback?.periodId ||
+      null,
+    financialYear:
+      d.financialYear ||
+      d.financial_year ||
+      empFallback?.financialYear ||
+      null,
+    startDate: d.startDate || d.start_date || d.periodStartDate || null,
+    endDate: d.endDate || d.end_date || d.periodEndDate || null,
+    paymentDate: d.paymentDate || d.payment_date || null,
+    finalizedAt:
+      d.finalizedAt ||
+      d.finalized_at ||
+      finalFallback?.finalization?.finalizedAt ||
+      null,
+    finalizedByName:
+      d.finalizedByName ||
+      d.finalized_by_name ||
+      finalFallback?.finalization?.finalizedByName ||
+      null,
+    status: rawStatus,
+    isFinalized,
+    isLocked,
+    employee: {
+      id: emp.id || emp.employeeId || employeeId,
+      name: emp.name || emp.employeeName || emp.full_name || "—",
+      department: emp.department || emp.dept || null,
+      designation: emp.designation || emp.role || null,
+      location: emp.location || emp.branch || null,
+      joiningDate: emp.joiningDate || emp.joining_date || emp.doj || null,
+      employmentStatus: emp.employmentStatus || emp.employment_status || null,
+      pan: emp.pan || emp.panNumber || emp.pan_number || null,
+      uan: emp.uan || emp.uanNumber || emp.uan_number || null,
+      pfNumber: emp.pfNumber || emp.pf_number || null,
+      esiNumber: emp.esiNumber || emp.esi_number || null,
+      bankInfo: emp.bankInfo || emp.bank || null,
+    },
+    attendance: {
+      workingDays: att.workingDays ?? att.working_days ?? att.totalDays ?? null,
+      paidDays: att.paidDays ?? att.paid_days ?? null,
+      lopDays: att.lopDays ?? att.lop_days ?? att.unpaidDays ?? null,
+      leaveDays: att.leaveDays ?? att.leave_days ?? null,
+      presentDays: att.presentDays ?? att.present_days ?? null,
+      holidays: att.holidays ?? att.holiday_days ?? null,
+      weeklyOffs: att.weeklyOffs ?? att.weekly_offs ?? null,
+      overtimeHours: att.overtimeHours ?? att.overtime_hours ?? null,
+      ...att,
+    },
+    earnings: {
+      basic: earn.basic ?? earn.basic_salary ?? null,
+      hra: earn.hra ?? earn.house_rent_allowance ?? null,
+      conveyance: earn.conveyance ?? earn.conveyance_allowance ?? null,
+      specialAllowance: earn.specialAllowance ?? earn.special_allowance ?? null,
+      medicalAllowance: earn.medicalAllowance ?? earn.medical_allowance ?? null,
+      otherAllowances: earn.otherAllowances ?? earn.other_allowances ?? earn.allowances ?? null,
+      overtime: earn.overtime ?? earn.overtime_pay ?? null,
+      bonus: earn.bonus ?? null,
+      incentives: earn.incentives ?? earn.incentive ?? null,
+      arrears: earn.arrears ?? null,
+      reimbursements: earn.reimbursements ?? earn.reimbursement ?? null,
+      otherEarnings: earn.otherEarnings ?? earn.other ?? null,
+      grossEarnings:
+        d.grossEarnings ??
+        d.gross_earnings ??
+        earn.grossEarnings ??
+        earn.gross_earnings ??
+        empFallback?.grossEarnings ??
+        null,
+      components: Array.isArray(earn.components) ? earn.components : undefined,
+    },
+    deductions: {
+      pf: ded.pf ?? ded.epf ?? ded.provident_fund ?? null,
+      esi: ded.esi ?? ded.esic ?? null,
+      pt: ded.pt ?? ded.professional_tax ?? null,
+      tds: ded.tds ?? ded.income_tax ?? ded.tax ?? null,
+      loan: ded.loan ?? ded.loan_deduction ?? null,
+      advance: ded.advance ?? ded.advance_salary ?? null,
+      otherDeductions: ded.otherDeductions ?? ded.other_deductions ?? ded.other ?? null,
+      totalDeductions:
+        d.totalDeductions ??
+        d.total_deductions ??
+        ded.totalDeductions ??
+        ded.total_deductions ??
+        empFallback?.totalDeductions ??
+        null,
+      components: Array.isArray(ded.components) ? ded.components : undefined,
+    },
+    statutory: stat && typeof stat === "object" ? {
+      employeePf: stat.employee?.epf ?? stat.employeePf ?? stat.employee_pf ?? ded.pf ?? null,
+      employerPf: stat.employer?.epf ?? stat.employerPf ?? stat.employer_pf ?? null,
+      employeeEsi: stat.employee?.esi ?? stat.employeeEsi ?? stat.employee_esi ?? ded.esi ?? null,
+      employerEsi: stat.employer?.esi ?? stat.employerEsi ?? stat.employer_esi ?? null,
+      pt: stat.employee?.pt ?? stat.pt ?? ded.pt ?? null,
+      tds: stat.employee?.tds ?? stat.tds ?? ded.tds ?? null,
+      eps: stat.employer?.eps ?? stat.eps ?? null,
+      edli: stat.employer?.edli ?? stat.edli ?? null,
+      other: stat.other || null,
+    } : null,
+    employerContributions: d.employerContributions || (stat?.employer ? {
+      pf: stat.employer?.epf ?? null,
+      esi: stat.employer?.esi ?? null,
+      eps: stat.employer?.eps ?? null,
+      edli: stat.employer?.edli ?? null,
+      total: empFallback?.employerContribution ?? null,
+    } : null),
+    netPay:
+      d.netPay ??
+      d.net_pay ??
+      empFallback?.netPay ??
+      null,
+    netPayInWords: d.netPayInWords || d.net_pay_in_words || null,
+    salaryStructure: d.salaryStructure || empFallback?.salaryStructure || null,
+    ytd: d.ytd || empFallback?.ytd || null,
+    document: {
+      pdfUrl: doc.pdfUrl || doc.pdf_url || d.pdfUrl || d.pdf_url || null,
+      downloadUrl: doc.downloadUrl || doc.download_url || d.downloadUrl || d.download_url || null,
+      documentId: doc.documentId || doc.document_id || d.documentId || null,
+      hasDocument: Boolean(doc.pdfUrl || doc.downloadUrl || doc.hasDocument || d.hasDocument),
+      mimeType: doc.mimeType || doc.mime_type || "application/pdf",
+    },
+    notes: d.notes || finalFallback?.finalization?.finalizationNotes || null,
+  };
+}
+
 // ── Real API Service ─────────────────────────────────────────────────
 
 export const payrollApi = {
@@ -2372,6 +2746,307 @@ export const payrollApi = {
           };
         } catch {
           // Fall through
+        }
+      }
+      throw err;
+    }
+  },
+
+  /**
+   * Fetch official final payslip data for a specific employee in a finalized run.
+   * Primary: GET /api/v2/payroll/runs/{runId}/employees/{employeeId}/payslip
+   * Fallback: Synthesizes authoritative calculation & finalization metadata.
+   */
+  async getPayslip(runId: string, employeeId: string): Promise<PayrollPayslipData> {
+    const requestConfig = {
+      headers: { "Cache-Control": "no-cache" },
+      skipCache: true,
+    };
+
+    // Primary: GET /api/v2/payroll/runs/{runId}/employees/{employeeId}/payslip
+    try {
+      const res = await apiInstance.get(
+        `/api/v2/payroll/runs/${runId}/employees/${employeeId}/payslip`,
+        requestConfig,
+      );
+      const data = extractData<any>(res);
+      if (data && typeof data === "object") {
+        return normalizePayrollPayslipData(runId, employeeId, data);
+      }
+    } catch (err: any) {
+      if (err?.response?.status !== 404) {
+        throw err;
+      }
+    }
+
+    // Fallback 1: GET /api/v2/payroll/payslips/{runId}/{employeeId}
+    try {
+      const res1 = await apiInstance.get(
+        `/api/v2/payroll/payslips/${runId}/${employeeId}`,
+        requestConfig,
+      );
+      const data1 = extractData<any>(res1);
+      if (data1 && typeof data1 === "object") {
+        return normalizePayrollPayslipData(runId, employeeId, data1);
+      }
+    } catch (err: any) {
+      if (err?.response?.status !== 404) {
+        throw err;
+      }
+    }
+
+    // Fallback 2: Retrieve employee detail and run finalization status from backend
+    const [empData, finalData] = await Promise.all([
+      this.getRunEmployeeDetail(runId, employeeId),
+      this.getPayrollFinalization(runId).catch(() => null),
+    ]);
+
+    if (!empData) {
+      const notFoundErr: any = new Error("Payslip record not found for employee on backend.");
+      notFoundErr.response = { status: 404 };
+      throw notFoundErr;
+    }
+
+    return normalizePayrollPayslipData(runId, employeeId, {}, empData, finalData);
+  },
+
+  /**
+   * Fetch payslip by unique payslip ID or reference.
+   * GET /api/v2/payroll/payslips/{payslipId}
+   */
+  async getPayslipById(payslipId: string): Promise<PayrollPayslipData> {
+    try {
+      const res = await apiInstance.get(`/api/v2/payroll/payslips/${payslipId}`, {
+        headers: { "Cache-Control": "no-cache" },
+        skipCache: true,
+      });
+      const data = extractData<any>(res);
+      return normalizePayrollPayslipData(data?.runId || "", data?.employeeId || "", data);
+    } catch (err: any) {
+      if (err?.response?.status === 404) {
+        try {
+          const fbRes = await apiInstance.get(`/payroll/payslips/${payslipId}`, {
+            headers: { "Cache-Control": "no-cache" },
+            skipCache: true,
+          });
+          const fbData = extractData<any>(fbRes);
+          return normalizePayrollPayslipData(fbData?.runId || "", fbData?.employeeId || "", fbData);
+        } catch {
+          // Fall through
+        }
+      }
+      throw err;
+    }
+  },
+
+  /**
+   * Download the official backend generated payslip document as a Blob.
+   * GET /api/v2/payroll/runs/{runId}/employees/{employeeId}/payslip/download
+   */
+  async downloadPayslip(runId: string, employeeId: string): Promise<Blob> {
+    try {
+      const res = await apiInstance.get<Blob>(
+        `/api/v2/payroll/runs/${runId}/employees/${employeeId}/payslip/download`,
+        {
+          responseType: "blob",
+          headers: { "Cache-Control": "no-cache" },
+        },
+      );
+      return res.data;
+    } catch (err: any) {
+      if (err?.response?.status === 404) {
+        // Fallback 1: /payroll/runs/{runId}/employees/{employeeId}/payslip/download
+        try {
+          const fbRes = await apiInstance.get<Blob>(
+            `/payroll/runs/${runId}/employees/${employeeId}/payslip/download`,
+            { responseType: "blob" },
+          );
+          return fbRes.data;
+        } catch {
+          // Fall through
+        }
+      }
+      throw err;
+    }
+  },
+
+  /**
+   * Generate payslips batch or single for a finalized run via backend.
+   * POST /api/v2/payroll/runs/{runId}/payslips/generate
+   */
+  async generatePayslips(
+    runId: string,
+    payload?: GeneratePayslipsPayload,
+  ): Promise<GeneratePayslipsResponse> {
+    try {
+      const res = await apiInstance.post(
+        `/api/v2/payroll/runs/${runId}/payslips/generate`,
+        payload ?? {},
+        { headers: { "Cache-Control": "no-cache" } },
+      );
+      const data = extractData<any>(res);
+      return {
+        success: Boolean(data?.success ?? true),
+        message: data?.message || "Final payslips generated successfully.",
+        generatedCount: data?.generatedCount ?? data?.count ?? undefined,
+        totalCount: data?.totalCount ?? undefined,
+        ...data,
+      };
+    } catch (err: any) {
+      if (err?.response?.status === 404) {
+        try {
+          const fbRes = await apiInstance.post(
+            `/payroll/runs/${runId}/payslips/generate`,
+            payload ?? {},
+            { headers: { "Cache-Control": "no-cache" } },
+          );
+          const fbData = extractData<any>(fbRes);
+          return {
+            success: Boolean(fbData?.success ?? true),
+            message: fbData?.message || "Final payslips generated successfully.",
+            ...fbData,
+          };
+        } catch {
+          // Fall through
+        }
+      }
+      throw err;
+    }
+  },
+
+  /**
+   * Fetch employee payslip history.
+   * GET /api/v2/payroll/employees/{employeeId}/payslips
+   */
+  async getEmployeePayslipHistory(
+    employeeId: string,
+    params?: { page?: number; limit?: number },
+  ): Promise<{ items: PayslipHistoryItem[]; total: number }> {
+    const p = new URLSearchParams();
+    if (params?.page) p.set("page", String(params.page));
+    if (params?.limit) p.set("limit", String(params.limit));
+    const q = p.toString() ? `?${p.toString()}` : "";
+
+    try {
+      const res = await apiInstance.get(`/api/v2/payroll/employees/${employeeId}/payslips${q}`, {
+        headers: { "Cache-Control": "no-cache" },
+        skipCache: true,
+      });
+      const data = extractData<any>(res);
+      const rawItems = Array.isArray(data) ? data : data?.items || data?.records || [];
+      return {
+        items: rawItems.map((r: any) => ({
+          id: r.id || r.payslipId || `${r.runId}_${employeeId}`,
+          runId: r.runId || r.run_id || null,
+          employeeId: r.employeeId || r.employee_id || employeeId,
+          employeeName: r.employeeName || r.name || null,
+          department: r.department || null,
+          periodName: r.periodName || r.period_name || null,
+          financialYear: r.financialYear || r.financial_year || null,
+          payslipNumber: r.payslipNumber || r.payslip_number || null,
+          netPay: r.netPay != null ? Number(r.netPay) : null,
+          grossEarnings: r.grossEarnings != null ? Number(r.grossEarnings) : null,
+          totalDeductions: r.totalDeductions != null ? Number(r.totalDeductions) : null,
+          status: r.status || "Finalized",
+          isFinalized: Boolean(r.isFinalized ?? true),
+          finalizedAt: r.finalizedAt || r.finalized_at || null,
+          paymentDate: r.paymentDate || r.payment_date || null,
+          hasDocument: Boolean(r.hasDocument || r.pdfUrl || r.downloadUrl),
+        })),
+        total: data?.total ?? rawItems.length,
+      };
+    } catch (err: any) {
+      if (err?.response?.status === 404) {
+        try {
+          const fbRes = await apiInstance.get(`/payroll/employees/${employeeId}/payslips${q}`, {
+            headers: { "Cache-Control": "no-cache" },
+            skipCache: true,
+          });
+          const fbData = extractData<any>(fbRes);
+          const fbItems = Array.isArray(fbData) ? fbData : fbData?.items || [];
+          return {
+            items: fbItems.map((r: any) => ({
+              id: r.id || `${r.runId}_${employeeId}`,
+              runId: r.runId || null,
+              employeeId,
+              periodName: r.periodName || null,
+              payslipNumber: r.payslipNumber || null,
+              netPay: r.netPay != null ? Number(r.netPay) : null,
+              status: r.status || "Finalized",
+              isFinalized: true,
+              finalizedAt: r.finalizedAt || null,
+            })),
+            total: fbData?.total ?? fbItems.length,
+          };
+        } catch {
+          return { items: [], total: 0 };
+        }
+      }
+      throw err;
+    }
+  },
+
+  /**
+   * Fetch current user's payslips for self-service portal.
+   * GET /api/v2/payroll/my-payslips
+   */
+  async getMyPayslips(
+    params?: { page?: number; limit?: number },
+  ): Promise<{ items: PayslipHistoryItem[]; total: number }> {
+    const p = new URLSearchParams();
+    if (params?.page) p.set("page", String(params.page));
+    if (params?.limit) p.set("limit", String(params.limit));
+    const q = p.toString() ? `?${p.toString()}` : "";
+
+    try {
+      const res = await apiInstance.get(`/api/v2/payroll/my-payslips${q}`, {
+        headers: { "Cache-Control": "no-cache" },
+        skipCache: true,
+      });
+      const data = extractData<any>(res);
+      const rawItems = Array.isArray(data) ? data : data?.items || data?.records || [];
+      return {
+        items: rawItems.map((r: any) => ({
+          id: r.id || r.payslipId || `${r.runId}_me`,
+          runId: r.runId || r.run_id || null,
+          employeeId: r.employeeId || r.employee_id || null,
+          periodName: r.periodName || r.period_name || null,
+          financialYear: r.financialYear || r.financial_year || null,
+          payslipNumber: r.payslipNumber || r.payslip_number || null,
+          netPay: r.netPay != null ? Number(r.netPay) : null,
+          grossEarnings: r.grossEarnings != null ? Number(r.grossEarnings) : null,
+          totalDeductions: r.totalDeductions != null ? Number(r.totalDeductions) : null,
+          status: r.status || "Finalized",
+          isFinalized: Boolean(r.isFinalized ?? true),
+          finalizedAt: r.finalizedAt || r.finalized_at || null,
+          paymentDate: r.paymentDate || r.payment_date || null,
+          hasDocument: Boolean(r.hasDocument || r.pdfUrl || r.downloadUrl),
+        })),
+        total: data?.total ?? rawItems.length,
+      };
+    } catch (err: any) {
+      if (err?.response?.status === 404) {
+        try {
+          const fbRes = await apiInstance.get(`/payroll/my-payslips${q}`, {
+            headers: { "Cache-Control": "no-cache" },
+            skipCache: true,
+          });
+          const fbData = extractData<any>(fbRes);
+          const fbItems = Array.isArray(fbData) ? fbData : fbData?.items || [];
+          return {
+            items: fbItems.map((r: any) => ({
+              id: r.id || `${r.runId}_me`,
+              runId: r.runId || null,
+              periodName: r.periodName || null,
+              payslipNumber: r.payslipNumber || null,
+              netPay: r.netPay != null ? Number(r.netPay) : null,
+              status: r.status || "Finalized",
+              isFinalized: true,
+            })),
+            total: fbData?.total ?? fbItems.length,
+          };
+        } catch {
+          return { items: [], total: 0 };
         }
       }
       throw err;

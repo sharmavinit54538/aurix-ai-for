@@ -159,6 +159,7 @@ import { Route as DashboardRecruitmentAiScreeningRouteImport } from './routes/da
 import { Route as DashboardRecruitmentAiInterviewRouteImport } from './routes/dashboard/recruitment/ai-interview'
 import { Route as DashboardRecruitmentAiRouteImport } from './routes/dashboard/recruitment/ai'
 import { Route as DashboardPayrollPeriodsRouteImport } from './routes/dashboard.payroll.periods'
+import { Route as DashboardPayrollPayslipsRouteImport } from './routes/dashboard.payroll.payslips'
 import { Route as DashboardHrOperationsVisitorManagementRouteImport } from './routes/dashboard.hr-operations.visitor-management'
 import { Route as DashboardHrOperationsTimelineRouteImport } from './routes/dashboard.hr-operations.timeline'
 import { Route as DashboardHrOperationsOnboardingRouteImport } from './routes/dashboard.hr-operations.onboarding'
@@ -228,7 +229,9 @@ import { Route as DashboardPayrollRunsRunIdProcessingRouteImport } from './route
 import { Route as DashboardPayrollRunsRunIdPreviewRouteImport } from './routes/dashboard.payroll.runs.$runId.preview'
 import { Route as DashboardPayrollRunsRunIdFinalizeRouteImport } from './routes/dashboard.payroll.runs.$runId.finalize'
 import { Route as DashboardPayrollRunsRunIdApprovalRouteImport } from './routes/dashboard.payroll.runs.$runId.approval'
+import { Route as PayrollRunsRunIdEmployeeEmployeeIdPayslipRouteImport } from './routes/payroll.runs.$runId.employee.$employeeId.payslip'
 import { Route as DashboardPayrollRunsRunIdEmployeesEmployeeIdRouteImport } from './routes/dashboard.payroll.runs.$runId.employees.$employeeId'
+import { Route as DashboardPayrollRunsRunIdEmployeesEmployeeIdPayslipRouteImport } from './routes/dashboard.payroll.runs.$runId.employees.$employeeId.payslip'
 
 const VerifyResetOtpRoute = VerifyResetOtpRouteImport.update({
   id: '/verify-reset-otp',
@@ -1037,6 +1040,12 @@ const DashboardPayrollPeriodsRoute = DashboardPayrollPeriodsRouteImport.update({
   path: '/periods',
   getParentRoute: () => DashboardPayrollRoute,
 } as any)
+const DashboardPayrollPayslipsRoute =
+  DashboardPayrollPayslipsRouteImport.update({
+    id: '/payslips',
+    path: '/payslips',
+    getParentRoute: () => DashboardPayrollRoute,
+  } as any)
 const DashboardHrOperationsVisitorManagementRoute =
   DashboardHrOperationsVisitorManagementRouteImport.update({
     id: '/visitor-management',
@@ -1441,11 +1450,23 @@ const DashboardPayrollRunsRunIdApprovalRoute =
     path: '/runs/$runId/approval',
     getParentRoute: () => DashboardPayrollRoute,
   } as any)
+const PayrollRunsRunIdEmployeeEmployeeIdPayslipRoute =
+  PayrollRunsRunIdEmployeeEmployeeIdPayslipRouteImport.update({
+    id: '/payslip',
+    path: '/payslip',
+    getParentRoute: () => PayrollRunsRunIdEmployeeEmployeeIdRoute,
+  } as any)
 const DashboardPayrollRunsRunIdEmployeesEmployeeIdRoute =
   DashboardPayrollRunsRunIdEmployeesEmployeeIdRouteImport.update({
     id: '/runs/$runId/employees/$employeeId',
     path: '/runs/$runId/employees/$employeeId',
     getParentRoute: () => DashboardPayrollRoute,
+  } as any)
+const DashboardPayrollRunsRunIdEmployeesEmployeeIdPayslipRoute =
+  DashboardPayrollRunsRunIdEmployeesEmployeeIdPayslipRouteImport.update({
+    id: '/payslip',
+    path: '/payslip',
+    getParentRoute: () => DashboardPayrollRunsRunIdEmployeesEmployeeIdRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -1551,6 +1572,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/hr-operations/onboarding': typeof DashboardHrOperationsOnboardingRoute
   '/dashboard/hr-operations/timeline': typeof DashboardHrOperationsTimelineRoute
   '/dashboard/hr-operations/visitor-management': typeof DashboardHrOperationsVisitorManagementRoute
+  '/dashboard/payroll/payslips': typeof DashboardPayrollPayslipsRoute
   '/dashboard/payroll/periods': typeof DashboardPayrollPeriodsRoute
   '/dashboard/recruitment/ai': typeof DashboardRecruitmentAiRoute
   '/dashboard/recruitment/ai-interview': typeof DashboardRecruitmentAiInterviewRoute
@@ -1667,8 +1689,10 @@ export interface FileRoutesByFullPath {
   '/dashboard/payroll/runs/$runId/review': typeof DashboardPayrollRunsRunIdReviewRoute
   '/dashboard/payroll/runs/$runId/validation': typeof DashboardPayrollRunsRunIdValidationRoute
   '/dashboard/recruitment/jobs/$jobId/publish': typeof DashboardRecruitmentJobsJobIdPublishRoute
-  '/payroll/runs/$runId/employee/$employeeId': typeof PayrollRunsRunIdEmployeeEmployeeIdRoute
-  '/dashboard/payroll/runs/$runId/employees/$employeeId': typeof DashboardPayrollRunsRunIdEmployeesEmployeeIdRoute
+  '/payroll/runs/$runId/employee/$employeeId': typeof PayrollRunsRunIdEmployeeEmployeeIdRouteWithChildren
+  '/dashboard/payroll/runs/$runId/employees/$employeeId': typeof DashboardPayrollRunsRunIdEmployeesEmployeeIdRouteWithChildren
+  '/payroll/runs/$runId/employee/$employeeId/payslip': typeof PayrollRunsRunIdEmployeeEmployeeIdPayslipRoute
+  '/dashboard/payroll/runs/$runId/employees/$employeeId/payslip': typeof DashboardPayrollRunsRunIdEmployeesEmployeeIdPayslipRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -1757,6 +1781,7 @@ export interface FileRoutesByTo {
   '/dashboard/hr-operations/onboarding': typeof DashboardHrOperationsOnboardingRoute
   '/dashboard/hr-operations/timeline': typeof DashboardHrOperationsTimelineRoute
   '/dashboard/hr-operations/visitor-management': typeof DashboardHrOperationsVisitorManagementRoute
+  '/dashboard/payroll/payslips': typeof DashboardPayrollPayslipsRoute
   '/dashboard/payroll/periods': typeof DashboardPayrollPeriodsRoute
   '/dashboard/recruitment/ai': typeof DashboardRecruitmentAiRoute
   '/dashboard/recruitment/ai-interview': typeof DashboardRecruitmentAiInterviewRoute
@@ -1872,8 +1897,10 @@ export interface FileRoutesByTo {
   '/dashboard/payroll/runs/$runId/review': typeof DashboardPayrollRunsRunIdReviewRoute
   '/dashboard/payroll/runs/$runId/validation': typeof DashboardPayrollRunsRunIdValidationRoute
   '/dashboard/recruitment/jobs/$jobId/publish': typeof DashboardRecruitmentJobsJobIdPublishRoute
-  '/payroll/runs/$runId/employee/$employeeId': typeof PayrollRunsRunIdEmployeeEmployeeIdRoute
-  '/dashboard/payroll/runs/$runId/employees/$employeeId': typeof DashboardPayrollRunsRunIdEmployeesEmployeeIdRoute
+  '/payroll/runs/$runId/employee/$employeeId': typeof PayrollRunsRunIdEmployeeEmployeeIdRouteWithChildren
+  '/dashboard/payroll/runs/$runId/employees/$employeeId': typeof DashboardPayrollRunsRunIdEmployeesEmployeeIdRouteWithChildren
+  '/payroll/runs/$runId/employee/$employeeId/payslip': typeof PayrollRunsRunIdEmployeeEmployeeIdPayslipRoute
+  '/dashboard/payroll/runs/$runId/employees/$employeeId/payslip': typeof DashboardPayrollRunsRunIdEmployeesEmployeeIdPayslipRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -1979,6 +2006,7 @@ export interface FileRoutesById {
   '/dashboard/hr-operations/onboarding': typeof DashboardHrOperationsOnboardingRoute
   '/dashboard/hr-operations/timeline': typeof DashboardHrOperationsTimelineRoute
   '/dashboard/hr-operations/visitor-management': typeof DashboardHrOperationsVisitorManagementRoute
+  '/dashboard/payroll/payslips': typeof DashboardPayrollPayslipsRoute
   '/dashboard/payroll/periods': typeof DashboardPayrollPeriodsRoute
   '/dashboard/recruitment/ai': typeof DashboardRecruitmentAiRoute
   '/dashboard/recruitment/ai-interview': typeof DashboardRecruitmentAiInterviewRoute
@@ -2095,8 +2123,10 @@ export interface FileRoutesById {
   '/dashboard/payroll/runs/$runId/review': typeof DashboardPayrollRunsRunIdReviewRoute
   '/dashboard/payroll/runs/$runId/validation': typeof DashboardPayrollRunsRunIdValidationRoute
   '/dashboard/recruitment/jobs/$jobId/publish': typeof DashboardRecruitmentJobsJobIdPublishRoute
-  '/payroll/runs/$runId/employee/$employeeId': typeof PayrollRunsRunIdEmployeeEmployeeIdRoute
-  '/dashboard/payroll/runs/$runId/employees/$employeeId': typeof DashboardPayrollRunsRunIdEmployeesEmployeeIdRoute
+  '/payroll/runs/$runId/employee/$employeeId': typeof PayrollRunsRunIdEmployeeEmployeeIdRouteWithChildren
+  '/dashboard/payroll/runs/$runId/employees/$employeeId': typeof DashboardPayrollRunsRunIdEmployeesEmployeeIdRouteWithChildren
+  '/payroll/runs/$runId/employee/$employeeId/payslip': typeof PayrollRunsRunIdEmployeeEmployeeIdPayslipRoute
+  '/dashboard/payroll/runs/$runId/employees/$employeeId/payslip': typeof DashboardPayrollRunsRunIdEmployeesEmployeeIdPayslipRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -2203,6 +2233,7 @@ export interface FileRouteTypes {
     | '/dashboard/hr-operations/onboarding'
     | '/dashboard/hr-operations/timeline'
     | '/dashboard/hr-operations/visitor-management'
+    | '/dashboard/payroll/payslips'
     | '/dashboard/payroll/periods'
     | '/dashboard/recruitment/ai'
     | '/dashboard/recruitment/ai-interview'
@@ -2321,6 +2352,8 @@ export interface FileRouteTypes {
     | '/dashboard/recruitment/jobs/$jobId/publish'
     | '/payroll/runs/$runId/employee/$employeeId'
     | '/dashboard/payroll/runs/$runId/employees/$employeeId'
+    | '/payroll/runs/$runId/employee/$employeeId/payslip'
+    | '/dashboard/payroll/runs/$runId/employees/$employeeId/payslip'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -2409,6 +2442,7 @@ export interface FileRouteTypes {
     | '/dashboard/hr-operations/onboarding'
     | '/dashboard/hr-operations/timeline'
     | '/dashboard/hr-operations/visitor-management'
+    | '/dashboard/payroll/payslips'
     | '/dashboard/payroll/periods'
     | '/dashboard/recruitment/ai'
     | '/dashboard/recruitment/ai-interview'
@@ -2526,6 +2560,8 @@ export interface FileRouteTypes {
     | '/dashboard/recruitment/jobs/$jobId/publish'
     | '/payroll/runs/$runId/employee/$employeeId'
     | '/dashboard/payroll/runs/$runId/employees/$employeeId'
+    | '/payroll/runs/$runId/employee/$employeeId/payslip'
+    | '/dashboard/payroll/runs/$runId/employees/$employeeId/payslip'
   id:
     | '__root__'
     | '/'
@@ -2630,6 +2666,7 @@ export interface FileRouteTypes {
     | '/dashboard/hr-operations/onboarding'
     | '/dashboard/hr-operations/timeline'
     | '/dashboard/hr-operations/visitor-management'
+    | '/dashboard/payroll/payslips'
     | '/dashboard/payroll/periods'
     | '/dashboard/recruitment/ai'
     | '/dashboard/recruitment/ai-interview'
@@ -2748,6 +2785,8 @@ export interface FileRouteTypes {
     | '/dashboard/recruitment/jobs/$jobId/publish'
     | '/payroll/runs/$runId/employee/$employeeId'
     | '/dashboard/payroll/runs/$runId/employees/$employeeId'
+    | '/payroll/runs/$runId/employee/$employeeId/payslip'
+    | '/dashboard/payroll/runs/$runId/employees/$employeeId/payslip'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -2785,7 +2824,7 @@ export interface RootRouteChildren {
   PayrollRunsRunIdProcessingRoute: typeof PayrollRunsRunIdProcessingRoute
   PayrollRunsRunIdReviewRoute: typeof PayrollRunsRunIdReviewRoute
   PayrollRunsRunIdValidationRoute: typeof PayrollRunsRunIdValidationRoute
-  PayrollRunsRunIdEmployeeEmployeeIdRoute: typeof PayrollRunsRunIdEmployeeEmployeeIdRoute
+  PayrollRunsRunIdEmployeeEmployeeIdRoute: typeof PayrollRunsRunIdEmployeeEmployeeIdRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -3840,6 +3879,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardPayrollPeriodsRouteImport
       parentRoute: typeof DashboardPayrollRoute
     }
+    '/dashboard/payroll/payslips': {
+      id: '/dashboard/payroll/payslips'
+      path: '/payslips'
+      fullPath: '/dashboard/payroll/payslips'
+      preLoaderRoute: typeof DashboardPayrollPayslipsRouteImport
+      parentRoute: typeof DashboardPayrollRoute
+    }
     '/dashboard/hr-operations/visitor-management': {
       id: '/dashboard/hr-operations/visitor-management'
       path: '/visitor-management'
@@ -4323,12 +4369,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardPayrollRunsRunIdApprovalRouteImport
       parentRoute: typeof DashboardPayrollRoute
     }
+    '/payroll/runs/$runId/employee/$employeeId/payslip': {
+      id: '/payroll/runs/$runId/employee/$employeeId/payslip'
+      path: '/payslip'
+      fullPath: '/payroll/runs/$runId/employee/$employeeId/payslip'
+      preLoaderRoute: typeof PayrollRunsRunIdEmployeeEmployeeIdPayslipRouteImport
+      parentRoute: typeof PayrollRunsRunIdEmployeeEmployeeIdRoute
+    }
     '/dashboard/payroll/runs/$runId/employees/$employeeId': {
       id: '/dashboard/payroll/runs/$runId/employees/$employeeId'
       path: '/runs/$runId/employees/$employeeId'
       fullPath: '/dashboard/payroll/runs/$runId/employees/$employeeId'
       preLoaderRoute: typeof DashboardPayrollRunsRunIdEmployeesEmployeeIdRouteImport
       parentRoute: typeof DashboardPayrollRoute
+    }
+    '/dashboard/payroll/runs/$runId/employees/$employeeId/payslip': {
+      id: '/dashboard/payroll/runs/$runId/employees/$employeeId/payslip'
+      path: '/payslip'
+      fullPath: '/dashboard/payroll/runs/$runId/employees/$employeeId/payslip'
+      preLoaderRoute: typeof DashboardPayrollRunsRunIdEmployeesEmployeeIdPayslipRouteImport
+      parentRoute: typeof DashboardPayrollRunsRunIdEmployeesEmployeeIdRoute
     }
   }
 }
@@ -4460,7 +4520,23 @@ const DashboardHrOperationsRouteWithChildren =
     DashboardHrOperationsRouteChildren,
   )
 
+interface DashboardPayrollRunsRunIdEmployeesEmployeeIdRouteChildren {
+  DashboardPayrollRunsRunIdEmployeesEmployeeIdPayslipRoute: typeof DashboardPayrollRunsRunIdEmployeesEmployeeIdPayslipRoute
+}
+
+const DashboardPayrollRunsRunIdEmployeesEmployeeIdRouteChildren: DashboardPayrollRunsRunIdEmployeesEmployeeIdRouteChildren =
+  {
+    DashboardPayrollRunsRunIdEmployeesEmployeeIdPayslipRoute:
+      DashboardPayrollRunsRunIdEmployeesEmployeeIdPayslipRoute,
+  }
+
+const DashboardPayrollRunsRunIdEmployeesEmployeeIdRouteWithChildren =
+  DashboardPayrollRunsRunIdEmployeesEmployeeIdRoute._addFileChildren(
+    DashboardPayrollRunsRunIdEmployeesEmployeeIdRouteChildren,
+  )
+
 interface DashboardPayrollRouteChildren {
+  DashboardPayrollPayslipsRoute: typeof DashboardPayrollPayslipsRoute
   DashboardPayrollPeriodsRoute: typeof DashboardPayrollPeriodsRoute
   DashboardPayrollIndexRoute: typeof DashboardPayrollIndexRoute
   DashboardPayrollRunsRunIdApprovalRoute: typeof DashboardPayrollRunsRunIdApprovalRoute
@@ -4469,10 +4545,11 @@ interface DashboardPayrollRouteChildren {
   DashboardPayrollRunsRunIdProcessingRoute: typeof DashboardPayrollRunsRunIdProcessingRoute
   DashboardPayrollRunsRunIdReviewRoute: typeof DashboardPayrollRunsRunIdReviewRoute
   DashboardPayrollRunsRunIdValidationRoute: typeof DashboardPayrollRunsRunIdValidationRoute
-  DashboardPayrollRunsRunIdEmployeesEmployeeIdRoute: typeof DashboardPayrollRunsRunIdEmployeesEmployeeIdRoute
+  DashboardPayrollRunsRunIdEmployeesEmployeeIdRoute: typeof DashboardPayrollRunsRunIdEmployeesEmployeeIdRouteWithChildren
 }
 
 const DashboardPayrollRouteChildren: DashboardPayrollRouteChildren = {
+  DashboardPayrollPayslipsRoute: DashboardPayrollPayslipsRoute,
   DashboardPayrollPeriodsRoute: DashboardPayrollPeriodsRoute,
   DashboardPayrollIndexRoute: DashboardPayrollIndexRoute,
   DashboardPayrollRunsRunIdApprovalRoute:
@@ -4486,7 +4563,7 @@ const DashboardPayrollRouteChildren: DashboardPayrollRouteChildren = {
   DashboardPayrollRunsRunIdValidationRoute:
     DashboardPayrollRunsRunIdValidationRoute,
   DashboardPayrollRunsRunIdEmployeesEmployeeIdRoute:
-    DashboardPayrollRunsRunIdEmployeesEmployeeIdRoute,
+    DashboardPayrollRunsRunIdEmployeesEmployeeIdRouteWithChildren,
 }
 
 const DashboardPayrollRouteWithChildren =
@@ -4908,6 +4985,21 @@ const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
   DashboardRouteChildren,
 )
 
+interface PayrollRunsRunIdEmployeeEmployeeIdRouteChildren {
+  PayrollRunsRunIdEmployeeEmployeeIdPayslipRoute: typeof PayrollRunsRunIdEmployeeEmployeeIdPayslipRoute
+}
+
+const PayrollRunsRunIdEmployeeEmployeeIdRouteChildren: PayrollRunsRunIdEmployeeEmployeeIdRouteChildren =
+  {
+    PayrollRunsRunIdEmployeeEmployeeIdPayslipRoute:
+      PayrollRunsRunIdEmployeeEmployeeIdPayslipRoute,
+  }
+
+const PayrollRunsRunIdEmployeeEmployeeIdRouteWithChildren =
+  PayrollRunsRunIdEmployeeEmployeeIdRoute._addFileChildren(
+    PayrollRunsRunIdEmployeeEmployeeIdRouteChildren,
+  )
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
@@ -4944,7 +5036,7 @@ const rootRouteChildren: RootRouteChildren = {
   PayrollRunsRunIdReviewRoute: PayrollRunsRunIdReviewRoute,
   PayrollRunsRunIdValidationRoute: PayrollRunsRunIdValidationRoute,
   PayrollRunsRunIdEmployeeEmployeeIdRoute:
-    PayrollRunsRunIdEmployeeEmployeeIdRoute,
+    PayrollRunsRunIdEmployeeEmployeeIdRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

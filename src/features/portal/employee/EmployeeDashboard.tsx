@@ -437,21 +437,27 @@ function MyPayslips() {
       <Card>
         <SectionHeader title="My Payslips" subtitle="Salary statements" link="/dashboard/payroll/payslips" />
         <div className="space-y-2">
-          {MY_PAYSLIPS.map((p) => (
-            <div key={p.month} className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-3">
-              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-green-500/10">
-                <Download className="h-4 w-4 text-green-500" />
+          {MY_PAYSLIPS.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-3 text-center">
+              No finalized payslips available yet.
+            </p>
+          ) : (
+            MY_PAYSLIPS.map((p) => (
+              <div key={p.month} className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-3">
+                <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-green-500/10">
+                  <Download className="h-4 w-4 text-green-500" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-medium">{p.month}</div>
+                  <div className="text-xs text-muted-foreground">Gross: {p.gross} · Paid on {p.date}</div>
+                </div>
+                <div className="text-right">
+                  <div className="font-semibold text-emerald-500">{p.net}</div>
+                  <Badge variant="default" className="text-[10px]">Paid</Badge>
+                </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <div className="text-sm font-medium">{p.month}</div>
-                <div className="text-xs text-muted-foreground">Gross: {p.gross} · Paid on {p.date}</div>
-              </div>
-              <div className="text-right">
-                <div className="font-semibold text-emerald-500">{p.net}</div>
-                <Badge variant="default" className="text-[10px]">Paid</Badge>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </Card>
     </motion.div>

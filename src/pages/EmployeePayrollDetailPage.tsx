@@ -9,7 +9,8 @@ import {
   Calendar,
   CheckCircle2,
   Clock,
-  ExternalLink,
+  FileCheck,
+  FileText,
   History,
   Info,
   Layers,
@@ -383,6 +384,22 @@ export function EmployeePayrollDetailPage() {
               <span>Recalculate Run</span>
             </Button>
           ) : null}
+
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() =>
+              navigate({
+                to: `/dashboard/payroll/runs/${runId}/employees/${employeeId}/payslip` as any,
+              })
+            }
+            className="h-9 gap-1.5 text-xs"
+            style={{ background: "var(--gradient-brand)" }}
+            title="View official final payslip for this employee"
+          >
+            <FileText className="h-3.5 w-3.5" />
+            <span>Final Payslip (Step 9)</span>
+          </Button>
         </div>
       </div>
 

@@ -404,6 +404,12 @@ export function PayrollFinalizationPage() {
           <span className="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm">
             Finalization
           </span>
+          <Link
+            to="/dashboard/payroll/payslips"
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
+          >
+            Final Payslips
+          </Link>
         </div>
 
         {/* Back Link */}
@@ -689,13 +695,25 @@ export function PayrollFinalizationPage() {
                     ) : null}
                   </div>
                 </div>
-                <Badge
-                  variant="outline"
-                  className="border-violet-500/40 bg-violet-500/20 text-violet-700 dark:text-violet-300 font-semibold uppercase text-[10px] px-2.5 py-1"
-                >
-                  <Lock className="mr-1 h-3 w-3 inline-block" />
-                  Locked & Final
-                </Badge>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge
+                    variant="outline"
+                    className="border-violet-500/40 bg-violet-500/20 text-violet-700 dark:text-violet-300 font-semibold uppercase text-[10px] px-2.5 py-1"
+                  >
+                    <Lock className="mr-1 h-3 w-3 inline-block" />
+                    Locked & Final
+                  </Badge>
+                  <Button
+                    size="sm"
+                    variant="default"
+                    onClick={() => navigate({ to: "/dashboard/payroll/payslips" as any })}
+                    className="text-xs gap-1.5"
+                    style={{ background: "var(--gradient-brand)" }}
+                  >
+                    <FileCheck className="h-3.5 w-3.5" />
+                    <span>View Final Payslips (Step 9)</span>
+                  </Button>
+                </div>
               </div>
             </GlassCard>
           ) : null}
