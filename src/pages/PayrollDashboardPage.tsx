@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { Link } from "@tanstack/react-router";
 import {
   AlertCircle,
   AlertTriangle,
@@ -329,6 +330,22 @@ export function PayrollDashboardPage() {
 
   return (
     <div className="space-y-6">
+      {/* ── Sub-header Navigation Tabs ────────────────────────────── */}
+      <div className="flex items-center gap-2 border-b border-border/80 pb-3">
+        <Link
+          to="/dashboard/payroll"
+          className="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm"
+        >
+          Payroll Dashboard
+        </Link>
+        <Link
+          to="/dashboard/payroll/periods"
+          className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
+        >
+          Payroll Periods
+        </Link>
+      </div>
+
       {/* ── Top Action Controls Bar ───────────────────────────────── */}
       <div className="flex flex-wrap items-center justify-end gap-2">
         {/* Period Selector */}

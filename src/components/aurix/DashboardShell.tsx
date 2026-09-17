@@ -117,11 +117,27 @@ const NAV_SECTIONS: SidebarNavSection[] = [
         permission: "resources.view",
       },
       {
-        to: "/dashboard/payroll",
+        id: "payroll",
         label: "Payroll",
         icon: Banknote,
+        basePath: "/dashboard/payroll",
         permission: "payroll.view",
         roles: ["admin", "hr", "hr_admin", "hradmin", "hr-admin", "super_admin", "superadmin"],
+        children: [
+          {
+            to: "/dashboard/payroll",
+            label: "Dashboard",
+            icon: LayoutDashboard,
+            exact: true,
+            permission: "payroll.view",
+          },
+          {
+            to: "/dashboard/payroll/periods",
+            label: "Payroll Periods",
+            icon: CalendarDays,
+            permission: "payroll.view",
+          },
+        ],
       },
       {
         to: "/dashboard/analytics",
@@ -854,6 +870,16 @@ export function DashboardShell() {
             >
               <Banknote className="mr-2 h-4 w-4" />
               <span>Payroll Dashboard</span>
+            </CommandItem>
+            <CommandItem
+              onSelect={() => {
+                navigate({ to: "/dashboard/payroll/periods" as any });
+                setSearchOpen(false);
+              }}
+              className="cursor-pointer"
+            >
+              <CalendarDays className="mr-2 h-4 w-4" />
+              <span>Payroll Periods</span>
             </CommandItem>
             <CommandItem
               onSelect={() => {
