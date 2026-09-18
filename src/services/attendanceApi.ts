@@ -107,6 +107,31 @@ export interface GeofenceVerifyResult {
   allowedRadiusMeters?: number;
 }
 
+/**
+ * Face Attendance status returned by GET /api/v1/attendance/face/me,
+ * augmented with inferred enrollment state.
+ */
+export interface FaceAttendanceStatus {
+  /** Whether the employee's face is enrolled / recognized by the backend. */
+  faceRegistered: boolean;
+  /** Whether the employee is currently checked in today. */
+  checkedIn: boolean;
+  /** Whether the employee has already checked out today. */
+  checkedOut: boolean;
+  /** ISO timestamp of today's check-in (from backend). */
+  checkInTime: string | null;
+  /** ISO timestamp of today's check-out (from backend). */
+  checkOutTime: string | null;
+  /** Backend-calculated working hours. */
+  workingHours: number | null;
+  /** Backend message string. */
+  message: string;
+  /** Raw backend response data for any extra fields. */
+  raw: Record<string, unknown>;
+  /** Error code from the backend, if any (e.g. FACE_NOT_ENROLLED). */
+  errorCode?: string;
+}
+
 export interface Shift {
   id: string;
   name: string;
@@ -336,34 +361,32 @@ function extractObjectPayload<T = Record<string, unknown>>(res: unknown): T {
 }
 
 /**
- * Creates a valid JPEG image blob to satisfy backend face verification
- * requirements when direct webcam frame capture is not active.
+ * Extracts user-friendly error message from face attendance API errors.
  */
-function createFallbackImageBlob(): Promise<Blob> {
-  if (typeof document === "undefined") {
-    return Promise.resolve(new Blob(["attendance-proof"], { type: "image/jpeg" }));
-  }
-  return new Promise((resolve) => {
-    try {
-      const canvas = document.createElement("canvas");
-      canvas.width = 120;
-      canvas.height = 120;
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.fillStyle = "#3b82f6";
-        ctx.fillRect(0, 0, 120, 120);
-        ctx.fillStyle = "#ffffff";
-        ctx.font = "14px sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText("Attendance", 60, 65);
-      }
-      canvas.toBlob((blob) => {
-        resolve(blob || new Blob(["attendance-proof"], { type: "image/jpeg" }));
-      }, "image/jpeg", 0.85);
-    } catch {
-      resolve(new Blob(["attendance-proof"], { type: "image/jpeg" }));
+function extractFaceApiError(err: any): string {
+  const resp = err?.response?.data || err?.data;
+  if (resp) {
+    if (typeof resp === "string") return resp;
+    if (resp.detail && typeof resp.detail === "string") return resp.detail;
+    if (resp.message && typeof resp.message === "string") return resp.message;
+    if (Array.isArray(resp.detail)) {
+      return resp.detail.map((d: any) => d.msg || d.message || JSON.stringify(d)).join("; ");
     }
-  });
+  }
+  if (err?.message && typeof err.message === "string") return err.message;
+  return "An unexpected error occurred.";
+}
+
+/**
+ * Extracts a machine-readable error code from backend response if available.
+ * Common codes: FACE_NOT_ENROLLED, FACE_MISMATCH, ALREADY_CHECKED_IN, etc.
+ */
+function extractErrorCode(err: any): string | undefined {
+  const resp = err?.response?.data || err?.data;
+  if (resp && typeof resp === "object") {
+    return resp.error_code || resp.code || resp.errorCode || undefined;
+  }
+  return undefined;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -517,13 +540,143 @@ export const attendanceApi = {
   },
 
   /**
+   * Get the authenticated employee's face attendance status.
+   * Calls GET /api/v1/attendance/face/me.
+   * Infers face enrollment from the API response:
+   * - A successful response means the employee is recognized (face registered).
+   * - A specific error (e.g. FACE_NOT_ENROLLED) means no face enrolled.
+   * - A 404 with no face enrollment indication means the endpoint isn't available.
+   */
+  getFaceAttendanceStatus: async (): Promise<FaceAttendanceStatus> => {
+    try {
+      const res: any = await api.get("attendance/face/me");
+      const data = extractObjectPayload<any>(res);
+
+      // Inspect live backend response for explicit enrollment status fields
+      let faceRegistered = true;
+      if (typeof data.face_registered === "boolean") faceRegistered = data.face_registered;
+      else if (typeof data.faceRegistered === "boolean") faceRegistered = data.faceRegistered;
+      else if (typeof data.is_registered === "boolean") faceRegistered = data.is_registered;
+      else if (typeof data.isRegistered === "boolean") faceRegistered = data.isRegistered;
+      else if (typeof data.is_face_registered === "boolean") faceRegistered = data.is_face_registered;
+      else if (typeof data.isFaceRegistered === "boolean") faceRegistered = data.isFaceRegistered;
+      else if (typeof data.is_enrolled === "boolean") faceRegistered = data.is_enrolled;
+      else if (typeof data.isEnrolled === "boolean") faceRegistered = data.isEnrolled;
+      else if (typeof data.face_enrolled === "boolean") faceRegistered = data.face_enrolled;
+      else if (typeof data.faceEnrolled === "boolean") faceRegistered = data.faceEnrolled;
+      else if (typeof data.enrolled === "boolean") faceRegistered = data.enrolled;
+      else if (typeof data.has_face === "boolean") faceRegistered = data.has_face;
+      else if (typeof data.hasFace === "boolean") faceRegistered = data.hasFace;
+      else if (data.enrollment_status === "not_enrolled" || data.enrollmentStatus === "not_enrolled") faceRegistered = false;
+
+      return {
+        faceRegistered,
+        checkedIn: Boolean(data.checked_in ?? data.checkedIn),
+        checkedOut: Boolean(data.checked_out ?? data.checkedOut),
+        checkInTime: data.check_in_time || data.checkInTime || null,
+        checkOutTime: data.check_out_time || data.checkOutTime || null,
+        workingHours: data.working_hours ?? data.workingHours ?? null,
+        message: data.message || "",
+        raw: data,
+      };
+    } catch (err: any) {
+      const errorCode = extractErrorCode(err);
+      const errorMsg = extractFaceApiError(err);
+      const status = err?.response?.status || err?.status;
+
+      // Detect face-not-enrolled from backend error code or message
+      const isNotEnrolled =
+        errorCode === "FACE_NOT_ENROLLED" ||
+        errorCode === "face_not_enrolled" ||
+        errorCode === "NOT_ENROLLED" ||
+        errorCode === "USER_NOT_ENROLLED" ||
+        errorMsg.toLowerCase().includes("face not enrolled") ||
+        errorMsg.toLowerCase().includes("face not registered") ||
+        errorMsg.toLowerCase().includes("no face registered") ||
+        errorMsg.toLowerCase().includes("face is not registered") ||
+        errorMsg.toLowerCase().includes("face registration required") ||
+        errorMsg.toLowerCase().includes("not enrolled");
+
+      if (isNotEnrolled) {
+        return {
+          faceRegistered: false,
+          checkedIn: false,
+          checkedOut: false,
+          checkInTime: null,
+          checkOutTime: null,
+          workingHours: null,
+          message: errorMsg,
+          raw: {},
+          errorCode: errorCode || "FACE_NOT_ENROLLED",
+        };
+      }
+
+      // If the API responds with 404, it might mean either:
+      // 1. Employee has no attendance record for today (face IS registered)
+      // 2. Employee has no face registered at all
+      if (status === 404) {
+        const isFaceMissing =
+          errorMsg.toLowerCase().includes("face") ||
+          errorMsg.toLowerCase().includes("profile") ||
+          errorMsg.toLowerCase().includes("biometric");
+
+        return {
+          faceRegistered: !isFaceMissing,
+          checkedIn: false,
+          checkedOut: false,
+          checkInTime: null,
+          checkOutTime: null,
+          workingHours: null,
+          message: errorMsg || "No attendance record for today.",
+          raw: {},
+        };
+      }
+
+      // Re-throw for auth errors (401/403) and other unrecoverable issues
+      throw err;
+    }
+  },
+
+  /**
+   * Enroll / register the authenticated employee's face.
+   *
+   * BACKEND CAPABILITY GAP: The live backend does NOT currently expose
+   * a face enrollment/registration endpoint.
+   *
+   * This stub is structured so that when the backend adds an enrollment
+   * API (e.g. POST /api/v1/attendance/face/enroll), it can be wired in
+   * without rewriting the check-in flow.
+   */
+  enrollFace: async (_faceImage: Blob): Promise<{ success: boolean; message: string }> => {
+    // When the backend exposes an enrollment endpoint, uncomment and adjust:
+    //
+    // const formData = new FormData();
+    // formData.append("file", _faceImage, "face-enrollment.jpg");
+    // const res: any = await apiInstance.post("/attendance/face/enroll", formData, {
+    //   headers: { "Content-Type": "multipart/form-data" },
+    // });
+    // return {
+    //   success: res.data?.success ?? true,
+    //   message: res.data?.message || "Face enrolled successfully.",
+    // };
+
+    throw new Error(
+      "Face enrollment is not yet available. " +
+      "The backend does not currently expose a face registration endpoint. " +
+      "Please contact your administrator to set up face enrollment."
+    );
+  },
+
+  /**
    * Perform attendance check-in.
    * Sends coordinates, device info, and photo proof to backend /api/v1/attendance/face/check-in.
    */
   checkIn: async (payload: CheckInPayload): Promise<AttendancePunchResult> => {
-    const fileBlob = payload.file || await createFallbackImageBlob();
+    if (!payload.file) {
+      throw new Error("A face photo is required for check-in. Please enable your camera and capture your face.");
+    }
     const formData = new FormData();
-    formData.append("file", fileBlob, "checkin-proof.jpg");
+    formData.append("file", payload.file, "checkin-proof.jpg");
     if (payload.latitude != null) formData.append("latitude", payload.latitude.toString());
     if (payload.longitude != null) formData.append("longitude", payload.longitude.toString());
     formData.append("device_info", payload.deviceInfo || (typeof navigator !== "undefined" ? navigator.userAgent : "Web"));
@@ -535,34 +688,24 @@ export const attendanceApi = {
       });
       const data = extractObjectPayload<any>(res.data);
       return {
-        id: data.id || data.attendance_id || new Date().getTime().toString(),
-        time: data.check_in_time || data.time || new Date().toISOString(),
+        id: data.id || data.attendance_id || "",
+        time: data.check_in_time || data.time || "",
         status: "checked-in",
         success: true,
         message: res.data?.message || "Checked in successfully",
-        isInsideGeofence: data.is_inside_geofence ?? true,
+        isInsideGeofence: data.is_inside_geofence,
       };
     } catch (err: any) {
-      if (err?.response?.status === 404) {
-        // Fallback to json endpoint if face endpoint is unavailable
-        const res: any = await api.post("attendance/checkin", {
-          latitude: payload.latitude,
-          longitude: payload.longitude,
-          device_info: payload.deviceInfo || (typeof navigator !== "undefined" ? navigator.userAgent : "Web"),
-          ip_address: payload.ipAddress,
-          notes: payload.notes,
-        });
-        const data = extractObjectPayload<any>(res);
-        return {
-          id: data.id || data.attendance_id || new Date().getTime().toString(),
-          time: data.time || data.check_in_time || new Date().toISOString(),
-          status: data.status || "checked-in",
-          success: true,
-          message: res.message || "Checked in successfully",
-          isInsideGeofence: data.is_inside_geofence ?? true,
-        };
-      }
-      throw err;
+      // Surface face-specific errors
+      const errorCode = extractErrorCode(err);
+      const errorMsg = extractFaceApiError(err);
+      const httpStatus = err?.response?.status || err?.status;
+
+      const enrichedError: any = new Error(errorMsg);
+      enrichedError.status = httpStatus;
+      enrichedError.errorCode = errorCode;
+      enrichedError.response = err?.response;
+      throw enrichedError;
     }
   },
 
@@ -571,9 +714,11 @@ export const attendanceApi = {
    * Sends coordinates, device info, and photo proof to backend /api/v1/attendance/face/check-out.
    */
   checkOut: async (payload: CheckOutPayload): Promise<AttendancePunchResult> => {
-    const fileBlob = payload.file || await createFallbackImageBlob();
+    if (!payload.file) {
+      throw new Error("A face photo is required for check-out. Please enable your camera and capture your face.");
+    }
     const formData = new FormData();
-    formData.append("file", fileBlob, "checkout-proof.jpg");
+    formData.append("file", payload.file, "checkout-proof.jpg");
     if (payload.latitude != null) formData.append("latitude", payload.latitude.toString());
     if (payload.longitude != null) formData.append("longitude", payload.longitude.toString());
     formData.append("device_info", payload.deviceInfo || (typeof navigator !== "undefined" ? navigator.userAgent : "Web"));
@@ -585,32 +730,22 @@ export const attendanceApi = {
       });
       const data = extractObjectPayload<any>(res.data);
       return {
-        id: data.id || data.attendance_id || new Date().getTime().toString(),
-        time: data.check_out_time || data.time || new Date().toISOString(),
+        id: data.id || data.attendance_id || "",
+        time: data.check_out_time || data.time || "",
         status: "checked-out",
         success: true,
         message: res.data?.message || "Checked out successfully",
       };
     } catch (err: any) {
-      if (err?.response?.status === 404) {
-        // Fallback to json endpoint if face endpoint is unavailable
-        const res: any = await api.post("attendance/checkout", {
-          latitude: payload.latitude,
-          longitude: payload.longitude,
-          device_info: payload.deviceInfo || (typeof navigator !== "undefined" ? navigator.userAgent : "Web"),
-          ip_address: payload.ipAddress,
-          notes: payload.notes,
-        });
-        const data = extractObjectPayload<any>(res);
-        return {
-          id: data.id || data.attendance_id || new Date().getTime().toString(),
-          time: data.time || data.check_out_time || new Date().toISOString(),
-          status: data.status || "checked-out",
-          success: true,
-          message: res.message || "Checked out successfully",
-        };
-      }
-      throw err;
+      const errorCode = extractErrorCode(err);
+      const errorMsg = extractFaceApiError(err);
+      const httpStatus = err?.response?.status || err?.status;
+
+      const enrichedError: any = new Error(errorMsg);
+      enrichedError.status = httpStatus;
+      enrichedError.errorCode = errorCode;
+      enrichedError.response = err?.response;
+      throw enrichedError;
     }
   },
 
