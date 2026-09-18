@@ -50,6 +50,18 @@ export interface CheckInPayload {
   ipAddress?: string;
   notes?: string;
   file?: Blob | File; // Captured photo if face verification used
+  image_base64?: string; // High-quality Base64 captured snapshot for AI face verification
+}
+
+export interface FaceStatusResponse {
+  is_enrolled: boolean;
+  enrolled_at?: string | null;
+  faceRegistered?: boolean;
+}
+
+export interface FaceEnrollResponse {
+  success: boolean;
+  message: string;
 }
 
 export interface CheckOutPayload {
@@ -367,11 +379,17 @@ function extractFaceApiError(err: any): string {
   const resp = err?.response?.data || err?.data;
   if (resp) {
     if (typeof resp === "string") return resp;
-    if (resp.detail && typeof resp.detail === "string") return resp.detail;
-    if (resp.message && typeof resp.message === "string") return resp.message;
-    if (Array.isArray(resp.detail)) {
-      return resp.detail.map((d: any) => d.msg || d.message || JSON.stringify(d)).join("; ");
+    if (resp.detail) {
+      if (typeof resp.detail === "string") return resp.detail;
+      if (typeof resp.detail === "object") {
+        if (typeof resp.detail.message === "string") return resp.detail.message;
+        if (typeof resp.detail.msg === "string") return resp.detail.msg;
+      }
+      if (Array.isArray(resp.detail)) {
+        return resp.detail.map((d: any) => d.msg || d.message || JSON.stringify(d)).join("; ");
+      }
     }
+    if (resp.message && typeof resp.message === "string") return resp.message;
   }
   if (err?.message && typeof err.message === "string") return err.message;
   return "An unexpected error occurred.";
@@ -384,6 +402,9 @@ function extractFaceApiError(err: any): string {
 function extractErrorCode(err: any): string | undefined {
   const resp = err?.response?.data || err?.data;
   if (resp && typeof resp === "object") {
+    if (resp.detail && typeof resp.detail === "object" && resp.detail.code) {
+      return resp.detail.code;
+    }
     return resp.error_code || resp.code || resp.errorCode || undefined;
   }
   return undefined;
@@ -638,45 +659,132 @@ export const attendanceApi = {
   },
 
   /**
-   * Enroll / register the authenticated employee's face.
-   *
-   * BACKEND CAPABILITY GAP: The live backend does NOT currently expose
-   * a face enrollment/registration endpoint.
-   *
-   * This stub is structured so that when the backend adds an enrollment
-   * API (e.g. POST /api/v1/attendance/face/enroll), it can be wired in
-   * without rewriting the check-in flow.
+   * Get employee face enrollment status.
+   * Calls GET /attendance/face-status (normalized to /api/v1/attendance/face-status).
    */
-  enrollFace: async (_faceImage: Blob): Promise<{ success: boolean; message: string }> => {
-    // When the backend exposes an enrollment endpoint, uncomment and adjust:
-    //
-    // const formData = new FormData();
-    // formData.append("file", _faceImage, "face-enrollment.jpg");
-    // const res: any = await apiInstance.post("/attendance/face/enroll", formData, {
-    //   headers: { "Content-Type": "multipart/form-data" },
-    // });
-    // return {
-    //   success: res.data?.success ?? true,
-    //   message: res.data?.message || "Face enrolled successfully.",
-    // };
+  getFaceStatus: async (): Promise<FaceStatusResponse> => {
+    try {
+      const res: any = await api.get("attendance/face-status");
+      const data = extractObjectPayload<any>(res);
+      const isEnrolled = Boolean(
+        data.is_enrolled ??
+        data.isEnrolled ??
+        data.is_face_enrolled ??
+        data.face_registered ??
+        data.faceRegistered ??
+        (res && typeof res === "object" && (res.is_enrolled ?? res.isEnrolled)) ??
+        false
+      );
+      return {
+        is_enrolled: isEnrolled,
+        enrolled_at: data.enrolled_at || data.enrolledAt || null,
+        faceRegistered: isEnrolled,
+      };
+    } catch (err: any) {
+      const errorCode = extractErrorCode(err);
+      if (errorCode === "FACE_NOT_ENROLLED") {
+        return { is_enrolled: false, enrolled_at: null, faceRegistered: false };
+      }
+      // Graceful fallback to /attendance/face/me
+      try {
+        const fallbackRes: any = await api.get("attendance/face/me");
+        const fbData = extractObjectPayload<any>(fallbackRes);
+        const isEnrolled = Boolean(
+          fbData.face_registered ?? fbData.is_registered ?? fbData.is_enrolled ?? false
+        );
+        return {
+          is_enrolled: isEnrolled,
+          enrolled_at: fbData.face_enrolled_at || null,
+          faceRegistered: isEnrolled,
+        };
+      } catch {
+        return { is_enrolled: false, enrolled_at: null, faceRegistered: false };
+      }
+    }
+  },
 
-    throw new Error(
-      "Face enrollment is not yet available. " +
-      "The backend does not currently expose a face registration endpoint. " +
-      "Please contact your administrator to set up face enrollment."
-    );
+  /**
+   * Enroll / register the authenticated employee's face via Base64 snapshot.
+   * Calls POST /attendance/face-enroll (normalized to /api/v1/attendance/face-enroll).
+   */
+  enrollFace: async (imageBase64: string): Promise<FaceEnrollResponse> => {
+    try {
+      const res: any = await api.post("attendance/face-enroll", {
+        image_base64: imageBase64,
+      });
+      const data = extractObjectPayload<any>(res);
+      return {
+        success: res.success ?? true,
+        message: res.message || data.message || "Face successfully registered!",
+      };
+    } catch (err: any) {
+      const errorCode = extractErrorCode(err);
+      const errorMsg = extractFaceApiError(err);
+      const enrichedError: any = new Error(errorMsg);
+      enrichedError.errorCode = errorCode;
+      enrichedError.response = err?.response;
+      throw enrichedError;
+    }
   },
 
   /**
    * Perform attendance check-in.
-   * Sends coordinates, device info, and photo proof to backend /api/v1/attendance/face/check-in.
+   * If image_base64 is provided, sends JSON payload to POST /attendance/checkin.
+   * Otherwise falls back to multipart POST /attendance/face/check-in.
    */
   checkIn: async (payload: CheckInPayload): Promise<AttendancePunchResult> => {
-    if (!payload.file) {
-      throw new Error("A face photo is required for check-in. Please enable your camera and capture your face.");
+    if (!payload.image_base64 && !payload.file) {
+      throw new Error("A face photo is required for check-in. Please look directly into the camera.");
     }
+
+    // 1. Primary path: Base64 face verification check-in
+    if (payload.image_base64) {
+      try {
+        const body: Record<string, any> = {
+          image_base64: payload.image_base64,
+          device_info: payload.deviceInfo || (typeof navigator !== "undefined" ? navigator.userAgent : "Web"),
+        };
+        if (payload.latitude != null || payload.longitude != null) {
+          body.location = {
+            latitude: payload.latitude,
+            longitude: payload.longitude,
+          };
+          body.latitude = payload.latitude;
+          body.longitude = payload.longitude;
+        }
+        if (payload.notes) {
+          body.notes = payload.notes;
+        }
+        if (payload.ipAddress) {
+          body.ip_address = payload.ipAddress;
+        }
+
+        const res: any = await api.post("attendance/checkin", body);
+        const data = extractObjectPayload<any>(res);
+        return {
+          id: data.id || data.attendance_id || "",
+          time: data.check_in_time || data.time || new Date().toISOString(),
+          status: "checked-in",
+          success: true,
+          message: res.message || data.message || "Attendance Verified & Marked Successfully!",
+          isInsideGeofence: data.is_inside_geofence,
+        };
+      } catch (err: any) {
+        const errorCode = extractErrorCode(err);
+        const errorMsg = extractFaceApiError(err);
+        const httpStatus = err?.response?.status || err?.status;
+
+        const enrichedError: any = new Error(errorMsg);
+        enrichedError.status = httpStatus;
+        enrichedError.errorCode = errorCode;
+        enrichedError.response = err?.response;
+        throw enrichedError;
+      }
+    }
+
+    // 2. Fallback path: Multipart upload
     const formData = new FormData();
-    formData.append("file", payload.file, "checkin-proof.jpg");
+    formData.append("file", payload.file!, "checkin-proof.jpg");
     if (payload.latitude != null) formData.append("latitude", payload.latitude.toString());
     if (payload.longitude != null) formData.append("longitude", payload.longitude.toString());
     formData.append("device_info", payload.deviceInfo || (typeof navigator !== "undefined" ? navigator.userAgent : "Web"));
@@ -696,7 +804,6 @@ export const attendanceApi = {
         isInsideGeofence: data.is_inside_geofence,
       };
     } catch (err: any) {
-      // Surface face-specific errors
       const errorCode = extractErrorCode(err);
       const errorMsg = extractFaceApiError(err);
       const httpStatus = err?.response?.status || err?.status;

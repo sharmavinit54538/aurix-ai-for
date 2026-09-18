@@ -5,12 +5,20 @@ import {
   Fingerprint, HelpCircle, History, Laptop, LogIn, LogOut,
   MapPin, MessageSquare, Monitor, Play, RefreshCw, Send,
   ShieldCheck, Timer, BarChart3, Wifi, X, Zap,
-  CameraOff, Video, User,
+  CameraOff, Video, User, ScanFace, Sparkles, ShieldAlert,
 } from "lucide-react";
+import { toast as sonnerToast } from "sonner";
 import { useAurix } from "@/lib/aurix-store";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { GlassCard, StatCard } from "@/components/hrms/Shared";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import {
   attendanceApi,
   TimelineEventItem,
@@ -312,6 +320,21 @@ function CheckInPage() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
+  // ── Face Enrollment & Biometric State ────────────────────────
+  const [isFaceEnrolled, setIsFaceEnrolled] = useState<boolean | null>(null);
+  const [enrolledAt, setEnrolledAt] = useState<string | null>(null);
+  const [showEnrollModal, setShowEnrollModal] = useState(false);
+  const [isEnrolling, setIsEnrolling] = useState(false);
+  const [enrollError, setEnrollError] = useState<string | null>(null);
+  const [verificationSuccess, setVerificationSuccess] = useState(false);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
+
+  // Modal Camera Refs & State
+  const [modalCameraActive, setModalCameraActive] = useState(false);
+  const [modalCameraError, setModalCameraError] = useState<string | null>(null);
+  const modalVideoRef = useRef<HTMLVideoElement | null>(null);
+  const modalStreamRef = useRef<MediaStream | null>(null);
+
   // ── Toast Helper ─────────────────────────────────────────────
   function showToast(msg: string, type: "success" | "error" | "info" = "success") {
     setToast({ msg, type });
@@ -332,7 +355,7 @@ function CheckInPage() {
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play();
+        videoRef.current.play().catch(() => {});
       }
       setCameraActive(true);
     } catch (err: any) {
@@ -353,11 +376,80 @@ function CheckInPage() {
     setCameraActive(false);
   }, []);
 
-  // Capture current frame from live video as Blob
-  const captureFrame = useCallback(async (): Promise<Blob | null> => {
-    if (!videoRef.current || !cameraActive) return null;
+  // Modal camera handlers for registration
+  const startModalCamera = useCallback(async () => {
+    setModalCameraError(null);
     try {
-      const video = videoRef.current;
+      if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+        throw new Error("Camera API is not supported in this browser.");
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
+        audio: false,
+      });
+      modalStreamRef.current = stream;
+      if (modalVideoRef.current) {
+        modalVideoRef.current.srcObject = stream;
+        modalVideoRef.current.play().catch(() => {});
+      }
+      setModalCameraActive(true);
+    } catch (err: any) {
+      console.warn("Modal camera could not be started:", err);
+      setModalCameraError(err?.message || "Could not access camera. Please allow camera permissions.");
+      setModalCameraActive(false);
+    }
+  }, []);
+
+  const stopModalCamera = useCallback(() => {
+    if (modalStreamRef.current) {
+      modalStreamRef.current.getTracks().forEach((track) => track.stop());
+      modalStreamRef.current = null;
+    }
+    if (modalVideoRef.current) {
+      modalVideoRef.current.srcObject = null;
+    }
+    setModalCameraActive(false);
+  }, []);
+
+  // High-quality Base64 capture from live video
+  const captureBase64 = useCallback((): string | null => {
+    const video = videoRef.current;
+    if (!video || !video.videoWidth) return null;
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return null;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      return canvas.toDataURL("image/jpeg", 0.95);
+    } catch {
+      return null;
+    }
+  }, []);
+
+  // High-quality Base64 capture from modal registration video
+  const captureModalBase64 = useCallback((): string | null => {
+    const video = modalVideoRef.current;
+    if (!video || !video.videoWidth) return null;
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return null;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      return canvas.toDataURL("image/jpeg", 0.95);
+    } catch {
+      return null;
+    }
+  }, []);
+
+  // Capture frame as Blob for checkout fallback
+  const captureFrame = useCallback(async (): Promise<Blob | null> => {
+    const video = videoRef.current;
+    if (!video || !cameraActive) return null;
+    try {
       const canvas = document.createElement("canvas");
       canvas.width = video.videoWidth || 640;
       canvas.height = video.videoHeight || 480;
@@ -372,10 +464,24 @@ function CheckInPage() {
     }
   }, [cameraActive]);
 
+  // ── Camera Resource Hygiene ──────────────────────────────────
   useEffect(() => {
+    // Unmount cleanup: explicitly stop all tracks to release camera hardware
     return () => {
       stopCamera();
+      stopModalCamera();
     };
+  }, [stopCamera, stopModalCamera]);
+
+  useEffect(() => {
+    // Release camera if tab becomes hidden to save power/privacy
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopCamera();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [stopCamera]);
 
   // ── Live Working Clock Ticker ────────────────────────────────
@@ -392,11 +498,11 @@ function CheckInPage() {
     return () => clearInterval(t);
   }, [status]);
 
-  // ── Load Real Attendance State from Backend ───────────────────
+  // ── Load Real Attendance State & Face Status from Backend ─────
   const loadAttendanceState = useCallback(async () => {
     setApiError(null);
     try {
-      const [punchRes, timelineRes, historyRes, shiftRes, holidaysRes, empRes] =
+      const [punchRes, timelineRes, historyRes, shiftRes, holidaysRes, empRes, faceStatusRes] =
         await Promise.allSettled([
           attendanceApi.getMyTodayStatus(),
           attendanceApi.getTimeline(),
@@ -404,9 +510,26 @@ function CheckInPage() {
           attendanceApi.getMyShiftSchedule(),
           attendanceApi.getHolidays({ year: new Date().getFullYear() }),
           attendanceApi.resolveCurrentEmployee(),
+          attendanceApi.getFaceStatus(),
         ]);
 
-      // 1. Process Punch State
+      // 1. Process Face Status Check (Mandatory condition check)
+      let enrolled = false;
+      if (faceStatusRes.status === "fulfilled") {
+        const fs = faceStatusRes.value;
+        enrolled = Boolean(fs.is_enrolled);
+        setIsFaceEnrolled(enrolled);
+        setEnrolledAt(fs.enrolled_at || null);
+      } else {
+        setIsFaceEnrolled(false);
+      }
+
+      // Auto-start camera if face is enrolled and user has not checked in yet
+      if (enrolled && !streamRef.current) {
+        startCamera().catch(() => {});
+      }
+
+      // 2. Process Punch State
       if (punchRes.status === "fulfilled") {
         const p = punchRes.value;
         if (p.checkedOut) {
@@ -434,27 +557,27 @@ function CheckInPage() {
         }
       }
 
-      // 2. Process Timeline
+      // 3. Process Timeline
       if (timelineRes.status === "fulfilled") {
         setTimeline(timelineRes.value || []);
       }
 
-      // 3. Process Attendance History
+      // 4. Process Attendance History
       if (historyRes.status === "fulfilled") {
         setHistoryList(historyRes.value?.items || []);
       }
 
-      // 4. Process Shift Info
+      // 5. Process Shift Info
       if (shiftRes.status === "fulfilled") {
         setAssignedShift(shiftRes.value);
       }
 
-      // 5. Process Holidays
+      // 6. Process Holidays
       if (holidaysRes.status === "fulfilled") {
         setHolidays(holidaysRes.value || []);
       }
 
-      // 6. Process Employee Details
+      // 7. Process Employee Details
       if (empRes.status === "fulfilled" && empRes.value) {
         setEmployeeDetails(empRes.value);
       }
@@ -464,35 +587,113 @@ function CheckInPage() {
     } finally {
       setPageLoading(false);
     }
-  }, []);
+  }, [startCamera]);
 
   useEffect(() => {
     loadAttendanceState();
   }, [loadAttendanceState]);
 
-  // ── Punch Actions ────────────────────────────────────────────
-  async function handleCheckIn() {
-    setLoading("checkin");
+  // ── Capture & Register Face (Condition A) ────────────────────
+  async function handleCaptureAndRegisterFace() {
+    setEnrollError(null);
+    setIsEnrolling(true);
     try {
-      const photo = await captureFrame();
+      const base64 = captureModalBase64();
+      if (!base64) {
+        throw new Error("Could not capture image from camera. Please make sure your camera is active and permissions are granted.");
+      }
+
+      const res = await attendanceApi.enrollFace(base64);
+      const successMsg = res.message || "Face successfully registered!";
+      showToast(successMsg, "success");
+      sonnerToast.success(successMsg);
+
+      setIsFaceEnrolled(true);
+      setShowEnrollModal(false);
+      stopModalCamera();
+
+      // Automatically switch to live check-in camera mode
+      await startCamera();
+    } catch (err: any) {
+      const msg = err?.message || "Face registration failed. Please ensure your face is well-lit and fully visible.";
+      setEnrollError(msg);
+      showToast(msg, "error");
+      sonnerToast.error(msg);
+    } finally {
+      setIsEnrolling(false);
+    }
+  }
+
+  // ── Biometric Verification Punch In (Condition B) ───────────
+  async function handleCheckIn() {
+    if (isFaceEnrolled === false) {
+      setShowEnrollModal(true);
+      startModalCamera();
+      showToast("Face registration required before check-in.", "error");
+      sonnerToast.error("Face registration required before check-in.");
+      return;
+    }
+
+    setVerificationError(null);
+    setLoading("checkin");
+
+    try {
+      // Ensure camera is active
+      if (!cameraActive) {
+        await startCamera();
+        await new Promise((r) => setTimeout(r, 600));
+      }
+
+      const capturedBase64 = captureBase64();
+      if (!capturedBase64) {
+        throw new Error("Could not capture live frame. Please position your face inside the frame and keep camera enabled.");
+      }
+
       const coords = await getCoordinates();
       const res = await attendanceApi.checkIn({
-        file: photo || undefined,
+        image_base64: capturedBase64,
         latitude: coords?.lat,
         longitude: coords?.lng,
         deviceInfo: typeof navigator !== "undefined" ? navigator.userAgent : "Browser",
         notes: noteEmp || undefined,
       });
 
-      showToast(res.message || "Checked in successfully!", "success");
+      // Verification Success handling
+      setVerificationSuccess(true);
+      const successMsg = res.message || "Attendance Verified & Marked Successfully!";
+      showToast(successMsg, "success");
+      sonnerToast.success(successMsg);
+
+      // Dismiss celebration animation after 3.5s
+      setTimeout(() => {
+        setVerificationSuccess(false);
+      }, 3500);
+
       await loadAttendanceState();
     } catch (err: any) {
-      const msg =
-        err?.response?.data?.detail ||
-        err?.response?.data?.message ||
+      const errorCode = err?.errorCode;
+      const errorMsg =
         err?.message ||
-        "Failed to check in. Please verify your connection.";
-      showToast(msg, "error");
+        err?.response?.data?.detail?.message ||
+        err?.response?.data?.message ||
+        "Check-in failed.";
+
+      if (errorCode === "FACE_NOT_ENROLLED") {
+        setIsFaceEnrolled(false);
+        setShowEnrollModal(true);
+        startModalCamera();
+        showToast("Face not enrolled. Please complete face registration.", "error");
+        sonnerToast.error("Face not enrolled. Please complete face registration.");
+      } else if (errorCode === "FACE_MISMATCH") {
+        const mismatchMsg = "Face match failed. Please look straight and ensure good lighting.";
+        setVerificationError(mismatchMsg);
+        showToast(mismatchMsg, "error");
+        sonnerToast.error(mismatchMsg);
+      } else {
+        setVerificationError(errorMsg);
+        showToast(errorMsg, "error");
+        sonnerToast.error(errorMsg);
+      }
     } finally {
       setLoading(null);
     }
@@ -627,6 +828,42 @@ function CheckInPage() {
         </div>
       )}
 
+      {/* ── Mandatory Face Registration Alert Banner (Condition A) ── */}
+      {isFaceEnrolled === false && (
+        <div className="relative overflow-hidden rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-rose-500/15 p-5 shadow-lg shadow-amber-500/5">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-amber-500/20 text-amber-500 border border-amber-500/30 shadow-inner">
+                <ScanFace className="h-6 w-6 animate-pulse" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-display text-sm sm:text-base font-semibold text-foreground">
+                    Face Registration Required
+                  </h3>
+                  <span className="rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                    Mandatory
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1 max-w-xl">
+                  Your biometric face profile is not registered. In accordance with company policy, face enrollment is mandatory before you can check in for attendance.
+                </p>
+              </div>
+            </div>
+            <Button
+              onClick={() => {
+                setShowEnrollModal(true);
+                startModalCamera();
+              }}
+              className="w-full sm:w-auto shrink-0 gap-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold shadow-md shadow-amber-500/25"
+            >
+              <ScanFace className="h-4 w-4" />
+              Register Face Now
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* ── Main Grid ── */}
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         {/* Left 2 Cols: Check-in, Timer, Actions, History */}
@@ -685,14 +922,27 @@ function CheckInPage() {
 
               {/* Action Buttons */}
               <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                <AttendBtn
-                  label="Check In"
-                  icon={LogIn}
-                  onClick={handleCheckIn}
-                  disabled={status !== "not-checked-in"}
-                  variant="success"
-                  loading={loading === "checkin"}
-                />
+                <div className="relative">
+                  <AttendBtn
+                    label={
+                      loading === "checkin"
+                        ? "Verifying Face..."
+                        : isFaceEnrolled === false
+                        ? "Face Required"
+                        : "Check In"
+                    }
+                    icon={loading === "checkin" ? RefreshCw : LogIn}
+                    onClick={handleCheckIn}
+                    disabled={status !== "not-checked-in" || isFaceEnrolled === false}
+                    variant="success"
+                    loading={loading === "checkin"}
+                  />
+                  {isFaceEnrolled === false && (
+                    <span className="absolute -top-2 right-1 rounded-full bg-amber-500 px-1.5 py-0.5 text-[9px] font-extrabold text-black uppercase tracking-wide shadow">
+                      Enroll First
+                    </span>
+                  )}
+                </div>
                 <AttendBtn
                   label="Break In"
                   icon={Coffee}
@@ -868,11 +1118,35 @@ function CheckInPage() {
 
           {/* ── Two-col grid: Face Verification Camera + Device ── */}
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            {/* Face Verification Camera */}
-            <GlassCard>
-              <SectionHeader title="Face Verification" icon={Camera} />
+            {/* Live Face Verification Camera Widget */}
+            <GlassCard className="relative overflow-hidden">
+              <div className="flex items-center justify-between mb-4">
+                <SectionHeader title="Face Verification" icon={Camera} />
+                {isFaceEnrolled !== null && (
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
+                      isFaceEnrolled
+                        ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
+                        : "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
+                    }`}
+                  >
+                    <span className={`h-1.5 w-1.5 rounded-full ${isFaceEnrolled ? "bg-emerald-500" : "bg-amber-500 animate-pulse"}`} />
+                    {isFaceEnrolled ? "Face Enrolled" : "Registration Required"}
+                  </span>
+                )}
+              </div>
+
               <div className="space-y-3">
-                <div className="relative h-44 rounded-xl border border-border bg-black/40 overflow-hidden flex flex-col items-center justify-center">
+                {/* Viewport with Live Feed & Oval Outline */}
+                <div
+                  className={`relative h-64 sm:h-72 rounded-2xl border bg-black/95 overflow-hidden flex flex-col items-center justify-center transition-colors duration-300 ${
+                    verificationError
+                      ? "border-rose-500/80 shadow-[0_0_20px_rgba(244,63,94,0.3)]"
+                      : verificationSuccess
+                      ? "border-emerald-500/80 shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+                      : "border-border"
+                  }`}
+                >
                   <video
                     ref={videoRef}
                     autoPlay
@@ -880,28 +1154,116 @@ function CheckInPage() {
                     muted
                     className={`h-full w-full object-cover ${cameraActive ? "block" : "hidden"}`}
                   />
+
                   {!cameraActive && (
-                    <div className="flex flex-col items-center gap-2 p-4 text-center">
-                      <CameraOff className="h-8 w-8 text-muted-foreground/40" />
-                      <span className="text-xs text-muted-foreground">Camera feed is inactive</span>
-                      {cameraError && <span className="text-[11px] text-destructive">{cameraError}</span>}
+                    <div className="flex flex-col items-center gap-2.5 p-5 text-center">
+                      <div className="grid h-12 w-12 place-items-center rounded-2xl bg-muted/40 text-muted-foreground">
+                        <CameraOff className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <span className="text-xs font-medium text-foreground block">Camera Feed Inactive</span>
+                        <span className="text-[11px] text-muted-foreground">Enable camera for live AI facial verification check-in</span>
+                      </div>
+                      {cameraError && <span className="text-[11px] text-destructive max-w-xs">{cameraError}</span>}
+                      <Button size="sm" variant="outline" className="mt-1 gap-1.5 text-xs" onClick={startCamera}>
+                        <Video className="h-3.5 w-3.5" /> Start Live Camera
+                      </Button>
                     </div>
                   )}
-                  {cameraActive && (
-                    <div className="absolute top-2 right-2 flex items-center gap-1.5 rounded-full bg-emerald-500/80 px-2.5 py-0.5 text-[10px] font-semibold text-white">
-                      <span className="h-1.5 w-1.5 rounded-full bg-white animate-ping" /> Live Preview
+
+                  {/* Oval Face Guide Overlay when Camera is Active */}
+                  {cameraActive && !verificationSuccess && (
+                    <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center p-3">
+                      {/* Live Indicator Badge */}
+                      <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 rounded-full bg-black/60 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-semibold text-white border border-white/10">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                        Live Preview
+                      </div>
+
+                      {/* Oval Frame */}
+                      <div
+                        className={`relative w-44 h-56 sm:w-48 sm:h-60 rounded-[50%] border-2 transition-all duration-300 ${
+                          loading === "checkin"
+                            ? "border-cyan-400 shadow-[0_0_30px_rgba(34,211,238,0.7)]"
+                            : verificationError
+                            ? "border-rose-500 shadow-[0_0_25px_rgba(244,63,94,0.6)]"
+                            : "border-primary/60 shadow-[0_0_20px_rgba(99,102,241,0.35)]"
+                        }`}
+                      >
+                        {/* Reticles / Viewfinder corners */}
+                        <div className="absolute -top-1.5 -left-1.5 w-4 h-4 border-t-2 border-l-2 border-primary" />
+                        <div className="absolute -top-1.5 -right-1.5 w-4 h-4 border-t-2 border-r-2 border-primary" />
+                        <div className="absolute -bottom-1.5 -left-1.5 w-4 h-4 border-b-2 border-l-2 border-primary" />
+                        <div className="absolute -bottom-1.5 -right-1.5 w-4 h-4 border-b-2 border-r-2 border-primary" />
+
+                        {/* Scanning Laser Line when Verifying */}
+                        {loading === "checkin" && (
+                          <div className="absolute inset-x-2 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_15px_#22d3ee] animate-pulse" />
+                        )}
+                      </div>
+
+                      {/* Instructions pill */}
+                      <div className="mt-2.5 rounded-full bg-black/75 backdrop-blur-md px-3 py-1 text-[11px] font-medium text-white shadow-lg flex items-center gap-1.5 border border-white/15">
+                        <ScanFace className="h-3.5 w-3.5 text-cyan-400" />
+                        <span>
+                          {loading === "checkin"
+                            ? "Verifying face..."
+                            : isFaceEnrolled === false
+                            ? "Face registration required before check-in"
+                            : "Position your face inside the frame to check in"}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Green Success Animation Overlay */}
+                  {verificationSuccess && (
+                    <div className="absolute inset-0 bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center gap-2.5 z-20 text-center animate-in fade-in zoom-in-95 duration-300">
+                      <div className="h-16 w-16 rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center text-emerald-400 shadow-[0_0_35px_rgba(16,185,129,0.5)]">
+                        <CheckCircle2 className="h-10 w-10 animate-bounce" />
+                      </div>
+                      <p className="text-sm font-semibold text-white">Attendance Verified & Marked Successfully!</p>
+                      <p className="text-xs text-emerald-400">Biometric match confirmed • Checked In</p>
                     </div>
                   )}
                 </div>
 
-                <div className="flex gap-2">
+                {/* Verification Error alert if mismatch */}
+                {verificationError && (
+                  <div className="flex items-center justify-between gap-2 rounded-xl border border-rose-500/40 bg-rose-500/10 p-3 text-xs text-rose-600 dark:text-rose-400 animate-in fade-in">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4 shrink-0" />
+                      <span>{verificationError}</span>
+                    </div>
+                    <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px]" onClick={() => setVerificationError(null)}>
+                      Dismiss
+                    </Button>
+                  </div>
+                )}
+
+                {/* Camera Control Buttons */}
+                <div className="flex flex-wrap gap-2">
                   {!cameraActive ? (
-                    <Button size="sm" variant="outline" className="w-full gap-2 text-xs" onClick={startCamera}>
+                    <Button size="sm" variant="outline" className="flex-1 gap-2 text-xs" onClick={startCamera}>
                       <Video className="h-3.5 w-3.5" /> Enable Camera
                     </Button>
                   ) : (
-                    <Button size="sm" variant="outline" className="w-full gap-2 text-xs text-rose-500 hover:text-rose-600" onClick={stopCamera}>
+                    <Button size="sm" variant="outline" className="flex-1 gap-2 text-xs text-rose-500 hover:text-rose-600" onClick={stopCamera}>
                       <CameraOff className="h-3.5 w-3.5" /> Turn Off Camera
+                    </Button>
+                  )}
+
+                  {isFaceEnrolled === false && (
+                    <Button
+                      size="sm"
+                      className="flex-1 gap-2 text-xs bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-md shadow-amber-500/20"
+                      onClick={() => {
+                        setShowEnrollModal(true);
+                        startModalCamera();
+                      }}
+                    >
+                      <ScanFace className="h-3.5 w-3.5" /> Register Face
                     </Button>
                   )}
                 </div>
@@ -1145,6 +1507,120 @@ function CheckInPage() {
           </GlassCard>
         </div>
       </div>
+
+      {/* ── Face Registration Required Modal (Condition A) ── */}
+      <Dialog
+        open={showEnrollModal}
+        onOpenChange={(open) => {
+          setShowEnrollModal(open);
+          if (open) {
+            setEnrollError(null);
+            startModalCamera();
+          } else {
+            stopModalCamera();
+          }
+        }}
+      >
+        <DialogContent className="max-w-md p-6 sm:rounded-2xl border-border bg-card/95 backdrop-blur-xl">
+          <DialogHeader>
+            <div className="flex items-center gap-2 text-primary font-semibold text-xs tracking-wider uppercase">
+              <Sparkles className="h-3.5 w-3.5" /> Biometric Registration
+            </div>
+            <DialogTitle className="font-display text-lg font-bold">Face Registration Required</DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Center your face inside the oval guide outline. Ensure clear ambient lighting and look directly into the camera.
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Webcam Viewport with Centered Oval Guide */}
+          <div className="relative aspect-[4/3] w-full rounded-2xl bg-black/95 overflow-hidden border border-border flex items-center justify-center">
+            <video
+              ref={modalVideoRef}
+              autoPlay
+              playsInline
+              muted
+              className={`h-full w-full object-cover ${modalCameraActive ? "block" : "hidden"}`}
+            />
+
+            {!modalCameraActive && (
+              <div className="flex flex-col items-center gap-2.5 p-6 text-center text-muted-foreground">
+                <CameraOff className="h-10 w-10 text-muted-foreground/40" />
+                <span className="text-xs font-medium text-foreground">Webcam Inactive</span>
+                {modalCameraError && <span className="text-[11px] text-destructive max-w-xs">{modalCameraError}</span>}
+                <Button size="sm" variant="outline" className="mt-1 gap-1.5 text-xs" onClick={startModalCamera}>
+                  <Video className="h-3.5 w-3.5" /> Enable Webcam
+                </Button>
+              </div>
+            )}
+
+            {/* Centered Circular/Oval Face Guide Overlay */}
+            {modalCameraActive && (
+              <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center p-3">
+                <div className="relative w-44 h-56 sm:w-48 sm:h-60 rounded-[50%] border-2 border-cyan-400 shadow-[0_0_30px_rgba(34,211,238,0.5)]">
+                  {/* Viewfinder reticle brackets */}
+                  <div className="absolute -top-1.5 -left-1.5 w-4 h-4 border-t-2 border-l-2 border-white" />
+                  <div className="absolute -top-1.5 -right-1.5 w-4 h-4 border-t-2 border-r-2 border-white" />
+                  <div className="absolute -bottom-1.5 -left-1.5 w-4 h-4 border-b-2 border-l-2 border-white" />
+                  <div className="absolute -bottom-1.5 -right-1.5 w-4 h-4 border-b-2 border-r-2 border-white" />
+                </div>
+
+                <div className="mt-3 rounded-full bg-black/75 backdrop-blur-md px-3 py-1 text-[10px] text-white border border-white/10 flex items-center gap-1.5">
+                  <ScanFace className="h-3 w-3 text-cyan-400" /> Keep face centered inside the frame
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Quick Best Practice Guidelines */}
+          <div className="grid grid-cols-3 gap-2 text-[10px] text-muted-foreground text-center">
+            <div className="rounded-xl bg-muted/40 p-2 border border-border/40">
+              <span className="font-semibold text-foreground block">Good Lighting</span>
+              Avoid dark shadows
+            </div>
+            <div className="rounded-xl bg-muted/40 p-2 border border-border/40">
+              <span className="font-semibold text-foreground block">Look Straight</span>
+              Level with camera
+            </div>
+            <div className="rounded-xl bg-muted/40 p-2 border border-border/40">
+              <span className="font-semibold text-foreground block">Neutral Pose</span>
+              No masks or glasses
+            </div>
+          </div>
+
+          {/* Error Message if registration failed */}
+          {enrollError && (
+            <div className="flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{enrollError}</span>
+            </div>
+          )}
+
+          {/* Dialog Action Buttons */}
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setShowEnrollModal(false);
+                stopModalCamera();
+              }}
+              disabled={isEnrolling}
+              className="text-xs"
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleCaptureAndRegisterFace}
+              disabled={!modalCameraActive || isEnrolling}
+              className="gap-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white font-semibold shadow-md shadow-violet-500/25 text-xs"
+            >
+              {isEnrolling ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <ScanFace className="h-3.5 w-3.5" />}
+              {isEnrolling ? "Registering Face Profile..." : "Capture & Register Face"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
