@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
-import { LogOut, ChevronsUpDown } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useAurix } from "@/lib/aurix-store";
 import { logout } from "@/lib/auth-bootstrap";
 import {
@@ -20,7 +20,7 @@ interface UserProfileMenuProps {
 
 export function UserProfileMenu({
   collapsed = false,
-  variant = "sidebar",
+  variant = "topbar",
   className = "",
 }: UserProfileMenuProps) {
   const ws = useAurix();
@@ -123,7 +123,6 @@ export function UserProfileMenu({
                 {formattedRole}
               </div>
             </div>
-            <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60 group-hover:text-foreground transition-colors" />
           </button>
         )}
       </DropdownMenuTrigger>

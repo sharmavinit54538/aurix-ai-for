@@ -733,10 +733,6 @@ export function DashboardShell() {
               </div>
             ))}
           </nav>
-
-          <div className="shrink-0 border-t border-border p-2">
-            <UserProfileMenu collapsed={collapsed} />
-          </div>
         </aside>
 
         {mobileOpen ? <div onClick={() => setMobileOpen(false)} className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm lg:hidden" /> : null}
