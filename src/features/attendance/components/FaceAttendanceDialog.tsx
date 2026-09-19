@@ -89,6 +89,16 @@ export function FaceAttendanceDialog({
   const autoCaptureTimerRef = useRef<any>(null);
   const isCapturingRef = useRef<boolean>(false);
 
+  const modeRef = useRef(mode);
+  const notesRef = useRef(notes);
+  const onSuccessRef = useRef(onSuccess);
+
+  useEffect(() => {
+    modeRef.current = mode;
+    notesRef.current = notes;
+    onSuccessRef.current = onSuccess;
+  }, [mode, notes, onSuccess]);
+
   // Stop all camera tracks and release hardware
   const stopCamera = useCallback(() => {
     if (autoCaptureTimerRef.current) {
@@ -138,14 +148,14 @@ export function FaceAttendanceDialog({
         const deviceInfo = typeof navigator !== "undefined" ? navigator.userAgent : "Browser";
 
         let result: AttendancePunchResult;
-        if (mode === "check-in") {
+        if (modeRef.current === "check-in") {
           result = await attendanceApi.checkIn({
             image_base64: base64Image,
             latitude: currentCoords?.lat,
             longitude: currentCoords?.lng,
             accuracy: currentCoords?.accuracy,
             deviceInfo,
-            notes,
+            notes: notesRef.current,
           });
         } else {
           result = await attendanceApi.checkOut({
@@ -154,7 +164,7 @@ export function FaceAttendanceDialog({
             longitude: currentCoords?.lng,
             accuracy: currentCoords?.accuracy,
             deviceInfo,
-            notes,
+            notes: notesRef.current,
           });
         }
 
@@ -162,7 +172,7 @@ export function FaceAttendanceDialog({
         stopCamera();
         setPunchResult(result);
         setStage("success");
-        onSuccess(result);
+        onSuccessRef.current(result);
       } catch (err: any) {
         // Verification failed: stop camera, do NOT mark attendance, display real backend error
         stopCamera();
@@ -173,7 +183,7 @@ export function FaceAttendanceDialog({
         isCapturingRef.current = false;
       }
     },
-    [coords, mode, notes, onSuccess, stopCamera]
+    [coords, stopCamera]
   );
 
   // Initialize camera and start automated detection
@@ -263,7 +273,7 @@ export function FaceAttendanceDialog({
     return () => {
       stopCamera();
     };
-  }, [open, startCamera, stopCamera]);
+  }, [open]);
 
   // Stop camera when browser tab is hidden
   useEffect(() => {
