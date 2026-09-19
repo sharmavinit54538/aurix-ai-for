@@ -25,7 +25,9 @@ import {
   AttendanceHistoryItem,
   HolidayRecord,
   EmployeeShiftScheduleData,
+  AttendancePunchResult,
 } from "@/services/attendanceApi";
+import { FaceAttendanceDialog } from "../components/FaceAttendanceDialog";
 
 // ── Types ─────────────────────────────────────────────────────
 type AttendanceStatus = "not-checked-in" | "checked-in" | "on-break" | "checked-out";
@@ -35,14 +37,19 @@ interface AttendanceDay {
   status: "present" | "absent" | "late" | "leave" | "holiday" | "weekend" | "halfday" | "today" | "future";
 }
 
-// ── Geolocation Helper ─────────────────────────────────────────
-function getCoordinates(): Promise<{ lat: number; lng: number } | null> {
+// ── Geolocation Helper with Accuracy ────────────────────────────
+function getCoordinates(): Promise<{ lat: number; lng: number; accuracy?: number } | null> {
   return new Promise((resolve) => {
     if (typeof navigator !== "undefined" && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        (pos) =>
+          resolve({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            accuracy: pos.coords.accuracy,
+          }),
         () => resolve(null),
-        { timeout: 5000, enableHighAccuracy: true }
+        { timeout: 7000, enableHighAccuracy: true }
       );
     } else {
       resolve(null);
@@ -314,22 +321,18 @@ function CheckInPage() {
     designation?: string | null;
   } | null>(null);
 
-  // ── Live Camera State ────────────────────────────────────────
-  const [cameraActive, setCameraActive] = useState(false);
-  const [cameraError, setCameraError] = useState<string | null>(null);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  // ── Face Attendance Dialog State ─────────────────────────────
+  const [faceModalOpen, setFaceModalOpen] = useState(false);
+  const [faceModalMode, setFaceModalMode] = useState<"check-in" | "check-out">("check-in");
 
-  // ── Face Enrollment & Biometric State ────────────────────────
+  // ── Face Enrollment & Biometric Registration Modal State ─────
   const [isFaceEnrolled, setIsFaceEnrolled] = useState<boolean | null>(null);
   const [enrolledAt, setEnrolledAt] = useState<string | null>(null);
   const [showEnrollModal, setShowEnrollModal] = useState(false);
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [enrollError, setEnrollError] = useState<string | null>(null);
-  const [verificationSuccess, setVerificationSuccess] = useState(false);
-  const [verificationError, setVerificationError] = useState<string | null>(null);
 
-  // Modal Camera Refs & State
+  // Modal Camera Refs & State for Face Registration
   const [modalCameraActive, setModalCameraActive] = useState(false);
   const [modalCameraError, setModalCameraError] = useState<string | null>(null);
   const modalVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -340,41 +343,6 @@ function CheckInPage() {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 4000);
   }
-
-  // ── Camera Handlers ──────────────────────────────────────────
-  const startCamera = useCallback(async () => {
-    setCameraError(null);
-    try {
-      if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
-        throw new Error("Camera API is not supported in this browser.");
-      }
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
-        audio: false,
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play().catch(() => {});
-      }
-      setCameraActive(true);
-    } catch (err: any) {
-      console.warn("Camera could not be started:", err);
-      setCameraError(err?.message || "Could not access camera. Please allow camera permissions.");
-      setCameraActive(false);
-    }
-  }, []);
-
-  const stopCamera = useCallback(() => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-    setCameraActive(false);
-  }, []);
 
   // Modal camera handlers for registration
   const startModalCamera = useCallback(async () => {
@@ -411,23 +379,6 @@ function CheckInPage() {
     setModalCameraActive(false);
   }, []);
 
-  // High-quality Base64 capture from live video
-  const captureBase64 = useCallback((): string | null => {
-    const video = videoRef.current;
-    if (!video || !video.videoWidth) return null;
-    try {
-      const canvas = document.createElement("canvas");
-      canvas.width = video.videoWidth || 640;
-      canvas.height = video.videoHeight || 480;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return null;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      return canvas.toDataURL("image/jpeg", 0.95);
-    } catch {
-      return null;
-    }
-  }, []);
-
   // High-quality Base64 capture from modal registration video
   const captureModalBase64 = useCallback((): string | null => {
     const video = modalVideoRef.current;
@@ -445,44 +396,22 @@ function CheckInPage() {
     }
   }, []);
 
-  // Capture frame as Blob for checkout fallback
-  const captureFrame = useCallback(async (): Promise<Blob | null> => {
-    const video = videoRef.current;
-    if (!video || !cameraActive) return null;
-    try {
-      const canvas = document.createElement("canvas");
-      canvas.width = video.videoWidth || 640;
-      canvas.height = video.videoHeight || 480;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return null;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      return await new Promise<Blob | null>((resolve) => {
-        canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.9);
-      });
-    } catch {
-      return null;
-    }
-  }, [cameraActive]);
-
-  // ── Camera Resource Hygiene ──────────────────────────────────
+  // Registration modal unmount and visibility cleanup
   useEffect(() => {
-    // Unmount cleanup: explicitly stop all tracks to release camera hardware
     return () => {
-      stopCamera();
       stopModalCamera();
     };
-  }, [stopCamera, stopModalCamera]);
+  }, [stopModalCamera]);
 
   useEffect(() => {
-    // Release camera if tab becomes hidden to save power/privacy
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        stopCamera();
+        stopModalCamera();
       }
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [stopCamera]);
+  }, [stopModalCamera]);
 
   // ── Live Working Clock Ticker ────────────────────────────────
   useEffect(() => {
@@ -514,20 +443,15 @@ function CheckInPage() {
         ]);
 
       // 1. Process Face Status Check (Mandatory condition check)
-      let enrolled = false;
       if (faceStatusRes.status === "fulfilled") {
         const fs = faceStatusRes.value;
-        enrolled = Boolean(fs.is_enrolled);
-        setIsFaceEnrolled(enrolled);
+        setIsFaceEnrolled(Boolean(fs.is_enrolled));
         setEnrolledAt(fs.enrolled_at || null);
       } else {
         setIsFaceEnrolled(false);
       }
 
-      // Auto-start camera if face is enrolled and user has not checked in yet
-      if (enrolled && !streamRef.current) {
-        startCamera().catch(() => {});
-      }
+      // NOTE: Zero background camera auto-start here. Camera is only activated on user action.
 
       // 2. Process Punch State
       if (punchRes.status === "fulfilled") {
@@ -587,7 +511,7 @@ function CheckInPage() {
     } finally {
       setPageLoading(false);
     }
-  }, [startCamera]);
+  }, []);
 
   useEffect(() => {
     loadAttendanceState();
@@ -611,9 +535,7 @@ function CheckInPage() {
       setIsFaceEnrolled(true);
       setShowEnrollModal(false);
       stopModalCamera();
-
-      // Automatically switch to live check-in camera mode
-      await startCamera();
+      await loadAttendanceState();
     } catch (err: any) {
       const msg = err?.message || "Face registration failed. Please ensure your face is well-lit and fully visible.";
       setEnrollError(msg);
@@ -624,8 +546,8 @@ function CheckInPage() {
     }
   }
 
-  // ── Biometric Verification Punch In (Condition B) ───────────
-  async function handleCheckIn() {
+  // ── Face Check-In Trigger ────────────────────────────────────
+  function handleCheckIn() {
     if (isFaceEnrolled === false) {
       setShowEnrollModal(true);
       startModalCamera();
@@ -633,99 +555,50 @@ function CheckInPage() {
       sonnerToast.error("Face registration required before check-in.");
       return;
     }
-
-    setVerificationError(null);
-    setLoading("checkin");
-
-    try {
-      // Ensure camera is active
-      if (!cameraActive) {
-        await startCamera();
-        await new Promise((r) => setTimeout(r, 600));
-      }
-
-      const capturedBase64 = captureBase64();
-      if (!capturedBase64) {
-        throw new Error("Could not capture live frame. Please position your face inside the frame and keep camera enabled.");
-      }
-
-      const coords = await getCoordinates();
-      const res = await attendanceApi.checkIn({
-        image_base64: capturedBase64,
-        latitude: coords?.lat,
-        longitude: coords?.lng,
-        deviceInfo: typeof navigator !== "undefined" ? navigator.userAgent : "Browser",
-        notes: noteEmp || undefined,
-      });
-
-      // Verification Success handling
-      setVerificationSuccess(true);
-      const successMsg = res.message || "Attendance Verified & Marked Successfully!";
-      showToast(successMsg, "success");
-      sonnerToast.success(successMsg);
-
-      // Dismiss celebration animation after 3.5s
-      setTimeout(() => {
-        setVerificationSuccess(false);
-      }, 3500);
-
-      await loadAttendanceState();
-    } catch (err: any) {
-      const errorCode = err?.errorCode;
-      const errorMsg =
-        err?.message ||
-        err?.response?.data?.detail?.message ||
-        err?.response?.data?.message ||
-        "Check-in failed.";
-
-      if (errorCode === "FACE_NOT_ENROLLED") {
-        setIsFaceEnrolled(false);
-        setShowEnrollModal(true);
-        startModalCamera();
-        showToast("Face not enrolled. Please complete face registration.", "error");
-        sonnerToast.error("Face not enrolled. Please complete face registration.");
-      } else if (errorCode === "FACE_MISMATCH") {
-        const mismatchMsg = "Face match failed. Please look straight and ensure good lighting.";
-        setVerificationError(mismatchMsg);
-        showToast(mismatchMsg, "error");
-        sonnerToast.error(mismatchMsg);
-      } else {
-        setVerificationError(errorMsg);
-        showToast(errorMsg, "error");
-        sonnerToast.error(errorMsg);
-      }
-    } finally {
-      setLoading(null);
+    if (status !== "not-checked-in") {
+      sonnerToast.info(status === "checked-out" ? "You have already completed attendance for today." : "You are already checked in.");
+      return;
     }
+    setFaceModalMode("check-in");
+    setFaceModalOpen(true);
   }
 
-  async function handleCheckOut() {
-    setLoading("checkout");
-    try {
-      const photo = await captureFrame();
-      const coords = await getCoordinates();
-      const res = await attendanceApi.checkOut({
-        file: photo || undefined,
-        latitude: coords?.lat,
-        longitude: coords?.lng,
-        deviceInfo: typeof navigator !== "undefined" ? navigator.userAgent : "Browser",
-        notes: noteEmp || undefined,
-      });
+  // ── Face Check-Out Trigger ───────────────────────────────────
+  function handleCheckOut() {
+    if (status === "not-checked-in") {
+      sonnerToast.error("You must check in first before checking out.");
+      return;
+    }
+    if (status === "checked-out") {
+      sonnerToast.info("You have already checked out for today.");
+      return;
+    }
+    if (isFaceEnrolled === false) {
+      setShowEnrollModal(true);
+      startModalCamera();
+      sonnerToast.error("Face registration required before check-out.");
+      return;
+    }
+    setFaceModalMode("check-out");
+    setFaceModalOpen(true);
+  }
 
-      showToast(res.message || "Checked out successfully. Have a great evening!", "success");
-      await loadAttendanceState();
-    } catch (err: any) {
+  // ── Successful Face Punch Callback ───────────────────────────
+  const handleFaceSuccess = useCallback(
+    async (result: AttendancePunchResult) => {
       const msg =
-        err?.response?.data?.detail ||
-        err?.response?.data?.message ||
-        err?.message ||
-        "Failed to check out.";
-      showToast(msg, "error");
-    } finally {
-      setLoading(null);
-    }
-  }
+        result.message ||
+        (faceModalMode === "check-in"
+          ? "Attendance verified & check-in marked successfully!"
+          : "Attendance verified & check-out marked successfully!");
+      showToast(msg, "success");
+      sonnerToast.success(msg);
+      await loadAttendanceState();
+    },
+    [faceModalMode, loadAttendanceState]
+  );
 
+  // ── Break In & Out Controls ──────────────────────────────────
   async function handleBreakIn() {
     setLoading("breakin");
     try {
@@ -734,9 +607,12 @@ function CheckInPage() {
         notes: noteEmp || undefined,
       });
       showToast(res.message || "Break started.", "info");
+      sonnerToast.info(res.message || "Break started.");
       await loadAttendanceState();
     } catch (err: any) {
-      showToast(err?.message || "Failed to start break.", "error");
+      const msg = err?.message || "Failed to start break.";
+      showToast(msg, "error");
+      sonnerToast.error(msg);
     } finally {
       setLoading(null);
     }
@@ -747,23 +623,49 @@ function CheckInPage() {
     try {
       const res = await attendanceApi.endBreak();
       showToast(res.message || "Break ended. Welcome back!", "success");
+      sonnerToast.success(res.message || "Break ended. Welcome back!");
       await loadAttendanceState();
     } catch (err: any) {
-      showToast(err?.message || "Failed to end break.", "error");
+      const msg = err?.message || "Failed to end break.";
+      showToast(msg, "error");
+      sonnerToast.error(msg);
     } finally {
       setLoading(null);
     }
   }
 
-  // Overtime & Late calculation based on real check-in
-  const overtimeSec = Math.max(0, workSec - 28800);
+  // ── Overtime & Late calculation based on real backend data ────
+  const expectedHours = assignedShift?.currentShift?.totalWorkingHours ?? null;
+  const overtimeSec = expectedHours != null ? Math.max(0, workSec - expectedHours * 3600) : 0;
+
+  const shiftStartStr = assignedShift?.currentShift?.startTime;
+  const graceMinutes = assignedShift?.currentShift?.gracePeriodMinutes ?? 0;
+
   const lateBy = (() => {
-    if (!checkInTimeRef.current) return 0;
+    if (!checkInTimeRef.current || !shiftStartStr) return 0;
     const checkInDate = new Date(checkInTimeRef.current);
+    let shiftH = 0;
+    let shiftM = 0;
+    const is12Hour = shiftStartStr.includes("AM") || shiftStartStr.includes("PM");
+    if (is12Hour) {
+      const parts = shiftStartStr.trim().split(/\s+/);
+      const [hStr, mStr] = (parts[0] || "").split(":");
+      let h = parseInt(hStr, 10) || 0;
+      const m = parseInt(mStr, 10) || 0;
+      if (parts[1]?.toUpperCase() === "PM" && h < 12) h += 12;
+      if (parts[1]?.toUpperCase() === "AM" && h === 12) h = 0;
+      shiftH = h;
+      shiftM = m;
+    } else {
+      const [hStr, mStr] = shiftStartStr.split(":");
+      shiftH = parseInt(hStr, 10) || 0;
+      shiftM = parseInt(mStr, 10) || 0;
+    }
+
     const shiftStart = new Date(checkInDate);
-    shiftStart.setHours(9, 0, 0, 0);
+    shiftStart.setHours(shiftH, shiftM, 0, 0);
     const diffSec = Math.floor((checkInDate.getTime() - shiftStart.getTime()) / 1000);
-    const graceSec = 15 * 60; // 15 mins grace period
+    const graceSec = graceMinutes * 60;
     return diffSec > graceSec ? diffSec : 0;
   })();
 
@@ -925,15 +827,17 @@ function CheckInPage() {
                 <div className="relative">
                   <AttendBtn
                     label={
-                      loading === "checkin"
-                        ? "Verifying Face..."
-                        : isFaceEnrolled === false
+                      isFaceEnrolled === false
                         ? "Face Required"
-                        : "Check In"
+                        : status === "checked-in" || status === "on-break"
+                        ? "Checked In Today"
+                        : status === "checked-out"
+                        ? "Day Complete"
+                        : "Face Check-In"
                     }
-                    icon={loading === "checkin" ? RefreshCw : LogIn}
+                    icon={LogIn}
                     onClick={handleCheckIn}
-                    disabled={status !== "not-checked-in" || isFaceEnrolled === false}
+                    disabled={status !== "not-checked-in" || isFaceEnrolled === false || loading !== null}
                     variant="success"
                     loading={loading === "checkin"}
                   />
@@ -947,7 +851,7 @@ function CheckInPage() {
                   label="Break In"
                   icon={Coffee}
                   onClick={handleBreakIn}
-                  disabled={status !== "checked-in"}
+                  disabled={status !== "checked-in" || loading !== null}
                   variant="warning"
                   loading={loading === "breakin"}
                 />
@@ -955,15 +859,21 @@ function CheckInPage() {
                   label="Break Out"
                   icon={Play}
                   onClick={handleBreakOut}
-                  disabled={status !== "on-break"}
+                  disabled={status !== "on-break" || loading !== null}
                   variant="primary"
                   loading={loading === "breakout"}
                 />
                 <AttendBtn
-                  label="Check Out"
+                  label={
+                    status === "not-checked-in"
+                      ? "Check In First"
+                      : status === "checked-out"
+                      ? "Checked Out Today"
+                      : "Face Check-Out"
+                  }
                   icon={LogOut}
                   onClick={handleCheckOut}
-                  disabled={status !== "checked-in" && status !== "on-break"}
+                  disabled={(status !== "checked-in" && status !== "on-break") || loading !== null}
                   variant="danger"
                   loading={loading === "checkout"}
                 />
@@ -1033,10 +943,34 @@ function CheckInPage() {
           <div>
             <SectionHeader title="Today's Summary" icon={BarChart3} />
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              <StatCard label="Working Hours" value={fmtHM(workSec)} hint="Standard: 9h 00m" icon={Clock} accent="brand" />
-              <StatCard label="Break Duration" value={fmtHM(breakSec)} hint="Max allowed: 1h" icon={Coffee} accent="warning" />
-              <StatCard label="Overtime" value={fmtHM(overtimeSec)} hint={overtimeSec > 0 ? "Eligible for OT" : "Standard time"} icon={Zap} accent="success" />
-              <StatCard label="Late By" value={lateBy > 0 ? fmtHM(lateBy) : "On Time"} hint="Grace: 15 mins" icon={AlertCircle} accent={lateBy > 0 ? "danger" : "success"} />
+              <StatCard
+                label="Working Hours"
+                value={fmtHM(workSec)}
+                hint={assignedShift?.currentShift?.totalWorkingHours ? `Expected: ${assignedShift.currentShift.totalWorkingHours}h` : "Flexible"}
+                icon={Clock}
+                accent="brand"
+              />
+              <StatCard
+                label="Break Duration"
+                value={fmtHM(breakSec)}
+                hint={assignedShift?.currentShift?.breakDuration ? `Standard: ${assignedShift.currentShift.breakDuration}` : "Recorded time"}
+                icon={Coffee}
+                accent="warning"
+              />
+              <StatCard
+                label="Overtime"
+                value={fmtHM(overtimeSec)}
+                hint={overtimeSec > 0 ? "Eligible for OT" : "Standard hours"}
+                icon={Zap}
+                accent="success"
+              />
+              <StatCard
+                label="Late By"
+                value={lateBy > 0 ? fmtHM(lateBy) : "On Time"}
+                hint={assignedShift?.currentShift?.gracePeriodMinutes ? `Grace: ${assignedShift.currentShift.gracePeriodMinutes}m` : "Standard timing"}
+                icon={AlertCircle}
+                accent={lateBy > 0 ? "danger" : "success"}
+              />
               <StatCard
                 label="Check In Time"
                 value={checkInTimeRef.current ? checkInTimeRef.current.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }) : "—"}
@@ -1081,30 +1015,35 @@ function CheckInPage() {
                 {[
                   {
                     label: "Shift Name",
-                    value: assignedShift?.currentShift?.shiftName || "General Shift",
+                    value: assignedShift?.currentShift?.shiftName || "Not Assigned",
                   },
                   {
                     label: "Timing",
                     value:
                       assignedShift?.currentShift?.startTime && assignedShift?.currentShift?.endTime
                         ? `${assignedShift.currentShift.startTime} – ${assignedShift.currentShift.endTime}`
-                        : "09:00 AM – 06:00 PM",
+                        : "Flexible Schedule",
                   },
                   {
                     label: "Working Days",
-                    value: assignedShift?.currentShift?.workingDays?.join(", ") || "Mon – Fri",
+                    value: assignedShift?.currentShift?.workingDays?.join(", ") || "Flexible",
                   },
                   {
                     label: "Expected Hours",
-                    value: `${assignedShift?.currentShift?.totalWorkingHours || 9}h 00m`,
+                    value: assignedShift?.currentShift?.totalWorkingHours
+                      ? `${assignedShift.currentShift.totalWorkingHours}h 00m`
+                      : "—",
                   },
                   {
                     label: "Grace Time",
-                    value: `${assignedShift?.currentShift?.gracePeriodMinutes || 15} minutes`,
+                    value:
+                      assignedShift?.currentShift?.gracePeriodMinutes != null
+                        ? `${assignedShift.currentShift.gracePeriodMinutes} minutes`
+                        : "—",
                   },
                   {
                     label: "Break Duration",
-                    value: assignedShift?.currentShift?.breakDuration || "60 minutes",
+                    value: assignedShift?.currentShift?.breakDuration || "—",
                   },
                 ].map((row) => (
                   <div key={row.label} className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-muted/40 transition-colors">
@@ -1116,12 +1055,12 @@ function CheckInPage() {
             </GlassCard>
           </div>
 
-          {/* ── Two-col grid: Face Verification Camera + Device ── */}
+          {/* ── Two-col grid: Biometric Face Attendance + Device ── */}
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            {/* Live Face Verification Camera Widget */}
+            {/* Live Face Attendance Biometric Card */}
             <GlassCard className="relative overflow-hidden">
               <div className="flex items-center justify-between mb-4">
-                <SectionHeader title="Face Verification" icon={Camera} />
+                <SectionHeader title="Biometric Face Attendance" icon={ScanFace} />
                 {isFaceEnrolled !== null && (
                   <span
                     className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
@@ -1131,139 +1070,71 @@ function CheckInPage() {
                     }`}
                   >
                     <span className={`h-1.5 w-1.5 rounded-full ${isFaceEnrolled ? "bg-emerald-500" : "bg-amber-500 animate-pulse"}`} />
-                    {isFaceEnrolled ? "Face Enrolled" : "Registration Required"}
+                    {isFaceEnrolled ? "Face Profile Active" : "Registration Required"}
                   </span>
                 )}
               </div>
 
-              <div className="space-y-3">
-                {/* Viewport with Live Feed & Oval Outline */}
-                <div
-                  className={`relative h-64 sm:h-72 rounded-2xl border bg-black/95 overflow-hidden flex flex-col items-center justify-center transition-colors duration-300 ${
-                    verificationError
-                      ? "border-rose-500/80 shadow-[0_0_20px_rgba(244,63,94,0.3)]"
-                      : verificationSuccess
-                      ? "border-emerald-500/80 shadow-[0_0_20px_rgba(16,185,129,0.3)]"
-                      : "border-border"
-                  }`}
-                >
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className={`h-full w-full object-cover ${cameraActive ? "block" : "hidden"}`}
-                  />
-
-                  {!cameraActive && (
-                    <div className="flex flex-col items-center gap-2.5 p-5 text-center">
-                      <div className="grid h-12 w-12 place-items-center rounded-2xl bg-muted/40 text-muted-foreground">
-                        <CameraOff className="h-6 w-6" />
-                      </div>
-                      <div>
-                        <span className="text-xs font-medium text-foreground block">Camera Feed Inactive</span>
-                        <span className="text-[11px] text-muted-foreground">Enable camera for live AI facial verification check-in</span>
-                      </div>
-                      {cameraError && <span className="text-[11px] text-destructive max-w-xs">{cameraError}</span>}
-                      <Button size="sm" variant="outline" className="mt-1 gap-1.5 text-xs" onClick={startCamera}>
-                        <Video className="h-3.5 w-3.5" /> Start Live Camera
-                      </Button>
+              <div className="space-y-4">
+                <div className="rounded-2xl border border-border/60 bg-muted/20 p-4 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary border border-primary/20">
+                      <ShieldCheck className="h-5 w-5" />
                     </div>
-                  )}
-
-                  {/* Oval Face Guide Overlay when Camera is Active */}
-                  {cameraActive && !verificationSuccess && (
-                    <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center p-3">
-                      {/* Live Indicator Badge */}
-                      <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 rounded-full bg-black/60 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-semibold text-white border border-white/10">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                        Live Preview
-                      </div>
-
-                      {/* Oval Frame */}
-                      <div
-                        className={`relative w-44 h-56 sm:w-48 sm:h-60 rounded-[50%] border-2 transition-all duration-300 ${
-                          loading === "checkin"
-                            ? "border-cyan-400 shadow-[0_0_30px_rgba(34,211,238,0.7)]"
-                            : verificationError
-                            ? "border-rose-500 shadow-[0_0_25px_rgba(244,63,94,0.6)]"
-                            : "border-primary/60 shadow-[0_0_20px_rgba(99,102,241,0.35)]"
-                        }`}
-                      >
-                        {/* Reticles / Viewfinder corners */}
-                        <div className="absolute -top-1.5 -left-1.5 w-4 h-4 border-t-2 border-l-2 border-primary" />
-                        <div className="absolute -top-1.5 -right-1.5 w-4 h-4 border-t-2 border-r-2 border-primary" />
-                        <div className="absolute -bottom-1.5 -left-1.5 w-4 h-4 border-b-2 border-l-2 border-primary" />
-                        <div className="absolute -bottom-1.5 -right-1.5 w-4 h-4 border-b-2 border-r-2 border-primary" />
-
-                        {/* Scanning Laser Line when Verifying */}
-                        {loading === "checkin" && (
-                          <div className="absolute inset-x-2 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_15px_#22d3ee] animate-pulse" />
-                        )}
-                      </div>
-
-                      {/* Instructions pill */}
-                      <div className="mt-2.5 rounded-full bg-black/75 backdrop-blur-md px-3 py-1 text-[11px] font-medium text-white shadow-lg flex items-center gap-1.5 border border-white/15">
-                        <ScanFace className="h-3.5 w-3.5 text-cyan-400" />
-                        <span>
-                          {loading === "checkin"
-                            ? "Verifying face..."
-                            : isFaceEnrolled === false
-                            ? "Face registration required before check-in"
-                            : "Position your face inside the frame to check in"}
-                        </span>
-                      </div>
+                    <div className="space-y-1">
+                      <h4 className="text-xs font-semibold text-foreground">
+                        Touchless Biometric AI Attendance
+                      </h4>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">
+                        Automatic face capture with backend 3D neural vector matching. No manual photo-clicking needed.
+                      </p>
                     </div>
-                  )}
+                  </div>
 
-                  {/* Green Success Animation Overlay */}
-                  {verificationSuccess && (
-                    <div className="absolute inset-0 bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center gap-2.5 z-20 text-center animate-in fade-in zoom-in-95 duration-300">
-                      <div className="h-16 w-16 rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center text-emerald-400 shadow-[0_0_35px_rgba(16,185,129,0.5)]">
-                        <CheckCircle2 className="h-10 w-10 animate-bounce" />
-                      </div>
-                      <p className="text-sm font-semibold text-white">Attendance Verified & Marked Successfully!</p>
-                      <p className="text-xs text-emerald-400">Biometric match confirmed • Checked In</p>
+                  <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                      <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
+                      <span>Live Liveness Check</span>
                     </div>
-                  )}
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                      <MapPin className="h-3.5 w-3.5 text-emerald-400" />
+                      <span>GPS Geofence Validation</span>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Verification Error alert if mismatch */}
-                {verificationError && (
-                  <div className="flex items-center justify-between gap-2 rounded-xl border border-rose-500/40 bg-rose-500/10 p-3 text-xs text-rose-600 dark:text-rose-400 animate-in fade-in">
-                    <div className="flex items-center gap-2">
-                      <AlertCircle className="h-4 w-4 shrink-0" />
-                      <span>{verificationError}</span>
-                    </div>
-                    <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px]" onClick={() => setVerificationError(null)}>
-                      Dismiss
-                    </Button>
-                  </div>
-                )}
-
-                {/* Camera Control Buttons */}
-                <div className="flex flex-wrap gap-2">
-                  {!cameraActive ? (
-                    <Button size="sm" variant="outline" className="flex-1 gap-2 text-xs" onClick={startCamera}>
-                      <Video className="h-3.5 w-3.5" /> Enable Camera
-                    </Button>
-                  ) : (
-                    <Button size="sm" variant="outline" className="flex-1 gap-2 text-xs text-rose-500 hover:text-rose-600" onClick={stopCamera}>
-                      <CameraOff className="h-3.5 w-3.5" /> Turn Off Camera
-                    </Button>
-                  )}
-
-                  {isFaceEnrolled === false && (
+                {/* Primary Action Button */}
+                <div>
+                  {isFaceEnrolled === false ? (
                     <Button
-                      size="sm"
-                      className="flex-1 gap-2 text-xs bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-md shadow-amber-500/20"
                       onClick={() => {
                         setShowEnrollModal(true);
                         startModalCamera();
                       }}
+                      className="w-full gap-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold shadow-md shadow-amber-500/20 text-xs"
                     >
-                      <ScanFace className="h-3.5 w-3.5" /> Register Face
+                      <ScanFace className="h-4 w-4" /> Register Face Profile
+                    </Button>
+                  ) : status === "not-checked-in" ? (
+                    <Button
+                      onClick={handleCheckIn}
+                      className="w-full gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold shadow-md shadow-emerald-500/25 text-xs"
+                    >
+                      <LogIn className="h-4 w-4" /> Start Face Check-In
+                    </Button>
+                  ) : status === "checked-in" || status === "on-break" ? (
+                    <Button
+                      onClick={handleCheckOut}
+                      className="w-full gap-2 bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-semibold shadow-md shadow-rose-500/25 text-xs"
+                    >
+                      <LogOut className="h-4 w-4" /> Start Face Check-Out
+                    </Button>
+                  ) : (
+                    <Button
+                      disabled
+                      className="w-full gap-2 text-xs font-semibold bg-muted text-muted-foreground"
+                    >
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Day Completed
                     </Button>
                   )}
                 </div>
@@ -1507,6 +1378,17 @@ function CheckInPage() {
           </GlassCard>
         </div>
       </div>
+
+      {/* ── Automated Face Attendance Verification Dialog (Check-In & Check-Out) ── */}
+      <FaceAttendanceDialog
+        open={faceModalOpen}
+        mode={faceModalMode}
+        onOpenChange={setFaceModalOpen}
+        onSuccess={handleFaceSuccess}
+        employeeDetails={employeeDetails}
+        currentUser={user}
+        notes={noteEmp}
+      />
 
       {/* ── Face Registration Required Modal (Condition A) ── */}
       <Dialog

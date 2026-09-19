@@ -46,6 +46,7 @@ export interface TodayPunchStatus {
 export interface CheckInPayload {
   latitude?: number | null;
   longitude?: number | null;
+  accuracy?: number | null;
   deviceInfo?: string;
   ipAddress?: string;
   notes?: string;
@@ -67,10 +68,12 @@ export interface FaceEnrollResponse {
 export interface CheckOutPayload {
   latitude?: number | null;
   longitude?: number | null;
+  accuracy?: number | null;
   deviceInfo?: string;
   ipAddress?: string;
   notes?: string;
   file?: Blob | File;
+  image_base64?: string; // High-quality Base64 captured snapshot for AI face verification checkout
 }
 
 export interface BreakPayload {
@@ -85,6 +88,11 @@ export interface AttendancePunchResult {
   success: boolean;
   message?: string;
   isInsideGeofence?: boolean;
+  employeeId?: string;
+  employeeName?: string;
+  workingHours?: number | null;
+  checkInTime?: string | null;
+  checkOutTime?: string | null;
 }
 
 export interface AttendanceHistoryItem {
@@ -373,26 +381,95 @@ function extractObjectPayload<T = Record<string, unknown>>(res: unknown): T {
 }
 
 /**
+ * Convert Base64 data URL to a binary Blob for multipart/form-data upload.
+ */
+export function base64ToBlob(base64: string, contentType = "image/jpeg"): Blob {
+  const parts = base64.split(",");
+  const raw = parts.length > 1 ? parts[1] : parts[0];
+  const binaryStr = atob(raw);
+  const len = binaryStr.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryStr.charCodeAt(i);
+  }
+  return new Blob([bytes], { type: contentType });
+}
+
+/**
  * Extracts user-friendly error message from face attendance API errors.
  */
-function extractFaceApiError(err: any): string {
+export function extractFaceApiError(err: any): string {
+  const status = err?.response?.status || err?.status;
   const resp = err?.response?.data || err?.data;
+  const code = extractErrorCode(err);
+  let rawMsg = "";
+
   if (resp) {
-    if (typeof resp === "string") return resp;
-    if (resp.detail) {
-      if (typeof resp.detail === "string") return resp.detail;
-      if (typeof resp.detail === "object") {
-        if (typeof resp.detail.message === "string") return resp.detail.message;
-        if (typeof resp.detail.msg === "string") return resp.detail.msg;
+    if (typeof resp === "string") {
+      rawMsg = resp;
+    } else if (resp.detail) {
+      if (typeof resp.detail === "string") {
+        rawMsg = resp.detail;
+      } else if (typeof resp.detail === "object") {
+        if (typeof resp.detail.message === "string") rawMsg = resp.detail.message;
+        else if (typeof resp.detail.msg === "string") rawMsg = resp.detail.msg;
+      } else if (Array.isArray(resp.detail)) {
+        rawMsg = resp.detail.map((d: any) => d.msg || d.message || JSON.stringify(d)).join("; ");
       }
-      if (Array.isArray(resp.detail)) {
-        return resp.detail.map((d: any) => d.msg || d.message || JSON.stringify(d)).join("; ");
-      }
+    } else if (resp.message && typeof resp.message === "string") {
+      rawMsg = resp.message;
     }
-    if (resp.message && typeof resp.message === "string") return resp.message;
   }
+
+  // Biometric specific mappings
+  if (code === "FACE_NOT_ENROLLED" || rawMsg.toLowerCase().includes("face not enrolled") || rawMsg.toLowerCase().includes("not enrolled")) {
+    return "Face not enrolled. Please complete biometric face registration first.";
+  }
+  if (code === "FACE_MISMATCH" || rawMsg.toLowerCase().includes("mismatch") || rawMsg.toLowerCase().includes("does not match")) {
+    return "Face not recognized. The face does not match your enrolled profile. Please ensure proper lighting and look directly into the camera.";
+  }
+  if (code === "FACE_NOT_FOUND" || rawMsg.toLowerCase().includes("no face")) {
+    return "No face detected in frame. Please center your face inside the guide outline.";
+  }
+  if (code === "MULTIPLE_FACES" || rawMsg.toLowerCase().includes("multiple faces")) {
+    return "Multiple faces detected. Exactly one person must be visible in the camera preview.";
+  }
+  if (code === "LIVENESS_FAILED" || rawMsg.toLowerCase().includes("liveness")) {
+    return "Liveness check failed. Please present your real face to the camera.";
+  }
+  if (code === "FACE_QUALITY_LOW" || rawMsg.toLowerCase().includes("blur") || rawMsg.toLowerCase().includes("quality")) {
+    return "Image quality too low or blurred. Please hold steady in good ambient light.";
+  }
+  if (code === "OUTSIDE_GEOFENCE" || rawMsg.toLowerCase().includes("geofence") || rawMsg.toLowerCase().includes("outside")) {
+    return "Outside office radius. Attendance verification must be completed inside the authorized office location.";
+  }
+
+  // HTTP Status Code mappings
+  if (status === 401) {
+    return "Session expired. Please log in again to continue.";
+  }
+  if (status === 403) {
+    return rawMsg || "Access forbidden. You do not have permission to perform this action.";
+  }
+  if (status === 404) {
+    return rawMsg || "Requested resource or attendance service is unavailable on the server.";
+  }
+  if (status === 409) {
+    return rawMsg || "Attendance conflict. You may have already punched in or out for today.";
+  }
+  if (status === 422) {
+    return rawMsg || "Validation error on submission. Please check captured image and coordinates.";
+  }
+  if (status === 429) {
+    return "Too many verification requests. Please wait a moment before trying again.";
+  }
+  if (status && status >= 500) {
+    return "Server error during verification. Please try again or contact HR support.";
+  }
+
+  if (rawMsg) return rawMsg;
   if (err?.message && typeof err.message === "string") return err.message;
-  return "An unexpected error occurred.";
+  return "An unexpected error occurred during attendance processing.";
 }
 
 /**
@@ -748,9 +825,11 @@ export const attendanceApi = {
           body.location = {
             latitude: payload.latitude,
             longitude: payload.longitude,
+            accuracy: payload.accuracy,
           };
           body.latitude = payload.latitude;
           body.longitude = payload.longitude;
+          body.accuracy = payload.accuracy;
         }
         if (payload.notes) {
           body.notes = payload.notes;
@@ -763,11 +842,15 @@ export const attendanceApi = {
         const data = extractObjectPayload<any>(res);
         return {
           id: data.id || data.attendance_id || "",
+          employeeId: data.employee_id || data.employeeId,
+          employeeName: data.employee_name || data.employeeName,
           time: data.check_in_time || data.time || new Date().toISOString(),
-          status: "checked-in",
+          checkInTime: data.check_in_time || data.time || new Date().toISOString(),
+          status: data.status || "checked-in",
+          workingHours: data.working_hours ?? data.workingHours ?? null,
           success: true,
           message: res.message || data.message || "Attendance Verified & Marked Successfully!",
-          isInsideGeofence: data.is_inside_geofence,
+          isInsideGeofence: data.is_inside_geofence ?? data.isInsideGeofence,
         };
       } catch (err: any) {
         const errorCode = extractErrorCode(err);
@@ -787,6 +870,7 @@ export const attendanceApi = {
     formData.append("file", payload.file!, "checkin-proof.jpg");
     if (payload.latitude != null) formData.append("latitude", payload.latitude.toString());
     if (payload.longitude != null) formData.append("longitude", payload.longitude.toString());
+    if (payload.accuracy != null) formData.append("accuracy", payload.accuracy.toString());
     formData.append("device_info", payload.deviceInfo || (typeof navigator !== "undefined" ? navigator.userAgent : "Web"));
     if (payload.ipAddress) formData.append("ip_address", payload.ipAddress);
 
@@ -797,11 +881,15 @@ export const attendanceApi = {
       const data = extractObjectPayload<any>(res.data);
       return {
         id: data.id || data.attendance_id || "",
+        employeeId: data.employee_id || data.employeeId,
+        employeeName: data.employee_name || data.employeeName,
         time: data.check_in_time || data.time || "",
-        status: "checked-in",
+        checkInTime: data.check_in_time || data.time || "",
+        status: data.status || "checked-in",
+        workingHours: data.working_hours ?? data.workingHours ?? null,
         success: true,
-        message: res.data?.message || "Checked in successfully",
-        isInsideGeofence: data.is_inside_geofence,
+        message: res.data?.message || data.message || "Checked in successfully",
+        isInsideGeofence: data.is_inside_geofence ?? data.isInsideGeofence,
       };
     } catch (err: any) {
       const errorCode = extractErrorCode(err);
@@ -819,15 +907,23 @@ export const attendanceApi = {
   /**
    * Perform attendance check-out.
    * Sends coordinates, device info, and photo proof to backend /api/v1/attendance/face/check-out.
+   * Supports both multipart file and Base64 captured snapshot.
    */
   checkOut: async (payload: CheckOutPayload): Promise<AttendancePunchResult> => {
-    if (!payload.file) {
+    let fileBlob = payload.file;
+    if (!fileBlob && payload.image_base64) {
+      fileBlob = base64ToBlob(payload.image_base64, "image/jpeg");
+    }
+
+    if (!fileBlob) {
       throw new Error("A face photo is required for check-out. Please enable your camera and capture your face.");
     }
+
     const formData = new FormData();
-    formData.append("file", payload.file, "checkout-proof.jpg");
+    formData.append("file", fileBlob, "checkout-proof.jpg");
     if (payload.latitude != null) formData.append("latitude", payload.latitude.toString());
     if (payload.longitude != null) formData.append("longitude", payload.longitude.toString());
+    if (payload.accuracy != null) formData.append("accuracy", payload.accuracy.toString());
     formData.append("device_info", payload.deviceInfo || (typeof navigator !== "undefined" ? navigator.userAgent : "Web"));
     if (payload.ipAddress) formData.append("ip_address", payload.ipAddress);
 
@@ -838,10 +934,15 @@ export const attendanceApi = {
       const data = extractObjectPayload<any>(res.data);
       return {
         id: data.id || data.attendance_id || "",
+        employeeId: data.employee_id || data.employeeId,
+        employeeName: data.employee_name || data.employeeName,
         time: data.check_out_time || data.time || "",
-        status: "checked-out",
+        checkOutTime: data.check_out_time || data.time || "",
+        status: data.status || "checked-out",
+        workingHours: data.working_hours ?? data.workingHours ?? null,
         success: true,
-        message: res.data?.message || "Checked out successfully",
+        message: res.data?.message || data.message || "Checked out successfully",
+        isInsideGeofence: data.is_inside_geofence ?? data.isInsideGeofence,
       };
     } catch (err: any) {
       const errorCode = extractErrorCode(err);
@@ -858,37 +959,53 @@ export const attendanceApi = {
 
   /**
    * Start employee break.
-   *
-   * TODO (Backend): Endpoint POST /api/v1/attendance/break/start
-   * Body: { reason?: string, notes?: string }
+   * Calls POST /api/v1/attendance/break/start.
    */
   startBreak: async (payload?: BreakPayload): Promise<AttendancePunchResult> => {
-    const res: any = await api.post("attendance/break/start", payload || {});
-    const data = extractObjectPayload<any>(res);
-    return {
-      id: data.id || new Date().getTime().toString(),
-      time: data.time || new Date().toISOString(),
-      status: "on-break",
-      success: true,
-      message: res.message || "Break started",
-    };
+    try {
+      const res: any = await api.post("attendance/break/start", payload || {});
+      const data = extractObjectPayload<any>(res);
+      return {
+        id: data.id || data.break_id || "",
+        time: data.time || data.break_start || new Date().toISOString(),
+        status: "on-break",
+        success: true,
+        message: res.message || data.message || "Break started successfully",
+      };
+    } catch (err: any) {
+      const errorMsg = extractFaceApiError(err);
+      const enrichedError: any = new Error(errorMsg);
+      enrichedError.status = err?.response?.status || err?.status;
+      enrichedError.errorCode = extractErrorCode(err);
+      enrichedError.response = err?.response;
+      throw enrichedError;
+    }
   },
 
   /**
    * End employee break.
-   *
-   * TODO (Backend): Endpoint POST /api/v1/attendance/break/end
+   * Calls POST /api/v1/attendance/break/end.
    */
   endBreak: async (): Promise<AttendancePunchResult> => {
-    const res: any = await api.post("attendance/break/end", {});
-    const data = extractObjectPayload<any>(res);
-    return {
-      id: data.id || new Date().getTime().toString(),
-      time: data.time || new Date().toISOString(),
-      status: "checked-in",
-      success: true,
-      message: res.message || "Break ended",
-    };
+    try {
+      const res: any = await api.post("attendance/break/end", {});
+      const data = extractObjectPayload<any>(res);
+      return {
+        id: data.id || data.break_id || "",
+        time: data.time || data.break_end || new Date().toISOString(),
+        status: "checked-in",
+        workingHours: data.working_hours ?? data.workingHours ?? null,
+        success: true,
+        message: res.message || data.message || "Break ended successfully",
+      };
+    } catch (err: any) {
+      const errorMsg = extractFaceApiError(err);
+      const enrichedError: any = new Error(errorMsg);
+      enrichedError.status = err?.response?.status || err?.status;
+      enrichedError.errorCode = extractErrorCode(err);
+      enrichedError.response = err?.response;
+      throw enrichedError;
+    }
   },
 
   /**
@@ -1493,7 +1610,7 @@ export const attendanceApi = {
     const user = ws.user;
     if (!user) return null;
 
-    // For employee self-service, avoid calling restricted admin-only /employees endpoint
+    // For employee self-service, check workspace cache and profile
     if (user.role === "employee") {
       const localMatch = ws.employees?.find(
         (e) => e.email === user.email || e.id === user.id
@@ -1503,11 +1620,11 @@ export const attendanceApi = {
         employee_id: localMatch?.employeeId || `EMP-${user.id.slice(0, 6).toUpperCase()}`,
         full_name: user.fullName || "Employee",
         email: user.email,
-        shift: localMatch?.shift || "General Shift",
+        shift: localMatch?.shift || null,
         branch: ws.company?.city || null,
         work_location: "Office",
-        department: localMatch?.department || "General",
-        designation: localMatch?.designation || "Employee",
+        department: localMatch?.department || null,
+        designation: localMatch?.designation || null,
       };
     }
 
