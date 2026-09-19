@@ -88,6 +88,14 @@ export interface AlertItem {
   icon?: string;
 }
 
+export interface PayrollAlertItem {
+  id?: string;
+  title: string;
+  who?: string;
+  delta?: string;
+  severity: "Critical" | "Medium" | "Low" | string;
+}
+
 export interface DocumentItem {
   id?: string;
   label: string;

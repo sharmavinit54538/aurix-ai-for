@@ -386,7 +386,7 @@ export function AIInsightsPage() {
                     <EmptySection message="No active payroll alerts." />
                   ) : (
                     <ul className="space-y-3">
-                      {payrollAlerts.map((p) => (
+                      {payrollAlerts.map((p: PayrollAlertItem) => (
                         <li key={p.title} className="flex items-start justify-between gap-3 rounded-xl border border-border/60 bg-background/40 p-3">
                           <div>
                             <div className="font-medium">{p.title}</div>
@@ -553,7 +553,7 @@ export function AIInsightsPage() {
 
               <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl">
                 <div className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">Full conversation</div>
-                <Link to="/dashboard/payroll/copilot" className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-background/40 px-3 py-2 text-sm font-medium hover:bg-accent">
+                <Link to={"/dashboard/payroll/copilot" as any} className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-background/40 px-3 py-2 text-sm font-medium hover:bg-accent">
                   <MessageSquare className="h-4 w-4" /> Open AI Copilot
                 </Link>
               </div>
