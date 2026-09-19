@@ -19,7 +19,8 @@ import {
   GitPullRequest, Send, ShieldAlert, Scale, Cpu, Home, Rocket,
 } from "lucide-react";
 import { useAurix, aurix, AVAILABLE_ROLES, type Role } from "@/lib/aurix-store";
-import { logout, useAuthReady } from "@/lib/auth-bootstrap";
+import { useAuthReady } from "@/lib/auth-bootstrap";
+import { UserProfileMenu } from "./UserProfileMenu";
 import { hasValidAccessToken } from "@/api";
 import { AuthLoadingScreen } from "@/features/auth/components/AuthLoadingScreen";
 import { Input } from "@/components/ui/input";
@@ -604,8 +605,6 @@ export function DashboardShell() {
     return null;
   }
 
-  const initials = ws.user.fullName?.split(" ").map((p) => p[0]).slice(0, 2).join("") || "A";
-
   const isCeoMode = (role || "").toLowerCase() === "ceo" || (ws.user?.email || "").toLowerCase() === "siddhubunny09@gmail.com" || pathname.startsWith("/dashboard/executive/ceo");
   const isCioMode = (role || "").toLowerCase() === "cio" || pathname.startsWith("/dashboard/executive/cio");
   const isCtoMode = (role || "").toLowerCase() === "cto" || pathname.startsWith("/dashboard/executive/cto");
@@ -736,44 +735,7 @@ export function DashboardShell() {
           </nav>
 
           <div className="shrink-0 border-t border-border p-2">
-            <div
-              onClick={() => logout()}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  logout();
-                }
-              }}
-              className={`flex items-center gap-2.5 cursor-pointer rounded-lg p-1 hover:bg-accent/60 transition-colors ${collapsed ? "justify-center" : ""}`}
-              title={`${ws.user?.fullName || "Admin User"} (${ws.user?.role || "Hr_admin"}) — Click to logout`}
-              aria-label="User profile, click to logout"
-            >
-              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-foreground text-xs font-semibold text-background">{initials}</div>
-              {!collapsed ? (
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-xs font-medium">{ws.user?.fullName}</div>
-                  <div className="truncate text-[11px] capitalize text-muted-foreground">
-                    {isCeoMode
-                      ? "Chief Executive Officer"
-                      : isCioMode
-                      ? "Chief Information Officer"
-                      : isCtoMode
-                      ? "Chief Technology Officer"
-                      : role === "hr"
-                      ? "HR Executive"
-                      : role === "interviewer"
-                      ? "Interviewer"
-                      : role === "candidate"
-                      ? "Candidate Portal"
-                      : role === "manager"
-                      ? "Hiring Manager"
-                      : ws.user?.role}
-                  </div>
-                </div>
-              ) : null}
-            </div>
+            <UserProfileMenu collapsed={collapsed} />
           </div>
         </aside>
 
@@ -819,6 +781,7 @@ export function DashboardShell() {
                 <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
                 <span className="font-medium">{ws.company?.name || "Workspace"}</span>
               </div>
+              <UserProfileMenu variant="topbar" />
             </div>
           </header>
 

@@ -93,8 +93,8 @@ export default function HolidaysPage() {
   const ws = useAurix();
   const router = useRouterState();
   const pathname = router.location.pathname;
-  const searchParams = new URLSearchParams(router.location.search);
-  const viewParam = searchParams.get("view");
+  const searchParams = router.location.search as Record<string, any>;
+  const viewParam = searchParams?.view;
 
   const normalizedRole = (ws.user?.role || "").toLowerCase();
   const isEmployee =
