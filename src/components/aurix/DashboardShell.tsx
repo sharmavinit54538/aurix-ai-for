@@ -119,27 +119,11 @@ const NAV_SECTIONS: SidebarNavSection[] = [
         permission: "resources.view",
       },
       {
-        id: "payroll",
+        to: "/dashboard/payroll",
         label: "Payroll",
         icon: Banknote,
-        basePath: "/dashboard/payroll",
         permission: "payroll.view",
         roles: ["admin", "hr", "hr_admin", "hradmin", "hr-admin", "super_admin", "superadmin"],
-        children: [
-          {
-            to: "/dashboard/payroll",
-            label: "Dashboard",
-            icon: LayoutDashboard,
-            exact: true,
-            permission: "payroll.view",
-          },
-          {
-            to: "/dashboard/payroll/periods",
-            label: "Payroll Periods",
-            icon: CalendarDays,
-            permission: "payroll.view",
-          },
-        ],
       },
       {
         to: "/dashboard/analytics",
