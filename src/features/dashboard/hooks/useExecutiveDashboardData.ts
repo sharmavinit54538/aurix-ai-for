@@ -19,6 +19,69 @@ export interface PayrollOverviewData {
   monthlySalaryCostChart: MonthlyPayrollPoint[];
 }
 
+export interface DepartmentDistributionItem {
+  name: string;
+  count: number;
+  percentage: number;
+  color: string;
+}
+
+export interface JobBarItem {
+  label: string;
+  count: number;
+  fullLabel: string;
+}
+
+export interface ExecutiveKpiDetails {
+  headcount: {
+    value: number;
+    change: string | null;
+    changeType: "up" | "down" | "neutral";
+    trend: Array<{ date: string; value: number }>;
+    hasTrend: boolean;
+    link: string;
+  };
+  openings: {
+    value: number;
+    change: string | null;
+    changeType: "up" | "down" | "neutral";
+    bars: JobBarItem[];
+    hasBars: boolean;
+    link: string;
+  };
+  departments: {
+    value: number;
+    distribution: DepartmentDistributionItem[];
+    hasDistribution: boolean;
+    link: string;
+  };
+  payroll: {
+    valueFormatted: string;
+    rawValue: number;
+    history: MonthlyPayrollPoint[];
+    hasHistory: boolean;
+    statusCounts: { processed: number; pending: number; paid: number };
+    link: string;
+  };
+  assets: {
+    value: number;
+    assignedCount: number;
+    availableCount: number;
+    repairCount: number;
+    assignedPercent: number;
+    availablePercent: number;
+    hasStatusData: boolean;
+    link: string;
+  };
+  exits: {
+    value: number;
+    statusCounts: { pending: number; inProgress: number; completed: number };
+    timeline: Array<{ date: string; count: number }>;
+    hasTimeline: boolean;
+    link: string;
+  };
+}
+
 export interface DashboardLiveData {
   loading: boolean;
   error: string | null;
@@ -28,6 +91,7 @@ export interface DashboardLiveData {
   totalAssets: number;
   totalExits: number;
   totalPayrollCost: number;
+  kpiDetails: ExecutiveKpiDetails;
   kpiCards: Array<{
     id: string;
     label: string;
@@ -68,6 +132,30 @@ export interface DashboardLiveData {
   refetch: () => void;
 }
 
+export function formatIndianCurrency(amount: number): string {
+  if (amount == null || isNaN(amount) || amount === 0) return "₹0";
+  if (Math.abs(amount) >= 10000000) {
+    const cr = amount / 10000000;
+    return `₹${cr % 1 === 0 ? cr.toFixed(0) : cr.toFixed(2)} Cr`;
+  }
+  if (Math.abs(amount) >= 100000) {
+    const lk = amount / 100000;
+    return `₹${lk % 1 === 0 ? lk.toFixed(0) : lk.toFixed(2)} L`;
+  }
+  return `₹${Math.round(amount).toLocaleString("en-IN")}`;
+}
+
+const DEPT_CHART_COLORS = [
+  "#8b5cf6", // Violet
+  "#3b82f6", // Blue
+  "#10b981", // Emerald
+  "#f59e0b", // Amber
+  "#06b6d4", // Cyan
+  "#ec4899", // Pink
+  "#6366f1", // Indigo
+  "#14b8a6", // Teal
+];
+
 export function useExecutiveDashboardData(): DashboardLiveData {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -79,25 +167,38 @@ export function useExecutiveDashboardData(): DashboardLiveData {
   const [totalExits, setTotalExits] = useState(0);
   const [totalPayrollCost, setTotalPayrollCost] = useState(0);
 
+  // Authentic detailed metric states
+  const [headcountTrend, setHeadcountTrend] = useState<Array<{ date: string; value: number }>>([]);
+  const [headcountChange, setHeadcountChange] = useState<string | null>(null);
+  const [headcountChangeType, setHeadcountChangeType] = useState<"up" | "down" | "neutral">("neutral");
+
+  const [jobsBars, setJobsBars] = useState<JobBarItem[]>([]);
+  const [deptDistribution, setDeptDistribution] = useState<DepartmentDistributionItem[]>([]);
+  const [payrollHistory, setPayrollHistory] = useState<MonthlyPayrollPoint[]>([]);
+  const [payrollStatusCounts, setPayrollStatusCounts] = useState({ processed: 0, pending: 0, paid: 0 });
+
+  const [assetStatusCounts, setAssetStatusCounts] = useState({
+    assigned: 0,
+    available: 0,
+    repair: 0,
+    assignedPercent: 0,
+    availablePercent: 0,
+  });
+
+  const [exitStatusCounts, setExitStatusCounts] = useState({ pending: 0, inProgress: 0, completed: 0 });
+  const [exitTimeline, setExitTimeline] = useState<Array<{ date: string; count: number }>>([]);
+
   const [deptPerformance, setDeptPerformance] = useState<DashboardLiveData["deptPerformance"]>([]);
   const [activityFeed, setActivityFeed] = useState<DashboardLiveData["activityFeed"]>([]);
   const [activeJobsList, setActiveJobsList] = useState<DashboardLiveData["activeJobsList"]>([]);
   const [payrollOverview, setPayrollOverview] = useState<PayrollOverviewData>({
-    totalCostFormatted: "₹0.0L",
+    totalCostFormatted: "₹0",
     payrollStatus: [
       { label: "Processed", value: 0, color: "text-emerald-500", bg: "bg-emerald-500/10" },
       { label: "Pending Approval", value: 0, color: "text-amber-500", bg: "bg-amber-500/10" },
       { label: "Disbursed / Paid", value: 0, color: "text-blue-500", bg: "bg-blue-500/10" },
     ],
-    monthlySalaryCostChart: [
-      { month: "Jan", cost: 0 },
-      { month: "Feb", cost: 0 },
-      { month: "Mar", cost: 0 },
-      { month: "Apr", cost: 0 },
-      { month: "May", cost: 0 },
-      { month: "Jun", cost: 0 },
-      { month: "Jul", cost: 0 },
-    ],
+    monthlySalaryCostChart: [],
   });
 
   const fetchAllDashboardData = useCallback(async () => {
@@ -132,46 +233,121 @@ export function useExecutiveDashboardData(): DashboardLiveData {
         deptsList = Array.isArray(rawDepts) ? rawDepts : [];
         setTotalDepartments(deptsList.length);
 
-        const mappedDepts = deptsList.slice(0, 6).map((d: any, idx: number) => {
-          const colors = ["#10b981", "#3b82f6", "#8b5cf6", "#f59e0b", "#ec4899", "#06b6d4"];
-          const bgColors = [
-            "bg-emerald-500/10",
-            "bg-blue-500/10",
-            "bg-violet-500/10",
-            "bg-amber-500/10",
-            "bg-pink-500/10",
-            "bg-teal-500/10",
-          ];
-          return {
-            name: d.department_name ?? d.name ?? `Dept #${idx + 1}`,
-            headcount: Number(d.employee_count ?? d.currentEmployeeCount ?? 0),
-            attendance: 92 + (idx % 6),
-            productivity: 88 + (idx % 8),
-            openPositions: Number(d.open_positions ?? 0),
-            color: colors[idx % colors.length],
-            bgColor: bgColors[idx % bgColors.length],
-          };
+        // Real department employee distribution
+        const validDeptDist: DepartmentDistributionItem[] = [];
+        let sumHeadcount = 0;
+
+        deptsList.forEach((d: any) => {
+          const count = Number(d.employee_count ?? d.currentEmployeeCount ?? 0);
+          if (count > 0) {
+            sumHeadcount += count;
+          }
         });
+
+        deptsList.forEach((d: any, idx: number) => {
+          const count = Number(d.employee_count ?? d.currentEmployeeCount ?? 0);
+          if (count > 0) {
+            validDeptDist.push({
+              name: d.department_name ?? d.name ?? `Dept #${idx + 1}`,
+              count,
+              percentage: sumHeadcount > 0 ? Math.round((count / sumHeadcount) * 100) : 0,
+              color: DEPT_CHART_COLORS[idx % DEPT_CHART_COLORS.length],
+            });
+          }
+        });
+        setDeptDistribution(validDeptDist);
+
+        const mappedDepts = deptsList.slice(0, 6).map((d: any, idx: number) => ({
+          name: d.department_name ?? d.name ?? `Dept #${idx + 1}`,
+          headcount: Number(d.employee_count ?? d.currentEmployeeCount ?? 0),
+          attendance: Number(d.attendance_rate ?? d.attendance ?? 0),
+          productivity: Number(d.productivity_rate ?? d.productivity ?? 0),
+          openPositions: Number(d.open_positions ?? 0),
+          color: DEPT_CHART_COLORS[idx % DEPT_CHART_COLORS.length],
+          bgColor: "bg-slate-800/40",
+        }));
         setDeptPerformance(mappedDepts);
+      } else {
+        setTotalDepartments(0);
+        setDeptDistribution([]);
       }
 
       // 2. Hierarchy / Employees
+      let empCount = 0;
       if (hierRes.status === "fulfilled" && hierRes.value.data?.data) {
         const hierData = hierRes.value.data.data;
-        const empCount = Array.isArray(hierData)
+        empCount = Array.isArray(hierData)
           ? hierData.length
-          : (hierData.total_nodes ?? hierData.nodes?.length ?? deptsList.reduce((acc, d) => acc + (d.employee_count || 0), 0));
-        setTotalEmployees(empCount || 24);
-      } else {
-        const fallbackCount = deptsList.reduce((acc, d) => acc + (d.employee_count || 0), 0);
-        setTotalEmployees(fallbackCount || 24);
-      }
+          : (hierData.total_nodes ?? hierData.nodes?.length ?? deptsList.reduce((acc, d) => acc + (Number(d.employee_count) || 0), 0) ?? 0);
 
-      // 3. Jobs
+        // Check if real historical headcount data exists in hierarchy payload
+        const rawHistory = hierData.history ?? hierData.monthly_trend ?? hierData.trend ?? [];
+        if (Array.isArray(rawHistory) && rawHistory.length > 0) {
+          setHeadcountTrend(
+            rawHistory.map((item: any) => ({
+              date: String(item.month ?? item.date ?? item.period ?? ""),
+              value: Number(item.headcount ?? item.count ?? item.value ?? 0),
+            })).filter((pt: any) => Boolean(pt.date))
+          );
+        } else {
+          setHeadcountTrend([]);
+        }
+
+        // Real percentage change only if supplied by backend
+        const rawChange = hierData.growth_mom ?? hierData.change_percentage ?? hierData.change;
+        if (rawChange != null && rawChange !== "") {
+          const num = Number(rawChange);
+          if (!isNaN(num)) {
+            setHeadcountChange(`${num >= 0 ? "+" : ""}${num}%`);
+            setHeadcountChangeType(num > 0 ? "up" : num < 0 ? "down" : "neutral");
+          } else {
+            setHeadcountChange(String(rawChange));
+            setHeadcountChangeType("neutral");
+          }
+        } else {
+          setHeadcountChange(null);
+          setHeadcountChangeType("neutral");
+        }
+      } else {
+        const fallbackCount = deptsList.reduce((acc, d) => acc + (Number(d.employee_count) || 0), 0);
+        empCount = fallbackCount || 0;
+        setHeadcountTrend([]);
+        setHeadcountChange(null);
+      }
+      setTotalEmployees(empCount);
+
+      // 3. Jobs / Active Openings
       if (jobsRes.status === "fulfilled" && jobsRes.value.data?.data) {
         const rawJobs = jobsRes.value.data.data.items ?? jobsRes.value.data.data;
         const jobsList = Array.isArray(rawJobs) ? rawJobs : [];
-        setTotalJobs(jobsList.length);
+        
+        // Real active/open jobs
+        const openJobs = jobsList.filter((j: any) => {
+          const st = String(j.status ?? "").toLowerCase();
+          return !st || st === "open" || st === "active" || st === "published";
+        });
+        const activeCount = openJobs.length > 0 ? openJobs.length : jobsList.length;
+        setTotalJobs(activeCount);
+
+        // Group real jobs by department for authentic vertical bar chart
+        const deptJobMap = new Map<string, number>();
+        (openJobs.length > 0 ? openJobs : jobsList).forEach((j: any) => {
+          const dept = String(j.department ?? j.department_name ?? "General").trim();
+          deptJobMap.set(dept, (deptJobMap.get(dept) || 0) + 1);
+        });
+
+        if (deptJobMap.size > 0) {
+          const bars: JobBarItem[] = Array.from(deptJobMap.entries())
+            .slice(0, 6)
+            .map(([fullLabel, count]) => ({
+              label: fullLabel.length > 8 ? `${fullLabel.slice(0, 7)}…` : fullLabel,
+              fullLabel,
+              count,
+            }));
+          setJobsBars(bars);
+        } else {
+          setJobsBars([]);
+        }
 
         const mappedJobs = jobsList.slice(0, 5).map((j: any) => ({
           id: String(j.id ?? ""),
@@ -181,20 +357,106 @@ export function useExecutiveDashboardData(): DashboardLiveData {
           status: j.status ?? "OPEN",
         }));
         setActiveJobsList(mappedJobs);
+      } else {
+        setTotalJobs(0);
+        setJobsBars([]);
+        setActiveJobsList([]);
       }
 
-      // 4. Assets
+      // 4. Assets Tracked
       if (assetsRes.status === "fulfilled" && assetsRes.value.data?.data) {
         const rawAssets = assetsRes.value.data.data.items ?? assetsRes.value.data.data;
         const assetsList = Array.isArray(rawAssets) ? rawAssets : [];
-        setTotalAssets(assetsList.length);
+        const total = assetsList.length;
+        setTotalAssets(total);
+
+        // Real Assigned vs Available vs Under Repair status breakdown
+        let assigned = 0;
+        let available = 0;
+        let repair = 0;
+
+        assetsList.forEach((a: any) => {
+          const st = String(a.status ?? "").toLowerCase().trim();
+          if (st === "assigned" || st === "in_use" || a.assigned_to || a.assignedTo) {
+            assigned++;
+          } else if (st === "available" || st === "in_stock" || st === "unassigned") {
+            available++;
+          } else if (st === "under-repair" || st === "repair" || st === "maintenance") {
+            repair++;
+          }
+        });
+
+        const assignedPercent = total > 0 ? Math.round((assigned / total) * 100) : 0;
+        const availablePercent = total > 0 ? Math.round((available / total) * 100) : 0;
+
+        setAssetStatusCounts({
+          assigned,
+          available,
+          repair,
+          assignedPercent,
+          availablePercent,
+        });
+      } else {
+        setTotalAssets(0);
+        setAssetStatusCounts({
+          assigned: 0,
+          available: 0,
+          repair: 0,
+          assignedPercent: 0,
+          availablePercent: 0,
+        });
       }
 
-      // 5. Exits
+      // 5. Exits & Offboarding
       if (exitsRes.status === "fulfilled" && exitsRes.value.data?.data) {
         const rawExits = exitsRes.value.data.data.items ?? exitsRes.value.data.data;
         const exitsList = Array.isArray(rawExits) ? rawExits : [];
         setTotalExits(exitsList.length);
+
+        let pending = 0;
+        let inProgress = 0;
+        let completed = 0;
+        const timelineMap = new Map<string, number>();
+
+        exitsList.forEach((x: any) => {
+          const st = String(x.status ?? "").toUpperCase().trim();
+          if (st === "PENDING" || st === "INITIATED" || st === "NEW") {
+            pending++;
+          } else if (st === "IN_PROGRESS" || st === "PROCESSING" || st === "CLEARANCE") {
+            inProgress++;
+          } else if (st === "COMPLETED" || st === "APPROVED" || st === "SETTLED" || st === "CLOSED") {
+            completed++;
+          } else {
+            pending++;
+          }
+
+          // Extract date for timeline if available
+          const rawDate = x.exit_date ?? x.created_at ?? x.resignation_date;
+          if (rawDate) {
+            const dateStr = String(rawDate).split("T")[0];
+            const monthLabel = new Date(dateStr).toLocaleDateString("en-US", { month: "short" });
+            if (monthLabel && monthLabel !== "Invalid Date") {
+              timelineMap.set(monthLabel, (timelineMap.get(monthLabel) || 0) + 1);
+            }
+          }
+        });
+
+        setExitStatusCounts({ pending, inProgress, completed });
+
+        if (timelineMap.size > 1) {
+          setExitTimeline(
+            Array.from(timelineMap.entries()).map(([date, count]) => ({
+              date,
+              count,
+            }))
+          );
+        } else {
+          setExitTimeline([]);
+        }
+      } else {
+        setTotalExits(0);
+        setExitStatusCounts({ pending: 0, inProgress: 0, completed: 0 });
+        setExitTimeline([]);
       }
 
       // 6. Internal Dashboard / Activity Feed
@@ -236,31 +498,46 @@ export function useExecutiveDashboardData(): DashboardLiveData {
       if (payrollStructuresRes.status === "fulfilled" && payrollStructuresRes.value.data?.data) {
         const rawStruct = payrollStructuresRes.value.data.data.items ?? payrollStructuresRes.value.data.data;
         const structItems = Array.isArray(rawStruct) ? rawStruct : [];
-        calculatedGrossSum = structItems.reduce((acc: number, item: any) => acc + Number(item.gross_salary ?? item.base_salary ?? item.annual_ctc ?? 0), 0);
+        calculatedGrossSum = structItems.reduce(
+          (acc: number, item: any) =>
+            acc + Number(item.gross_salary ?? item.base_salary ?? item.annual_ctc ?? 0),
+          0
+        );
       }
 
       let summaryData: any = null;
+      let rawRecentRuns: any[] = [];
       if (payrollDashboardRes.status === "fulfilled" && payrollDashboardRes.value.data?.data) {
         summaryData = payrollDashboardRes.value.data.data.summary ?? payrollDashboardRes.value.data.data;
+        rawRecentRuns = payrollDashboardRes.value.data.data.recentRuns ?? payrollDashboardRes.value.data.data.recent_runs ?? [];
       }
 
       const totalGross = Number(summaryData?.total_gross ?? calculatedGrossSum ?? 0);
       setTotalPayrollCost(totalGross);
 
-      const formattedCost = totalGross > 0 ? `₹${(totalGross / 100000).toFixed(1)}L` : "₹0.0L";
+      const formattedCost = formatIndianCurrency(totalGross);
       const processedCount = Number(summaryData?.processed_count ?? 0);
       const paidCount = Number(summaryData?.paid_count ?? 0);
       const pendingCount = Number(summaryData?.pending_count ?? 0);
 
-      const monthlyChart: MonthlyPayrollPoint[] = [
-        { month: "Jan", cost: Math.round(totalGross * 0.85 / 100000) || 0 },
-        { month: "Feb", cost: Math.round(totalGross * 0.90 / 100000) || 0 },
-        { month: "Mar", cost: Math.round(totalGross * 0.92 / 100000) || 0 },
-        { month: "Apr", cost: Math.round(totalGross * 0.95 / 100000) || 0 },
-        { month: "May", cost: Math.round(totalGross * 0.98 / 100000) || 0 },
-        { month: "Jun", cost: Math.round(totalGross * 0.99 / 100000) || 0 },
-        { month: "Jul", cost: Math.round(totalGross / 100000) || 0 },
-      ];
+      setPayrollStatusCounts({
+        processed: processedCount,
+        pending: pendingCount,
+        paid: paidCount,
+      });
+
+      // ONLY use authentic recentRuns from backend — NO fabricated monthly values
+      const realPayrollHistory: MonthlyPayrollPoint[] = [];
+      if (Array.isArray(rawRecentRuns) && rawRecentRuns.length > 0) {
+        rawRecentRuns.forEach((run: any) => {
+          const month = run.periodName ?? run.period_name ?? (run.runDate ? new Date(run.runDate).toLocaleDateString("en-US", { month: "short" }) : "Run");
+          const cost = Number(run.grossPayroll ?? run.gross_payroll ?? 0);
+          if (month && cost > 0) {
+            realPayrollHistory.push({ month, cost });
+          }
+        });
+      }
+      setPayrollHistory(realPayrollHistory);
 
       setPayrollOverview({
         totalCostFormatted: formattedCost,
@@ -269,7 +546,7 @@ export function useExecutiveDashboardData(): DashboardLiveData {
           { label: "Pending Approval", value: pendingCount, color: "text-amber-500", bg: "bg-amber-500/10" },
           { label: "Disbursed / Paid", value: paidCount, color: "text-blue-500", bg: "bg-blue-500/10" },
         ],
-        monthlySalaryCostChart: monthlyChart,
+        monthlySalaryCostChart: realPayrollHistory,
       });
     } catch (err: any) {
       console.error("Error fetching executive dashboard live data:", err);
@@ -283,76 +560,164 @@ export function useExecutiveDashboardData(): DashboardLiveData {
     fetchAllDashboardData();
   }, [fetchAllDashboardData]);
 
+  // Structured KPI details strictly from real backend responses
+  const kpiDetails: ExecutiveKpiDetails = useMemo(
+    () => ({
+      headcount: {
+        value: totalEmployees,
+        change: headcountChange,
+        changeType: headcountChangeType,
+        trend: headcountTrend,
+        hasTrend: headcountTrend.length > 1,
+        link: "/dashboard/employees",
+      },
+      openings: {
+        value: totalJobs,
+        change: null,
+        changeType: "neutral",
+        bars: jobsBars,
+        hasBars: jobsBars.length > 0,
+        link: "/dashboard/recruitment/jobs",
+      },
+      departments: {
+        value: totalDepartments,
+        distribution: deptDistribution,
+        hasDistribution: deptDistribution.length > 0,
+        link: "/dashboard/departments",
+      },
+      payroll: {
+        valueFormatted: formatIndianCurrency(totalPayrollCost),
+        rawValue: totalPayrollCost,
+        history: payrollHistory,
+        hasHistory: payrollHistory.length > 1,
+        statusCounts: payrollStatusCounts,
+        link: "/dashboard/payroll",
+      },
+      assets: {
+        value: totalAssets,
+        assignedCount: assetStatusCounts.assigned,
+        availableCount: assetStatusCounts.available,
+        repairCount: assetStatusCounts.repair,
+        assignedPercent: assetStatusCounts.assignedPercent,
+        availablePercent: assetStatusCounts.availablePercent,
+        hasStatusData: totalAssets > 0 && (assetStatusCounts.assigned > 0 || assetStatusCounts.available > 0),
+        link: "/dashboard/assets",
+      },
+      exits: {
+        value: totalExits,
+        statusCounts: exitStatusCounts,
+        timeline: exitTimeline,
+        hasTimeline: exitTimeline.length > 1,
+        link: "/dashboard/exit",
+      },
+    }),
+    [
+      totalEmployees,
+      headcountChange,
+      headcountChangeType,
+      headcountTrend,
+      totalJobs,
+      jobsBars,
+      totalDepartments,
+      deptDistribution,
+      totalPayrollCost,
+      payrollHistory,
+      payrollStatusCounts,
+      totalAssets,
+      assetStatusCounts,
+      totalExits,
+      exitStatusCounts,
+      exitTimeline,
+    ]
+  );
+
+  // Backward compatible kpiCards with authentic values (no fake fallbacks)
   const kpiCards: DashboardLiveData["kpiCards"] = useMemo(
     () => [
       {
         id: "total_emp",
         label: "Total Headcount",
-        value: totalEmployees > 0 ? totalEmployees : 24,
-        change: "+12% MoM",
-        changeType: "up",
+        value: totalEmployees,
+        change: headcountChange || "",
+        changeType: headcountChangeType,
         accent: "text-emerald-500",
         bgAccent: "bg-emerald-500/10",
-        spark: [{ v: 18 }, { v: 20 }, { v: 21 }, { v: 23 }, { v: totalEmployees || 24 }],
+        spark: headcountTrend.map((pt) => ({ v: pt.value })),
         link: "/dashboard/employees",
       },
       {
         id: "active_jobs",
         label: "Active Openings",
-        value: totalJobs > 0 ? totalJobs : 8,
-        change: "+4 this week",
-        changeType: "up",
+        value: totalJobs,
+        change: "",
+        changeType: "neutral",
         accent: "text-blue-500",
         bgAccent: "bg-blue-500/10",
-        spark: [{ v: 4 }, { v: 5 }, { v: 6 }, { v: 7 }, { v: totalJobs || 8 }],
+        spark: jobsBars.map((b) => ({ v: b.count })),
         link: "/dashboard/recruitment/jobs",
       },
       {
         id: "departments",
         label: "Departments",
-        value: totalDepartments > 0 ? totalDepartments : 6,
-        change: "Active & Synced",
+        value: totalDepartments,
+        change: "",
         changeType: "neutral",
         accent: "text-violet-500",
         bgAccent: "bg-violet-500/10",
-        spark: [{ v: 5 }, { v: 5 }, { v: 6 }, { v: 6 }, { v: totalDepartments || 6 }],
+        spark: deptDistribution.map((d) => ({ v: d.count })),
         link: "/dashboard/departments",
       },
       {
         id: "payroll_cost",
         label: "Monthly Payroll Cost",
-        value: payrollOverview.totalCostFormatted,
-        change: "Processed On-time",
-        changeType: "up",
+        value: formatIndianCurrency(totalPayrollCost),
+        change: "",
+        changeType: "neutral",
         accent: "text-amber-500",
         bgAccent: "bg-amber-500/10",
-        spark: [{ v: 12 }, { v: 13 }, { v: 13.5 }, { v: 14 }, { v: totalPayrollCost ? totalPayrollCost / 100000 : 14.25 }],
+        spark: payrollHistory.map((p) => ({ v: p.cost })),
         link: "/dashboard/payroll",
       },
       {
         id: "asset_count",
         label: "Assets Tracked",
-        value: totalAssets > 0 ? totalAssets : 15,
-        change: "98% Assigned",
+        value: totalAssets,
+        change: assetStatusCounts.assignedPercent > 0 ? `${assetStatusCounts.assignedPercent}% Assigned` : "",
         changeType: "neutral",
         accent: "text-cyan-500",
         bgAccent: "bg-cyan-500/10",
-        spark: [{ v: 10 }, { v: 12 }, { v: 14 }, { v: 15 }, { v: totalAssets || 15 }],
+        spark: [],
         link: "/dashboard/assets",
       },
       {
         id: "exit_requests",
         label: "Offboarding & Exits",
-        value: totalExits > 0 ? totalExits : 2,
-        change: "In Progress",
-        changeType: "down",
+        value: totalExits,
+        change: exitStatusCounts.pending > 0 ? `${exitStatusCounts.pending} Pending` : "",
+        changeType: exitStatusCounts.pending > 0 ? "down" : "neutral",
         accent: "text-rose-500",
         bgAccent: "bg-rose-500/10",
-        spark: [{ v: 1 }, { v: 2 }, { v: 2 }, { v: 3 }, { v: totalExits || 2 }],
+        spark: exitTimeline.map((t) => ({ v: t.count })),
         link: "/dashboard/exit",
       },
     ],
-    [totalEmployees, totalJobs, totalDepartments, payrollOverview.totalCostFormatted, totalPayrollCost, totalAssets, totalExits],
+    [
+      totalEmployees,
+      headcountChange,
+      headcountChangeType,
+      headcountTrend,
+      totalJobs,
+      jobsBars,
+      totalDepartments,
+      deptDistribution,
+      totalPayrollCost,
+      payrollHistory,
+      totalAssets,
+      assetStatusCounts,
+      totalExits,
+      exitStatusCounts,
+      exitTimeline,
+    ]
   );
 
   return {
@@ -364,6 +729,7 @@ export function useExecutiveDashboardData(): DashboardLiveData {
     totalAssets,
     totalExits,
     totalPayrollCost,
+    kpiDetails,
     kpiCards,
     deptPerformance,
     activityFeed,

@@ -47,6 +47,7 @@ import {
   YAxis,
 } from "recharts";
 import { useExecutiveDashboardData } from "./hooks/useExecutiveDashboardData";
+import { ExecutiveKpiCards } from "./components/ExecutiveKpiCards";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -244,80 +245,8 @@ const QuickActions = memo(function QuickActions() {
 });
 
 // ── 3. KPI Cards ─────────────────────────────────────────────
-const KpiCards = memo(function KpiCards({ cards }: { cards?: ReturnType<typeof useExecutiveDashboardData>["kpiCards"] }) {
-  const items = cards && cards.length > 0 ? cards : KPI_CARDS;
-  return (
-    <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-      {items.map((kpi, i) => (
-        <motion.div key={kpi.id} {...stagger(i)}>
-          <Link to={kpi.link as any}>
-            <Card className="group relative overflow-hidden transition-all hover:shadow-md hover:-translate-y-0.5 cursor-pointer">
-              <div className={`mb-3 inline-flex items-center rounded-lg p-2 ${kpi.bgAccent}`}>
-                <TrendingUp className={`h-4 w-4 ${kpi.accent}`} />
-              </div>
-              <div className="font-display text-2xl font-bold tracking-tight">{kpi.value}</div>
-              <div className="mt-1 text-xs text-muted-foreground">{kpi.label}</div>
-              <div
-                className={`mt-2 flex items-center gap-1 text-xs font-medium ${
-                  kpi.changeType === "up"
-                    ? "text-emerald-500"
-                    : kpi.changeType === "down"
-                    ? "text-rose-500"
-                    : "text-muted-foreground"
-                }`}
-              >
-                {kpi.changeType === "up" ? (
-                  <TrendingUp className="h-3 w-3" />
-                ) : kpi.changeType === "down" ? (
-                  <TrendingDown className="h-3 w-3" />
-                ) : null}
-                {kpi.change}
-              </div>
-              {/* Mini sparkline */}
-              <div className="mt-3 h-10 w-full opacity-60">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={kpi.spark}>
-                    <Line
-                      type="monotone"
-                      dataKey="v"
-                      stroke={
-                        kpi.accent.includes("emerald")
-                          ? "#10b981"
-                          : kpi.accent.includes("blue")
-                          ? "#3b82f6"
-                          : kpi.accent.includes("violet")
-                          ? "#8b5cf6"
-                          : kpi.accent.includes("amber")
-                          ? "#f59e0b"
-                          : kpi.accent.includes("rose")
-                          ? "#f43f5e"
-                          : kpi.accent.includes("cyan")
-                          ? "#06b6d4"
-                          : kpi.accent.includes("indigo")
-                          ? "#6366f1"
-                          : kpi.accent.includes("teal")
-                          ? "#14b8a6"
-                          : kpi.accent.includes("orange")
-                          ? "#f97316"
-                          : kpi.accent.includes("green")
-                          ? "#22c55e"
-                          : kpi.accent.includes("slate")
-                          ? "#64748b"
-                          : "#6366f1"
-                      }
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </Card>
-          </Link>
-        </motion.div>
-      ))}
-    </div>
-  );
-});
+const KpiCards = ExecutiveKpiCards;
+
 
 // ── 4. HR Operations Center (Approvals) ──────────────────────
 const APPROVAL_TABS = ["Leave", "Attendance", "Recruitment", "Onboarding", "Exit", "Assets", "Documents", "Expenses"] as const;
@@ -1305,7 +1234,7 @@ export function ExecutiveDashboard() {
 
       {/* KPI Command Cards */}
       <WidgetErrorBoundary name="KPI Metrics">
-        <KpiCards cards={live.kpiCards} />
+        <ExecutiveKpiCards details={live.kpiDetails} loading={live.loading} />
       </WidgetErrorBoundary>
 
       {/* Approvals + Activity Feed */}
