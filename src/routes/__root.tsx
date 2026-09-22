@@ -15,7 +15,6 @@ import { bootstrapAuth } from "../lib/auth-bootstrap";
 import { PageSkeleton } from "../components/common/PageSkeleton";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
 import { ThemeProvider } from "../components/site/ThemeProvider";
 
 function NotFoundComponent() {
@@ -43,7 +42,7 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
   useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    console.error("Root error boundary caught error:", error);
   }, [error]);
 
   return (

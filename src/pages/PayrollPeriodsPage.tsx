@@ -476,22 +476,6 @@ export function PayrollPeriodsPage() {
 
   return (
     <div className="space-y-6">
-      {/* ── Sub-header Navigation Tabs ────────────────────────────── */}
-      <div className="flex items-center gap-2 border-b border-border/80 pb-3">
-        <Link
-          to="/dashboard/payroll"
-          className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
-        >
-          Payroll Dashboard
-        </Link>
-        <Link
-          to="/dashboard/payroll/periods"
-          className="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm"
-        >
-          Payroll Periods
-        </Link>
-      </div>
-
       {/* ── Page Header ───────────────────────────────────────────── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -503,13 +487,33 @@ export function PayrollPeriodsPage() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Navigation Tabs (Segmented Control matching Attendance) */}
+          <div className="flex items-center bg-card/65 border border-border/80 p-0.5 rounded-lg">
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="text-xs h-7 px-3 font-semibold rounded-md cursor-pointer text-muted-foreground hover:text-foreground"
+            >
+              <Link to="/dashboard/payroll">Payroll Dashboard</Link>
+            </Button>
+            <Button
+              asChild
+              variant="secondary"
+              size="sm"
+              className="text-xs h-7 px-3 font-semibold rounded-md cursor-pointer"
+            >
+              <Link to="/dashboard/payroll/periods">Payroll Periods</Link>
+            </Button>
+          </div>
+
           <Button
             variant="outline"
             size="sm"
             onClick={fetchPeriods}
             disabled={loading}
-            className="h-9 gap-1.5"
+            className="h-8 gap-1.5 cursor-pointer text-xs"
             title="Refresh periods list"
           >
             <RefreshCw
@@ -525,7 +529,7 @@ export function PayrollPeriodsPage() {
                 setCreateFormError(null);
                 setCreateModalOpen(true);
               }}
-              className="h-9 gap-1.5 text-brand-foreground shadow-sm"
+              className="h-8 gap-1.5 cursor-pointer text-xs text-brand-foreground shadow-sm"
               style={{ background: "var(--gradient-brand)" }}
             >
               <Plus className="h-4 w-4" />

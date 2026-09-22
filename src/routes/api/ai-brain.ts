@@ -1,4 +1,4 @@
-import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
 import { getAgent } from "@/lib/ai/agents";
 import { hrTools } from "@/lib/ai/hr-tools";
 import { createFileRoute } from "@tanstack/react-router";
@@ -34,8 +34,8 @@ export const Route = createFileRoute("/api/ai-brain")({
           return new Response("Messages are required", { status: 400 });
         }
 
-        const key = process.env.LOVABLE_API_KEY;
-        if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
+        const key = process.env.AI_GATEWAY_API_KEY || process.env.OPENAI_API_KEY;
+        if (!key) return new Response("Missing AI_GATEWAY_API_KEY", { status: 500 });
 
         const agent = getAgent(agentId);
         const modelName =
@@ -43,7 +43,7 @@ export const Route = createFileRoute("/api/ai-brain")({
             ? modelOverride
             : "google/gemini-3-flash-preview";
 
-        const gateway = createLovableAiGatewayProvider(key);
+        const gateway = createAiGatewayProvider(key);
 
         try {
           const result = streamText({

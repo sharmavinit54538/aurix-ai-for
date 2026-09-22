@@ -241,6 +241,15 @@ export function PayrollDashboardPage() {
     }
   }, []);
 
+  const handleRefresh = useCallback(() => {
+    fetchPeriods();
+    if (selectedPeriodId) {
+      fetchDashboardData(selectedPeriodId);
+    } else {
+      fetchDashboardData();
+    }
+  }, [fetchPeriods, fetchDashboardData, selectedPeriodId]);
+
   // Initial load
   useEffect(() => {
     fetchPeriods();
@@ -348,24 +357,27 @@ export function PayrollDashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* ── Sub-header Navigation Tabs ────────────────────────────── */}
-      <div className="flex items-center gap-2 border-b border-border/80 pb-3">
-        <Link
-          to="/dashboard/payroll"
-          className="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm"
-        >
-          Payroll Dashboard
-        </Link>
-        <Link
-          to="/dashboard/payroll/periods"
-          className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
-        >
-          Payroll Periods
-        </Link>
-      </div>
-
       {/* ── Top Action Controls Bar ───────────────────────────────── */}
-      <div className="flex flex-wrap items-center justify-end gap-2">
+      <div className="flex flex-wrap items-center justify-end gap-3">
+        {/* Navigation Tabs (Segmented Control matching Attendance) */}
+        <div className="flex items-center bg-card/65 border border-border/80 p-0.5 rounded-lg">
+          <Button
+            asChild
+            variant="secondary"
+            size="sm"
+            className="text-xs h-7 px-3 font-semibold rounded-md cursor-pointer"
+          >
+            <Link to="/dashboard/payroll">Payroll Dashboard</Link>
+          </Button>
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="text-xs h-7 px-3 font-semibold rounded-md cursor-pointer text-muted-foreground hover:text-foreground"
+          >
+            <Link to="/dashboard/payroll/periods">Payroll Periods</Link>
+          </Button>
+        </div>
         {/* Period Selector */}
         <div className="w-52">
           {loadingPeriods ? (
@@ -399,6 +411,21 @@ export function PayrollDashboardPage() {
         </div>
 
 
+        {/* Refresh Action */}
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={loadingPeriods || loadingDashboard}
+          onClick={handleRefresh}
+          className="h-9 gap-1.5 cursor-pointer text-xs"
+          title="Refresh dashboard data"
+        >
+          <RefreshCw
+            className={`h-3.5 w-3.5 ${loadingPeriods || loadingDashboard ? "animate-spin" : ""}`}
+          />
+          <span>{loadingPeriods || loadingDashboard ? "Refreshing..." : "Refresh"}</span>
+        </Button>
+
         {/* Primary Action: Run Payroll */}
         {canRunPayroll ? (
           <Button
@@ -409,7 +436,7 @@ export function PayrollDashboardPage() {
               !selectedPeriodId ||
               hasBlockingReadinessErrors
             }
-            className="h-9 gap-1.5 shadow-sm"
+            className="h-9 gap-1.5 shadow-sm cursor-pointer"
             style={
               !selectedPeriodId || loadingDashboard || hasBlockingReadinessErrors
                 ? undefined

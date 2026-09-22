@@ -12,6 +12,7 @@ import employeeHierarchyReducer from "@/store/employeeHierarchy/employeeHierarch
 
 import aiHubReducer from "@/store/aiHub/aiHubSlice";
 import analyticsReducer from "@/store/analytics/analyticsSlice";
+import { settingsApi, settingsApiErrorLogger } from "./settingsApi";
 
 export const store = configureStore({
   reducer: {
@@ -27,7 +28,10 @@ export const store = configureStore({
     employeeHierarchy: employeeHierarchyReducer,
     aiHub: aiHubReducer,
     analytics: analyticsReducer,
+    [settingsApi.reducerPath]: settingsApi.reducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(settingsApi.middleware, settingsApiErrorLogger),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

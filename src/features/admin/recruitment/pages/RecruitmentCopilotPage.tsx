@@ -65,7 +65,7 @@ export function RecruitmentCopilotPage() {
 
   return (
     <>
-      <PageHeader title="AI Recruiter Copilot" description="Ranking, summaries, drafting, search, and recommendations powered by Lovable AI." />
+      <PageHeader title="AI Recruiter Copilot" description="Ranking, summaries, drafting, search, and recommendations powered by Aurix AI." />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[260px_1fr]">
         <aside className="space-y-1 rounded-2xl border border-border bg-card/60 p-2 backdrop-blur-xl">
