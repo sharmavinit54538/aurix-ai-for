@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Building2, Plus, Users, Target, Clock, ArrowRight,
@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import apiInstance from "@/api/apiInstance";
 import { useRecruitment } from "../hooks/useRecruitment";
 
 export interface WorkforceRequirement {
@@ -48,96 +49,7 @@ export interface WorkforceRequirement {
   createdAt: string;
 }
 
-const INITIAL_REQUIREMENTS: WorkforceRequirement[] = [
-  {
-    id: "WFR-101",
-    department: "Engineering",
-    roleTitle: "Senior Full Stack Engineer",
-    headcountNeeded: 3,
-    currentHeadcount: 14,
-    plannedQuarter: "Q1 2026",
-    priority: "Urgent",
-    budgetMin: 2200000,
-    budgetMax: 3200000,
-    currency: "INR",
-    requiredSkills: ["React", "TypeScript", "Node.js", "PostgreSQL"],
-    experienceLevel: "5-8 yrs (Senior)",
-    justification: "Scaling enterprise automation pipeline for tier-1 client deployments.",
-    status: "Approved",
-    createdAt: "2026-02-10",
-  },
-  {
-    id: "WFR-102",
-    department: "Data & AI Analytics",
-    roleTitle: "Staff AI/ML Engineer",
-    headcountNeeded: 2,
-    currentHeadcount: 6,
-    plannedQuarter: "Q1 2026",
-    priority: "High",
-    budgetMin: 3500000,
-    budgetMax: 5000000,
-    currency: "INR",
-    requiredSkills: ["Python", "PyTorch", "LLMs", "Vector DBs"],
-    experienceLevel: "8+ yrs (Lead)",
-    justification: "Core model fine-tuning and agentic routing systems buildout.",
-    status: "Finance Approved",
-    createdAt: "2026-02-18",
-  },
-  {
-    id: "WFR-103",
-    department: "Design & Creative",
-    roleTitle: "Lead Product Designer (UI/UX)",
-    headcountNeeded: 1,
-    currentHeadcount: 4,
-    plannedQuarter: "Q2 2026",
-    priority: "Medium",
-    budgetMin: 2000000,
-    budgetMax: 2800000,
-    currency: "INR",
-    requiredSkills: ["Figma", "Design Systems", "Prototyping"],
-    experienceLevel: "5-8 yrs (Senior)",
-    justification: "End-to-end design refresh across all executive portals and mobile views.",
-    status: "Approved",
-    createdAt: "2026-03-01",
-  },
-  {
-    id: "WFR-104",
-    department: "Sales & Business Dev",
-    roleTitle: "Enterprise Account Executive",
-    headcountNeeded: 4,
-    currentHeadcount: 8,
-    plannedQuarter: "Q2 2026",
-    priority: "High",
-    budgetMin: 1800000,
-    budgetMax: 2500000,
-    currency: "INR",
-    requiredSkills: ["B2B SaaS", "Enterprise Sales", "Contract Negotiation"],
-    experienceLevel: "4-7 yrs",
-    justification: "Expansion into North American and Southeast Asian enterprise markets.",
-    status: "Submitted",
-    createdAt: "2026-03-05",
-  },
-  {
-    id: "WFR-105",
-    department: "Human Resources",
-    roleTitle: "Senior People Operations Partner",
-    headcountNeeded: 2,
-    currentHeadcount: 5,
-    plannedQuarter: "Q1 2026",
-    priority: "Medium",
-    budgetMin: 1200000,
-    budgetMax: 1700000,
-    currency: "INR",
-    requiredSkills: ["HR Operations", "Onboarding", "Compliance"],
-    experienceLevel: "3-5 yrs",
-    justification: "Rapid workforce expansion requiring structured onboarding and BGV bandwidth.",
-    status: "Converted to Job",
-    convertedJobId: "job-105",
-    createdAt: "2026-02-12",
-  },
-];
-
-const DEPARTMENTS = [
+const DEFAULT_DEPARTMENTS = [
   "Engineering",
   "Data & AI Analytics",
   "Product Management",
@@ -151,14 +63,58 @@ const DEPARTMENTS = [
 export function WorkforcePlanningPage() {
   const navigate = useNavigate();
   const { upsertJob } = useRecruitment();
+  const [departments, setDepartments] = useState<string[]>(DEFAULT_DEPARTMENTS);
+
+  // Load real departments from backend API
+  useEffect(() => {
+    let mounted = true;
+    async function loadDepts() {
+      try {
+        const res = await apiInstance.get("/departments", { params: { limit: 100 } });
+        const dData = res.data?.data ?? res.data;
+        const list = Array.isArray(dData)
+          ? dData
+          : Array.isArray(dData?.items)
+          ? dData.items
+          : Array.isArray(dData?.departments)
+          ? dData.departments
+          : [];
+        if (mounted && list.length > 0) {
+          const names = list.map((d: any) => d.name || d.title || d.department_name).filter(Boolean);
+          if (names.length > 0) {
+            setDepartments(Array.from(new Set([...names, ...DEFAULT_DEPARTMENTS])));
+          }
+        }
+      } catch {
+        // fallback to DEFAULT_DEPARTMENTS
+      }
+    }
+    loadDepts();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const [requirements, setRequirements] = useState<WorkforceRequirement[]>(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("ofc360:workforce_requirements");
       if (saved) {
-        try { return JSON.parse(saved); } catch { /* ignore */ }
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            // Purge mock records (WFR-101 to WFR-105)
+            const clean = parsed.filter(
+              (r: any) => !["WFR-101", "WFR-102", "WFR-103", "WFR-104", "WFR-105"].includes(r.id)
+            );
+            if (clean.length !== parsed.length) {
+              localStorage.setItem("ofc360:workforce_requirements", JSON.stringify(clean));
+            }
+            return clean;
+          }
+        } catch { /* ignore */ }
       }
     }
-    return INITIAL_REQUIREMENTS;
+    return [];
   });
 
   const [filterDept, setFilterDept] = useState<string>("all");
@@ -166,18 +122,18 @@ export function WorkforcePlanningPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedReq, setSelectedReq] = useState<WorkforceRequirement | null>(null);
 
-  // New Requirement Form State
+  // New Requirement Form State (Zero mock defaults)
   const [form, setForm] = useState({
     department: "Engineering",
     roleTitle: "",
     headcountNeeded: 1,
-    currentHeadcount: 10,
+    currentHeadcount: 0,
     plannedQuarter: "Q2 2026" as WorkforceRequirement["plannedQuarter"],
     priority: "High" as WorkforceRequirement["priority"],
-    budgetMin: 1800000,
-    budgetMax: 2600000,
+    budgetMin: 0,
+    budgetMax: 0,
     currency: "INR",
-    requiredSkills: "React, TypeScript, Cloud",
+    requiredSkills: "",
     experienceLevel: "3-5 yrs (Mid-Level)",
     justification: "",
   });
@@ -218,16 +174,16 @@ export function WorkforcePlanningPage() {
     toast.success(`Workforce requirement ${newReq.id} created successfully!`);
     setShowCreateModal(false);
     setForm({
-      department: "Engineering",
+      department: departments[0] || "Engineering",
       roleTitle: "",
       headcountNeeded: 1,
-      currentHeadcount: 10,
+      currentHeadcount: 0,
       plannedQuarter: "Q2 2026",
       priority: "High",
-      budgetMin: 1800000,
-      budgetMax: 2600000,
+      budgetMin: 0,
+      budgetMax: 0,
       currency: "INR",
-      requiredSkills: "React, TypeScript, Cloud",
+      requiredSkills: "",
       experienceLevel: "3-5 yrs (Mid-Level)",
       justification: "",
     });
@@ -335,7 +291,7 @@ export function WorkforcePlanningPage() {
             <Users className="h-4 w-4 text-indigo-500" />
           </div>
           <div className="mt-2 font-display text-2xl font-bold">{totalPlannedHeadcount} Positions</div>
-          <div className="mt-1 text-[11px] text-muted-foreground">Across {DEPARTMENTS.length} functional units</div>
+          <div className="mt-1 text-[11px] text-muted-foreground">Across {departments.length} functional units</div>
         </div>
 
         <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl">
@@ -379,7 +335,7 @@ export function WorkforcePlanningPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Departments</SelectItem>
-              {DEPARTMENTS.map((d) => (
+              {departments.map((d) => (
                 <SelectItem key={d} value={d}>{d}</SelectItem>
               ))}
             </SelectContent>
@@ -424,7 +380,28 @@ export function WorkforcePlanningPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {filtered.map((req) => (
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-14 text-center text-muted-foreground">
+                    <Target className="mx-auto h-9 w-9 opacity-35 mb-2.5 text-primary" />
+                    <p className="text-sm font-semibold text-foreground">No workforce requirements found</p>
+                    <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+                      {filterDept !== "all" || filterStatus !== "all"
+                        ? "No requisitions match your selected department or status filters."
+                        : "No mock data. Create a new workforce requirement to track department headcount needs."}
+                    </p>
+                    <Button
+                      onClick={() => setShowCreateModal(true)}
+                      size="sm"
+                      className="mt-4 gap-1.5 shadow-sm"
+                    >
+                      <Plus className="h-4 w-4" />
+                      New Workforce Requirement
+                    </Button>
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((req) => (
                 <tr key={req.id} className="hover:bg-accent/30 transition-colors">
                   <td className="px-4 py-3">
                     <div className="font-medium text-foreground text-sm flex items-center gap-1.5">
@@ -507,7 +484,7 @@ export function WorkforcePlanningPage() {
                     </div>
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>
@@ -633,7 +610,7 @@ export function WorkforcePlanningPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {DEPARTMENTS.map((d) => (
+                      {departments.map((d) => (
                         <SelectItem key={d} value={d}>{d}</SelectItem>
                       ))}
                     </SelectContent>
