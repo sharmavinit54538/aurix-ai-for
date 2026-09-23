@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import {
-  Mail, MessageSquare, Phone, Send, CheckCircle2, Clock, AlertCircle,
-  Eye, Copy, Sparkles, Filter, Users, ChevronRight, FileText, Check
+  Mail, Send, CheckCircle2, Eye, Copy
 } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
@@ -9,14 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -41,43 +32,45 @@ interface CommMessage {
 
 const DEFAULT_TEMPLATES: Record<string, { subject: string; body: string }> = {
   "Application Received": {
-    subject: "We received your application for {{job_title}} at OFC360",
-    body: "Hi {{candidate_name}},\n\nThank you for applying for the {{job_title}} position at OFC360. Our recruitment team is currently reviewing your application.\n\nYou can expect an update on your candidacy within 3 business days.\n\nBest regards,\nOFC360 Talent Acquisition Team",
+    subject: "Application Received: {{job_title}}",
+    body: "Hi {{candidate_name}},\n\nThank you for applying for the {{job_title}} position. Our recruitment team is currently reviewing your profile.\n\nYou can expect an update on your candidacy within 3 to 5 business days.\n\nBest regards,\nTalent Acquisition Team",
   },
   "Screening Result": {
-    subject: "Update on your application for {{job_title}} — OFC360",
-    body: "Dear {{candidate_name}},\n\nGreat news! Your qualifications and background have passed our initial AI screening review for {{job_title}}.\n\nWe would like to invite you to complete a 15-minute technical assessment round.\n\nWarm regards,\nOFC360 Recruitment Team",
+    subject: "Update on your application for {{job_title}}",
+    body: "Dear {{candidate_name}},\n\nGreat news! Your qualifications and background have passed our initial screening review for the {{job_title}} role.\n\nWe would like to invite you to complete the next evaluation assessment round.\n\nWarm regards,\nRecruitment Team",
   },
   "Interview Invitation": {
-    subject: "Interview Invitation: {{job_title}} round with OFC360",
-    body: "Hi {{candidate_name}},\n\nYou are invited to attend an interview for {{job_title}} on {{interview_time}}.\n\nGoogle Meet Link: {{meeting_link}}\n\nPlease confirm your availability by replying to this message.\n\nLooking forward to speaking with you!\n\nBest regards,\nOFC360 Team",
+    subject: "Interview Invitation: {{job_title}}",
+    body: "Hi {{candidate_name}},\n\nYou are invited to attend an interview for {{job_title}} on {{interview_time}}.\n\nMeeting Link: {{meeting_link}}\n\nPlease confirm your availability by replying to this message.\n\nLooking forward to speaking with you!\n\nBest regards,\nHiring Team",
   },
   "Interview Reminder": {
-    subject: "Reminder: Your upcoming interview tomorrow with OFC360",
-    body: "Hi {{candidate_name}},\n\nThis is a quick reminder about your scheduled interview for {{job_title}} tomorrow at {{interview_time}}.\n\nMeeting link: {{meeting_link}}\n\nPlease let us know if you have any questions.\n\nBest of luck!",
+    subject: "Reminder: Scheduled interview for {{job_title}}",
+    body: "Hi {{candidate_name}},\n\nThis is a quick reminder about your scheduled interview for {{job_title}} on {{interview_time}}.\n\nMeeting link: {{meeting_link}}\n\nPlease let us know if you need to reschedule.\n\nBest of luck!",
   },
   "Offer Letter": {
-    subject: "Congratulations! Formal Job Offer from OFC360 — {{job_title}}",
-    body: "Dear {{candidate_name}},\n\nWe are absolutely delighted to offer you the position of {{job_title}} at OFC360!\n\nAttached is your formal employment agreement detailing compensation, joining date, and benefits.\n\nPlease review and electronically sign before the expiration date.\n\nWelcome to OFC360!\n\nSincerely,\nLeadership Team, OFC360",
+    subject: "Offer of Employment: {{job_title}}",
+    body: "Dear {{candidate_name}},\n\nWe are delighted to offer you the position of {{job_title}}!\n\nAttached is your formal employment offer detailing compensation, joining date, and benefits.\n\nPlease review and sign electronically before the deadline.\n\nWelcome to the team!\n\nSincerely,\nLeadership Team",
   },
   "Rejection": {
-    subject: "Update regarding your application for {{job_title}} at OFC360",
-    body: "Dear {{candidate_name}},\n\nThank you for taking the time to meet with our team for the {{job_title}} position. While your background is impressive, we have decided to move forward with candidates whose current skillsets align more closely with our immediate requirements.\n\nWe will keep your resume in our talent pool for future opportunities.\n\nSincerely,\nOFC360 Talent Team",
+    subject: "Update regarding your application for {{job_title}}",
+    body: "Dear {{candidate_name}},\n\nThank you for taking the time to interview with our team for the {{job_title}} position. While your qualifications are strong, we have decided to move forward with other candidates whose skillsets align more closely with our current requirements.\n\nWe will keep your resume in our talent pool for future opportunities.\n\nSincerely,\nTalent Acquisition Team",
   },
 };
 
 export function CandidateCommunicationPage() {
-  const { candidates, jobs } = useRecruitment();
+  const { candidates, jobs, interviews } = useRecruitment();
 
-  // Load user dispatched messages with permanent mock purge
+  // Load user dispatched messages with mock purge
   const [messages, setMessages] = useState<CommMessage[]>(() => {
     if (typeof window !== "undefined") {
       try {
-        const saved = localStorage.getItem("ofc360:comm_messages");
+        const saved =
+          localStorage.getItem("aurix:comm_messages") ||
+          localStorage.getItem("ofc360:comm_messages");
         if (saved) {
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed)) {
-            // Purge mock message IDs msg-101 to msg-103
+            // Purge mock message IDs or hardcoded fake names
             const clean = parsed.filter(
               (m: CommMessage) =>
                 !["msg-101", "msg-102", "msg-103"].includes(m.id) &&
@@ -85,11 +78,9 @@ export function CandidateCommunicationPage() {
                   "Siddharth Nambiar",
                   "Priyanka Deshmukh",
                   "Aditya Roy",
+                  "Candidate Candidate",
                 ].includes(m.recipientName),
             );
-            if (clean.length !== parsed.length) {
-              localStorage.setItem("ofc360:comm_messages", JSON.stringify(clean));
-            }
             return clean;
           }
         }
@@ -133,6 +124,15 @@ export function CandidateCommunicationPage() {
   const selectedJob =
     jobs.find((j) => j.id === selectedCandidate?.jobId) || jobs[0];
 
+  const candInterview = useMemo(() => {
+    if (!selectedCandidate) return null;
+    return interviews.find(
+      (i) =>
+        i.candidateId === selectedCandidate.id ||
+        (selectedCandidate.name && i.candidateName === selectedCandidate.name),
+    );
+  }, [interviews, selectedCandidate]);
+
   const handleTemplateSelect = (type: keyof typeof DEFAULT_TEMPLATES) => {
     setActiveTemplateType(type);
     setComposerSubject(DEFAULT_TEMPLATES[type].subject);
@@ -149,6 +149,20 @@ export function CandidateCommunicationPage() {
         "Position",
     );
 
+  const interviewTimeStr = candInterview?.date
+    ? new Date(candInterview.date).toLocaleDateString("en-IN", {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "scheduled date and time";
+
+  const meetingLinkStr =
+    candInterview?.meetingLink ||
+    candInterview?.location ||
+    "Meeting link will be shared prior to session";
+
   const previewBody = composerBody
     .replace(/{{candidate_name}}/g, selectedCandidate?.name || "Candidate")
     .replace(
@@ -157,8 +171,8 @@ export function CandidateCommunicationPage() {
         selectedCandidate?.appliedPosition ||
         "Position",
     )
-    .replace(/{{interview_time}}/g, "upcoming scheduled time")
-    .replace(/{{meeting_link}}/g, "https://meet.google.com/ofc-360-call");
+    .replace(/{{interview_time}}/g, interviewTimeStr)
+    .replace(/{{meeting_link}}/g, meetingLinkStr);
 
   const handleSendMessage = () => {
     if (!selectedCandidate) {
@@ -171,8 +185,8 @@ export function CandidateCommunicationPage() {
       recipientName: selectedCandidate.name || "Candidate",
       recipientContact:
         selectedChannel === "Email"
-          ? selectedCandidate.email || "candidate@example.com"
-          : selectedCandidate.phone || "+91 98000 00000",
+          ? selectedCandidate.email || "No email on record"
+          : selectedCandidate.phone || "No phone on record",
       templateType: activeTemplateType as any,
       channel: selectedChannel,
       subject: previewSubject,
@@ -184,7 +198,7 @@ export function CandidateCommunicationPage() {
     const updated = [newMsg, ...messages];
     setMessages(updated);
     if (typeof window !== "undefined") {
-      localStorage.setItem("ofc360:comm_messages", JSON.stringify(updated));
+      localStorage.setItem("aurix:comm_messages", JSON.stringify(updated));
     }
     toast.success(
       `Message dispatched via ${selectedChannel} to ${selectedCandidate.name}!`,
@@ -252,18 +266,24 @@ export function CandidateCommunicationPage() {
 
             <div>
               <Label className="text-xs">Recipient Candidate</Label>
-              <Select value={selectedCandidateId} onValueChange={setSelectedCandidateId}>
-                <SelectTrigger className="mt-1 h-9 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {candidates.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name} ({c.appliedPosition})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {candidates.length === 0 ? (
+                <div className="mt-1 p-2 rounded-lg border border-dashed border-border text-xs text-muted-foreground bg-muted/20">
+                  No candidates available in pipeline
+                </div>
+              ) : (
+                <Select value={selectedCandidateId} onValueChange={setSelectedCandidateId}>
+                  <SelectTrigger className="mt-1 h-9 text-xs">
+                    <SelectValue placeholder="Select a candidate" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {candidates.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name || "Candidate"} {c.appliedPosition ? `(${c.appliedPosition})` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
 
             {selectedChannel === "Email" && (
@@ -280,7 +300,7 @@ export function CandidateCommunicationPage() {
             <div>
               <div className="flex items-center justify-between">
                 <Label className="text-xs">Message Template Body</Label>
-                <span className="text-[10px] text-muted-foreground font-mono">&#123;&#123;candidate_name&#125;&#125;, &#123;&#123;job_title&#125;&#125;</span>
+                <span className="text-[10px] text-muted-foreground font-mono">&#123;&#123;candidate_name&#125;&#125;, &#123;&#123;job_title&#125;&#125;, &#123;&#123;interview_time&#125;&#125;, &#123;&#123;meeting_link&#125;&#125;</span>
               </div>
               <Textarea
                 className="mt-1 text-xs font-mono"
@@ -292,8 +312,9 @@ export function CandidateCommunicationPage() {
 
             <div className="pt-2 flex justify-end">
               <Button
+                disabled={!selectedCandidate}
                 onClick={handleSendMessage}
-                className="bg-gradient-brand text-brand-foreground shadow-glow gap-1.5 text-xs"
+                className="bg-gradient-brand text-brand-foreground shadow-glow gap-1.5 text-xs disabled:opacity-50"
               >
                 <Send className="h-3.5 w-3.5" />
                 Dispatch via {selectedChannel}
@@ -311,7 +332,7 @@ export function CandidateCommunicationPage() {
                 Live {selectedChannel} Render Preview
               </span>
               <Badge variant="outline" className="text-[10px]">
-                To: {selectedCandidate?.name}
+                To: {selectedCandidate?.name || "No recipient"}
               </Badge>
             </div>
 
@@ -320,11 +341,13 @@ export function CandidateCommunicationPage() {
                 <div className="border-b border-border pb-2 space-y-1">
                   <div>
                     <span className="text-muted-foreground">From: </span>
-                    <span className="font-semibold text-foreground">OFC360 Talent &lt;careers@ofc360.com&gt;</span>
+                    <span className="font-semibold text-foreground">Talent Acquisition Team &lt;careers@company.com&gt;</span>
                   </div>
                   <div>
                     <span className="text-muted-foreground">To: </span>
-                    <span className="font-semibold text-foreground">{selectedCandidate?.email}</span>
+                    <span className="font-semibold text-foreground">
+                      {selectedCandidate?.email || "No email on record"}
+                    </span>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Subject: </span>
@@ -339,7 +362,7 @@ export function CandidateCommunicationPage() {
             ) : (
               <div className="mt-4 max-w-sm mx-auto rounded-2xl border border-border bg-zinc-900 p-4 text-xs text-white space-y-3 shadow-lg">
                 <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                  <div className="font-bold text-sm">OFC360 Verified Account</div>
+                  <div className="font-bold text-sm">Official Talent Channel</div>
                   <Badge variant="secondary" className="text-[9px] bg-emerald-500/20 text-emerald-400">
                     {selectedChannel}
                   </Badge>
