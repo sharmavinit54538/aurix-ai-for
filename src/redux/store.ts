@@ -7,6 +7,12 @@ import recruitmentReducer from "@/features/admin/recruitment/recruitmentSlice";
 import aiInsightsReducer from "@/store/aiInsights/aiInsightsSlice";
 import complianceReducer from "@/store/compliance/complianceSlice";
 import meetingIntelligenceReducer from "@/store/meetingIntelligence/meetingIntelligenceSlice";
+import policyAssistantReducer from "@/store/policyAssistant/policyAssistantSlice";
+import employeeHealthReducer from "@/store/employeeHealth/employeeHealthSlice";
+import performanceCoachReducer from "@/store/performanceCoach/performanceCoachSlice";
+import leaveAssistantReducer from "@/store/leaveAssistant/leaveAssistantSlice";
+import recruiterReducer from "@/store/recruiter/recruiterSlice";
+import workforceInsightsReducer from "@/store/workforceInsights/workforceInsightsSlice";
 import profileReducer from "@/store/profile/profileSlice";
 import settingsReducer from "@/store/settings/settingsSlice";
 import sidebarReducer from "@/store/sidebar/sidebarSlice";
@@ -26,6 +32,12 @@ export const store = configureStore({
     aiInsights: aiInsightsReducer,
     compliance: complianceReducer,
     meetingIntelligence: meetingIntelligenceReducer,
+    policyAssistant: policyAssistantReducer,
+    employeeHealth: employeeHealthReducer,
+    performanceCoach: performanceCoachReducer,
+    leaveAssistant: leaveAssistantReducer,
+    aiRecruiter: recruiterReducer,
+    workforceInsights: workforceInsightsReducer,
     settings: settingsReducer,
     profile: profileReducer,
     sidebar: sidebarReducer,
