@@ -415,7 +415,7 @@ export function MyProfileSection({ canEdit = true, onDirtyChange }: MyProfileSec
             <Lock className="h-4 w-4 text-primary shrink-0" />
           </div>
 
-          <div className="grid max-w-xl grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="space-y-1.5">
               <Label htmlFor="current-password" className="text-xs font-medium">
                 Current Password
@@ -530,18 +530,18 @@ export function MyProfileSection({ canEdit = true, onDirtyChange }: MyProfileSec
                 <p className="text-[11px] text-destructive">{passwordErrors.confirmPassword}</p>
               )}
             </div>
+          </div>
 
-            <div className="pt-2">
-              <Button
-                type="submit"
-                size="sm"
-                disabled={changingPassword || !passwordData.newPassword}
-                className="gap-1.5 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                <ShieldCheck className="h-3.5 w-3.5" />
-                {changingPassword ? "Updating..." : "Update Password"}
-              </Button>
-            </div>
+          <div className="mt-4 pt-1">
+            <Button
+              type="submit"
+              size="sm"
+              disabled={changingPassword || !passwordData.newPassword}
+              className="gap-1.5 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              <ShieldCheck className="h-3.5 w-3.5" />
+              {changingPassword ? "Updating..." : "Update Password"}
+            </Button>
           </div>
         </form>
       )}
