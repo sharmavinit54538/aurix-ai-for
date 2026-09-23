@@ -1,15 +1,12 @@
 import { useState } from "react";
 import {
-  CalendarDays, CheckCircle2, Clock, FileCheck, Gift,
-  HeartHandshake, Laptop, ShieldCheck, UserCheck, AlertCircle,
-  Video, Mail, ChevronRight, Check
+  Clock, Mail, Check, Users
 } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { useRecruitment } from "../hooks/useRecruitment";
 
 interface PreboardingCandidate {
   id: string;
@@ -22,49 +19,16 @@ interface PreboardingCandidate {
   tasks: { id: string; title: string; owner: "Candidate" | "HR" | "IT"; completed: boolean }[];
 }
 
-const INITIAL_PREBOARDING: PreboardingCandidate[] = [
-  {
-    id: "pb-1",
-    name: "Meera Kulkarni",
-    role: "Senior People Operations Partner",
-    joiningDate: "2026-04-01",
-    daysToJoin: 16,
-    assignedBuddy: "Neha Kapoor (Lead Recruiter)",
-    welcomePackStatus: "Dispatched",
-    tasks: [
-      { id: "t1", title: "Signed Formal Offer Letter", owner: "Candidate", completed: true },
-      { id: "t2", title: "Identity & Academic Documents Uploaded", owner: "Candidate", completed: true },
-      { id: "t3", title: "Company NDA & Code of Conduct Sign-off", owner: "Candidate", completed: true },
-      { id: "t4", title: "Emergency Contact & Address Details Submitted", owner: "Candidate", completed: true },
-      { id: "t5", title: "Laptop Spec & Peripherals Selection", owner: "IT", completed: true },
-      { id: "t6", title: "Day-One Schedule & Welcome Call", owner: "HR", completed: false },
-    ],
-  },
-  {
-    id: "pb-2",
-    name: "Aditya Roy",
-    role: "Lead Product Designer (UI/UX)",
-    joiningDate: "2026-04-01",
-    daysToJoin: 16,
-    assignedBuddy: "Pooja Sharma (Design Head)",
-    welcomePackStatus: "Preparing",
-    tasks: [
-      { id: "t11", title: "Signed Formal Offer Letter", owner: "Candidate", completed: true },
-      { id: "t12", title: "Identity & Academic Documents Uploaded", owner: "Candidate", completed: true },
-      { id: "t13", title: "Company NDA & Code of Conduct Sign-off", owner: "Candidate", completed: false },
-      { id: "t14", title: "MacBook Pro M3 Max Provisioning", owner: "IT", completed: false },
-      { id: "t15", title: "Welcome Swag Kit Dispatch", owner: "HR", completed: false },
-    ],
-  },
-];
+const INITIAL_PREBOARDING: PreboardingCandidate[] = [];
 
 export function PreboardingPage() {
   const [candidates, setCandidates] = useState<PreboardingCandidate[]>(INITIAL_PREBOARDING);
-  const [selectedCandidateId, setSelectedCandidateId] = useState<string>("pb-1");
+  const [selectedCandidateId, setSelectedCandidateId] = useState<string>("");
 
-  const activeCandidate = candidates.find((c) => c.id === selectedCandidateId) || candidates[0];
+  const activeCandidate = candidates.find((c) => c.id === selectedCandidateId) || candidates[0] || null;
 
   const handleToggleTask = (taskId: string) => {
+    if (!activeCandidate) return;
     const updated = candidates.map((c) => {
       if (c.id !== activeCandidate.id) return c;
       return {
@@ -76,8 +40,9 @@ export function PreboardingPage() {
     toast.success("Preboarding checklist item updated!");
   };
 
-  const completedCount = activeCandidate.tasks.filter((t) => t.completed).length;
-  const progressPct = Math.round((completedCount / activeCandidate.tasks.length) * 100);
+  const completedCount = activeCandidate?.tasks.filter((t) => t.completed).length ?? 0;
+  const totalTasks = activeCandidate?.tasks.length ?? 0;
+  const progressPct = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
 
   return (
     <div className="space-y-6">
@@ -98,13 +63,13 @@ export function PreboardingPage() {
           <div className="space-y-2">
             {candidates.map((c) => {
               const comp = c.tasks.filter((t) => t.completed).length;
-              const pct = Math.round((comp / c.tasks.length) * 100);
+              const pct = c.tasks.length > 0 ? Math.round((comp / c.tasks.length) * 100) : 0;
               return (
                 <button
                   key={c.id}
                   onClick={() => setSelectedCandidateId(c.id)}
                   className={`w-full p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
-                    activeCandidate.id === c.id
+                    activeCandidate?.id === c.id
                       ? "border-indigo-500 bg-accent/60 shadow-sm"
                       : "border-border bg-card/40 hover:bg-accent/30"
                   }`}
@@ -126,11 +91,15 @@ export function PreboardingPage() {
                 </button>
               );
             })}
+            {candidates.length === 0 && (
+              <div className="text-xs text-muted-foreground text-center py-6">No upcoming joiners in preboarding.</div>
+            )}
           </div>
         </div>
 
         {/* Right 2 Cols: Active Joiner Preboarding Details */}
         <div className="lg:col-span-2 space-y-4">
+          {activeCandidate ? (
           <div className="rounded-2xl border border-border bg-card/60 p-5 backdrop-blur-xl space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-3">
               <div>
@@ -202,6 +171,15 @@ export function PreboardingPage() {
               ))}
             </div>
           </div>
+          ) : (
+            <div className="rounded-2xl border border-border bg-card/60 p-8 backdrop-blur-xl flex flex-col items-center justify-center text-center min-h-[300px]">
+              <Users className="h-10 w-10 text-muted-foreground/40 mb-3" />
+              <h3 className="font-semibold text-sm text-foreground">No Preboarding Candidates</h3>
+              <p className="text-xs text-muted-foreground mt-1 max-w-xs">
+                There are no candidates currently in the preboarding pipeline. Accepted offers will appear here.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

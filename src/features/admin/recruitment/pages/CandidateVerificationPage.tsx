@@ -1,13 +1,10 @@
 import { useState } from "react";
 import {
-  ShieldCheck, CheckCircle2, Clock, AlertTriangle, FileText,
-  UserCheck, Building, GraduationCap, Phone, Upload, Check, X,
-  Search, Eye, AlertCircle, Sparkles, Filter
+  ShieldCheck, CheckCircle2, AlertTriangle, Check, Users
 } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -18,15 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { toast } from "sonner";
-import { useRecruitment } from "../hooks/useRecruitment";
 
 interface VerificationCheck {
   id: string;
@@ -49,144 +38,18 @@ interface CandidateVerificationProfile {
   timeline: { date: string; title: string; actor: string }[];
 }
 
-const INITIAL_BGV_DATA: CandidateVerificationProfile[] = [
-  {
-    candidateId: "cand-201",
-    candidateName: "Siddharth Nambiar",
-    appliedPosition: "Senior Full Stack Engineer",
-    overallStatus: "In Progress",
-    riskScore: "Low",
-    checks: [
-      {
-        id: "chk-1",
-        name: "Government ID / Passport",
-        category: "Identity",
-        status: "Verified",
-        verifiedAt: "2026-03-12",
-        verifier: "Automated OCR Verification",
-        documentName: "Passport_Front_Back.pdf",
-        notes: "Aadhaar & Passport match official UIDAI records 100%.",
-      },
-      {
-        id: "chk-2",
-        name: "Highest Degree Verification",
-        category: "Education",
-        status: "Verified",
-        verifiedAt: "2026-03-13",
-        verifier: "National Academic Depository (NAD)",
-        documentName: "NIT_Surathkal_Degree.pdf",
-        notes: "B.Tech Computer Science verified directly with university records.",
-      },
-      {
-        id: "chk-3",
-        name: "Previous Employer Experience Check",
-        category: "Employment",
-        status: "In Review",
-        verifier: "First Advantage Partner",
-        documentName: "Razorpay_Relieving_Letter.pdf",
-        notes: "Tenure confirmed. Awaiting formal HR exit confirmation letter.",
-      },
-      {
-        id: "chk-4",
-        name: "Professional Reference Checks",
-        category: "Reference",
-        status: "Pending Document",
-        verifier: "HR Operations",
-        documentName: "Reference_Contact_Form.pdf",
-        notes: "Candidate requested to submit 2 peer/manager references.",
-      },
-      {
-        id: "chk-5",
-        name: "Court & Criminal Record Search",
-        category: "Criminal",
-        status: "Verified",
-        verifiedAt: "2026-03-14",
-        verifier: "e-Courts National Database",
-        documentName: "Court_Registry_Check.pdf",
-        notes: "No litigation, criminal records, or adverse civil records found.",
-      },
-    ],
-    timeline: [
-      { date: "2026-03-11", title: "BGV Package Initiated", actor: "System" },
-      { date: "2026-03-12", title: "Government Identity Verified via OCR", actor: "Automated OCR" },
-      { date: "2026-03-13", title: "Education Degree Authenticated with NAD", actor: "NAD Partner" },
-    ],
-  },
-  {
-    candidateId: "cand-203",
-    candidateName: "Aditya Roy",
-    appliedPosition: "Lead Product Designer (UI/UX)",
-    overallStatus: "Clear",
-    riskScore: "Low",
-    checks: [
-      {
-        id: "chk-11",
-        name: "Government ID",
-        category: "Identity",
-        status: "Verified",
-        verifiedAt: "2026-03-05",
-        verifier: "Automated OCR Verification",
-        documentName: "Aadhaar_Card.pdf",
-        notes: "Biometric and demographic data verified.",
-      },
-      {
-        id: "chk-12",
-        name: "Degree Verification",
-        category: "Education",
-        status: "Verified",
-        verifiedAt: "2026-03-06",
-        verifier: "NID Academic Registry",
-        documentName: "NID_BDes_Certificate.pdf",
-        notes: "Degree confirmed with distinction.",
-      },
-      {
-        id: "chk-13",
-        name: "Employment History",
-        category: "Employment",
-        status: "Verified",
-        verifiedAt: "2026-03-08",
-        verifier: "Postman HR Operations",
-        documentName: "Postman_Experience_Letter.pdf",
-        notes: "Senior Product Designer tenure confirmed without discrepancy.",
-      },
-    ],
-    timeline: [
-      { date: "2026-03-04", title: "BGV Initiated on Offer Acceptance", actor: "HR" },
-      { date: "2026-03-08", title: "All BGV checks completed with Zero Exceptions", actor: "HR Lead" },
-    ],
-  },
-  {
-    candidateId: "cand-204",
-    candidateName: "Kavita Ranganathan",
-    appliedPosition: "DevOps & Cloud Infrastructure Lead",
-    overallStatus: "Manual Review",
-    riskScore: "Medium",
-    checks: [
-      {
-        id: "chk-21",
-        name: "Employment History Discrepancy",
-        category: "Employment",
-        status: "Exception Flagged",
-        verifier: "Manual HR Review",
-        documentName: "Zoho_Service_Certificate.pdf",
-        notes: "Relieving date differs by 14 days due to unencashed leave balance. Requires manual sign-off.",
-      },
-    ],
-    timeline: [
-      { date: "2026-03-12", title: "Exception raised on relieving date mismatch", actor: "Verification Analyst" },
-    ],
-  },
-];
+const INITIAL_BGV_DATA: CandidateVerificationProfile[] = [];
 
 export function CandidateVerificationPage() {
   const [bgvList, setBgvList] = useState<CandidateVerificationProfile[]>(INITIAL_BGV_DATA);
-  const [selectedProfileId, setSelectedProfileId] = useState<string>("cand-201");
+  const [selectedProfileId, setSelectedProfileId] = useState<string>("");
   const [manualOverrideModal, setManualOverrideModal] = useState<VerificationCheck | null>(null);
   const [overrideNotes, setOverrideNotes] = useState("");
 
-  const activeProfile = bgvList.find((p) => p.candidateId === selectedProfileId) || bgvList[0];
+  const activeProfile = bgvList.find((p) => p.candidateId === selectedProfileId) || bgvList[0] || null;
 
   const handleApproveCheck = (checkId: string) => {
+    if (!activeProfile) return;
     const updated = bgvList.map((prof) => {
       if (prof.candidateId !== activeProfile.candidateId) return prof;
       return {
@@ -204,7 +67,7 @@ export function CandidateVerificationPage() {
 
   const handleManualOverrideSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!manualOverrideModal) return;
+    if (!manualOverrideModal || !activeProfile) return;
 
     const updated = bgvList.map((prof) => {
       if (prof.candidateId !== activeProfile.candidateId) return prof;
@@ -258,7 +121,7 @@ export function CandidateVerificationPage() {
                 key={prof.candidateId}
                 onClick={() => setSelectedProfileId(prof.candidateId)}
                 className={`w-full p-3 rounded-xl border text-left transition-all cursor-pointer ${
-                  activeProfile.candidateId === prof.candidateId
+                  activeProfile?.candidateId === prof.candidateId
                     ? "border-indigo-500 bg-accent/60 shadow-sm"
                     : "border-border bg-card/40 hover:bg-accent/30"
                 }`}
@@ -285,11 +148,15 @@ export function CandidateVerificationPage() {
                 </div>
               </button>
             ))}
+            {bgvList.length === 0 && (
+              <div className="text-xs text-muted-foreground text-center py-6">No candidates in verification pipeline.</div>
+            )}
           </div>
         </div>
 
         {/* BGV Checklist & Status Details */}
         <div className="lg:col-span-2 space-y-4">
+          {activeProfile ? (
           <div className="rounded-2xl border border-border bg-card/60 p-5 backdrop-blur-xl space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border pb-3">
               <div>
@@ -338,7 +205,7 @@ export function CandidateVerificationPage() {
                         className="h-7 text-xs px-2.5 bg-rose-600 hover:bg-rose-700 text-white gap-1"
                         onClick={() => {
                           setManualOverrideModal(chk);
-                          setOverrideNotes("Discrepancy verified with HR relieving documentation. Exception approved.");
+                          setOverrideNotes("");
                         }}
                       >
                         <AlertTriangle className="h-3 w-3" /> Manual Review
@@ -370,6 +237,9 @@ export function CandidateVerificationPage() {
             <div className="pt-3 border-t border-border">
               <h4 className="font-semibold text-xs text-muted-foreground mb-2">Verification Audit Log</h4>
               <div className="space-y-1.5">
+                {activeProfile.timeline.length === 0 && (
+                  <div className="text-xs text-muted-foreground text-center py-3">No audit entries yet.</div>
+                )}
                 {activeProfile.timeline.map((t, i) => (
                   <div key={i} className="text-xs text-muted-foreground flex items-center justify-between">
                     <span>• {t.title} <span className="text-[10px] text-muted-foreground/70">({t.actor})</span></span>
@@ -379,6 +249,15 @@ export function CandidateVerificationPage() {
               </div>
             </div>
           </div>
+          ) : (
+            <div className="rounded-2xl border border-border bg-card/60 p-8 backdrop-blur-xl flex flex-col items-center justify-center text-center min-h-[300px]">
+              <Users className="h-10 w-10 text-muted-foreground/40 mb-3" />
+              <h3 className="font-semibold text-sm text-foreground">No Verification Cases</h3>
+              <p className="text-xs text-muted-foreground mt-1 max-w-xs">
+                There are no candidates currently in the background verification pipeline. BGV cases will appear here once initiated.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -393,7 +272,7 @@ export function CandidateVerificationPage() {
                   Manual Review Exception Override
                 </DialogTitle>
                 <DialogDescription>
-                  Resolve exception for {manualOverrideModal.name} for {activeProfile.candidateName}.
+                  Resolve exception for {manualOverrideModal.name} for {activeProfile?.candidateName}.
                 </DialogDescription>
               </DialogHeader>
 

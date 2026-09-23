@@ -1,13 +1,10 @@
 import { useState } from "react";
 import {
-  Users, CheckCircle2, Clock, AlertCircle, Laptop, ShieldCheck,
-  CreditCard, Award, FileText, Check, X, ChevronRight, Package,
-  Building, UserCheck, AlertTriangle
+  Users, Laptop, ShieldCheck, Check
 } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 
 interface OnboardingTask {
@@ -31,52 +28,17 @@ interface NewHireOnboarding {
   tasks: OnboardingTask[];
 }
 
-const INITIAL_HIRES: NewHireOnboarding[] = [
-  {
-    id: "nh-101",
-    employeeName: "Meera Kulkarni",
-    role: "Senior People Operations Partner",
-    department: "Human Resources",
-    joinDate: "2026-04-01",
-    dayOneReadinessScore: 88,
-    laptopAssigned: "MacBook Air M3 15-inch (Asset #OFC-MBP-842)",
-    accessGranted: ["Google Workspace", "Slack", "BambooHR", "Notion", "OFC360 Admin"],
-    tasks: [
-      { id: "t-1", department: "HR", title: "Verify Government ID & Permanent Address", assignee: "Pooja Sharma", status: "Completed", dueDate: "2026-03-25" },
-      { id: "t-2", department: "IT", title: "Provision Corporate Email & Security 2FA Keys", assignee: "Cloud Infra Lead", status: "Completed", dueDate: "2026-03-26" },
-      { id: "t-3", department: "IT", title: "Ship Encrypted MacBook & Display Kit", assignee: "IT Asset Desk", status: "Completed", dueDate: "2026-03-27" },
-      { id: "t-4", department: "Admin", title: "Issue RFID Office Access Badge & Desk Allocation", assignee: "Facilities Desk", status: "Pending", dueDate: "2026-03-30" },
-      { id: "t-5", department: "Finance", title: "Bank Account & PF/ESI Compliance Direct Debit Setup", assignee: "Payroll Lead", status: "Completed", dueDate: "2026-03-28" },
-      { id: "t-6", department: "Manager", title: "Schedule 1:1 Welcome Call & 30-Day Goal Alignment", assignee: "Meera Nair", status: "Pending", dueDate: "2026-04-01" },
-    ],
-  },
-  {
-    id: "nh-102",
-    employeeName: "Aditya Roy",
-    role: "Lead Product Designer (UI/UX)",
-    department: "Design & Creative",
-    joinDate: "2026-04-01",
-    dayOneReadinessScore: 72,
-    laptopAssigned: "MacBook Pro M3 Max (Asset #OFC-MBP-901)",
-    accessGranted: ["Google Workspace", "Slack", "Figma Enterprise"],
-    tasks: [
-      { id: "t-11", department: "HR", title: "Verify Government ID & Educational Credentials", assignee: "Pooja Sharma", status: "Completed", dueDate: "2026-03-25" },
-      { id: "t-12", department: "IT", title: "Configure Figma Enterprise & Adobe Creative Cloud Licenses", assignee: "IT Desk", status: "Pending", dueDate: "2026-03-28" },
-      { id: "t-13", department: "IT", title: "Provision GitHub & Zero-Trust VPN Access", assignee: "Cloud Infra", status: "Blocked", dueDate: "2026-03-28" },
-      { id: "t-14", department: "Finance", title: "Setup Direct Deposit & Tax Declaration Forms", assignee: "Finance Ops", status: "Pending", dueDate: "2026-03-29" },
-      { id: "t-15", department: "Manager", title: "Assign Onboarding Mentor / Buddy", assignee: "Design Lead", status: "Completed", dueDate: "2026-03-24" },
-    ],
-  },
-];
+const INITIAL_HIRES: NewHireOnboarding[] = [];
 
 export function EnterpriseOnboardingPage() {
   const [newHires, setNewHires] = useState<NewHireOnboarding[]>(INITIAL_HIRES);
-  const [selectedHireId, setSelectedHireId] = useState<string>("nh-101");
+  const [selectedHireId, setSelectedHireId] = useState<string>("");
   const [deptFilter, setDeptFilter] = useState<string>("all");
 
-  const activeHire = newHires.find((h) => h.id === selectedHireId) || newHires[0];
+  const activeHire = newHires.find((h) => h.id === selectedHireId) || newHires[0] || null;
 
   const handleToggleTaskStatus = (taskId: string) => {
+    if (!activeHire) return;
     const updated = newHires.map((hire) => {
       if (hire.id !== activeHire.id) return hire;
       return {
@@ -92,9 +54,10 @@ export function EnterpriseOnboardingPage() {
     toast.success("Task status updated!");
   };
 
-  const filteredTasks = activeHire.tasks.filter((t) => deptFilter === "all" || t.department === deptFilter);
-  const completedTasks = activeHire.tasks.filter((t) => t.status === "Completed").length;
-  const calculatedReadiness = Math.round((completedTasks / activeHire.tasks.length) * 100);
+  const filteredTasks = activeHire?.tasks.filter((t) => deptFilter === "all" || t.department === deptFilter) ?? [];
+  const completedTasks = activeHire?.tasks.filter((t) => t.status === "Completed").length ?? 0;
+  const totalTasks = activeHire?.tasks.length ?? 0;
+  const calculatedReadiness = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
   const statusColors = {
     Completed: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30 dark:text-emerald-400",
@@ -125,7 +88,7 @@ export function EnterpriseOnboardingPage() {
                 key={hire.id}
                 onClick={() => setSelectedHireId(hire.id)}
                 className={`w-full p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
-                  activeHire.id === hire.id
+                  activeHire?.id === hire.id
                     ? "border-indigo-500 bg-accent/60 shadow-sm"
                     : "border-border bg-card/40 hover:bg-accent/30"
                 }`}
@@ -143,11 +106,15 @@ export function EnterpriseOnboardingPage() {
                 </div>
               </button>
             ))}
+            {newHires.length === 0 && (
+              <div className="text-xs text-muted-foreground text-center py-6">No new hires in the pipeline.</div>
+            )}
           </div>
         </div>
 
         {/* Right 2 Cols: Onboarding Tasks & Provisioning Matrix */}
         <div className="lg:col-span-2 space-y-4">
+          {activeHire ? (
           <div className="rounded-2xl border border-border bg-card/60 p-5 backdrop-blur-xl space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-3">
               <div>
@@ -246,6 +213,15 @@ export function EnterpriseOnboardingPage() {
               ))}
             </div>
           </div>
+          ) : (
+            <div className="rounded-2xl border border-border bg-card/60 p-8 backdrop-blur-xl flex flex-col items-center justify-center text-center min-h-[300px]">
+              <Users className="h-10 w-10 text-muted-foreground/40 mb-3" />
+              <h3 className="font-semibold text-sm text-foreground">No Onboarding Cases</h3>
+              <p className="text-xs text-muted-foreground mt-1 max-w-xs">
+                There are no employees currently in the onboarding pipeline. New hires will appear here once added.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

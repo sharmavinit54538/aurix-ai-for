@@ -1,8 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
-  FileText, DollarSign, CheckCircle2, Clock, XCircle, Send,
-  Download, Sparkles, TrendingUp, UserCheck, ShieldCheck,
-  ChevronRight, Edit3, RefreshCw, Eye
+  FileText, Send, Download, TrendingUp, ShieldCheck, Edit3
 } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
@@ -32,49 +30,27 @@ import type { Offer } from "../types";
 
 export function CompensationOfferBuilderPage() {
   const { candidates, jobs, offers, upsertOffer } = useRecruitment();
-  const [selectedCandidateId, setSelectedCandidateId] = useState(candidates[0]?.id || "cand-201");
+  const [selectedCandidateId, setSelectedCandidateId] = useState(candidates[0]?.id || "");
   const [showOfferPreview, setShowOfferPreview] = useState(false);
   const [showRevisionModal, setShowRevisionModal] = useState(false);
 
   // Compensation Structure State
-  const [baseSalary, setBaseSalary] = useState(2400000);
-  const [variableBonus, setVariableBonus] = useState(400000);
-  const [esopGrant, setEsopGrant] = useState(300000);
-  const [joiningBonus, setJoiningBonus] = useState(200000);
-  const [targetJoiningDate, setTargetJoiningDate] = useState("2026-04-15");
+  const [baseSalary, setBaseSalary] = useState(0);
+  const [variableBonus, setVariableBonus] = useState(0);
+  const [esopGrant, setEsopGrant] = useState(0);
+  const [joiningBonus, setJoiningBonus] = useState(0);
+  const [targetJoiningDate, setTargetJoiningDate] = useState("");
 
   // Negotiation history state
-  const [negotiationLog, setNegotiationLog] = useState<{ round: string; date: string; amount: string; note: string }[]>([
-    { round: "Initial HR Screen", date: "2026-03-08", amount: "₹24 LPA", note: "Candidate communicated current CTC ₹20L, expecting ₹26L+" },
-    { round: "Revised Proposal", date: "2026-03-14", amount: "₹28 LPA Total CTC", note: "Added ₹2L sign-on bonus for immediate 30-day joiner." },
-  ]);
+  const [negotiationLog, setNegotiationLog] = useState<{ round: string; date: string; amount: string; note: string }[]>([]);
   const [revisionNote, setRevisionNote] = useState("");
 
-  const candidate =
-    candidates.find((c) => c.id === selectedCandidateId) ||
-    candidates[0] || {
-      id: "cand-201",
-      name: "Vikram Malhotra",
-      email: "vikram.m@example.com",
-      appliedPosition: "Senior Full Stack Engineer",
-      currentCompany: "Fintech Corp",
-      expectedSalary: 2600000,
-      jobId: "job-101",
-      stage: "offer",
-      applicationId: "app-201",
-    };
-  const job =
-    jobs.find((j) => j.id === candidate?.jobId) ||
-    jobs[0] || {
-      id: "job-101",
-      title: "Senior Full Stack Engineer",
-      department: "Engineering",
-      salaryMax: 3200000,
-    };
+  const candidate = candidates.find((c) => c.id === selectedCandidateId) || candidates[0] || null;
+  const job = candidate ? (jobs.find((j) => j.id === candidate?.jobId) || jobs[0] || null) : null;
 
   const totalCtc = baseSalary + variableBonus + esopGrant + joiningBonus;
-  const candidateExpected = candidate?.expectedSalary || 2600000;
-  const budgetMax = job?.salaryMax || 3200000;
+  const candidateExpected = candidate?.expectedSalary || 0;
+  const budgetMax = job?.salaryMax || 0;
 
   // Breakdown Calculations
   const basic = Math.round(baseSalary * 0.5);
@@ -82,9 +58,10 @@ export function CompensationOfferBuilderPage() {
   const specialAllowance = baseSalary - basic - hra;
 
   const handleCreateOrUpdateOffer = () => {
+    if (!candidate || !job) return;
     const newOff: Offer = {
       id: `off-${Date.now()}`,
-      applicationId: candidate.applicationId || "app-new",
+      applicationId: candidate.applicationId || "",
       candidateId: candidate.id,
       candidateName: candidate.name,
       jobId: job.id,
@@ -97,18 +74,14 @@ export function CompensationOfferBuilderPage() {
         `Annual Performance Bonus: ₹${(variableBonus / 100000).toFixed(1)} LPA`,
         `ESOP Equity Value: ₹${(esopGrant / 100000).toFixed(1)} LPA`,
         `One-time Joining Bonus: ₹${(joiningBonus / 100000).toFixed(1)} Lakhs`,
-        "Family Health Insurance (₹10 Lakh sum insured)",
       ],
       status: "pending-approval",
       sentAt: new Date().toISOString(),
-      approvals: [
-        { stage: "Hiring Manager Sign-off", by: "Arun Verma", at: new Date().toISOString(), status: "approved" },
-        { stage: "Finance / CFO Approval", by: "Kunal Gupta (CFO)", at: new Date().toISOString(), status: "pending" },
-      ],
+      approvals: [],
     };
 
     upsertOffer(newOff);
-    toast.success(`Formal Compensation Package for ${candidate.name} submitted for CFO Approval!`);
+    toast.success(`Formal Compensation Package for ${candidate.name} submitted for Approval!`);
     setShowOfferPreview(true);
   };
 
@@ -141,12 +114,14 @@ export function CompensationOfferBuilderPage() {
               variant="outline"
               onClick={() => setShowRevisionModal(true)}
               className="gap-1.5"
+              disabled={!candidate}
             >
               <Edit3 className="h-4 w-4" /> Revise Offer Terms
             </Button>
             <Button
               onClick={handleCreateOrUpdateOffer}
               className="bg-gradient-brand text-brand-foreground shadow-glow gap-1.5"
+              disabled={!candidate}
             >
               <Send className="h-4 w-4" /> Submit for Approval
             </Button>
@@ -162,7 +137,7 @@ export function CompensationOfferBuilderPage() {
             <Label className="text-xs text-muted-foreground">Candidate for Offer Structuring</Label>
             <Select value={selectedCandidateId} onValueChange={setSelectedCandidateId}>
               <SelectTrigger className="mt-1 h-9 text-xs">
-                <SelectValue />
+                <SelectValue placeholder="Select a candidate" />
               </SelectTrigger>
               <SelectContent>
                 {candidates.map((c) => (
@@ -174,6 +149,7 @@ export function CompensationOfferBuilderPage() {
             </Select>
           </div>
 
+          {candidate ? (
           <div className="rounded-xl border border-border bg-background/50 p-3.5 space-y-2 text-xs">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Target Role:</span>
@@ -181,19 +157,23 @@ export function CompensationOfferBuilderPage() {
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Current Company:</span>
-              <span className="font-medium text-foreground">{candidate.currentCompany || "Fintech Corp"}</span>
+              <span className="font-medium text-foreground">{candidate.currentCompany || "—"}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Candidate Expectation:</span>
-              <span className="font-bold text-foreground">₹{(candidateExpected / 100000).toFixed(1)} LPA</span>
+              <span className="font-bold text-foreground">{candidateExpected > 0 ? `₹${(candidateExpected / 100000).toFixed(1)} LPA` : "—"}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Approved Job Band Max:</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">₹{(budgetMax / 100000).toFixed(1)} LPA</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">{budgetMax > 0 ? `₹${(budgetMax / 100000).toFixed(1)} LPA` : "—"}</span>
             </div>
           </div>
+          ) : (
+            <div className="text-xs text-muted-foreground text-center py-4">Select a candidate to view details.</div>
+          )}
 
           {/* Budget Health Indicator */}
+          {candidate && budgetMax > 0 && (
           <div className="rounded-xl bg-muted/40 p-3 space-y-1.5 border border-border/80 text-xs">
             <div className="flex justify-between font-semibold">
               <span>Budget Consumption</span>
@@ -213,6 +193,7 @@ export function CompensationOfferBuilderPage() {
                 : `⚠ Exceeds department budget allocation by ₹${((totalCtc - budgetMax) / 100000).toFixed(1)}L.`}
             </p>
           </div>
+          )}
         </div>
 
         {/* Salary Structuring Sliders & Components */}
@@ -235,7 +216,7 @@ export function CompensationOfferBuilderPage() {
               </div>
               <Slider
                 value={[baseSalary]}
-                min={1000000}
+                min={0}
                 max={4000000}
                 step={50000}
                 onValueChange={(v) => setBaseSalary(v[0])}
@@ -311,6 +292,9 @@ export function CompensationOfferBuilderPage() {
             Offer Negotiation & Audit Trail
           </h4>
           <div className="space-y-2 text-xs">
+            {negotiationLog.length === 0 && (
+              <div className="text-muted-foreground text-center py-6">No negotiation history yet. Revisions will appear here.</div>
+            )}
             {negotiationLog.map((n, i) => (
               <div key={i} className="p-3 rounded-xl border border-border bg-card/40 space-y-1">
                 <div className="flex justify-between font-semibold">
@@ -331,29 +315,7 @@ export function CompensationOfferBuilderPage() {
             Executive Approval Chain
           </h4>
           <div className="space-y-2 text-xs">
-            <div className="p-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 flex items-center justify-between">
-              <div>
-                <div className="font-bold text-foreground">1. Hiring Manager Sign-off</div>
-                <div className="text-[11px] text-muted-foreground">Arun Verma (Director of Engineering)</div>
-              </div>
-              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">Approved</Badge>
-            </div>
-
-            <div className="p-3 rounded-xl border border-border bg-card/40 flex items-center justify-between">
-              <div>
-                <div className="font-bold text-foreground">2. Financial Review & Cap Check</div>
-                <div className="text-[11px] text-muted-foreground">Kunal Gupta (CFO)</div>
-              </div>
-              <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20">Pending Sign-off</Badge>
-            </div>
-
-            <div className="p-3 rounded-xl border border-border bg-card/40 flex items-center justify-between">
-              <div>
-                <div className="font-bold text-foreground">3. Final Offer Release to Candidate</div>
-                <div className="text-[11px] text-muted-foreground">Meera Nair (VP People)</div>
-              </div>
-              <Badge variant="outline">Queued</Badge>
-            </div>
+            <div className="text-muted-foreground text-center py-6">No approval workflow configured yet. Submit an offer to initiate the approval chain.</div>
           </div>
         </div>
       </div>
@@ -367,28 +329,27 @@ export function CompensationOfferBuilderPage() {
               Formal Offer Letter Preview
             </DialogTitle>
             <DialogDescription>
-              Binding employment agreement for {candidate.name}
+              Binding employment agreement for {candidate?.name}
             </DialogDescription>
           </DialogHeader>
 
           <div className="max-h-[450px] overflow-y-auto p-6 rounded-xl border border-border bg-zinc-950 text-zinc-100 font-serif text-xs leading-relaxed space-y-4 shadow-inner">
             <div className="text-center border-b border-zinc-800 pb-3">
-              <h2 className="text-base font-bold font-sans tracking-wide uppercase">OFC360 Technologies Private Limited</h2>
-              <div className="text-[10px] text-zinc-400 font-sans">CIN: U72200KA2026PTC109876 • Bengaluru, India</div>
+              <h2 className="text-base font-bold font-sans tracking-wide uppercase">Offer of Employment</h2>
             </div>
 
             <div className="text-[11px] font-sans">
               <strong>Date:</strong> {new Date().toLocaleDateString("en-IN", { dateStyle: "long" })}<br />
-              <strong>To:</strong> {candidate.name}<br />
-              <strong>Address:</strong> {candidate.location}
+              <strong>To:</strong> {candidate?.name}<br />
+              <strong>Address:</strong> {candidate?.location}
             </div>
 
             <p>
-              Dear <strong>{candidate.name}</strong>,
+              Dear <strong>{candidate?.name}</strong>,
             </p>
 
             <p>
-              On behalf of OFC360 Technologies, we are delighted to offer you full-time employment as <strong>{candidate.appliedPosition}</strong> reporting to the Director of Engineering.
+              We are delighted to offer you full-time employment as <strong>{candidate?.appliedPosition}</strong>.
             </p>
 
             <div className="p-3 rounded border border-zinc-800 bg-zinc-900/60 font-sans space-y-1">
@@ -397,7 +358,7 @@ export function CompensationOfferBuilderPage() {
               <div>• Fixed Base Salary: ₹{(baseSalary / 100000).toFixed(2)} LPA</div>
               <div>• Annual Performance Incentive: ₹{(variableBonus / 100000).toFixed(2)} LPA</div>
               <div>• ESOP Stock Value: ₹{(esopGrant / 100000).toFixed(2)} LPA (4-year vesting schedule)</div>
-              <div>• Target Joining Date: <strong>{targetJoiningDate}</strong></div>
+              <div>• Target Joining Date: <strong>{targetJoiningDate || "TBD"}</strong></div>
             </div>
 
             <p>
@@ -407,8 +368,7 @@ export function CompensationOfferBuilderPage() {
             <div className="pt-4 border-t border-zinc-800 flex justify-between font-sans text-[11px]">
               <div>
                 <div className="text-zinc-400">Authorized Signatory:</div>
-                <div className="font-bold mt-2">Meera Nair</div>
-                <div className="text-zinc-500 text-[10px]">VP People, OFC360</div>
+                <div className="text-zinc-500 text-[10px] mt-2">Pending Assignment</div>
               </div>
               <div className="text-right">
                 <div className="text-zinc-400">Accepted & Signed:</div>
@@ -451,7 +411,7 @@ export function CompensationOfferBuilderPage() {
                 <Textarea
                   className="mt-1 text-xs"
                   rows={4}
-                  placeholder="e.g. Candidate countered with competing offer from Razorpay. Agreed to match base salary."
+                  placeholder="e.g. Candidate countered with competing offer. Agreed to adjust base salary."
                   value={revisionNote}
                   onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setRevisionNote(e.target.value)}
                   required

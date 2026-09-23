@@ -1,8 +1,6 @@
 import { useState } from "react";
 import {
-  GraduationCap, Target, Clock, Award, CheckCircle2, AlertTriangle,
-  UserCheck, BookOpen, Share2, FileText, Check, ChevronRight,
-  TrendingUp, Users, Calendar
+  GraduationCap, Award, BookOpen, Check
 } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
@@ -59,72 +57,19 @@ interface EmployeeProbationCase {
   checkpoints: ProbationCheckin[];
 }
 
-const INITIAL_PROBATION_CASES: EmployeeProbationCase[] = [
-  {
-    id: "prob-101",
-    employeeName: "Siddharth Nambiar",
-    role: "Senior Full Stack Engineer",
-    department: "Engineering",
-    mentor: "Arun Verma (Director of Engineering)",
-    startDate: "2026-01-15",
-    endDate: "2026-04-15",
-    daysRemaining: 30,
-    probationStatus: "On Track",
-    goals: [
-      "Ship first production microservice deployment within first 45 days.",
-      "Complete code reviews on 15+ pull requests adhering to security protocols.",
-      "Document architectural guidelines for distributed event-bus reconciliation.",
-    ],
-    trainingModules: [
-      { id: "tm-1", title: "OFC360 Core Microservices Architecture", category: "Architecture & Codebase", mentor: "Arun Verma", completed: true, resourceLink: "https://wiki.ofc360.internal/arch" },
-      { id: "tm-2", title: "SOC-2 Type II Developer Security Protocols", category: "Security & Compliance", mentor: "Security Desk", completed: true, resourceLink: "https://wiki.ofc360.internal/soc2" },
-      { id: "tm-3", title: "Zero-Downtime EKS Deployment Workflows", category: "Deployment & CI/CD", mentor: "DevOps Lead", completed: true, resourceLink: "https://wiki.ofc360.internal/eks" },
-      { id: "tm-4", title: "Enterprise HR Domain Deep Dive", category: "Product Domain", mentor: "Pooja Sharma", completed: false, resourceLink: "https://wiki.ofc360.internal/domain" },
-    ],
-    checkpoints: [
-      { milestone: "Day 30", date: "2026-02-15", status: "Completed", managerRating: 5, managerNotes: "Ramped up in under 3 weeks. Successfully resolved high-priority cache invalidation bug." },
-      { milestone: "Day 60", date: "2026-03-15", status: "Completed", managerRating: 5, managerNotes: "Strong peer collaboration and proactive code reviews. Fully autonomous." },
-      { milestone: "Day 90", date: "2026-04-15", status: "Upcoming", managerRating: 0, managerNotes: "Final confirmation evaluation scheduled." },
-    ],
-  },
-  {
-    id: "prob-102",
-    employeeName: "Kavita Ranganathan",
-    role: "DevOps & Cloud Infrastructure Lead",
-    department: "Engineering",
-    mentor: "Cloud Architect",
-    startDate: "2026-02-01",
-    endDate: "2026-05-01",
-    daysRemaining: 46,
-    probationStatus: "On Track",
-    goals: [
-      "Audit cloud cost allocation across multi-region Kubernetes clusters.",
-      "Implement automated failover runbooks.",
-    ],
-    trainingModules: [
-      { id: "tm-11", title: "Cloud Security & IAM Principles", category: "Security & Compliance", mentor: "SecOps", completed: true, resourceLink: "https://wiki.ofc360.internal/iam" },
-      { id: "tm-12", title: "Terraform State Management & Secrets", category: "Deployment & CI/CD", mentor: "DevOps Lead", completed: false, resourceLink: "https://wiki.ofc360.internal/tf" },
-    ],
-    checkpoints: [
-      { milestone: "Day 30", date: "2026-03-01", status: "Completed", managerRating: 4, managerNotes: "Solid start on infrastructure cost reduction analysis." },
-      { milestone: "Day 60", date: "2026-04-01", status: "Upcoming", managerRating: 0, managerNotes: "" },
-      { milestone: "Day 90", date: "2026-05-01", status: "Upcoming", managerRating: 0, managerNotes: "" },
-    ],
-  },
-];
+const INITIAL_PROBATION_CASES: EmployeeProbationCase[] = [];
 
 export function KnowledgeTransferProbationPage() {
   const [cases, setCases] = useState<EmployeeProbationCase[]>(INITIAL_PROBATION_CASES);
-  const [selectedCaseId, setSelectedCaseId] = useState<string>("prob-101");
+  const [selectedCaseId, setSelectedCaseId] = useState<string>("");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [recommendationDecision, setRecommendationDecision] = useState<"Confirmed" | "Extended">("Confirmed");
-  const [recommendationFeedback, setRecommendationFeedback] = useState(
-    "Employee has met all performance expectations ahead of schedule and demonstrated strong cultural alignment. Recommend immediate full employment confirmation."
-  );
+  const [recommendationFeedback, setRecommendationFeedback] = useState("");
 
-  const activeCase = cases.find((c) => c.id === selectedCaseId) || cases[0];
+  const activeCase = cases.find((c) => c.id === selectedCaseId) || cases[0] || null;
 
   const handleToggleModule = (moduleId: string) => {
+    if (!activeCase) return;
     const updated = cases.map((c) => {
       if (c.id !== activeCase.id) return c;
       return {
@@ -140,6 +85,7 @@ export function KnowledgeTransferProbationPage() {
 
   const handleCompleteProbation = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!activeCase) return;
     const updated = cases.map((c) =>
       c.id === activeCase.id ? { ...c, probationStatus: recommendationDecision } : c
     );
@@ -148,8 +94,9 @@ export function KnowledgeTransferProbationPage() {
     setShowConfirmModal(false);
   };
 
-  const completedModules = activeCase.trainingModules.filter((m) => m.completed).length;
-  const trainingPct = Math.round((completedModules / activeCase.trainingModules.length) * 100);
+  const completedModules = activeCase?.trainingModules.filter((m) => m.completed).length ?? 0;
+  const totalModules = activeCase?.trainingModules.length ?? 0;
+  const trainingPct = totalModules > 0 ? Math.round((completedModules / totalModules) * 100) : 0;
 
   return (
     <div className="space-y-6">
@@ -182,7 +129,7 @@ export function KnowledgeTransferProbationPage() {
                 key={c.id}
                 onClick={() => setSelectedCaseId(c.id)}
                 className={`w-full p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
-                  activeCase.id === c.id
+                  activeCase?.id === c.id
                     ? "border-indigo-500 bg-accent/60 shadow-sm"
                     : "border-border bg-card/40 hover:bg-accent/30"
                 }`}
@@ -212,7 +159,7 @@ export function KnowledgeTransferProbationPage() {
 
         {/* Right 2 Cols: KT Plan & 30-60-90 Day Reviews */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="rounded-2xl border border-border bg-card/60 p-5 backdrop-blur-xl space-y-5">
+          {activeCase ? (<div className="rounded-2xl border border-border bg-card/60 p-5 backdrop-blur-xl space-y-5">
             {/* Header Profile Details */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-3">
               <div>
@@ -321,7 +268,15 @@ export function KnowledgeTransferProbationPage() {
                 ))}
               </div>
             </div>
-          </div>
+          </div>) : (
+            <div className="rounded-2xl border border-border bg-card/60 p-8 backdrop-blur-xl flex flex-col items-center justify-center text-center min-h-[300px]">
+              <GraduationCap className="h-10 w-10 text-muted-foreground/40 mb-3" />
+              <h3 className="font-semibold text-sm text-foreground">No Probation Cases</h3>
+              <p className="text-xs text-muted-foreground mt-1 max-w-xs">
+                There are no employees currently in probation tracking. New hires entering probation will appear here.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -335,7 +290,7 @@ export function KnowledgeTransferProbationPage() {
                 Probation Completion Recommendation
               </DialogTitle>
               <DialogDescription>
-                Record manager sign-off for {activeCase.employeeName} ({activeCase.role}).
+                Record manager sign-off for {activeCase?.employeeName} ({activeCase?.role}).
               </DialogDescription>
             </DialogHeader>
 
