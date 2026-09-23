@@ -1,5 +1,4 @@
 import { Plus, Upload, Building, BarChart, Network, Link, ChevronLeft } from "lucide-react";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DepartmentFormDialog } from "../components/DepartmentFormDialog";
@@ -20,28 +19,22 @@ export function DepartmentsPage() {
   return (
     <div className="space-y-6">
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <PageHeader
-          title="Departments Manager"
-          description="Design division frameworks, allocate corporate budgets, configure hierarchy trees, and balance employee capacities."
-        />
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Button
-            onClick={() => page.setImportOpen(true)}
-            variant="outline"
-            className="rounded-xl border-border bg-card/60 hover:bg-muted text-xs font-semibold gap-1.5 h-10 px-4 flex-1 sm:flex-initial"
-          >
-            <Upload className="h-4 w-4" />
-            Import CSV
-          </Button>
-          <Button
-            onClick={page.handleAddClick}
-            className="rounded-xl bg-brand text-brand-foreground shadow-glow hover:bg-brand/90 text-xs font-semibold gap-1.5 h-10 px-4 flex-1 sm:flex-initial"
-          >
-            <Plus className="h-4 w-4" />
-            Add Department
-          </Button>
-        </div>
+      <div className="flex justify-end items-center gap-2">
+        <Button
+          onClick={() => page.setImportOpen(true)}
+          variant="outline"
+          className="rounded-xl border-border bg-card/60 hover:bg-muted text-xs font-semibold gap-1.5 h-10 px-4"
+        >
+          <Upload className="h-4 w-4" />
+          Import CSV
+        </Button>
+        <Button
+          onClick={page.handleAddClick}
+          className="rounded-xl bg-brand text-brand-foreground shadow-glow hover:bg-brand/90 text-xs font-semibold gap-1.5 h-10 px-4"
+        >
+          <Plus className="h-4 w-4" />
+          Add Department
+        </Button>
       </div>
 
       <Tabs value={page.activeTab} onValueChange={page.setActiveTab} className="space-y-6">

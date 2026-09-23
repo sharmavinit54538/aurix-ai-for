@@ -41,18 +41,7 @@ export function PeopleHubPage() {
     <div className="space-y-6">
       {/* HEADER SECTION */}
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between text-left">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-brand text-brand-foreground shadow-glow">
-              <Users className="h-5 w-5" />
-            </span>
-            <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">People & Organization</h1>
-          </div>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Manage your company workforce profiles, corporate hierarchies, and direct reporting structures.
-          </p>
-        </div>
+      <div className="flex justify-end">
         {/* TAB SWITCHER */}
         <div className="flex items-center rounded-lg border border-border/80 bg-card/65 p-0.5">
           <Button
