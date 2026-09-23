@@ -50,7 +50,6 @@ export function RecruitmentDashboardPage() {
       <RecruitmentHubHeader
         viewMode={viewMode}
         onViewModeChange={setViewMode}
-        onRefresh={refetch}
       />
 
       {viewMode === "modules" ? (
@@ -99,11 +98,9 @@ export function RecruitmentDashboardPage() {
 function RecruitmentHubHeader({
   viewMode,
   onViewModeChange,
-  onRefresh,
 }: {
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
-  onRefresh?: () => void;
 }) {
   return (
     <div className="flex flex-wrap items-center justify-end gap-3">
@@ -125,12 +122,6 @@ function RecruitmentHubHeader({
           Hiring Metrics
         </Button>
       </div>
-      {onRefresh ? (
-        <Button variant="outline" size="sm" onClick={onRefresh}>
-          <RefreshCw className="mr-2 h-4 w-4" />
-          Refresh
-        </Button>
-      ) : null}
     </div>
   );
 }

@@ -322,14 +322,6 @@ export function EmployeeRostersView({ employeeId }: EmployeeRostersViewProps) {
               Your personal planned work schedule and shift assignment calendar.
             </p>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => loadRoster(true)}
-            className="gap-2 self-start sm:self-auto border-border bg-card/60"
-          >
-            <RefreshCw className="h-3.5 w-3.5" /> Refresh
-          </Button>
         </div>
 
         <div className="rounded-2xl border border-dashed border-border bg-card/40 p-12 text-center flex flex-col items-center justify-center min-h-[350px]">

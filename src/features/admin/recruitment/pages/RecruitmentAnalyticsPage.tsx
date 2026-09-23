@@ -437,15 +437,6 @@ export function RecruitmentAnalyticsPage() {
         description="Monitor pipeline conversion health, candidate sourcing ROI, offer acceptance velocity, and hiring forecasts."
         actions={
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => refreshAll()}
-              className="text-xs h-8 px-2.5"
-            >
-              <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
-              Refresh
-            </Button>
             <button
               onClick={() => handleExport("CSV")}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card/60 text-xs font-medium text-foreground hover:bg-accent cursor-pointer shadow-sm transition-colors"

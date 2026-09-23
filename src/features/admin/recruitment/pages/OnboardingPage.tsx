@@ -1,4 +1,4 @@
-import { CheckCircle2, FileText, RefreshCw, UserCheck, UserPlus } from "lucide-react";
+import { CheckCircle2, FileText, UserCheck, UserPlus } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { OnboardingDetailsPanel } from "@/features/admin/recruitment/components/onboarding/OnboardingDetailsPanel";
@@ -33,12 +33,6 @@ export function OnboardingPage() {
       <PageHeader
         title="Employee Onboarding"
         description="Review onboarding progress, verify documents, and track completion across your workforce."
-        actions={
-          <Button variant="outline" onClick={() => void retryList()} disabled={listLoading}>
-            <RefreshCw className={`mr-2 h-4 w-4 ${listLoading ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
-        }
       />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">

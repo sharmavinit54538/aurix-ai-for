@@ -4,7 +4,7 @@ import { useAurix } from "@/lib/aurix-store";
 import { EmployeeShiftsView } from "@/features/portal/employee/components/EmployeeShiftsView";
 import {
   Clock, Plus, Search, Users, Moon, Sun, Edit, Trash2, UserPlus,
-  CheckCircle2, AlertCircle, RefreshCw, ChevronLeft, Calendar,
+  CheckCircle2, AlertCircle, ChevronLeft, Calendar,
   SlidersHorizontal, Check, Sparkles, Loader2, ArrowRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -357,17 +357,6 @@ function ShiftsPage() {
         </div>
 
         <div className="flex items-center gap-2.5">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={loading}
-            onClick={() => loadShifts(true)}
-            className="h-9 gap-1.5 text-xs"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
-
           <Button
             size="sm"
             onClick={openCreateDialog}

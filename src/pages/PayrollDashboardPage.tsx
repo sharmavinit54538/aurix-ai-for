@@ -379,52 +379,43 @@ export function PayrollDashboardPage() {
           </Button>
         </div>
         {/* Period Selector */}
-        <div className="w-52">
+        <div className="w-auto min-w-[280px] sm:min-w-[300px]">
           {loadingPeriods ? (
-            <Skeleton className="h-9 w-full" />
+            <Skeleton className="h-9 w-full rounded-lg" />
           ) : periods.length > 0 ? (
             <Select
               value={selectedPeriodId}
               onValueChange={handlePeriodChange}
               aria-label="Select payroll period"
             >
-              <SelectTrigger className="h-9 w-full bg-card/60 backdrop-blur-xl">
-                <Calendar className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
+              <SelectTrigger className="h-9 w-full bg-card/85 border-border/80 hover:bg-accent/40 font-medium text-xs px-3 shadow-xs rounded-lg transition-colors">
+                <Calendar className="mr-2 h-3.5 w-3.5 shrink-0 text-primary" />
                 <SelectValue placeholder="Select period" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="min-w-[280px] sm:min-w-[300px]">
                 {periods.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name} {p.isCurrent ? "(Current)" : ""}
+                  <SelectItem key={p.id} value={p.id} className="text-xs cursor-pointer">
+                    <span className="font-medium">{p.name}</span>
+                    {p.isCurrent ? (
+                      <span className="ml-2 text-[10px] bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded-full font-semibold">
+                        Current
+                      </span>
+                    ) : null}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           ) : (
             <div
-              className="flex h-9 items-center justify-between rounded-md border border-border bg-muted/40 px-3 text-xs text-muted-foreground"
+              className="flex h-9 items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 text-xs text-muted-foreground"
               title="No payroll periods available from backend"
             >
+              <Calendar className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
               <span className="truncate">No payroll periods available</span>
             </div>
           )}
         </div>
 
-
-        {/* Refresh Action */}
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={loadingPeriods || loadingDashboard}
-          onClick={handleRefresh}
-          className="h-9 gap-1.5 cursor-pointer text-xs"
-          title="Refresh dashboard data"
-        >
-          <RefreshCw
-            className={`h-3.5 w-3.5 ${loadingPeriods || loadingDashboard ? "animate-spin" : ""}`}
-          />
-          <span>{loadingPeriods || loadingDashboard ? "Refreshing..." : "Refresh"}</span>
-        </Button>
 
         {/* Primary Action: Run Payroll */}
         {canRunPayroll ? (
@@ -436,12 +427,7 @@ export function PayrollDashboardPage() {
               !selectedPeriodId ||
               hasBlockingReadinessErrors
             }
-            className="h-9 gap-1.5 shadow-sm cursor-pointer"
-            style={
-              !selectedPeriodId || loadingDashboard || hasBlockingReadinessErrors
-                ? undefined
-                : { background: "var(--gradient-brand)" }
-            }
+            className="h-9 gap-1.5 shadow-md cursor-pointer bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 text-white font-semibold border-0 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             title={
               hasBlockingReadinessErrors
                 ? "Cannot run payroll while readiness errors exist"
@@ -450,8 +436,8 @@ export function PayrollDashboardPage() {
                 : "Run provisional payroll"
             }
           >
-            <Play className="h-3.5 w-3.5 fill-current" />
-            <span>Run Payroll</span>
+            <Play className="h-3.5 w-3.5 fill-white text-white" />
+            <span className="text-white font-semibold">Run Payroll</span>
           </Button>
         ) : null}
       </div>
@@ -988,17 +974,17 @@ export function PayrollDashboardPage() {
               size="sm"
               onClick={handleConfirmRunPayroll}
               disabled={isRunningPayroll || hasBlockingReadinessErrors}
-              style={{ background: "var(--gradient-brand)" }}
+              className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 text-white font-semibold shadow-md disabled:opacity-50 border-0"
             >
               {isRunningPayroll ? (
                 <>
-                  <RefreshCw className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                  Initiating...
+                  <RefreshCw className="mr-1.5 h-3.5 w-3.5 animate-spin text-white" />
+                  <span className="text-white">Initiating...</span>
                 </>
               ) : (
                 <>
-                  <Play className="mr-1.5 h-3.5 w-3.5 fill-current" />
-                  Confirm & Run
+                  <Play className="mr-1.5 h-3.5 w-3.5 fill-white text-white" />
+                  <span className="text-white">Confirm & Run</span>
                 </>
               )}
             </Button>

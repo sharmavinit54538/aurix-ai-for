@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Crown,
-  RefreshCw,
   Download,
   Printer,
   Sparkles,
@@ -65,11 +64,6 @@ export function CtoPortalPage() {
     fetchCtoMetrics();
   }, []);
 
-  const handleRefresh = () => {
-    fetchCtoMetrics();
-    toast.success("Refreshed CTO Enterprise metrics from backend.");
-  };
-
   const handleExportCSV = () => {
     toast.success("Exporting CTO Executive Metrics to CSV...");
   };
@@ -109,16 +103,6 @@ export function CtoPortalPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRefresh}
-              disabled={loading}
-              className="border-purple-500/30 bg-purple-500/10 text-purple-200 hover:bg-purple-500/20 text-xs cursor-pointer"
-            >
-              <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-              Refresh
-            </Button>
             <Button
               variant="outline"
               size="sm"

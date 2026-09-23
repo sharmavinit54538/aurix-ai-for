@@ -478,20 +478,6 @@ export function PayrollFinalizationPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={handleRefresh}
-            disabled={isRefreshing || loadingData}
-            className="h-9 gap-1.5 text-xs shadow-sm"
-            title="Refresh finalization status from backend"
-          >
-            <RefreshCw
-              className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`}
-            />
-            <span>Refresh</span>
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
             onClick={() =>
               navigate({
                 to: `/dashboard/payroll/runs/${runId}/approval` as any,

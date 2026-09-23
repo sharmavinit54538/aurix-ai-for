@@ -611,16 +611,6 @@ export default function HolidaysPage() {
         description="Manage public, regional, and company holidays."
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={loading}
-              onClick={() => loadHolidays(true)}
-              className="h-9 border-border bg-card/40 text-xs hover:bg-accent/60"
-            >
-              <RefreshCw className={`mr-2 h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-              Refresh
-            </Button>
             <Button variant="outline" size="sm" onClick={() => setIsImportModalOpen(true)} className="h-9 border-border bg-card/40 text-xs hover:bg-accent/60">
               <Upload className="mr-2 h-3.5 w-3.5" /> Import Holidays
             </Button>

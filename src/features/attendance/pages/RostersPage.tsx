@@ -525,16 +525,6 @@ export default function RostersPage() {
             <Button
               variant="outline"
               size="sm"
-              disabled={loading}
-              onClick={() => loadData(true)}
-              className="h-9 border-border bg-card/40 text-xs hover:bg-accent/60"
-            >
-              <RefreshCw className={`mr-2 h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-              Refresh
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
               onClick={() => {
                 toast.promise(
                   new Promise((resolve) => setTimeout(resolve, 1500)),

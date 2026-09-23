@@ -560,20 +560,6 @@ export function PayrollPreviewPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={handleRefresh}
-            disabled={isRefreshing || loadingPreview}
-            className="h-9 gap-1.5 text-xs shadow-sm"
-            title="Refresh preview data from backend"
-          >
-            <RefreshCw
-              className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`}
-            />
-            <span>Refresh</span>
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
             onClick={() =>
               navigate({
                 to: `/dashboard/payroll/runs/${runId}/validation` as any,

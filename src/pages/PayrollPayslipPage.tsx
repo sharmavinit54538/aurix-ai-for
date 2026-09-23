@@ -495,19 +495,6 @@ export function PayrollPayslipPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={handleRefresh}
-            disabled={isRefreshing || isLoading}
-            className="text-xs gap-1.5"
-          >
-            <RefreshCw
-              className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`}
-            />
-            <span>Refresh</span>
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
             onClick={handlePrint}
             disabled={isLoading || !payslipData}
             className="text-xs gap-1.5"

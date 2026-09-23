@@ -1210,14 +1210,6 @@ function CheckInPage() {
                 <History className="h-4 w-4 text-muted-foreground" />
                 <h2 className="font-semibold text-sm">Recent Attendance History</h2>
               </div>
-              <Button
-                size="sm"
-                variant="outline"
-                className="gap-1.5 text-xs h-7"
-                onClick={loadAttendanceState}
-              >
-                <RefreshCw className="h-3.5 w-3.5" /> Refresh
-              </Button>
             </div>
 
             {historyList.length === 0 ? (

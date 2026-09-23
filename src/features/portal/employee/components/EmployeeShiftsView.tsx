@@ -191,14 +191,6 @@ export function EmployeeShiftsView({ employeeId }: EmployeeShiftsViewProps) {
               View your assigned work timings, shift specifications, and schedule history.
             </p>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => loadShiftData(true)}
-            className="gap-2 self-start sm:self-auto border-border bg-card/60"
-          >
-            <RefreshCw className="h-3.5 w-3.5" /> Refresh
-          </Button>
         </div>
 
         {/* Empty State Banner */}

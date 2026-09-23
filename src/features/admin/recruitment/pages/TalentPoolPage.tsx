@@ -5,7 +5,6 @@ import {
   BookmarkPlus,
   Download,
   Filter,
-  RefreshCw,
   Search,
   Sparkles,
   Star,
@@ -60,7 +59,6 @@ export function TalentPoolPage() {
   const [tag, setTag] = useState<string | null>(null);
   const [minScore, setMinScore] = useState(0);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Saved Searches state with permanent mock purge
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>(() => {
@@ -171,18 +169,6 @@ export function TalentPoolPage() {
     const total = candidates.reduce((sum, c) => sum + (c.yearsExperience || 0), 0);
     return Math.round((total / candidates.length) * 10) / 10;
   }, [candidates]);
-
-  const handleManualRefresh = async () => {
-    setIsRefreshing(true);
-    try {
-      await refreshAll();
-      toast.success("Talent pool refreshed");
-    } catch {
-      toast.error("Failed to refresh recruitment data");
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
 
   const handleExportCSV = async () => {
     try {
@@ -308,17 +294,6 @@ export function TalentPoolPage() {
         description={`Searchable database of ${candidates.length} candidates across every requisition.`}
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleManualRefresh}
-              disabled={isRefreshing}
-            >
-              <RefreshCw
-                className={`mr-1.5 h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`}
-              />
-              Refresh
-            </Button>
             <Button
               variant="outline"
               size="sm"

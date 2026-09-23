@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { useAurix } from "@/lib/aurix-store";
 import {
-  CalendarDays, Check, Clock, X, RefreshCw, Fingerprint, ScrollText, Palmtree, ChevronLeft,
+  CalendarDays, Check, Clock, X, Fingerprint, ScrollText, Palmtree, ChevronLeft,
   AlertCircle, Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -215,17 +215,6 @@ export function AttendancePage() {
               Attendance Dashboard
             </Button>
           </div>
-
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={loading}
-            onClick={() => loadData(true)}
-            className="h-8 gap-1.5 cursor-pointer text-xs"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-            {loading ? "Refreshing..." : "Refresh"}
-          </Button>
         </div>
       </div>
 

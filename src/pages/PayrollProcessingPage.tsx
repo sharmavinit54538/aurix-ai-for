@@ -524,20 +524,6 @@ export function PayrollProcessingPage() {
 
         {/* Header Actions */}
         <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => fetchStatus(false)}
-            disabled={isRefreshing || loadingInitial}
-            className="h-9 gap-1.5 text-xs shadow-sm"
-            title="Fetch latest status from backend"
-          >
-            <RefreshCw
-              className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`}
-            />
-            <span>Refresh</span>
-          </Button>
-
           {isCancellable ? (
             <Button
               variant="outline"

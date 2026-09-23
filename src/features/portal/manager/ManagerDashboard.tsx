@@ -16,7 +16,6 @@ import {
   FileText,
   MapPin,
   Package,
-  RefreshCw,
   Sparkles,
   Target,
   TrendingDown,
@@ -198,9 +197,6 @@ function ManagerHeader({ greeting, userName, companyName }: { greeting: string; 
               {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })}
             </div>
           </div>
-          <Button variant="outline" size="sm" className="gap-1.5 text-xs">
-            <RefreshCw className="h-3.5 w-3.5" /> Refresh
-          </Button>
           <Link to="/ai/chat-assistant" className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 px-3 py-2 text-xs font-semibold text-white shadow transition-all hover:shadow-md hover:-translate-y-0.5">
             <Bot className="h-3.5 w-3.5" /> AI Copilot
           </Link>

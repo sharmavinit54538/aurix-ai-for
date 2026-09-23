@@ -508,20 +508,6 @@ export function PayrollPeriodsPage() {
             </Button>
           </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={fetchPeriods}
-            disabled={loading}
-            className="h-8 gap-1.5 cursor-pointer text-xs"
-            title="Refresh periods list"
-          >
-            <RefreshCw
-              className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`}
-            />
-            <span>Refresh</span>
-          </Button>
-
           {canCreatePeriod ? (
             <Button
               size="sm"
