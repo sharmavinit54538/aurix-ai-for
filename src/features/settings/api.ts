@@ -190,6 +190,23 @@ export async function uploadCompanyLogo(file: File): Promise<{ logoUrl: string }
 // ─────────────────────────────────────────────────────────────
 
 export async function fetchMyProfile(): Promise<MyProfileForm> {
+  try {
+    const res = await apiInstance.get("/settings/profile");
+    const data = extractPayload<Record<string, unknown>>(res, {});
+    if (data && (data.fullName || data.name || data.email)) {
+      return {
+        name: String(data.fullName || data.name || ""),
+        email: String(data.email || ""),
+        phone: String(data.phone || ""),
+        avatarUrl: String(data.avatarUrl || data.avatar_url || ""),
+        designation: String(data.designation || ""),
+        department: String(data.department || ""),
+      };
+    }
+  } catch {
+    // Fallback to user session endpoint
+  }
+
   const user = await profileApi.getCurrentUser();
   return {
     name: user.fullName || user.name || "",
@@ -203,10 +220,11 @@ export async function fetchMyProfile(): Promise<MyProfileForm> {
 
 export async function updateMyProfile(form: MyProfileForm): Promise<MyProfileForm> {
   const updated = await profileApi.updateCurrentUser({
-    fullName: form.name,
-    name: form.name,
-    email: form.email,
-    phone: form.phone,
+    fullName: form.name.trim(),
+    email: form.email.trim(),
+    phone: form.phone?.trim(),
+    designation: form.designation?.trim(),
+    department: form.department?.trim(),
   });
 
   const ws = aurix.get();

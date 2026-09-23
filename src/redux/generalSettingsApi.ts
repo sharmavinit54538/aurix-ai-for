@@ -17,10 +17,12 @@ import type {
   MfaVerifyResponse,
   NotificationSettings,
   PermissionItem,
+  ProfileData,
   ProfileSettings,
   Role,
   SecuritySettings,
   SettingsSummary,
+  UpdateProfilePayload,
   UpdateRolePayload,
 } from "./settingsApiTypes";
 
@@ -204,20 +206,52 @@ export const generalSettingsApi = settingsApi.injectEndpoints({
     }),
 
     // ── Profile Settings ─────────────────────────────────────────────────
+    getProfile: builder.query<ApiResponse<ProfileSettings>, void>({
+      query: () => "/settings/profile",
+      providesTags: ["Profile", "ProfileSettings"],
+    }),
     getProfileSettings: builder.query<ApiResponse<ProfileSettings>, void>({
       query: () => "/settings/profile",
-      providesTags: ["ProfileSettings"],
+      providesTags: ["Profile", "ProfileSettings"],
     }),
-    updateProfileSettings: builder.mutation<ApiResponse<ProfileSettings>, Partial<ProfileSettings>>(
-      {
-        query: (body) => ({
+    updateProfile: builder.mutation<ApiResponse<ProfileData>, UpdateProfilePayload>({
+      query: (body) => {
+        const { fullName, email, phone, designation, department, bio } = body;
+        const cleanPayload: UpdateProfilePayload = {};
+        if (fullName !== undefined) cleanPayload.fullName = fullName;
+        if (email !== undefined) cleanPayload.email = email;
+        if (phone !== undefined) cleanPayload.phone = phone;
+        if (designation !== undefined) cleanPayload.designation = designation;
+        if (department !== undefined) cleanPayload.department = department;
+        if (bio !== undefined) cleanPayload.bio = bio;
+
+        return {
           url: "/settings/profile",
           method: "PUT",
-          body,
-        }),
-        invalidatesTags: ["ProfileSettings"],
+          body: cleanPayload,
+        };
       },
-    ),
+      invalidatesTags: ["Profile", "ProfileSettings"],
+    }),
+    updateProfileSettings: builder.mutation<ApiResponse<ProfileData>, UpdateProfilePayload>({
+      query: (body) => {
+        const { fullName, email, phone, designation, department, bio } = body;
+        const cleanPayload: UpdateProfilePayload = {};
+        if (fullName !== undefined) cleanPayload.fullName = fullName;
+        if (email !== undefined) cleanPayload.email = email;
+        if (phone !== undefined) cleanPayload.phone = phone;
+        if (designation !== undefined) cleanPayload.designation = designation;
+        if (department !== undefined) cleanPayload.department = department;
+        if (bio !== undefined) cleanPayload.bio = bio;
+
+        return {
+          url: "/settings/profile",
+          method: "PUT",
+          body: cleanPayload,
+        };
+      },
+      invalidatesTags: ["Profile", "ProfileSettings"],
+    }),
 
     // ── HR Settings ──────────────────────────────────────────────────────
     getHrSettings: builder.query<ApiResponse<HrSettings>, void>({
@@ -301,6 +335,8 @@ export const {
   useUpdateNotificationSettingsMutation,
   useGetIntegrationSettingsQuery,
   useUpdateIntegrationSettingsMutation,
+  useGetProfileQuery,
+  useUpdateProfileMutation,
   useGetProfileSettingsQuery,
   useUpdateProfileSettingsMutation,
   useGetHrSettingsQuery,

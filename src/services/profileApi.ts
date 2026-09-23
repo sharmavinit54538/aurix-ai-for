@@ -96,23 +96,50 @@ export const profileApi = {
   },
 
   async updateCurrentUser(payload: UpdateCurrentUserPayload): Promise<UserProfile> {
-    const res = await apiInstance.patch("/users/me", payload);
-    const data = extractData<Record<string, unknown>>(res);
-    return {
-      id: String(data?.id ?? ""),
-      fullName: String(data?.fullName ?? data?.full_name ?? data?.name ?? payload.fullName ?? ""),
-      name: String(data?.name ?? payload.name ?? ""),
-      email: String(data?.email ?? payload.email ?? ""),
-      phone: String(data?.phone ?? payload.phone ?? ""),
+    const fullName = payload.fullName ?? payload.name;
+    const cleanPayload: Record<string, unknown> = {};
+
+    if (fullName !== undefined && fullName !== null) cleanPayload.fullName = fullName;
+    if (payload.email !== undefined && payload.email !== null) cleanPayload.email = payload.email;
+    if (payload.phone !== undefined && payload.phone !== null) cleanPayload.phone = payload.phone;
+    if (payload.designation !== undefined && payload.designation !== null)
+      cleanPayload.designation = payload.designation;
+    if (payload.department !== undefined && payload.department !== null)
+      cleanPayload.department = payload.department;
+    if (payload.bio !== undefined && payload.bio !== null) cleanPayload.bio = payload.bio;
+
+    const res = await apiInstance.put("/settings/profile", cleanPayload);
+    const data = extractData<Record<string, unknown>>(res, cleanPayload);
+
+    const ws = aurix.get();
+    const updatedProfile: UserProfile = {
+      id: String(data?.id ?? ws.user?.id ?? ""),
+      fullName: String(data?.fullName ?? data?.full_name ?? fullName ?? ws.user?.fullName ?? ""),
+      name: String(data?.fullName ?? data?.full_name ?? fullName ?? ws.user?.fullName ?? ""),
+      email: String(data?.email ?? payload.email ?? ws.user?.email ?? ""),
+      phone: String(data?.phone ?? payload.phone ?? ws.user?.phone ?? ""),
       designation: String(data?.designation ?? payload.designation ?? ""),
       department: String(data?.department ?? payload.department ?? ""),
       bio: String(data?.bio ?? payload.bio ?? ""),
-      avatarUrl: String(data?.avatarUrl ?? data?.avatar_url ?? ""),
-      role: String(data?.role ?? ""),
-      timezone: String(data?.timezone ?? payload.timezone ?? ""),
-      language: String(data?.language ?? payload.language ?? ""),
-      createdAt: String(data?.createdAt ?? data?.created_at ?? ""),
+      avatarUrl: String(data?.avatarUrl ?? data?.avatar_url ?? ws.user?.avatarUrl ?? ""),
+      role: String(data?.role ?? ws.user?.role ?? "employee"),
+      timezone: String(data?.timezone ?? payload.timezone ?? "UTC+05:30 (IST)"),
+      language: String(data?.language ?? payload.language ?? "en"),
+      createdAt: String(data?.createdAt ?? data?.created_at ?? ws.user?.createdAt ?? ""),
     };
+
+    if (ws.user) {
+      aurix.set({
+        user: {
+          ...ws.user,
+          fullName: updatedProfile.fullName,
+          email: updatedProfile.email,
+          phone: updatedProfile.phone,
+        },
+      });
+    }
+
+    return updatedProfile;
   },
 
   // ── Avatar Management ──────────────────────────────────────────

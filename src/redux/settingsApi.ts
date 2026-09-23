@@ -75,6 +75,7 @@ export const settingsApi = createApi({
     "SecuritySettings",
     "NotificationSettings",
     "IntegrationSettings",
+    "Profile",
     "ProfileSettings",
     "HrSettings",
     "MfaStatus",

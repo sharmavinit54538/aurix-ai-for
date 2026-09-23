@@ -203,6 +203,27 @@ export interface ProfileSettings {
   [key: string]: unknown;
 }
 
+export interface ProfileData {
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  designation?: string;
+  department?: string;
+  bio?: string;
+  avatarUrl?: string;
+  role?: string;
+  [key: string]: unknown;
+}
+
+export interface UpdateProfilePayload {
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  designation?: string;
+  department?: string;
+  bio?: string;
+}
+
 export interface HrSettings {
   defaultProbationMonths?: number;
   noticePeriodDays?: number;
