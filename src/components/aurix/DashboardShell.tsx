@@ -21,6 +21,7 @@ import {
 import { useAurix, aurix, AVAILABLE_ROLES, type Role } from "@/lib/aurix-store";
 import { useAuthReady } from "@/lib/auth-bootstrap";
 import { UserProfileMenu } from "./UserProfileMenu";
+import { GeminiIcon } from "@/components/icons/GeminiIcon";
 import { hasValidAccessToken } from "@/api";
 import { AuthLoadingScreen } from "@/features/auth/components/AuthLoadingScreen";
 import { Input } from "@/components/ui/input";
@@ -135,7 +136,7 @@ const NAV_SECTIONS: SidebarNavSection[] = [
       {
         to: "/dashboard/ai-hub",
         label: "AI Hub",
-        icon: Brain,
+        icon: GeminiIcon,
         permission: "ai.view",
       },
       {
@@ -831,13 +832,14 @@ export function DashboardShell() {
               <span>Payroll Periods</span>
             </CommandItem>
             <CommandItem
+              value="AI Hub Gemini Assistant Artificial Intelligence"
               onSelect={() => {
-                navigate({ to: "/dashboard/ai" as any });
+                navigate({ to: "/dashboard/ai-hub" as any });
                 setSearchOpen(false);
               }}
-              className="cursor-pointer"
+              className="cursor-pointer group"
             >
-              <Bot className="mr-2 h-4 w-4" />
+              <GeminiIcon gradient className="mr-2 h-4 w-4 shrink-0 transition-transform duration-200 group-hover:scale-110" />
               <span>AI Hub</span>
             </CommandItem>
           </CommandGroup>

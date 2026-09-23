@@ -617,7 +617,7 @@ const HeroBanner = memo(function HeroBanner({ summary }: { summary: SummaryData 
             <Brain className="h-5 w-5" />
           </div>
           <div>
-            <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">OFC360 Intelligence</div>
+            <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">AI Intelligence</div>
             <div className="font-display text-lg font-semibold">{total} new insights generated</div>
           </div>
         </div>
@@ -782,7 +782,7 @@ const AIChatPanel = memo(function AIChatPanel({ recommendations }: { recommendat
           <div className="grid h-7 w-7 place-items-center rounded-lg text-brand-foreground" style={{ background: "var(--gradient-brand)" }}>
             <Brain className="h-3.5 w-3.5" />
           </div>
-          <div className="text-sm font-medium">OFC360 Assistant</div>
+          <div className="text-sm font-medium">AI Assistant</div>
         </div>
         <Badge variant="secondary" className="text-[10px]">Live</Badge>
       </div>
@@ -806,7 +806,7 @@ const AIChatPanel = memo(function AIChatPanel({ recommendations }: { recommendat
           ))}
         </div>
         <form onSubmit={(e) => { e.preventDefault(); send(); }} className="flex items-center gap-2">
-          <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="Ask OFC360 anything..." className="h-9" />
+          <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="Ask AI anything..." className="h-9" />
           <Button type="submit" size="sm"><Send className="h-4 w-4" /></Button>
         </form>
       </div>

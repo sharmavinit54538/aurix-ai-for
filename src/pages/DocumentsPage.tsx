@@ -3,7 +3,7 @@ import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import {
   Folder, Search, Upload, Wand2, Download, CheckCircle, Clock, XCircle, AlertTriangle,
   FileText, Shield, Trash2, Eye, FileSpreadsheet, RefreshCw, Info, Calendar,
-  ShieldCheck, User, AlertCircle
+  ShieldCheck, User, AlertCircle, RotateCcw, X
 } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Input } from "@/components/ui/input";
@@ -1812,19 +1812,77 @@ Acknowledged and Signed electronically.`;
 
       {/* SLIDE-OUT PREVIEW PANEL SHEET */}
       <Sheet open={!!previewDoc} onOpenChange={open => !open && setPreviewDoc(null)}>
-        <SheetContent className="sm:max-w-xl flex flex-col h-full bg-background border-l border-border p-0 shadow-2xl">
+        <SheetContent className="w-full sm:max-w-2xl lg:max-w-3xl flex flex-col h-full bg-background border-l border-border p-0 shadow-2xl [&>button.absolute]:hidden">
           {previewDoc && (
             <>
-              <SheetHeader className="p-5 border-b border-border bg-muted/10 shrink-0 text-left">
-                <div className="flex items-center justify-between">
-                  <Badge variant="outline" className="text-[10px] uppercase font-bold text-muted-foreground tracking-wide border-border">{previewDoc.category}</Badge>
-                  {previewDoc.status === "Verified" && (<Badge className="bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-500 border-none shadow-none font-medium text-xs">Verified</Badge>)}
-                  {previewDoc.status === "Pending" && (<Badge className="bg-amber-500/10 hover:bg-amber-500/15 text-amber-500 border-none shadow-none font-medium text-xs">Pending Review</Badge>)}
-                  {previewDoc.status === "Rejected" && (<Badge className="bg-rose-500/10 hover:bg-rose-500/15 text-rose-500 border-none shadow-none font-medium text-xs">Rejected</Badge>)}
-                  {previewDoc.status === "Expired" && (<Badge className="bg-neutral-500/10 hover:bg-neutral-500/15 text-neutral-500 border-none shadow-none font-medium text-xs">Expired</Badge>)}
+              <SheetHeader className="p-5 border-b border-border/80 bg-card/40 backdrop-blur-md shrink-0 text-left space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge
+                      variant="outline"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-semibold tracking-wide rounded-full border-border/80 bg-background/60 text-foreground/85 shadow-xs"
+                    >
+                      <Folder className="h-3 w-3 text-indigo-400 shrink-0" />
+                      {previewDoc.category}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-2.5">
+                    {previewDoc.status === "Verified" && (
+                      <Badge className="inline-flex items-center gap-1.5 px-3 py-0.5 text-xs font-semibold rounded-full bg-emerald-500/15 text-emerald-500 dark:text-emerald-400 border border-emerald-500/30 shadow-xs">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+                        Verified & Approved
+                      </Badge>
+                    )}
+                    {previewDoc.status === "Pending" && (
+                      <Badge className="inline-flex items-center gap-1.5 px-3 py-0.5 text-xs font-semibold rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 shadow-xs">
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                        Pending Review
+                      </Badge>
+                    )}
+                    {previewDoc.status === "Rejected" && (
+                      <Badge className="inline-flex items-center gap-1.5 px-3 py-0.5 text-xs font-semibold rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 shadow-xs">
+                        <span className="h-1.5 w-1.5 rounded-full bg-rose-500 shrink-0" />
+                        Rejected
+                      </Badge>
+                    )}
+                    {previewDoc.status === "Expired" && (
+                      <Badge className="inline-flex items-center gap-1.5 px-3 py-0.5 text-xs font-semibold rounded-full bg-neutral-500/15 text-neutral-400 border border-neutral-500/30 shadow-xs">
+                        <span className="h-1.5 w-1.5 rounded-full bg-neutral-400 shrink-0" />
+                        Expired
+                      </Badge>
+                    )}
+
+                    {/* Cut / Close Button */}
+                    <button
+                      type="button"
+                      onClick={() => setPreviewDoc(null)}
+                      className="h-7 w-7 rounded-lg border border-border/80 bg-background/60 hover:bg-rose-500/10 hover:border-rose-500/30 hover:text-rose-500 text-muted-foreground inline-flex items-center justify-center cursor-pointer transition-all duration-150 active:scale-95 shadow-xs shrink-0"
+                      title="Close"
+                      aria-label="Close"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
-                <SheetTitle className="font-display text-base font-bold text-foreground mt-2 truncate text-left" title={previewDoc.name}>{previewDoc.name}</SheetTitle>
-                <SheetDescription className="text-xs text-muted-foreground text-left mt-0.5">Type: {previewDoc.type} &bull; Uploaded by {previewDoc.uploadedBy} on {previewDoc.uploadDate}</SheetDescription>
+                <SheetTitle className="font-display text-lg font-bold text-foreground truncate text-left tracking-tight mt-1 flex items-center gap-2" title={previewDoc.name}>
+                  <FileText className="h-4.5 w-4.5 text-indigo-400 shrink-0" />
+                  <span className="truncate">{previewDoc.name}</span>
+                </SheetTitle>
+                <SheetDescription className="text-xs text-muted-foreground text-left mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <span className="inline-flex items-center gap-1 font-medium text-foreground/85">
+                    <span className="text-muted-foreground font-normal">Type:</span> {previewDoc.type}
+                  </span>
+                  <span className="text-border/80">•</span>
+                  <span className="inline-flex items-center gap-1">
+                    <User className="h-3 w-3 text-muted-foreground/70" />
+                    Uploaded by <span className="text-foreground/80 font-medium">{previewDoc.uploadedBy}</span>
+                  </span>
+                  <span className="text-border/80">•</span>
+                  <span className="inline-flex items-center gap-1">
+                    <Calendar className="h-3 w-3 text-muted-foreground/70" />
+                    {previewDoc.uploadDate}
+                  </span>
+                </SheetDescription>
               </SheetHeader>
 
               <ScrollArea className="flex-1 p-5 min-h-0">
@@ -1951,18 +2009,73 @@ Acknowledged and Signed electronically.`;
                 </div>
               </ScrollArea>
 
-              <div className="p-4 border-t border-border bg-muted/10 shrink-0 flex gap-2 justify-end">
+              <div className="p-4 border-t border-border/80 bg-card/60 backdrop-blur-md shrink-0 flex flex-wrap items-center justify-between gap-3">
+                {/* File Operation / Download */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleDownload(previewDoc)}
+                    className="h-9 px-3.5 text-xs font-medium rounded-xl border border-border/70 bg-card/60 hover:bg-accent/80 hover:border-border text-foreground gap-2 cursor-pointer transition-all duration-150 shadow-xs active:scale-[0.98]"
+                  >
+                    <Download className="h-3.5 w-3.5 text-muted-foreground transition-colors group-hover:text-foreground" />
+                    <span>Download</span>
+                  </Button>
+
+                  {previewDoc.status !== "Pending" && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        const updatedDocs = docs.map(d => {
+                          if (d.id === previewDoc.id) return { ...d, status: "Pending" as const, rejectionReason: undefined };
+                          return d;
+                        });
+                        aurix.set({ documents: updatedDocs });
+                        setPreviewDoc({ ...previewDoc, status: "Pending" as const, rejectionReason: undefined });
+                        toast.info("Document reset to Pending review state");
+                      }}
+                      className="h-9 px-3.5 text-xs font-medium rounded-xl border border-border/70 bg-card/60 hover:bg-accent text-muted-foreground hover:text-foreground gap-2 cursor-pointer transition-all duration-150 shadow-xs active:scale-[0.98]"
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" />
+                      <span>Reset Status to Review</span>
+                    </Button>
+                  )}
+                </div>
+
+                {/* Compliance Review Decisions */}
                 {previewDoc.status === "Pending" && (
-                  <>
-                    <Button variant="outline" onClick={() => handleRequestReupload(previewDoc)} className="h-9 text-xs border-border bg-transparent hover:bg-accent/60 gap-1.5 cursor-pointer"><RefreshCw className="h-3.5 w-3.5 text-amber-500" />Request Re-upload</Button>
-                    <Button onClick={() => handleRejectPrompt(previewDoc)} className="h-9 text-xs bg-rose-600 text-white hover:bg-rose-700 gap-1.5 cursor-pointer"><XCircle className="h-3.5 w-3.5" />Reject Document</Button>
-                    <Button onClick={() => handleVerify(previewDoc)} className="h-9 text-xs bg-emerald-600 text-white hover:bg-emerald-700 gap-1.5 cursor-pointer"><CheckCircle className="h-3.5 w-3.5" />Verify & Approve</Button>
-                  </>
+                  <div className="flex items-center gap-2 flex-wrap justify-end">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleRequestReupload(previewDoc)}
+                      className="h-9 px-3.5 text-xs font-medium rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 gap-2 cursor-pointer transition-all duration-150 shadow-xs active:scale-[0.98]"
+                    >
+                      <RefreshCw className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                      <span>Request Re-upload</span>
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleRejectPrompt(previewDoc)}
+                      className="h-9 px-3.5 text-xs font-medium rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 gap-2 cursor-pointer transition-all duration-150 shadow-xs active:scale-[0.98]"
+                    >
+                      <XCircle className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+                      <span>Reject Document</span>
+                    </Button>
+
+                    <Button
+                      type="button"
+                      onClick={() => handleVerify(previewDoc)}
+                      className="h-9 px-4 text-xs font-semibold rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white gap-2 cursor-pointer shadow-md shadow-emerald-950/30 border border-emerald-400/20 transition-all duration-150 active:scale-[0.98]"
+                    >
+                      <CheckCircle className="h-3.5 w-3.5 shrink-0" />
+                      <span>Verify & Approve</span>
+                    </Button>
+                  </div>
                 )}
-                {previewDoc.status !== "Pending" && (
-                  <Button variant="outline" onClick={() => { const updatedDocs = docs.map(d => { if (d.id === previewDoc.id) return { ...d, status: "Pending" as const, rejectionReason: undefined }; return d; }); aurix.set({ documents: updatedDocs }); setPreviewDoc({ ...previewDoc, status: "Pending" as const, rejectionReason: undefined }); toast.info("Document reset to Pending review state"); }} className="h-9 text-xs border-border bg-transparent hover:bg-accent/60 cursor-pointer">Reset Status to Review</Button>
-                )}
-                <Button variant="outline" onClick={() => handleDownload(previewDoc)} className="h-9 text-xs border-border bg-transparent hover:bg-accent/60 gap-1.5 cursor-pointer"><Download className="h-3.5 w-3.5" />Download</Button>
               </div>
             </>
           )}
