@@ -53,7 +53,6 @@ export const EXIT_STAGES: any[] = [];
 export const AI_FEATURES = [
   { title: "HR Copilot", desc: "AI-powered HR Q&A and policy guidance", link: "/ai/chat-assistant", color: "from-violet-600 to-purple-700" },
   { title: "Resume Screening", desc: "Automated resume parsing & scoring", link: "/ai/recruiter", color: "from-blue-600 to-indigo-700" },
-  { title: "Interview Copilot", desc: "Real-time interview assistance", link: "/dashboard/recruitment/copilot", color: "from-cyan-600 to-blue-700" },
   { title: "AI Analytics", desc: "Predictive workforce intelligence", link: "/ai/analytics-center", color: "from-emerald-600 to-teal-700" },
   { title: "Policy Assistant", desc: "Instant policy answers & summaries", link: "/ai/policy-assistant", color: "from-amber-600 to-orange-700" },
   { title: "AI Chat", desc: "Multi-modal HR assistant", link: "/ai/chat-assistant", color: "from-rose-600 to-pink-700" },

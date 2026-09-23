@@ -146,7 +146,6 @@ import { Route as DashboardRecruitmentImportExportRouteImport } from './routes/d
 import { Route as DashboardRecruitmentHiringManagerRouteImport } from './routes/dashboard/recruitment/hiring-manager'
 import { Route as DashboardRecruitmentEmployeeOnboardingRouteImport } from './routes/dashboard/recruitment/employee-onboarding'
 import { Route as DashboardRecruitmentCrmRouteImport } from './routes/dashboard/recruitment/crm'
-import { Route as DashboardRecruitmentCopilotRouteImport } from './routes/dashboard/recruitment/copilot'
 import { Route as DashboardRecruitmentComplianceRouteImport } from './routes/dashboard/recruitment/compliance'
 import { Route as DashboardRecruitmentCompensationRouteImport } from './routes/dashboard/recruitment/compensation'
 import { Route as DashboardRecruitmentCommunicationRouteImport } from './routes/dashboard/recruitment/communication'
@@ -964,12 +963,6 @@ const DashboardRecruitmentCrmRoute = DashboardRecruitmentCrmRouteImport.update({
   path: '/crm',
   getParentRoute: () => DashboardRecruitmentRoute,
 } as any)
-const DashboardRecruitmentCopilotRoute =
-  DashboardRecruitmentCopilotRouteImport.update({
-    id: '/copilot',
-    path: '/copilot',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
 const DashboardRecruitmentComplianceRoute =
   DashboardRecruitmentComplianceRouteImport.update({
     id: '/compliance',
@@ -1585,7 +1578,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/recruitment/communication': typeof DashboardRecruitmentCommunicationRoute
   '/dashboard/recruitment/compensation': typeof DashboardRecruitmentCompensationRoute
   '/dashboard/recruitment/compliance': typeof DashboardRecruitmentComplianceRoute
-  '/dashboard/recruitment/copilot': typeof DashboardRecruitmentCopilotRoute
   '/dashboard/recruitment/crm': typeof DashboardRecruitmentCrmRoute
   '/dashboard/recruitment/employee-onboarding': typeof DashboardRecruitmentEmployeeOnboardingRoute
   '/dashboard/recruitment/hiring-manager': typeof DashboardRecruitmentHiringManagerRoute
@@ -1793,7 +1785,6 @@ export interface FileRoutesByTo {
   '/dashboard/recruitment/communication': typeof DashboardRecruitmentCommunicationRoute
   '/dashboard/recruitment/compensation': typeof DashboardRecruitmentCompensationRoute
   '/dashboard/recruitment/compliance': typeof DashboardRecruitmentComplianceRoute
-  '/dashboard/recruitment/copilot': typeof DashboardRecruitmentCopilotRoute
   '/dashboard/recruitment/crm': typeof DashboardRecruitmentCrmRoute
   '/dashboard/recruitment/employee-onboarding': typeof DashboardRecruitmentEmployeeOnboardingRoute
   '/dashboard/recruitment/hiring-manager': typeof DashboardRecruitmentHiringManagerRoute
@@ -2019,7 +2010,6 @@ export interface FileRoutesById {
   '/dashboard/recruitment/communication': typeof DashboardRecruitmentCommunicationRoute
   '/dashboard/recruitment/compensation': typeof DashboardRecruitmentCompensationRoute
   '/dashboard/recruitment/compliance': typeof DashboardRecruitmentComplianceRoute
-  '/dashboard/recruitment/copilot': typeof DashboardRecruitmentCopilotRoute
   '/dashboard/recruitment/crm': typeof DashboardRecruitmentCrmRoute
   '/dashboard/recruitment/employee-onboarding': typeof DashboardRecruitmentEmployeeOnboardingRoute
   '/dashboard/recruitment/hiring-manager': typeof DashboardRecruitmentHiringManagerRoute
@@ -2246,7 +2236,6 @@ export interface FileRouteTypes {
     | '/dashboard/recruitment/communication'
     | '/dashboard/recruitment/compensation'
     | '/dashboard/recruitment/compliance'
-    | '/dashboard/recruitment/copilot'
     | '/dashboard/recruitment/crm'
     | '/dashboard/recruitment/employee-onboarding'
     | '/dashboard/recruitment/hiring-manager'
@@ -2454,7 +2443,6 @@ export interface FileRouteTypes {
     | '/dashboard/recruitment/communication'
     | '/dashboard/recruitment/compensation'
     | '/dashboard/recruitment/compliance'
-    | '/dashboard/recruitment/copilot'
     | '/dashboard/recruitment/crm'
     | '/dashboard/recruitment/employee-onboarding'
     | '/dashboard/recruitment/hiring-manager'
@@ -2679,7 +2667,6 @@ export interface FileRouteTypes {
     | '/dashboard/recruitment/communication'
     | '/dashboard/recruitment/compensation'
     | '/dashboard/recruitment/compliance'
-    | '/dashboard/recruitment/copilot'
     | '/dashboard/recruitment/crm'
     | '/dashboard/recruitment/employee-onboarding'
     | '/dashboard/recruitment/hiring-manager'
@@ -3788,13 +3775,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRecruitmentCrmRouteImport
       parentRoute: typeof DashboardRecruitmentRoute
     }
-    '/dashboard/recruitment/copilot': {
-      id: '/dashboard/recruitment/copilot'
-      path: '/copilot'
-      fullPath: '/dashboard/recruitment/copilot'
-      preLoaderRoute: typeof DashboardRecruitmentCopilotRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
     '/dashboard/recruitment/compliance': {
       id: '/dashboard/recruitment/compliance'
       path: '/compliance'
@@ -4614,7 +4594,6 @@ interface DashboardRecruitmentRouteChildren {
   DashboardRecruitmentCommunicationRoute: typeof DashboardRecruitmentCommunicationRoute
   DashboardRecruitmentCompensationRoute: typeof DashboardRecruitmentCompensationRoute
   DashboardRecruitmentComplianceRoute: typeof DashboardRecruitmentComplianceRoute
-  DashboardRecruitmentCopilotRoute: typeof DashboardRecruitmentCopilotRoute
   DashboardRecruitmentCrmRoute: typeof DashboardRecruitmentCrmRoute
   DashboardRecruitmentEmployeeOnboardingRoute: typeof DashboardRecruitmentEmployeeOnboardingRoute
   DashboardRecruitmentHiringManagerRoute: typeof DashboardRecruitmentHiringManagerRoute
@@ -4658,7 +4637,6 @@ const DashboardRecruitmentRouteChildren: DashboardRecruitmentRouteChildren = {
     DashboardRecruitmentCommunicationRoute,
   DashboardRecruitmentCompensationRoute: DashboardRecruitmentCompensationRoute,
   DashboardRecruitmentComplianceRoute: DashboardRecruitmentComplianceRoute,
-  DashboardRecruitmentCopilotRoute: DashboardRecruitmentCopilotRoute,
   DashboardRecruitmentCrmRoute: DashboardRecruitmentCrmRoute,
   DashboardRecruitmentEmployeeOnboardingRoute:
     DashboardRecruitmentEmployeeOnboardingRoute,

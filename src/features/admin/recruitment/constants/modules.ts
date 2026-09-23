@@ -6,7 +6,6 @@ import {
   Folder,
   MessageSquare,
   Settings,
-  Sparkles,
   TrendingUp,
   UserPlus,
   Users,
@@ -163,14 +162,7 @@ export const RECRUITMENT_MODULES_LIST: RecruitmentModule[] = [
     to: "/dashboard/recruitment/kt-probation",
     color: "from-blue-500/20 to-cyan-500/20 text-blue-400 border-blue-500/30",
   },
-  {
-    id: "copilot",
-    title: "AI Recruiter Copilot",
-    description: "Screen resume batches, evaluate candidate scores, and generate inclusive job descriptions with AI.",
-    icon: Sparkles,
-    to: "/dashboard/recruitment/copilot",
-    color: "from-fuchsia-500/20 to-pink-500/20 text-fuchsia-400 border-fuchsia-500/30",
-  },
+
   {
     id: "onboarding",
     title: "Onboarding Checklists",
