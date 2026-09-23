@@ -5,6 +5,8 @@ import managersReducer from "@/features/admin/managers/managersSlice";
 import performanceReducer from "@/features/admin/performance/performanceSlice";
 import recruitmentReducer from "@/features/admin/recruitment/recruitmentSlice";
 import aiInsightsReducer from "@/store/aiInsights/aiInsightsSlice";
+import complianceReducer from "@/store/compliance/complianceSlice";
+import meetingIntelligenceReducer from "@/store/meetingIntelligence/meetingIntelligenceSlice";
 import profileReducer from "@/store/profile/profileSlice";
 import settingsReducer from "@/store/settings/settingsSlice";
 import sidebarReducer from "@/store/sidebar/sidebarSlice";
@@ -22,6 +24,8 @@ export const store = configureStore({
     performance: performanceReducer,
     recruitment: recruitmentReducer,
     aiInsights: aiInsightsReducer,
+    compliance: complianceReducer,
+    meetingIntelligence: meetingIntelligenceReducer,
     settings: settingsReducer,
     profile: profileReducer,
     sidebar: sidebarReducer,
