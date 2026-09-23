@@ -22,7 +22,7 @@ interface CommMessage {
   id: string;
   recipientName: string;
   recipientContact: string;
-  templateType: "Application Received" | "Screening Result" | "Interview Invitation" | "Interview Reminder" | "Rejection" | "Offer Letter";
+  templateType: string;
   channel: "Email" | "WhatsApp" | "SMS";
   subject: string;
   body: string;
@@ -30,59 +30,26 @@ interface CommMessage {
   sentAt?: string;
 }
 
-const DEFAULT_TEMPLATES: Record<string, { subject: string; body: string }> = {
-  "Application Received": {
-    subject: "Application Received: {{job_title}}",
-    body: "Hi {{candidate_name}},\n\nThank you for applying for the {{job_title}} position. Our recruitment team is currently reviewing your profile.\n\nYou can expect an update on your candidacy within 3 to 5 business days.\n\nBest regards,\nTalent Acquisition Team",
-  },
-  "Screening Result": {
-    subject: "Update on your application for {{job_title}}",
-    body: "Dear {{candidate_name}},\n\nGreat news! Your qualifications and background have passed our initial screening review for the {{job_title}} role.\n\nWe would like to invite you to complete the next evaluation assessment round.\n\nWarm regards,\nRecruitment Team",
-  },
-  "Interview Invitation": {
-    subject: "Interview Invitation: {{job_title}}",
-    body: "Hi {{candidate_name}},\n\nYou are invited to attend an interview for {{job_title}} on {{interview_time}}.\n\nMeeting Link: {{meeting_link}}\n\nPlease confirm your availability by replying to this message.\n\nLooking forward to speaking with you!\n\nBest regards,\nHiring Team",
-  },
-  "Interview Reminder": {
-    subject: "Reminder: Scheduled interview for {{job_title}}",
-    body: "Hi {{candidate_name}},\n\nThis is a quick reminder about your scheduled interview for {{job_title}} on {{interview_time}}.\n\nMeeting link: {{meeting_link}}\n\nPlease let us know if you need to reschedule.\n\nBest of luck!",
-  },
-  "Offer Letter": {
-    subject: "Offer of Employment: {{job_title}}",
-    body: "Dear {{candidate_name}},\n\nWe are delighted to offer you the position of {{job_title}}!\n\nAttached is your formal employment offer detailing compensation, joining date, and benefits.\n\nPlease review and sign electronically before the deadline.\n\nWelcome to the team!\n\nSincerely,\nLeadership Team",
-  },
-  "Rejection": {
-    subject: "Update regarding your application for {{job_title}}",
-    body: "Dear {{candidate_name}},\n\nThank you for taking the time to interview with our team for the {{job_title}} position. While your qualifications are strong, we have decided to move forward with other candidates whose skillsets align more closely with our current requirements.\n\nWe will keep your resume in our talent pool for future opportunities.\n\nSincerely,\nTalent Acquisition Team",
-  },
-};
+const TEMPLATE_TYPES = [
+  "Application Received",
+  "Screening Result",
+  "Interview Invitation",
+  "Interview Reminder",
+  "Offer Letter",
+  "Rejection",
+] as const;
 
 export function CandidateCommunicationPage() {
-  const { candidates, jobs, interviews } = useRecruitment();
+  const { candidates, jobs } = useRecruitment();
 
-  // Load user dispatched messages with mock purge
+  // Load user-created messages from localStorage (no mock/seed data)
   const [messages, setMessages] = useState<CommMessage[]>(() => {
     if (typeof window !== "undefined") {
       try {
-        const saved =
-          localStorage.getItem("aurix:comm_messages") ||
-          localStorage.getItem("ofc360:comm_messages");
+        const saved = localStorage.getItem("aurix:comm_messages");
         if (saved) {
           const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed)) {
-            // Purge mock message IDs or hardcoded fake names
-            const clean = parsed.filter(
-              (m: CommMessage) =>
-                !["msg-101", "msg-102", "msg-103"].includes(m.id) &&
-                ![
-                  "Siddharth Nambiar",
-                  "Priyanka Deshmukh",
-                  "Aditya Roy",
-                  "Candidate Candidate",
-                ].includes(m.recipientName),
-            );
-            return clean;
-          }
+          if (Array.isArray(parsed)) return parsed;
         }
       } catch {
         /* ignore */
@@ -91,15 +58,12 @@ export function CandidateCommunicationPage() {
     return [];
   });
 
-  const [activeTemplateType, setActiveTemplateType] =
-    useState<keyof typeof DEFAULT_TEMPLATES>("Interview Invitation");
-  const [selectedChannel, setSelectedChannel] = useState<
-    "Email" | "WhatsApp" | "SMS"
-  >("Email");
-  const [selectedCandidateId, setSelectedCandidateId] = useState(
-    candidates[0]?.id || "",
-  );
+  const [activeTemplateType, setActiveTemplateType] = useState<string>("");
+  const [selectedChannel, setSelectedChannel] = useState<"Email" | "WhatsApp" | "SMS">("Email");
+  const [selectedCandidateId, setSelectedCandidateId] = useState("");
   const [filterChannel, setFilterChannel] = useState("all");
+  const [composerSubject, setComposerSubject] = useState("");
+  const [composerBody, setComposerBody] = useState("");
 
   // Auto-sync selected candidate when candidates load
   useMemo(() => {
@@ -112,82 +76,52 @@ export function CandidateCommunicationPage() {
     }
   }, [candidates, selectedCandidateId]);
 
-  const [composerSubject, setComposerSubject] = useState(
-    DEFAULT_TEMPLATES["Interview Invitation"].subject,
-  );
-  const [composerBody, setComposerBody] = useState(
-    DEFAULT_TEMPLATES["Interview Invitation"].body,
-  );
-
   const selectedCandidate =
-    candidates.find((c) => c.id === selectedCandidateId) || candidates[0];
-  const selectedJob =
-    jobs.find((j) => j.id === selectedCandidate?.jobId) || jobs[0];
+    candidates.find((c) => c.id === selectedCandidateId) || null;
+  const selectedJob = selectedCandidate
+    ? jobs.find((j) => j.id === selectedCandidate.jobId) || null
+    : null;
 
-  const candInterview = useMemo(() => {
-    if (!selectedCandidate) return null;
-    return interviews.find(
-      (i) =>
-        i.candidateId === selectedCandidate.id ||
-        (selectedCandidate.name && i.candidateName === selectedCandidate.name),
-    );
-  }, [interviews, selectedCandidate]);
-
-  const handleTemplateSelect = (type: keyof typeof DEFAULT_TEMPLATES) => {
+  const handleTemplateSelect = (type: string) => {
     setActiveTemplateType(type);
-    setComposerSubject(DEFAULT_TEMPLATES[type].subject);
-    setComposerBody(DEFAULT_TEMPLATES[type].body);
+    // Templates start empty — user fills in subject/body
+    setComposerSubject("");
+    setComposerBody("");
   };
 
-  // Interpolated Preview
+  // Interpolated Preview (replace variables if user typed them)
+  const candidateName = selectedCandidate?.name || "";
+  const jobTitle =
+    selectedJob?.title || selectedCandidate?.appliedPosition || "";
+
   const previewSubject = composerSubject
-    .replace(/{{candidate_name}}/g, selectedCandidate?.name || "Candidate")
-    .replace(
-      /{{job_title}}/g,
-      selectedJob?.title ||
-        selectedCandidate?.appliedPosition ||
-        "Position",
-    );
-
-  const interviewTimeStr = candInterview?.date
-    ? new Date(candInterview.date).toLocaleDateString("en-IN", {
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : "scheduled date and time";
-
-  const meetingLinkStr =
-    candInterview?.meetingLink ||
-    candInterview?.location ||
-    "Meeting link will be shared prior to session";
+    .replace(/\{\{candidate_name\}\}/g, candidateName)
+    .replace(/\{\{job_title\}\}/g, jobTitle);
 
   const previewBody = composerBody
-    .replace(/{{candidate_name}}/g, selectedCandidate?.name || "Candidate")
-    .replace(
-      /{{job_title}}/g,
-      selectedJob?.title ||
-        selectedCandidate?.appliedPosition ||
-        "Position",
-    )
-    .replace(/{{interview_time}}/g, interviewTimeStr)
-    .replace(/{{meeting_link}}/g, meetingLinkStr);
+    .replace(/\{\{candidate_name\}\}/g, candidateName)
+    .replace(/\{\{job_title\}\}/g, jobTitle)
+    .replace(/\{\{interview_time\}\}/g, "")
+    .replace(/\{\{meeting_link\}\}/g, "");
 
   const handleSendMessage = () => {
     if (!selectedCandidate) {
       toast.error("Please select a candidate first.");
       return;
     }
+    if (!composerBody.trim()) {
+      toast.error("Please write a message body before sending.");
+      return;
+    }
 
     const newMsg: CommMessage = {
       id: `msg-${Date.now()}`,
-      recipientName: selectedCandidate.name || "Candidate",
+      recipientName: selectedCandidate.name || "",
       recipientContact:
         selectedChannel === "Email"
-          ? selectedCandidate.email || "No email on record"
-          : selectedCandidate.phone || "No phone on record",
-      templateType: activeTemplateType as any,
+          ? selectedCandidate.email || ""
+          : selectedCandidate.phone || "",
+      templateType: activeTemplateType || "Custom",
       channel: selectedChannel,
       subject: previewSubject,
       body: previewBody,
@@ -214,7 +148,7 @@ export function CandidateCommunicationPage() {
     <div className="space-y-6">
       <PageHeader
         title="Candidate Communication Center"
-        description="Deliver automated multi-channel messages across Email, WhatsApp, and SMS throughout every milestone of the candidate lifecycle."
+        description="Deliver multi-channel messages across Email, WhatsApp, and SMS throughout every milestone of the candidate lifecycle."
       />
 
       {/* Main Composer & Live Preview Grid */}
@@ -224,7 +158,7 @@ export function CandidateCommunicationPage() {
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-sm flex items-center gap-2">
               <Mail className="h-4 w-4 text-indigo-500" />
-              Message Template Composer
+              Message Composer
             </h3>
             <div className="flex items-center gap-1">
               {(["Email", "WhatsApp", "SMS"] as const).map((ch) => (
@@ -245,13 +179,13 @@ export function CandidateCommunicationPage() {
 
           <div className="space-y-3 text-xs">
             <div>
-              <Label className="text-xs">Recruiter Template Preset</Label>
+              <Label className="text-xs">Template Category</Label>
               <div className="grid grid-cols-2 gap-1.5 mt-1 sm:grid-cols-3">
-                {Object.keys(DEFAULT_TEMPLATES).map((type) => (
+                {TEMPLATE_TYPES.map((type) => (
                   <button
                     key={type}
                     type="button"
-                    onClick={() => handleTemplateSelect(type as any)}
+                    onClick={() => handleTemplateSelect(type)}
                     className={`p-2 rounded-lg text-left border text-[11px] font-medium transition-colors cursor-pointer ${
                       activeTemplateType === type
                         ? "bg-indigo-500/15 text-indigo-600 border-indigo-500/40 dark:text-indigo-300"
@@ -278,7 +212,7 @@ export function CandidateCommunicationPage() {
                   <SelectContent>
                     {candidates.map((c) => (
                       <SelectItem key={c.id} value={c.id}>
-                        {c.name || "Candidate"} {c.appliedPosition ? `(${c.appliedPosition})` : ""}
+                        {c.name || "Unnamed"}{c.appliedPosition ? ` (${c.appliedPosition})` : ""}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -288,9 +222,10 @@ export function CandidateCommunicationPage() {
 
             {selectedChannel === "Email" && (
               <div>
-                <Label className="text-xs">Subject Line (Template with variables)</Label>
+                <Label className="text-xs">Subject Line</Label>
                 <Input
                   className="mt-1 h-9 text-xs font-mono"
+                  placeholder="Enter subject line..."
                   value={composerSubject}
                   onChange={(e) => setComposerSubject(e.target.value)}
                 />
@@ -299,12 +234,15 @@ export function CandidateCommunicationPage() {
 
             <div>
               <div className="flex items-center justify-between">
-                <Label className="text-xs">Message Template Body</Label>
-                <span className="text-[10px] text-muted-foreground font-mono">&#123;&#123;candidate_name&#125;&#125;, &#123;&#123;job_title&#125;&#125;, &#123;&#123;interview_time&#125;&#125;, &#123;&#123;meeting_link&#125;&#125;</span>
+                <Label className="text-xs">Message Body</Label>
+                <span className="text-[10px] text-muted-foreground font-mono">
+                  Variables: &#123;&#123;candidate_name&#125;&#125;, &#123;&#123;job_title&#125;&#125;
+                </span>
               </div>
               <Textarea
                 className="mt-1 text-xs font-mono"
                 rows={6}
+                placeholder="Write your message here..."
                 value={composerBody}
                 onChange={(e) => setComposerBody(e.target.value)}
               />
@@ -312,7 +250,7 @@ export function CandidateCommunicationPage() {
 
             <div className="pt-2 flex justify-end">
               <Button
-                disabled={!selectedCandidate}
+                disabled={!selectedCandidate || !composerBody.trim()}
                 onClick={handleSendMessage}
                 className="bg-gradient-brand text-brand-foreground shadow-glow gap-1.5 text-xs disabled:opacity-50"
               >
@@ -323,38 +261,45 @@ export function CandidateCommunicationPage() {
           </div>
         </div>
 
-        {/* Right: Live Preview in Realistic Client Simulator */}
+        {/* Right: Live Preview */}
         <div className="rounded-2xl border border-border bg-card/60 p-5 backdrop-blur-xl flex flex-col justify-between space-y-4">
           <div>
             <div className="flex items-center justify-between border-b border-border pb-2">
               <span className="text-xs uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
                 <Eye className="h-3.5 w-3.5" />
-                Live {selectedChannel} Render Preview
+                Live {selectedChannel} Preview
               </span>
-              <Badge variant="outline" className="text-[10px]">
-                To: {selectedCandidate?.name || "No recipient"}
-              </Badge>
+              {selectedCandidate && (
+                <Badge variant="outline" className="text-[10px]">
+                  To: {selectedCandidate.name}
+                </Badge>
+              )}
             </div>
 
-            {selectedChannel === "Email" ? (
+            {!composerBody.trim() ? (
+              <div className="mt-4 flex flex-col items-center justify-center p-12 text-center rounded-xl border border-dashed border-border bg-card/20">
+                <Mail className="h-8 w-8 text-muted-foreground/30 mb-2" />
+                <p className="text-sm font-medium text-muted-foreground">No message to preview</p>
+                <p className="text-xs text-muted-foreground/60 mt-1">
+                  Start composing a message to see the live preview here.
+                </p>
+              </div>
+            ) : selectedChannel === "Email" ? (
               <div className="mt-4 rounded-xl border border-border bg-background p-4 shadow-sm text-xs space-y-3">
                 <div className="border-b border-border pb-2 space-y-1">
-                  <div>
-                    <span className="text-muted-foreground">From: </span>
-                    <span className="font-semibold text-foreground">Talent Acquisition Team &lt;careers@company.com&gt;</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">To: </span>
-                    <span className="font-semibold text-foreground">
-                      {selectedCandidate?.email || "No email on record"}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Subject: </span>
-                    <span className="font-bold text-foreground">{previewSubject}</span>
-                  </div>
+                  {selectedCandidate?.email && (
+                    <div>
+                      <span className="text-muted-foreground">To: </span>
+                      <span className="font-semibold text-foreground">{selectedCandidate.email}</span>
+                    </div>
+                  )}
+                  {previewSubject && (
+                    <div>
+                      <span className="text-muted-foreground">Subject: </span>
+                      <span className="font-bold text-foreground">{previewSubject}</span>
+                    </div>
+                  )}
                 </div>
-
                 <p className="text-foreground whitespace-pre-line leading-relaxed">
                   {previewBody}
                 </p>
@@ -362,7 +307,7 @@ export function CandidateCommunicationPage() {
             ) : (
               <div className="mt-4 max-w-sm mx-auto rounded-2xl border border-border bg-zinc-900 p-4 text-xs text-white space-y-3 shadow-lg">
                 <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                  <div className="font-bold text-sm">Official Talent Channel</div>
+                  <div className="font-bold text-sm">{selectedChannel} Preview</div>
                   <Badge variant="secondary" className="text-[9px] bg-emerald-500/20 text-emerald-400">
                     {selectedChannel}
                   </Badge>
@@ -374,20 +319,22 @@ export function CandidateCommunicationPage() {
             )}
           </div>
 
-          <div className="text-[11px] text-muted-foreground border-t border-border pt-2 flex items-center justify-between">
-            <span>Variables resolved dynamically from selected candidate record.</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 text-[10px]"
-              onClick={() => {
-                navigator.clipboard.writeText(previewBody);
-                toast.success("Preview copied to clipboard!");
-              }}
-            >
-              <Copy className="h-3 w-3 mr-1" /> Copy Text
-            </Button>
-          </div>
+          {composerBody.trim() && (
+            <div className="text-[11px] text-muted-foreground border-t border-border pt-2 flex items-center justify-between">
+              <span>Variables resolved from selected candidate record.</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 text-[10px]"
+                onClick={() => {
+                  navigator.clipboard.writeText(previewBody);
+                  toast.success("Preview copied to clipboard!");
+                }}
+              >
+                <Copy className="h-3 w-3 mr-1" /> Copy
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -396,7 +343,7 @@ export function CandidateCommunicationPage() {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-semibold text-sm text-foreground">Communication Delivery History</h3>
-            <p className="text-xs text-muted-foreground">Recent messages sent to candidates across channels.</p>
+            <p className="text-xs text-muted-foreground">Messages sent to candidates across channels.</p>
           </div>
 
           <div className="flex items-center gap-2">
@@ -430,9 +377,9 @@ export function CandidateCommunicationPage() {
               {filteredMessages.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
-                    <p className="font-medium text-xs">No dispatched messages found</p>
+                    <p className="font-medium text-xs">No dispatched messages yet</p>
                     <p className="text-[11px] mt-0.5 text-muted-foreground/80">
-                      Use the template composer above to dispatch outreach messages to candidates.
+                      Use the composer above to send messages to candidates.
                     </p>
                   </td>
                 </tr>
