@@ -294,8 +294,17 @@ export const settingsApi = {
     const res = await apiInstance.get("/settings/profile");
     return extractData<ProfileSettings>(res);
   },
-  async updateProfile(payload: Partial<ProfileSettings>): Promise<ProfileSettings> {
-    const res = await apiInstance.put("/settings/profile", payload);
+  async updateProfile(payload: Partial<ProfileSettings> & { name?: string }): Promise<ProfileSettings> {
+    const fullName = payload.fullName ?? payload.name;
+    const cleanPayload: Record<string, unknown> = {};
+    if (fullName !== undefined) cleanPayload.fullName = fullName;
+    if (payload.email !== undefined) cleanPayload.email = payload.email;
+    if (payload.phone !== undefined) cleanPayload.phone = payload.phone;
+    if (payload.designation !== undefined) cleanPayload.designation = payload.designation;
+    if (payload.department !== undefined) cleanPayload.department = payload.department;
+    if (payload.bio !== undefined) cleanPayload.bio = payload.bio;
+
+    const res = await apiInstance.put("/settings/profile", cleanPayload);
     return extractData<ProfileSettings>(res);
   },
 };

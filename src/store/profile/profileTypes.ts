@@ -43,14 +43,11 @@ export interface ChangePasswordPayload {
 
 export interface UpdateCurrentUserPayload {
   fullName?: string;
-  name?: string;
   email?: string;
   phone?: string;
   designation?: string;
   department?: string;
   bio?: string;
-  timezone?: string;
-  language?: string;
 }
 
 export interface ProfileState {

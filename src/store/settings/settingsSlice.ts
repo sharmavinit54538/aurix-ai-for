@@ -439,7 +439,9 @@ export const settingsSlice = createSlice({
         state.profile = action.payload;
       })
       .addCase(updateProfileSettings.fulfilled, (state, action) => {
-        state.profile = action.payload;
+        state.profile = state.profile
+          ? { ...state.profile, ...action.payload }
+          : action.payload;
       });
   },
 });

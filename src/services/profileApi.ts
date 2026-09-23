@@ -96,7 +96,7 @@ export const profileApi = {
   },
 
   async updateCurrentUser(payload: UpdateCurrentUserPayload): Promise<UserProfile> {
-    const fullName = payload.fullName ?? payload.name;
+    const fullName = payload.fullName;
     const cleanPayload: Record<string, unknown> = {};
 
     if (fullName !== undefined && fullName !== null) cleanPayload.fullName = fullName;
@@ -121,10 +121,10 @@ export const profileApi = {
       designation: String(data?.designation ?? payload.designation ?? ""),
       department: String(data?.department ?? payload.department ?? ""),
       bio: String(data?.bio ?? payload.bio ?? ""),
-      avatarUrl: String(data?.avatarUrl ?? data?.avatar_url ?? ws.user?.avatarUrl ?? ""),
+      avatarUrl: String(data?.avatarUrl ?? data?.avatar_url ?? ""),
       role: String(data?.role ?? ws.user?.role ?? "employee"),
-      timezone: String(data?.timezone ?? payload.timezone ?? "UTC+05:30 (IST)"),
-      language: String(data?.language ?? payload.language ?? "en"),
+      timezone: String(data?.timezone ?? "UTC+05:30 (IST)"),
+      language: String(data?.language ?? "en"),
       createdAt: String(data?.createdAt ?? data?.created_at ?? ws.user?.createdAt ?? ""),
     };
 
@@ -134,7 +134,7 @@ export const profileApi = {
           ...ws.user,
           fullName: updatedProfile.fullName,
           email: updatedProfile.email,
-          phone: updatedProfile.phone,
+          phone: updatedProfile.phone || ws.user.phone || "",
         },
       });
     }

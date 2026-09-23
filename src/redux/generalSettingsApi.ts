@@ -232,6 +232,29 @@ export const generalSettingsApi = settingsApi.injectEndpoints({
         };
       },
       invalidatesTags: ["Profile", "ProfileSettings"],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data: response } = await queryFulfilled;
+          if (response?.data) {
+            dispatch(
+              settingsApi.util.updateQueryData("getProfile" as never, undefined as never, (draft: any) => {
+                if (draft?.data) {
+                  Object.assign(draft.data, response.data);
+                }
+              })
+            );
+            dispatch(
+              settingsApi.util.updateQueryData("getProfileSettings" as never, undefined as never, (draft: any) => {
+                if (draft?.data) {
+                  Object.assign(draft.data, response.data);
+                }
+              })
+            );
+          }
+        } catch {
+          // Handled by error logger and invalidation
+        }
+      },
     }),
     updateProfileSettings: builder.mutation<ApiResponse<ProfileData>, UpdateProfilePayload>({
       query: (body) => {
@@ -251,6 +274,29 @@ export const generalSettingsApi = settingsApi.injectEndpoints({
         };
       },
       invalidatesTags: ["Profile", "ProfileSettings"],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data: response } = await queryFulfilled;
+          if (response?.data) {
+            dispatch(
+              settingsApi.util.updateQueryData("getProfile" as never, undefined as never, (draft: any) => {
+                if (draft?.data) {
+                  Object.assign(draft.data, response.data);
+                }
+              })
+            );
+            dispatch(
+              settingsApi.util.updateQueryData("getProfileSettings" as never, undefined as never, (draft: any) => {
+                if (draft?.data) {
+                  Object.assign(draft.data, response.data);
+                }
+              })
+            );
+          }
+        } catch {
+          // Handled by error logger and invalidation
+        }
+      },
     }),
 
     // ── HR Settings ──────────────────────────────────────────────────────

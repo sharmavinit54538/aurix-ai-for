@@ -71,7 +71,9 @@ export const profileSlice = createSlice({
       .addCase(updateCurrentUser.fulfilled, (state, action) => {
         state.submitting = false;
         state.operationLoading.updateUser = false;
-        state.currentUser = action.payload;
+        state.currentUser = state.currentUser
+          ? { ...state.currentUser, ...action.payload }
+          : action.payload;
         state.operationSuccess.updateUser = true;
       })
       .addCase(updateCurrentUser.rejected, (state, action) => {

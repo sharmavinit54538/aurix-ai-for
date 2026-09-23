@@ -219,13 +219,14 @@ export async function fetchMyProfile(): Promise<MyProfileForm> {
 }
 
 export async function updateMyProfile(form: MyProfileForm): Promise<MyProfileForm> {
-  const updated = await profileApi.updateCurrentUser({
-    fullName: form.name.trim(),
-    email: form.email.trim(),
-    phone: form.phone?.trim(),
-    designation: form.designation?.trim(),
-    department: form.department?.trim(),
-  });
+  const payload: UpdateCurrentUserPayload = {};
+  if (form.name?.trim()) payload.fullName = form.name.trim();
+  if (form.email?.trim()) payload.email = form.email.trim();
+  if (form.phone !== undefined && form.phone !== null) payload.phone = form.phone.trim();
+  if (form.designation?.trim()) payload.designation = form.designation.trim();
+  if (form.department?.trim()) payload.department = form.department.trim();
+
+  const updated = await profileApi.updateCurrentUser(payload);
 
   const ws = aurix.get();
   if (ws.user) {
@@ -240,6 +241,7 @@ export async function updateMyProfile(form: MyProfileForm): Promise<MyProfileFor
   }
 
   return {
+    ...form,
     name: updated.fullName || form.name,
     email: updated.email || form.email,
     phone: updated.phone || form.phone,
