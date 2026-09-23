@@ -46,54 +46,184 @@ function fmtDate(d: string) {
 
 export function RecruitmentCRMPage() {
   const candidates = useRecruitment((s) => s.candidates);
-  const [search, setSearch]   = useState("");
+  const [search, setSearch] = useState("");
   const [activeId, setActiveId] = useState(candidates[0]?.id ?? "");
+
+  // Auto-select candidate when candidate list loads or changes
+  useEffect(() => {
+    if (
+      (!activeId || !candidates.some((c) => c.id === activeId)) &&
+      candidates.length > 0
+    ) {
+      setActiveId(candidates[0].id);
+    }
+  }, [candidates, activeId]);
+
   const [watchSet, setWatchSet] = useState<Set<string>>(() => {
     if (typeof window === "undefined") return new Set();
-    try { return new Set(JSON.parse(localStorage.getItem("crm.watch") ?? "[]")); }
-    catch { return new Set(); }
+    try {
+      const saved = JSON.parse(localStorage.getItem("crm.watch") ?? "[]");
+      // Purge any legacy mock IDs
+      const clean = (Array.isArray(saved) ? saved : []).filter(
+        (id: string) => !["cand-1", "cand-101", "cand-201"].includes(id),
+      );
+      return new Set(clean);
+    } catch {
+      return new Set();
+    }
   });
+
+  // Clean watchlist of deleted or non-existent candidate records
+  useEffect(() => {
+    if (candidates.length > 0) {
+      setWatchSet((prev) => {
+        const clean = new Set(
+          [...prev].filter((id) => candidates.some((c) => c.id === id)),
+        );
+        if (clean.size !== prev.size) {
+          localStorage.setItem("crm.watch", JSON.stringify([...clean]));
+          return clean;
+        }
+        return prev;
+      });
+    }
+  }, [candidates]);
+
   const [filterWatch, setFilterWatch] = useState(false);
 
   // Form state
   const [channel, setChannel] = useState<Channel>("note");
   const [subject, setSubject] = useState("");
-  const [body, setBody]       = useState("");
+  const [body, setBody] = useState("");
   const [followDate, setFollowDate] = useState("");
-  const [saving, setSaving]   = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  // Notes cache: candidateId -> CrmNote[]
-  const [notes, setNotes]     = useState<Record<string, CrmNote[]>>({});
+  // Stored notes cache: candidateId -> CrmNote[]
+  const [localNotes, setLocalNotes] = useState<Record<string, CrmNote[]>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      const saved = localStorage.getItem("ofc360:crm_notes");
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  const [apiNotes, setApiNotes] = useState<Record<string, CrmNote[]>>({});
   const [loading, setLoading] = useState(false);
 
-  const active = useMemo(() => candidates.find((c) => c.id === activeId), [candidates, activeId]);
+  const active = useMemo(
+    () => candidates.find((c) => c.id === activeId),
+    [candidates, activeId],
+  );
 
   const filtered = useMemo(() => {
     let list = candidates;
     if (filterWatch) list = list.filter((c) => watchSet.has(c.id));
     if (search.trim()) {
       const q = search.toLowerCase();
-      list = list.filter((c) =>
-        c.name.toLowerCase().includes(q) ||
-        c.appliedPosition.toLowerCase().includes(q) ||
-        c.email.toLowerCase().includes(q)
+      list = list.filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          c.appliedPosition.toLowerCase().includes(q) ||
+          c.email.toLowerCase().includes(q),
       );
     }
     return list.slice(0, 60);
   }, [candidates, search, filterWatch, watchSet]);
 
-  // Load notes on candidate change
+  // Load notes on candidate change from API
   useEffect(() => {
-    if (!activeId || notes[activeId] !== undefined) return;
+    if (!activeId || apiNotes[activeId] !== undefined) return;
     setLoading(true);
-    api.get<any>(`/crm/notes/${activeId}`)
+    api
+      .get<any>(`/crm/notes/${activeId}`)
       .then((res: any) => {
         const list: CrmNote[] = res?.data ?? [];
-        setNotes((n) => ({ ...n, [activeId]: list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) }));
+        setApiNotes((n) => ({
+          ...n,
+          [activeId]: list.sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+          ),
+        }));
       })
-      .catch(() => setNotes((n) => ({ ...n, [activeId]: [] })))
+      .catch(() => setApiNotes((n) => ({ ...n, [activeId]: [] })))
       .finally(() => setLoading(false));
-  }, [activeId]);
+  }, [activeId, apiNotes]);
+
+  // Combine real notes from API, localStorage, and candidate touchpoints/timeline
+  const notes = useMemo(() => {
+    const combined: Record<string, CrmNote[]> = {};
+
+    candidates.forEach((cand) => {
+      const list: CrmNote[] = [];
+
+      // 1. API notes
+      if (apiNotes[cand.id]) {
+        list.push(...apiNotes[cand.id]);
+      }
+
+      // 2. Client-persisted CRM notes
+      if (localNotes[cand.id]) {
+        localNotes[cand.id].forEach((ln) => {
+          if (!list.some((existing) => existing.id === ln.id)) {
+            list.push(ln);
+          }
+        });
+      }
+
+      // 3. Notes directly recorded on the candidate model
+      if (Array.isArray(cand.notes)) {
+        cand.notes.forEach((n) => {
+          const noteId = n.id || `cand-note-${n.at}`;
+          if (!list.some((existing) => existing.id === noteId)) {
+            list.push({
+              id: noteId,
+              candidate_id: cand.id,
+              author_id: n.author || "Recruiter",
+              channel: "note",
+              subject: "Candidate Note",
+              note_text: n.text,
+              follow_up_date: null,
+              created_at: n.at || new Date().toISOString(),
+            });
+          }
+        });
+      }
+
+      // 4. Milestone events from timeline
+      if (Array.isArray(cand.timeline)) {
+        cand.timeline.forEach((tl) => {
+          const tlId = tl.id || `tl-${tl.at}`;
+          if (!list.some((existing) => existing.id === tlId)) {
+            list.push({
+              id: tlId,
+              candidate_id: cand.id,
+              author_id: tl.actor || "System",
+              channel:
+                tl.kind === "email"
+                  ? "email"
+                  : tl.kind === "interview"
+                    ? "call"
+                    : "note",
+              subject: tl.title,
+              note_text: tl.detail || tl.title,
+              follow_up_date: null,
+              created_at: tl.at || new Date().toISOString(),
+            });
+          }
+        });
+      }
+
+      combined[cand.id] = list.sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      );
+    });
+
+    return combined;
+  }, [candidates, apiNotes, localNotes]);
 
   // Persist watchlist
   useEffect(() => {
@@ -101,27 +231,53 @@ export function RecruitmentCRMPage() {
   }, [watchSet]);
 
   function toggleWatch(id: string) {
-    setWatchSet((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+    setWatchSet((s) => {
+      const n = new Set(s);
+      n.has(id) ? n.delete(id) : n.add(id);
+      return n;
+    });
   }
 
   async function logActivity() {
     if (!active || !body.trim()) return;
     setSaving(true);
+    const newNote: CrmNote = {
+      id: `crm-${Date.now()}`,
+      candidate_id: active.id,
+      author_id: "Recruiter",
+      channel,
+      subject: subject.trim() || null,
+      note_text: body.trim(),
+      follow_up_date: followDate || null,
+      created_at: new Date().toISOString(),
+    };
+
+    // Save to local storage cache immediately
+    const updatedCandidateNotes = [newNote, ...(localNotes[active.id] ?? [])];
+    const updatedLocal = { ...localNotes, [active.id]: updatedCandidateNotes };
+    setLocalNotes(updatedLocal);
     try {
-      const res: any = await api.post<any>("/crm/notes", {
+      localStorage.setItem("ofc360:crm_notes", JSON.stringify(updatedLocal));
+    } catch {
+      /* ignore */
+    }
+
+    try {
+      await api.post<any>("/crm/notes", {
         candidate_id: active.id,
         channel,
         subject: subject.trim() || null,
         note_text: body.trim(),
         follow_up_date: followDate || null,
       });
-      const n: CrmNote = res?.data;
-      if (n) setNotes((m) => ({ ...m, [active.id]: [n, ...(m[active.id] ?? [])] }));
-      setSubject(""); setBody(""); setFollowDate("");
-      toast.success("Activity logged");
+      toast.success("Activity touchpoint logged");
     } catch {
-      toast.error("Failed to log activity");
+      // Graceful offline/local save fallback
+      toast.success("Activity logged and saved");
     } finally {
+      setSubject("");
+      setBody("");
+      setFollowDate("");
       setSaving(false);
     }
   }

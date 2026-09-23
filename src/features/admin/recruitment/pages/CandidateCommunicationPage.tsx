@@ -66,55 +66,72 @@ const DEFAULT_TEMPLATES: Record<string, { subject: string; body: string }> = {
   },
 };
 
-const INITIAL_HISTORY: CommMessage[] = [
-  {
-    id: "msg-101",
-    recipientName: "Siddharth Nambiar",
-    recipientContact: "siddharth.nambiar@example.com",
-    templateType: "Interview Invitation",
-    channel: "Email",
-    subject: "Interview Invitation: Senior Full Stack Engineer with OFC360",
-    body: "Hi Siddharth, You are invited to attend an interview on March 18, 2026 at 2:30 PM IST.",
-    status: "Delivered",
-    sentAt: "2026-03-14 10:15 AM",
-  },
-  {
-    id: "msg-102",
-    recipientName: "Priyanka Deshmukh",
-    recipientContact: "+91 97112 34567",
-    templateType: "Interview Reminder",
-    channel: "WhatsApp",
-    subject: "Interview Reminder",
-    body: "Hi Priyanka, quick reminder about your Staff AI Engineer interview tomorrow at 4:00 PM.",
-    status: "Sent",
-    sentAt: "2026-03-15 09:00 AM",
-  },
-  {
-    id: "msg-103",
-    recipientName: "Aditya Roy",
-    recipientContact: "aditya.roy@example.com",
-    templateType: "Offer Letter",
-    channel: "Email",
-    subject: "Congratulations! Formal Job Offer from OFC360 — Lead Product Designer",
-    body: "Dear Aditya, We are delighted to offer you the position of Lead Product Designer.",
-    status: "Delivered",
-    sentAt: "2026-03-14 04:30 PM",
-  },
-];
-
 export function CandidateCommunicationPage() {
   const { candidates, jobs } = useRecruitment();
-  const [messages, setMessages] = useState<CommMessage[]>(INITIAL_HISTORY);
-  const [activeTemplateType, setActiveTemplateType] = useState<keyof typeof DEFAULT_TEMPLATES>("Interview Invitation");
-  const [selectedChannel, setSelectedChannel] = useState<"Email" | "WhatsApp" | "SMS">("Email");
-  const [selectedCandidateId, setSelectedCandidateId] = useState(candidates[0]?.id || "cand-201");
+
+  // Load user dispatched messages with permanent mock purge
+  const [messages, setMessages] = useState<CommMessage[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("ofc360:comm_messages");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            // Purge mock message IDs msg-101 to msg-103
+            const clean = parsed.filter(
+              (m: CommMessage) =>
+                !["msg-101", "msg-102", "msg-103"].includes(m.id) &&
+                ![
+                  "Siddharth Nambiar",
+                  "Priyanka Deshmukh",
+                  "Aditya Roy",
+                ].includes(m.recipientName),
+            );
+            if (clean.length !== parsed.length) {
+              localStorage.setItem("ofc360:comm_messages", JSON.stringify(clean));
+            }
+            return clean;
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+    return [];
+  });
+
+  const [activeTemplateType, setActiveTemplateType] =
+    useState<keyof typeof DEFAULT_TEMPLATES>("Interview Invitation");
+  const [selectedChannel, setSelectedChannel] = useState<
+    "Email" | "WhatsApp" | "SMS"
+  >("Email");
+  const [selectedCandidateId, setSelectedCandidateId] = useState(
+    candidates[0]?.id || "",
+  );
   const [filterChannel, setFilterChannel] = useState("all");
 
-  const [composerSubject, setComposerSubject] = useState(DEFAULT_TEMPLATES["Interview Invitation"].subject);
-  const [composerBody, setComposerBody] = useState(DEFAULT_TEMPLATES["Interview Invitation"].body);
+  // Auto-sync selected candidate when candidates load
+  useMemo(() => {
+    if (
+      (!selectedCandidateId ||
+        !candidates.some((c) => c.id === selectedCandidateId)) &&
+      candidates.length > 0
+    ) {
+      setSelectedCandidateId(candidates[0].id);
+    }
+  }, [candidates, selectedCandidateId]);
 
-  const selectedCandidate = candidates.find((c) => c.id === selectedCandidateId) || candidates[0];
-  const selectedJob = jobs.find((j) => j.id === selectedCandidate?.jobId) || jobs[0];
+  const [composerSubject, setComposerSubject] = useState(
+    DEFAULT_TEMPLATES["Interview Invitation"].subject,
+  );
+  const [composerBody, setComposerBody] = useState(
+    DEFAULT_TEMPLATES["Interview Invitation"].body,
+  );
+
+  const selectedCandidate =
+    candidates.find((c) => c.id === selectedCandidateId) || candidates[0];
+  const selectedJob =
+    jobs.find((j) => j.id === selectedCandidate?.jobId) || jobs[0];
 
   const handleTemplateSelect = (type: keyof typeof DEFAULT_TEMPLATES) => {
     setActiveTemplateType(type);
@@ -125,22 +142,37 @@ export function CandidateCommunicationPage() {
   // Interpolated Preview
   const previewSubject = composerSubject
     .replace(/{{candidate_name}}/g, selectedCandidate?.name || "Candidate")
-    .replace(/{{job_title}}/g, selectedJob?.title || selectedCandidate?.appliedPosition || "Software Engineer");
+    .replace(
+      /{{job_title}}/g,
+      selectedJob?.title ||
+        selectedCandidate?.appliedPosition ||
+        "Position",
+    );
 
   const previewBody = composerBody
     .replace(/{{candidate_name}}/g, selectedCandidate?.name || "Candidate")
-    .replace(/{{job_title}}/g, selectedJob?.title || selectedCandidate?.appliedPosition || "Software Engineer")
-    .replace(/{{interview_time}}/g, "Thursday, Mar 19 at 2:00 PM IST")
+    .replace(
+      /{{job_title}}/g,
+      selectedJob?.title ||
+        selectedCandidate?.appliedPosition ||
+        "Position",
+    )
+    .replace(/{{interview_time}}/g, "upcoming scheduled time")
     .replace(/{{meeting_link}}/g, "https://meet.google.com/ofc-360-call");
 
   const handleSendMessage = () => {
+    if (!selectedCandidate) {
+      toast.error("Please select a candidate first.");
+      return;
+    }
+
     const newMsg: CommMessage = {
       id: `msg-${Date.now()}`,
-      recipientName: selectedCandidate?.name || "Candidate",
+      recipientName: selectedCandidate.name || "Candidate",
       recipientContact:
         selectedChannel === "Email"
-          ? selectedCandidate?.email || "candidate@example.com"
-          : selectedCandidate?.phone || "+91 98000 00000",
+          ? selectedCandidate.email || "candidate@example.com"
+          : selectedCandidate.phone || "+91 98000 00000",
       templateType: activeTemplateType as any,
       channel: selectedChannel,
       subject: previewSubject,
@@ -149,8 +181,14 @@ export function CandidateCommunicationPage() {
       sentAt: new Date().toLocaleString(),
     };
 
-    setMessages([newMsg, ...messages]);
-    toast.success(`Message dispatched via ${selectedChannel} to ${selectedCandidate?.name}!`);
+    const updated = [newMsg, ...messages];
+    setMessages(updated);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("ofc360:comm_messages", JSON.stringify(updated));
+    }
+    toast.success(
+      `Message dispatched via ${selectedChannel} to ${selectedCandidate.name}!`,
+    );
   };
 
   const filteredMessages = useMemo(() => {
@@ -366,32 +404,43 @@ export function CandidateCommunicationPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {filteredMessages.map((msg) => (
-                <tr key={msg.id} className="hover:bg-accent/30">
-                  <td className="px-4 py-2.5">
-                    <div className="font-semibold text-foreground">{msg.recipientName}</div>
-                    <div className="text-[10px] text-muted-foreground">{msg.recipientContact}</div>
-                  </td>
-                  <td className="px-4 py-2.5 font-medium">{msg.templateType}</td>
-                  <td className="px-4 py-2.5">
-                    <Badge variant="outline" className="text-[10px]">
-                      {msg.channel}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-2.5 max-w-xs truncate text-muted-foreground">
-                    {msg.body}
-                  </td>
-                  <td className="px-4 py-2.5">
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                      {msg.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2.5 text-muted-foreground font-mono text-[10px]">
-                    {msg.sentAt}
+              {filteredMessages.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                    <p className="font-medium text-xs">No dispatched messages found</p>
+                    <p className="text-[11px] mt-0.5 text-muted-foreground/80">
+                      Use the template composer above to dispatch outreach messages to candidates.
+                    </p>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredMessages.map((msg) => (
+                  <tr key={msg.id} className="hover:bg-accent/30">
+                    <td className="px-4 py-2.5">
+                      <div className="font-semibold text-foreground">{msg.recipientName}</div>
+                      <div className="text-[10px] text-muted-foreground">{msg.recipientContact}</div>
+                    </td>
+                    <td className="px-4 py-2.5 font-medium">{msg.templateType}</td>
+                    <td className="px-4 py-2.5">
+                      <Badge variant="outline" className="text-[10px]">
+                        {msg.channel}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-2.5 max-w-xs truncate text-muted-foreground">
+                      {msg.body}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        {msg.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2.5 text-muted-foreground font-mono text-[10px]">
+                      {msg.sentAt}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

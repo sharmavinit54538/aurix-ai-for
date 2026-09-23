@@ -19,6 +19,8 @@ export const EXCLUDED_BACK_BUTTON_ROUTES: (string | RegExp)[] = [
   "/dashboard/executive/ceo",
   "/dashboard/executive/cio",
   "/dashboard/executive/cto",
+  "/dashboard/recruitment/templates",
+  "/dashboard/recruitment/templates/",
   // Auth Pages
   "/login",
   "/register",
