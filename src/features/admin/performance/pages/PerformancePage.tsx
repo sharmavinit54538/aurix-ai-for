@@ -497,12 +497,8 @@ export function PerformancePage() {
   return (
     <div className="space-y-6">
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <PageHeader
-          title="Performance Management"
-          description="Evaluate employee metrics, track strategic OKRs targets, conduct 360 feedback reviews, and trigger promotion recommendations."
-        />
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+
+      <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4">
           <Button
             onClick={() => setImportOpen(true)}
             variant="outline"
@@ -519,7 +515,6 @@ export function PerformancePage() {
             New Review
           </Button>
         </div>
-      </div>
 
       {/* Tabs navigation list to switch between List, Charts, and AI analysis */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">

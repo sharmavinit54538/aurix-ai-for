@@ -142,7 +142,7 @@ export function AIInsightsPage() {
         <LoadingSkeletonView />
       ) : (
         <>
-          <HeroBanner summary={summary} />
+
 
           <SectionTitle eyebrow="Overview" title="AI Workforce KPIs" icon={Activity} />
           {kpis.length === 0 ? (

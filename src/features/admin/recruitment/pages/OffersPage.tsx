@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Check, Clock, FileCheck2, Send, X } from "lucide-react";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useRecruitment } from "@/features/admin/recruitment/hooks/useRecruitment";
@@ -15,11 +14,9 @@ export function OffersPage() {
 
   return (
     <>
-      <PageHeader
-        title="Offers"
-        description={`${offers.length} offers in progress`}
-        actions={<Button><Send className="mr-2 h-4 w-4" />New Offer</Button>}
-      />
+      <div className="mb-4 flex justify-end">
+        <Button><Send className="mr-2 h-4 w-4" />New Offer</Button>
+      </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="space-y-2 lg:col-span-1">

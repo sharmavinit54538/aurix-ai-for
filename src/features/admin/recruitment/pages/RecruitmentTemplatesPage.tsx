@@ -234,14 +234,14 @@ export function RecruitmentTemplatesPage() {
     let body = template.body || "(No message body)";
 
     const sampleData: Record<string, string> = {
-      "{{candidate.first_name}}": "Alex",
-      "{{candidate.last_name}}": "Johnson",
-      "{{job.title}}": "Senior Engineer",
+      "{{candidate.first_name}}": "Candidate",
+      "{{candidate.last_name}}": "Name",
+      "{{job.title}}": "Position Title",
       "{{company.name}}": "OFC360",
-      "{{interview.date}}": "Thursday, Oct 12",
-      "{{interview.time}}": "03:00 PM IST",
-      "{{interview.meeting_url}}": "https://meet.google.com/ofc-round",
-      "{{joining.date}}": "Monday, Nov 6, 2026",
+      "{{interview.date}}": "[Interview Date]",
+      "{{interview.time}}": "[Interview Time]",
+      "{{interview.meeting_url}}": "[Meeting URL]",
+      "{{joining.date}}": "[Joining Date]",
       "{{sender.name}}": "Recruiting Team",
     };
 
@@ -532,7 +532,7 @@ export function RecruitmentTemplatesPage() {
                         <span className="font-semibold text-foreground">From:</span> OFC360 Talent &lt;recruiting@ofc360.com&gt;
                       </div>
                       <div className="text-[11px] text-muted-foreground">
-                        <span className="font-semibold text-foreground">To:</span> Alex Johnson &lt;alex.johnson@example.com&gt;
+                        <span className="font-semibold text-foreground">To:</span> Candidate Name &lt;candidate@example.com&gt;
                       </div>
                       <div className="text-[11px] font-medium text-foreground">
                         <span className="font-semibold text-muted-foreground">Subject:</span>{" "}

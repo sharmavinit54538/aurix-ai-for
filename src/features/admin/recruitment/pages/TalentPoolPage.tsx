@@ -16,7 +16,6 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -45,13 +44,7 @@ interface SavedSearch {
 }
 
 const STORAGE_KEY = "ofc360:talent_pool_saved_searches";
-const MOCK_SAVED_SEARCH_IDS = ["ss1", "ss2", "ss3", "ss4"];
-const MOCK_DEFAULT_NAMES = [
-  "Senior React Engineers",
-  "Product Designers — Remote",
-  "Data Scientists — Python",
-  "Sales Leaders — EMEA",
-];
+
 
 export function TalentPoolPage() {
   const { candidates, jobs, refreshAll } = useRecruitment();
@@ -60,7 +53,7 @@ export function TalentPoolPage() {
   const [minScore, setMinScore] = useState(0);
   const [showAddModal, setShowAddModal] = useState(false);
 
-  // Saved Searches state with permanent mock purge
+  // Saved Searches state — user-created only
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>(() => {
     if (typeof window !== "undefined") {
       try {
@@ -68,16 +61,7 @@ export function TalentPoolPage() {
         if (saved) {
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed)) {
-            // Purge legacy mock searches (ss1 to ss4) or hardcoded default titles
-            const clean = parsed.filter(
-              (s: SavedSearch) =>
-                !MOCK_SAVED_SEARCH_IDS.includes(s.id) &&
-                !MOCK_DEFAULT_NAMES.includes(s.name),
-            );
-            if (clean.length !== parsed.length) {
-              localStorage.setItem(STORAGE_KEY, JSON.stringify(clean));
-            }
-            return clean;
+            return parsed;
           }
         }
       } catch {
@@ -289,30 +273,24 @@ export function TalentPoolPage() {
         onChange={handleImportCSV}
       />
 
-      <PageHeader
-        title="Talent Pool"
-        description={`Searchable database of ${candidates.length} candidates across every requisition.`}
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => document.getElementById("csv-import-input")?.click()}
-            >
-              <Upload className="mr-1.5 h-3.5 w-3.5" />
-              Import CSV
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleExportCSV}>
-              <Download className="mr-1.5 h-3.5 w-3.5" />
-              Export CSV
-            </Button>
-            <Button size="sm" onClick={() => setShowAddModal(true)}>
-              <UserPlus className="mr-1.5 h-3.5 w-3.5" />
-              Add to Pool
-            </Button>
-          </div>
-        }
-      />
+      <div className="mb-4 flex flex-wrap items-center justify-end gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => document.getElementById("csv-import-input")?.click()}
+        >
+          <Upload className="mr-1.5 h-3.5 w-3.5" />
+          Import CSV
+        </Button>
+        <Button variant="outline" size="sm" onClick={handleExportCSV}>
+          <Download className="mr-1.5 h-3.5 w-3.5" />
+          Export CSV
+        </Button>
+        <Button size="sm" onClick={() => setShowAddModal(true)}>
+          <UserPlus className="mr-1.5 h-3.5 w-3.5" />
+          Add to Pool
+        </Button>
+      </div>
 
       {/* Dynamic Talent Pool KPI Summary */}
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">

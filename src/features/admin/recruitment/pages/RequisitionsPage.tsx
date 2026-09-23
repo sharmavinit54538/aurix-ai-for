@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { CheckCircle2, Clock, FileSignature, Plus, XCircle } from "lucide-react";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -67,11 +66,9 @@ export function RequisitionsPage() {
 
   return (
     <>
-      <PageHeader
-        title="Hiring Requisitions"
-        description="Multi-level approval workflow for new open positions."
-        actions={<Button onClick={createRequisition}><Plus className="mr-2 h-4 w-4" />New Requisition</Button>}
-      />
+      <div className="mb-4 flex justify-end">
+        <Button onClick={createRequisition}><Plus className="mr-2 h-4 w-4" />New Requisition</Button>
+      </div>
 
       <div className="mb-3 flex flex-wrap gap-2">
         {(["all", "draft", "pending", "approved", "rejected"] as const).map((s) => (

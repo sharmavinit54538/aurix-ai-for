@@ -268,7 +268,7 @@ export function ImportDialog({
 
   const downloadTemplate = () => {
     const headers = "Department Name,Code,Description,Department Head,Reporting To,Office Location,Budget,Cost Center,Capacity,Status";
-    const sample = "\nLogistics & Supply,LSC,Handles supplier pipelines,Ali Hassan,None,Dubai Office,150000,CC-OPS-500,25,active";
+    const sample = "\nDepartment Name,DEPT,Description of department,Head Name,None,Office Location,100000,CC-001,20,active";
     const blob = new Blob([headers, sample], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");

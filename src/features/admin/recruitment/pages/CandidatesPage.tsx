@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { Download, Filter, Plus, Search, Users } from "lucide-react";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -45,19 +44,13 @@ export function CandidatesPage() {
 
   return (
     <>
-      <PageHeader
-        title="Candidates"
-        description={`${filtered.length} of ${candidates.length} candidates`}
-        actions={
-          <>
-            <Button variant="outline"><Download className="mr-2 h-4 w-4" />Export</Button>
-            <Button onClick={() => setShowAddModal(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Candidate
-            </Button>
-          </>
-        }
-      />
+      <div className="mb-4 flex justify-end gap-2">
+        <Button variant="outline"><Download className="mr-2 h-4 w-4" />Export</Button>
+        <Button onClick={() => setShowAddModal(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Candidate
+        </Button>
+      </div>
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <div className="relative min-w-[240px] flex-1">

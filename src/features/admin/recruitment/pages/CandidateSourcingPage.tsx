@@ -258,18 +258,12 @@ export function CandidateSourcingPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Multi-Channel Candidate Sourcing Hub"
-        description="Discover, import, and engage passive talent across LinkedIn, GitHub, job boards, referrals, and staffing vendors."
-        actions={
-          <div className="flex items-center gap-2">
-            <Button onClick={() => setShowUploadModal(true)} className="gap-1.5 shadow-sm">
-              <Upload className="h-4 w-4" />
-              Import Resumes / Candidates
-            </Button>
-          </div>
-        }
-      />
+      <div className="flex justify-end">
+        <Button onClick={() => setShowUploadModal(true)} className="gap-1.5 shadow-sm">
+          <Upload className="h-4 w-4" />
+          Import Resumes / Candidates
+        </Button>
+      </div>
 
       {/* Sourcing Channel Cards (100% Dynamic Real Data) */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

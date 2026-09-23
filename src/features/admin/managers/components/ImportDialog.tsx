@@ -280,7 +280,7 @@ export function ImportDialog({
 
   const downloadTemplate = () => {
     const headers = "Employee ID,First Name,Last Name,Email,Phone,Department,Designation,Office,Status,Role,Reporting Manager,Joining Date,Salary";
-    const sampleRow = "\nEMP-1100,Raj,Malhotra,raj.malhotra@ofc360.com,+91 98989 89898,Engineering,Engineering Manager,Bengaluru Tech Park,active,team_lead,Rohan Mehta,2026-06-01,110000";
+    const sampleRow = "\nEMP-0001,First,Last,first.last@company.com,+91 00000 00000,Engineering,Engineering Manager,Head Office,active,team_lead,Manager Name,2026-01-01,100000";
     const blob = new Blob([headers, sampleRow], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");

@@ -91,7 +91,7 @@ export function PerformanceFormDialog({
       setEmployeeIdCode(emp.employeeId || emp.id);
       setDepartment(emp.department || "Engineering");
       setDesignation(emp.designation || "Software Developer");
-      setManagerName(emp.managerName || "Rohan Mehta");
+      setManagerName(emp.managerName || "");
     }
   };
 

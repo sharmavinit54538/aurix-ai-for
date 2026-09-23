@@ -2,7 +2,6 @@ import { useState, useMemo } from "react";
 import {
   Mail, Send, CheckCircle2, Eye, Copy
 } from "lucide-react";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -146,10 +145,6 @@ export function CandidateCommunicationPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Candidate Communication Center"
-        description="Deliver multi-channel messages across Email, WhatsApp, and SMS throughout every milestone of the candidate lifecycle."
-      />
 
       {/* Main Composer & Live Preview Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

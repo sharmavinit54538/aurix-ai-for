@@ -414,28 +414,6 @@ const CTO_NAV_SECTIONS: SidebarNavSection[] = [
   },
 ];
 
-// ── Demo Mode Banner ──────────────────────────────────────────
-function DemoBanner({ role, onDismiss }: { role: Role; onDismiss: () => void }) {
-  const roleLabel = role === "manager" ? "Manager" : "Employee";
-  return (
-    <div className="flex items-center justify-between gap-3 border-b border-amber-400/30 bg-amber-500/10 px-4 py-2">
-      <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400">
-        <Info className="h-3.5 w-3.5 shrink-0" />
-        <span>
-          <span className="font-semibold">Demo Mode</span> — Viewing Sample Enterprise Data as{" "}
-          <span className="font-semibold">{roleLabel}</span>. All data is illustrative only.
-        </span>
-      </div>
-      <button
-        onClick={onDismiss}
-        aria-label="Dismiss demo banner"
-        className="shrink-0 rounded-md p-1 text-amber-600 hover:bg-amber-500/20 dark:text-amber-400 cursor-pointer"
-      >
-        <X className="h-3.5 w-3.5" />
-      </button>
-    </div>
-  );
-}
 
 export function DashboardShell() {
   const ws = useAurix();
@@ -450,9 +428,7 @@ export function DashboardShell() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [demoDismissed, setDemoDismissed] = useState(false);
 
-  const isDemo = false;
 
   useEffect(() => {
     if (authReady && ws.user) {
@@ -613,19 +589,12 @@ export function DashboardShell() {
 
   return (
     <div className="flex min-h-screen w-full flex-col overflow-x-hidden bg-background text-foreground">
-      {/* Demo Mode Banner */}
-      {isDemo && (
-        <DemoBanner
-          role={role as Role}
-          onDismiss={() => setDemoDismissed(true)}
-        />
-      )}
 
       <div className="relative flex min-w-0 flex-1">
         {/* Sidebar — fixed to viewport; main content scrolls independently */}
         <aside
           className={`fixed left-0 z-40 flex flex-col border-r border-border bg-card/60 backdrop-blur-xl transition-[width,transform] duration-200 ${
-            isDemo ? "top-9 bottom-0" : "inset-y-0"
+            "inset-y-0"
           } ${collapsed ? "w-[60px]" : "w-[200px]"} ${
             mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
           }`}

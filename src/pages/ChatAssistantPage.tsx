@@ -269,7 +269,7 @@ export default function ChatAssistantPage() {
         eyebrow="Central People AI Agent"
         title="Command your entire workforce with natural language"
         description="Search candidates, shortlist applicants, draft offer letters, trigger onboardings, and inspect payroll through an intelligent central conversational interface."
-        lastAnalysis="Live Demo Active"
+        lastAnalysis="Ready"
       />
 
       {/* Chat Window */}

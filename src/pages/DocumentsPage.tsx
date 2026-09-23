@@ -1866,7 +1866,7 @@ Acknowledged and Signed electronically.`;
                         onClick={() => { autoFillTemplateFields(genTemplateId); handleGenerateAI(); }}
                         className="mt-4 h-8 bg-gradient-brand text-brand-foreground text-xs gap-1.5 cursor-pointer"
                       >
-                        <Wand2 className="h-3 w-3" /> Quick Demo Generate
+                        <Wand2 className="h-3 w-3" /> Quick Generate
                       </Button>
                     </div>
                   )}

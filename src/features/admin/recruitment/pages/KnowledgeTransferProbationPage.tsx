@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   GraduationCap, Award, BookOpen, Check
 } from "lucide-react";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -100,19 +99,15 @@ export function KnowledgeTransferProbationPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Knowledge Transfer (KT) & Probation Management Hub"
-        description="Oversee structured employee ramp-up curricula, track mentor-led knowledge transfer plans, and conduct 30-60-90 day milestone performance reviews."
-        actions={
-          <Button
-            onClick={() => setShowConfirmModal(true)}
-            className="bg-gradient-brand text-brand-foreground shadow-glow gap-1.5"
-          >
-            <Award className="h-4 w-4" />
-            Submit Probation Recommendation
-          </Button>
-        }
-      />
+      <div className="flex justify-end">
+        <Button
+          onClick={() => setShowConfirmModal(true)}
+          className="bg-gradient-brand text-brand-foreground shadow-glow gap-1.5"
+        >
+          <Award className="h-4 w-4" />
+          Submit Probation Recommendation
+        </Button>
+      </div>
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

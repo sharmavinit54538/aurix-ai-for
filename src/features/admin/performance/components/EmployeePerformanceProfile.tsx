@@ -463,7 +463,7 @@ export function EmployeePerformanceProfile({
                     ))
                   ) : (
                     <div className="text-xs text-muted-foreground italic text-center py-8 border border-dashed border-border rounded-xl">
-                      No target goals configured for Jordan Lee.
+                      No target goals configured for this employee.
                     </div>
                   )}
                 </div>
@@ -664,7 +664,7 @@ export function EmployeePerformanceProfile({
                     ))
                   ) : (
                     <div className="text-xs text-muted-foreground italic text-center py-8 border border-dashed border-border rounded-xl">
-                      No corporate recognitions awarded to Jordan Lee yet.
+                      No corporate recognitions awarded yet.
                     </div>
                   )}
                 </div>

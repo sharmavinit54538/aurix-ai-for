@@ -246,7 +246,7 @@ export function ImportDialog({
         employeeIdCode: d.employeeIdCode || "EMP-IMP",
         department,
         designation,
-        managerName: d.managerName || "Rohan Mehta",
+        managerName: d.managerName || "",
         overallRating: d.overallRating || 3,
         kpiScore: d.kpiScore || 80,
         productivity: d.overallRating || 3,
@@ -283,7 +283,7 @@ export function ImportDialog({
 
   const downloadTemplate = () => {
     const headers = "Employee ID,Employee Name,Department,Designation,Manager,Overall Rating,KPI Score,Goal Completion,Status,Review Date";
-    const sample = "\nAUR-1042,Jordan Lee,Engineering,Senior Frontend Engineer,Rohan Mehta,5,95,90,completed,2026-06-25";
+    const sample = "\nEMP-0001,Jane Doe,Engineering,Software Engineer,Manager Name,4,85,80,completed,2026-01-15";
     const blob = new Blob([headers, sample], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");

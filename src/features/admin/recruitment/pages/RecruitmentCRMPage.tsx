@@ -6,7 +6,6 @@ import {
   Clock, Inbox, Link2, Mail, MessageSquare, Phone,
   Plus, Search, StickyNote, Users, X,
 } from "lucide-react";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import { CandidateAvatar, StageBadge } from "@/features/admin/recruitment/components/Bits";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -309,10 +308,6 @@ export function RecruitmentCRMPage() {
 
   return (
     <>
-      <PageHeader
-        title="Candidate CRM"
-        description="Track every touchpoint, log outreach activities, and manage follow-ups."
-      />
 
       {candidates.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card/40 py-20 text-center">

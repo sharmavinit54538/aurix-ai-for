@@ -3,7 +3,6 @@ import {
   Video, Mic, Camera, Play, CheckCircle2, AlertTriangle,
   Sparkles, ShieldCheck, Clock, Award, ChevronRight, ShieldAlert
 } from "lucide-react";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -181,10 +180,6 @@ export function AIInterviewSimulatorPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="AI Interview Session & Integrity Intelligence"
-        description="Conduct AI-evaluated video interviews with real-time fraud monitoring and automated scorecards."
-      />
 
       {/* VIEW 1: INTERVIEW SETUP */}
       {sessionState === "setup" && (

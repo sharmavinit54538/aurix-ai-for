@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   Clock, Mail, Check, Users
 } from "lucide-react";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -46,10 +45,6 @@ export function PreboardingPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Candidate Preboarding & Day-One Readiness Hub"
-        description="Nurture future joiners between offer acceptance and Day 1. Coordinate document collection, equipment deliveries, and welcome communication."
-      />
 
       {/* Main Preboarding Layout */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

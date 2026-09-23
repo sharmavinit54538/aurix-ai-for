@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   FileText, Send, Download, TrendingUp, ShieldCheck, Edit3
 } from "lucide-react";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -105,29 +104,23 @@ export function CompensationOfferBuilderPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Compensation Proposal & Offer Letter Management"
-        description="Structure fixed and variable components, benchmark against candidate expectations, run multi-tier approval workflows, and generate binding offer letters."
-        actions={
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setShowRevisionModal(true)}
-              className="gap-1.5"
-              disabled={!candidate}
-            >
-              <Edit3 className="h-4 w-4" /> Revise Offer Terms
-            </Button>
-            <Button
-              onClick={handleCreateOrUpdateOffer}
-              className="bg-gradient-brand text-brand-foreground shadow-glow gap-1.5"
-              disabled={!candidate}
-            >
-              <Send className="h-4 w-4" /> Submit for Approval
-            </Button>
-          </div>
-        }
-      />
+      <div className="flex justify-end items-center gap-2">
+        <Button
+          variant="outline"
+          onClick={() => setShowRevisionModal(true)}
+          className="gap-1.5"
+          disabled={!candidate}
+        >
+          <Edit3 className="h-4 w-4" /> Revise Offer Terms
+        </Button>
+        <Button
+          onClick={handleCreateOrUpdateOffer}
+          className="bg-gradient-brand text-brand-foreground shadow-glow gap-1.5"
+          disabled={!candidate}
+        >
+          <Send className="h-4 w-4" /> Submit for Approval
+        </Button>
+      </div>
 
       {/* Target Candidate & Benchmark Comparison Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

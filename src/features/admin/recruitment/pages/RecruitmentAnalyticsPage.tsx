@@ -15,7 +15,6 @@ import {
   RefreshCw,
   Users,
 } from "lucide-react";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Loader } from "@/components/aurix/Loader";
 import { Button } from "@/components/ui/button";
 import { useRecruitment } from "@/features/admin/recruitment/hooks/useRecruitment";
@@ -403,10 +402,6 @@ export function RecruitmentAnalyticsPage() {
   if (loading && candidates.length === 0 && jobs.length === 0) {
     return (
       <div className="space-y-6">
-        <PageHeader
-          title="Recruitment & Workforce Analytics"
-          description="Monitor pipeline conversion health, candidate sourcing ROI, offer acceptance velocity, and hiring forecasts."
-        />
         <Loader variant="panel" label="Loading recruitment analytics from API..." skeletonRows={6} />
       </div>
     );
@@ -415,10 +410,6 @@ export function RecruitmentAnalyticsPage() {
   if (error && candidates.length === 0 && jobs.length === 0) {
     return (
       <div className="space-y-6">
-        <PageHeader
-          title="Recruitment & Workforce Analytics"
-          description="Monitor pipeline conversion health, candidate sourcing ROI, offer acceptance velocity, and hiring forecasts."
-        />
         <div className="rounded-2xl border border-border bg-card/60 p-8 text-center">
           <p className="text-sm text-destructive">{error}</p>
           <Button variant="outline" size="sm" className="mt-4" onClick={() => refreshAll()}>
@@ -432,28 +423,22 @@ export function RecruitmentAnalyticsPage() {
 
   return (
     <>
-      <PageHeader
-        title="Recruitment & Workforce Analytics"
-        description="Monitor pipeline conversion health, candidate sourcing ROI, offer acceptance velocity, and hiring forecasts."
-        actions={
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => handleExport("CSV")}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card/60 text-xs font-medium text-foreground hover:bg-accent cursor-pointer shadow-sm transition-colors"
-            >
-              <Download className="h-3 w-3" />
-              Export CSV
-            </button>
-            <button
-              onClick={() => handleExport("Excel")}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card/60 text-xs font-medium text-foreground hover:bg-accent cursor-pointer shadow-sm transition-colors"
-            >
-              <Download className="h-3 w-3" />
-              Export Excel
-            </button>
-          </div>
-        }
-      />
+      <div className="mb-4 flex items-center justify-end gap-2">
+        <button
+          onClick={() => handleExport("CSV")}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card/60 text-xs font-medium text-foreground hover:bg-accent cursor-pointer shadow-sm transition-colors"
+        >
+          <Download className="h-3 w-3" />
+          Export CSV
+        </button>
+        <button
+          onClick={() => handleExport("Excel")}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card/60 text-xs font-medium text-foreground hover:bg-accent cursor-pointer shadow-sm transition-colors"
+        >
+          <Download className="h-3 w-3" />
+          Export Excel
+        </button>
+      </div>
 
       {/* KPI Cards Row */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-4">

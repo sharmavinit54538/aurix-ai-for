@@ -4,7 +4,6 @@ import {
   Briefcase, CalendarClock, Clock, CheckCircle2,
   Filter, ArrowUpRight, Check, X, AlertCircle
 } from "lucide-react";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -67,13 +66,9 @@ export function HiringManagerRecruitmentPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <PageHeader
-          title="Hiring Manager Recruitment Dashboard"
-          description="Review assigned open requisitions, candidate pipeline funnels, scheduled interviews, and pending candidate approvals."
-        />
-        {jobs.length > 0 && (
-          <div className="flex items-center gap-2 self-start sm:self-auto">
+      {jobs.length > 0 && (
+        <div className="flex justify-end">
+          <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
             <select
               value={selectedJobId}
@@ -86,8 +81,8 @@ export function HiringManagerRecruitmentPage() {
               ))}
             </select>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

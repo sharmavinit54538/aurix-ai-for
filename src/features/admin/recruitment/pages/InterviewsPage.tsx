@@ -2,7 +2,6 @@ import { Link } from "@tanstack/react-router";
 
 import { useMemo, useState } from "react";
 import { Calendar, CheckCircle2, Clock, Star, Video, User } from "lucide-react";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useRecruitment, newId } from "@/features/admin/recruitment/hooks/useRecruitment";
@@ -182,11 +181,9 @@ export function InterviewsPage() {
 
   return (
     <>
-      <PageHeader
-        title="Interviews"
-        description="Schedule, review, and track every interview round."
-        actions={<Button onClick={() => setShowScheduleModal(true)}><Calendar className="mr-2 h-4 w-4" />Schedule</Button>}
-      />
+      <div className="mb-4 flex justify-end">
+        <Button onClick={() => setShowScheduleModal(true)}><Calendar className="mr-2 h-4 w-4" />Schedule</Button>
+      </div>
 
       <div className="mb-4 inline-flex rounded-md border border-border bg-card/60 p-1">
         {([

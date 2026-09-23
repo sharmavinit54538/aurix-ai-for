@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Briefcase, Filter, LayoutGrid, List, Plus, Search } from "lucide-react";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -33,13 +32,9 @@ export function JobsPage() {
 
   return (
     <>
-      <PageHeader
-        title="All Jobs"
-        description={`${filtered.length} of ${jobs.length} roles`}
-        actions={
-          <Button asChild><Link to="/dashboard/recruitment/jobs/new"><Plus className="mr-2 h-4 w-4" />New job</Link></Button>
-        }
-      />
+      <div className="mb-4 flex justify-end">
+        <Button asChild><Link to="/dashboard/recruitment/jobs/new"><Plus className="mr-2 h-4 w-4" />New job</Link></Button>
+      </div>
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <div className="relative min-w-[220px] flex-1">

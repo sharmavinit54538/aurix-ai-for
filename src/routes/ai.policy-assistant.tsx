@@ -3,11 +3,6 @@ import { useState, useEffect, useRef } from "react";
 import {
   BookOpen,
   Send,
-  Sparkles,
-  FileText,
-  Briefcase,
-  CalendarDays,
-  Banknote,
   Loader2,
   AlertCircle,
   RefreshCw,
@@ -34,12 +29,7 @@ export const Route = createFileRoute("/ai/policy-assistant")({
   component: Page,
 });
 
-const SUGGESTIONS = [
-  { icon: CalendarDays, q: "How many casual leaves are allowed per year?" },
-  { icon: Briefcase, q: "What's the notice period for senior roles?" },
-  { icon: Banknote, q: "When is payroll processed each month?" },
-  { icon: FileText, q: "What documents are needed for reimbursement?" },
-];
+
 
 function Page() {
   const dispatch = useAppDispatch();
@@ -105,8 +95,7 @@ function Page() {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="flex h-[520px] flex-col rounded-2xl border border-border bg-card/60 backdrop-blur-xl lg:col-span-2">
+      <div className="flex h-[520px] flex-col rounded-2xl border border-border bg-card/60 backdrop-blur-xl">
           <div className="flex-1 space-y-3 overflow-y-auto p-5">
             {msgs.map((m, i) => (
               <div
@@ -165,30 +154,6 @@ function Page() {
             </Button>
           </form>
         </div>
-
-        <div className="rounded-2xl border border-border bg-card/60 p-5 backdrop-blur-xl">
-          <div className="mb-3 flex items-center gap-2 text-sm font-semibold">
-            <Sparkles className="h-4 w-4" /> Try asking
-          </div>
-          <div className="space-y-2">
-            {SUGGESTIONS.map((s) => {
-              const Icon = s.icon;
-              return (
-                <button
-                  key={s.q}
-                  type="button"
-                  disabled={asking}
-                  onClick={() => ask(s.q)}
-                  className="flex w-full items-start gap-3 rounded-xl border border-border bg-background/40 p-3 text-left text-sm transition-colors hover:border-foreground/20 hover:bg-accent/60 disabled:opacity-50"
-                >
-                  <Icon className="mt-0.5 h-4 w-4 text-muted-foreground" />
-                  <span>{s.q}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

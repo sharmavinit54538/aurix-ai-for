@@ -1,5 +1,4 @@
 import { CheckCircle2, FileText, UserCheck, UserPlus } from "lucide-react";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { OnboardingDetailsPanel } from "@/features/admin/recruitment/components/onboarding/OnboardingDetailsPanel";
 import { OnboardingEmployeeList } from "@/features/admin/recruitment/components/onboarding/OnboardingEmployeeList";
@@ -30,10 +29,6 @@ export function OnboardingPage() {
 
   return (
     <>
-      <PageHeader
-        title="Employee Onboarding"
-        description="Review onboarding progress, verify documents, and track completion across your workforce."
-      />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         {[

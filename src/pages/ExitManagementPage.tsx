@@ -227,7 +227,7 @@ export function ExitManagementPage() {
       department: "Platform Operations",
       designation: "Associate Member",
       joiningDate: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      managerName: "Maya Chen",
+      managerName: "",
     };
 
     // Auto calculate LWD (resignedAt + noticeDays)
@@ -263,7 +263,7 @@ export function ExitManagementPage() {
       department: selectedEmp.department,
       designation: selectedEmp.designation,
       joiningDate: selectedEmp.joiningDate,
-      managerName: selectedEmp.managerName || "Maya Chen",
+      managerName: selectedEmp.managerName || "",
       remainingDays: noticeDays,
       managerApprovalStatus: "pending",
       hrApprovalStatus: "pending",
@@ -1147,13 +1147,13 @@ Finance Operations Partner`;
                                 </div>
                               </TableCell>
                               <TableCell className="px-4 py-3 font-mono text-xs text-foreground/80">
-                                {exit.employeeId || "AUR-1048"}
+                                {exit.employeeId || "—"}
                               </TableCell>
                               <TableCell className="px-4 py-3 text-xs text-muted-foreground">
                                 {exit.department || "Operations"}
                               </TableCell>
                               <TableCell className="px-4 py-3 text-xs text-foreground/80">
-                                {exit.managerName || "Maya Chen"}
+                                {exit.managerName || "—"}
                               </TableCell>
                               <TableCell className="px-4 py-3 text-xs text-muted-foreground">
                                 {exit.resignedAt}
@@ -1665,7 +1665,7 @@ Finance Operations Partner`;
                             Reporting Manager
                           </span>
                           <strong className="text-foreground mt-0.5 block">
-                            {detailCase.managerName || "Maya Chen"}
+                            {detailCase.managerName || "—"}
                           </strong>
                         </div>
                         <div className="col-span-2">
@@ -1728,7 +1728,7 @@ Finance Operations Partner`;
                             Reporting Manager
                           </span>
                           <strong className="text-foreground block">
-                            {detailCase.managerName || "Maya Chen"}
+                            {detailCase.managerName || "—"}
                           </strong>
                           <div className="pt-2 flex items-center justify-between">
                             {detailCase.managerApprovalStatus === "approved" ? (

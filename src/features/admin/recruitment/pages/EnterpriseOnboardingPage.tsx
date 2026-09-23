@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   Users, Laptop, ShieldCheck, Check
 } from "lucide-react";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -68,10 +67,6 @@ export function EnterpriseOnboardingPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Cross-Department Employee Onboarding Hub"
-        description="Track Day-One readiness scores, coordinate HR, IT, Admin, Finance, and Manager task handoffs, and ensure seamless hardware and access provisioning."
-      />
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

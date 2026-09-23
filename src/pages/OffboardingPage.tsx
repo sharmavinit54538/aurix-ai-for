@@ -25,7 +25,7 @@ export function OffboardingPage() {
 
   return (
     <>
-      <PageHeader title="Offboarding Automation" description="Auto-generated exit workflows, clearances, and document bundles." />
+
 
       <div className="mb-6 grid gap-3 sm:grid-cols-3">
         <StatCard label="Active offboardings" value={total - done} icon={LogOut} accent="warning" />

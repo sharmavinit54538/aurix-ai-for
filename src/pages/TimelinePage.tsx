@@ -581,44 +581,8 @@ export function TimelinePage() {
           </div>
         </div>
 
-        {/* Single-Row Horizontal Scroll Pills (No Multi-Line Wrapping) */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-1 scrollbar-none text-xs">
-          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider shrink-0 mr-1">
-            Category:
-          </span>
-          <button
-            onClick={() => setSelectedCategory("all")}
-            className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-medium transition-all ${
-              selectedCategory === "all"
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground border border-border/40"
-            }`}
-          >
-            All Events ({events.length})
-          </button>
-          {ALL_KINDS.map((k) => {
-            const meta = KIND_META[k];
-            const Icon = meta.icon;
-            const isSelected = selectedCategory === k;
-            const count = events.filter((e) => e.kind === k).length;
 
-            return (
-              <button
-                key={k}
-                onClick={() => setSelectedCategory(isSelected ? "all" : k)}
-                className={`shrink-0 inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-all ${
-                  isSelected
-                    ? `${meta.bg} shadow-sm border-current font-semibold`
-                    : "border-border/50 bg-background/40 text-muted-foreground hover:border-foreground/20 hover:text-foreground"
-                }`}
-              >
-                <Icon className="h-3 w-3" />
-                <span>{meta.label}</span>
-                {count > 0 && <span className="opacity-70 text-[10px]">({count})</span>}
-              </button>
-            );
-          })}
-        </div>
+
       </div>
 
       {/* Timeline Stream */}

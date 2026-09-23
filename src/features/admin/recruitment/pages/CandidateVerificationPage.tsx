@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   ShieldCheck, CheckCircle2, AlertTriangle, Check, Users
 } from "lucide-react";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -101,10 +100,6 @@ export function CandidateVerificationPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Candidate Background Verification (BGV) Hub"
-        description="Verify candidate credentials, identity documents, past employment records, court registries, and manage exceptions with full audit tracking."
-      />
 
       {/* Main Candidate Selection & Verification Details */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

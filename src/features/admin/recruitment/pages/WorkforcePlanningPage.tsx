@@ -270,18 +270,12 @@ export function WorkforcePlanningPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Workforce Planning & Headcount Requirements"
-        description="Forecast talent capacity, track department hiring demands, manage budget allocations, and convert approved requisitions into active jobs."
-        actions={
-          <div className="flex items-center gap-2">
-            <Button onClick={() => setShowCreateModal(true)} className="gap-1.5 shadow-sm">
-              <Plus className="h-4 w-4" />
-              New Workforce Requirement
-            </Button>
-          </div>
-        }
-      />
+      <div className="flex justify-end">
+        <Button onClick={() => setShowCreateModal(true)} className="gap-1.5 shadow-sm">
+          <Plus className="h-4 w-4" />
+          New Workforce Requirement
+        </Button>
+      </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

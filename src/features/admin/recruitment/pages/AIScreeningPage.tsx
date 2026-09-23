@@ -3,7 +3,6 @@ import {
   Sparkles, Sliders, CheckCircle2,
   GitCompare, Check, X, Eye
 } from "lucide-react";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -147,30 +146,23 @@ export function AIScreeningPage() {
     if (targetId) {
       moveStage(targetId, nextStage);
     }
-    toast.success(`Candidate ${cand.name} marked as ${decision.toUpperCase()}!`);
   };
 
   const compareList = scoredCandidates.filter((c) => compareIds.includes(c.id));
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="AI Resume Screening & Match Intelligence"
-        description="Fine-tune criteria weights, inspect AI semantic fit breakdown, compare candidate scorecards side-by-side, and triage shortlists."
-        actions={
-          <div className="flex items-center gap-2">
-            {compareIds.length >= 2 && (
-              <Button
-                onClick={() => setShowCompareModal(true)}
-                className="gap-1.5 bg-gradient-brand text-brand-foreground shadow-glow"
-              >
-                <GitCompare className="h-4 w-4" />
-                Compare ({compareIds.length}) Candidates
-              </Button>
-            )}
-          </div>
-        }
-      />
+      {compareIds.length >= 2 && (
+        <div className="flex justify-end">
+          <Button
+            onClick={() => setShowCompareModal(true)}
+            className="gap-1.5 bg-gradient-brand text-brand-foreground shadow-glow"
+          >
+            <GitCompare className="h-4 w-4" />
+            Compare ({compareIds.length}) Candidates
+          </Button>
+        </div>
+      )}
 
       {/* Target Job Selector & Screening Weights Configuration */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">

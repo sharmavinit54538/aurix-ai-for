@@ -42,10 +42,7 @@ export function HrOpsPage() {
 
   return (
     <>
-      <PageHeader
-        title="HR Ops Command Center"
-        description="Real-time operational command center across the people lifecycle, onboarding, and SLA metrics."
-      />
+
 
       <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Timeline events" value={s.timeline.length} icon={Activity} />
