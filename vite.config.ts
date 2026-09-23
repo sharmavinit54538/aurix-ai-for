@@ -80,6 +80,18 @@ export default defineConfig(({ mode, isSsrBuild }) => {
       }),
       nitro({
         preset: process.env.NITRO_PRESET || (process.env.VERCEL ? "vercel" : undefined),
+        routeRules: {
+          "/assets/**": {
+            headers: {
+              "cache-control": "public, max-age=31536000, immutable",
+            },
+          },
+          "/**": {
+            headers: {
+              "cache-control": "no-cache, no-store, must-revalidate",
+            },
+          },
+        },
       }),
       viteReact(),
     ],
