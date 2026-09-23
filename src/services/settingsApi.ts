@@ -1,4 +1,5 @@
 import apiInstance from "@/api/apiInstance";
+import { aurix } from "@/lib/aurix-store";
 import type {
   AuditLog,
   AuditLogExportParams,
@@ -305,7 +306,37 @@ export const settingsApi = {
     if (payload.bio !== undefined) cleanPayload.bio = payload.bio;
 
     const res = await apiInstance.put("/settings/profile", cleanPayload);
-    return extractData<ProfileSettings>(res);
+    const data = extractData<ProfileSettings>(res);
+
+    const ws = aurix.get();
+    const newName = (cleanPayload.fullName as string | undefined) || data?.fullName;
+    const newEmail = (cleanPayload.email as string | undefined) || data?.email;
+    const newPhone = (cleanPayload.phone as string | undefined) || data?.phone;
+
+    if (newName || newEmail || newPhone) {
+      aurix.set({
+        user: ws.user
+          ? {
+              ...ws.user,
+              fullName: newName || ws.user.fullName,
+              email: newEmail || ws.user.email,
+              phone: newPhone || ws.user.phone,
+            }
+          : {
+              id: "usr_current",
+              fullName: newName || "User",
+              email: newEmail || "",
+              phone: newPhone || "",
+              role: "admin",
+              companyId: "workspace",
+              emailVerified: true,
+              onboardingComplete: true,
+              createdAt: new Date().toISOString(),
+            },
+      });
+    }
+
+    return data;
   },
 };
 

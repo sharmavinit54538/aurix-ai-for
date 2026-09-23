@@ -1,6 +1,7 @@
 import { api, apiInstance } from "@/api";
 import { aurix } from "@/lib/aurix-store";
 import { profileApi } from "@/services/profileApi";
+import type { UpdateCurrentUserPayload } from "@/store/profile/profileTypes";
 import { settingsApi } from "@/services/settingsApi";
 import { attendanceApi } from "@/services/attendanceApi";
 import type {

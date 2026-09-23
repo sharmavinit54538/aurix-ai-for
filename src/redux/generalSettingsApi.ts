@@ -1,4 +1,5 @@
 import { settingsApi } from "./settingsApi";
+import { aurix } from "@/lib/aurix-store";
 import type {
   ApiResponse,
   AuditLogParams,
@@ -232,9 +233,37 @@ export const generalSettingsApi = settingsApi.injectEndpoints({
         };
       },
       invalidatesTags: ["Profile", "ProfileSettings"],
-      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         try {
           const { data: response } = await queryFulfilled;
+          const updatedName = arg.fullName || response?.data?.fullName;
+          const updatedEmail = arg.email || response?.data?.email;
+          const updatedPhone = arg.phone || response?.data?.phone;
+
+          if (updatedName || updatedEmail || updatedPhone) {
+            const ws = aurix.get();
+            aurix.set({
+              user: ws.user
+                ? {
+                    ...ws.user,
+                    fullName: updatedName || ws.user.fullName,
+                    email: updatedEmail || ws.user.email,
+                    phone: updatedPhone || ws.user.phone,
+                  }
+                : {
+                    id: "usr_current",
+                    fullName: updatedName || "User",
+                    email: updatedEmail || "",
+                    phone: updatedPhone || "",
+                    role: "admin",
+                    companyId: "workspace",
+                    emailVerified: true,
+                    onboardingComplete: true,
+                    createdAt: new Date().toISOString(),
+                  },
+            });
+          }
+
           if (response?.data) {
             dispatch(
               settingsApi.util.updateQueryData("getProfile" as never, undefined as never, (draft: any) => {
@@ -274,9 +303,37 @@ export const generalSettingsApi = settingsApi.injectEndpoints({
         };
       },
       invalidatesTags: ["Profile", "ProfileSettings"],
-      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         try {
           const { data: response } = await queryFulfilled;
+          const updatedName = arg.fullName || response?.data?.fullName;
+          const updatedEmail = arg.email || response?.data?.email;
+          const updatedPhone = arg.phone || response?.data?.phone;
+
+          if (updatedName || updatedEmail || updatedPhone) {
+            const ws = aurix.get();
+            aurix.set({
+              user: ws.user
+                ? {
+                    ...ws.user,
+                    fullName: updatedName || ws.user.fullName,
+                    email: updatedEmail || ws.user.email,
+                    phone: updatedPhone || ws.user.phone,
+                  }
+                : {
+                    id: "usr_current",
+                    fullName: updatedName || "User",
+                    email: updatedEmail || "",
+                    phone: updatedPhone || "",
+                    role: "admin",
+                    companyId: "workspace",
+                    emailVerified: true,
+                    onboardingComplete: true,
+                    createdAt: new Date().toISOString(),
+                  },
+            });
+          }
+
           if (response?.data) {
             dispatch(
               settingsApi.util.updateQueryData("getProfile" as never, undefined as never, (draft: any) => {
