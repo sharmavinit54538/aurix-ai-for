@@ -693,15 +693,15 @@ export function ExitManagementPage() {
     let text = `OFC360
 To whom it may concern,
 
-This is to certify that ${exit.employee} (Employee ID: ${exit.employeeId || "AUR-1048"})
-was employed with OFC360 from ${exit.joiningDate || "2024-01-01"} to ${exit.lastWorkingDay}.
-During their tenure, they held the designation of ${exit.designation || exit.role} under Platform Engineering department.
+This is to certify that ${exit.employee} (Employee ID: ${exit.employeeId || "—"})
+was employed with OFC360 from ${exit.joiningDate || "—"} to ${exit.lastWorkingDay || "—"}.
+During their tenure, they held the designation of ${exit.designation || exit.role || "Employee"} under ${exit.department || "General"} department.
 
 We verify that all clearances have been successfully compiled.
 
 Sincerely,
-Priya Nair
-Head of People Operations`;
+People Operations
+Corporate HR`;
 
     if (docName.includes("Settlement")) {
       text = `OFC360 — FINAL SETTLEMENT SHEET
@@ -1762,7 +1762,7 @@ Finance Operations Partner`;
                           <span className="text-muted-foreground block text-[10px]">
                             HR Business Partner
                           </span>
-                          <strong className="text-foreground block">Priya Nair</strong>
+                          <strong className="text-foreground block">{(detailCase as any).hrApproverName || "HR Business Partner"}</strong>
                           <div className="pt-2 flex items-center justify-between">
                             {detailCase.hrApprovalStatus === "approved" ? (
                               <Badge className="bg-emerald-500/10 text-emerald-500 border-none text-[10px]">

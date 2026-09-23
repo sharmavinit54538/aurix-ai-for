@@ -6,19 +6,22 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
 export function CtoDevOpsPage() {
-  const pipelines = [
-    { name: "ofc360-backend-production-deploy", env: "Production", status: "Success", duration: "3m 42s", lastRun: "12 mins ago" },
-    { name: "ofc360-frontend-vercel-deploy", env: "Production", status: "Success", duration: "1m 18s", lastRun: "24 mins ago" },
-    { name: "ofc360-ai-inference-gpu-deploy", env: "Staging", status: "Running", duration: "2m 04s", lastRun: "Just now" },
-    { name: "ofc360-postgres-migration-check", env: "Development", status: "Success", duration: "45s", lastRun: "1 hour ago" },
-  ];
+  const pipelines: Array<{
+    name: string;
+    env: string;
+    status: string;
+    duration: string;
+    lastRun: string;
+  }> = [];
 
-  const servers = [
-    { name: "aws-us-east-prod-api-01", type: "c6i.2xlarge", ip: "54.210.14.88", cpu: "34%", ram: "6.2/16 GB", status: "Healthy" },
-    { name: "aws-us-east-prod-api-02", type: "c6i.2xlarge", ip: "54.210.15.12", cpu: "28%", ram: "5.8/16 GB", status: "Healthy" },
-    { name: "aws-us-east-gpu-cluster-01", type: "g5.4xlarge (NVIDIA A10G)", ip: "34.204.88.19", cpu: "74%", ram: "42/64 GB", status: "Healthy" },
-    { name: "aws-us-east-db-primary", type: "r6g.2xlarge", ip: "10.0.4.12", cpu: "42%", ram: "28/32 GB", status: "Healthy" },
-  ];
+  const servers: Array<{
+    name: string;
+    type: string;
+    ip: string;
+    cpu: string;
+    ram: string;
+    status: string;
+  }> = [];
 
   return (
     <div className="space-y-6 pb-12 text-left">
@@ -42,7 +45,7 @@ export function CtoDevOpsPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button size="sm" onClick={() => toast.success("Triggered Production Deploy Pipeline")} className="bg-purple-600 hover:bg-purple-500 text-white text-xs cursor-pointer">
+            <Button size="sm" onClick={() => toast.info("CI/CD pipeline webhook integration pending.")} className="bg-purple-600 hover:bg-purple-500 text-white text-xs cursor-pointer">
               <PlayCircle className="mr-1.5 h-3.5 w-3.5" />
               Trigger Deploy
             </Button>
@@ -52,10 +55,10 @@ export function CtoDevOpsPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "Build Success Rate", val: "99.4%", sub: "142 builds today", color: "text-emerald-400" },
-          { label: "Avg Deploy Duration", val: "2m 14s", sub: "-18s faster", color: "text-cyan-400" },
-          { label: "Active Containers", val: "184 Pods", sub: "Kubernetes healthy", color: "text-purple-400" },
-          { label: "Zero-Downtime Rollback", val: "Ready", sub: "Instant 1-click rollback", color: "text-emerald-400" },
+          { label: "Build Success Rate", val: "—", sub: "No pipeline runs recorded", color: "text-emerald-400" },
+          { label: "Avg Deploy Duration", val: "—", sub: "Pipeline telemetry pending", color: "text-cyan-400" },
+          { label: "Active Containers", val: "—", sub: "Kubernetes cluster offline", color: "text-purple-400" },
+          { label: "Zero-Downtime Rollback", val: "—", sub: "Rollback target unconfigured", color: "text-emerald-400" },
         ].map((kpi, idx) => (
           <div key={idx} className="rounded-xl border border-border/80 bg-card/60 p-4 backdrop-blur-xl space-y-1">
             <div className="text-xs text-muted-foreground font-semibold uppercase">{kpi.label}</div>
@@ -77,22 +80,40 @@ export function CtoDevOpsPage() {
         <TabsContent value="pipelines">
           <div className="rounded-2xl border border-border/80 bg-card/60 p-5 space-y-4">
             <h3 className="font-bold text-sm text-foreground">Active CI/CD Pipelines</h3>
-            <div className="divide-y divide-border/40">
-              {pipelines.map((p, idx) => (
-                <div key={idx} className="py-3 flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <div className="text-xs font-bold text-foreground flex items-center gap-2">
-                      <span>{p.name}</span>
-                      <Badge variant="outline" className="text-[9px] border-purple-500/30 text-purple-400">{p.env}</Badge>
+            {pipelines.length === 0 ? (
+              <div className="p-8 text-center text-xs text-muted-foreground">
+                No active CI/CD pipelines connected. Configure GitHub Actions, GitLab CI, or Jenkins.
+              </div>
+            ) : (
+              <div className="divide-y divide-border/40">
+                {pipelines.map((p, idx) => (
+                  <div key={idx} className="py-3 flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <div className="text-xs font-bold text-foreground flex items-center gap-2">
+                        <span>{p.name}</span>
+                        <Badge variant="outline" className="text-[9px] border-purple-500/30 text-purple-400">{p.env}</Badge>
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">Duration: {p.duration} • Ran: {p.lastRun}</div>
                     </div>
-                    <div className="text-[11px] text-muted-foreground">Duration: {p.duration} • Ran: {p.lastRun}</div>
+                    <Badge className={`text-[10px] ${p.status === "Running" ? "bg-amber-500/20 text-amber-400 border-amber-500/30 animate-pulse" : "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"}`}>
+                      {p.status}
+                    </Badge>
                   </div>
-                  <Badge className={`text-[10px] ${p.status === "Running" ? "bg-amber-500/20 text-amber-400 border-amber-500/30 animate-pulse" : "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"}`}>
-                    {p.status}
-                  </Badge>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="deployments">
+          <div className="rounded-xl border border-border/80 bg-card/60 p-8 text-center text-xs text-muted-foreground">
+            No deployment logs or artifact releases recorded.
+          </div>
+        </TabsContent>
+
+        <TabsContent value="k8s">
+          <div className="rounded-xl border border-border/80 bg-card/60 p-8 text-center text-xs text-muted-foreground">
+            No Kubernetes clusters or Docker daemon connections detected.
           </div>
         </TabsContent>
 
@@ -110,20 +131,34 @@ export function CtoDevOpsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40">
-                {servers.map((s, idx) => (
-                  <tr key={idx} className="hover:bg-accent/20 transition-colors">
-                    <td className="p-3 font-bold text-foreground">{s.name}</td>
-                    <td className="p-3 text-muted-foreground">{s.type}</td>
-                    <td className="p-3 font-mono text-purple-400">{s.ip}</td>
-                    <td className="p-3 font-mono text-emerald-400">{s.cpu}</td>
-                    <td className="p-3 font-mono text-indigo-400">{s.ram}</td>
-                    <td className="p-3">
-                      <Badge className="text-[10px] bg-emerald-500/20 text-emerald-400 border-emerald-500/30">{s.status}</Badge>
+                {servers.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-xs text-muted-foreground">
+                      No cloud or on-premise compute servers connected.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  servers.map((s, idx) => (
+                    <tr key={idx} className="hover:bg-accent/20 transition-colors">
+                      <td className="p-3 font-bold text-foreground">{s.name}</td>
+                      <td className="p-3 text-muted-foreground">{s.type}</td>
+                      <td className="p-3 font-mono text-purple-400">{s.ip}</td>
+                      <td className="p-3 font-mono text-emerald-400">{s.cpu}</td>
+                      <td className="p-3 font-mono text-indigo-400">{s.ram}</td>
+                      <td className="p-3">
+                        <Badge className="text-[10px] bg-emerald-500/20 text-emerald-400 border-emerald-500/30">{s.status}</Badge>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="networking">
+          <div className="rounded-xl border border-border/80 bg-card/60 p-8 text-center text-xs text-muted-foreground">
+            No active load balancers, DNS zones, or SSL certificates configured.
           </div>
         </TabsContent>
       </Tabs>

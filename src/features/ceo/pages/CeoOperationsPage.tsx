@@ -3,10 +3,7 @@ import { ClipboardCheck, Activity, CheckCircle2, Clock, ShieldCheck, Zap, Packag
 import { Badge } from "@/components/ui/badge";
 
 export function CeoOperationsPage() {
-  const approvals = [
-    { id: "APP-401", title: "AWS Cloud Infrastructure Reserved Instance Commitment ($420k)", requester: "Vinit Sharma (CTO)", amount: "$420,000", status: "Pending CEO Signoff" },
-    { id: "APP-402", title: "APAC Regional Sales Office Lease Contract", requester: "Neha Gupta (Ops)", amount: "$180,000", status: "Pending CEO Signoff" },
-  ];
+  const approvals: any[] = [];
 
   return (
     <div className="space-y-6 pb-12 text-left">
@@ -33,10 +30,10 @@ export function CeoOperationsPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "Operational Health", val: "98.4%", sub: "Zero business bottlenecks", color: "text-sky-400" },
-          { label: "Pending Signoffs", val: "2 Contracts", sub: "Requires CEO approval", color: "text-amber-400" },
-          { label: "Resource Utilization", val: "91.2%", sub: "Optimal efficiency", color: "text-emerald-400" },
-          { label: "SOC2 Compliance", val: "Verified", sub: "ISO27001 Certified", color: "text-indigo-400" },
+          { label: "Operational Health", val: "—", sub: "Pending integration", color: "text-sky-400" },
+          { label: "Pending Signoffs", val: "0", sub: "No pending signoffs", color: "text-amber-400" },
+          { label: "Resource Utilization", val: "—", sub: "Pending integration", color: "text-emerald-400" },
+          { label: "SOC2 Compliance", val: "—", sub: "Pending audit sync", color: "text-indigo-400" },
         ].map((k, i) => (
           <div key={i} className="rounded-xl border border-border/80 bg-card/60 p-4 space-y-1">
             <div className="text-xs text-muted-foreground font-semibold uppercase">{k.label}</div>
@@ -49,18 +46,24 @@ export function CeoOperationsPage() {
       <div className="rounded-2xl border border-border/80 bg-card/60 p-5 space-y-4">
         <h3 className="font-bold text-sm text-foreground">Pending Executive Approvals</h3>
         <div className="space-y-2.5">
-          {approvals.map((app) => (
-            <div key={app.id} className="rounded-lg border border-border/60 bg-card/80 p-3 flex items-center justify-between">
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-sky-400 font-bold text-xs">{app.id}</span>
-                  <h4 className="font-bold text-xs text-foreground">{app.title}</h4>
+          {approvals.length > 0 ? (
+            approvals.map((app) => (
+              <div key={app.id} className="rounded-lg border border-border/60 bg-card/80 p-3 flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-sky-400 font-bold text-xs">{app.id}</span>
+                    <h4 className="font-bold text-xs text-foreground">{app.title}</h4>
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">Requester: {app.requester} • Amount: {app.amount}</div>
                 </div>
-                <div className="text-[11px] text-muted-foreground">Requester: {app.requester} • Amount: {app.amount}</div>
+                <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs">{app.status}</Badge>
               </div>
-              <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs">{app.status}</Badge>
+            ))
+          ) : (
+            <div className="rounded-xl border border-dashed border-border/60 p-8 text-center text-xs text-muted-foreground">
+              No pending executive approvals.
             </div>
-          ))}
+          )}
         </div>
       </div>
     </div>

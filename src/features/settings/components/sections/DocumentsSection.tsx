@@ -75,7 +75,7 @@ export function DocumentsSection({ canEdit, onDirtyChange }: DocumentsSectionPro
 
   const [initialData, setInitialData] = useState<DocumentSettingsForm | null>(null);
   const [formData, setFormData] = useState<DocumentSettingsForm>({
-    documentTypes: DEFAULT_DOC_TYPES,
+    documentTypes: [],
     expiryReminderDays: [30, 15, 7],
     salarySlipWatermark: true,
     salarySlipVisibleToEmployee: true,
@@ -106,10 +106,7 @@ export function DocumentsSection({ canEdit, onDirtyChange }: DocumentsSectionPro
       const data = await fetchDocumentSettings();
       const combined = {
         ...data,
-        documentTypes:
-          data.documentTypes && data.documentTypes.length > 0
-            ? data.documentTypes
-            : DEFAULT_DOC_TYPES,
+        documentTypes: data.documentTypes || [],
       };
       setInitialData(combined);
       setFormData(combined);
@@ -182,54 +179,60 @@ export function DocumentsSection({ canEdit, onDirtyChange }: DocumentsSectionPro
         </div>
 
         <div className="space-y-3">
-          {formData.documentTypes.map((doc, idx) => (
-            <div
-              key={doc.id}
-              className="flex flex-col gap-3 rounded-xl border border-border bg-card/80 p-3.5 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div className="min-w-0 flex-1 space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-foreground">{doc.name}</span>
-                  {doc.mandatory && (
-                    <Badge
-                      variant="secondary"
-                      className="text-[9px] px-1.5 py-0 bg-primary/10 text-primary border-primary/20"
-                    >
-                      Mandatory
-                    </Badge>
-                  )}
-                  {doc.hasExpiry && (
-                    <Badge
-                      variant="outline"
-                      className="text-[9px] px-1.5 py-0 text-amber-500 border-amber-500/30"
-                    >
-                      Tracks Expiry
-                    </Badge>
-                  )}
-                </div>
-                <p className="text-[11px] text-muted-foreground">
-                  Allowed: {doc.allowedFormats.join(", ")} • Max {doc.maxSizeMb}MB
-                </p>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Label className="text-[11px] font-medium text-muted-foreground">
-                    HR Verification
-                  </Label>
-                  <Switch
-                    checked={doc.requiresHrVerification}
-                    onCheckedChange={(c) => {
-                      const updated = [...formData.documentTypes];
-                      updated[idx] = { ...updated[idx], requiresHrVerification: c };
-                      setFormData({ ...formData, documentTypes: updated });
-                    }}
-                    disabled={!canEdit}
-                  />
-                </div>
-              </div>
+          {formData.documentTypes.length === 0 ? (
+            <div className="p-6 text-center text-xs text-muted-foreground border border-dashed border-border rounded-xl">
+              No document rules or required types configured.
             </div>
-          ))}
+          ) : (
+            formData.documentTypes.map((doc, idx) => (
+              <div
+                key={doc.id}
+                className="flex flex-col gap-3 rounded-xl border border-border bg-card/80 p-3.5 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="min-w-0 flex-1 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-foreground">{doc.name}</span>
+                    {doc.mandatory && (
+                      <Badge
+                        variant="secondary"
+                        className="text-[9px] px-1.5 py-0 bg-primary/10 text-primary border-primary/20"
+                      >
+                        Mandatory
+                      </Badge>
+                    )}
+                    {doc.hasExpiry && (
+                      <Badge
+                        variant="outline"
+                        className="text-[9px] px-1.5 py-0 text-amber-500 border-amber-500/30"
+                      >
+                        Tracks Expiry
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Allowed: {doc.allowedFormats.join(", ")} • Max {doc.maxSizeMb}MB
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-[11px] font-medium text-muted-foreground">
+                      HR Verification
+                    </Label>
+                    <Switch
+                      checked={doc.requiresHrVerification}
+                      onCheckedChange={(c) => {
+                        const updated = [...formData.documentTypes];
+                        updated[idx] = { ...updated[idx], requiresHrVerification: c };
+                        setFormData({ ...formData, documentTypes: updated });
+                      }}
+                      disabled={!canEdit}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 

@@ -61,7 +61,7 @@ function Page() {
 
   const kpis: AIKpi[] = useMemo(() => {
     if (backendKpis && backendKpis.length > 0) {
-      return backendKpis.map((k) => ({
+      return backendKpis.map((k: any) => ({
         label: k.label,
         value: `${k.score}`,
         trend: k.trend,

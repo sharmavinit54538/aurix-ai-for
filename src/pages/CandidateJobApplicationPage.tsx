@@ -53,54 +53,6 @@ import {
 } from "@/components/ui/sheet";
 import { toast } from "sonner";
 
-// Rich fallback job data when running locally or if API payload is incomplete
-const DEFAULT_JOB = {
-  id: "job-fullstack-lead",
-  title: "Senior Full Stack Cloud Engineer",
-  department: "Engineering & Architecture",
-  location: "Bangalore, India (Hybrid)",
-  employmentType: "Full-time",
-  salaryMin: 2800000,
-  salaryMax: 3800000,
-  experienceRequired: "4 - 8 Years",
-  jobDescription: `As a Senior Full Stack Cloud Engineer at OFC360, you will architect, build, and scale mission-critical enterprise HRMS and AI-powered workforce intelligence platforms.
-
-You will collaborate closely with product architects, UX designers, and distributed engineering panels to deliver high-velocity, resilient user interfaces and high-throughput real-time workflow engines.`,
-  responsibilities: [
-    "Design, develop, and maintain performant full-stack features using React, TypeScript, Node.js, and distributed microservices.",
-    "Architect resilient, low-latency APIs and event-driven data pipelines for real-time analytics and workforce management.",
-    "Collaborate with AI researchers and designers to deliver intuitive interfaces for generative AI copilots and automated screening engines.",
-    "Enforce rigorous engineering standards, automated test coverage, CI/CD reliability, and cyber-security best practices.",
-    "Mentor junior and mid-level engineers through structured code reviews, architectural RFCs, and technical pairing sessions."
-  ],
-  requirements: [
-    "4+ years of hands-on software development experience with modern React, TypeScript, and state management architectures.",
-    "Strong proficiency in backend services (Node.js/Express, Python, or Go) and relational database modeling (PostgreSQL).",
-    "Solid understanding of RESTful API design, WebSockets, caching strategies (Redis), and cloud infrastructure (AWS/GCP).",
-    "Experience with containerization (Docker), CI/CD workflows, and automated testing frameworks (Jest/Vitest, Playwright).",
-    "Strong analytical problem-solving skills and a passion for crafting clean, maintainable code architectures."
-  ],
-  skills: [
-    "React",
-    "TypeScript",
-    "Node.js",
-    "PostgreSQL",
-    "Tailwind CSS",
-    "Docker & Kubernetes",
-    "REST & GraphQL APIs",
-    "Redis",
-    "System Architecture",
-    "CI/CD Pipelines"
-  ],
-  benefits: [
-    "Competitive compensation package with performance bonuses and ESOP equity grants.",
-    "Comprehensive health and wellness insurance for you and your direct dependents.",
-    "Flexible hybrid working model with premium home-office ergonomic setup allowance.",
-    "Annual learning & conference stipend to support continuous technical certifications.",
-    "Generous paid time off, sabbatical programs, and wellness rejuvenation days."
-  ],
-  aboutCompany: `OFC360 is an enterprise-grade Autonomous People Operations platform that empowers next-generation organizations to hire, manage, pay, and grow global workforces seamlessly. Trusted by industry leaders, our cloud platform unifies AI recruitment copilots, dynamic compensation models, cross-department onboarding, and real-time organizational analytics.`
-};
 
 const COUNTRY_CODES = [
   { code: "+91", label: "+91 (India)", flag: "🇮🇳" },
@@ -192,6 +144,11 @@ export default function JobApplyPage() {
 
   useEffect(() => {
     async function fetchJobDetails() {
+      if (!ukey) {
+        setError("Invalid job application link.");
+        setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
         setError(null);
@@ -199,19 +156,20 @@ export default function JobApplyPage() {
         if (res.data && res.data.success && res.data.data) {
           const apiData = res.data.data;
           setJob({
-            ...DEFAULT_JOB,
             ...apiData,
-            skills: apiData.skills && apiData.skills.length > 0 ? apiData.skills : DEFAULT_JOB.skills,
-            responsibilities: apiData.responsibilities || DEFAULT_JOB.responsibilities,
-            requirements: apiData.requirements || DEFAULT_JOB.requirements,
-            benefits: apiData.benefits || DEFAULT_JOB.benefits,
-            aboutCompany: apiData.aboutCompany || DEFAULT_JOB.aboutCompany,
+            skills: apiData.skills || [],
+            responsibilities: apiData.responsibilities || [],
+            requirements: apiData.requirements || [],
+            benefits: apiData.benefits || [],
+            aboutCompany: apiData.aboutCompany || "",
           });
         } else {
-          setJob(DEFAULT_JOB);
+          setError(res.data?.message || "Job position not found or no longer active.");
+          setJob(null);
         }
       } catch (err: any) {
-        setJob(DEFAULT_JOB);
+        setError(err.response?.data?.message || "Job position not found or unavailable.");
+        setJob(null);
       } finally {
         setLoading(false);
       }
@@ -245,7 +203,7 @@ export default function JobApplyPage() {
     if (typeof job?.responsibilities === "string") {
       return job.responsibilities.split("\n").filter((s: string) => s.trim().length > 0);
     }
-    return DEFAULT_JOB.responsibilities;
+    return [];
   }, [job?.responsibilities]);
 
   const requirementsList: string[] = useMemo(() => {
@@ -253,7 +211,7 @@ export default function JobApplyPage() {
     if (typeof job?.requirements === "string") {
       return job.requirements.split("\n").filter((s: string) => s.trim().length > 0);
     }
-    return DEFAULT_JOB.requirements;
+    return [];
   }, [job?.requirements]);
 
   const benefitsList: string[] = useMemo(() => {
@@ -261,7 +219,7 @@ export default function JobApplyPage() {
     if (typeof job?.benefits === "string") {
       return job.benefits.split("\n").filter((s: string) => s.trim().length > 0);
     }
-    return DEFAULT_JOB.benefits;
+    return [];
   }, [job?.benefits]);
 
   const validateFile = (file: File): boolean => {
@@ -441,12 +399,10 @@ export default function JobApplyPage() {
         setSuccess(true);
         toast.success("Application submitted successfully!");
       } else {
-        setSuccess(true);
-        toast.success("Application submitted successfully!");
+        toast.error(res.data?.message || "Failed to submit application. Please review your details.");
       }
     } catch (err: any) {
-      setSuccess(true);
-      toast.success("Application submitted successfully!");
+      toast.error(err.response?.data?.message || "An error occurred while submitting your application.");
     } finally {
       setSubmitting(false);
     }
@@ -466,6 +422,33 @@ export default function JobApplyPage() {
           <div className="text-center space-y-1">
             <p className="text-sm font-semibold text-white tracking-wide">Loading position details...</p>
             <p className="text-xs text-slate-400">Fetching opportunities from OFC360 Talent Network</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !job) {
+    return (
+      <div className="relative flex min-h-screen flex-col items-center justify-center bg-[#0B0F19] py-12 px-4 text-center">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-rose-500/10 blur-[140px] pointer-events-none" />
+        <div className="relative z-10 max-w-md w-full bg-[#111726]/90 border border-slate-800/80 rounded-3xl p-8 sm:p-10 backdrop-blur-2xl shadow-2xl">
+          <div className="mx-auto rounded-2xl bg-rose-500/15 border border-rose-500/30 p-4 text-rose-400 w-fit">
+            <AlertCircle className="h-10 w-10" />
+          </div>
+          <h1 className="mt-5 text-xl sm:text-2xl font-bold tracking-tight text-white font-display">
+            Position Not Available
+          </h1>
+          <p className="mt-2 text-xs text-slate-300 leading-relaxed">
+            {error || "This job opening does not exist or is no longer accepting applications."}
+          </p>
+          <div className="mt-6 flex justify-center">
+            <Button
+              asChild
+              className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl h-10 px-5 text-xs font-semibold cursor-pointer"
+            >
+              <Link to="/dashboard">Return to Dashboard</Link>
+            </Button>
           </div>
         </div>
       </div>
@@ -587,7 +570,7 @@ export default function JobApplyPage() {
                 <FileText className="h-4 w-4 text-indigo-400" /> About the Role
               </h2>
               <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-line font-normal">
-                {job?.jobDescription || DEFAULT_JOB.jobDescription}
+                {job?.jobDescription || "No detailed description provided for this position."}
               </p>
             </div>
 
@@ -598,22 +581,26 @@ export default function JobApplyPage() {
                   <Sparkles className="h-4 w-4 text-indigo-400" /> Core Skillsets Needed
                 </h2>
                 <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700/60">
-                  {(job?.skills || DEFAULT_JOB.skills).length} Skills
+                  {(job?.skills || []).length} Skills
                 </span>
               </div>
               <div className="flex flex-wrap gap-2 pt-1">
-                {(job?.skills || DEFAULT_JOB.skills).map((skill: any, idx: number) => {
-                  const skillName = typeof skill === "string" ? skill : skill.skill_name || `Skill ${idx + 1}`;
-                  return (
-                    <Badge 
-                      key={idx} 
-                      variant="secondary" 
-                      className="bg-slate-850 text-slate-200 border border-slate-750 hover:border-indigo-500/40 py-1.5 px-3 text-xs font-semibold rounded-lg"
-                    >
-                      {skillName}
-                    </Badge>
-                  );
-                })}
+                {(job?.skills || []).length === 0 ? (
+                  <span className="text-xs text-slate-500 italic">No specific skill requirements listed.</span>
+                ) : (
+                  (job?.skills || []).map((skill: any, idx: number) => {
+                    const skillName = typeof skill === "string" ? skill : skill.skill_name || `Skill ${idx + 1}`;
+                    return (
+                      <Badge 
+                        key={idx} 
+                        variant="secondary" 
+                        className="bg-slate-850 text-slate-200 border border-slate-750 hover:border-indigo-500/40 py-1.5 px-3 text-xs font-semibold rounded-lg"
+                      >
+                        {skillName}
+                      </Badge>
+                    );
+                  })
+                )}
               </div>
             </div>
 

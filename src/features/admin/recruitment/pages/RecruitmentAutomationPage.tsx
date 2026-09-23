@@ -293,7 +293,7 @@ export function RecruitmentAutomationPage() {
               <Workflow className="h-8 w-8 text-muted-foreground/40 mx-auto" />
               <div className="text-xs font-semibold text-foreground">No automation rules configured</div>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                No mock data. Build visual trigger rules to automate resume screening, interview invites, and candidate communications.
+                No active automation workflows. Build visual trigger rules to automate resume screening, interview invites, and candidate communications.
               </p>
               <Button
                 size="sm"

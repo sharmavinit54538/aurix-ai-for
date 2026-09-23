@@ -28,14 +28,14 @@ export function CtoMonitoringPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
-          { name: "CPU Utilization", val: "34%", status: "Normal", color: "text-emerald-400" },
-          { name: "RAM Memory Load", val: "58%", status: "Optimal", color: "text-indigo-400" },
-          { name: "GPU Cluster Load", val: "74%", status: "Inference Active", color: "text-purple-400" },
+          { name: "CPU Utilization", val: "—", status: "Telemetry pending", color: "text-emerald-400" },
+          { name: "RAM Memory Load", val: "—", status: "Telemetry pending", color: "text-indigo-400" },
+          { name: "GPU Cluster Load", val: "—", status: "Cluster offline", color: "text-purple-400" },
         ].map((m, i) => (
           <div key={i} className="rounded-xl border border-border/80 bg-card/60 p-4 space-y-2">
             <div className="text-xs text-muted-foreground font-semibold uppercase">{m.name}</div>
             <div className={`text-3xl font-bold font-display ${m.color}`}>{m.val}</div>
-            <Badge variant="outline" className="text-[10px] border-emerald-500/30 text-emerald-400">{m.status}</Badge>
+            <Badge variant="outline" className="text-[10px] border-border text-muted-foreground">{m.status}</Badge>
           </div>
         ))}
       </div>

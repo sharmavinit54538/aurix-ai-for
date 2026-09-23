@@ -60,7 +60,7 @@ export function AssetsSection({ canEdit, onDirtyChange }: AssetsSectionProps) {
 
   const [initialData, setInitialData] = useState<AssetSettingsForm | null>(null);
   const [formData, setFormData] = useState<AssetSettingsForm>({
-    categories: DEFAULT_ASSET_CATEGORIES,
+    categories: [],
     requireEmployeeAcknowledgment: true,
     mandatoryClearanceOnExit: true,
     notifyWarrantyExpiryDays: 30,
@@ -80,10 +80,7 @@ export function AssetsSection({ canEdit, onDirtyChange }: AssetsSectionProps) {
       const data = await fetchAssetSettings();
       const combined = {
         ...data,
-        categories:
-          data.categories && data.categories.length > 0
-            ? data.categories
-            : DEFAULT_ASSET_CATEGORIES,
+        categories: data.categories || [],
       };
       setInitialData(combined);
       setFormData(combined);
@@ -192,62 +189,68 @@ export function AssetsSection({ canEdit, onDirtyChange }: AssetsSectionProps) {
         </div>
 
         <div className="space-y-3">
-          {formData.categories.map((cat, idx) => (
-            <div
-              key={cat.id}
-              className="grid grid-cols-1 gap-3 rounded-xl border border-border bg-card/80 p-3.5 sm:grid-cols-12 sm:items-center"
-            >
-              <div className="space-y-1 sm:col-span-5">
-                <Label className="text-[11px] font-medium text-muted-foreground">
-                  Category Name
-                </Label>
-                <Input
-                  value={cat.name}
-                  onChange={(e) => handleUpdateCategory(idx, "name", e.target.value)}
-                  disabled={!canEdit}
-                  className="h-8 text-xs font-semibold"
-                />
-              </div>
-
-              <div className="space-y-1 sm:col-span-4">
-                <Label className="text-[11px] font-medium text-muted-foreground">Description</Label>
-                <Input
-                  value={cat.description || ""}
-                  onChange={(e) => handleUpdateCategory(idx, "description", e.target.value)}
-                  disabled={!canEdit}
-                  placeholder="Category purpose"
-                  className="h-8 text-xs"
-                />
-              </div>
-
-              <div className="flex items-center gap-2 sm:col-span-2">
-                <div className="space-y-0.5">
-                  <Label className="text-[10px] font-medium text-muted-foreground">
-                    Require Serial
+          {formData.categories.length === 0 ? (
+            <div className="p-6 text-center text-xs text-muted-foreground border border-dashed border-border rounded-xl">
+              No asset categories configured. Click "Add Category" to create one.
+            </div>
+          ) : (
+            formData.categories.map((cat, idx) => (
+              <div
+                key={cat.id}
+                className="grid grid-cols-1 gap-3 rounded-xl border border-border bg-card/80 p-3.5 sm:grid-cols-12 sm:items-center"
+              >
+                <div className="space-y-1 sm:col-span-5">
+                  <Label className="text-[11px] font-medium text-muted-foreground">
+                    Category Name
                   </Label>
-                  <Switch
-                    checked={cat.requiresSerialNumber}
-                    onCheckedChange={(c) => handleUpdateCategory(idx, "requiresSerialNumber", c)}
+                  <Input
+                    value={cat.name}
+                    onChange={(e) => handleUpdateCategory(idx, "name", e.target.value)}
                     disabled={!canEdit}
+                    className="h-8 text-xs font-semibold"
                   />
                 </div>
-              </div>
 
-              <div className="flex justify-end sm:col-span-1">
-                {canEdit && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDeleteCategory(idx)}
-                    className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive cursor-pointer"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                )}
+                <div className="space-y-1 sm:col-span-4">
+                  <Label className="text-[11px] font-medium text-muted-foreground">Description</Label>
+                  <Input
+                    value={cat.description || ""}
+                    onChange={(e) => handleUpdateCategory(idx, "description", e.target.value)}
+                    disabled={!canEdit}
+                    placeholder="Category purpose"
+                    className="h-8 text-xs"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 sm:col-span-2">
+                  <div className="space-y-0.5">
+                    <Label className="text-[10px] font-medium text-muted-foreground">
+                      Require Serial
+                    </Label>
+                    <Switch
+                      checked={cat.requiresSerialNumber}
+                      onCheckedChange={(c) => handleUpdateCategory(idx, "requiresSerialNumber", c)}
+                      disabled={!canEdit}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end sm:col-span-1">
+                  {canEdit && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteCategory(idx)}
+                      className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive cursor-pointer"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 

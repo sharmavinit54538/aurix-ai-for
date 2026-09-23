@@ -167,7 +167,6 @@ export interface Workspace {
   documents?: HRDocument[];
   documentActivities?: HRDocumentActivity[];
   pendingOtp?: string;
-  isDemoUser?: boolean;
   isRestoring?: boolean;
 }
 
@@ -237,33 +236,9 @@ export const aurix = {
   switchRole: (role: Role) => {
     if (state.user) {
       state = { ...state, user: { ...state.user, role } };
-    } else {
-      state = {
-        ...state,
-        user: {
-          id: "usr_demo",
-          fullName:
-            role === "candidate"
-              ? "Sarah Jenkins"
-              : role === "interviewer"
-              ? "Devon Vance"
-              : role === "manager"
-              ? "Marcus Brody"
-              : role === "hr"
-              ? "Priya Sharma"
-              : "Alex Morgan",
-          email: `${role}@ofc360.io`,
-          phone: "+1 555 019 2834",
-          role,
-          companyId: "comp_1",
-          emailVerified: true,
-          onboardingComplete: true,
-          createdAt: new Date().toISOString(),
-        },
-      };
+      persist();
+      emit();
     }
-    persist();
-    emit();
   },
   subscribe: (l: () => void) => {
     listeners.add(l);

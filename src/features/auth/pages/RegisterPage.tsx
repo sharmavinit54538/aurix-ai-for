@@ -21,7 +21,7 @@ const schema = z
     email: z.string().email("Enter a valid work email"),
     phone: z
       .string()
-      .regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit Indian mobile number (e.g. 9876543210)"),
+      .regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit Indian mobile number"),
     companyName: z.string().min(2, "Enter your company name"),
     password: z
       .string()
@@ -198,7 +198,7 @@ console.log("Register response:", res);
               id="phone"
               value={form.phone}
               onChange={(e) => set("phone", e.target.value)}
-              placeholder="9876543210 (10-digit Indian mobile)"
+              placeholder="Enter 10-digit mobile number"
               aria-invalid={!!errors.phone}
               maxLength={10}
             />

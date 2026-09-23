@@ -15,111 +15,10 @@ export function CtoProjectsPage() {
   const [search, setSearch] = useState("");
   const [selectedProject, setSelectedProject] = useState<any | null>(null);
 
-  const projects = [
-    {
-      id: "PROJ-101",
-      name: "AI Copilot Engine v2.0",
-      lead: "Vinit Sharma",
-      dept: "AI Core",
-      progress: 84,
-      budget: "$45,000",
-      spent: "$38,200",
-      risk: "Low",
-      status: "On Track",
-      dueDate: "Aug 15, 2026",
-      tasks: [
-        { id: "T-1", name: "Qdrant Vector DB indexing optimization", status: "Done" },
-        { id: "T-2", name: "Llama-3-70B model quantization", status: "In Progress" },
-        { id: "T-3", name: "Streaming SSE endpoint unit tests", status: "Pending" }
-      ],
-      files: ["architecture_v2.pdf", "benchmarks_gpu.csv", "api_schema.json"],
-      comments: [
-        { author: "Alex Rivera", text: "Quantization test shows 3.2x latency improvement on A10G GPUs.", time: "2 hours ago" },
-        { author: "Vinit Sharma", text: "Great work! Pushing v2.0 beta build to staging.", time: "1 hour ago" }
-      ],
-      activities: [
-        "Vinit Sharma pushed 4 commits to branch feature/ai-engine-v2",
-        "Pipeline #184 passed automated testing",
-        "Milestone 'Beta Inference SLA' marked as Completed"
-      ]
-    },
-    {
-      id: "PROJ-102",
-      name: "PostgreSQL Database Clustering & Sharding",
-      lead: "Alex Rivera",
-      dept: "Data Platform",
-      progress: 92,
-      budget: "$28,000",
-      spent: "$24,500",
-      risk: "Low",
-      status: "On Track",
-      dueDate: "Aug 05, 2026",
-      tasks: [
-        { id: "T-4", name: "Configure PgBouncer connection pooling", status: "Done" },
-        { id: "T-5", name: "Read-replica failover test", status: "Done" }
-      ],
-      files: ["db_schema_v4.sql", "failover_runbook.md"],
-      comments: [{ author: "Rohan Verma", text: "Failover script validated under 500ms downtime.", time: "Yesterday" }],
-      activities: ["Read-replica automated backup completed"]
-    },
-    {
-      id: "PROJ-103",
-      name: "Kubernetes GPU Autoscale Migration",
-      lead: "Rohan Verma",
-      dept: "Infrastructure",
-      progress: 68,
-      budget: "$35,000",
-      spent: "$28,000",
-      risk: "Medium",
-      status: "In Progress",
-      dueDate: "Sep 01, 2026",
-      tasks: [
-        { id: "T-6", name: "KEDA autoscale triggers setup", status: "In Progress" },
-        { id: "T-7", name: "NVIDIA Container Toolkit daemonset", status: "Pending" }
-      ],
-      files: ["k8s_keda_spec.yaml", "cluster_cost.xlsx"],
-      comments: [{ author: "Vinit Sharma", text: "Ensure GPU VRAM metrics are exported to Prometheus.", time: "3 hours ago" }],
-      activities: ["Pod autoscaler deployed to staging cluster"]
-    },
-    {
-      id: "PROJ-104",
-      name: "SOC2 Type II Compliance Readiness",
-      lead: "Neha Gupta",
-      dept: "Security",
-      progress: 98,
-      budget: "$15,000",
-      spent: "$14,100",
-      risk: "Low",
-      status: "Completed",
-      dueDate: "Jul 25, 2026",
-      tasks: [
-        { id: "T-8", name: "Audit logging rotation policy", status: "Done" },
-        { id: "T-9", name: "Penetration testing report review", status: "Done" }
-      ],
-      files: ["soc2_audit_report.pdf", "penetration_test_results.pdf"],
-      comments: [{ author: "Neha Gupta", text: "Final compliance certificate received from auditor.", time: "2 days ago" }],
-      activities: ["Audit certificate uploaded"]
-    },
-  ];
-
-  const milestones = [
-    { title: "AI Copilot v2.0 Beta Release", project: "AI Copilot Engine v2.0", date: "Aug 01, 2026", status: "Completed" },
-    { title: "PostgreSQL Primary Failover Test", project: "PostgreSQL Database Clustering", date: "Aug 05, 2026", status: "In Progress" },
-    { title: "Kubernetes GPU Autoscale Live", project: "Kubernetes GPU Autoscale", date: "Aug 20, 2026", status: "Scheduled" },
-  ];
-
-  const risks = [
-    { title: "GPU Cloud Instance Availability Surge", project: "AI Copilot Engine", impact: "High", likelihood: "Medium", status: "Mitigated" },
-    { title: "Database Storage IOPS Throttling", project: "PostgreSQL Clustering", impact: "Medium", likelihood: "Low", status: "Monitored" },
-  ];
-
-  const teamAllocations = [
-    { name: "Vinit Sharma", project: "AI Copilot Engine v2.0", role: "Project Lead", allocation: "60%" },
-    { name: "Alex Rivera", project: "PostgreSQL Clustering", role: "Lead Architect", allocation: "80%" },
-    { name: "Rohan Verma", project: "Kubernetes GPU Autoscale", role: "DevOps Lead", allocation: "100%" },
-    { name: "Neha Gupta", project: "SOC2 Compliance", role: "Security Lead", allocation: "40%" },
-    { name: "Priya Patel", project: "AI Copilot Engine v2.0", role: "UI Lead", allocation: "80%" },
-  ];
+  const projects: any[] = [];
+  const milestones: any[] = [];
+  const risks: any[] = [];
+  const teamAllocations: any[] = [];
 
   return (
     <div className="space-y-6 pb-12 text-left">
@@ -155,10 +54,10 @@ export function CtoProjectsPage() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "Active Portfolio", val: "14 Projects", sub: "12 On Track • 2 At Risk", color: "text-cyan-400" },
-          { label: "Engineering Budget", val: "$123,000", sub: "$104,800 Spent (85%)", color: "text-emerald-400" },
-          { label: "Milestones Target", val: "48 / 52", sub: "92% completion rate", color: "text-indigo-400" },
-          { label: "Open Portfolio Risks", val: "2 Tracked", sub: "1 High • 1 Medium", color: "text-amber-400" },
+          { label: "Active Portfolio", val: "0 Projects", sub: "Backend API integration pending", color: "text-cyan-400" },
+          { label: "Engineering Budget", val: "—", sub: "Backend API integration pending", color: "text-emerald-400" },
+          { label: "Milestones Target", val: "—", sub: "Backend API integration pending", color: "text-indigo-400" },
+          { label: "Open Portfolio Risks", val: "0 Tracked", sub: "No active risks", color: "text-amber-400" },
         ].map((k, i) => (
           <div key={i} className="rounded-xl border border-border/80 bg-card/60 p-4 space-y-1">
             <div className="text-xs text-muted-foreground font-semibold uppercase">{k.label}</div>
@@ -168,7 +67,7 @@ export function CtoProjectsPage() {
         ))}
       </div>
 
-      {/* 8 Required Features Sub-Tabs */}
+      {/* 8 Features Sub-Tabs */}
       <Tabs defaultValue="list" onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="bg-card/60 border border-border/80 p-1 rounded-xl flex flex-wrap gap-1">
           <TabsTrigger value="list" className="text-xs font-semibold">Project List</TabsTrigger>
@@ -198,26 +97,34 @@ export function CtoProjectsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40">
-                {projects.map((p) => (
-                  <tr key={p.id} className="hover:bg-accent/20 transition-colors">
-                    <td className="p-3 font-mono text-cyan-400 font-bold">{p.id}</td>
-                    <td className="p-3 font-bold text-foreground">{p.name}</td>
-                    <td className="p-3 text-muted-foreground">{p.lead}</td>
-                    <td className="p-3 font-mono text-cyan-400 font-semibold">{p.progress}%</td>
-                    <td className="p-3 font-mono text-emerald-400 font-semibold">{p.budget}</td>
-                    <td className="p-3">
-                      <Badge variant="outline" className={`text-[10px] ${p.risk === "Low" ? "border-emerald-500/30 text-emerald-400" : "border-amber-500/30 text-amber-400"}`}>{p.risk}</Badge>
-                    </td>
-                    <td className="p-3">
-                      <Badge className="text-[10px] bg-emerald-500/20 text-emerald-400 border-emerald-500/30">{p.status}</Badge>
-                    </td>
-                    <td className="p-3 text-right">
-                      <Button size="sm" variant="ghost" onClick={() => setSelectedProject(p)} className="h-7 px-2 text-xs text-cyan-400 hover:bg-cyan-500/20 cursor-pointer">
-                        <Eye className="mr-1 h-3 w-3" /> Details
-                      </Button>
+                {projects.length > 0 ? (
+                  projects.map((p) => (
+                    <tr key={p.id} className="hover:bg-accent/20 transition-colors">
+                      <td className="p-3 font-mono text-cyan-400 font-bold">{p.id}</td>
+                      <td className="p-3 font-bold text-foreground">{p.name}</td>
+                      <td className="p-3 text-muted-foreground">{p.lead}</td>
+                      <td className="p-3 font-mono text-cyan-400 font-semibold">{p.progress}%</td>
+                      <td className="p-3 font-mono text-emerald-400 font-semibold">{p.budget}</td>
+                      <td className="p-3">
+                        <Badge variant="outline" className={`text-[10px] ${p.risk === "Low" ? "border-emerald-500/30 text-emerald-400" : "border-amber-500/30 text-amber-400"}`}>{p.risk}</Badge>
+                      </td>
+                      <td className="p-3">
+                        <Badge className="text-[10px] bg-emerald-500/20 text-emerald-400 border-emerald-500/30">{p.status}</Badge>
+                      </td>
+                      <td className="p-3 text-right">
+                        <Button size="sm" variant="ghost" onClick={() => setSelectedProject(p)} className="h-7 px-2 text-xs text-cyan-400 hover:bg-cyan-500/20 cursor-pointer">
+                          <Eye className="mr-1 h-3 w-3" /> Details
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={8} className="p-8 text-center text-xs text-muted-foreground">
+                      No engineering projects found. Backend API integration pending.
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
@@ -226,24 +133,30 @@ export function CtoProjectsPage() {
         {/* 2. Timeline */}
         <TabsContent value="timeline">
           <div className="rounded-xl border border-border/80 bg-card/60 p-5 space-y-4">
-            <h3 className="font-bold text-sm text-foreground">Project Timeline Roadmap (Q3 2026)</h3>
-            <div className="space-y-3">
-              {projects.map((p) => (
-                <div key={p.id} className="rounded-lg border border-border/60 bg-card/80 p-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-                  <div className="space-y-0.5">
-                    <div className="text-xs font-bold text-foreground">{p.name}</div>
-                    <div className="text-[11px] text-muted-foreground">Due Date: {p.dueDate} • Lead: {p.lead}</div>
-                  </div>
-                  <div className="flex items-center gap-3 w-full md:w-auto">
-                    <div className="w-32 bg-slate-800 rounded-full h-2 overflow-hidden border border-border/60">
-                      <div className="bg-cyan-500 h-full rounded-full" style={{ width: `${p.progress}%` }} />
+            <h3 className="font-bold text-sm text-foreground">Project Timeline Roadmap</h3>
+            {projects.length > 0 ? (
+              <div className="space-y-3">
+                {projects.map((p) => (
+                  <div key={p.id} className="rounded-lg border border-border/60 bg-card/80 p-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+                    <div className="space-y-0.5">
+                      <div className="text-xs font-bold text-foreground">{p.name}</div>
+                      <div className="text-[11px] text-muted-foreground">Due Date: {p.dueDate} • Lead: {p.lead}</div>
                     </div>
-                    <span className="text-xs font-mono font-bold text-cyan-400">{p.progress}%</span>
-                    <Button size="sm" variant="outline" onClick={() => setSelectedProject(p)} className="text-[10px] h-7 cursor-pointer">View</Button>
+                    <div className="flex items-center gap-3 w-full md:w-auto">
+                      <div className="w-32 bg-slate-800 rounded-full h-2 overflow-hidden border border-border/60">
+                        <div className="bg-cyan-500 h-full rounded-full" style={{ width: `${p.progress}%` }} />
+                      </div>
+                      <span className="text-xs font-mono font-bold text-cyan-400">{p.progress}%</span>
+                      <Button size="sm" variant="outline" onClick={() => setSelectedProject(p)} className="text-[10px] h-7 cursor-pointer">View</Button>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-8 text-center text-xs text-muted-foreground">
+                No active project timelines.
+              </div>
+            )}
           </div>
         </TabsContent>
 
@@ -259,19 +172,23 @@ export function CtoProjectsPage() {
                   </Badge>
                 </div>
                 <div className="space-y-2.5">
-                  {projects.filter((p) => p.status === statusCol).map((p) => (
-                    <div key={p.id} onClick={() => setSelectedProject(p)} className="rounded-lg border border-border/60 bg-card/80 p-3 space-y-2 hover:border-cyan-500/50 transition-colors cursor-pointer">
-                      <div className="flex items-center justify-between text-[10px]">
-                        <span className="font-mono text-cyan-400 font-bold">{p.id}</span>
-                        <Badge className="text-[9px] bg-cyan-500/10 text-cyan-300 border-cyan-500/20">{p.dept}</Badge>
+                  {projects.filter((p) => p.status === statusCol).length > 0 ? (
+                    projects.filter((p) => p.status === statusCol).map((p) => (
+                      <div key={p.id} onClick={() => setSelectedProject(p)} className="rounded-lg border border-border/60 bg-card/80 p-3 space-y-2 hover:border-cyan-500/50 transition-colors cursor-pointer">
+                        <div className="flex items-center justify-between text-[10px]">
+                          <span className="font-mono text-cyan-400 font-bold">{p.id}</span>
+                          <Badge className="text-[9px] bg-cyan-500/10 text-cyan-300 border-cyan-500/20">{p.dept}</Badge>
+                        </div>
+                        <h4 className="text-xs font-bold text-foreground">{p.name}</h4>
+                        <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-border/30">
+                          <span>{p.lead}</span>
+                          <span className="font-mono font-bold text-emerald-400">{p.budget}</span>
+                        </div>
                       </div>
-                      <h4 className="text-xs font-bold text-foreground">{p.name}</h4>
-                      <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-border/30">
-                        <span>{p.lead}</span>
-                        <span className="font-mono font-bold text-emerald-400">{p.budget}</span>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <div className="p-4 text-center text-xs text-muted-foreground">No projects in this stage</div>
+                  )}
                 </div>
               </div>
             ))}
@@ -280,11 +197,11 @@ export function CtoProjectsPage() {
 
         {/* 4. Gantt View */}
         <TabsContent value="gantt">
-          <div className="p-6 rounded-xl border border-border/80 bg-card/60 text-center space-y-3">
+          <div className="p-8 rounded-xl border border-dashed border-border/80 bg-card/60 text-center space-y-3">
             <Calendar className="h-8 w-8 text-cyan-400 mx-auto" />
-            <h3 className="font-bold text-sm text-foreground">Interactive Gantt View Blueprint</h3>
+            <h3 className="font-bold text-sm text-foreground">Gantt View Blueprint</h3>
             <p className="text-xs text-muted-foreground max-w-xl mx-auto">
-              Visualizing engineering task dependencies, critical path schedules, and resource milestones across Q3 & Q4 2026.
+              Visualizing engineering task dependencies and critical path schedules will be active once projects are loaded.
             </p>
           </div>
         </TabsContent>
@@ -293,37 +210,49 @@ export function CtoProjectsPage() {
         <TabsContent value="milestones">
           <div className="rounded-xl border border-border/80 bg-card/60 p-5 space-y-3">
             <h3 className="font-bold text-sm text-foreground">Engineering Milestones Tracker</h3>
-            <div className="space-y-2.5">
-              {milestones.map((m, idx) => (
-                <div key={idx} className="rounded-lg border border-border/60 bg-card/80 p-3 flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <h4 className="font-bold text-xs text-foreground">{m.title}</h4>
-                    <div className="text-[11px] text-muted-foreground">Project: {m.project} • Target Date: {m.date}</div>
+            {milestones.length > 0 ? (
+              <div className="space-y-2.5">
+                {milestones.map((m, idx) => (
+                  <div key={idx} className="rounded-lg border border-border/60 bg-card/80 p-3 flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <h4 className="font-bold text-xs text-foreground">{m.title}</h4>
+                      <div className="text-[11px] text-muted-foreground">Project: {m.project} • Target Date: {m.date}</div>
+                    </div>
+                    <Badge className={`text-[10px] ${m.status === "Completed" ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : "bg-indigo-500/20 text-indigo-400 border-indigo-500/30"}`}>
+                      {m.status}
+                    </Badge>
                   </div>
-                  <Badge className={`text-[10px] ${m.status === "Completed" ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : "bg-indigo-500/20 text-indigo-400 border-indigo-500/30"}`}>
-                    {m.status}
-                  </Badge>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-8 text-center text-xs text-muted-foreground border border-dashed border-border/60 rounded-lg">
+                No engineering milestones scheduled.
+              </div>
+            )}
           </div>
         </TabsContent>
 
         {/* 6. Risks */}
         <TabsContent value="risks">
           <div className="space-y-3">
-            {risks.map((r, idx) => (
-              <div key={idx} className="rounded-xl border border-border/80 bg-card/60 p-4 flex items-center justify-between">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-amber-400" />
-                    <h4 className="font-bold text-sm text-foreground">{r.title}</h4>
+            {risks.length > 0 ? (
+              risks.map((r, idx) => (
+                <div key={idx} className="rounded-xl border border-border/80 bg-card/60 p-4 flex items-center justify-between">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-amber-400" />
+                      <h4 className="font-bold text-sm text-foreground">{r.title}</h4>
+                    </div>
+                    <div className="text-xs text-muted-foreground">Project: {r.project} • Impact: {r.impact} • Likelihood: {r.likelihood}</div>
                   </div>
-                  <div className="text-xs text-muted-foreground">Project: {r.project} • Impact: {r.impact} • Likelihood: {r.likelihood}</div>
+                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">{r.status}</Badge>
                 </div>
-                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">{r.status}</Badge>
+              ))
+            ) : (
+              <div className="p-8 text-center text-xs text-muted-foreground border border-dashed border-border/60 rounded-xl">
+                No active portfolio risks identified.
               </div>
-            ))}
+            )}
           </div>
         </TabsContent>
 
@@ -331,15 +260,21 @@ export function CtoProjectsPage() {
         <TabsContent value="budget">
           <div className="rounded-xl border border-border/80 bg-card/60 p-5 space-y-4">
             <h3 className="font-bold text-sm text-foreground">Project Budget & Expenditure</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-              {projects.map((p) => (
-                <div key={p.id} className="rounded-lg border border-border/60 bg-card/80 p-3 space-y-1">
-                  <div className="text-xs font-bold text-foreground truncate">{p.name}</div>
-                  <div className="text-lg font-bold font-mono text-emerald-400">{p.spent} / {p.budget}</div>
-                  <div className="text-[11px] text-muted-foreground">Utilized: {Math.round((parseInt(p.spent.replace(/[^0-9]/g, '')) / parseInt(p.budget.replace(/[^0-9]/g, ''))) * 100)}%</div>
-                </div>
-              ))}
-            </div>
+            {projects.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                {projects.map((p) => (
+                  <div key={p.id} className="rounded-lg border border-border/60 bg-card/80 p-3 space-y-1">
+                    <div className="text-xs font-bold text-foreground truncate">{p.name}</div>
+                    <div className="text-lg font-bold font-mono text-emerald-400">{p.spent} / {p.budget}</div>
+                    <div className="text-[11px] text-muted-foreground">Utilized: {Math.round((parseInt(p.spent.replace(/[^0-9]/g, '')) / parseInt(p.budget.replace(/[^0-9]/g, ''))) * 100)}%</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-8 text-center text-xs text-muted-foreground border border-dashed border-border/60 rounded-lg">
+                No budget allocations tracked yet.
+              </div>
+            )}
           </div>
         </TabsContent>
 
@@ -356,14 +291,22 @@ export function CtoProjectsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40">
-                {teamAllocations.map((ta, i) => (
-                  <tr key={i} className="hover:bg-accent/20 transition-colors">
-                    <td className="p-3 font-bold text-foreground">{ta.name}</td>
-                    <td className="p-3 text-cyan-400 font-semibold">{ta.project}</td>
-                    <td className="p-3 text-muted-foreground">{ta.role}</td>
-                    <td className="p-3 font-mono text-emerald-400 font-bold">{ta.allocation}</td>
+                {teamAllocations.length > 0 ? (
+                  teamAllocations.map((ta, i) => (
+                    <tr key={i} className="hover:bg-accent/20 transition-colors">
+                      <td className="p-3 font-bold text-foreground">{ta.name}</td>
+                      <td className="p-3 text-cyan-400 font-semibold">{ta.project}</td>
+                      <td className="p-3 text-muted-foreground">{ta.role}</td>
+                      <td className="p-3 font-mono text-emerald-400 font-bold">{ta.allocation}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="p-8 text-center text-xs text-muted-foreground">
+                      No engineering allocations assigned yet.
+                    </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

@@ -7,7 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
 export function CioSettingsPage() {
-  const [apiKey, setApiKey] = useState("aurix_live_cio_key_948192049182");
+  const [apiKey, setApiKey] = useState("");
 
   const handleSave = () => {
     toast.success("Saved Enterprise CIO IT Settings.");
@@ -56,8 +56,26 @@ export function CioSettingsPage() {
             <h3 className="font-bold text-sm text-foreground">Enterprise Master API Token</h3>
             <div>
               <label className="text-xs font-semibold text-muted-foreground block mb-1">Master Telemetry Key</label>
-              <Input value={apiKey} onChange={(e) => setApiKey(e.target.value)} className="bg-slate-900/60 font-mono text-xs text-cyan-400" />
+              <Input value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="e.g. aurix_live_cio_key_..." className="bg-slate-900/60 font-mono text-xs text-cyan-400" />
             </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="providers">
+          <div className="rounded-2xl border border-border/80 bg-card/60 p-8 text-center text-xs text-muted-foreground">
+            No cloud service providers connected.
+          </div>
+        </TabsContent>
+
+        <TabsContent value="policies">
+          <div className="rounded-2xl border border-border/80 bg-card/60 p-8 text-center text-xs text-muted-foreground">
+            No custom security policy overrides defined.
+          </div>
+        </TabsContent>
+
+        <TabsContent value="backups">
+          <div className="rounded-2xl border border-border/80 bg-card/60 p-8 text-center text-xs text-muted-foreground">
+            No automated backup schedules configured.
           </div>
         </TabsContent>
       </Tabs>

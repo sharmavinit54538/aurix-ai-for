@@ -117,9 +117,9 @@ export function ExecutiveHubPage() {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-xs font-semibold text-emerald-400">
+            <div className="flex items-center gap-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-4 py-2 text-xs font-semibold text-indigo-400">
               <ShieldCheck className="h-4 w-4" />
-              <span>Executive Health Score: 95.5%</span>
+              <span>Role-Based Governance</span>
             </div>
           </div>
         </div>
@@ -166,22 +166,30 @@ export function ExecutiveHubPage() {
 
                 {/* Key KPIs Preview Footer */}
                 <div className="mt-4 pt-3 border-t border-border/40 space-y-2">
-                  <div className="grid grid-cols-2 gap-2 text-left">
-                    {dataset.kpis.slice(0, 2).map((kpi) => (
-                      <div key={kpi.id} className="bg-accent/20 rounded-lg p-2 border border-border/30">
-                        <span className="text-[9px] uppercase font-semibold text-muted-foreground/70 block truncate">
-                          {kpi.title}
-                        </span>
-                        <span className="font-display text-xs font-bold text-foreground truncate block">
-                          {kpi.value}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                  {dataset.kpis.length > 0 ? (
+                    <div className="grid grid-cols-2 gap-2 text-left">
+                      {dataset.kpis.slice(0, 2).map((kpi) => (
+                        <div key={kpi.id} className="bg-accent/20 rounded-lg p-2 border border-border/30">
+                          <span className="text-[9px] uppercase font-semibold text-muted-foreground/70 block truncate">
+                            {kpi.title}
+                          </span>
+                          <span className="font-display text-xs font-bold text-foreground truncate block">
+                            {kpi.value}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="bg-accent/10 rounded-lg p-2 border border-border/20 text-center">
+                      <span className="text-[10px] text-muted-foreground">
+                        Telemetry feeds pending integration
+                      </span>
+                    </div>
+                  )}
 
                   <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                    <span className="flex items-center gap-1 font-semibold text-emerald-400">
-                      <ShieldCheck className="h-3 w-3" /> Score: {dataset.healthScore}%
+                    <span className="flex items-center gap-1 font-semibold text-muted-foreground">
+                      <ShieldCheck className="h-3 w-3" /> Score: {dataset.healthScore > 0 ? `${dataset.healthScore}%` : "—"}
                     </span>
                     <span className="text-primary font-semibold group-hover:underline">Open Dashboard &rarr;</span>
                   </div>

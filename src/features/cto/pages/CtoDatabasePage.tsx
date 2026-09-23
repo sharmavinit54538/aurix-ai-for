@@ -3,11 +3,13 @@ import { Coins, Zap, Clock, ListTodo, Archive, History, HeartPulse } from "lucid
 import { Badge } from "@/components/ui/badge";
 
 export function CtoDatabasePage() {
-  const dbs = [
-    { name: "PostgreSQL Primary (ofc360_prod)", engine: "PostgreSQL 16.2", conn: "142 / 500", size: "14.2 GB", status: "Healthy" },
-    { name: "Redis Cache Cluster (ofc360_cache)", engine: "Redis 7.2 (Sentinel)", conn: "84 / 1000", size: "2.4 GB", status: "Healthy" },
-    { name: "Qdrant Vector DB (ofc360_vectors)", engine: "Qdrant 1.8", conn: "24 / 200", size: "6.8 GB", status: "Healthy" },
-  ];
+  const dbs: Array<{
+    name: string;
+    engine: string;
+    conn: string;
+    size: string;
+    status: string;
+  }> = [];
 
   return (
     <div className="space-y-6 pb-12 text-left">
@@ -44,17 +46,25 @@ export function CtoDatabasePage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-border/40">
-            {dbs.map((d, idx) => (
-              <tr key={idx} className="hover:bg-accent/20 transition-colors">
-                <td className="p-3 font-bold text-foreground">{d.name}</td>
-                <td className="p-3 text-muted-foreground">{d.engine}</td>
-                <td className="p-3 font-mono text-indigo-400">{d.conn}</td>
-                <td className="p-3 font-mono text-amber-400">{d.size}</td>
-                <td className="p-3">
-                  <Badge className="text-[10px] bg-emerald-500/20 text-emerald-400 border-emerald-500/30">{d.status}</Badge>
+            {dbs.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="p-8 text-center text-xs text-muted-foreground">
+                  No database clusters connected or monitored.
                 </td>
               </tr>
-            ))}
+            ) : (
+              dbs.map((d, idx) => (
+                <tr key={idx} className="hover:bg-accent/20 transition-colors">
+                  <td className="p-3 font-bold text-foreground">{d.name}</td>
+                  <td className="p-3 text-muted-foreground">{d.engine}</td>
+                  <td className="p-3 font-mono text-indigo-400">{d.conn}</td>
+                  <td className="p-3 font-mono text-amber-400">{d.size}</td>
+                  <td className="p-3">
+                    <Badge className="text-[10px] bg-emerald-500/20 text-emerald-400 border-emerald-500/30">{d.status}</Badge>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

@@ -258,7 +258,7 @@ export function EmployeesPage() {
 
           company_email: draft.email,
 
-          phone: draft.phone || "9876543210",
+          phone: draft.phone || "",
 
           department: draft.department || "Engineering",
 

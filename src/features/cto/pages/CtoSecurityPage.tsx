@@ -6,12 +6,13 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
 export function CtoSecurityPage() {
-  const auditLogs = [
-    { time: "2026-07-28 19:14:02", actor: "sharmav33496@gmail.com", action: "CTO Login", ip: "180.149.227.7", status: "Success" },
-    { time: "2026-07-28 19:10:45", actor: "system-cron-worker", action: "DB Backup Snapshot", ip: "Internal K8s", status: "Success" },
-    { time: "2026-07-28 18:42:11", actor: "sharmav33496@gmail.com", action: "Updated Role Enum to CTO", ip: "180.149.227.7", status: "Success" },
-    { time: "2026-07-28 18:04:18", actor: "waf-firewall-bot", action: "Blocked SQL Injection Payload", ip: "45.142.120.4", status: "Blocked" },
-  ];
+  const auditLogs: Array<{
+    time: string;
+    actor: string;
+    action: string;
+    ip: string;
+    status: string;
+  }> = [];
 
   return (
     <div className="space-y-6 pb-12 text-left">
@@ -35,7 +36,7 @@ export function CtoSecurityPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button size="sm" onClick={() => toast.success("Exported Audit Log Archive")} className="bg-rose-600 hover:bg-rose-500 text-white text-xs cursor-pointer">
+            <Button size="sm" onClick={() => toast.info("No audit logs available to export.")} className="bg-rose-600 hover:bg-rose-500 text-white text-xs cursor-pointer">
               <FileCheck className="mr-1.5 h-3.5 w-3.5" />
               Export Audit Logs
             </Button>
@@ -45,10 +46,10 @@ export function CtoSecurityPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "Security Health Score", val: "96 / 100", sub: "SOC2 Type II Compliant", color: "text-emerald-400" },
-          { label: "Threat Detection Alerts", val: "0 Active", sub: "142 malicious payloads blocked", color: "text-rose-400" },
-          { label: "MFA Enrollment", val: "100%", sub: "Enforced on all CTO/Admin users", color: "text-indigo-400" },
-          { label: "System Health SLA", val: "99.98%", sub: "Live health probes passing", color: "text-cyan-400" },
+          { label: "Security Health Score", val: "—", sub: "Compliance scan pending", color: "text-emerald-400" },
+          { label: "Threat Detection Alerts", val: "—", sub: "IDS/IPS sensor offline", color: "text-rose-400" },
+          { label: "MFA Enrollment", val: "—", sub: "Directory auth telemetry pending", color: "text-indigo-400" },
+          { label: "System Health SLA", val: "—", sub: "Awaiting probe telemetry", color: "text-cyan-400" },
         ].map((k, i) => (
           <div key={i} className="rounded-xl border border-border/80 bg-card/60 p-4 space-y-1">
             <div className="text-xs text-muted-foreground font-semibold uppercase">{k.label}</div>
@@ -79,21 +80,47 @@ export function CtoSecurityPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40">
-                {auditLogs.map((log, idx) => (
-                  <tr key={idx} className="hover:bg-accent/20 transition-colors">
-                    <td className="p-3 font-mono text-muted-foreground">{log.time}</td>
-                    <td className="p-3 font-semibold text-foreground">{log.actor}</td>
-                    <td className="p-3 text-foreground">{log.action}</td>
-                    <td className="p-3 font-mono text-indigo-400">{log.ip}</td>
-                    <td className="p-3">
-                      <Badge className={`text-[10px] ${log.status === "Blocked" ? "bg-rose-500/20 text-rose-400 border-rose-500/30" : "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"}`}>
-                        {log.status}
-                      </Badge>
+                {auditLogs.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="p-8 text-center text-xs text-muted-foreground">
+                      No security audit events or access logs recorded.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  auditLogs.map((log, idx) => (
+                    <tr key={idx} className="hover:bg-accent/20 transition-colors">
+                      <td className="p-3 font-mono text-muted-foreground">{log.time}</td>
+                      <td className="p-3 font-semibold text-foreground">{log.actor}</td>
+                      <td className="p-3 text-foreground">{log.action}</td>
+                      <td className="p-3 font-mono text-indigo-400">{log.ip}</td>
+                      <td className="p-3">
+                        <Badge className={`text-[10px] ${log.status === "Blocked" ? "bg-rose-500/20 text-rose-400 border-rose-500/30" : "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"}`}>
+                          {log.status}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="threats">
+          <div className="rounded-xl border border-border/80 bg-card/60 p-8 text-center text-xs text-muted-foreground">
+            No active threat alerts or intrusion detection incidents reported.
+          </div>
+        </TabsContent>
+
+        <TabsContent value="monitoring">
+          <div className="rounded-xl border border-border/80 bg-card/60 p-8 text-center text-xs text-muted-foreground">
+            System logs and daemon telemetry stream unconfigured.
+          </div>
+        </TabsContent>
+
+        <TabsContent value="apikeys">
+          <div className="rounded-xl border border-border/80 bg-card/60 p-8 text-center text-xs text-muted-foreground">
+            No API keys or integration credentials registered.
           </div>
         </TabsContent>
       </Tabs>

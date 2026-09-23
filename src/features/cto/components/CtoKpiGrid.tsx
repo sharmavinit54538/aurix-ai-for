@@ -30,6 +30,14 @@ export function CtoKpiGrid({ kpis, loading }: CtoKpiGridProps) {
     );
   }
 
+  if (!kpis || kpis.length === 0) {
+    return (
+      <div className="rounded-xl border border-border/80 bg-card/60 p-8 text-center text-xs text-muted-foreground">
+        No KPI telemetry recorded.
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
       {kpis.map((kpi, index) => {

@@ -388,7 +388,7 @@ export function WorkforcePlanningPage() {
                     <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
                       {filterDept !== "all" || filterStatus !== "all"
                         ? "No requisitions match your selected department or status filters."
-                        : "No mock data. Create a new workforce requirement to track department headcount needs."}
+                        : "No workforce requirements found. Create a new workforce requirement to track department headcount needs."}
                     </p>
                     <Button
                       onClick={() => setShowCreateModal(true)}

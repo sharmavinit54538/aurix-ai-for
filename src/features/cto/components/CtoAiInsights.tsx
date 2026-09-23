@@ -36,8 +36,13 @@ export function CtoAiInsights({ insights }: CtoAiInsightsProps) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {insights.map((item, idx) => {
-          const isHigh = item.severity === "High";
+        {(!insights || insights.length === 0) ? (
+          <div className="col-span-full rounded-xl border border-border/60 bg-card/40 p-8 text-center text-xs text-muted-foreground">
+            No autonomous AI recommendations available.
+          </div>
+        ) : (
+          insights.map((item, idx) => {
+            const isHigh = item.severity === "High";
           return (
             <div
               key={idx}
@@ -74,7 +79,7 @@ export function CtoAiInsights({ insights }: CtoAiInsightsProps) {
               </Button>
             </div>
           );
-        })}
+        }))}
       </div>
     </div>
   );

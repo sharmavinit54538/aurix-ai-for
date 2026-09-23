@@ -7,8 +7,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
 export function CeoSettingsPage() {
-  const [compName, setCompName] = useState("OFC HR Enterprise Technologies Inc.");
-  const [taxId, setTaxId] = useState("EIN-84-2940192");
+  const [compName, setCompName] = useState("");
+  const [taxId, setTaxId] = useState("");
 
   const handleSave = () => {
     toast.success("Saved CEO Corporate Settings.");
@@ -59,11 +59,11 @@ export function CeoSettingsPage() {
             <div className="space-y-3">
               <div>
                 <label className="text-xs font-semibold text-muted-foreground block mb-1">Company Legal Name</label>
-                <Input value={compName} onChange={(e) => setCompName(e.target.value)} className="bg-slate-900/60 text-xs" />
+                <Input value={compName} onChange={(e) => setCompName(e.target.value)} placeholder="Enter company legal name" className="bg-slate-900/60 text-xs" />
               </div>
               <div>
                 <label className="text-xs font-semibold text-muted-foreground block mb-1">Tax ID / Employer Identification Number (EIN)</label>
-                <Input value={taxId} onChange={(e) => setTaxId(e.target.value)} className="bg-slate-900/60 font-mono text-xs text-amber-400" />
+                <Input value={taxId} onChange={(e) => setTaxId(e.target.value)} placeholder="Enter Tax ID / EIN" className="bg-slate-900/60 font-mono text-xs text-amber-400" />
               </div>
             </div>
           </div>

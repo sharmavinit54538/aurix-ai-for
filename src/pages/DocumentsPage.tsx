@@ -108,16 +108,16 @@ export function DocumentsPage() {
         const empItems = empsRes.value.data.data.items ?? empsRes.value.data.data ?? [];
         liveEmps = empItems.map((e: any) => ({
           id: e.id,
-          fullName: [e.first_name, e.last_name].filter(Boolean).join(" ").trim() || e.full_name || e.employee_id || "Vinit Sharma",
-          employeeId: e.employee_id || "EMP-190996",
-          department: e.department || "Developer",
-          designation: e.designation || "Senior Software Architect",
-          location: e.work_location || "Hyderabad, Telangana",
-          joiningDate: e.joining_date || "2026-08-01",
-          email: e.company_email || e.personal_email || "ofc360@gmail.com",
-          phone: e.phone || "8976499879",
-          panNumber: e.pan_number || "QYPPS7378N",
-          fatherName: e.father_name || "Dinesh Kumar Sharma",
+          fullName: [e.first_name, e.last_name].filter(Boolean).join(" ").trim() || e.full_name || e.employee_id || "Employee",
+          employeeId: e.employee_id || e.id || "—",
+          department: e.department || "—",
+          designation: e.designation || "—",
+          location: e.work_location || "—",
+          joiningDate: e.joining_date || "—",
+          email: e.company_email || e.personal_email || "—",
+          phone: e.phone || "—",
+          panNumber: e.pan_number || "—",
+          fatherName: e.father_name || "—",
         }));
         setEmployeesList(liveEmps);
       }
@@ -128,7 +128,7 @@ export function DocumentsPage() {
           const mapped: HRDocument[] = rawDocs.map((d: any) => {
             const empName = d.employee
               ? [d.employee.first_name, d.employee.last_name].filter(Boolean).join(" ").trim()
-              : (liveEmps.find((e) => e.id === d.employee_id)?.fullName || "Vinit Sharma");
+              : (liveEmps.find((e) => e.id === d.employee_id)?.fullName || "Employee");
 
             const rawCategory = d.category?.name || d.category || d.document_type || "Employee Documents";
             let category: HRDocument["category"] = "Employee Documents";
@@ -396,28 +396,27 @@ export function DocumentsPage() {
   const autoFillTemplateFields = (templateId: string, targetEmpId?: string) => {
     const activeEmps = employeesList.length > 0 ? employeesList : ws.employees;
     const selectedEmpObj = activeEmps.find(x => x.id === (targetEmpId || genEmployee));
-    const empName = selectedEmpObj ? selectedEmpObj.fullName : "Vinit Sharma";
 
     if (templateId === "offer") {
       setGenFields({
-        "Role": "Senior Software Architect",
-        "Salary (LPA)": "18.5",
-        "Start Date": new Date(Date.now() + 14*24*3600*1000).toISOString().split("T")[0],
+        "Role": selectedEmpObj?.designation || "",
+        "Salary (LPA)": "",
+        "Start Date": "",
       });
     } else if (templateId === "nda") {
       setGenFields({
-        "Witness Name": "Priya Nair (Legal Ops)",
-        "Duration (Years)": "3",
+        "Witness Name": "",
+        "Duration (Years)": "",
       });
     } else if (templateId === "relieving") {
       setGenFields({
-        "Last Working Day": new Date(Date.now() + 30*24*3600*1000).toISOString().split("T")[0],
-        "Reason for Leaving": "Career Advancement & Higher Education",
+        "Last Working Day": "",
+        "Reason for Leaving": "",
       });
     } else {
       setGenFields({
-        "Version Date": "2026-01-01",
-        "Signee Designation": "Lead Architect",
+        "Version Date": new Date().toISOString().split("T")[0],
+        "Signee Designation": selectedEmpObj?.designation || "",
       });
     }
   };
@@ -431,7 +430,7 @@ export function DocumentsPage() {
       const template = DOCUMENT_TEMPLATES.find(x => x.id === genTemplateId);
       const activeEmps = employeesList.length > 0 ? employeesList : ws.employees;
       const emp = activeEmps.find(x => x.id === genEmployee);
-      const recipient = emp ? emp.fullName : (genEmployee === "general" ? "Vinit Sharma" : (activeEmps[0]?.fullName || "Vinit Sharma"));
+      const recipient = emp ? emp.fullName : (genEmployee === "general" ? "General Employee" : (activeEmps[0]?.fullName || "Employee"));
 
       let text = `OFC360 — OFFICIAL HR LETTER
 Date: ${new Date().toISOString().split("T")[0]}
@@ -454,7 +453,7 @@ OFC360`;
       } else if (genTemplateId === "nda") {
         text += `NON-DISCLOSURE AGREEMENT (NDA)
 
-This Confidentiality Agreement is entered into by and between OFC360 and ${recipient}, with witness ${genFields["Witness Name"] || "Priya Nair (Legal Lead)"}.
+This Confidentiality Agreement is entered into by and between OFC360 and ${recipient}, with witness ${genFields["Witness Name"] || "Legal Department"}.
 Both parties agree to hold all proprietary corporate information in strict confidence for a duration of ${genFields["Duration (Years)"] || "3"} years from signing.
 Information covered includes software source code, corporate financials, client records, and AI models.
 
@@ -465,19 +464,19 @@ And Recipient: ${recipient}`;
         text += `RELIEVING & EXPERIENCE CERTIFICATE
 
 This is to certify that ${recipient} was employed with OFC360.
-Their last working day was ${genFields["Last Working Day"] || "2026-08-31"}.
-Reason for release: ${genFields["Reason for Leaving"] || "Resignation (Career Advancement)"}.
+Their last working day was ${genFields["Last Working Day"] || "—"}.
+Reason for release: ${genFields["Reason for Leaving"] || "Voluntary Resignation"}.
 
 During their tenure, they demonstrated professional competence, leadership, and sincere dedication. We wish them grand success in their future endeavors.
 
 Signed,
-Priya Nair, People Ops Lead Partner`;
+Authorized Signatory, People Operations`;
       } else {
         text += `COMPANY HANDBOOK ACKNOWLEDGMENT
-Version: ${genFields["Version Date"] || "2026-01-01"}
+Version: ${genFields["Version Date"] || "—"}
 
-I, ${recipient}, holding the designation of ${genFields["Signee Designation"] || "Lead Architect"},
-acknowledge that I have received, read, and understood all policies stated in the OFC360 Corporate Handbook v4.0.
+I, ${recipient}, holding the designation of ${genFields["Signee Designation"] || "Employee"},
+acknowledge that I have received, read, and understood all policies stated in the OFC360 Corporate Handbook.
 
 Acknowledged and Signed electronically.`;
       }
@@ -1179,7 +1178,7 @@ Acknowledged and Signed electronically.`;
                   <Select value={genEmployee || "general"} onValueChange={val => { setGenEmployee(val); autoFillTemplateFields(genTemplateId, val); }}>
                     <SelectTrigger className="h-8 bg-background border-border text-xs"><SelectValue placeholder="Select Employee" /></SelectTrigger>
                     <SelectContent className="max-h-[200px]">
-                      <SelectItem value="general">Vinit Sharma (General Employee)</SelectItem>
+                      <SelectItem value="general">General / Standard Template</SelectItem>
                       {(employeesList.length > 0 ? employeesList : ws.employees).map(emp => (
                         <SelectItem key={emp.id} value={emp.id}>{emp.fullName}</SelectItem>
                       ))}
@@ -1271,35 +1270,35 @@ Acknowledged and Signed electronically.`;
                               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-[11px]">
                                 <div>
                                   <span className="text-[9px] text-slate-500 block">Employee Name</span>
-                                  <strong className="text-slate-900 font-bold">{selEmp?.fullName || "Vinit Sharma"}</strong>
+                                  <strong className="text-slate-900 font-bold">{selEmp?.fullName || "Employee"}</strong>
                                 </div>
                                 <div>
                                   <span className="text-[9px] text-slate-500 block">Employee ID</span>
-                                  <strong className="text-slate-900 font-mono font-bold">{selEmp?.employeeId || "EMP-190996"}</strong>
+                                  <strong className="text-slate-900 font-mono font-bold">{selEmp?.employeeId || "—"}</strong>
                                 </div>
                                 <div>
                                   <span className="text-[9px] text-slate-500 block">Designation</span>
-                                  <strong className="text-indigo-950 font-bold">{genFields["Role"] || selEmp?.designation || "Senior Software Architect"}</strong>
+                                  <strong className="text-indigo-950 font-bold">{genFields["Role"] || selEmp?.designation || "Employee"}</strong>
                                 </div>
                                 <div>
                                   <span className="text-[9px] text-slate-500 block">Department</span>
-                                  <strong className="text-slate-900 font-bold">{selEmp?.department || "Developer"}</strong>
+                                  <strong className="text-slate-900 font-bold">{selEmp?.department || "—"}</strong>
                                 </div>
                                 <div>
                                   <span className="text-[9px] text-slate-500 block">Reporting Manager</span>
-                                  <strong className="text-slate-900 font-bold">Director of Engineering</strong>
+                                  <strong className="text-slate-900 font-bold">{(selEmp as any)?.reportingManager || "Department Head"}</strong>
                                 </div>
                                 <div>
                                   <span className="text-[9px] text-slate-500 block">Office Location</span>
-                                  <strong className="text-slate-900 font-bold">{selEmp?.location || "Hyderabad, Telangana"}</strong>
+                                  <strong className="text-slate-900 font-bold">{selEmp?.location || "Corporate HQ"}</strong>
                                 </div>
                                 <div>
                                   <span className="text-[9px] text-slate-500 block">Date of Joining</span>
-                                  <strong className="text-slate-900 font-bold">{selEmp?.joiningDate || "2026-07-21"}</strong>
+                                  <strong className="text-slate-900 font-bold">{selEmp?.joiningDate || "—"}</strong>
                                 </div>
                                 <div>
                                   <span className="text-[9px] text-slate-500 block">Last Working Day</span>
-                                  <strong className="text-rose-700 font-bold">{genFields["Last Working Day"] || "2026-08-31"}</strong>
+                                  <strong className="text-rose-700 font-bold">{genFields["Last Working Day"] || "—"}</strong>
                                 </div>
                               </div>
                             </div>
@@ -1309,21 +1308,21 @@ Acknowledged and Signed electronically.`;
                         {/* 3. LETTER BODY */}
                         {(() => {
                           const selEmp = employeesList.find(x => x.id === genEmployee);
-                          const empFirstName = (selEmp?.fullName || "Vinit Sharma").split(' ')[0];
+                          const empFirstName = (selEmp?.fullName || "Employee").split(' ')[0];
                           return (
                             <div className="space-y-2.5 text-[11px] leading-relaxed text-slate-800">
-                              <p className="font-bold text-slate-900">Dear Mr. {empFirstName},</p>
+                              <p className="font-bold text-slate-900">Dear {empFirstName},</p>
                               <p>
-                                This is to certify that you were employed with <strong>OFC360 Private Limited</strong> as a <strong>{genFields["Role"] || selEmp?.designation || "Senior Software Architect"}</strong> in the <strong>{selEmp?.department || "Developer"}</strong> department from <strong>{selEmp?.joiningDate || "2026-07-21"}</strong> to <strong>{genFields["Last Working Day"] || "2026-08-31"}</strong>.
+                                This is to certify that you were employed with <strong>OFC360 Private Limited</strong> as a <strong>{genFields["Role"] || selEmp?.designation || "Employee"}</strong> in the <strong>{selEmp?.department || "General"}</strong> department from <strong>{selEmp?.joiningDate || "—"}</strong> to <strong>{genFields["Last Working Day"] || "—"}</strong>.
                               </p>
                               <p>
                                 During your tenure, you successfully fulfilled your assigned responsibilities and contributed to various engineering initiatives with high professionalism, technical competence, and dedication.
                               </p>
                               <p>
-                                We confirm that all company assets assigned to you have been returned and all applicable exit formalities have been completed successfully. Reason for separation: <em>{genFields["Reason for Leaving"] || "Resignation (Career Advancement)"}</em>.
+                                We confirm that all company assets assigned to you have been returned and all applicable exit formalities have been completed successfully. Reason for separation: <em>{genFields["Reason for Leaving"] || "Voluntary Resignation"}</em>.
                               </p>
                               <p>
-                                Accordingly, you are hereby formally relieved from your duties and services at OFC360 Private Limited effective from the close of business hours on <strong>{genFields["Last Working Day"] || "2026-08-31"}</strong>.
+                                Accordingly, you are hereby formally relieved from your duties and services at OFC360 Private Limited effective from the close of business hours on <strong>{genFields["Last Working Day"] || "—"}</strong>.
                               </p>
                               <p>
                                 We sincerely appreciate your valuable contributions during your employment with us and extend our best wishes for your continued success, professional growth, and prosperity in all future endeavors.
@@ -1359,7 +1358,7 @@ Acknowledged and Signed electronically.`;
                           <div className="text-right space-y-1">
                             <div className="inline-block rounded-lg border border-indigo-200 bg-indigo-50/60 p-2.5 text-right">
                               <p className="text-[8px] font-bold text-indigo-900 uppercase tracking-wider">OFFICIALLY SIGNED & E-ISSUED</p>
-                              <p className="text-[9px] font-semibold text-slate-800">Priya Nair</p>
+                              <p className="text-[9px] font-semibold text-slate-800">People Operations</p>
                               <p className="text-[8px] text-slate-500">Lead People Operations Partner</p>
                               <p className="text-[7px] text-slate-400 font-mono">OFC360 Pvt Ltd</p>
                             </div>
@@ -1418,15 +1417,15 @@ Acknowledged and Signed electronically.`;
                                 </div>
                                 <div className="bg-white p-2.5 rounded-lg border border-slate-200 space-y-0.5">
                                   <span className="text-[9px] font-bold text-indigo-950 uppercase tracking-wider">RECEIVING PARTY (EMPLOYEE)</span>
-                                  <p className="font-bold text-slate-900">{selEmp?.fullName || "Vinit Sharma"}</p>
-                                  <p className="text-[10px] text-slate-500">ID: {selEmp?.employeeId || "EMP-190996"} &bull; {genFields["Role"] || selEmp?.designation || "Senior Software Architect"}</p>
+                                  <p className="font-bold text-slate-900">{selEmp?.fullName || "Employee"}</p>
+                                  <p className="text-[10px] text-slate-500">ID: {selEmp?.employeeId || "—"} &bull; {genFields["Role"] || selEmp?.designation || "Employee"}</p>
                                 </div>
                               </div>
                               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px] pt-1">
-                                <div><span className="text-slate-400 block">Department</span><strong className="text-slate-800">{selEmp?.department || "Developer"}</strong></div>
-                                <div><span className="text-slate-400 block">Work Location</span><strong className="text-slate-800">{selEmp?.location || "Hyderabad, Telangana"}</strong></div>
-                                <div><span className="text-slate-400 block">Email Address</span><strong className="text-slate-800">{selEmp?.email || "ofc360@gmail.com"}</strong></div>
-                                <div><span className="text-slate-400 block">Legal Witness</span><strong className="text-slate-800">{genFields["Witness Name"] || "Priya Nair (Legal Lead)"}</strong></div>
+                                <div><span className="text-slate-400 block">Department</span><strong className="text-slate-800">{selEmp?.department || "—"}</strong></div>
+                                <div><span className="text-slate-400 block">Work Location</span><strong className="text-slate-800">{selEmp?.location || "Corporate HQ"}</strong></div>
+                                <div><span className="text-slate-400 block">Email Address</span><strong className="text-slate-800">{selEmp?.email || "—"}</strong></div>
+                                <div><span className="text-slate-400 block">Legal Witness</span><strong className="text-slate-800">{genFields["Witness Name"] || "Legal Department"}</strong></div>
                               </div>
                             </div>
                           );
@@ -1439,7 +1438,7 @@ Acknowledged and Signed electronically.`;
                             <div className="space-y-1 text-[11px] leading-relaxed text-slate-800">
                               <h4 className="text-[10px] font-bold text-slate-900 uppercase tracking-wider">1. PURPOSE & INTENT</h4>
                               <p>
-                                This Proprietary Non-Disclosure Agreement ("Agreement") is executed between <strong>OFC360 Private Limited</strong> ("Disclosing Party") and <strong>{selEmp?.fullName || "Vinit Sharma"}</strong> ("Receiving Party") to safeguard confidential, proprietary, and technical assets accessed during employment, research, product engineering, customer interaction, and corporate operations.
+                                This Proprietary Non-Disclosure Agreement ("Agreement") is executed between <strong>OFC360 Private Limited</strong> ("Disclosing Party") and <strong>{selEmp?.fullName || "Employee"}</strong> ("Receiving Party") to safeguard confidential, proprietary, and technical assets accessed during employment, research, product engineering, customer interaction, and corporate operations.
                               </p>
                             </div>
                           );
@@ -1503,7 +1502,7 @@ Acknowledged and Signed electronically.`;
                             <div className="border-t-2 border-slate-200 pt-3 grid grid-cols-2 gap-4 items-end">
                               <div className="space-y-3">
                                 <div className="border-b border-slate-400 pb-0.5 max-w-[180px]">
-                                  <p className="font-serif italic text-slate-400 text-[10px]">{selEmp?.fullName || "Vinit Sharma"}</p>
+                                  <p className="font-serif italic text-slate-400 text-[10px]">{selEmp?.fullName || "Employee"}</p>
                                 </div>
                                 <div className="text-[9px] text-slate-600">
                                   <p className="font-bold text-slate-900">Receiving Party Acceptance Signature</p>
@@ -1513,7 +1512,7 @@ Acknowledged and Signed electronically.`;
                               <div className="text-right space-y-1">
                                 <div className="inline-block rounded-lg border border-indigo-200 bg-indigo-50/60 p-2 text-right">
                                   <p className="text-[8px] font-bold text-indigo-900 uppercase tracking-wider">OFFICIALLY SIGNED & EXECUTED</p>
-                                  <p className="text-[9px] font-semibold text-slate-800">{genFields["Witness Name"] || "Priya Nair (Legal Lead)"}</p>
+                                  <p className="text-[9px] font-semibold text-slate-800">{genFields["Witness Name"] || "Legal Department"}</p>
                                   <p className="text-[8px] text-slate-500">Corporate Legal Counsel</p>
                                   <p className="text-[7px] text-slate-400 font-mono">OFC360 Pvt Ltd</p>
                                 </div>
@@ -1569,35 +1568,35 @@ Acknowledged and Signed electronically.`;
                               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-[11px]">
                                 <div>
                                   <span className="text-[9px] text-slate-500 block">Employee Name</span>
-                                  <strong className="text-slate-900 font-bold">{selEmp?.fullName || "Vinit Sharma"}</strong>
+                                  <strong className="text-slate-900 font-bold">{selEmp?.fullName || "Employee"}</strong>
                                 </div>
                                 <div>
                                   <span className="text-[9px] text-slate-500 block">Employee ID</span>
-                                  <strong className="text-slate-900 font-mono font-bold">{selEmp?.employeeId || "EMP-190996"}</strong>
+                                  <strong className="text-slate-900 font-mono font-bold">{selEmp?.employeeId || "—"}</strong>
                                 </div>
                                 <div>
                                   <span className="text-[9px] text-slate-500 block">Designation</span>
-                                  <strong className="text-indigo-950 font-bold">{genFields["Signee Designation"] || selEmp?.designation || "Senior Software Architect"}</strong>
+                                  <strong className="text-indigo-950 font-bold">{genFields["Signee Designation"] || selEmp?.designation || "Employee"}</strong>
                                 </div>
                                 <div>
                                   <span className="text-[9px] text-slate-500 block">Department</span>
-                                  <strong className="text-slate-900 font-bold">{selEmp?.department || "Developer"}</strong>
+                                  <strong className="text-slate-900 font-bold">{selEmp?.department || "—"}</strong>
                                 </div>
                                 <div>
                                   <span className="text-[9px] text-slate-500 block">Business Unit</span>
-                                  <strong className="text-slate-900 font-bold">Engineering & Product</strong>
+                                  <strong className="text-slate-900 font-bold">{selEmp?.department || "Operations"}</strong>
                                 </div>
                                 <div>
                                   <span className="text-[9px] text-slate-500 block">Office Location</span>
-                                  <strong className="text-slate-900 font-bold">{selEmp?.location || "Hyderabad, Telangana"}</strong>
+                                  <strong className="text-slate-900 font-bold">{selEmp?.location || "Corporate HQ"}</strong>
                                 </div>
                                 <div>
                                   <span className="text-[9px] text-slate-500 block">Joining Date</span>
-                                  <strong className="text-slate-900 font-bold">{selEmp?.joiningDate || "2026-07-21"}</strong>
+                                  <strong className="text-slate-900 font-bold">{selEmp?.joiningDate || "—"}</strong>
                                 </div>
                                 <div>
                                   <span className="text-[9px] text-slate-500 block">Policy Version</span>
-                                  <strong className="text-emerald-700 font-bold">v4.0 ({genFields["Version Date"] || "2026-01-01"})</strong>
+                                  <strong className="text-emerald-700 font-bold">Standard ({genFields["Version Date"] || "Current"})</strong>
                                 </div>
                               </div>
                             </div>
@@ -1608,7 +1607,7 @@ Acknowledged and Signed electronically.`;
                         <div className="space-y-2 text-[11px] leading-relaxed text-slate-800">
                           <h4 className="text-[10px] font-bold text-slate-900 uppercase tracking-wider">1. ACKNOWLEDGMENT & AGREEMENT</h4>
                           <p>
-                            I acknowledge that I have received, accessed, and thoroughly reviewed the official <strong>Company Handbook v4.0</strong> issued by <strong>OFC360 Private Limited</strong>.
+                            I acknowledge that I have received, accessed, and thoroughly reviewed the official <strong>Company Handbook</strong> issued by <strong>OFC360 Private Limited</strong>.
                           </p>
                           <p>
                             I understand that the handbook contains vital policies regarding code of conduct, acceptable asset usage, workplace ethics, information security, leave rules, anti-harassment standards, and employment guidelines. I agree to comply with all current and future corporate policies throughout my tenure.
@@ -1640,7 +1639,7 @@ Acknowledged and Signed electronically.`;
                         <div className="border-t-2 border-slate-200 pt-3 grid grid-cols-2 gap-4 items-end">
                           <div className="space-y-3">
                             <div className="border-b border-slate-400 pb-0.5 max-w-[180px]">
-                              <p className="font-serif italic text-slate-400 text-[10px]">{((employeesList.length > 0 ? employeesList : ws.employees).find(x => x.id === genEmployee)?.fullName) || "Vinit Sharma"}</p>
+                              <p className="font-serif italic text-slate-400 text-[10px]">{((employeesList.length > 0 ? employeesList : ws.employees).find(x => x.id === genEmployee)?.fullName) || "Employee"}</p>
                             </div>
                             <div className="text-[9px] text-slate-600">
                               <p className="font-bold text-slate-900">Employee Electronic Signature</p>
@@ -1650,7 +1649,7 @@ Acknowledged and Signed electronically.`;
                           <div className="text-right space-y-1">
                             <div className="inline-block rounded-lg border border-indigo-200 bg-indigo-50/60 p-2.5 text-right">
                               <p className="text-[8px] font-bold text-indigo-900 uppercase tracking-wider">OFFICIALLY REGISTERED & VERIFIED</p>
-                              <p className="text-[9px] font-semibold text-slate-800">Priya Nair</p>
+                              <p className="text-[9px] font-semibold text-slate-800">People Operations</p>
                               <p className="text-[8px] text-slate-500">Lead People Operations Partner</p>
                               <p className="text-[7px] text-slate-400 font-mono">OFC360 Pvt Ltd</p>
                             </div>
@@ -1704,27 +1703,27 @@ Acknowledged and Signed electronically.`;
                               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-[11px]">
                                 <div>
                                   <span className="text-[9px] text-slate-500 block">Candidate Name</span>
-                                  <strong className="text-slate-900 font-bold">{selEmp?.fullName || "Vinit Sharma"}</strong>
+                                  <strong className="text-slate-900 font-bold">{selEmp?.fullName || "Candidate"}</strong>
                                 </div>
                                 <div>
                                   <span className="text-[9px] text-slate-500 block">Candidate ID</span>
-                                  <strong className="text-slate-900 font-mono font-bold">{selEmp?.employeeId || "EMP-190996"}</strong>
+                                  <strong className="text-slate-900 font-mono font-bold">{selEmp?.employeeId || "—"}</strong>
                                 </div>
                                 <div>
                                   <span className="text-[9px] text-slate-500 block">Position Offered</span>
-                                  <strong className="text-indigo-950 font-bold">{genFields["Role"] || selEmp?.designation || "Senior Software Architect"}</strong>
+                                  <strong className="text-indigo-950 font-bold">{genFields["Role"] || selEmp?.designation || "Designated Role"}</strong>
                                 </div>
                                 <div>
                                   <span className="text-[9px] text-slate-500 block">Department</span>
-                                  <strong className="text-slate-900 font-bold">{selEmp?.department || "Developer"}</strong>
+                                  <strong className="text-slate-900 font-bold">{selEmp?.department || "—"}</strong>
                                 </div>
                                 <div>
                                   <span className="text-[9px] text-slate-500 block">Reporting Manager</span>
-                                  <strong className="text-slate-900 font-bold">Director of Engineering</strong>
+                                  <strong className="text-slate-900 font-bold">{(selEmp as any)?.reportingManager || "Department Head"}</strong>
                                 </div>
                                 <div>
                                   <span className="text-[9px] text-slate-500 block">Work Location</span>
-                                  <strong className="text-slate-900 font-bold">{selEmp?.location || "Hyderabad, Telangana"}</strong>
+                                  <strong className="text-slate-900 font-bold">{selEmp?.location || "Corporate HQ"}</strong>
                                 </div>
                                 <div>
                                   <span className="text-[9px] text-slate-500 block">Employment Type</span>
@@ -1732,7 +1731,7 @@ Acknowledged and Signed electronically.`;
                                 </div>
                                 <div>
                                   <span className="text-[9px] text-slate-500 block">Joining Date</span>
-                                  <strong className="text-emerald-700 font-bold">{genFields["Start Date"] || selEmp?.joiningDate || "2026-08-01"}</strong>
+                                  <strong className="text-emerald-700 font-bold">{genFields["Start Date"] || selEmp?.joiningDate || "—"}</strong>
                                 </div>
                               </div>
                             </div>
@@ -1741,9 +1740,9 @@ Acknowledged and Signed electronically.`;
 
                         {/* 3. SALUTATION & BODY */}
                         <div className="space-y-2 text-[11px] leading-relaxed text-slate-800">
-                          <p className="font-bold text-slate-900">Dear Mr. {(((employeesList.length > 0 ? employeesList : ws.employees).find(x => x.id === genEmployee)?.fullName) || "Vinit Sharma").split(' ')[0]},</p>
+                          <p className="font-bold text-slate-900">Dear {(((employeesList.length > 0 ? employeesList : ws.employees).find(x => x.id === genEmployee)?.fullName) || "Candidate").split(' ')[0]},</p>
                           <p>
-                            We are delighted to formally offer you the position of <strong>{genFields["Role"] || "Senior Software Architect"}</strong> at <strong>OFC360 Private Limited</strong>. After evaluating your technical accomplishments and leadership profile, we are confident that your experience will play a crucial role in building our next-generation enterprise AI HR platform.
+                            We are delighted to formally offer you the position of <strong>{genFields["Role"] || "Designated Role"}</strong> at <strong>OFC360 Private Limited</strong>. After evaluating your technical accomplishments and leadership profile, we are confident that your experience will play a crucial role in building our next-generation enterprise AI HR platform.
                           </p>
                           <p>
                             Your appointment is subject to the terms and conditions outlined in this offer letter and corporate governance policies.
@@ -1796,7 +1795,7 @@ Acknowledged and Signed electronically.`;
                                 <tr className="bg-slate-900 text-white font-bold text-[11px]">
                                   <td className="p-2 pl-3">Total Annual CTC (Cost to Company)</td>
                                   <td className="p-2 text-right">₹ 1,54,166 / mo</td>
-                                  <td className="p-2 text-right pr-3 text-emerald-400">₹ {genFields["Salary (LPA)"] || "18.5"} Lakhs (INR 18,50,000)</td>
+                                  <td className="p-2 text-right pr-3 text-emerald-400">₹ {genFields["Salary (LPA)"] || "18.5"} Lakhs</td>
                                 </tr>
                               </tbody>
                             </table>
@@ -1831,7 +1830,7 @@ Acknowledged and Signed electronically.`;
                         <div className="border-t-2 border-slate-200 pt-3 grid grid-cols-2 gap-4 items-end">
                           <div className="space-y-3">
                             <div className="border-b border-slate-400 pb-0.5 max-w-[180px]">
-                              <p className="font-serif italic text-slate-400 text-[10px]">{((employeesList.length > 0 ? employeesList : ws.employees).find(x => x.id === genEmployee)?.fullName) || "Vinit Sharma"}</p>
+                              <p className="font-serif italic text-slate-400 text-[10px]">{((employeesList.length > 0 ? employeesList : ws.employees).find(x => x.id === genEmployee)?.fullName) || "Candidate"}</p>
                             </div>
                             <div className="text-[9px] text-slate-600">
                               <p className="font-bold text-slate-900">Candidate Acceptance Signature</p>
@@ -1841,7 +1840,7 @@ Acknowledged and Signed electronically.`;
                           <div className="text-right space-y-1">
                             <div className="inline-block rounded-lg border border-indigo-200 bg-indigo-50/60 p-2 text-right">
                               <p className="text-[8px] font-bold text-indigo-900 uppercase tracking-wider">OFFICIALLY VERIFIED & E-SIGNED</p>
-                              <p className="text-[9px] font-semibold text-slate-800">Priya Nair</p>
+                              <p className="text-[9px] font-semibold text-slate-800">Talent Acquisition Lead</p>
                               <p className="text-[8px] text-slate-500">Lead Talent Acquisition Partner</p>
                               <p className="text-[7px] text-slate-400 font-mono">OFC360 Pvt Ltd</p>
                             </div>

@@ -4,14 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 
 export function CioCloudNetworkPage() {
-  const trafficData = [
-    { time: "00:00", bandwidth: 4.2, cloudCost: 42 },
-    { time: "04:00", bandwidth: 3.8, cloudCost: 43 },
-    { time: "08:00", bandwidth: 8.4, cloudCost: 46 },
-    { time: "12:00", bandwidth: 12.6, cloudCost: 50 },
-    { time: "16:00", bandwidth: 11.2, cloudCost: 48 },
-    { time: "20:00", bandwidth: 6.5, cloudCost: 44 },
-  ];
+  const trafficData: Array<{
+    time: string;
+    bandwidth: number;
+    cloudCost: number;
+  }> = [];
 
   return (
     <div className="space-y-6 pb-12 text-left">
@@ -38,10 +35,10 @@ export function CioCloudNetworkPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "Active Cloud Clusters", val: "18 Clusters", sub: "AWS • Azure • GCP", color: "text-sky-400" },
-          { label: "Network Bandwidth", val: "12.6 Gbps Peak", sub: "SD-WAN Direct Connect", color: "text-indigo-400" },
-          { label: "VPN Tunnel Uptime", val: "100%", sub: "Zero-Trust Mesh VPN", color: "text-emerald-400" },
-          { label: "SSL Certificate SLA", val: "All Valid", sub: "Auto-renewed Let's Encrypt", color: "text-purple-400" },
+          { label: "Active Cloud Clusters", val: "—", sub: "No clusters connected", color: "text-sky-400" },
+          { label: "Network Bandwidth", val: "—", sub: "SD-WAN telemetry pending", color: "text-indigo-400" },
+          { label: "VPN Tunnel Uptime", val: "—", sub: "No active tunnels", color: "text-emerald-400" },
+          { label: "SSL Certificate SLA", val: "—", sub: "No certificates tracked", color: "text-purple-400" },
         ].map((k, i) => (
           <div key={i} className="rounded-xl border border-border/80 bg-card/60 p-4 space-y-1">
             <div className="text-xs text-muted-foreground font-semibold uppercase">{k.label}</div>
@@ -54,15 +51,21 @@ export function CioCloudNetworkPage() {
       <div className="rounded-2xl border border-border/80 bg-card/60 p-5 space-y-3">
         <h3 className="font-bold text-sm text-foreground">Global Network Traffic Bandwidth (Gbps)</h3>
         <div className="h-56 w-full pt-2">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={trafficData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="time" stroke="#888888" fontSize={10} />
-              <YAxis stroke="#888888" fontSize={10} />
-              <Tooltip contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", borderRadius: "8px" }} />
-              <Area type="monotone" dataKey="bandwidth" stroke="#0284c7" fill="#0284c7" fillOpacity={0.2} name="Bandwidth (Gbps)" />
-            </AreaChart>
-          </ResponsiveContainer>
+          {trafficData.length === 0 ? (
+            <div className="h-full w-full flex items-center justify-center text-xs text-muted-foreground">
+              No network bandwidth telemetry recorded.
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={trafficData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                <XAxis dataKey="time" stroke="#888888" fontSize={10} />
+                <YAxis stroke="#888888" fontSize={10} />
+                <Tooltip contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", borderRadius: "8px" }} />
+                <Area type="monotone" dataKey="bandwidth" stroke="#0284c7" fill="#0284c7" fillOpacity={0.2} name="Bandwidth (Gbps)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
     </div>

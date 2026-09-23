@@ -68,7 +68,7 @@ directly (small talk, definitions, single-step lookups) or call the most
 appropriate specialist tool. When delegating, summarize what you did and why.`,
     suggestions: [
       "Who is at risk of leaving this quarter?",
-      "Draft an offer letter for Priya Singh, Senior Engineer, ₹28L CTC",
+      "Draft an offer letter for a shortlisted candidate",
       "Summarize last month's attrition by department",
       "What's my leave balance?",
     ],

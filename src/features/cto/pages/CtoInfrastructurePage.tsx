@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 export function CtoInfrastructurePage() {
-  const servers = [
-    { name: "aws-us-east-prod-api-01", type: "c6i.2xlarge", ip: "54.210.14.88", cpu: "34%", ram: "6.2/16 GB", status: "Healthy" },
-    { name: "aws-us-east-prod-api-02", type: "c6i.2xlarge", ip: "54.210.15.12", cpu: "28%", ram: "5.8/16 GB", status: "Healthy" },
-    { name: "aws-us-east-gpu-cluster-01", type: "g5.4xlarge (NVIDIA A10G)", ip: "34.204.88.19", cpu: "74%", ram: "42/64 GB", status: "Healthy" },
-    { name: "aws-us-east-db-primary", type: "r6g.2xlarge", ip: "10.0.4.12", cpu: "42%", ram: "28/32 GB", status: "Healthy" },
-  ];
+  const servers: Array<{
+    name: string;
+    type: string;
+    ip: string;
+    cpu: string;
+    ram: string;
+    status: string;
+  }> = [];
 
   return (
     <div className="space-y-6 pb-12 text-left">
@@ -47,18 +49,26 @@ export function CtoInfrastructurePage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-border/40">
-            {servers.map((s, idx) => (
-              <tr key={idx} className="hover:bg-accent/20 transition-colors">
-                <td className="p-3 font-bold text-foreground">{s.name}</td>
-                <td className="p-3 text-muted-foreground">{s.type}</td>
-                <td className="p-3 font-mono text-sky-400">{s.ip}</td>
-                <td className="p-3 font-mono text-emerald-400">{s.cpu}</td>
-                <td className="p-3 font-mono text-indigo-400">{s.ram}</td>
-                <td className="p-3">
-                  <Badge className="text-[10px] bg-emerald-500/20 text-emerald-400 border-emerald-500/30">{s.status}</Badge>
+            {servers.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="p-8 text-center text-xs text-muted-foreground">
+                  No cloud or compute infrastructure connected.
                 </td>
               </tr>
-            ))}
+            ) : (
+              servers.map((s, idx) => (
+                <tr key={idx} className="hover:bg-accent/20 transition-colors">
+                  <td className="p-3 font-bold text-foreground">{s.name}</td>
+                  <td className="p-3 text-muted-foreground">{s.type}</td>
+                  <td className="p-3 font-mono text-sky-400">{s.ip}</td>
+                  <td className="p-3 font-mono text-emerald-400">{s.cpu}</td>
+                  <td className="p-3 font-mono text-indigo-400">{s.ram}</td>
+                  <td className="p-3">
+                    <Badge className="text-[10px] bg-emerald-500/20 text-emerald-400 border-emerald-500/30">{s.status}</Badge>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

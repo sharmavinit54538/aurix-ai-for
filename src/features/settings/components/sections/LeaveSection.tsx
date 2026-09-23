@@ -77,7 +77,7 @@ export function LeaveSection({ canEdit, onDirtyChange }: LeaveSectionProps) {
 
   const [initialData, setInitialData] = useState<LeaveSettingsForm | null>(null);
   const [formData, setFormData] = useState<LeaveSettingsForm>({
-    leaveTypes: DEFAULT_LEAVE_TYPES,
+    leaveTypes: [],
     approvalWorkflow: "manager_then_hr",
     autoApproveDaysAfterPending: 7,
     allowNegativeBalance: false,
@@ -98,8 +98,7 @@ export function LeaveSection({ canEdit, onDirtyChange }: LeaveSectionProps) {
       const data = await fetchLeaveSettings();
       const combined = {
         ...data,
-        leaveTypes:
-          data.leaveTypes && data.leaveTypes.length > 0 ? data.leaveTypes : DEFAULT_LEAVE_TYPES,
+        leaveTypes: data.leaveTypes || [],
       };
       setInitialData(combined);
       setFormData(combined);
@@ -222,11 +221,16 @@ export function LeaveSection({ canEdit, onDirtyChange }: LeaveSectionProps) {
         </div>
 
         <div className="space-y-3">
-          {formData.leaveTypes.map((type, idx) => (
-            <div
-              key={type.id}
-              className="grid grid-cols-1 gap-3 rounded-xl border border-border bg-card/80 p-3.5 sm:grid-cols-12 sm:items-center"
-            >
+          {formData.leaveTypes.length === 0 ? (
+            <div className="p-6 text-center text-xs text-muted-foreground border border-dashed border-border rounded-xl">
+              No leave categories defined. Click "Add Leave Type" to create one.
+            </div>
+          ) : (
+            formData.leaveTypes.map((type, idx) => (
+              <div
+                key={type.id}
+                className="grid grid-cols-1 gap-3 rounded-xl border border-border bg-card/80 p-3.5 sm:grid-cols-12 sm:items-center"
+              >
               <div className="space-y-1 sm:col-span-4">
                 <Label className="text-[11px] font-medium text-muted-foreground">
                   Category Name
@@ -306,7 +310,8 @@ export function LeaveSection({ canEdit, onDirtyChange }: LeaveSectionProps) {
                 )}
               </div>
             </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 

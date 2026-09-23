@@ -4,20 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 
 export function CeoAiInsightsPage() {
-  const forecastData = [
-    { month: "Jul", current: 2.1, predicted: 2.15 },
-    { month: "Aug", current: null, predicted: 2.4 },
-    { month: "Sep", current: null, predicted: 2.7 },
-    { month: "Oct", current: null, predicted: 3.1 },
-    { month: "Nov", current: null, predicted: 3.5 },
-    { month: "Dec", current: null, predicted: 4.0 },
-  ];
-
-  const recommendations = [
-    { title: "Expand APAC Enterprise Sales Reps by 4 Headcount", impact: "+$1.8M ARR Increase", confidence: "94%" },
-    { title: "Migrate Cloud Storage to Cold Tier", impact: "-$42,000 Annual Savings", confidence: "98%" },
-    { title: "Adjust Q4 Enterprise Tier Pricing +8%", impact: "+$420,000 Net Profit", confidence: "91%" },
-  ];
+  const forecastData: any[] = [];
+  const recommendations: any[] = [];
 
   return (
     <div className="space-y-6 pb-12 text-left">
@@ -47,16 +35,20 @@ export function CeoAiInsightsPage() {
           <TrendingUp className="h-4 w-4 text-violet-400" />
           AI Revenue Forecast ($M) — 6-Month Trajectory
         </h3>
-        <div className="h-56 w-full pt-2">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={forecastData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="month" stroke="#888888" fontSize={10} />
-              <YAxis stroke="#888888" fontSize={10} />
-              <Tooltip contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", borderRadius: "8px" }} />
-              <Area type="monotone" dataKey="predicted" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.2} name="Predicted Revenue ($M)" />
-            </AreaChart>
-          </ResponsiveContainer>
+        <div className="h-56 w-full pt-2 flex items-center justify-center">
+          {forecastData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={forecastData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                <XAxis dataKey="month" stroke="#888888" fontSize={10} />
+                <YAxis stroke="#888888" fontSize={10} />
+                <Tooltip contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", borderRadius: "8px" }} />
+                <Area type="monotone" dataKey="predicted" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.2} name="Predicted Revenue ($M)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="text-xs text-muted-foreground">No forecasting data available. Backend API integration pending.</p>
+          )}
         </div>
       </div>
 
@@ -66,15 +58,21 @@ export function CeoAiInsightsPage() {
           Smart Strategic AI Recommendations
         </h3>
         <div className="space-y-2.5">
-          {recommendations.map((rec, idx) => (
-            <div key={idx} className="rounded-lg border border-border/60 bg-card/80 p-3 flex items-center justify-between">
-              <div className="space-y-0.5">
-                <h4 className="font-bold text-xs text-foreground">{rec.title}</h4>
-                <div className="text-[11px] text-emerald-400 font-mono">Predicted Impact: {rec.impact}</div>
+          {recommendations.length > 0 ? (
+            recommendations.map((rec, idx) => (
+              <div key={idx} className="rounded-lg border border-border/60 bg-card/80 p-3 flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <h4 className="font-bold text-xs text-foreground">{rec.title}</h4>
+                  <div className="text-[11px] text-emerald-400 font-mono">Predicted Impact: {rec.impact}</div>
+                </div>
+                <Badge className="bg-violet-500/20 text-violet-300 border-violet-500/30 text-xs font-mono">{rec.confidence} Confidence</Badge>
               </div>
-              <Badge className="bg-violet-500/20 text-violet-300 border-violet-500/30 text-xs font-mono">{rec.confidence} Confidence</Badge>
+            ))
+          ) : (
+            <div className="rounded-xl border border-dashed border-border/60 p-8 text-center text-xs text-muted-foreground">
+              No AI recommendations generated yet.
             </div>
-          ))}
+          )}
         </div>
       </div>
     </div>

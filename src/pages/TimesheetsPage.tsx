@@ -39,11 +39,11 @@ interface PendingApproval {
 }
 
 const AVAILABLE_PROJECTS = [
-  { id: "proj_aurix_core", name: "OFC360 Core Engine" },
-  { id: "proj_recruitment", name: "Enterprise Recruitment Bot" },
-  { id: "proj_compensation", name: "Compensation Analytics" },
-  { id: "proj_internal", name: "Internal Admin Operations" },
-  { id: "proj_client_x", name: "Acme Corp Web Portal" },
+  { id: "proj_operations", name: "General Operations" },
+  { id: "proj_client_work", name: "Client Deliverables" },
+  { id: "proj_internal", name: "Internal Operations" },
+  { id: "proj_engineering", name: "Engineering & Development" },
+  { id: "proj_support", name: "Maintenance & Support" },
 ];
 
 export function TimesheetsPage() {
@@ -369,57 +369,25 @@ export function TimesheetsPage() {
     }
   };
 
-  // AI Autofill Trigger (Local Analysis + Database Save)
-  const triggerAiAutofill = () => {
+  // AI Autofill Trigger (Queries backend suggestions or notifies user)
+  const triggerAiAutofill = async () => {
     setAiLoading(true);
-    setTimeout(async () => {
-      const autofilledRows = [
-        {
-          id: uid("row"),
-          projectId: "proj_aurix_core",
-          hours: [7.5, 8, 7, 8.5, 6, 0, 0],
-          description: "Implemented security tokens parser, fixed hydration mismatches in checkin and live clock panels"
-        },
-        {
-          id: uid("row"),
-          projectId: "proj_recruitment",
-          hours: [0, 0.5, 1.5, 0, 2, 0, 0],
-          description: "Candidate CRM profile reviews and interview feedback panel updates"
-        },
-        {
-          id: uid("row"),
-          projectId: "proj_internal",
-          hours: [1, 0.5, 1, 0.5, 0.5, 0, 0],
-          description: "Daily Standup sync, Jira review & platform retrospectives"
-        }
-      ];
-
-      setRows(autofilledRows);
+    try {
+      const formattedDate = getLocalDateString(startOfWeekDate);
+      const res = await api.get<any>(`/timesheets/ai-suggest?week_start_date=${formattedDate}`).catch(() => null);
+      if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+        setRows(res.data);
+        toast.success("Timesheet pre-filled from recorded activity logs.");
+        loadHistory();
+      } else {
+        toast.info("No external activity logs or automated check-ins found for this week.");
+      }
+    } catch {
+      toast.info("AI timesheet suggestion requires connected tracking integrations.");
+    } finally {
       setAiLoading(false);
       setAiAutofillOpen(false);
-      setTimesheetStatus("draft");
-      
-      // Auto-save entries to database draft
-      try {
-        const formattedDate = getLocalDateString(startOfWeekDate);
-        const entries = autofilledRows.map(r => ({
-          project_id: r.projectId,
-          monday_hours: r.hours[0],
-          tuesday_hours: r.hours[1],
-          wednesday_hours: r.hours[2],
-          thursday_hours: r.hours[3],
-          friday_hours: r.hours[4],
-          saturday_hours: r.hours[5],
-          sunday_hours: r.hours[6],
-          description: r.description
-        }));
-        await api.post(`/timesheets/weekly?week_start_date=${formattedDate}`, entries);
-        toast.success("AI pre-filled timesheet and saved it to backend draft!");
-        loadHistory();
-      } catch (err) {
-        toast.warning("AI generated entries locally but failed to auto-save to database draft.");
-      }
-    }, 1800);
+    }
   };
 
   // API Call: Approve pending timesheet

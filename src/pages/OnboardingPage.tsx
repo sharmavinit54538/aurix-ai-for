@@ -74,7 +74,7 @@ async function syncInvites(ws: ReturnType<typeof useAurix>) {
         first_name: parts[0] || "HR",
         last_name: parts.slice(1).join(" ") || "Member",
         personal_email: h.email,
-        phone: h.phone || "9876543210",
+        phone: h.phone || "",
         department: h.department || "Human Resources",
         designation: h.designation || "HR Specialist",
       };
@@ -85,7 +85,7 @@ async function syncInvites(ws: ReturnType<typeof useAurix>) {
         first_name: parts[0] || "Employee",
         last_name: parts.slice(1).join(" ") || "Member",
         personal_email: e.email,
-        phone: e.phone || "9876543210",
+        phone: e.phone || "",
         department: e.department || "Engineering",
         designation: e.designation || "Software Engineer",
       };
@@ -96,7 +96,7 @@ async function syncInvites(ws: ReturnType<typeof useAurix>) {
         first_name: parts[0] || "Manager",
         last_name: parts.slice(1).join(" ") || "Member",
         personal_email: m.email,
-        phone: m.phone || "9876543210",
+        phone: m.phone || "",
         department: m.department || "Management",
         designation: m.designation || "Team Manager",
       };
@@ -104,8 +104,8 @@ async function syncInvites(ws: ReturnType<typeof useAurix>) {
   ].filter((x) => x.personal_email && x.first_name);
 
   allInvites.forEach((inv) => {
-    const cleanPhone = inv.phone.replace(/\D/g, "");
-    inv.phone = cleanPhone.length >= 10 ? cleanPhone.substring(0, 10) : "9876543210";
+    const cleanPhone = (inv.phone || "").replace(/\D/g, "");
+    inv.phone = cleanPhone;
   });
 
   if (allInvites.length > 0) {
@@ -713,7 +713,7 @@ function AdminProfileStep({ onNext, onBack }: { onNext: () => void; onBack: () =
         first_name: firstName,
         last_name: lastName,
         profile_photo: null,
-        mobile_number: phone.length >= 10 ? phone.substring(0, 10) : "9876543210",
+        mobile_number: phone.trim(),
         designation: designation,
         preferred_language: language,
       };
@@ -746,13 +746,13 @@ function AdminProfileStep({ onNext, onBack }: { onNext: () => void; onBack: () =
     >
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <Field label="First name">
-          <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="John" />
+          <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First Name" />
         </Field>
         <Field label="Last name">
-          <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Doe" />
+          <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last Name" />
         </Field>
         <Field label="Mobile number">
-          <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="9876543210" />
+          <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Enter mobile number" />
         </Field>
         <Field label="Designation">
           <Input value={designation} onChange={(e) => setDesignation(e.target.value)} placeholder="Company Owner" />

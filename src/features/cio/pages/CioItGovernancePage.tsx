@@ -3,11 +3,11 @@ import { FileCheck, Shield, FileText, CheckCircle2, DollarSign, Award, Users } f
 import { Badge } from "@/components/ui/badge";
 
 export function CioItGovernancePage() {
-  const policies = [
-    { name: "Enterprise Information Security Policy (EISP v4.2)", status: "Active & Approved", review: "Dec 2026" },
-    { name: "GDPR & Data Residency Compliance Framework", status: "Active & Approved", review: "Nov 2026" },
-    { name: "SaaS Vendor Risk & Third-Party License Policy", status: "Active & Approved", review: "Oct 2026" },
-  ];
+  const policies: Array<{
+    name: string;
+    status: string;
+    review: string;
+  }> = [];
 
   return (
     <div className="space-y-6 pb-12 text-left">
@@ -34,10 +34,10 @@ export function CioItGovernancePage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "Compliance Score", val: "99.4%", sub: "SOC2 & GDPR Compliant", color: "text-purple-400" },
-          { label: "Vendor Risk Audits", val: "42 Vendors", sub: "100% Risk Assessed", color: "text-indigo-400" },
-          { label: "Software Licenses", val: "1,840 Active", sub: "$1.2M Annual License", color: "text-emerald-400" },
-          { label: "Audit Logs Retention", val: "7 Years", sub: "Immutable Encrypted S3", color: "text-cyan-400" },
+          { label: "Compliance Score", val: "—", sub: "Audit scan pending", color: "text-purple-400" },
+          { label: "Vendor Risk Audits", val: "—", sub: "No vendors cataloged", color: "text-indigo-400" },
+          { label: "Software Licenses", val: "—", sub: "License tracking pending", color: "text-emerald-400" },
+          { label: "Audit Logs Retention", val: "—", sub: "Retention policy unlinked", color: "text-cyan-400" },
         ].map((k, i) => (
           <div key={i} className="rounded-xl border border-border/80 bg-card/60 p-4 space-y-1">
             <div className="text-xs text-muted-foreground font-semibold uppercase">{k.label}</div>
@@ -49,17 +49,23 @@ export function CioItGovernancePage() {
 
       <div className="rounded-2xl border border-border/80 bg-card/60 p-5 space-y-4">
         <h3 className="font-bold text-sm text-foreground">Approved IT Enterprise Governance Policies</h3>
-        <div className="space-y-2.5">
-          {policies.map((p, idx) => (
-            <div key={idx} className="rounded-lg border border-border/60 bg-card/80 p-3 flex items-center justify-between">
-              <div className="space-y-0.5">
-                <h4 className="font-bold text-xs text-foreground">{p.name}</h4>
-                <div className="text-[11px] text-muted-foreground">Next Review Window: {p.review}</div>
+        {policies.length === 0 ? (
+          <div className="p-8 text-center text-xs text-muted-foreground">
+            No enterprise IT policies or compliance frameworks registered.
+          </div>
+        ) : (
+          <div className="space-y-2.5">
+            {policies.map((p, idx) => (
+              <div key={idx} className="rounded-lg border border-border/60 bg-card/80 p-3 flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <h4 className="font-bold text-xs text-foreground">{p.name}</h4>
+                  <div className="text-[11px] text-muted-foreground">Next Review Window: {p.review}</div>
+                </div>
+                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">{p.status}</Badge>
               </div>
-              <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">{p.status}</Badge>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -38,8 +38,8 @@ export function PayrollSection({ canEdit, onDirtyChange }: PayrollSectionProps) 
   const [formData, setFormData] = useState<PayrollSettingsForm>({
     payFrequency: "monthly",
     currency: "INR (₹)",
-    salaryStructureName: "Indian Standard CTC Breakup",
-    components: DEFAULT_COMPONENTS,
+    salaryStructureName: "Standard CTC Breakup",
+    components: [],
     pfEnabled: true,
     pfEmployeePercent: 12,
     pfEmployerPercent: 12,
@@ -69,8 +69,7 @@ export function PayrollSection({ canEdit, onDirtyChange }: PayrollSectionProps) 
       const data = await fetchPayrollSettings();
       const combined = {
         ...data,
-        components:
-          data.components && data.components.length > 0 ? data.components : DEFAULT_COMPONENTS,
+        components: data.components || [],
       };
       setInitialData(combined);
       setFormData(combined);
@@ -192,21 +191,27 @@ export function PayrollSection({ canEdit, onDirtyChange }: PayrollSectionProps) 
             Standard CTC Earnings & Deductions
           </Label>
           <div className="divide-y divide-border/60 rounded-xl border border-border bg-card/80 overflow-hidden">
-            {formData.components.map((c, i) => (
-              <div key={i} className="flex items-center justify-between p-3 text-xs">
-                <div className="space-y-0.5">
-                  <span className="font-medium text-foreground">{c.name}</span>
-                  <span className="ml-2 text-[10px] text-muted-foreground uppercase tracking-wider">
-                    {c.taxExempt ? "Tax Exempt" : "Taxable"}
-                  </span>
-                </div>
-                <div className="font-mono text-muted-foreground">
-                  {c.percentageOfCtc
-                    ? `${c.percentageOfCtc}% of CTC`
-                    : `₹${c.fixedMonthly}/mo fixed`}
-                </div>
+            {formData.components.length === 0 ? (
+              <div className="p-4 text-center text-xs text-muted-foreground">
+                No salary components configured.
               </div>
-            ))}
+            ) : (
+              formData.components.map((c, i) => (
+                <div key={i} className="flex items-center justify-between p-3 text-xs">
+                  <div className="space-y-0.5">
+                    <span className="font-medium text-foreground">{c.name}</span>
+                    <span className="ml-2 text-[10px] text-muted-foreground uppercase tracking-wider">
+                      {c.taxExempt ? "Tax Exempt" : "Taxable"}
+                    </span>
+                  </div>
+                  <div className="font-mono text-muted-foreground">
+                    {c.percentageOfCtc
+                      ? `${c.percentageOfCtc}% of CTC`
+                      : `₹${c.fixedMonthly}/mo fixed`}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

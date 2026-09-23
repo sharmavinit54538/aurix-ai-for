@@ -105,21 +105,21 @@ export default function RostersPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // Forms state
-  const [formEmployeeId, setFormEmployeeId] = useState("AUR-1042");
+  const [formEmployeeId, setFormEmployeeId] = useState("");
   const [formShift, setFormShift] = useState<RosterEntry["shift"]>("Morning");
-  const [formDate, setFormDate] = useState("2026-06-25");
+  const [formDate, setFormDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [formStartTime, setFormStartTime] = useState("08:00");
   const [formEndTime, setFormEndTime] = useState("16:00");
   const [formBreak, setFormBreak] = useState("45 mins");
-  const [formLocation, setFormLocation] = useState("San Francisco HQ");
+  const [formLocation, setFormLocation] = useState("Corporate HQ");
   const [formStatus, setFormStatus] = useState<RosterEntry["status"]>("Approved");
   const [formRecurring, setFormRecurring] = useState(false);
 
   // Create Roster form
   const [createRosterName, setCreateRosterName] = useState("");
-  const [createRosterDept, setCreateRosterDept] = useState("Engineering");
-  const [createRosterStart, setCreateRosterStart] = useState("2026-06-22");
-  const [createRosterEnd, setCreateRosterEnd] = useState("2026-06-28");
+  const [createRosterDept, setCreateRosterDept] = useState("General");
+  const [createRosterStart, setCreateRosterStart] = useState(() => new Date().toISOString().split("T")[0]);
+  const [createRosterEnd, setCreateRosterEnd] = useState(() => new Date(Date.now() + 6 * 86400000).toISOString().split("T")[0]);
 
   // Confirm delete flow
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -172,7 +172,7 @@ export default function RostersPage() {
           code: e.employee_id || e.code || `EMP-${(e.id || "").slice(0, 4)}`,
           dept: e.department || "General",
           role: e.designation || e.role || "Staff",
-          mgr: e.manager_name || e.manager || "Alex Morgan",
+          mgr: e.manager_name || e.manager || "",
         }));
         setEmployees(parsed);
         if (parsed.length > 0 && !formEmployeeId) {
@@ -194,6 +194,19 @@ export default function RostersPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  const availableManagers = useMemo(() => {
+    const set = new Set<string>();
+    employees.forEach(e => { if (e.mgr && e.mgr.trim()) set.add(e.mgr.trim()); });
+    rosters.forEach(r => { if ((r as any).managerName && (r as any).managerName.trim()) set.add((r as any).managerName.trim()); });
+    return Array.from(set);
+  }, [employees, rosters]);
+
+  const availableLocations = useMemo(() => {
+    const set = new Set<string>(["Corporate HQ", "Remote"]);
+    rosters.forEach(r => { if (r.location && r.location.trim()) set.add(r.location.trim()); });
+    return Array.from(set);
+  }, [rosters]);
 
   // Auto-Save Trigger
   const triggerAutoSave = () => {
@@ -665,8 +678,9 @@ export default function RostersPage() {
                 className="bg-transparent font-medium text-foreground outline-none cursor-pointer"
               >
                 <option value="all" className="bg-background">All Locations</option>
-                <option value="san francisco hq" className="bg-background">San Francisco HQ</option>
-                <option value="remote" className="bg-background">Remote</option>
+                {availableLocations.map(loc => (
+                  <option key={loc} value={loc.toLowerCase()} className="bg-background">{loc}</option>
+                ))}
               </select>
             </div>
 
@@ -679,9 +693,9 @@ export default function RostersPage() {
                 className="bg-transparent font-medium text-foreground outline-none cursor-pointer"
               >
                 <option value="all" className="bg-background">All Managers</option>
-                <option value="maya chen" className="bg-background">Maya Chen</option>
-                <option value="priya nair" className="bg-background">Priya Nair</option>
-                <option value="michael scott" className="bg-background">Michael Scott</option>
+                {availableManagers.map(mgr => (
+                  <option key={mgr} value={mgr.toLowerCase()} className="bg-background">{mgr}</option>
+                ))}
               </select>
             </div>
 
@@ -765,7 +779,6 @@ export default function RostersPage() {
                         key={v}
                         onClick={() => {
                           setCalendarView(v as any);
-                          toast.info(`Switched view to ${v} (Demo Mode)`);
                         }}
                         className={`px-2.5 py-1 rounded ${
                           calendarView === v ? "bg-muted font-bold text-foreground" : "text-muted-foreground hover:text-foreground"

@@ -6,18 +6,20 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
 export function CtoAiPlatformPage() {
-  const models = [
-    { name: "Llama-3-70B-Instruct", type: "LLM / Text Generation", status: "Active", gpu: "4x A10G (42 GB)", latency: "140ms" },
-    { name: "Qwen-2.5-Coder-32B", type: "Code Intelligence", status: "Active", gpu: "2x A10G (24 GB)", latency: "95ms" },
-    { name: "bge-large-en-v1.5", type: "Vector Embeddings", status: "Active", gpu: "1x A10G (8 GB)", latency: "12ms" },
-    { name: "Whisper-v3-Turbo", type: "Speech Recognition", status: "Idle", gpu: "Shared GPU", latency: "180ms" },
-  ];
+  const models: Array<{
+    name: string;
+    type: string;
+    status: string;
+    gpu: string;
+    latency: string;
+  }> = [];
 
-  const agents = [
-    { name: "Payroll Copilot Agent", model: "Qwen-2.5-Coder", role: "Automated Tax & Calculation Engine", status: "Running" },
-    { name: "Recruitment Resume Screener", model: "Llama-3-70B", role: "AI Candidate Scoring & Shortlisting", status: "Running" },
-    { name: "Attendance Anomaly Agent", model: "Llama-3-8B", role: "Geofence & Overtime Verification", status: "Running" },
-  ];
+  const agents: Array<{
+    name: string;
+    model: string;
+    role: string;
+    status: string;
+  }> = [];
 
   return (
     <div className="space-y-6 pb-12 text-left">
@@ -41,7 +43,7 @@ export function CtoAiPlatformPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button size="sm" onClick={() => toast.success("Deploy AI Agent modal opened")} className="bg-violet-600 hover:bg-violet-500 text-white text-xs cursor-pointer">
+            <Button size="sm" onClick={() => toast.info("AI Agent deployment integration pending.")} className="bg-violet-600 hover:bg-violet-500 text-white text-xs cursor-pointer">
               <Plus className="mr-1.5 h-3.5 w-3.5" />
               Deploy AI Agent
             </Button>
@@ -51,10 +53,10 @@ export function CtoAiPlatformPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "Active LLM Models", val: "8 Deployed", sub: "100% Uptime SLA", color: "text-violet-400" },
-          { label: "Daily Token Consumption", val: "1.4M Tokens", sub: "$14.20 daily cost", color: "text-emerald-400" },
-          { label: "Avg Inference Latency", val: "140ms", sub: "NVIDIA A10G Cluster", color: "text-cyan-400" },
-          { label: "Vector Search Index", val: "4.2M Items", sub: "Qdrant Vector DB", color: "text-purple-400" },
+          { label: "Active LLM Models", val: "—", sub: "No models deployed", color: "text-violet-400" },
+          { label: "Daily Token Consumption", val: "—", sub: "Token metering pending", color: "text-emerald-400" },
+          { label: "Avg Inference Latency", val: "—", sub: "Latency telemetry pending", color: "text-cyan-400" },
+          { label: "Vector Search Index", val: "—", sub: "Vector DB offline", color: "text-purple-400" },
         ].map((k, i) => (
           <div key={i} className="rounded-xl border border-border/80 bg-card/60 p-4 space-y-1">
             <div className="text-xs text-muted-foreground font-semibold uppercase">{k.label}</div>
@@ -86,34 +88,66 @@ export function CtoAiPlatformPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40">
-                {models.map((m, idx) => (
-                  <tr key={idx} className="hover:bg-accent/20 transition-colors">
-                    <td className="p-3 font-bold text-foreground">{m.name}</td>
-                    <td className="p-3 text-muted-foreground">{m.type}</td>
-                    <td className="p-3 font-mono text-purple-400">{m.gpu}</td>
-                    <td className="p-3 font-mono text-emerald-400">{m.latency}</td>
-                    <td className="p-3">
-                      <Badge className="text-[10px] bg-emerald-500/20 text-emerald-400 border-emerald-500/30">{m.status}</Badge>
+                {models.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="p-8 text-center text-xs text-muted-foreground">
+                      No active AI models or LLMs registered.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  models.map((m, idx) => (
+                    <tr key={idx} className="hover:bg-accent/20 transition-colors">
+                      <td className="p-3 font-bold text-foreground">{m.name}</td>
+                      <td className="p-3 text-muted-foreground">{m.type}</td>
+                      <td className="p-3 font-mono text-purple-400">{m.gpu}</td>
+                      <td className="p-3 font-mono text-emerald-400">{m.latency}</td>
+                      <td className="p-3">
+                        <Badge className="text-[10px] bg-emerald-500/20 text-emerald-400 border-emerald-500/30">{m.status}</Badge>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         </TabsContent>
 
         <TabsContent value="agents">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {agents.map((a, i) => (
-              <div key={i} className="rounded-xl border border-border/80 bg-card/60 p-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-sm text-foreground">{a.name}</h4>
-                  <Badge className="text-[10px] bg-emerald-500/20 text-emerald-400 border-emerald-500/30">{a.status}</Badge>
+          {agents.length === 0 ? (
+            <div className="rounded-xl border border-border/80 bg-card/60 p-8 text-center text-xs text-muted-foreground">
+              No autonomous AI agents registered or running.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {agents.map((a, i) => (
+                <div key={i} className="rounded-xl border border-border/80 bg-card/60 p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-bold text-sm text-foreground">{a.name}</h4>
+                    <Badge className="text-[10px] bg-emerald-500/20 text-emerald-400 border-emerald-500/30">{a.status}</Badge>
+                  </div>
+                  <div className="text-xs text-muted-foreground">{a.role}</div>
+                  <div className="text-[11px] font-mono text-violet-400 pt-2 border-t border-border/40">Base LLM: {a.model}</div>
                 </div>
-                <div className="text-xs text-muted-foreground">{a.role}</div>
-                <div className="text-[11px] font-mono text-violet-400 pt-2 border-t border-border/40">Base LLM: {a.model}</div>
-              </div>
-            ))}
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="prompt">
+          <div className="rounded-xl border border-border/80 bg-card/60 p-8 text-center text-xs text-muted-foreground">
+            No prompt telemetry or query logs available.
+          </div>
+        </TabsContent>
+
+        <TabsContent value="vector">
+          <div className="rounded-xl border border-border/80 bg-card/60 p-8 text-center text-xs text-muted-foreground">
+            Vector database collection telemetry offline or unconfigured.
+          </div>
+        </TabsContent>
+
+        <TabsContent value="cost">
+          <div className="rounded-xl border border-border/80 bg-card/60 p-8 text-center text-xs text-muted-foreground">
+            No AI token consumption or cost breakdown records available.
           </div>
         </TabsContent>
       </Tabs>

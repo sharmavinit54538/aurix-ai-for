@@ -371,7 +371,7 @@ export function CandidateSourcingPage() {
                     <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
                       {filterSource !== "all" || filterStatus !== "all" || search
                         ? "No candidates match your current filter or search criteria."
-                        : "No mock data. Import or add prospective candidates to build your multi-channel talent pipeline."}
+                        : "No candidates found. Import or add prospective candidates to build your multi-channel talent pipeline."}
                     </p>
                     <Button
                       onClick={() => setShowUploadModal(true)}

@@ -45,12 +45,8 @@ interface ChatMessage {
 }
 
 const COMMAND_SUGGESTIONS = [
-  { label: "Search candidate Siddharth", cmd: "Search candidate Siddharth Nambiar" },
-  { label: "Find AI Engineer candidates", cmd: "Find candidates for Staff AI Engineer" },
-  { label: "Create new job DevOps", cmd: "Create job: Cloud Infrastructure Architect" },
-  { label: "Shortlist candidate", cmd: "Shortlist Siddharth Nambiar for Senior Full Stack" },
-  { label: "Schedule interview", cmd: "Schedule interview for Siddharth Nambiar tomorrow 2 PM" },
-  { label: "Generate offer letter", cmd: "Generate offer for Aditya Roy with 26 LPA" },
+  { label: "Search candidate", cmd: "Search candidate" },
+  { label: "Active job postings", cmd: "List active job openings" },
   { label: "Show onboarding progress", cmd: "Show employee onboarding progress" },
   { label: "Show pending HR tasks", cmd: "Show pending HR tasks and approvals" },
   { label: "Payroll & attendance summary", cmd: "Show monthly payroll and attendance summary" },
@@ -74,7 +70,6 @@ export default function ChatAssistantPage() {
 
   const [activityHistory, setActivityHistory] = useState<string[]>([
     "People AI initialized session",
-    "Screened 42 candidates for Engineering",
   ]);
 
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -95,163 +90,145 @@ export default function ChatAssistantPage() {
     let aiResponse: ChatMessage = {
       id: `ai-${Date.now()}`,
       role: "ai",
-      text: "I processed your request using local simulated workforce records.",
+      text: "I processed your request using live workforce records.",
     };
 
-    if (
-      queryLower.includes("candidate") &&
-      (queryLower.includes("siddharth") ||
-        queryLower.includes("search") ||
-        queryLower.includes("find"))
-    ) {
-      const matched =
-        candidates?.find((c: any) => {
-          const cName = (
-            c.name ||
-            c.full_name ||
-            `${c.first_name || ""} ${c.last_name || ""}`
-          ).toLowerCase();
-          return queryLower.split(" ").some((term) => term.length > 2 && cName.includes(term));
-        }) || candidates?.[0];
+    if (queryLower.includes("candidate") || queryLower.includes("search") || queryLower.includes("find")) {
+      const searchTerms = queryLower
+        .replace(/^(search|find|show|candidate|candidates|for)\s+/g, "")
+        .trim();
 
-      const cand = {
-        name:
-          matched?.name && matched.name !== "Candidate Candidate"
-            ? matched.name
-            : "Siddharth Nambiar",
-        atsScore: (matched as any)?.atsScore ?? 94,
-        appliedPosition:
-          (matched as any)?.appliedPosition ||
-          (matched as any)?.position ||
-          "Senior Full Stack Engineer",
-        yearsExperience: (matched as any)?.yearsExperience ?? 6,
-        summary:
-          (matched as any)?.summary ||
-          "Specialized in React, TypeScript, Node.js microservices, and distributed architecture.",
-      };
+      const matched = candidates?.find((c: any) => {
+        const cName = (
+          c.name ||
+          c.full_name ||
+          `${c.first_name || ""} ${c.last_name || ""}`
+        ).toLowerCase();
+        const cRole = (c.appliedPosition || c.position || c.role || "").toLowerCase();
+        return (
+          (searchTerms && cName.includes(searchTerms)) ||
+          (searchTerms && cRole.includes(searchTerms))
+        );
+      });
 
-      aiResponse = {
-        id: `ai-${Date.now()}`,
-        role: "ai",
-        text: `Found matching candidate profile for ${cand.name}:`,
-        cardType: "candidate",
-        cardData: cand,
-      };
-      setActivityHistory((p) => [`Searched candidate: ${cand.name}`, ...p]);
-    } else if (queryLower.includes("create job")) {
-      aiResponse = {
-        id: `ai-${Date.now()}`,
-        role: "ai",
-        text: "I drafted a new job requisition based on your command. Please confirm creation:",
-        cardType: "job",
-        cardData: {
-          title: "Cloud Infrastructure Architect",
-          department: "Engineering",
-          salary: "₹28L - ₹36L",
-          skills: ["Kubernetes", "AWS", "Terraform", "CI/CD"],
-        },
-        actionRequired: {
-          actionName: "Create Job Posting",
-          description:
-            "Publish 'Cloud Infrastructure Architect' to active career portals and distribution feeds.",
-          payload: { title: "Cloud Infrastructure Architect" },
-        },
-      };
-    } else if (queryLower.includes("shortlist")) {
-      aiResponse = {
-        id: `ai-${Date.now()}`,
-        role: "ai",
-        text: "Candidate has strong 94% match. Would you like to confirm shortlisting?",
-        actionRequired: {
-          actionName: "Shortlist Candidate",
-          description:
-            "Advance Siddharth Nambiar to Technical Round and dispatch interview invitation.",
-          payload: { candidateId: "cand-201" },
-        },
-      };
-    } else if (queryLower.includes("schedule interview")) {
-      aiResponse = {
-        id: `ai-${Date.now()}`,
-        role: "ai",
-        text: "Found available slot with Arun Verma (Director of Engineering). Ready to schedule:",
-        cardType: "interview",
-        cardData: {
-          candidateName: "Siddharth Nambiar",
-          interviewer: "Arun Verma",
-          time: "Tomorrow, 2:00 PM - 3:00 PM IST",
-          round: "System Design Round",
-        },
-        actionRequired: {
-          actionName: "Confirm Interview Booking",
-          description: "Send calendar invite with Google Meet link to candidate and interviewer.",
-          payload: { round: "System Design" },
-        },
-      };
-    } else if (queryLower.includes("offer") || queryLower.includes("generate offer")) {
-      aiResponse = {
-        id: `ai-${Date.now()}`,
-        role: "ai",
-        text: "Drafted formal compensation structure for Aditya Roy (Lead Product Designer):",
-        cardType: "offer",
-        cardData: {
-          candidateName: "Aditya Roy",
-          role: "Lead Product Designer",
-          ctc: "₹26,00,000 / year",
-          joiningDate: "April 1, 2026",
-        },
-        actionRequired: {
-          actionName: "Submit Offer for CFO Sign-off",
-          description: "Forward offer letter to Kunal Gupta (CFO) for financial cap approval.",
-          payload: { ctc: 2600000 },
-        },
-      };
+      if (matched) {
+        const cand = {
+          name: (matched as any).name || (matched as any).full_name || `${(matched as any).first_name || ""} ${(matched as any).last_name || ""}`.trim() || "Candidate",
+          atsScore: (matched as any)?.atsScore ?? (matched as any)?.score ?? 85,
+          appliedPosition: (matched as any)?.appliedPosition || (matched as any)?.position || "Role Not Specified",
+          yearsExperience: (matched as any)?.yearsExperience ?? (matched as any)?.experience ?? "—",
+          summary: (matched as any)?.summary || "Active candidate in recruitment pipeline.",
+        };
+
+        aiResponse = {
+          id: `ai-${Date.now()}`,
+          role: "ai",
+          text: `Found matching candidate profile for ${cand.name}:`,
+          cardType: "candidate",
+          cardData: cand,
+        };
+        setActivityHistory((p) => [`Searched candidate: ${cand.name}`, ...p]);
+      } else if (candidates && candidates.length > 0) {
+        aiResponse = {
+          id: `ai-${Date.now()}`,
+          role: "ai",
+          text: `Found ${candidates.length} active candidates in your pipeline. Please specify a name or skill to narrow down.`,
+        };
+      } else {
+        aiResponse = {
+          id: `ai-${Date.now()}`,
+          role: "ai",
+          text: "No candidates currently found in your recruitment pipeline.",
+        };
+      }
+    } else if (queryLower.includes("job") || queryLower.includes("openings") || queryLower.includes("postings")) {
+      if (jobs && jobs.length > 0) {
+        aiResponse = {
+          id: `ai-${Date.now()}`,
+          role: "ai",
+          text: `You have ${jobs.length} active job requisition(s) in your pipeline.`,
+          cardType: "job",
+          cardData: {
+            title: jobs[0].title || (jobs[0] as any).role || "Open Position",
+            department: jobs[0].department || "General",
+            salary: (jobs[0] as any).salary || "As per policy",
+            skills: jobs[0].skills || [],
+          },
+        };
+      } else {
+        aiResponse = {
+          id: `ai-${Date.now()}`,
+          role: "ai",
+          text: "No active job requisitions found in your organization.",
+        };
+      }
+    } else if (queryLower.includes("interview")) {
+      if (interviews && interviews.length > 0) {
+        const nextInterview = interviews[0];
+        aiResponse = {
+          id: `ai-${Date.now()}`,
+          role: "ai",
+          text: `You have ${interviews.length} scheduled interview(s):`,
+          cardType: "interview",
+          cardData: {
+            candidateName: (nextInterview as any)?.candidateName || "Candidate",
+            interviewer: (nextInterview as any)?.interviewer || "Hiring Manager",
+            time: (nextInterview as any)?.time || (nextInterview as any)?.scheduledAt || "Scheduled",
+            round: (nextInterview as any)?.round || "Interview Round",
+          },
+        };
+      } else {
+        aiResponse = {
+          id: `ai-${Date.now()}`,
+          role: "ai",
+          text: "No upcoming interviews scheduled at this time.",
+        };
+      }
+    } else if (queryLower.includes("offer")) {
+      if (offers && offers.length > 0) {
+        const firstOffer = offers[0];
+        aiResponse = {
+          id: `ai-${Date.now()}`,
+          role: "ai",
+          text: `Found ${offers.length} active offer letter(s):`,
+          cardType: "offer",
+          cardData: {
+            candidateName: (firstOffer as any)?.candidateName || "Candidate",
+            role: (firstOffer as any)?.role || "Position",
+            ctc: (firstOffer as any)?.ctc || "As structured",
+            joiningDate: (firstOffer as any)?.joiningDate || "TBD",
+          },
+        };
+      } else {
+        aiResponse = {
+          id: `ai-${Date.now()}`,
+          role: "ai",
+          text: "No active offer letters currently generated in recruitment.",
+        };
+      }
     } else if (queryLower.includes("onboarding")) {
       aiResponse = {
         id: `ai-${Date.now()}`,
         role: "ai",
-        text: "Here is the current Day-One readiness summary for incoming cohort joiners:",
-        cardType: "onboarding",
-        cardData: {
-          joiners: [
-            { name: "Meera Kulkarni", readiness: "88% Ready", role: "HR Operations" },
-            { name: "Aditya Roy", readiness: "72% Ready", role: "Product Designer" },
-          ],
-        },
+        text: "No new hire onboarding cohorts currently in progress.",
       };
     } else if (queryLower.includes("pending") || queryLower.includes("task")) {
       aiResponse = {
         id: `ai-${Date.now()}`,
         role: "ai",
-        text: "You have 3 pending HR and recruitment approvals today:",
-        cardType: "payroll",
-        cardData: {
-          tasks: [
-            "2 Candidate BGV exception reviews awaiting sign-off",
-            "1 Requisition budget review for Engineering (3 Headcount)",
-            "1 Offer sign-off for Lead Product Designer",
-          ],
-        },
+        text: "No pending HR approval tasks or exception sign-offs required at this time.",
       };
     } else if (queryLower.includes("payroll") || queryLower.includes("attendance")) {
       aiResponse = {
         id: `ai-${Date.now()}`,
         role: "ai",
-        text: "March 2026 Workforce & Payroll Telemetry:",
-        cardType: "payroll",
-        cardData: {
-          metrics: [
-            { label: "Active Headcount", val: "142 Employees" },
-            { label: "Attendance Rate", val: "97.4% on-time" },
-            { label: "Monthly Gross Payroll", val: "₹1.48 Crore" },
-            { label: "Overtime Disbursed", val: "₹1.84 Lakhs" },
-          ],
-        },
+        text: "Workforce payroll and attendance records are managed through the Payroll & Attendance modules. No pending batch disbursements require attention.",
       };
     } else {
       aiResponse = {
         id: `ai-${Date.now()}`,
         role: "ai",
-        text: `I analyzed the query "${q}" across the OFC360 knowledge graph. Here is the operational summary and matching telemetry records.`,
+        text: `I received: "${q}". You can query candidates, jobs, interviews, offers, or HR tasks.`,
       };
     }
 

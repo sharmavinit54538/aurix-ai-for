@@ -6,13 +6,15 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
 export function CtoDevelopersPage() {
-  const developers = [
-    { name: "Vinit Sharma", title: "Chief Technology Officer", skills: ["System Design", "Python", "Kubernetes", "AI/ML"], commits: 342, prs: 48, score: "99%", status: "Online" },
-    { name: "Alex Rivera", title: "Principal Systems Architect", skills: ["PostgreSQL", "FastAPI", "Redis", "Distributed Systems"], commits: 218, prs: 34, score: "96%", status: "Online" },
-    { name: "Neha Gupta", title: "Senior Backend Engineer", skills: ["Python", "AsyncIO", "WebSockets", "Docker"], commits: 184, prs: 29, score: "94%", status: "In Meeting" },
-    { name: "Rohan Verma", title: "Lead DevOps Specialist", skills: ["Terraform", "Kubernetes", "AWS", "CI/CD"], commits: 156, prs: 22, score: "98%", status: "Online" },
-    { name: "Priya Patel", title: "Senior Frontend Engineer", skills: ["React", "TypeScript", "TailwindCSS", "State Mgmt"], commits: 142, prs: 19, score: "95%", status: "Offline" },
-  ];
+  const developers: Array<{
+    name: string;
+    title: string;
+    skills: string[];
+    commits: number;
+    prs: number;
+    score: string;
+    status: string;
+  }> = [];
 
   return (
     <div className="space-y-6 pb-12 text-left">
@@ -36,7 +38,7 @@ export function CtoDevelopersPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button size="sm" onClick={() => toast.success("Add Developer Form opened")} className="bg-blue-600 hover:bg-blue-500 text-white text-xs cursor-pointer">
+            <Button size="sm" onClick={() => toast.info("Developer registration API integration pending.")} className="bg-blue-600 hover:bg-blue-500 text-white text-xs cursor-pointer">
               <UserPlus className="mr-1.5 h-3.5 w-3.5" />
               Add Developer
             </Button>
@@ -46,10 +48,10 @@ export function CtoDevelopersPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "Active Developers", val: "24 Engineers", sub: "18 Senior • 6 Lead", color: "text-blue-400" },
-          { label: "Total Commits (30d)", val: "1,248 Commits", sub: "+18% vs last month", color: "text-emerald-400" },
-          { label: "PR Code Review Time", val: "1.4 Hours", sub: "Fast review cycle", color: "text-cyan-400" },
-          { label: "Team Productivity", val: "96.4%", sub: "High efficiency score", color: "text-indigo-400" },
+          { label: "Active Developers", val: "—", sub: "No active developers recorded", color: "text-blue-400" },
+          { label: "Total Commits (30d)", val: "—", sub: "Git telemetry pending", color: "text-emerald-400" },
+          { label: "PR Code Review Time", val: "—", sub: "Awaiting PR integration", color: "text-cyan-400" },
+          { label: "Team Productivity", val: "—", sub: "No metrics calculated", color: "text-indigo-400" },
         ].map((k, i) => (
           <div key={i} className="rounded-xl border border-border/80 bg-card/60 p-4 space-y-1">
             <div className="text-xs text-muted-foreground font-semibold uppercase">{k.label}</div>
@@ -81,24 +83,50 @@ export function CtoDevelopersPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40">
-                {developers.map((d, i) => (
-                  <tr key={i} className="hover:bg-accent/20 transition-colors">
-                    <td className="p-3 font-bold text-foreground">{d.name}</td>
-                    <td className="p-3 text-muted-foreground">{d.title}</td>
-                    <td className="p-3 flex flex-wrap gap-1">
-                      {d.skills.map((s, si) => (
-                        <Badge key={si} variant="outline" className="text-[9px] border-blue-500/20 text-blue-300">{s}</Badge>
-                      ))}
-                    </td>
-                    <td className="p-3 font-mono text-blue-400 font-bold">{d.commits}</td>
-                    <td className="p-3 font-mono text-emerald-400 font-bold">{d.prs}</td>
-                    <td className="p-3">
-                      <Badge className="text-[10px] bg-emerald-500/20 text-emerald-400 border-emerald-500/30">{d.status}</Badge>
+                {developers.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-xs text-muted-foreground">
+                      No engineering talent or developers found in directory.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  developers.map((d, i) => (
+                    <tr key={i} className="hover:bg-accent/20 transition-colors">
+                      <td className="p-3 font-bold text-foreground">{d.name}</td>
+                      <td className="p-3 text-muted-foreground">{d.title}</td>
+                      <td className="p-3 flex flex-wrap gap-1">
+                        {d.skills.map((s, si) => (
+                          <Badge key={si} variant="outline" className="text-[9px] border-blue-500/20 text-blue-300">{s}</Badge>
+                        ))}
+                      </td>
+                      <td className="p-3 font-mono text-blue-400 font-bold">{d.commits}</td>
+                      <td className="p-3 font-mono text-emerald-400 font-bold">{d.prs}</td>
+                      <td className="p-3">
+                        <Badge className="text-[10px] bg-emerald-500/20 text-emerald-400 border-emerald-500/30">{d.status}</Badge>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="skills">
+          <div className="rounded-xl border border-border/80 bg-card/60 p-8 text-center text-xs text-muted-foreground">
+            No technical skill matrix data available. Connect engineering VCS or skills inventory.
+          </div>
+        </TabsContent>
+
+        <TabsContent value="activity">
+          <div className="rounded-xl border border-border/80 bg-card/60 p-8 text-center text-xs text-muted-foreground">
+            No git activity recorded. Connect GitHub, GitLab or Bitbucket organization.
+          </div>
+        </TabsContent>
+
+        <TabsContent value="workload">
+          <div className="rounded-xl border border-border/80 bg-card/60 p-8 text-center text-xs text-muted-foreground">
+            No workload or sprint allocation data available for engineering team.
           </div>
         </TabsContent>
       </Tabs>

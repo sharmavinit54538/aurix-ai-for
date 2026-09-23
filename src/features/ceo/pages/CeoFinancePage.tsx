@@ -6,14 +6,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ResponsiveContainer, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 
 export function CeoFinancePage() {
-  const financeData = [
-    { month: "Jan", revenue: 1.1, expenses: 0.82, profit: 0.28, payroll: 0.45 },
-    { month: "Feb", revenue: 1.25, expenses: 0.93, profit: 0.32, payroll: 0.48 },
-    { month: "Mar", revenue: 1.4, expenses: 1.02, profit: 0.38, payroll: 0.52 },
-    { month: "Apr", revenue: 1.6, expenses: 1.16, profit: 0.44, payroll: 0.55 },
-    { month: "May", revenue: 1.85, expenses: 1.33, profit: 0.52, payroll: 0.58 },
-    { month: "Jun", revenue: 2.1, expenses: 1.49, profit: 0.61, payroll: 0.62 },
-  ];
+  const financeData: any[] = [];
 
   return (
     <div className="space-y-6 pb-12 text-left">
@@ -40,10 +33,10 @@ export function CeoFinancePage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "Annual Run Rate (ARR)", val: "$14.2M", sub: "+24.8% YoY", color: "text-emerald-400" },
-          { label: "Monthly Expenses", val: "$1.49M", sub: "Operational costs", color: "text-rose-400" },
-          { label: "Net Operating Margin", val: "29.0%", sub: "High profitability", color: "text-amber-400" },
-          { label: "Monthly Payroll Cost", val: "$620,000", sub: "248 Employees", color: "text-indigo-400" },
+          { label: "Annual Run Rate (ARR)", val: "—", sub: "Live data pending", color: "text-emerald-400" },
+          { label: "Monthly Expenses", val: "—", sub: "Live data pending", color: "text-rose-400" },
+          { label: "Net Operating Margin", val: "—", sub: "Live data pending", color: "text-amber-400" },
+          { label: "Monthly Payroll Cost", val: "—", sub: "Live data pending", color: "text-indigo-400" },
         ].map((k, i) => (
           <div key={i} className="rounded-xl border border-border/80 bg-card/60 p-4 space-y-1">
             <div className="text-xs text-muted-foreground font-semibold uppercase">{k.label}</div>
@@ -56,32 +49,40 @@ export function CeoFinancePage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="rounded-2xl border border-border/80 bg-card/60 p-5 space-y-3">
           <h3 className="font-bold text-sm text-foreground">Revenue vs Operating Expenses ($M)</h3>
-          <div className="h-56 w-full pt-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={financeData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="month" stroke="#888888" fontSize={10} />
-                <YAxis stroke="#888888" fontSize={10} />
-                <Tooltip contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", borderRadius: "8px" }} />
-                <Bar dataKey="revenue" fill="#10b981" radius={[4, 4, 0, 0]} name="Revenue ($M)" />
-                <Bar dataKey="expenses" fill="#f43f5e" radius={[4, 4, 0, 0]} name="Expenses ($M)" />
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="h-56 w-full pt-2 flex items-center justify-center">
+            {financeData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={financeData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                  <XAxis dataKey="month" stroke="#888888" fontSize={10} />
+                  <YAxis stroke="#888888" fontSize={10} />
+                  <Tooltip contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", borderRadius: "8px" }} />
+                  <Bar dataKey="revenue" fill="#10b981" radius={[4, 4, 0, 0]} name="Revenue ($M)" />
+                  <Bar dataKey="expenses" fill="#f43f5e" radius={[4, 4, 0, 0]} name="Expenses ($M)" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-xs text-muted-foreground">No financial data available. Backend API integration pending.</p>
+            )}
           </div>
         </div>
 
         <div className="rounded-2xl border border-border/80 bg-card/60 p-5 space-y-3">
           <h3 className="font-bold text-sm text-foreground">Monthly Payroll Cost Trajectory ($M)</h3>
-          <div className="h-56 w-full pt-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={financeData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="month" stroke="#888888" fontSize={10} />
-                <YAxis stroke="#888888" fontSize={10} />
-                <Tooltip contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", borderRadius: "8px" }} />
-                <Area type="monotone" dataKey="payroll" stroke="#818cf8" fill="#818cf8" fillOpacity={0.2} name="Payroll ($M)" />
-              </AreaChart>
-            </ResponsiveContainer>
+          <div className="h-56 w-full pt-2 flex items-center justify-center">
+            {financeData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={financeData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                  <XAxis dataKey="month" stroke="#888888" fontSize={10} />
+                  <YAxis stroke="#888888" fontSize={10} />
+                  <Tooltip contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", borderRadius: "8px" }} />
+                  <Area type="monotone" dataKey="payroll" stroke="#818cf8" fill="#818cf8" fillOpacity={0.2} name="Payroll ($M)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-xs text-muted-foreground">No payroll trajectory data available. Backend API integration pending.</p>
+            )}
           </div>
         </div>
       </div>

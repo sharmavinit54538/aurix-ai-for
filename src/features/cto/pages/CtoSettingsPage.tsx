@@ -7,9 +7,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
 export function CtoSettingsPage() {
-  const [githubOrg, setGithubOrg] = useState("ofc360-enterprise");
-  const [awsAccount, setAwsAccount] = useState("8420-1940-2041 (prod-us-east-1)");
-  const [qdrantHost, setQdrantHost] = useState("qdrant.internal.ofc360.ai:6333");
+  const [githubOrg, setGithubOrg] = useState("");
+  const [awsAccount, setAwsAccount] = useState("");
+  const [qdrantHost, setQdrantHost] = useState("");
+  const [orgName, setOrgName] = useState("");
 
   const handleSave = () => {
     toast.success("Saved CTO Organization & Technical Settings.");
@@ -62,11 +63,11 @@ export function CtoSettingsPage() {
             <div className="space-y-3">
               <div>
                 <label className="text-xs font-semibold text-muted-foreground block mb-1">Organization Name</label>
-                <Input defaultValue="OFC360 Technologies" className="bg-slate-900/60 text-xs" />
+                <Input value={orgName} onChange={(e) => setOrgName(e.target.value)} placeholder="e.g. Your Company Name" className="bg-slate-900/60 text-xs" />
               </div>
               <div>
                 <label className="text-xs font-semibold text-muted-foreground block mb-1">Primary Vector DB Endpoint</label>
-                <Input value={qdrantHost} onChange={(e) => setQdrantHost(e.target.value)} className="bg-slate-900/60 font-mono text-xs text-indigo-400" />
+                <Input value={qdrantHost} onChange={(e) => setQdrantHost(e.target.value)} placeholder="e.g. qdrant.internal:6333" className="bg-slate-900/60 font-mono text-xs text-indigo-400" />
               </div>
             </div>
           </div>
@@ -78,9 +79,11 @@ export function CtoSettingsPage() {
             <div className="space-y-3">
               <div>
                 <label className="text-xs font-semibold text-muted-foreground block mb-1">GitHub Enterprise Organization</label>
-                <Input value={githubOrg} onChange={(e) => setGithubOrg(e.target.value)} className="bg-slate-900/60 font-mono text-xs text-indigo-400" />
+                <Input value={githubOrg} onChange={(e) => setGithubOrg(e.target.value)} placeholder="e.g. github-organization-slug" className="bg-slate-900/60 font-mono text-xs text-indigo-400" />
               </div>
-              <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">Connected via GitHub Webhooks & OAuth</Badge>
+              <Badge className={githubOrg ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]" : "bg-muted text-muted-foreground border-border text-[10px]"}>
+                {githubOrg ? "Configured" : "Pending VCS Connection"}
+              </Badge>
             </div>
           </div>
         </TabsContent>
@@ -91,10 +94,36 @@ export function CtoSettingsPage() {
             <div className="space-y-3">
               <div>
                 <label className="text-xs font-semibold text-muted-foreground block mb-1">AWS Production Account ID</label>
-                <Input value={awsAccount} onChange={(e) => setAwsAccount(e.target.value)} className="bg-slate-900/60 font-mono text-xs text-sky-400" />
+                <Input value={awsAccount} onChange={(e) => setAwsAccount(e.target.value)} placeholder="e.g. 123456789012" className="bg-slate-900/60 font-mono text-xs text-sky-400" />
               </div>
-              <Badge className="bg-sky-500/20 text-sky-400 border-sky-500/30 text-[10px]">Connected via AWS IAM OIDC Role</Badge>
+              <Badge className={awsAccount ? "bg-sky-500/20 text-sky-400 border-sky-500/30 text-[10px]" : "bg-muted text-muted-foreground border-border text-[10px]"}>
+                {awsAccount ? "Configured" : "Pending IAM OIDC Role"}
+              </Badge>
             </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="notifications">
+          <div className="rounded-2xl border border-border/80 bg-card/60 p-8 text-center text-xs text-muted-foreground">
+            No notification channels configured. Add Slack, PagerDuty, or Webhook destinations.
+          </div>
+        </TabsContent>
+
+        <TabsContent value="security">
+          <div className="rounded-2xl border border-border/80 bg-card/60 p-8 text-center text-xs text-muted-foreground">
+            Default security baseline active. Configure SSO, SAML, and IP whitelists.
+          </div>
+        </TabsContent>
+
+        <TabsContent value="billing">
+          <div className="rounded-2xl border border-border/80 bg-card/60 p-8 text-center text-xs text-muted-foreground">
+            No cloud billing account linked. Connect AWS Cost Explorer or GCP Billing API.
+          </div>
+        </TabsContent>
+
+        <TabsContent value="backup">
+          <div className="rounded-2xl border border-border/80 bg-card/60 p-8 text-center text-xs text-muted-foreground">
+            No automated backup schedules configured.
           </div>
         </TabsContent>
       </Tabs>

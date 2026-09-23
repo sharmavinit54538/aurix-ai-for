@@ -24,13 +24,18 @@ export function CtoSystemHealth({ services }: CtoSystemHealthProps) {
             Live System & Service Operational Health
           </h3>
         </div>
-        <Badge className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] uppercase font-bold">
-          100% Operational SLA
+        <Badge className={services && services.length > 0 ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] uppercase font-bold" : "bg-muted text-muted-foreground border-border text-[10px] uppercase font-bold"}>
+          {services && services.length > 0 ? "100% Operational SLA" : "No telemetry"}
         </Badge>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {services.map((item, idx) => (
+      {(!services || services.length === 0) ? (
+        <div className="rounded-xl border border-border/40 bg-accent/5 p-6 text-center text-xs text-muted-foreground">
+          No active system health probes or services monitored.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {services.map((item, idx) => (
           <div
             key={idx}
             className="flex items-center justify-between rounded-xl border border-border/40 bg-accent/10 p-3.5 transition-colors hover:bg-accent/20"
@@ -53,7 +58,8 @@ export function CtoSystemHealth({ services }: CtoSystemHealthProps) {
             </Badge>
           </div>
         ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
