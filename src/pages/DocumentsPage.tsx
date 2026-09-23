@@ -130,7 +130,7 @@ export function DocumentsPage() {
               ? [d.employee.first_name, d.employee.last_name].filter(Boolean).join(" ").trim()
               : (liveEmps.find((e) => e.id === d.employee_id)?.fullName || "Vinit Sharma");
 
-            const rawCategory = d.category?.name || d.document_type || "Employee Documents";
+            const rawCategory = d.category?.name || d.category || d.document_type || "Employee Documents";
             let category: HRDocument["category"] = "Employee Documents";
             if (rawCategory.includes("Education") || rawCategory.includes("EDU") || rawCategory.includes("DEGREE") || rawCategory.includes("MARKSHEET")) {
               category = "Education";
@@ -140,8 +140,16 @@ export function DocumentsPage() {
               category = "Company Documents";
             }
 
-            const rawType = d.document_type || d.title || "General Document";
+            const rawType = d.document_type || d.title || d.name || "General Document";
             const cleanType = rawType.replace(/^Onboarding Document:\s*/i, "").replace(/_/g, " ");
+
+            const rawUrl = d.file_url || d.download_url || d.document_url || d.url || d.file_path || d.filePath || d.fileUrl || d.documentUrl;
+            const cleanUrl = rawUrl ? getFileUrl(rawUrl) : "";
+            const isPhoto = cleanType.toLowerCase().includes("photo") ||
+                            (d.title || "").toLowerCase().includes("photo") ||
+                            (d.document_type || "").toLowerCase().includes("photo") ||
+                            /\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?$/i.test(cleanUrl || d.file_name || d.name || "");
+            const detectedFileType = isPhoto ? "jpg" : (((cleanUrl || d.file_name || d.name || "pdf").split(".").pop() || "pdf").toLowerCase());
 
             return {
               id: d.id,
@@ -155,9 +163,9 @@ export function DocumentsPage() {
               expiryDate: d.expiry_date || undefined,
               status: d.is_verified ? "Verified" : (d.status === "REJECTED" ? "Rejected" : "Pending"),
               fileSize: d.file_size ? `${(d.file_size / 1024).toFixed(1)} KB` : "1.2 MB",
-              fileType: ((d.document_url || d.file_path || "pdf").split(".").pop() || "pdf").toLowerCase() as any,
+              fileType: detectedFileType as any,
               description: d.description || `Uploaded ${cleanType} for ${empName}`,
-              fileUrl: d.document_url || d.file_path,
+              fileUrl: cleanUrl,
             };
           });
 
@@ -192,6 +200,73 @@ export function DocumentsPage() {
 
   // Selected document for Preview
   const [previewDoc, setPreviewDoc] = useState<HRDocument | null>(null);
+  const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(null);
+  const [previewBlobType, setPreviewBlobType] = useState<string>("");
+  const [previewLoading, setPreviewLoading] = useState(false);
+
+  // Fetch actual file blob whenever previewDoc is opened
+  useEffect(() => {
+    let active = true;
+    let createdUrl: string | null = null;
+
+    if (!previewDoc) {
+      setPreviewBlobUrl(null);
+      setPreviewBlobType("");
+      setPreviewLoading(false);
+      return;
+    }
+
+    const loadDocument = async () => {
+      setPreviewLoading(true);
+
+      // 1. If previewDoc.fileUrl is already a local blob: or data: URL, use it directly
+      if (previewDoc.fileUrl?.startsWith("blob:") || previewDoc.fileUrl?.startsWith("data:")) {
+        setPreviewBlobUrl(previewDoc.fileUrl);
+        setPreviewLoading(false);
+        return;
+      }
+
+      // 2. Fetch actual document blob from backend endpoint if id exists
+      if (previewDoc.id) {
+        try {
+          const res = await apiInstance.get(`/documents/employees/${previewDoc.id}/download`, {
+            responseType: "blob",
+          });
+          if (!active) return;
+          const blob = res.data as Blob;
+          if (blob && blob.size > 0) {
+            createdUrl = URL.createObjectURL(blob);
+            setPreviewBlobUrl(createdUrl);
+            setPreviewBlobType(blob.type || "");
+            setPreviewLoading(false);
+            return;
+          }
+        } catch {
+          // If download endpoint fails or is mock, fallback to direct URL
+        }
+      }
+
+      // 3. Fallback: if previewDoc.fileUrl is a full/relative URL
+      if (previewDoc.fileUrl) {
+        const resolved = getFileUrl(previewDoc.fileUrl);
+        if (active) {
+          setPreviewBlobUrl(resolved);
+        }
+      }
+      if (active) {
+        setPreviewLoading(false);
+      }
+    };
+
+    loadDocument();
+
+    return () => {
+      active = false;
+      if (createdUrl) {
+        URL.revokeObjectURL(createdUrl);
+      }
+    };
+  }, [previewDoc?.id, previewDoc?.fileUrl]);
 
   // Modals state
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -246,6 +321,7 @@ export function DocumentsPage() {
       }
 
       const newDocId = uid("doc");
+      const localFileUrl = selectedUploadFile ? URL.createObjectURL(selectedUploadFile) : undefined;
       const newDoc: HRDocument = {
         id: newDocId,
         name: uploadFileName,
@@ -260,6 +336,7 @@ export function DocumentsPage() {
         fileSize: uploadFileSize || "1.2 MB",
         fileType: uploadFileName.split(".").pop() as any || "pdf",
         description: uploadDesc,
+        fileUrl: localFileUrl,
       };
 
       const newActivity: HRDocumentActivity = {
@@ -291,7 +368,7 @@ export function DocumentsPage() {
 
   // Real drag and drop file handler
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [, setSelectedUploadFile] = useState<File | null>(null);
+  const [selectedUploadFile, setSelectedUploadFile] = useState<File | null>(null);
 
   const handleRealFileSelect = (file: File) => {
     setSelectedUploadFile(file);
@@ -593,8 +670,8 @@ Acknowledged and Signed electronically.`;
   };
 
   // Download & View File Handler
-  const handleDownload = (doc: HRDocument) => {
-    toast.success(`Downloading ${doc.name}...`);
+  const handleDownload = async (doc: HRDocument) => {
+    toast.info(`Downloading ${doc.name}...`);
     const newActivity: HRDocumentActivity = {
       id: uid("act"),
       documentId: doc.id,
@@ -606,10 +683,48 @@ Acknowledged and Signed electronically.`;
     };
     aurix.set({ documentActivities: [newActivity, ...activities] });
 
-    if (doc.fileUrl) {
-      const targetUrl = getFileUrl(doc.fileUrl);
-      window.open(targetUrl, "_blank");
-      return;
+    try {
+      if (doc.fileUrl && (doc.fileUrl.startsWith("blob:") || doc.fileUrl.startsWith("data:"))) {
+        const a = document.createElement("a");
+        a.href = doc.fileUrl;
+        a.download = doc.name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        toast.success(`Downloaded ${doc.name}`);
+        return;
+      }
+
+      if (doc.id) {
+        const res = await apiInstance.get(`/documents/employees/${doc.id}/download`, {
+          responseType: "blob",
+        });
+        const blob = res.data as Blob;
+        if (blob && blob.size > 0) {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          const ext = blob.type.includes("pdf") ? ".pdf" : (blob.type.includes("png") ? ".png" : (blob.type.includes("jpeg") || blob.type.includes("jpg") ? ".jpg" : ""));
+          a.download = doc.name.includes(".") ? doc.name : `${doc.name}${ext}`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 60000);
+          toast.success(`Downloaded ${doc.name}`);
+          return;
+        }
+      }
+
+      if (doc.fileUrl) {
+        const targetUrl = getFileUrl(doc.fileUrl);
+        window.open(targetUrl, "_blank");
+        return;
+      }
+    } catch {
+      if (doc.fileUrl) {
+        window.open(getFileUrl(doc.fileUrl), "_blank");
+        return;
+      }
     }
 
     const element = document.createElement("a");
@@ -1891,66 +2006,102 @@ Acknowledged and Signed electronically.`;
                   <div className="space-y-1.5">
                     <Label className="text-xs font-semibold text-muted-foreground">Inline Verification View</Label>
                     <div className="overflow-hidden rounded-2xl border border-border bg-card/60 min-h-[440px] relative flex flex-col items-center justify-center p-1">
-                      {previewDoc.fileUrl ? (
-                        ["jpg", "jpeg", "png", "webp", "gif", "svg"].includes((previewDoc.fileType || "").toLowerCase()) ? (
-                          <div className="w-full h-full min-h-[420px] relative flex flex-col items-center justify-center overflow-hidden rounded-xl bg-black/40 p-2">
-                            <img
-                              src={previewDoc.fileUrl}
-                              alt={previewDoc.name}
-                              className="w-full max-h-[480px] object-contain rounded-lg shadow-lg"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = getFileUrl(previewDoc.fileUrl);
-                              }}
-                            />
-                            <div className="mt-2 flex items-center gap-2">
-                              <a
-                                href={previewDoc.fileUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex items-center gap-1.5 bg-background/80 hover:bg-accent text-foreground text-xs font-semibold px-3 py-1.5 rounded-lg border border-border cursor-pointer"
-                              >
-                                <Eye className="h-3.5 w-3.5" /> Fullscreen View
-                              </a>
+                      {(() => {
+                        const displayUrl = previewBlobUrl || (previewDoc.fileUrl ? getFileUrl(previewDoc.fileUrl) : "");
+                        const isImage =
+                          (previewBlobType && previewBlobType.startsWith("image/")) ||
+                          ["jpg", "jpeg", "png", "webp", "gif", "svg"].includes((previewDoc.fileType || "").toLowerCase()) ||
+                          /\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?$/i.test(displayUrl) ||
+                          (previewDoc.name || "").toLowerCase().includes("photo") ||
+                          (previewDoc.type || "").toLowerCase().includes("photo");
+
+                        if (previewLoading) {
+                          return (
+                            <div className="w-full h-[440px] flex flex-col items-center justify-center p-6 text-center gap-3">
+                              <RefreshCw className="h-8 w-8 text-indigo-500 animate-spin" />
+                              <p className="text-xs font-semibold text-foreground">Loading document preview...</p>
+                              <p className="text-[11px] text-muted-foreground">Fetching file securely from vault...</p>
                             </div>
-                          </div>
-                        ) : (
-                          <div className="w-full h-[520px] relative flex flex-col items-center justify-center overflow-hidden rounded-xl bg-background border border-border shadow-inner">
-                            <object
-                              data={previewDoc.fileUrl}
-                              type="application/pdf"
-                              className="w-full h-full rounded-xl"
-                            >
+                          );
+                        }
+
+                        if (displayUrl) {
+                          if (isImage) {
+                            return (
+                              <div className="w-full h-full min-h-[440px] relative flex flex-col items-center justify-center overflow-hidden rounded-xl bg-black/40 p-3">
+                                <img
+                                  src={displayUrl}
+                                  alt={previewDoc.name}
+                                  className="w-full max-h-[480px] object-contain rounded-lg shadow-lg"
+                                  onError={(e) => {
+                                    if (previewDoc.fileUrl && (e.target as HTMLImageElement).src !== getFileUrl(previewDoc.fileUrl)) {
+                                      (e.target as HTMLImageElement).src = getFileUrl(previewDoc.fileUrl);
+                                    }
+                                  }}
+                                />
+                                <div className="mt-3 flex items-center gap-2">
+                                  <a
+                                    href={displayUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-1.5 bg-background/80 hover:bg-accent text-foreground text-xs font-semibold px-3.5 py-1.5 rounded-lg border border-border cursor-pointer transition-all shadow-xs"
+                                  >
+                                    <Eye className="h-3.5 w-3.5" /> Fullscreen View
+                                  </a>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleDownload(previewDoc)}
+                                    className="h-8 text-xs font-medium border-border bg-background/60 hover:bg-accent gap-1.5 cursor-pointer shadow-xs"
+                                  >
+                                    <Download className="h-3.5 w-3.5 text-muted-foreground" /> Download
+                                  </Button>
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div className="w-full h-[520px] relative flex flex-col items-center justify-center overflow-hidden rounded-xl bg-background border border-border shadow-inner">
                               <iframe
-                                src={previewDoc.fileUrl}
+                                src={displayUrl}
                                 className="w-full h-full rounded-xl border-0"
                                 title={previewDoc.name}
+                              />
+                              <div className="absolute top-2 right-2 flex items-center gap-1.5 bg-background/90 backdrop-blur-md border border-border p-1 rounded-lg shadow-md z-10">
+                                <a
+                                  href={displayUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-foreground px-2.5 py-1 hover:bg-accent rounded-md cursor-pointer transition-colors"
+                                >
+                                  <Eye className="h-3 w-3" /> Pop-out
+                                </a>
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div className="w-full h-[400px] flex flex-col items-center justify-center p-6 bg-card/90 text-center gap-3">
+                            <div className="h-16 w-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 mb-1">
+                              <FileText className="h-8 w-8" />
+                            </div>
+                            <p className="text-sm font-bold text-foreground">{previewDoc.name}</p>
+                            <p className="text-xs text-muted-foreground">{previewDoc.type} &bull; {previewDoc.fileSize}</p>
+                            <div className="pt-2 flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDownload(previewDoc)}
+                                className="h-8 text-xs border-border bg-background hover:bg-accent gap-1.5 cursor-pointer"
                               >
-                                <embed
-                                  src={previewDoc.fileUrl}
-                                  type="application/pdf"
-                                  className="w-full h-full rounded-xl"
-                                />
-                              </iframe>
-                            </object>
-                            <div className="absolute top-2 right-2 flex items-center gap-1.5 bg-background/90 backdrop-blur-md border border-border p-1 rounded-lg shadow-md z-10">
-                              <a
-                                href={previewDoc.fileUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex items-center gap-1 text-[11px] font-semibold text-foreground px-2 py-1 hover:bg-accent rounded cursor-pointer"
-                              >
-                                <Eye className="h-3 w-3" /> Pop-out
-                              </a>
+                                <Download className="h-3.5 w-3.5 text-muted-foreground" /> Fetch & Download File
+                              </Button>
                             </div>
                           </div>
-                        )
-                      ) : (
-                        <div className="w-full h-[400px] flex flex-col items-center justify-center p-6 bg-card/90 text-center gap-3">
-                          <FileText className="h-12 w-12 text-primary" />
-                          <p className="text-sm font-bold text-foreground">{previewDoc.name}</p>
-                          <p className="text-xs text-muted-foreground">{previewDoc.type} &bull; {previewDoc.fileSize}</p>
-                        </div>
-                      )}
+                        );
+                      })()}
                     </div>
                   </div>
 

@@ -13,14 +13,14 @@ import {
 
 
 const QUICK_LINKS = [
-  { to: "/dashboard/timeline", label: "Timeline", icon: Activity },
-  { to: "/dashboard/assets", label: "Assets", icon: Package },
-  { to: "/dashboard/visitors", label: "Visitors", icon: Users },
+  { to: "/dashboard/hr-operations/onboarding", label: "Onboarding", icon: UserCheck },
+  { to: "/dashboard/hr-operations/timeline", label: "Timeline", icon: Activity },
+  { to: "/dashboard/hr-operations/visitor-management", label: "Visitors", icon: Users },
+  { to: "/dashboard/resources/assets", label: "Assets", icon: Package },
   { to: "/dashboard/expenses", label: "Expenses", icon: Receipt },
   { to: "/dashboard/travel", label: "Travel", icon: Plane },
-  { to: "/dashboard/exit", label: "Exit", icon: LogOut },
-  { to: "/dashboard/onboarding-checklist", label: "Onboarding", icon: UserCheck },
-  { to: "/dashboard/offboarding", label: "Offboarding", icon: Archive },
+  { to: "/dashboard/hr-operations/offboarding", label: "Offboarding", icon: Archive },
+  { to: "/dashboard/hr-operations/exit-management", label: "Exit", icon: LogOut },
 ];
 
 const COLORS = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#06b6d4", "#8b5cf6"];
@@ -42,7 +42,10 @@ export function HrOpsPage() {
 
   return (
     <>
-      <PageHeader title="HR Operations" description="Real-time view across the people lifecycle." />
+      <PageHeader
+        title="HR Ops Command Center"
+        description="Real-time operational command center across the people lifecycle, onboarding, and SLA metrics."
+      />
 
       <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Timeline events" value={s.timeline.length} icon={Activity} />

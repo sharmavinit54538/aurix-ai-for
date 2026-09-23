@@ -13,7 +13,7 @@ const HR_OPS_MODULES: ModuleItem[] = [
     title: "HR Ops Command Center",
     description: "Operational overview of active HR tasks, daily checklists, and SLA metrics.",
     icon: Activity,
-    to: "/dashboard/hr-operations",
+    to: "/dashboard/hr-operations/command-center",
     color: "from-blue-500/20 to-indigo-500/20 text-blue-400 border-blue-500/30",
   },
   {

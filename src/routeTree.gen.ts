@@ -164,6 +164,7 @@ import { Route as DashboardHrOperationsTimelineRouteImport } from './routes/dash
 import { Route as DashboardHrOperationsOnboardingRouteImport } from './routes/dashboard.hr-operations.onboarding'
 import { Route as DashboardHrOperationsOffboardingRouteImport } from './routes/dashboard.hr-operations.offboarding'
 import { Route as DashboardHrOperationsExitManagementRouteImport } from './routes/dashboard.hr-operations.exit-management'
+import { Route as DashboardHrOperationsCommandCenterRouteImport } from './routes/dashboard.hr-operations.command-center'
 import { Route as DashboardExecutiveCtoRouteImport } from './routes/dashboard.executive.cto'
 import { Route as DashboardExecutiveCooRouteImport } from './routes/dashboard.executive.coo'
 import { Route as DashboardExecutiveCmoRouteImport } from './routes/dashboard.executive.cmo'
@@ -1069,6 +1070,12 @@ const DashboardHrOperationsExitManagementRoute =
     path: '/exit-management',
     getParentRoute: () => DashboardHrOperationsRoute,
   } as any)
+const DashboardHrOperationsCommandCenterRoute =
+  DashboardHrOperationsCommandCenterRouteImport.update({
+    id: '/command-center',
+    path: '/command-center',
+    getParentRoute: () => DashboardHrOperationsRoute,
+  } as any)
 const DashboardExecutiveCtoRoute = DashboardExecutiveCtoRouteImport.update({
   id: '/executive/cto',
   path: '/executive/cto',
@@ -1560,6 +1567,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/executive/cmo': typeof DashboardExecutiveCmoRoute
   '/dashboard/executive/coo': typeof DashboardExecutiveCooRoute
   '/dashboard/executive/cto': typeof DashboardExecutiveCtoRouteWithChildren
+  '/dashboard/hr-operations/command-center': typeof DashboardHrOperationsCommandCenterRoute
   '/dashboard/hr-operations/exit-management': typeof DashboardHrOperationsExitManagementRoute
   '/dashboard/hr-operations/offboarding': typeof DashboardHrOperationsOffboardingRoute
   '/dashboard/hr-operations/onboarding': typeof DashboardHrOperationsOnboardingRoute
@@ -1768,6 +1776,7 @@ export interface FileRoutesByTo {
   '/dashboard/executive/cfo': typeof DashboardExecutiveCfoRoute
   '/dashboard/executive/cmo': typeof DashboardExecutiveCmoRoute
   '/dashboard/executive/coo': typeof DashboardExecutiveCooRoute
+  '/dashboard/hr-operations/command-center': typeof DashboardHrOperationsCommandCenterRoute
   '/dashboard/hr-operations/exit-management': typeof DashboardHrOperationsExitManagementRoute
   '/dashboard/hr-operations/offboarding': typeof DashboardHrOperationsOffboardingRoute
   '/dashboard/hr-operations/onboarding': typeof DashboardHrOperationsOnboardingRoute
@@ -1992,6 +2001,7 @@ export interface FileRoutesById {
   '/dashboard/executive/cmo': typeof DashboardExecutiveCmoRoute
   '/dashboard/executive/coo': typeof DashboardExecutiveCooRoute
   '/dashboard/executive/cto': typeof DashboardExecutiveCtoRouteWithChildren
+  '/dashboard/hr-operations/command-center': typeof DashboardHrOperationsCommandCenterRoute
   '/dashboard/hr-operations/exit-management': typeof DashboardHrOperationsExitManagementRoute
   '/dashboard/hr-operations/offboarding': typeof DashboardHrOperationsOffboardingRoute
   '/dashboard/hr-operations/onboarding': typeof DashboardHrOperationsOnboardingRoute
@@ -2218,6 +2228,7 @@ export interface FileRouteTypes {
     | '/dashboard/executive/cmo'
     | '/dashboard/executive/coo'
     | '/dashboard/executive/cto'
+    | '/dashboard/hr-operations/command-center'
     | '/dashboard/hr-operations/exit-management'
     | '/dashboard/hr-operations/offboarding'
     | '/dashboard/hr-operations/onboarding'
@@ -2426,6 +2437,7 @@ export interface FileRouteTypes {
     | '/dashboard/executive/cfo'
     | '/dashboard/executive/cmo'
     | '/dashboard/executive/coo'
+    | '/dashboard/hr-operations/command-center'
     | '/dashboard/hr-operations/exit-management'
     | '/dashboard/hr-operations/offboarding'
     | '/dashboard/hr-operations/onboarding'
@@ -2649,6 +2661,7 @@ export interface FileRouteTypes {
     | '/dashboard/executive/cmo'
     | '/dashboard/executive/coo'
     | '/dashboard/executive/cto'
+    | '/dashboard/hr-operations/command-center'
     | '/dashboard/hr-operations/exit-management'
     | '/dashboard/hr-operations/offboarding'
     | '/dashboard/hr-operations/onboarding'
@@ -3901,6 +3914,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardHrOperationsExitManagementRouteImport
       parentRoute: typeof DashboardHrOperationsRoute
     }
+    '/dashboard/hr-operations/command-center': {
+      id: '/dashboard/hr-operations/command-center'
+      path: '/command-center'
+      fullPath: '/dashboard/hr-operations/command-center'
+      preLoaderRoute: typeof DashboardHrOperationsCommandCenterRouteImport
+      parentRoute: typeof DashboardHrOperationsRoute
+    }
     '/dashboard/executive/cto': {
       id: '/dashboard/executive/cto'
       path: '/executive/cto'
@@ -4476,6 +4496,7 @@ const DashboardAttendanceRouteWithChildren =
   DashboardAttendanceRoute._addFileChildren(DashboardAttendanceRouteChildren)
 
 interface DashboardHrOperationsRouteChildren {
+  DashboardHrOperationsCommandCenterRoute: typeof DashboardHrOperationsCommandCenterRoute
   DashboardHrOperationsExitManagementRoute: typeof DashboardHrOperationsExitManagementRoute
   DashboardHrOperationsOffboardingRoute: typeof DashboardHrOperationsOffboardingRoute
   DashboardHrOperationsOnboardingRoute: typeof DashboardHrOperationsOnboardingRoute
@@ -4485,6 +4506,8 @@ interface DashboardHrOperationsRouteChildren {
 }
 
 const DashboardHrOperationsRouteChildren: DashboardHrOperationsRouteChildren = {
+  DashboardHrOperationsCommandCenterRoute:
+    DashboardHrOperationsCommandCenterRoute,
   DashboardHrOperationsExitManagementRoute:
     DashboardHrOperationsExitManagementRoute,
   DashboardHrOperationsOffboardingRoute: DashboardHrOperationsOffboardingRoute,

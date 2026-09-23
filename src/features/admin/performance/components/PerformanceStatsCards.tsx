@@ -100,7 +100,7 @@ export function PerformanceStatsCards({ reviews, goals }: PerformanceStatsCardsP
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-8">
+    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 2xl:grid-cols-8 gap-3 sm:gap-4">
       {stats.map((stat, i) => {
         const Icon = stat.icon;
         return (
@@ -109,18 +109,24 @@ export function PerformanceStatsCards({ reviews, goals }: PerformanceStatsCardsP
             className="group relative overflow-hidden rounded-2xl border border-border/80 bg-card/40 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-border hover:shadow-md hover:bg-card/60"
           >
             <div className="absolute inset-0 bg-gradient-to-br opacity-0 transition-opacity duration-300 group-hover:opacity-100 -z-10" />
-            <CardContent className="p-3.5 flex flex-col justify-between h-full min-h-[125px]">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground line-clamp-1">{stat.label}</span>
-                <div className={`flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br border ${stat.color}`}>
-                  <Icon className="h-3.5 w-3.5" />
+            <CardContent className="p-4 flex flex-col justify-between h-full min-h-[125px]">
+              <div className="flex items-start justify-between gap-2.5">
+                <div className="flex-1 min-w-0 pr-1">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block truncate" title={stat.label}>
+                    {stat.label}
+                  </span>
+                  <div className="text-2xl font-bold tracking-tight text-foreground mt-1.5 truncate">
+                    {stat.value}
+                  </div>
+                </div>
+                <div className={`flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br border shrink-0 ${stat.color} shadow-xs`}>
+                  <Icon className="h-4.5 w-4.5 shrink-0" />
                 </div>
               </div>
-              <div className="mt-2">
-                <div className="text-xl font-bold tracking-tight text-foreground truncate">{stat.value}</div>
-                <div className="mt-1">
-                  <span className="text-[9px] text-muted-foreground line-clamp-1">{stat.desc}</span>
-                </div>
+              <div className="mt-2.5 pt-2 border-t border-border/30">
+                <span className="text-[10px] text-muted-foreground block truncate" title={stat.desc}>
+                  {stat.desc}
+                </span>
               </div>
             </CardContent>
           </Card>
