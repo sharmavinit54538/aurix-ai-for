@@ -3,7 +3,7 @@
 // Production-ready manager view for team leads and managers.
 // ============================================================
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertTriangle,
@@ -16,6 +16,7 @@ import {
   FileText,
   MapPin,
   Package,
+  RefreshCw,
   Sparkles,
   Target,
   TrendingDown,
@@ -44,6 +45,8 @@ import {
   YAxis,
 } from "recharts";
 import { useAurix } from "@/lib/aurix-store";
+import { api } from "@/api";
+import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -59,7 +62,6 @@ const DEPT_DISTRIBUTION: any[] = [];
 const ATTENDANCE_SUMMARY: any[] = [];
 const WEEKLY_TEAM_ATTENDANCE: any[] = [];
 const ATTENDANCE_RECORDS: any[] = [];
-const LEAVE_REQUESTS: LeaveRequest[] = [];
 const TEAM_GOALS: any[] = [];
 const PERF_MONTHLY: any[] = [];
 const TOP_PERFORMERS: any[] = [];
@@ -516,13 +518,70 @@ function AttendanceCenter() {
 // ── 5. Leave Center ───────────────────────────────────────────
 type LeaveTab = "Pending" | "Approved" | "Upcoming";
 
+function toLeaveStatus(status: unknown): LeaveRequest["status"] {
+  switch (String(status || "pending").toLowerCase()) {
+    case "approved": return "approved";
+    case "rejected": return "rejected";
+    default: return "pending";
+  }
+}
+
 function LeaveCenter() {
   const [tab, setTab] = useState<LeaveTab>("Pending");
+  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
+  const [leaveLoading, setLeaveLoading] = useState(false);
+
+  const loadLeaveRequests = useCallback(async () => {
+    setLeaveLoading(true);
+    try {
+      const response = await api.get<any>("/leaves/pending");
+      if (!response?.success) {
+        throw new Error(response?.message || "Failed to load pending leave requests.");
+      }
+
+      const data = Array.isArray(response.data) ? response.data : [];
+      setLeaveRequests(data.map((request: any): LeaveRequest => ({
+        id: String(request.id),
+        name: request.employee?.fullName || request.employee?.full_name || request.employee_name || "Employee",
+        type: request.leave_type || "Leave",
+        from: request.start_date,
+        to: request.end_date,
+        days: Number(request.total_days) || 0,
+        reason: request.reason || "No reason provided",
+        requestedAt: request.created_at || request.applied_at || "Recently",
+        status: toLeaveStatus(request.status),
+        urgent: false,
+      })));
+    } catch (error: any) {
+      console.error("Error loading manager leave requests", error);
+      toast.error(error?.message || "Failed to load pending leave requests.");
+    } finally {
+      setLeaveLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadLeaveRequests();
+  }, [loadLeaveRequests]);
+
+  const reviewLeave = async (id: string, status: "APPROVED" | "REJECTED") => {
+    try {
+      const response = await api.post<any>(`/leaves/${id}/review`, { status });
+      if (!response?.success) {
+        throw new Error(response?.message || "Failed to review leave request.");
+      }
+      toast.success(status === "APPROVED" ? "Leave request approved." : "Leave request rejected.");
+      await loadLeaveRequests();
+    } catch (error: any) {
+      console.error("Error reviewing manager leave request", error);
+      toast.error(error?.message || "Failed to review leave request.");
+    }
+  };
 
   const filtered: Record<LeaveTab, LeaveRequest[]> = {
-    Pending: LEAVE_REQUESTS.filter((l) => l.status === "pending"),
-    Approved: LEAVE_REQUESTS.filter((l) => l.status === "approved"),
-    Upcoming: LEAVE_REQUESTS.filter(
+    Pending: leaveRequests.filter((l) => l.status === "pending"),
+    Approved: leaveRequests.filter((l) => l.status === "approved"),
+    Upcoming: leaveRequests.filter(
       (l) => l.status === "approved" && new Date(l.from) > new Date()
     ),
   };
@@ -530,7 +589,13 @@ function LeaveCenter() {
   return (
     <motion.div {...fadeUp}>
       <Card>
-        <SectionHeader title="Leave Center" subtitle="Team leave requests and approvals" link="/dashboard/leaves" />
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <SectionHeader title="Leave Center" subtitle="Team leave requests and approvals" link="/dashboard/leaves" />
+          <Button variant="outline" size="sm" onClick={loadLeaveRequests} disabled={leaveLoading} className="gap-2">
+            <RefreshCw className={`h-3.5 w-3.5 ${leaveLoading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        </div>
         <div className="mb-4 flex gap-2">
           {(["Pending", "Approved", "Upcoming"] as LeaveTab[]).map((t) => (
             <button
@@ -590,10 +655,10 @@ function LeaveCenter() {
                 <div className="shrink-0 text-xs text-muted-foreground">{req.requestedAt}</div>
                 {tab === "Pending" && (
                   <div className="flex shrink-0 gap-1.5">
-                    <button className="flex items-center gap-1 rounded-lg bg-emerald-500/10 px-2.5 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-500/20 transition-colors">
+                    <button onClick={() => void reviewLeave(req.id, "APPROVED")} disabled={leaveLoading} className="flex items-center gap-1 rounded-lg bg-emerald-500/10 px-2.5 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-500/20 transition-colors disabled:opacity-50">
                       <CheckCircle2 className="h-3 w-3" /> Approve
                     </button>
-                    <button className="flex items-center gap-1 rounded-lg bg-rose-500/10 px-2.5 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-500/20 transition-colors">
+                    <button onClick={() => void reviewLeave(req.id, "REJECTED")} disabled={leaveLoading} className="flex items-center gap-1 rounded-lg bg-rose-500/10 px-2.5 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-500/20 transition-colors disabled:opacity-50">
                       <X className="h-3 w-3" /> Reject
                     </button>
                   </div>

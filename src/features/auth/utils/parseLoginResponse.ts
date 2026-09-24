@@ -1,4 +1,5 @@
 import type { AuthUserPayload } from "@/api/types";
+import { normalizeRole } from "@/lib/rbac";
 
 export interface ParsedLoginResult {
   accessToken: string;
@@ -23,7 +24,7 @@ function normalizeUser(raw: unknown): AuthUserPayload | null {
     name: String(user.name ?? user.full_name ?? user.fullName ?? combinedName ?? ""),
     email: user.email,
     phone: typeof user.phone === "string" ? user.phone : undefined,
-    role: (user.role ?? "employee") as AuthUserPayload["role"],
+    role: normalizeRole(typeof user.role === "string" ? user.role : null),
     is_verified: Boolean(user.is_verified ?? user.isVerified ?? user.email_verified),
     onboarding_completed: true,
     created_at: typeof user.created_at === "string" ? user.created_at : undefined,

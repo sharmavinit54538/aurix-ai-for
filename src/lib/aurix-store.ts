@@ -1,16 +1,8 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { safeStorage } from "./safe-storage";
+import { normalizeRole, type Role } from "./rbac";
 
-export type Role =
-  | "admin"
-  | "hr"
-  | "manager"
-  | "interviewer"
-  | "employee"
-  | "candidate"
-  | "ceo"
-  | "cto"
-  | "cio";
+export type { Role } from "./rbac";
 
 export interface RoleConfig {
   role: Role;
@@ -22,46 +14,46 @@ export interface RoleConfig {
 
 export const AVAILABLE_ROLES: RoleConfig[] = [
   {
-    role: "admin",
+    role: "super_admin",
     label: "Super Admin",
-    badge: "Full Control",
-    description: "Complete system governance, security, and global config",
+    badge: "Owner",
+    description: "Full application, company, security and system control",
     defaultPath: "/dashboard",
   },
   {
-    role: "hr",
-    label: "HR Executive",
-    badge: "Recruitment",
-    description: "End-to-end talent pipelines, requisitions, offers & BGV",
-    defaultPath: "/dashboard/recruitment",
-  },
-  {
-    role: "manager",
-    label: "Hiring Manager",
-    badge: "Department",
-    description: "Role requisitions, approvals, team pipeline & interviews",
-    defaultPath: "/dashboard/recruitment/hiring-manager",
-  },
-  {
-    role: "interviewer",
-    label: "Interviewer / Panel",
-    badge: "Evaluator",
-    description: "Assigned rounds, AI interview monitoring & scorecards",
-    defaultPath: "/dashboard/recruitment/interviews",
+    role: "hr_admin",
+    label: "HR Admin",
+    badge: "HR",
+    description: "Complete HR administration and workforce management",
+    defaultPath: "/dashboard",
   },
   {
     role: "employee",
     label: "Employee",
-    badge: "Self-Service",
-    description: "Personal portal, KT onboarding, attendance & documents",
+    badge: "Self Service",
+    description: "Personal employee portal and self-service",
     defaultPath: "/dashboard/employee",
   },
   {
-    role: "candidate",
-    label: "Candidate Portal",
-    badge: "Applicant",
-    description: "Application tracking, AI interview room, offers & preboarding",
-    defaultPath: "/dashboard/recruitment/candidates",
+    role: "manager",
+    label: "Manager",
+    badge: "Team",
+    description: "Team management, approvals and team operations",
+    defaultPath: "/dashboard/manager",
+  },
+  {
+    role: "it_admin",
+    label: "IT Admin",
+    badge: "IT",
+    description: "IT, assets, access and system operations",
+    defaultPath: "/dashboard",
+  },
+  {
+    role: "executive",
+    label: "Executive",
+    badge: "Executive",
+    description: "Executive business intelligence and reporting",
+    defaultPath: "/dashboard/executive",
   },
 ];
 
@@ -193,7 +185,11 @@ function load() {
   if (raw) {
     try {
       const parsed = JSON.parse(raw);
-      state = { ...defaultState, ...parsed };
+      state = {
+        ...defaultState,
+        ...parsed,
+        user: parsed.user ? { ...parsed.user, role: normalizeRole(parsed.user.role) } : null,
+      };
     } catch {
       state = { ...defaultState };
     }
@@ -218,7 +214,11 @@ function emit() {
 export const aurix = {
   get: () => state,
   set: (partial: Partial<Workspace>) => {
-    state = { ...state, ...partial };
+    state = {
+      ...state,
+      ...partial,
+      user: partial.user ? { ...partial.user, role: normalizeRole(partial.user.role) } : partial.user ?? state.user,
+    };
     persist();
     emit();
   },

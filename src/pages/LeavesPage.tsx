@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   FileText, Check, X, Calendar, Sparkles, Plus, AlertCircle,
   TrendingUp, Clock, CheckCircle2, XCircle, Info, RefreshCw, Briefcase,
@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { aurix, uid, useAurix } from "@/lib/aurix-store";
+import { normalizeRole } from "@/lib/rbac";
 import { api } from "@/api";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -45,7 +46,12 @@ const LEAVE_TYPES = ["Sick Leave", "Casual Leave", "Vacation Leave"];
 
 export function LeavesPage() {
   const ws = useAurix();
-  const userRole = ws.user?.role || "employee"; // "admin", "manager", "employee"
+  const normalizedRole = normalizeRole(ws.user?.role);
+  const isSuperAdmin = normalizedRole === "super_admin";
+  const isHrAdmin = normalizedRole === "hr_admin";
+  const isManager = normalizedRole === "manager";
+  const canReviewLeaves = isSuperAdmin || isHrAdmin || isManager;
+  const canViewAllEmployeeBalances = isSuperAdmin || isHrAdmin;
   const employeesList = ws.employees || [];
 
   // Tabs routing based on role
@@ -59,6 +65,7 @@ export function LeavesPage() {
   
   // Pending approvals (visible to Admin/Manager)
   const [approvals, setApprovals] = useState<LeaveRequest[]>([]);
+  const [pendingLoading, setPendingLoading] = useState(false);
 
   // Search & employee balances (visible to Admin)
   const [adminSearch, setAdminSearch] = useState("");
@@ -124,26 +131,33 @@ export function LeavesPage() {
   };
 
   // Load team pending requests
-  const loadPendingApprovals = async () => {
+  const loadPendingApprovals = useCallback(async () => {
+    setPendingLoading(true);
     try {
       const res = await api.get<any>("/leaves/pending");
-      if (res?.success && res.data) {
-        setApprovals(res.data.map((l: any) => ({
-          id: l.id,
-          employee_name: l.employee?.fullName || "Employee",
-          department: l.employee?.department || "Staff",
-          leave_type: l.leave_type,
-          start_date: l.start_date,
-          end_date: l.end_date,
-          total_days: parseFloat(l.total_days),
-          reason: l.reason,
-          status: l.status.toLowerCase()
-        })));
+      if (!res?.success) {
+        throw new Error(res?.message || "Failed to load pending leave requests.");
       }
-    } catch (err) {
+
+      const data = Array.isArray(res.data) ? res.data : [];
+      setApprovals(data.map((l: any) => ({
+        id: String(l.id),
+        employee_name: l.employee?.fullName || l.employee?.full_name || l.employee_name || "Employee",
+        department: l.employee?.department || l.department || "Staff",
+        leave_type: l.leave_type || "Leave",
+        start_date: l.start_date,
+        end_date: l.end_date,
+        total_days: Number(l.total_days) || 0,
+        reason: l.reason || "No reason provided",
+        status: String(l.status || "pending").toLowerCase(),
+      })));
+    } catch (err: any) {
       console.error("Error loading pending leaves", err);
+      toast.error(err?.message || "Failed to load pending leave requests.");
+    } finally {
+      setPendingLoading(false);
     }
-  };
+  }, []);
 
   // Load details for admin view of specific employee
   const handleViewEmployeeBalances = async (emp: any) => {
@@ -175,24 +189,29 @@ export function LeavesPage() {
     );
   }, [employeesList, adminSearch]);
 
-  // Sync state triggers
+  // Keep self-service data current for all six roles.
   useEffect(() => {
     if (activeTab === "my-leaves") {
       loadBalances();
       loadHistory();
-    } else if (activeTab === "approvals") {
-      loadPendingApprovals();
     }
   }, [activeTab]);
 
-  // Initial load
+  // Reviewers receive the current queue immediately after their role is known.
   useEffect(() => {
-    loadBalances();
-    loadHistory();
-    if (userRole === "admin" || userRole === "manager") {
-      loadPendingApprovals();
+    if (canReviewLeaves) {
+      void loadPendingApprovals();
     }
-  }, [userRole]);
+  }, [canReviewLeaves, loadPendingApprovals]);
+
+  // A lightweight queue refresh is active only while a reviewer is viewing it.
+  useEffect(() => {
+    if (!canReviewLeaves || activeTab !== "approvals") return;
+
+    void loadPendingApprovals();
+    const interval = window.setInterval(() => void loadPendingApprovals(), 30_000);
+    return () => window.clearInterval(interval);
+  }, [canReviewLeaves, activeTab, loadPendingApprovals]);
 
   // Submit apply form
   const handleApplySubmit = async (e: React.FormEvent) => {
@@ -281,8 +300,8 @@ export function LeavesPage() {
         </Button>
       </div>
 
-      {/* Tabs navigation - dynamically visible based on user role */}
-      {userRole !== "employee" && (
+      {/* Review capabilities are computed once from the canonical role. */}
+      {(canReviewLeaves || canViewAllEmployeeBalances) && (
         <div className="mb-6 flex border-b border-border bg-muted/20 p-1 rounded-xl max-w-md">
           <button
             onClick={() => setActiveTab("my-leaves")}
@@ -295,23 +314,25 @@ export function LeavesPage() {
             My Leaves
           </button>
           
-          <button
-            onClick={() => setActiveTab("approvals")}
-            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
-              activeTab === "approvals"
-                ? "bg-background text-foreground shadow"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Review Requests
-            {approvals.length > 0 && (
-              <Badge className="ml-2 bg-amber-500/20 text-amber-500 border border-amber-500/30">
-                {approvals.length}
-              </Badge>
-            )}
-          </button>
+          {canReviewLeaves && (
+            <button
+              onClick={() => setActiveTab("approvals")}
+              className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
+                activeTab === "approvals"
+                  ? "bg-background text-foreground shadow"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Review Requests
+              {approvals.length > 0 && (
+                <Badge className="ml-2 bg-amber-500/20 text-amber-500 border border-amber-500/30">
+                  {approvals.length}
+                </Badge>
+              )}
+            </button>
+          )}
 
-          {userRole === "admin" && (
+          {canViewAllEmployeeBalances && (
             <button
               onClick={() => setActiveTab("employee-balances")}
               className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
@@ -428,8 +449,7 @@ export function LeavesPage() {
           </motion.div>
         )}
 
-        {/* Tab 2: Review Requests (Visible to Admin/Manager) */}
-        {activeTab === "approvals" && (userRole === "admin" || userRole === "manager") && (
+        {activeTab === "approvals" && canReviewLeaves && (
           <motion.div
             key="approvals"
             initial={{ opacity: 0, y: 15 }}
@@ -443,9 +463,15 @@ export function LeavesPage() {
                 <h3 className="text-lg font-semibold text-foreground">Review Team Time-Off Requests</h3>
                 <p className="text-sm text-muted-foreground">Approve leave filings or request revisions with feedback comments.</p>
               </div>
-              <Badge className="bg-amber-500/20 text-amber-500 border border-amber-500/30">
-                {approvals.length} Pending
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge className="bg-amber-500/20 text-amber-500 border border-amber-500/30">
+                  {approvals.length} Pending
+                </Badge>
+                <Button variant="outline" size="sm" onClick={loadPendingApprovals} disabled={pendingLoading} className="gap-2">
+                  <RefreshCw className={`h-4 w-4 ${pendingLoading ? "animate-spin" : ""}`} />
+                  Refresh
+                </Button>
+              </div>
             </div>
 
             <div className="grid gap-4">
@@ -517,8 +543,7 @@ export function LeavesPage() {
           </motion.div>
         )}
 
-        {/* Tab 3: Employee Balances (Visible to Admin/HR only) */}
-        {activeTab === "employee-balances" && userRole === "admin" && (
+        {activeTab === "employee-balances" && canViewAllEmployeeBalances && (
           <motion.div
             key="employee-balances"
             initial={{ opacity: 0, y: 15 }}

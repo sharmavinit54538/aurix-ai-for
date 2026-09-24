@@ -2,12 +2,13 @@
  * Reusable server-side authentication guard for API routes in TanStack Start / Nitro.
  * Validates the Authorization header against the backend GET /auth/me endpoint.
  */
+import { normalizeRole, type Role } from "./rbac";
 
 export interface AuthenticatedUser {
   id: string;
   name?: string;
   email?: string;
-  role: string;
+  role: Role;
   company_id?: string | number;
   [key: string]: unknown;
 }
@@ -138,7 +139,7 @@ export async function requireAuth(request: Request): Promise<AuthResult> {
       id: String(userData.id || userData.sub || userData.email),
       name: userData.name || userData.full_name || "",
       email: userData.email || "",
-      role: (userData.role || "employee").toLowerCase(),
+      role: normalizeRole(typeof userData.role === "string" ? userData.role : null),
       company_id: userData.company_id,
       ...userData,
     };

@@ -3,6 +3,7 @@ import { api, clearApiCache, getTokens, hasValidAccessToken, isAccessTokenExpire
 import type { AuthMeResponse, AuthUserPayload } from "@/api";
 import { aurix } from "./aurix-store";
 import { safeStorage } from "./safe-storage";
+import { normalizeRole } from "./rbac";
 
 type AuthStatus = "loading" | "ready";
 
@@ -29,7 +30,7 @@ function mapAuthUser(data: AuthUserPayload) {
       fullName: data.name,
       email: data.email,
       phone: data.phone || "",
-      role: data.role,
+      role: normalizeRole(data.role),
       companyId,
       emailVerified: data.is_verified,
       onboardingComplete: true,
@@ -53,10 +54,10 @@ export function persistAuthSession(
 }
 
 export function getPostLoginRoute(user: AuthUserPayload): string {
-  const role = (user.role || "").toLowerCase();
+  const role = normalizeRole(user.role);
   if (!user.is_verified) return "/verify-email";
-  if (role === "cto" || role === "ceo" || role === "cfo" || role === "coo" || role === "cio") {
-    return "/dashboard/executive/cto";
+  if (role === "executive") {
+    return "/dashboard/executive";
   }
   if (role === "manager") return "/dashboard/manager";
   if (role === "employee") return "/dashboard/employee";
