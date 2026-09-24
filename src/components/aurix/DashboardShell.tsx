@@ -4,27 +4,25 @@ import { PageSkeleton } from "@/components/common/PageSkeleton";
 import { BackButton } from "@/components/common/BackButton";
 // Executive Dashboards Navigation Enabled
 import {
-  Activity, AlertCircle, Archive, Award, Banknote, BarChart3, Bell, BookOpen, Bot, Brain,
-  Briefcase, Building2, CalendarDays, CalendarCheck, CalendarClock, CheckCircle2, ChevronLeft, PanelLeft,
-  ChevronDown, ClipboardCheck, Clock, Compass, CreditCard, Crown, Download, FileCheck, FileSearch, FileText, FilePlus2,
-  FileSignature, Folder, FolderOpen, Gauge, Gift, Globe, HandCoins, HeartPulse, History,
-  Info, Languages, LayoutDashboard, LineChart as LineChartIcon, Lock, Mail, Medal,
-  Menu, MessageCircle, MessageSquare, Mic, MinusCircle, Moon, Package, Palmtree, Percent,
-  PlayCircle, Plane, Receipt, ScanLine, ScrollText, Search, Settings, ShieldCheck, Sparkles,
-  Star, Sun, Target, Timer, TrendingUp, Trophy, User, UserCheck, UserCog, UserPlus, Users, Video,
-  Wallet, Workflow, X, Zap, Clock3, ListTodo, CalendarRange, FileBarChart, Lightbulb,
-  ClipboardList, BadgeCheck, Headphones, HelpCircle, TicketCheck, Map, Laptop, Printer,
-  Repeat, Wrench, TrendingDown, BrainCircuit, Coffee, HeartHandshake, GraduationCap,
-  BookMarked, PenLine, FileEdit, Landmark, Coins, Building, Hash, Sliders, Shield, Layers, PackageCheck,
-  GitPullRequest, Send, ShieldAlert, Scale, Cpu, Home, Rocket,
+  Banknote,
+  Bell,
+  Building2,
+  CalendarDays,
+  LayoutDashboard,
+  Menu,
+  Moon,
+  PanelLeft,
+  Search,
+  Sparkles,
+  Sun,
+  Users,
 } from "lucide-react";
-import { useAurix, aurix, AVAILABLE_ROLES, type Role } from "@/lib/aurix-store";
+import { useAurix } from "@/lib/aurix-store";
 import { useAuthReady } from "@/lib/auth-bootstrap";
 import { UserProfileMenu } from "./UserProfileMenu";
 import { GeminiIcon } from "@/components/icons/GeminiIcon";
 import { hasValidAccessToken } from "@/api";
 import { AuthLoadingScreen } from "@/features/auth/components/AuthLoadingScreen";
-import { Input } from "@/components/ui/input";
 import {
   CommandDialog,
   CommandEmpty,
@@ -42,15 +40,12 @@ import {
 } from "@/store/sidebar/sidebarSelectors";
 import {
   fetchSidebarPermissions,
-  setActiveRoute,
   setSectionExpand,
-  setUserRole,
   toggleSectionExpand,
 } from "@/store/sidebar/sidebarSlice";
 import type {
   BadgeKind,
   SidebarNavItem,
-  SidebarNavLeaf,
   SidebarNavParent,
   SidebarNavSection,
 } from "@/store/sidebar/sidebarTypes";
@@ -434,7 +429,7 @@ export function DashboardShell() {
     if (authReady && ws.user) {
       dispatch(fetchSidebarPermissions(role));
     }
-  }, [dispatch, authReady, Boolean(ws.user), role]);
+  }, [dispatch, authReady, ws.user, role]);
 
   // ── Auth & Role guard ────────────────────────────────────────
   useEffect(() => {
@@ -450,7 +445,6 @@ export function DashboardShell() {
     }
 
     const normalizedRole = (role || "").toLowerCase();
-    const isExecutive = normalizedRole === "cto" || normalizedRole === "ceo" || normalizedRole === "cio";
     const isAdminOrHr =
       normalizedRole === "admin" ||
       normalizedRole === "hr" ||
@@ -601,7 +595,7 @@ export function DashboardShell() {
           <div className={`flex h-16 shrink-0 items-center border-b border-border px-2.5 ${collapsed ? "justify-center" : "justify-between"}`}>
             {!collapsed ? (
               <>
-                <Link to={homeLink as any} className="flex items-center gap-2 min-w-0">
+                <Link to={homeLink} className="flex items-center gap-2 min-w-0">
                   <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-brand-foreground shadow-glow" style={{ background: "var(--gradient-brand)" }}>
                     <Sparkles className="h-3.5 w-3.5" />
                   </span>
@@ -665,7 +659,7 @@ export function DashboardShell() {
                   return (
                     <Link
                       key={item.to}
-                      to={item.to as any}
+                      to={item.to as string}
                       title={collapsed ? item.label : undefined}
                       className={`group relative flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors ${
                         active ? "bg-accent text-foreground font-semibold" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
@@ -751,7 +745,7 @@ export function DashboardShell() {
           <CommandGroup heading="Quick Navigation">
             <CommandItem
               onSelect={() => {
-                navigate({ to: "/dashboard" as any });
+                navigate({ to: "/dashboard" });
                 setSearchOpen(false);
               }}
               className="cursor-pointer"
@@ -761,7 +755,7 @@ export function DashboardShell() {
             </CommandItem>
             <CommandItem
               onSelect={() => {
-                navigate({ to: "/dashboard/people" as any });
+                navigate({ to: "/dashboard/people" });
                 setSearchOpen(false);
               }}
               className="cursor-pointer"
@@ -771,7 +765,7 @@ export function DashboardShell() {
             </CommandItem>
             <CommandItem
               onSelect={() => {
-                navigate({ to: "/dashboard/leaves" as any });
+                navigate({ to: "/dashboard/leaves" });
                 setSearchOpen(false);
               }}
               className="cursor-pointer"
@@ -781,7 +775,7 @@ export function DashboardShell() {
             </CommandItem>
             <CommandItem
               onSelect={() => {
-                navigate({ to: "/dashboard/payroll" as any });
+                navigate({ to: "/dashboard/payroll" });
                 setSearchOpen(false);
               }}
               className="cursor-pointer"
@@ -791,7 +785,7 @@ export function DashboardShell() {
             </CommandItem>
             <CommandItem
               onSelect={() => {
-                navigate({ to: "/dashboard/payroll/periods" as any });
+                navigate({ to: "/dashboard/payroll/periods" });
                 setSearchOpen(false);
               }}
               className="cursor-pointer"
@@ -802,7 +796,7 @@ export function DashboardShell() {
             <CommandItem
               value="AI Hub Gemini Assistant Artificial Intelligence"
               onSelect={() => {
-                navigate({ to: "/dashboard/ai-hub" as any });
+                navigate({ to: "/dashboard/ai-hub" });
                 setSearchOpen(false);
               }}
               className="cursor-pointer group"
@@ -907,10 +901,10 @@ export function PageHeader({
   title,
   description,
   actions,
-  showBack,
-  backLink,
-  backText,
-  onBack,
+  showBack: _showBack,
+  backLink: _backLink,
+  backText: _backText,
+  onBack: _onBack,
 }: {
   title: string;
   description?: string;
@@ -920,27 +914,6 @@ export function PageHeader({
   backText?: string;
   onBack?: () => void;
 }) {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const isRecruitmentSubPage =
-    pathname.startsWith("/dashboard/recruitment/") &&
-    pathname !== "/dashboard/recruitment" &&
-    pathname !== "/dashboard/recruitment/";
-  const isAttendanceSubPage =
-    pathname.startsWith("/dashboard/attendance/") &&
-    pathname !== "/dashboard/attendance" &&
-    pathname !== "/dashboard/attendance/";
-  const isPeopleSubPage =
-    pathname.startsWith("/dashboard/employees") ||
-    pathname.startsWith("/dashboard/managers");
-
-  const handleBack = () => {
-    if (onBack) {
-      onBack();
-    } else if (window.history.length > 1) {
-      window.history.back();
-    }
-  };
-
   return (
     <div className="mb-6 flex flex-col min-w-0 gap-2 text-left">
       <div className="flex min-w-0 flex-wrap items-end justify-between gap-4">
@@ -954,7 +927,15 @@ export function PageHeader({
   );
 }
 
-export function ComingSoon({ title, description, icon: Icon }: { title: string; description: string; icon: any }) {
+export function ComingSoon({
+  title,
+  description,
+  icon: Icon,
+}: {
+  title: string;
+  description: string;
+  icon: React.ElementType;
+}) {
   return (
     <div className="rounded-2xl border border-dashed border-border bg-card/40 p-12 text-center">
       <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-xl text-brand-foreground shadow-glow" style={{ background: "var(--gradient-brand)" }}>

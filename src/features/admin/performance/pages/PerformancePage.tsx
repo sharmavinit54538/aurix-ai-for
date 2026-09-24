@@ -179,10 +179,6 @@ function EmployeePerformanceView() {
 export function PerformancePage() {
   const ws = useAurix();
 
-  if (ws.user?.role === "employee") {
-    return <EmployeePerformanceView />;
-  }
-
   const {
     reviews,
     goals,
@@ -263,6 +259,10 @@ export function PerformancePage() {
   }, [processedReviews, currentPage, perPage]);
 
   const totalPages = Math.ceil(processedReviews.length / perPage);
+
+  if (ws.user?.role === "employee") {
+    return <EmployeePerformanceView />;
+  }
 
   // Handlers
   const handleSort = (field: any) => {

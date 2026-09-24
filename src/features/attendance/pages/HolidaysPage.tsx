@@ -98,10 +98,6 @@ export default function HolidaysPage() {
     viewParam === "my" ||
     pathname.startsWith("/dashboard/employee");
 
-  if (isEmployee) {
-    return <EmployeeHolidaysView branch={ws.company?.city || undefined} />;
-  }
-
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -178,25 +174,14 @@ export default function HolidaysPage() {
   };
 
   useEffect(() => {
-    loadHolidays();
-  }, [calendarYear, yearFilter]);
+    if (!isEmployee) loadHolidays();
+  }, [calendarYear, yearFilter, isEmployee]);
 
   useEffect(() => {
     if (yearFilter !== "all") {
       setCalendarYear(parseInt(yearFilter, 10));
     }
   }, [yearFilter]);
-
-  const resetFilters = () => {
-    setSearch("");
-    setCountryFilter("all");
-    setStateFilter("all");
-    setOfficeFilter("all");
-    setDepartmentFilter("all");
-    setTypeFilter("all");
-    setYearFilter("2026");
-    toast.success("Filters reset successfully");
-  };
 
   const filteredHolidays = useMemo(() => {
     return holidays.filter((h) => {
@@ -324,6 +309,21 @@ export default function HolidaysPage() {
     }
     return [...prevCells, ...currentCells, ...nextCells];
   }, [calendarYear, calendarMonth]);
+
+  if (isEmployee) {
+    return <EmployeeHolidaysView branch={ws.company?.city || undefined} />;
+  }
+
+  const resetFilters = () => {
+    setSearch("");
+    setCountryFilter("all");
+    setStateFilter("all");
+    setOfficeFilter("all");
+    setDepartmentFilter("all");
+    setTypeFilter("all");
+    setYearFilter("2026");
+    toast.success("Filters reset successfully");
+  };
 
   const handlePrevMonth = () => {
     if (calendarMonth === 0) { setCalendarMonth(11); setCalendarYear((y) => y - 1); }

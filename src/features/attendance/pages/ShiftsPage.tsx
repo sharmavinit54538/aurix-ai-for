@@ -65,10 +65,6 @@ function ShiftsPage() {
     viewParam === "my" ||
     pathname.startsWith("/dashboard/employee");
 
-  if (isEmployee) {
-    return <EmployeeShiftsView employeeId={employeeIdParam || undefined} />;
-  }
-
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -152,8 +148,8 @@ function ShiftsPage() {
   };
 
   useEffect(() => {
-    loadShifts();
-  }, []);
+    if (!isEmployee) loadShifts();
+  }, [isEmployee]);
 
   // Filtered shifts
   const filteredShifts = useMemo(() => {
@@ -177,6 +173,10 @@ function ShiftsPage() {
     const assigned = shifts.reduce((sum, s) => sum + (s.assignedEmployeesCount || 0), 0);
     return { total, active, night, assigned };
   }, [shifts]);
+
+  if (isEmployee) {
+    return <EmployeeShiftsView employeeId={employeeIdParam || undefined} />;
+  }
 
   // Open Create Dialog
   const openCreateDialog = () => {

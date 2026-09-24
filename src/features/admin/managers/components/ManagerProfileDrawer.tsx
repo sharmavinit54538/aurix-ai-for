@@ -75,38 +75,6 @@ export function ManagerProfileDrawer({
   loading = false,
   error = null,
 }: ManagerProfileDrawerProps) {
-  if (!open) return null;
-
-  if (loading) {
-    return (
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="w-full sm:max-w-md md:max-w-lg border-l border-border bg-card/90 backdrop-blur-xl p-0 shadow-2xl flex flex-col h-full">
-          <Loader variant="panel" label="Loading manager profile..." className="h-full" />
-        </SheetContent>
-      </Sheet>
-    );
-  }
-
-  if (error) {
-    return (
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="w-full sm:max-w-md md:max-w-lg border-l border-border bg-card/90 backdrop-blur-xl p-0 shadow-2xl flex flex-col h-full">
-          <div className="flex h-full items-center justify-center p-6 text-sm text-rose-500">{error}</div>
-        </SheetContent>
-      </Sheet>
-    );
-  }
-
-  if (!manager) return null;
-
-  const initials = manager.fullName
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("");
-
-  const hue = avatarHue(manager.fullName);
-
   const [documents, setDocuments] = React.useState<ManagerDocument[]>([]);
   const [loadingDocs, setLoadingDocs] = React.useState(false);
 
@@ -141,6 +109,38 @@ export function ManagerProfileDrawer({
       active = false;
     };
   }, [manager?.id, manager?.employeeId]);
+
+  if (!open) return null;
+
+  if (loading) {
+    return (
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent className="w-full sm:max-w-md md:max-w-lg border-l border-border bg-card/90 backdrop-blur-xl p-0 shadow-2xl flex flex-col h-full">
+          <Loader variant="panel" label="Loading manager profile..." className="h-full" />
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  if (error) {
+    return (
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent className="w-full sm:max-w-md md:max-w-lg border-l border-border bg-card/90 backdrop-blur-xl p-0 shadow-2xl flex flex-col h-full">
+          <div className="flex h-full items-center justify-center p-6 text-sm text-rose-500">{error}</div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  if (!manager) return null;
+
+  const initials = manager.fullName
+    .split(" ")
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join("");
+
+  const hue = avatarHue(manager.fullName);
 
   // Permissions list
   const activePermissions = Object.entries(manager.permissions)

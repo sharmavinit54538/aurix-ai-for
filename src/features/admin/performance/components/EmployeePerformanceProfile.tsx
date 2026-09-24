@@ -108,6 +108,35 @@ export function EmployeePerformanceProfile({
   const [rewardValue, setRewardValue] = useState("");
   const [isAddingReward, setIsAddingReward] = useState(false);
 
+  // Strengths & Weaknesses auto-calculation
+  const strengths = useMemo(() => {
+    if (!review) return ["General Work Ethic"];
+    const list: string[] = [];
+    if (review.productivity >= 4) list.push("Productivity");
+    if (review.teamwork >= 4) list.push("Team Collaboration");
+    if (review.innovation >= 4) list.push("Creative Innovation");
+    if (review.problemSolving >= 4) list.push("Logical Problem Solving");
+    if (review.technicalSkills >= 4) list.push("Technical Knowledge");
+    if (review.discipline >= 4) list.push("Professional Discipline");
+    if (review.communication >= 4) list.push("Clear Communications");
+    if (list.length === 0) list.push("General Work Ethic");
+    return list;
+  }, [review]);
+
+  const weaknesses = useMemo(() => {
+    if (!review) return ["None Identified"];
+    const list: string[] = [];
+    if (review.productivity <= 2) list.push("Work Productivity Velocity");
+    if (review.teamwork <= 2) list.push("Inter-team Collaboration");
+    if (review.innovation <= 2) list.push("Independent Idea Sourcing");
+    if (review.problemSolving <= 2) list.push("Structured Problem Analysis");
+    if (review.technicalSkills <= 2) list.push("Specific Technical Training");
+    if (review.discipline <= 2) list.push("Timely Attendance & Discipline");
+    if (review.communication <= 2) list.push("Proactive Communications");
+    if (list.length === 0) list.push("None Identified");
+    return list;
+  }, [review]);
+
   if (!review) return null;
 
   const employeeId = review.employeeId;
@@ -135,33 +164,6 @@ export function EmployeePerformanceProfile({
     { subject: "Technical Skills", value: review.technicalSkills * 20 },
     { subject: "Discipline", value: review.discipline * 20 },
   ];
-
-  // Strengths & Weaknesses auto-calculation
-  const strengths = useMemo(() => {
-    const list: string[] = [];
-    if (review.productivity >= 4) list.push("Productivity");
-    if (review.teamwork >= 4) list.push("Team Collaboration");
-    if (review.innovation >= 4) list.push("Creative Innovation");
-    if (review.problemSolving >= 4) list.push("Logical Problem Solving");
-    if (review.technicalSkills >= 4) list.push("Technical Knowledge");
-    if (review.discipline >= 4) list.push("Professional Discipline");
-    if (review.communication >= 4) list.push("Clear Communications");
-    if (list.length === 0) list.push("General Work Ethic");
-    return list;
-  }, [review]);
-
-  const weaknesses = useMemo(() => {
-    const list: string[] = [];
-    if (review.productivity <= 2) list.push("Work Productivity Velocity");
-    if (review.teamwork <= 2) list.push("Inter-team Collaboration");
-    if (review.innovation <= 2) list.push("Independent Idea Sourcing");
-    if (review.problemSolving <= 2) list.push("Structured Problem Analysis");
-    if (review.technicalSkills <= 2) list.push("Specific Technical Training");
-    if (review.discipline <= 2) list.push("Timely Attendance & Discipline");
-    if (review.communication <= 2) list.push("Proactive Communications");
-    if (list.length === 0) list.push("None Identified");
-    return list;
-  }, [review]);
 
   // Goal assignment
   const handleAssignGoalSubmit = (e: React.FormEvent) => {

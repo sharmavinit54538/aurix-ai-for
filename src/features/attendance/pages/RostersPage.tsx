@@ -77,10 +77,6 @@ export default function RostersPage() {
     viewParam === "my" ||
     pathname.startsWith("/dashboard/employee");
 
-  if (isEmployee) {
-    return <EmployeeRostersView employeeId={employeeIdParam || undefined} />;
-  }
-
   const [rosters, setRosters] = useState<RosterEntry[]>([]);
   const [employees, setEmployees] = useState<EmployeeItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -192,8 +188,8 @@ export default function RostersPage() {
   };
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (!isEmployee) loadData();
+  }, [isEmployee]);
 
   const availableManagers = useMemo(() => {
     const set = new Set<string>();
@@ -207,24 +203,6 @@ export default function RostersPage() {
     rosters.forEach(r => { if (r.location && r.location.trim()) set.add(r.location.trim()); });
     return Array.from(set);
   }, [rosters]);
-
-  // Auto-Save Trigger
-  const triggerAutoSave = () => {
-    setAutoSaveStatus("Saving changes...");
-    setTimeout(() => {
-      setAutoSaveStatus("Saved a few seconds ago");
-    }, 800);
-  };
-
-  const handleResetFilters = () => {
-    setSearch("");
-    setDeptFilter("all");
-    setShiftFilter("all");
-    setLocationFilter("all");
-    setManagerFilter("all");
-    setStatusFilter("all");
-    toast.success("Filters reset successfully");
-  };
 
   // Filtered Roster Entries
   const filteredRosters = useMemo(() => {
@@ -319,6 +297,28 @@ export default function RostersPage() {
 
     return list;
   }, [rosters]);
+
+  if (isEmployee) {
+    return <EmployeeRostersView employeeId={employeeIdParam || undefined} />;
+  }
+
+  // Auto-Save Trigger
+  const triggerAutoSave = () => {
+    setAutoSaveStatus("Saving changes...");
+    setTimeout(() => {
+      setAutoSaveStatus("Saved a few seconds ago");
+    }, 800);
+  };
+
+  const handleResetFilters = () => {
+    setSearch("");
+    setDeptFilter("all");
+    setShiftFilter("all");
+    setLocationFilter("all");
+    setManagerFilter("all");
+    setStatusFilter("all");
+    toast.success("Filters reset successfully");
+  };
 
   // Handle Roster Actions — Connects to attendanceApi
   const handleAssignShift = async (e: React.FormEvent) => {

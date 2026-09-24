@@ -68,7 +68,7 @@ export default function PaymentBatchListPage() {
           runs = periods.items.map((p) => ({
             id: p.id,
             name: p.name,
-            status: p.status,
+            status: p.status || "draft",
             employeeCount: p.employeeCount,
           }));
         }
@@ -129,7 +129,8 @@ export default function PaymentBatchListPage() {
     loadBatches();
   }, [page, statusFilter]);
 
-  const getStatusBadge = (status: PaymentBatchStatus) => {
+  const getStatusBadge = (status?: PaymentBatchStatus | string) => {
+    if (!status) return <Badge variant="outline">Unknown</Badge>;
     switch (status) {
       case "approved":
         return <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30">Approved</Badge>;
