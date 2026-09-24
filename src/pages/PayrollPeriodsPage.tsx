@@ -20,6 +20,7 @@ import {
 import { Link } from "@tanstack/react-router";
 import { GlassCard, StatusBadge, EmptyState, Skeleton } from "@/components/hrms/Shared";
 import { Button } from "@/components/ui/button";
+import { MONTH_NAMES } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -123,21 +124,6 @@ function getPeriodStatusTone(
   }
   return "muted";
 }
-
-const MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
 
 export function PayrollPeriodsPage() {
   const ws = useAurix();

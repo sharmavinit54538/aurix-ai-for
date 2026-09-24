@@ -204,6 +204,7 @@ function RootShell({ children }: { children: ReactNode }) {
                       regs.forEach(function(r) { r.unregister(); });
                     }).catch(function() {});
                   }
+                  // Intentionally ignored: Raw inline browser bootstrap script (cannot import modules or safely log before page loads)
                 } catch(e) {}
               })();
             `,

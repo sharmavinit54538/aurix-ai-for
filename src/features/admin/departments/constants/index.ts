@@ -1,14 +1,7 @@
 import type { Department, DepartmentFilters } from "../types";
+import { OFFICES } from "@/lib/constants";
 
-export const OFFICES = [
-  "San Francisco HQ",
-  "Bengaluru Tech Park",
-  "London Office",
-  "Singapore Hub",
-  "New York Branch",
-  "Dubai Office",
-  "Remote",
-];
+export { OFFICES };
 
 export const STATUS_OPTIONS = [
   { value: "active", label: "Active", color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" },

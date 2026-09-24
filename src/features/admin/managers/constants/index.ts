@@ -2,8 +2,10 @@ import type {
   Manager,
   ManagerPermissions,
   ManagerFilters,
-} from "../types";
 import type { ManagerFormState } from "../managersTypes";
+import { OFFICES } from "@/lib/constants";
+
+export { OFFICES };
 
 // ─── Default Permission Set ───────────────────────────────────────────────────
 export const DEFAULT_PERMISSIONS: ManagerPermissions = {
@@ -86,11 +88,6 @@ export const DEPARTMENTS = [
     label: "Core",
     options: ["CEO", "CTO", "Director", "CPO", "CMO"],
   },
-];
-
-export const OFFICES = [
-  "San Francisco HQ", "Bengaluru Tech Park", "London Office",
-  "Singapore Hub", "New York Branch", "Dubai Office", "Remote",
 ];
 
 export const SHIFT_OPTIONS = [
