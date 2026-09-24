@@ -5,6 +5,7 @@ import { api } from "@/api";
 import { parseLoginResponse } from "@/features/auth/utils/parseLoginResponse";
 import { persistAuthSession, getPostLoginRoute } from "@/lib/auth-bootstrap";
 import { getErrorMessage } from "@/api/utils";
+import { isSuperAdmin } from "@/lib/rbac";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -51,17 +52,16 @@ export function GoogleAuthButton({ action = "login" }: GoogleAuthButtonProps) {
         const { accessToken, refreshToken, user } = login;
 
         // Double check user role on frontend as extra security
-        const userRole = (user.role || "").toLowerCase();
-        if (userRole !== "admin" && userRole !== "super_admin") {
+        if (!isSuperAdmin(user.role)) {
           const restrictedMsg =
-            "Access Restricted: Only Company Admins are allowed to login using Google. Employees and company members must sign in using their work email and password.";
+            "Access Restricted: Only Super Admin accounts can sign in with Google. Employees and company members must sign in using their work email and password.";
           setErrorMsg(restrictedMsg);
           toast.error(restrictedMsg);
           return;
         }
 
         persistAuthSession(user, { accessToken, refreshToken });
-        toast.success(`Welcome back, ${user.name}! (Company Admin)`);
+        toast.success(`Welcome back, ${user.name}! (Super Admin)`);
         setDialogOpen(false);
         navigate({ to: getPostLoginRoute(user) });
         return;
@@ -78,7 +78,7 @@ export function GoogleAuthButton({ action = "login" }: GoogleAuthButtonProps) {
         err?.status === 403
       ) {
         const adminOnlyMsg =
-          "Access Restricted: Only Company Admins are allowed to login using Google. Employees and staff members must sign in using their work email and password.";
+          "Access Restricted: Only Super Admin accounts can sign in with Google. Employees and staff members must sign in using their work email and password.";
         setErrorMsg(adminOnlyMsg);
         toast.error(adminOnlyMsg);
       } else {
@@ -134,7 +134,7 @@ export function GoogleAuthButton({ action = "login" }: GoogleAuthButtonProps) {
 
       <div className="flex items-center justify-center gap-1 text-[11px] text-muted-foreground text-center pt-0.5">
         <Lock className="h-3 w-3 text-amber-500 shrink-0" />
-        <span>Restricted to <strong>Company Admin</strong> accounts only</span>
+        <span>Restricted to <strong>Super Admin</strong> accounts only</span>
       </div>
 
       {/* Google SSO Dialog / Modal */}
@@ -162,10 +162,10 @@ export function GoogleAuthButton({ action = "login" }: GoogleAuthButtonProps) {
                   />
                 </svg>
               </div>
-              <DialogTitle className="text-lg font-bold">Google SSO (Company Admin Only)</DialogTitle>
+              <DialogTitle className="text-lg font-bold">Google SSO (Super Admin Only)</DialogTitle>
             </div>
             <DialogDescription className="text-xs text-muted-foreground pt-1">
-              Enter your Company Admin Google Account email address to sign in.
+              Enter your Super Admin Google Account email address to sign in.
             </DialogDescription>
           </DialogHeader>
 
@@ -185,7 +185,7 @@ export function GoogleAuthButton({ action = "login" }: GoogleAuthButtonProps) {
               <Input
                 id="googleEmail"
                 type="email"
-                placeholder="admin@company.com"
+                placeholder="owner@company.com"
                 value={googleEmail}
                 onChange={(e) => setGoogleEmail(e.target.value)}
                 required
@@ -199,7 +199,7 @@ export function GoogleAuthButton({ action = "login" }: GoogleAuthButtonProps) {
                 Security Rule Notice:
               </div>
               <p className="opacity-90">
-                Only registered <strong>Company Admins</strong> are authorized to log in using Google. Employees, staff, and non-admin members must sign in using password authentication.
+                Only registered <strong>Super Admin</strong> accounts are authorized to log in using Google. Employees and other members must sign in using password authentication.
               </p>
             </div>
 
@@ -221,7 +221,7 @@ export function GoogleAuthButton({ action = "login" }: GoogleAuthButtonProps) {
                 className="h-8 text-xs bg-[#1a73e8] hover:bg-[#1557b0] text-white gap-1.5"
               >
                 {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-                Authenticate Admin
+                Authenticate Super Admin
               </Button>
             </div>
           </form>

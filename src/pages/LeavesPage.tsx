@@ -50,8 +50,8 @@ export function LeavesPage() {
   const isSuperAdmin = normalizedRole === "super_admin";
   const isHrAdmin = normalizedRole === "hr_admin";
   const isManager = normalizedRole === "manager";
-  const canReviewLeaves = isSuperAdmin || isHrAdmin || isManager;
-  const canViewAllEmployeeBalances = isSuperAdmin || isHrAdmin;
+  const canReviewLeaves = isSuperAdmin || isHrAdmin || isManager || (ws.user?.role || "").toLowerCase().includes("admin") || (ws.user?.role || "").toLowerCase().includes("hr");
+  const canViewAllEmployeeBalances = isSuperAdmin || isHrAdmin || (ws.user?.role || "").toLowerCase().includes("admin") || (ws.user?.role || "").toLowerCase().includes("hr");
   const employeesList = ws.employees || [];
 
   // Tabs routing based on role

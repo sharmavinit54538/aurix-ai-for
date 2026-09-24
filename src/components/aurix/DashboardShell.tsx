@@ -307,140 +307,30 @@ const MANAGER_NAV_SECTIONS: SidebarNavSection[] = [
   },
 ];
 
-const INTERVIEWER_NAV_SECTIONS: SidebarNavSection[] = [
+const EXECUTIVE_NAV_SECTIONS: SidebarNavSection[] = [
   {
-    title: "INTERVIEWER PORTAL",
+    title: "EXECUTIVE DASHBOARD",
     items: [
-      {
-        to: "/dashboard/recruitment/interviews",
-        label: "My Interviews",
-        icon: CalendarClock,
-        exact: true,
-      },
-      {
-        to: "/dashboard/recruitment/ai-interview",
-        label: "AI Interview & Integrity",
-        icon: Video,
-        badge: "AI",
-      },
-      {
-        to: "/dashboard/recruitment/candidates",
-        label: "Candidate Profiles",
-        icon: Users,
-      },
-      {
-        to: "/dashboard/recruitment/ai-screening",
-        label: "Resume Screening",
-        icon: FileSearch,
-      },
-      {
-        to: "/dashboard/recruitment/scorecards",
-        label: "Scorecards & Notes",
-        icon: ClipboardCheck,
-      },
-      {
-        to: "/dashboard/ai-hub",
-        label: "AI Assistant",
-        icon: Brain,
-      },
-      {
-        to: "/dashboard/settings/profile",
-        label: "My Settings",
-        icon: Settings,
-      },
-    ],
-  },
-];
-
-const CANDIDATE_NAV_SECTIONS: SidebarNavSection[] = [
-  {
-    title: "CANDIDATE PORTAL",
-    items: [
-      {
-        to: "/dashboard/recruitment/candidates",
-        label: "Application Status",
-        icon: Users,
-        exact: true,
-      },
-      {
-        to: "/dashboard/recruitment/ai-interview",
-        label: "AI Interview Room",
-        icon: Video,
-        badge: "Live",
-      },
-      {
-        to: "/dashboard/recruitment/offers",
-        label: "Offer Letters & Sign",
-        icon: FileText,
-        badge: "Hot",
-      },
-      {
-        to: "/dashboard/recruitment/preboarding",
-        label: "Preboarding & Day 1",
-        icon: Compass,
-        badge: "New",
-      },
-      {
-        to: "/dashboard/recruitment/communication",
-        label: "Notices & Updates",
-        icon: Send,
-      },
-      {
-        to: "/dashboard/settings/profile",
-        label: "Candidate Profile",
-        icon: Settings,
-      },
-    ],
-  },
-];
-
-const CIO_NAV_SECTIONS: SidebarNavSection[] = [
-  {
-    title: "CIO PORTAL",
-    items: [
-      { to: "/dashboard/executive/cio", label: "Overview", icon: Home, exact: true },
-      { to: "/dashboard/executive/cio/it-operations", label: "IT Operations", icon: Laptop },
-      { to: "/dashboard/executive/cio/infrastructure", label: "Infrastructure", icon: Building },
-      { to: "/dashboard/executive/cio/cyber-security", label: "Cyber Security", icon: ShieldCheck },
-      { to: "/dashboard/executive/cio/cloud-network", label: "Cloud & Network", icon: Globe },
-      { to: "/dashboard/executive/cio/it-governance", label: "IT Governance", icon: FileCheck },
-      { to: "/dashboard/executive/cio/digital-transformation", label: "Digital Transformation", icon: Sparkles },
-      { to: "/dashboard/executive/cio/analytics", label: "Analytics", icon: BarChart3 },
-      { to: "/dashboard/executive/cio/settings", label: "Settings", icon: Settings },
-    ],
-  },
-];
-
-const CEO_NAV_SECTIONS: SidebarNavSection[] = [
-  {
-    title: "CEO PORTAL",
-    items: [
-      { to: "/dashboard/executive/ceo", label: "Overview", icon: Home, exact: true },
+      { to: "/dashboard/executive", label: "Overview", icon: Home, exact: true },
       { to: "/dashboard/executive/ceo/business", label: "Business", icon: TrendingUp },
       { to: "/dashboard/executive/ceo/finance", label: "Finance", icon: HandCoins },
-      { to: "/dashboard/executive/ceo/sales", label: "Sales", icon: BarChart3 },
       { to: "/dashboard/executive/ceo/organization", label: "Organization", icon: Users },
-      { to: "/dashboard/executive/ceo/operations", label: "Operations", icon: ClipboardCheck },
       { to: "/dashboard/executive/ceo/reports", label: "Reports", icon: LineChartIcon },
-      { to: "/dashboard/executive/ceo/ai-insights", label: "AI Insights", icon: Bot },
-      { to: "/dashboard/executive/ceo/settings", label: "Settings", icon: Settings },
+      { to: "/dashboard/executive/cio/it-operations", label: "Technology Operations", icon: Laptop },
+      { to: "/dashboard/executive/cto/engineering", label: "Engineering", icon: Wrench },
+      { to: "/dashboard/executive/cto/security", label: "Security", icon: Lock },
     ],
   },
 ];
 
-const CTO_NAV_SECTIONS: SidebarNavSection[] = [
+const IT_ADMIN_NAV_SECTIONS: SidebarNavSection[] = [
   {
-    title: "CTO PORTAL",
+    title: "IT ADMINISTRATION",
     items: [
-      { to: "/dashboard/executive/cto", label: "Overview", icon: Home, exact: true },
-      { to: "/dashboard/executive/cto/engineering", label: "Engineering", icon: Wrench },
-      { to: "/dashboard/executive/cto/projects", label: "Projects", icon: Folder },
-      { to: "/dashboard/executive/cto/developers", label: "Developers", icon: UserCheck },
-      { to: "/dashboard/executive/cto/devops", label: "DevOps", icon: Rocket },
-      { to: "/dashboard/executive/cto/analytics", label: "Analytics", icon: BarChart3 },
-      { to: "/dashboard/executive/cto/ai", label: "AI Platform", icon: Bot },
-      { to: "/dashboard/executive/cto/security", label: "Security", icon: Lock },
-      { to: "/dashboard/executive/cto/settings", label: "Settings", icon: Settings },
+      { to: "/dashboard", label: "System Overview", icon: LayoutDashboard, exact: true },
+      { to: "/dashboard/admin", label: "System Controls", icon: ShieldCheck },
+      { to: "/dashboard/assets", label: "Assets", icon: Package },
+      { to: "/dashboard/settings", label: "Settings", icon: Settings },
     ],
   },
 ];
@@ -480,103 +370,39 @@ export function DashboardShell() {
       return;
     }
 
-    const normalizedRole = (role || "").toLowerCase();
-    const isAdminOrHr =
-      normalizedRole === "admin" ||
-      normalizedRole === "hr" ||
-      normalizedRole === "super_admin" ||
-      normalizedRole === "superadmin";
+    const normalizedRole = normalizeRole(role);
 
     if (pathname === "/dashboard/employee" && normalizedRole !== "employee") {
-      if (normalizedRole === "cio") {
-        navigate({ to: "/dashboard/executive/cio" });
-        return;
-      }
-      if (normalizedRole === "cto") {
-        navigate({ to: "/dashboard/executive/cto" });
-        return;
-      }
-      if (normalizedRole === "ceo") {
-        navigate({ to: "/dashboard/executive/ceo" });
-        return;
-      }
       if (normalizedRole === "manager") {
         navigate({ to: "/dashboard/manager" });
         return;
       }
-      if (normalizedRole === "interviewer") {
-        navigate({ to: "/dashboard/recruitment/interviews" });
-        return;
-      }
-      if (normalizedRole === "candidate") {
-        navigate({ to: "/dashboard/recruitment/candidates" });
-        return;
-      }
-      if (isAdminOrHr) {
-        navigate({ to: "/dashboard" });
-        return;
-      }
+      navigate({ to: getRoleDefaultHome(normalizedRole) });
+      return;
     }
 
     if (pathname === "/onboarding") {
-      if (normalizedRole === "cio") {
-        navigate({ to: "/dashboard/executive/cio" });
-        return;
-      }
-      if (normalizedRole === "cto") {
-        navigate({ to: "/dashboard/executive/cto" });
-        return;
-      }
-      if (normalizedRole === "ceo") {
-        navigate({ to: "/dashboard/executive/ceo" });
-        return;
-      }
       if (normalizedRole === "employee") {
         navigate({ to: "/dashboard/employee" });
         return;
       }
-    }
-
-    if (normalizedRole === "cio" && (pathname === "/dashboard/employee" || pathname.startsWith("/dashboard/employee/"))) {
-      navigate({ to: "/dashboard/executive/cio" });
-      return;
-    }
-    if (normalizedRole === "cto" && (pathname === "/dashboard/employee" || pathname.startsWith("/dashboard/employee/"))) {
-      navigate({ to: "/dashboard/executive/cto" });
-      return;
-    }
-
-    if (normalizedRole === "ceo" && (pathname === "/dashboard/employee" || pathname.startsWith("/dashboard/employee/"))) {
-      navigate({ to: "/dashboard/executive/ceo" });
-      return;
     }
   }, [authReady, ws.isRestoring, ws.user, pathname, role, navigate]);
 
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
   const visibleNav = useMemo(() => {
-    const normalizedRole = (role || "").toLowerCase();
+    const normalizedRole = normalizeRole(role);
 
     const isEmployeePortalPath = pathname === "/dashboard/employee" || pathname.startsWith("/dashboard/employee/");
     const isManagerPortalPath = pathname === "/dashboard/manager" || pathname.startsWith("/dashboard/manager/");
-    const isCtoPortalPath = pathname === "/dashboard/executive/cto" || pathname.startsWith("/dashboard/executive/cto");
-    const isCeoPortalPath = pathname === "/dashboard/executive/ceo" || pathname.startsWith("/dashboard/executive/ceo");
-    const isCioPortalPath = pathname === "/dashboard/executive/cio" || pathname.startsWith("/dashboard/executive/cio");
+    const isExecutivePortalPath = pathname === "/dashboard/executive" || pathname.startsWith("/dashboard/executive/");
 
-    if (normalizedRole === "candidate") {
-      return filterNavTree(CANDIDATE_NAV_SECTIONS, role, userPermissions);
+    if (normalizedRole === "executive" || isExecutivePortalPath) {
+      return filterNavTree(EXECUTIVE_NAV_SECTIONS, role, userPermissions);
     }
-    if (normalizedRole === "interviewer") {
-      return filterNavTree(INTERVIEWER_NAV_SECTIONS, role, userPermissions);
-    }
-    if (normalizedRole === "cio" || isCioPortalPath) {
-      return filterNavTree(CIO_NAV_SECTIONS, role, userPermissions);
-    }
-    if (normalizedRole === "ceo" || isCeoPortalPath) {
-      return filterNavTree(CEO_NAV_SECTIONS, role, userPermissions);
-    }
-    if (normalizedRole === "cto" || isCtoPortalPath) {
-      return filterNavTree(CTO_NAV_SECTIONS, role, userPermissions);
+    if (normalizedRole === "it_admin") {
+      return filterNavTree(IT_ADMIN_NAV_SECTIONS, role, userPermissions);
     }
     if (normalizedRole === "employee" || isEmployeePortalPath) {
       return filterNavTree(EMPLOYEE_NAV_SECTIONS, role, userPermissions);
@@ -595,26 +421,7 @@ export function DashboardShell() {
     return null;
   }
 
-  const isCeoMode = (role || "").toLowerCase() === "ceo" || (ws.user?.email || "").toLowerCase() === "siddhubunny09@gmail.com" || pathname.startsWith("/dashboard/executive/ceo");
-  const isCioMode = (role || "").toLowerCase() === "cio" || pathname.startsWith("/dashboard/executive/cio");
-  const isCtoMode = (role || "").toLowerCase() === "cto" || pathname.startsWith("/dashboard/executive/cto");
-
-  const homeLink =
-    isCeoMode
-      ? "/dashboard/executive/ceo"
-      : isCioMode
-      ? "/dashboard/executive/cio"
-      : isCtoMode
-      ? "/dashboard/executive/cto"
-      : role === "manager"
-      ? "/dashboard/recruitment/hiring-manager"
-      : role === "employee"
-      ? "/dashboard/employee"
-      : role === "interviewer"
-      ? "/dashboard/recruitment/interviews"
-      : role === "candidate"
-      ? "/dashboard/recruitment/candidates"
-      : "/dashboard";
+  const homeLink = getRoleDefaultHome(role);
 
   return (
     <div className="flex min-h-screen w-full flex-col overflow-x-hidden bg-background text-foreground">
