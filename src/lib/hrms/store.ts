@@ -1,7 +1,4 @@
 import { useSyncExternalStore } from "react";
-import {
-  seedAssets, seedExits, seedExpenses, seedOffboarding, seedOnboarding, seedTimeline, seedTravel, seedVisitors,
-} from "./seed";
 import type {
   Asset, Expense, ExitCase, OffboardingCase, OnboardingCase, TimelineEvent, TravelRequest, Visitor,
 } from "./types";
@@ -20,14 +17,14 @@ interface HrmsState {
 const STORAGE_KEY = "aurix.hrms.v1";
 
 const initial: HrmsState = {
-  timeline: seedTimeline,
-  assets: seedAssets,
-  visitors: seedVisitors,
-  expenses: seedExpenses,
-  travel: seedTravel,
-  exits: seedExits,
-  onboarding: seedOnboarding,
-  offboarding: seedOffboarding,
+  timeline: [],
+  assets: [],
+  visitors: [],
+  expenses: [],
+  travel: [],
+  exits: [],
+  onboarding: [],
+  offboarding: [],
 };
 
 function load(): HrmsState {

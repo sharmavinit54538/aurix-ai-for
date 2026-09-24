@@ -47,29 +47,40 @@ import { useAurix } from "@/lib/aurix-store";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  AI_TEAM_INSIGHTS,
-  ATTENDANCE_RECORDS,
-  ATTENDANCE_SUMMARY,
-  CANDIDATE_PIPELINE,
-  DEPT_DISTRIBUTION,
-  HIRING_REQUESTS,
-  LEAVE_REQUESTS,
-  LOW_PERFORMERS,
-  MANAGER_KPI,
-  MANAGER_NOTIFICATIONS,
-  MANAGER_REPORTS,
-  MANAGER_INTERVIEWS,
-  PERF_MONTHLY,
-  TEAM_ASSETS,
-  TEAM_ASSET_SUMMARY,
-  TEAM_GOALS,
-  TEAM_MEMBERS,
-  TOP_PERFORMERS,
-  WEEKLY_TEAM_ATTENDANCE,
-  type EmployeeStatus,
-  type LeaveRequest,
-} from "./manager-data";
+import type {
+  EmployeeStatus,
+  LeaveRequest,
+} from "./types";
+
+// ── Empty arrays — will be populated when backend endpoints are ready ──
+const MANAGER_KPI: any[] = [];
+const TEAM_MEMBERS: any[] = [];
+const DEPT_DISTRIBUTION: any[] = [];
+const ATTENDANCE_SUMMARY: any[] = [];
+const WEEKLY_TEAM_ATTENDANCE: any[] = [];
+const ATTENDANCE_RECORDS: any[] = [];
+const LEAVE_REQUESTS: LeaveRequest[] = [];
+const TEAM_GOALS: any[] = [];
+const PERF_MONTHLY: any[] = [];
+const TOP_PERFORMERS: any[] = [];
+const LOW_PERFORMERS: any[] = [];
+const HIRING_REQUESTS: any[] = [];
+const MANAGER_INTERVIEWS: any[] = [];
+const CANDIDATE_PIPELINE: any[] = [];
+const TEAM_ASSET_SUMMARY: any[] = [];
+const TEAM_ASSETS: any[] = [];
+const AI_TEAM_INSIGHTS: any[] = [];
+const MANAGER_NOTIFICATIONS: any[] = [];
+
+// ── UI navigation config (not backend data) ───────────────────
+const MANAGER_REPORTS = [
+  { label: "Team Attendance", color: "from-teal-600 to-cyan-600", link: "/dashboard/attendance" },
+  { label: "Team Performance", color: "from-violet-600 to-purple-600", link: "/dashboard/performance" },
+  { label: "Leave Summary", color: "from-amber-600 to-orange-600", link: "/dashboard/leaves" },
+  { label: "Productivity", color: "from-blue-600 to-indigo-600", link: "/dashboard/reports" },
+  { label: "Hiring Status", color: "from-emerald-600 to-teal-600", link: "/dashboard/recruitment" },
+  { label: "Asset Report", color: "from-slate-600 to-gray-700", link: "/dashboard/assets" },
+];
 
 // ── Animation helpers ─────────────────────────────────────────
 const fadeUp = {
@@ -310,8 +321,8 @@ function TeamOverview() {
           <div className="lg:col-span-2">
             <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">Team Members</p>
             <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-              {TEAM_MEMBERS.map((m) => {
-                const cfg = STATUS_CONFIG[m.status];
+              {TEAM_MEMBERS.map((m: any) => {
+                const cfg = STATUS_CONFIG[m.status as EmployeeStatus] || STATUS_CONFIG.present;
                 return (
                   <div
                     key={m.id}
@@ -463,7 +474,7 @@ function AttendanceCenter() {
                     : "bg-blue-500/10 text-blue-500"
                 }`}
               >
-                {r.name.split(" ").map((n) => n[0]).join("")}
+                {r.name.split(" ").map((n: string) => n[0]).join("")}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
@@ -652,7 +663,7 @@ function PerformanceCenter() {
                   <div className="mb-1 flex items-center justify-between text-xs">
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="font-medium truncate">{g.goal}</span>
-                      <span className={`shrink-0 font-semibold text-[10px] uppercase ${PRIORITY_COLORS[g.priority]}`}>
+                      <span className={`shrink-0 font-semibold text-[10px] uppercase ${PRIORITY_COLORS[g.priority as keyof typeof PRIORITY_COLORS] || ""}`}>
                         {g.priority}
                       </span>
                     </div>

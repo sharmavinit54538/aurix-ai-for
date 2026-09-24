@@ -441,9 +441,8 @@ export function DashboardShell() {
     if (!authReady || ws.isRestoring) return;
 
     if (!ws.user) {
-      // Only redirect to login when there is no valid access token.
-      // If the token is still valid (e.g. 1-year expiry) the bootstrap
-      // will eventually restore the user — don't kick out prematurely.
+      // Backup client guard: Redirect to login if user is not restored and has no valid token.
+      // (Primary protection is enforced via beforeLoad in routes/dashboard.tsx).
       if (!hasValidAccessToken()) {
         navigate({ to: "/login", replace: true });
       }

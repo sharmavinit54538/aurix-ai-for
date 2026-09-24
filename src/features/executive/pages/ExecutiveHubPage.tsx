@@ -15,7 +15,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAurix } from "@/lib/aurix-store";
-import { EXECUTIVE_DATASETS } from "../data/executiveData";
 import type { ExecutiveRole } from "../types/executiveTypes";
 
 const EXECUTIVE_CARDS: {
@@ -129,7 +128,10 @@ export function ExecutiveHubPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {EXECUTIVE_CARDS.map((card, idx) => {
           const Icon = card.icon;
-          const dataset = EXECUTIVE_DATASETS[card.role];
+          const dataset: { kpis: { id: string; title: string; value: string }[]; healthScore: number } = {
+            kpis: [],
+            healthScore: 0,
+          };
           return (
             <motion.div
               key={card.role}
@@ -168,7 +170,7 @@ export function ExecutiveHubPage() {
                 <div className="mt-4 pt-3 border-t border-border/40 space-y-2">
                   {dataset.kpis.length > 0 ? (
                     <div className="grid grid-cols-2 gap-2 text-left">
-                      {dataset.kpis.slice(0, 2).map((kpi) => (
+                      {dataset.kpis.slice(0, 2).map((kpi: { id: string; title: string; value: string }) => (
                         <div key={kpi.id} className="bg-accent/20 rounded-lg p-2 border border-border/30">
                           <span className="text-[9px] uppercase font-semibold text-muted-foreground/70 block truncate">
                             {kpi.title}

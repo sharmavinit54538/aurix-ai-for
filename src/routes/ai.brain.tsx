@@ -17,6 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { getTokens } from "@/api";
 import { AGENT_LIST, AGENTS, type AgentId, type AgentDef } from "@/lib/ai/agents";
 
 export const Route = createFileRoute("/ai/brain")({
@@ -53,7 +54,19 @@ function BrainPage() {
   // Re-create the chat instance when the agent or model changes so the body
   // params are picked up on the next request.
   const transport = useMemo(
-    () => new DefaultChatTransport({ api: "/api/ai-brain", body: { agentId, model } }),
+    () =>
+      new DefaultChatTransport({
+        api: "/api/ai-brain",
+        body: { agentId, model },
+        headers: (): Record<string, string> => {
+          const tokens = getTokens();
+          const headers: Record<string, string> = {};
+          if (tokens?.accessToken) {
+            headers.Authorization = `Bearer ${tokens.accessToken}`;
+          }
+          return headers;
+        },
+      }),
     [agentId, model],
   );
 

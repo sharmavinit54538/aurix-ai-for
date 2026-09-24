@@ -49,54 +49,64 @@ export const BASE_URL = `${API_BASE_URL}/api/v1`;
 const apiInstance = axios.create({
   baseURL: API_BASE_URL,
   timeout: 120000,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-let isRefreshing = false;
-let refreshSubscribers: ((token: string) => void)[] = [];
+let refreshPromise: Promise<string> | null = null;
 
-function subscribeTokenRefresh(cb: (token: string) => void) {
-  refreshSubscribers.push(cb);
-}
-
-function onRefreshed(token: string) {
-  refreshSubscribers.forEach((cb) => cb(token));
-  refreshSubscribers = [];
-}
-
-async function refreshAccessToken(): Promise<string> {
-  const tokens = getTokens();
-  if (!tokens?.refreshToken) {
-    throw new Error("No refresh token available");
+export async function refreshAccessToken(): Promise<string> {
+  if (refreshPromise) {
+    return refreshPromise;
   }
 
-  try {
-    const res = await axios.post(`${BASE_URL}/auth/refresh`, {
-      refresh_token: tokens.refreshToken,
-    });
+  refreshPromise = (async () => {
+    try {
+      // POST to /auth/refresh with withCredentials: true.
+      // The browser automatically attaches the HttpOnly cookie.
+      let res;
+      try {
+        res = await axios.post(
+          `${BASE_URL}/auth/refresh`,
+          {},
+          { withCredentials: true },
+        );
+      } catch (postErr: any) {
+        if (postErr?.response?.status === 404) {
+          res = await axios.post(
+            `${API_BASE_URL}/auth/refresh`,
+            {},
+            { withCredentials: true },
+          );
+        } else {
+          throw postErr;
+        }
+      }
 
-    if (!res.data?.success || !res.data?.data) {
+      const tokenData = res.data?.data ?? res.data;
+      const accessToken =
+        tokenData?.access_token || tokenData?.accessToken || tokenData?.token;
+
+      if (!accessToken) {
+        setTokens(null);
+        aurix.set({ isRestoring: false, user: null, company: null });
+        throw new Error("Invalid session refresh response");
+      }
+
+      setTokens({ accessToken });
+      return accessToken;
+    } catch (error) {
       setTokens(null);
       aurix.set({ isRestoring: false, user: null, company: null });
-      throw new Error("Invalid session refresh response");
+      throw new Error("Failed to refresh session");
+    } finally {
+      refreshPromise = null;
     }
+  })();
 
-    const newTokens = {
-      accessToken: res.data.data.access_token,
-      refreshToken: res.data.data.refresh_token,
-    };
-    setTokens(newTokens);
-    return newTokens.accessToken;
-  } catch (error) {
-    const status = (error as AxiosError)?.response?.status;
-    if (status === 400 || status === 401 || status === 403) {
-      setTokens(null);
-      aurix.set({ isRestoring: false, user: null, company: null });
-    }
-    throw new Error("Failed to refresh session");
-  }
+  return refreshPromise;
 }
 
 apiInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
@@ -138,52 +148,36 @@ apiInstance.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    if (error.response?.status !== 401 || !originalRequest || originalRequest._retry) {
+    // Don't retry refresh endpoint or non-401 or already retried requests
+    if (
+      error.response?.status !== 401 ||
+      !originalRequest ||
+      originalRequest._retry ||
+      originalRequest.url?.includes("/auth/refresh") ||
+      originalRequest.url?.includes("/auth/login")
+    ) {
       return Promise.reject(error);
     }
 
     const tokens = getTokens();
 
-    // Access token is still valid — don't clear the session on unrelated 401 responses.
+    // Access token is still valid — don't clear session on unrelated 401 responses.
     if (tokens?.accessToken && !isAccessTokenExpired(tokens.accessToken)) {
-      return Promise.reject(error);
-    }
-
-    if (!tokens?.refreshToken) {
-      setTokens(null);
-      aurix.set({ isRestoring: false, user: null, company: null });
-      if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
-        window.location.replace("/login");
-      }
       return Promise.reject(error);
     }
 
     originalRequest._retry = true;
 
-    if (!isRefreshing) {
-      isRefreshing = true;
-      try {
-        const newAccessToken = await refreshAccessToken();
-        isRefreshing = false;
-        onRefreshed(newAccessToken);
-      } catch (refreshError) {
-        isRefreshing = false;
-        refreshSubscribers = [];
-        setTokens(null);
-        aurix.set({ isRestoring: false, user: null, company: null });
-        if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
-          window.location.replace("/login");
-        }
-        return Promise.reject(refreshError);
+    try {
+      const newAccessToken = await refreshAccessToken();
+      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+      return apiInstance(originalRequest);
+    } catch (refreshError) {
+      if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
+        window.location.replace("/login");
       }
+      return Promise.reject(refreshError);
     }
-
-    return new Promise((resolve, reject) => {
-      subscribeTokenRefresh((token) => {
-        originalRequest.headers.Authorization = `Bearer ${token}`;
-        apiInstance(originalRequest).then(resolve).catch(reject);
-      });
-    });
   },
 );
 

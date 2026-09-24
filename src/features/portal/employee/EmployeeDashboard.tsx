@@ -40,19 +40,20 @@ import {
 import { useAurix } from "@/lib/aurix-store";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import {
-  COMPANY_EVENTS,
-  EMP_KPI,
-  EMP_NOTIFICATIONS,
-  LEAVE_QUOTA,
-  MY_ASSETS,
-  MY_ATTENDANCE,
-  MY_ATTENDANCE_TREND,
-  MY_DOCUMENTS,
-  MY_GOALS,
-  MY_LEAVES,
-  MY_PAYSLIPS,
-} from "./employee-data";
+import type { EmpKpi } from "./types";
+
+// ── Empty arrays — will be populated when backend endpoints are ready ──
+const EMP_KPI: EmpKpi[] = [];
+const MY_ATTENDANCE: any[] = [];
+const MY_LEAVES: any[] = [];
+const LEAVE_QUOTA: any[] = [];
+const MY_GOALS: any[] = [];
+const MY_PAYSLIPS: any[] = [];
+const MY_DOCUMENTS: any[] = [];
+const MY_ASSETS: any[] = [];
+const COMPANY_EVENTS: any[] = [];
+const EMP_NOTIFICATIONS: any[] = [];
+const MY_ATTENDANCE_TREND: any[] = [];
 
 // ── Animation helpers ─────────────────────────────────────────
 const fadeUp = {

@@ -41,9 +41,11 @@ function mapAuthUser(data: AuthUserPayload) {
   };
 }
 
+import { refreshAccessToken } from "@/api/apiInstance";
+
 export function persistAuthSession(
   user: AuthUserPayload,
-  tokens: { accessToken: string; refreshToken: string },
+  tokens: { accessToken: string; refreshToken?: string },
 ) {
   setTokens(tokens);
   aurix.set(mapAuthUser(user));
@@ -73,19 +75,8 @@ export async function bootstrapAuth(): Promise<void> {
     const tokens = getTokens();
     const ws = aurix.get();
 
-    // Cached user + valid access token — stay logged in without calling the API.
-    if (ws.user && tokens?.accessToken && !isAccessTokenExpired(tokens.accessToken)) {
-      finish();
-      return;
-    }
-
-    if (!tokens?.accessToken) {
-      finish();
-      return;
-    }
-
-    // Access token still valid — restore profile when missing, but never clear tokens on failure.
-    if (!isAccessTokenExpired(tokens.accessToken)) {
+    // 1. If we already have a valid access token in memory:
+    if (tokens?.accessToken && !isAccessTokenExpired(tokens.accessToken)) {
       if (!ws.user) {
         try {
           const res = await api.get<AuthMeResponse>("auth/me");
@@ -93,27 +84,26 @@ export async function bootstrapAuth(): Promise<void> {
             aurix.set(mapAuthUser(res.data));
           }
         } catch {
-          // Keep the session while the access token is still valid.
+          // Keep session while access token is valid
         }
       }
       finish();
       return;
     }
 
-    // Access token expired — try auth/me (interceptor will refresh the token first).
+    // 2. If memory has no valid token (e.g. page refresh), attempt refresh via HttpOnly cookie:
     try {
+      await refreshAccessToken();
       const res = await api.get<AuthMeResponse>("auth/me");
       if (res.success && res.data) {
         aurix.set(mapAuthUser(res.data));
-      } else if (!hasValidAccessToken()) {
+      } else {
         setTokens(null);
         aurix.set({ user: null, company: null });
       }
     } catch {
-      if (!hasValidAccessToken()) {
-        setTokens(null);
-        aurix.set({ user: null, company: null });
-      }
+      setTokens(null);
+      aurix.set({ user: null, company: null });
     } finally {
       finish();
     }
@@ -137,7 +127,12 @@ export function useAuthReady(): boolean {
   );
 }
 
-export function logout(options?: { redirect?: boolean }) {
+export async function logout(options?: { redirect?: boolean }) {
+  try {
+    await api.post("/auth/logout");
+  } catch {
+    // If backend is offline or logout endpoint fails, proceed with local session cleanup
+  }
   setTokens(null);
   aurix.reset();
   try {

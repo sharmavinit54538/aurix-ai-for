@@ -195,14 +195,9 @@ function load() {
       const parsed = JSON.parse(raw);
       state = { ...defaultState, ...parsed };
     }
-    
-    // Check if we have tokens stored to restore session on startup
-    const tokensRaw = localStorage.getItem("aurix:tokens");
-    if (tokensRaw) {
-      const tokens = JSON.parse(tokensRaw);
-      if (tokens && tokens.accessToken) {
-        state.isRestoring = true;
-      }
+    // If a cached user profile exists, mark as restoring until bootstrapAuth verifies with backend
+    if (state.user) {
+      state.isRestoring = true;
     }
   } catch {}
 }

@@ -53,34 +53,52 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { GeminiIcon } from "@/components/icons/GeminiIcon";
 import { useAurix, type HRDocument } from "@/lib/aurix-store";
-import {
-  AI_FEATURES,
-  AI_METRICS,
-  AI_RECENT,
-  ACTIVE_JOBS,
-  ACTIVITY_FEED,
-  APPROVAL_DATA,
-  ASSET_STATS,
-  ATTRITION_RATE,
-  CALENDAR_EVENTS,
-  DEPT_ATTENDANCE,
-  DEPT_DISTRIBUTION,
-  DEPT_PERFORMANCE,
-  EXIT_STAGES,
-  GENDER_DIVERSITY,
-  HEADCOUNT_GROWTH,
-  INTERVIEWS_TODAY,
-  KPI_CARDS,
-  MONTHLY_PAYROLL,
-  NOTIFICATIONS,
-  ONBOARDING_STAGES,
-  PAYROLL_STATUS,
-  PIPELINE_STAGES,
-  SALARY_DISTRIBUTION,
-  WEEKLY_ATTENDANCE,
-  WIDGET_SCORES,
-  WORLD_CLOCKS,
-} from "./executive-data";
+import type {
+  ApprovalItem,
+  CalendarEvent,
+  ActivityItem,
+  NotificationItem,
+  DeptCard,
+} from "./types/executiveDashboardTypes";
+
+// ── UI navigation config (not backend data) ───────────────────
+const AI_FEATURES = [
+  { title: "HR Copilot", desc: "AI-powered HR Q&A and policy guidance", link: "/ai/chat-assistant", color: "from-violet-600 to-purple-700" },
+  { title: "Resume Screening", desc: "Automated resume parsing & scoring", link: "/ai/recruiter", color: "from-blue-600 to-indigo-700" },
+  { title: "AI Analytics", desc: "Predictive workforce intelligence", link: "/ai/analytics-center", color: "from-emerald-600 to-teal-700" },
+  { title: "Policy Assistant", desc: "Instant policy answers & summaries", link: "/ai/policy-assistant", color: "from-amber-600 to-orange-700" },
+  { title: "AI Chat", desc: "Multi-modal HR assistant", link: "/ai/chat-assistant", color: "from-rose-600 to-pink-700" },
+];
+
+// ── Empty arrays — will be populated when backend endpoints are ready ──
+const AI_METRICS: any[] = [];
+const AI_RECENT: any[] = [];
+const ACTIVE_JOBS: any[] = [];
+const ACTIVITY_FEED: ActivityItem[] = [];
+const APPROVAL_DATA: Record<string, ApprovalItem[]> = {
+  Leave: [], Attendance: [], Recruitment: [], Onboarding: [],
+  Exit: [], Assets: [], Documents: [], Expenses: [],
+};
+const ASSET_STATS: any[] = [];
+const ATTRITION_RATE: any[] = [];
+const CALENDAR_EVENTS: CalendarEvent[] = [];
+const DEPT_ATTENDANCE: any[] = [];
+const DEPT_DISTRIBUTION: any[] = [];
+const DEPT_PERFORMANCE: DeptCard[] = [];
+const EXIT_STAGES: any[] = [];
+const GENDER_DIVERSITY: any[] = [];
+const HEADCOUNT_GROWTH: any[] = [];
+const INTERVIEWS_TODAY: any[] = [];
+const KPI_CARDS: any[] = [];
+const MONTHLY_PAYROLL: any[] = [];
+const NOTIFICATIONS: NotificationItem[] = [];
+const ONBOARDING_STAGES: any[] = [];
+const PAYROLL_STATUS: any[] = [];
+const PIPELINE_STAGES: any[] = [];
+const SALARY_DISTRIBUTION: any[] = [];
+const WEEKLY_ATTENDANCE: any[] = [];
+const WIDGET_SCORES: any[] = [];
+const WORLD_CLOCKS: any[] = [];
 
 // ── Animation variants ────────────────────────────────────────
 const fadeUp = {

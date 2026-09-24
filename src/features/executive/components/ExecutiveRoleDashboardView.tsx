@@ -17,8 +17,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import type { ExecutiveRole, DateRangeType } from "../types/executiveTypes";
-import { EXECUTIVE_DATASETS } from "../data/executiveData";
+import type { ExecutiveRole, DateRangeType, ExecutiveDashboardData } from "../types/executiveTypes";
 import { ExecutiveHeader } from "./ExecutiveHeader";
 import { ExecutiveKpiCard } from "./ExecutiveKpiCard";
 import { ExecutiveAiInsightCard } from "./ExecutiveAiInsightCard";
@@ -28,6 +27,43 @@ import { Progress } from "@/components/ui/progress";
 import { Target, AlertCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
+// ── Role metadata — backend provides real data via API ────────
+const ROLE_META: Record<ExecutiveRole, { title: string; subtitle: string; tableTitle: string; tableDesc: string }> = {
+  ceo: { title: "Chief Executive Officer Command Center", subtitle: "Enterprise Business Performance, ARR Growth, OKR Tracking & Strategic Health", tableTitle: "Strategic Corporate Projects & Initiatives", tableDesc: "High-priority enterprise initiatives monitored by executive committee" },
+  cto: { title: "Chief Technology Officer Command Center", subtitle: "System Health, Engineering Velocity, Infrastructure Cost, CI/CD & AI Architecture", tableTitle: "Engineering Milestones & Critical Infrastructure Deliverables", tableDesc: "Strategic engineering initiatives and core platform roadmap deliverables" },
+  cfo: { title: "Chief Financial Officer Command Center", subtitle: "Corporate Financials, Runway, Cash Flow, OPEX & Department Budget Allocations", tableTitle: "Capital Expenditures & Department Budget Allocations", tableDesc: "Enterprise financial outlays, capital expenditures and department burn monitoring" },
+  cio: { title: "Chief Information Officer Command Center", subtitle: "Enterprise IT Operations, Global Infrastructure, Cybersecurity & Compliance", tableTitle: "IT Projects, System Migrations & Compliance Audits", tableDesc: "Enterprise technology deployments, security assessments and infrastructure lifecycle" },
+  coo: { title: "Chief Operating Officer Command Center", subtitle: "Workforce Productivity, Operational Bottlenecks, Facility SLA & Supply Chain", tableTitle: "Operational Efficiency & Process Optimization Initiatives", tableDesc: "Enterprise operations, SLA compliance and business continuity programs" },
+  cmo: { title: "Chief Marketing Officer Command Center", subtitle: "Brand Presence, Customer Acquisition Cost, Pipeline Generation & Marketing ROI", tableTitle: "Strategic Marketing Campaigns & Brand Growth Initiatives", tableDesc: "Global customer acquisition campaigns, brand equity and go-to-market initiatives" },
+};
+
+function getDataset(role: ExecutiveRole): ExecutiveDashboardData {
+  const meta = ROLE_META[role] ?? ROLE_META.ceo;
+  return {
+    role,
+    title: meta.title,
+    subtitle: meta.subtitle,
+    healthScore: 0,
+    kpis: [],
+    charts: [],
+    tableData: {
+      title: meta.tableTitle,
+      description: meta.tableDesc,
+      headers: [
+        { key: "name", label: "Initiative / Project" },
+        { key: "category", label: "Business Unit" },
+        { key: "owner", label: "Executive Sponsor" },
+        { key: "value", label: "Impact / Budget" },
+        { key: "status", label: "Status" },
+        { key: "progress", label: "Completion" },
+      ],
+      rows: [],
+    },
+    aiInsights: [],
+    okrs: [],
+  };
+}
+
 export interface ExecutiveRoleDashboardViewProps {
   role: ExecutiveRole;
 }
@@ -36,7 +72,7 @@ export function ExecutiveRoleDashboardView({ role }: ExecutiveRoleDashboardViewP
   const [dateRange, setDateRange] = useState<DateRangeType>("month");
   const [isLoading, setIsLoading] = useState(false);
 
-  const dataset = EXECUTIVE_DATASETS[role] || EXECUTIVE_DATASETS.ceo;
+  const dataset = getDataset(role);
 
   const handleRefresh = () => {
     setIsLoading(true);
