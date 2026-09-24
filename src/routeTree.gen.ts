@@ -54,6 +54,7 @@ import { Route as DashboardHrOpsRouteImport } from './routes/dashboard.hr-ops'
 import { Route as DashboardHrOperationsRouteImport } from './routes/dashboard.hr-operations'
 import { Route as DashboardHrRouteImport } from './routes/dashboard.hr'
 import { Route as DashboardHierarchyRouteImport } from './routes/dashboard.hierarchy'
+import { Route as DashboardForbiddenRouteImport } from './routes/dashboard.forbidden'
 import { Route as DashboardExpensesRouteImport } from './routes/dashboard.expenses'
 import { Route as DashboardExitManagementRouteImport } from './routes/dashboard.exit-management'
 import { Route as DashboardExitRouteImport } from './routes/dashboard.exit'
@@ -457,6 +458,11 @@ const DashboardHrRoute = DashboardHrRouteImport.update({
 const DashboardHierarchyRoute = DashboardHierarchyRouteImport.update({
   id: '/hierarchy',
   path: '/hierarchy',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardForbiddenRoute = DashboardForbiddenRouteImport.update({
+  id: '/forbidden',
+  path: '/forbidden',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardExpensesRoute = DashboardExpensesRouteImport.update({
@@ -1527,6 +1533,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/exit': typeof DashboardExitRoute
   '/dashboard/exit-management': typeof DashboardExitManagementRoute
   '/dashboard/expenses': typeof DashboardExpensesRoute
+  '/dashboard/forbidden': typeof DashboardForbiddenRoute
   '/dashboard/hierarchy': typeof DashboardHierarchyRoute
   '/dashboard/hr': typeof DashboardHrRoute
   '/dashboard/hr-operations': typeof DashboardHrOperationsRouteWithChildren
@@ -1746,6 +1753,7 @@ export interface FileRoutesByTo {
   '/dashboard/exit': typeof DashboardExitRoute
   '/dashboard/exit-management': typeof DashboardExitManagementRoute
   '/dashboard/expenses': typeof DashboardExpensesRoute
+  '/dashboard/forbidden': typeof DashboardForbiddenRoute
   '/dashboard/hierarchy': typeof DashboardHierarchyRoute
   '/dashboard/hr': typeof DashboardHrRoute
   '/dashboard/hr-ops': typeof DashboardHrOpsRoute
@@ -1961,6 +1969,7 @@ export interface FileRoutesById {
   '/dashboard/exit': typeof DashboardExitRoute
   '/dashboard/exit-management': typeof DashboardExitManagementRoute
   '/dashboard/expenses': typeof DashboardExpensesRoute
+  '/dashboard/forbidden': typeof DashboardForbiddenRoute
   '/dashboard/hierarchy': typeof DashboardHierarchyRoute
   '/dashboard/hr': typeof DashboardHrRoute
   '/dashboard/hr-operations': typeof DashboardHrOperationsRouteWithChildren
@@ -2188,6 +2197,7 @@ export interface FileRouteTypes {
     | '/dashboard/exit'
     | '/dashboard/exit-management'
     | '/dashboard/expenses'
+    | '/dashboard/forbidden'
     | '/dashboard/hierarchy'
     | '/dashboard/hr'
     | '/dashboard/hr-operations'
@@ -2407,6 +2417,7 @@ export interface FileRouteTypes {
     | '/dashboard/exit'
     | '/dashboard/exit-management'
     | '/dashboard/expenses'
+    | '/dashboard/forbidden'
     | '/dashboard/hierarchy'
     | '/dashboard/hr'
     | '/dashboard/hr-ops'
@@ -2621,6 +2632,7 @@ export interface FileRouteTypes {
     | '/dashboard/exit'
     | '/dashboard/exit-management'
     | '/dashboard/expenses'
+    | '/dashboard/forbidden'
     | '/dashboard/hierarchy'
     | '/dashboard/hr'
     | '/dashboard/hr-operations'
@@ -3142,6 +3154,13 @@ declare module '@tanstack/react-router' {
       path: '/hierarchy'
       fullPath: '/dashboard/hierarchy'
       preLoaderRoute: typeof DashboardHierarchyRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/forbidden': {
+      id: '/dashboard/forbidden'
+      path: '/forbidden'
+      fullPath: '/dashboard/forbidden'
+      preLoaderRoute: typeof DashboardForbiddenRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/expenses': {
@@ -4900,6 +4919,7 @@ interface DashboardRouteChildren {
   DashboardExitRoute: typeof DashboardExitRoute
   DashboardExitManagementRoute: typeof DashboardExitManagementRoute
   DashboardExpensesRoute: typeof DashboardExpensesRoute
+  DashboardForbiddenRoute: typeof DashboardForbiddenRoute
   DashboardHierarchyRoute: typeof DashboardHierarchyRoute
   DashboardHrRoute: typeof DashboardHrRoute
   DashboardHrOperationsRoute: typeof DashboardHrOperationsRouteWithChildren
@@ -4949,6 +4969,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardExitRoute: DashboardExitRoute,
   DashboardExitManagementRoute: DashboardExitManagementRoute,
   DashboardExpensesRoute: DashboardExpensesRoute,
+  DashboardForbiddenRoute: DashboardForbiddenRoute,
   DashboardHierarchyRoute: DashboardHierarchyRoute,
   DashboardHrRoute: DashboardHrRoute,
   DashboardHrOperationsRoute: DashboardHrOperationsRouteWithChildren,

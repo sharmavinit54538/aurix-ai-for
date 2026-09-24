@@ -171,7 +171,7 @@ export function AssetsPage() {
   // ----------------------------------------------------
   // PARSE DEEP LINK QR SCAN
   // ----------------------------------------------------
-  const searchParams = useRouterState({ select: (s) => s.location.search }) as Record<string, string>;
+  const searchParams = useRouterState({ select: (s) => s.location.search }) as unknown as Record<string, string>;
   useEffect(() => {
     if (searchParams && searchParams.scan && assets.length > 0) {
       const matched = assets.find(a => a.id === searchParams.scan || a.tag === searchParams.scan);

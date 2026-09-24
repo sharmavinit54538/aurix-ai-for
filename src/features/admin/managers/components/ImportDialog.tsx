@@ -231,7 +231,7 @@ export function ImportDialog({
       const d = r.data;
       const firstName = d.firstName || "Imported";
       const lastName = d.lastName || "User";
-      const office = OFFICES.includes(d.office || "") ? (d.office as string) : OFFICES[0];
+      const office = (OFFICES as readonly string[]).includes(d.office || "") ? (d.office as string) : OFFICES[0];
       const deptObj = DEPARTMENTS.find((opt) => opt.value === d.department);
       const department = deptObj ? deptObj.value : DEPARTMENTS[0].value;
 

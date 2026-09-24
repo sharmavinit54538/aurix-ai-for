@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { useAurix } from "@/lib/aurix-store";
+import { MONTH_NAMES } from "@/lib/constants";
 import { EmployeeHolidaysView } from "@/features/portal/employee/components/EmployeeHolidaysView";
 import {
   Palmtree,
@@ -83,11 +84,6 @@ function fmtWeekday(dateStr: string) {
   const date = new Date(year, month - 1, day);
   return date.toLocaleDateString("en-US", { weekday: "long" });
 }
-
-const MONTH_NAMES = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
 
 export default function HolidaysPage() {
   const ws = useAurix();

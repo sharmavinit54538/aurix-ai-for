@@ -86,7 +86,7 @@ export function ManagerFormDialog({
     return options;
   }, [existingManagers, form.reporting_to, manager]);
   const officeOptions = useMemo(() => {
-    if (form.branch && !OFFICES.includes(form.branch)) {
+    if (form.branch && !(OFFICES as readonly string[]).includes(form.branch)) {
       return [form.branch, ...OFFICES];
     }
     return OFFICES;

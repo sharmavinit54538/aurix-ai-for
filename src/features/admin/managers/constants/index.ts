@@ -2,6 +2,7 @@ import type {
   Manager,
   ManagerPermissions,
   ManagerFilters,
+} from "../types";
 import type { ManagerFormState } from "../managersTypes";
 import { OFFICES } from "@/lib/constants";
 

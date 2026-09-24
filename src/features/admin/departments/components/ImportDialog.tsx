@@ -225,7 +225,7 @@ export function ImportDialog({
 
     const importedDepartments: Department[] = parsedRows.map((r, idx) => {
       const d = r.data;
-      const office = OFFICES.includes(d.office || "") ? (d.office as string) : OFFICES[0];
+      const office = (OFFICES as readonly string[]).includes(d.office || "") ? (d.office as string) : OFFICES[0];
 
       return {
         id: `dept_imported_${Math.random().toString(36).substr(2, 9)}`,
