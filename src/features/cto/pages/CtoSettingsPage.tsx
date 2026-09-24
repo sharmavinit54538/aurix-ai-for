@@ -4,17 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { toast } from "sonner";
 
 export function CtoSettingsPage() {
   const [githubOrg, setGithubOrg] = useState("");
   const [awsAccount, setAwsAccount] = useState("");
   const [qdrantHost, setQdrantHost] = useState("");
   const [orgName, setOrgName] = useState("");
-
-  const handleSave = () => {
-    toast.success("Saved CTO Organization & Technical Settings.");
-  };
 
   return (
     <div className="space-y-6 pb-12 text-left">
@@ -38,9 +33,14 @@ export function CtoSettingsPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button size="sm" onClick={handleSave} className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs cursor-pointer">
+            <Button
+              size="sm"
+              disabled
+              className="bg-indigo-600/50 text-white/70 text-xs cursor-not-allowed opacity-70"
+              title="Coming soon (Backend API pending)"
+            >
               <Save className="mr-1.5 h-3.5 w-3.5" />
-              Save Configuration
+              Save Configuration (Coming soon)
             </Button>
           </div>
         </div>
@@ -59,30 +59,57 @@ export function CtoSettingsPage() {
 
         <TabsContent value="general">
           <div className="rounded-2xl border border-border/80 bg-card/60 p-6 space-y-4 max-w-2xl">
-            <h3 className="font-bold text-sm text-foreground">General Platform Configuration</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-sm text-foreground">General Platform Configuration</h3>
+              <Badge variant="outline" className="text-[10px] text-amber-500/90 border-amber-500/30">Backend API Pending</Badge>
+            </div>
             <div className="space-y-3">
               <div>
                 <label className="text-xs font-semibold text-muted-foreground block mb-1">Organization Name</label>
-                <Input value={orgName} onChange={(e) => setOrgName(e.target.value)} placeholder="e.g. Your Company Name" className="bg-slate-900/60 text-xs" />
+                <Input
+                  disabled
+                  value={orgName}
+                  onChange={(e) => setOrgName(e.target.value)}
+                  placeholder="e.g. Your Company Name"
+                  className="bg-slate-900/60 text-xs opacity-60 cursor-not-allowed"
+                />
               </div>
               <div>
                 <label className="text-xs font-semibold text-muted-foreground block mb-1">Primary Vector DB Endpoint</label>
-                <Input value={qdrantHost} onChange={(e) => setQdrantHost(e.target.value)} placeholder="e.g. qdrant.internal:6333" className="bg-slate-900/60 font-mono text-xs text-indigo-400" />
+                <Input
+                  disabled
+                  value={qdrantHost}
+                  onChange={(e) => setQdrantHost(e.target.value)}
+                  placeholder="e.g. qdrant.internal:6333"
+                  className="bg-slate-900/60 font-mono text-xs text-indigo-400 opacity-60 cursor-not-allowed"
+                />
               </div>
             </div>
+            <p className="text-[11px] text-muted-foreground/80">
+              Platform configuration persistence is pending backend CTO settings endpoint implementation.
+            </p>
           </div>
         </TabsContent>
 
         <TabsContent value="git">
           <div className="rounded-2xl border border-border/80 bg-card/60 p-6 space-y-4 max-w-2xl">
-            <h3 className="font-bold text-sm text-foreground">Version Control (GitHub / GitLab Integration)</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-sm text-foreground">Version Control (GitHub / GitLab Integration)</h3>
+              <Badge variant="outline" className="text-[10px] text-amber-500/90 border-amber-500/30">Backend API Pending</Badge>
+            </div>
             <div className="space-y-3">
               <div>
                 <label className="text-xs font-semibold text-muted-foreground block mb-1">GitHub Enterprise Organization</label>
-                <Input value={githubOrg} onChange={(e) => setGithubOrg(e.target.value)} placeholder="e.g. github-organization-slug" className="bg-slate-900/60 font-mono text-xs text-indigo-400" />
+                <Input
+                  disabled
+                  value={githubOrg}
+                  onChange={(e) => setGithubOrg(e.target.value)}
+                  placeholder="e.g. github-organization-slug"
+                  className="bg-slate-900/60 font-mono text-xs text-indigo-400 opacity-60 cursor-not-allowed"
+                />
               </div>
-              <Badge className={githubOrg ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]" : "bg-muted text-muted-foreground border-border text-[10px]"}>
-                {githubOrg ? "Configured" : "Pending VCS Connection"}
+              <Badge className="bg-muted text-muted-foreground border-border text-[10px]">
+                Pending Backend Integration
               </Badge>
             </div>
           </div>
@@ -90,14 +117,23 @@ export function CtoSettingsPage() {
 
         <TabsContent value="cloud">
           <div className="rounded-2xl border border-border/80 bg-card/60 p-6 space-y-4 max-w-2xl">
-            <h3 className="font-bold text-sm text-foreground">Cloud Account & Infrastructure Connection</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-sm text-foreground">Cloud Account & Infrastructure Connection</h3>
+              <Badge variant="outline" className="text-[10px] text-amber-500/90 border-amber-500/30">Backend API Pending</Badge>
+            </div>
             <div className="space-y-3">
               <div>
                 <label className="text-xs font-semibold text-muted-foreground block mb-1">AWS Production Account ID</label>
-                <Input value={awsAccount} onChange={(e) => setAwsAccount(e.target.value)} placeholder="e.g. 123456789012" className="bg-slate-900/60 font-mono text-xs text-sky-400" />
+                <Input
+                  disabled
+                  value={awsAccount}
+                  onChange={(e) => setAwsAccount(e.target.value)}
+                  placeholder="e.g. 123456789012"
+                  className="bg-slate-900/60 font-mono text-xs text-sky-400 opacity-60 cursor-not-allowed"
+                />
               </div>
-              <Badge className={awsAccount ? "bg-sky-500/20 text-sky-400 border-sky-500/30 text-[10px]" : "bg-muted text-muted-foreground border-border text-[10px]"}>
-                {awsAccount ? "Configured" : "Pending IAM OIDC Role"}
+              <Badge className="bg-muted text-muted-foreground border-border text-[10px]">
+                Pending IAM OIDC Integration
               </Badge>
             </div>
           </div>

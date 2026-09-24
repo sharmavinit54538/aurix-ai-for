@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
+import ReactMarkdown from "react-markdown";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { 
   ArrowLeft, Briefcase, Building, MapPin, DollarSign, Users, 
@@ -102,32 +103,49 @@ function MarkdownRenderer({ content }: { content: unknown }) {
     );
   }
 
-  const html = text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/^# (.*?)$/gm, '<h1 class="text-2xl font-display font-bold text-foreground mt-6 mb-3 border-b border-border/80 pb-1.5">$1</h1>')
-    .replace(/^## (.*?)$/gm, '<h2 class="text-xl font-display font-bold text-foreground mt-5 mb-2.5">$1</h2>')
-    .replace(/^### (.*?)$/gm, '<h3 class="text-lg font-semibold text-foreground mt-4 mb-2">$1</h3>')
-    .replace(/^\- (.*?)$/gm, '<li class="ml-5 list-disc text-sm text-muted-foreground my-1">$1</li>')
-    .replace(/^\* (.*?)$/gm, '<li class="ml-5 list-disc text-sm text-muted-foreground my-1">$1</li>')
-    .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em class="italic text-foreground/90">$1</em>')
-    .split('\n\n')
-    .map(p => {
-      const trimmed = p.trim();
-      if (trimmed.startsWith('<h') || trimmed.startsWith('<li')) {
-        return trimmed;
-      }
-      return `<p class="text-sm text-muted-foreground leading-relaxed my-2.5">${trimmed.replace(/\n/g, '<br/>')}</p>`;
-    })
-    .join('\n');
-
   return (
-    <div 
-      className="space-y-1 text-muted-foreground prose dark:prose-invert max-w-none text-sm leading-relaxed" 
-      dangerouslySetInnerHTML={{ __html: html }} 
-    />
+    <div className="space-y-1 text-muted-foreground prose dark:prose-invert max-w-none text-sm leading-relaxed">
+      <ReactMarkdown
+        skipHtml={true}
+        components={{
+          h1: ({ children }) => (
+            <h1 className="text-2xl font-display font-bold text-foreground mt-6 mb-3 border-b border-border/80 pb-1.5">
+              {children}
+            </h1>
+          ),
+          h2: ({ children }) => (
+            <h2 className="text-xl font-display font-bold text-foreground mt-5 mb-2.5">
+              {children}
+            </h2>
+          ),
+          h3: ({ children }) => (
+            <h3 className="text-lg font-semibold text-foreground mt-4 mb-2">
+              {children}
+            </h3>
+          ),
+          ul: ({ children }) => <ul className="my-2 space-y-1">{children}</ul>,
+          ol: ({ children }) => <ol className="my-2 list-decimal ml-5 space-y-1">{children}</ol>,
+          li: ({ children }) => (
+            <li className="ml-5 list-disc text-sm text-muted-foreground my-1">
+              {children}
+            </li>
+          ),
+          strong: ({ children }) => (
+            <strong className="font-semibold text-foreground">{children}</strong>
+          ),
+          em: ({ children }) => (
+            <em className="italic text-foreground/90">{children}</em>
+          ),
+          p: ({ children }) => (
+            <p className="text-sm text-muted-foreground leading-relaxed my-2.5">
+              {children}
+            </p>
+          ),
+        }}
+      >
+        {text}
+      </ReactMarkdown>
+    </div>
   );
 }
 

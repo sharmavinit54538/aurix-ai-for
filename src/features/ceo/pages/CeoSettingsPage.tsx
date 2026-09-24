@@ -4,15 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { toast } from "sonner";
 
 export function CeoSettingsPage() {
   const [compName, setCompName] = useState("");
   const [taxId, setTaxId] = useState("");
-
-  const handleSave = () => {
-    toast.success("Saved CEO Corporate Settings.");
-  };
 
   return (
     <div className="space-y-6 pb-12 text-left">
@@ -36,9 +31,14 @@ export function CeoSettingsPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button size="sm" onClick={handleSave} className="bg-amber-600 hover:bg-amber-500 text-white text-xs cursor-pointer">
+            <Button
+              size="sm"
+              disabled
+              className="bg-amber-600/50 text-white/70 text-xs cursor-not-allowed opacity-70"
+              title="Coming soon (Backend API pending)"
+            >
               <Save className="mr-1.5 h-3.5 w-3.5" />
-              Save Changes
+              Save Changes (Coming soon)
             </Button>
           </div>
         </div>
@@ -55,17 +55,35 @@ export function CeoSettingsPage() {
 
         <TabsContent value="profile">
           <div className="rounded-2xl border border-border/80 bg-card/60 p-6 space-y-4 max-w-2xl">
-            <h3 className="font-bold text-sm text-foreground">Corporate Legal Entity Profile</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-sm text-foreground">Corporate Legal Entity Profile</h3>
+              <Badge variant="outline" className="text-[10px] text-amber-500/90 border-amber-500/30">Backend API Pending</Badge>
+            </div>
             <div className="space-y-3">
               <div>
                 <label className="text-xs font-semibold text-muted-foreground block mb-1">Company Legal Name</label>
-                <Input value={compName} onChange={(e) => setCompName(e.target.value)} placeholder="Enter company legal name" className="bg-slate-900/60 text-xs" />
+                <Input
+                  disabled
+                  value={compName}
+                  onChange={(e) => setCompName(e.target.value)}
+                  placeholder="Enter company legal name"
+                  className="bg-slate-900/60 text-xs opacity-60 cursor-not-allowed"
+                />
               </div>
               <div>
                 <label className="text-xs font-semibold text-muted-foreground block mb-1">Tax ID / Employer Identification Number (EIN)</label>
-                <Input value={taxId} onChange={(e) => setTaxId(e.target.value)} placeholder="Enter Tax ID / EIN" className="bg-slate-900/60 font-mono text-xs text-amber-400" />
+                <Input
+                  disabled
+                  value={taxId}
+                  onChange={(e) => setTaxId(e.target.value)}
+                  placeholder="Enter Tax ID / EIN"
+                  className="bg-slate-900/60 font-mono text-xs text-amber-400 opacity-60 cursor-not-allowed"
+                />
               </div>
             </div>
+            <p className="text-[11px] text-muted-foreground/80">
+              Corporate legal entity profile persistence is pending backend CEO settings endpoint implementation.
+            </p>
           </div>
         </TabsContent>
       </Tabs>

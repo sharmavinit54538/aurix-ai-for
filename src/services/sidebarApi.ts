@@ -175,12 +175,13 @@ export const sidebarApi = {
       // Fallback permissions based on user role when API endpoint returns error or dev mock
     }
 
-    const fallbackRole = (userRole || "admin").toLowerCase();
+    // Least-privilege fallback: If userRole is unknown or missing, default to employee permissions, NEVER admin.
+    const fallbackRole = (userRole || "employee").toLowerCase();
     const permissions =
       DEFAULT_ROLE_PERMISSIONS[fallbackRole] ||
       (fallbackRole.includes("admin") ? DEFAULT_ROLE_PERMISSIONS.admin : null) ||
       (fallbackRole.includes("hr") ? DEFAULT_ROLE_PERMISSIONS.hr : null) ||
-      DEFAULT_ROLE_PERMISSIONS.admin;
+      DEFAULT_ROLE_PERMISSIONS.employee;
     return {
       role: fallbackRole,
       permissions,
