@@ -129,7 +129,7 @@ export default function PaymentBatchDetailPage() {
         const valRes = await paymentApi.validatePaymentBatch(batchId);
         setValidationIssues(valRes.issues || []);
       } catch {
-        // Validation endpoint optional in mock
+        // Validation endpoint optional if not supported by backend
       }
 
       // Check reconciliation if in progress

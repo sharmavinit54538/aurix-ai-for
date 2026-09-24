@@ -14,40 +14,48 @@ describe("Part 4 — Full & Final Settlement (F&F) & Employee Self-Service (ESS)
       employeeCode: "AUR-101",
       department: "Engineering",
       designation: "Staff Systems Engineer",
-      exitType: "resignation",
-      noticePeriodDays: 60,
-      noticePeriodServedDays: 60,
-      resignationDate: "2026-08-01",
-      lastWorkingDate: "2026-09-30",
-      reason: "Pursuing higher studies abroad",
-      status: "pending_approval",
-      calculation: {
+      joiningDate: "2023-01-15",
+      exitDetails: {
+        exitType: "resignation",
+        noticePeriodDaysRequired: 60,
+        noticePeriodDaysServed: 60,
+        shortfallDays: 0,
+        resignationDate: "2026-08-01",
+        lastWorkingDate: "2026-09-30",
+        reason: "Pursuing higher studies abroad",
+      },
+      earnings: {
         unpaidSalaryDays: 30,
         unpaidSalaryPaise: 15000000,
-        encashableLeavesDays: 14,
+        leaveEncashmentDays: 14,
         leaveEncashmentPaise: 7000000,
         gratuityPaise: 35000000,
-        bonusPaise: 5000000,
-        noticeShortfallDays: 0,
-        noticePayRecoveryPaise: 0,
-        loansAdvancesRecoveryPaise: 0,
-        statutoryDeductions: {
-          pfPaise: 180000,
-          esiPaise: 0,
-          ptPaise: 20000,
-          tdsPaise: 4500000,
-        },
-        otherAdjustmentsPaise: 0,
+        statutoryBonusPaise: 5000000,
+        reimbursementsPaise: 0,
+        otherEarningsPaise: 0,
         totalEarningsPaise: 62000000,
+        totalEarningsFormatted: "₹6,20,000.00",
+      },
+      deductions: {
+        noticeShortfallRecoveryPaise: 0,
+        loanAdvanceRecoveryPaise: 0,
+        assetDamageRecoveryPaise: 0,
+        pfDeductionPaise: 180000,
+        ptDeductionPaise: 20000,
+        tdsDeductionPaise: 4500000,
+        otherDeductionsPaise: 0,
         totalDeductionsPaise: 4700000,
-        netPayablePaise: 57300000,
-        netPayableFormatted: "₹5,73,000.00",
+        totalDeductionsFormatted: "₹47,000.00",
       },
-      audit: {
-        initiatedBy: "hr-admin-01",
-        initiatedByName: "Rohan Varma",
-        initiatedAt: "2026-09-15T10:00:00Z",
+      netSettlementPaise: 57300000,
+      netSettlementFormatted: "₹5,73,000.00",
+      status: "pending_approval",
+      maker: {
+        id: "hr-admin-01",
+        name: "Rohan Varma",
       },
+      checker: null,
+      createdAt: "2026-09-15T10:00:00Z",
     };
 
     it("fetches list of F&F records with pagination and status", async () => {
@@ -68,7 +76,7 @@ describe("Part 4 — Full & Final Settlement (F&F) & Employee Self-Service (ESS)
       const res = await fnfApi.getFnfRecords();
       expect(res.items).toHaveLength(1);
       expect(res.items[0].id).toBe("fnf-001");
-      expect(res.items[0].calculation.netPayablePaise).toBe(57300000);
+      expect(res.items[0].netSettlementPaise).toBe(57300000);
       expect(res.items[0].status).toBe("pending_approval");
     });
 
@@ -94,8 +102,9 @@ describe("Part 4 — Full & Final Settlement (F&F) & Employee Self-Service (ESS)
           lastWorkingDate: "2026-09-30",
           exitType: "resignation",
           reason: "Career transition",
-          noticePeriodDays: 60,
-          noticeServedDays: 60,
+          noticePeriodDaysRequired: 60,
+          noticePeriodDaysServed: 60,
+          shortfallDays: 0,
         },
       });
 
@@ -111,12 +120,11 @@ describe("Part 4 — Full & Final Settlement (F&F) & Employee Self-Service (ESS)
             data: {
               ...mockFnfRecord,
               status: "approved" as FnfStatus,
-              audit: {
-                ...mockFnfRecord.audit,
-                approvedBy: "finance-head-01",
-                approvedByName: "Priya Sharma",
-                approvedAt: "2026-09-20T12:00:00Z",
+              checker: {
+                id: "finance-head-01",
+                name: "Priya Sharma",
               },
+              approvalRemarks: "All assets cleared and approved",
             },
           });
         })
@@ -124,7 +132,7 @@ describe("Part 4 — Full & Final Settlement (F&F) & Employee Self-Service (ESS)
 
       const approved = await fnfApi.approveFnf("fnf-001", "All assets cleared and approved");
       expect(approved.status).toBe("approved");
-      expect(approved.audit.approvedByName).toBe("Priya Sharma");
+      expect(approved.checker?.name).toBe("Priya Sharma");
     });
 
     it("finalizes approved F&F settlement and prevents duplicate finalization", async () => {
