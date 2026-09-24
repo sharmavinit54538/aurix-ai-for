@@ -92,7 +92,6 @@ export const createEmployee = createAsyncThunk<
   { rejectValue: ParsedError }
 >("employees/createEmployee", async (payload, thunkAPI) => {
   try {
-    console.log(payload);
     await apiInstance.post("/employees", payload);
   } catch (error) {
     return thunkAPI.rejectWithValue(parseApiError(error, "Failed to add employee"));

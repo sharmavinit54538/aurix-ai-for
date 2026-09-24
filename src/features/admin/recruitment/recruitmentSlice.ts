@@ -67,7 +67,6 @@ const recruitmentSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchRecruitmentData.fulfilled, (state, action) => {
-        console.log("action.payload", action.payload);
         state.loading = false;
         state.jobs = action.payload.jobs;
         state.candidates = action.payload.candidates;

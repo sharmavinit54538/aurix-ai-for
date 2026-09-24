@@ -93,7 +93,6 @@ const departmentsSlice = createSlice({
         state.selectedDepartmentError = action.payload ?? "Failed to load department details";
       })
       .addCase(createDepartment.fulfilled, (state, action) => {
-        console.log("action.payload", action.payload, "state.departments", state.departments);
         state.departments = [action.payload, ...state.departments];
       })
       .addCase(updateDepartment.fulfilled, (state, action) => {

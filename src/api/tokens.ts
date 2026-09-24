@@ -7,16 +7,14 @@
  * - Legacy localStorage keys ("aurix:tokens") are cleaned up to mitigate XSS risks.
  */
 
+import { safeStorage } from "@/lib/safe-storage";
+
 const LEGACY_TOKENS_KEY = "aurix:tokens";
 
 let inMemoryAccessToken: string | null = null;
 
 // Initial migration: Purge legacy tokens from localStorage if present
-if (typeof window !== "undefined") {
-  try {
-    localStorage.removeItem(LEGACY_TOKENS_KEY);
-  } catch {}
-}
+safeStorage.removeItem(LEGACY_TOKENS_KEY);
 
 export interface Tokens {
   accessToken: string;
@@ -33,11 +31,7 @@ export function getTokens(): Tokens | null {
 
 export function setTokens(tokens: { accessToken?: string; refreshToken?: string } | null) {
   inMemoryAccessToken = tokens?.accessToken || null;
-  if (typeof window !== "undefined") {
-    try {
-      localStorage.removeItem(LEGACY_TOKENS_KEY);
-    } catch {}
-  }
+  safeStorage.removeItem(LEGACY_TOKENS_KEY);
 }
 
 export function getAccessToken(): string | null {
@@ -50,9 +44,5 @@ export function setAccessToken(token: string | null) {
 
 export function clearTokens() {
   inMemoryAccessToken = null;
-  if (typeof window !== "undefined") {
-    try {
-      localStorage.removeItem(LEGACY_TOKENS_KEY);
-    } catch {}
-  }
+  safeStorage.removeItem(LEGACY_TOKENS_KEY);
 }

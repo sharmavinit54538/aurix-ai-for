@@ -3,6 +3,8 @@
  * caused by new deployments changing asset hashes while a user has an active tab.
  */
 
+import { logger } from "@/lib/logger";
+
 const CHUNK_RETRY_KEY = "ofc360_chunk_reload_attempted";
 const CHUNK_RETRY_TIMESTAMP_KEY = "ofc360_chunk_reload_ts";
 const COOLDOWN_MS = 15000; // 15-second cooldown to strictly prevent infinite reload loops
@@ -132,7 +134,7 @@ export function unregisterLegacyServiceWorkers(): void {
       for (const registration of registrations) {
         registration.unregister().then((success) => {
           if (success) {
-            console.log("[ServiceWorker] Successfully unregistered stale service worker:", registration.scope);
+            logger.info("[ServiceWorker] Successfully unregistered stale service worker:", registration.scope);
           }
         });
       }

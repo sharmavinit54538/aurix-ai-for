@@ -1,4 +1,5 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { safeStorage } from "./safe-storage";
 
 export type Role =
   | "admin"
@@ -188,28 +189,26 @@ let state: Workspace = defaultState;
 const listeners = new Set<() => void>();
 
 function load() {
-  if (typeof window === "undefined") return;
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (raw) {
+  const raw = safeStorage.getItem(KEY);
+  if (raw) {
+    try {
       const parsed = JSON.parse(raw);
       state = { ...defaultState, ...parsed };
+    } catch {
+      state = { ...defaultState };
     }
-    // If a cached user profile exists, mark as restoring until bootstrapAuth verifies with backend
-    if (state.user) {
-      state.isRestoring = true;
-    }
-  } catch {}
+  }
+  // If a cached user profile exists, mark as restoring until bootstrapAuth verifies with backend
+  if (state.user) {
+    state.isRestoring = true;
+  }
 }
 load();
 
 function persist() {
-  if (typeof window === "undefined") return;
-  try {
-    const toSave = { ...state };
-    delete toSave.isRestoring;
-    localStorage.setItem(KEY, JSON.stringify(toSave));
-  } catch {}
+  const toSave = { ...state };
+  delete toSave.isRestoring;
+  safeStorage.setItem(KEY, JSON.stringify(toSave));
 }
 
 function emit() {

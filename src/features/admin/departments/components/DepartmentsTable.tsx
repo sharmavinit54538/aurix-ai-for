@@ -59,7 +59,6 @@ export function DepartmentsTable({
   sortDir,
   onSort,
 }: DepartmentsTableProps) {
-  console.log("departments", departments);
   // Bulk select disabled
   // const allSelected = useMemo(() => {
   //   return departments.length > 0 && selectedIds.length === departments.length;

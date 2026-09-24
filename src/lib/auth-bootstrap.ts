@@ -2,6 +2,7 @@ import { useSyncExternalStore } from "react";
 import { api, clearApiCache, getTokens, hasValidAccessToken, isAccessTokenExpired, setTokens } from "@/api";
 import type { AuthMeResponse, AuthUserPayload } from "@/api";
 import { aurix } from "./aurix-store";
+import { safeStorage } from "./safe-storage";
 
 type AuthStatus = "loading" | "ready";
 
@@ -135,12 +136,10 @@ export async function logout(options?: { redirect?: boolean }) {
   }
   setTokens(null);
   aurix.reset();
-  try {
-    localStorage.removeItem("aurix:tokens");
-    localStorage.removeItem("aurix:workspace:v1");
-    localStorage.removeItem("aurix:remember");
-    sessionStorage.clear();
-  } catch {}
+  safeStorage.removeItem("aurix:tokens");
+  safeStorage.removeItem("aurix:workspace:v1");
+  safeStorage.removeItem("aurix:remember");
+  safeStorage.clear(typeof window !== "undefined" ? window.sessionStorage : undefined);
   clearApiCache();
   setStatus("ready");
   if (options?.redirect !== false && typeof window !== "undefined") {

@@ -87,7 +87,6 @@ export function RegisterPage() {
         company_name: form.companyName,
       };
       const res = (await api.post("auth/register", payload)) as any;
-console.log("Register response:", res);
       if (res.success) {
         aurix.set({
           user: {

@@ -22,6 +22,7 @@ import {
   AttendancePunchResult,
   extractFaceApiError,
 } from "@/services/attendanceApi";
+import { logger } from "@/lib/logger";
 
 // ── Geolocation Helper with Accuracy ────────────────────────────
 function getGeolocation(): Promise<{ lat: number; lng: number; accuracy?: number } | null> {
@@ -110,7 +111,9 @@ export function FaceAttendanceDialog({
       streamRef.current.getTracks().forEach((track) => {
         try {
           track.stop();
-        } catch {}
+        } catch (err) {
+          logger.warn("Failed to stop media stream track:", err);
+        }
       });
       streamRef.current = null;
     }
