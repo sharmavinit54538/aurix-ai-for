@@ -37,6 +37,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useAurix } from "@/lib/aurix-store";
+import { canManagePayroll } from "@/lib/rbac";
 import { useAppSelector } from "@/redux/hooks";
 import { selectUserPermissions } from "@/store/sidebar/sidebarSelectors";
 import {
@@ -122,40 +123,15 @@ export function EmployeePayrollDetailPage() {
   const ws = useAurix();
   const userPermissions = useAppSelector(selectUserPermissions);
 
-  // RBAC Permission Check
-  const normalizedRole = (
-    ws.user?.role ||
-    (typeof window !== "undefined" ? localStorage.getItem("user_role") : null) ||
-    ""
-  )
-    .toLowerCase()
-    .trim();
-
-  const isAdmin =
-    normalizedRole === "admin" ||
-    normalizedRole === "super_admin" ||
-    normalizedRole === "superadmin" ||
-    normalizedRole === "hr_admin" ||
-    normalizedRole === "hradmin" ||
-    normalizedRole === "hr-admin" ||
-    normalizedRole.includes("admin");
-
-  const isHr =
-    normalizedRole === "hr" ||
-    normalizedRole === "hr_manager" ||
-    normalizedRole === "hrmanager" ||
-    normalizedRole === "hr_executive" ||
-    normalizedRole.includes("hr");
+  const isPayrollAdmin = canManagePayroll(ws.user?.role);
 
   const canViewPayroll =
-    isAdmin ||
-    isHr ||
+    isPayrollAdmin ||
     userPermissions.includes("payroll.view") ||
-    userPermissions.includes("*") ||
-    !normalizedRole;
+    userPermissions.includes("*");
 
   const canRunPayroll =
-    isAdmin || isHr || userPermissions.includes("payroll.process") || userPermissions.includes("*");
+    isPayrollAdmin || userPermissions.includes("payroll.process") || userPermissions.includes("*");
 
   // State
   const [employee, setEmployee] = useState<PayrollPreviewEmployee | null>(null);
