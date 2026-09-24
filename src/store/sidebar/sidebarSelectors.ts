@@ -1,5 +1,6 @@
 import type { RootState } from "@/redux/store";
 import type { SidebarNavParent, SidebarNavSection } from "./sidebarTypes";
+import { normalizeRole } from "@/lib/rbac";
 
 export const selectSidebarState = (state: RootState) => state.sidebar;
 
@@ -32,23 +33,14 @@ export function filterNavTree(
   role?: string,
   userPermissions: string[] = []
 ): SidebarNavSection[] {
-  const normalizedRole = (role || "").toLowerCase();
-  const isAdmin =
-    normalizedRole === "admin" ||
-    normalizedRole === "super_admin" ||
-    normalizedRole === "superadmin" ||
-    normalizedRole === "hr_admin" ||
-    normalizedRole === "hradmin" ||
-    normalizedRole === "hr-admin" ||
-    normalizedRole.includes("admin") ||
-    !role;
+  const normalizedRole = normalizeRole(role);
+  const isSuperAdmin = normalizedRole === "super_admin";
 
   const isAllowedByRole = (roles?: string[]) =>
-    isAdmin || !roles || roles.length === 0 || roles.includes(normalizedRole);
+    isSuperAdmin || !roles || roles.length === 0 || roles.includes(normalizedRole);
   const isAllowedByPerm = (perm?: string) =>
-    isAdmin ||
+    isSuperAdmin ||
     !perm ||
-    userPermissions.length === 0 ||
     userPermissions.includes(perm) ||
     userPermissions.includes("*");
 
@@ -73,10 +65,6 @@ export function filterNavTree(
         }),
     }))
     .filter((section) => section.items.length > 0);
-
-  if (filtered.length === 0 && sections.length > 0) {
-    return sections;
-  }
 
   return filtered;
 }

@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useRouterState } from "@tanstack/react-router";
 import { LogOut } from "lucide-react";
 import { useAurix } from "@/lib/aurix-store";
+import { normalizeRole, type Role } from "@/lib/rbac";
 import { logout } from "@/lib/auth-bootstrap";
 import {
   DropdownMenu,
@@ -18,6 +18,15 @@ interface UserProfileMenuProps {
   className?: string;
 }
 
+const ROLE_LABELS: Record<Role, string> = {
+  super_admin: "Super Admin",
+  hr_admin: "HR Admin",
+  employee: "Employee",
+  manager: "Manager",
+  it_admin: "IT Admin",
+  executive: "Executive",
+};
+
 export function UserProfileMenu({
   collapsed = false,
   variant = "topbar",
@@ -25,42 +34,12 @@ export function UserProfileMenu({
 }: UserProfileMenuProps) {
   const ws = useAurix();
   const [open, setOpen] = useState(false);
-  const router = useRouterState();
-  const pathname = router.location.pathname;
 
   if (!ws.user) {
     return null;
   }
 
-  const role = ws.user.role;
-  const isCeoMode =
-    (role || "").toLowerCase() === "ceo" ||
-    (ws.user?.email || "").toLowerCase() === "siddhubunny09@gmail.com" ||
-    pathname.startsWith("/dashboard/executive/ceo");
-  const isCioMode =
-    (role || "").toLowerCase() === "cio" ||
-    pathname.startsWith("/dashboard/executive/cio");
-  const isCtoMode =
-    (role || "").toLowerCase() === "cto" ||
-    pathname.startsWith("/dashboard/executive/cto");
-
-  const formattedRole = isCeoMode
-    ? "Chief Executive Officer"
-    : isCioMode
-    ? "Chief Information Officer"
-    : isCtoMode
-    ? "Chief Technology Officer"
-    : role === "hr"
-    ? "HR Executive"
-    : role === "interviewer"
-    ? "Interviewer"
-    : role === "candidate"
-    ? "Candidate Portal"
-    : role === "manager"
-    ? "Hiring Manager"
-    : role === "employee"
-    ? "Employee"
-    : ws.user.role || "Team Member";
+  const formattedRole = ROLE_LABELS[normalizeRole(ws.user.role)];
 
   const initials =
     ws.user.fullName

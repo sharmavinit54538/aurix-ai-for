@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { ChevronDown, Check, UserCog, ShieldCheck, Briefcase, Video, User, Sparkles } from "lucide-react";
-import { AVAILABLE_ROLES, type Role, type RoleConfig } from "@/lib/aurix-store";
+import { ChevronDown, Check, UserCog, ShieldCheck, Briefcase, User, Sparkles, Laptop } from "lucide-react";
+import { AVAILABLE_ROLES, type Role } from "@/lib/aurix-store";
 
 interface RoleSwitcherDropdownProps {
   currentRole: Role;
@@ -8,32 +8,31 @@ interface RoleSwitcherDropdownProps {
 }
 
 const ROLE_ICONS: Record<Role, any> = {
-  admin: ShieldCheck,
-  hr: Briefcase,
-  manager: UserCog,
-  interviewer: Video,
+  super_admin: ShieldCheck,
+  hr_admin: Briefcase,
   employee: User,
-  candidate: Sparkles,
-  ceo: ShieldCheck,
-  cto: ShieldCheck,
-  cio: ShieldCheck,
+  manager: UserCog,
+  it_admin: Laptop,
+  executive: Sparkles,
 };
 
-const ROLE_BADGE_COLORS: Record<string, string> = {
-  admin: "bg-purple-500/20 text-purple-400 border-purple-500/30",
-  hr: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+const ROLE_BADGE_COLORS: Record<Role, string> = {
+  super_admin: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+  hr_admin: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
   manager: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  interviewer: "bg-amber-500/20 text-amber-400 border-amber-500/30",
   employee: "bg-sky-500/20 text-sky-400 border-sky-500/30",
-  candidate: "bg-pink-500/20 text-pink-400 border-pink-500/30",
-  ceo: "bg-amber-500/20 text-amber-400 border-amber-500/30",
-  cto: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
-  cio: "bg-indigo-500/20 text-indigo-400 border-indigo-500/30",
+  it_admin: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
+  executive: "bg-amber-500/20 text-amber-400 border-amber-500/30",
 };
 
 export function RoleSwitcherDropdown({ currentRole, onSwitchRole }: RoleSwitcherDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // This is a local development preview only; production identity always comes from auth/me.
+  if (!import.meta.env.DEV) {
+    return null;
+  }
 
   const activeConfig = AVAILABLE_ROLES.find((r) => r.role === currentRole) || {
     role: currentRole,
@@ -102,7 +101,7 @@ export function RoleSwitcherDropdown({ currentRole, onSwitchRole }: RoleSwitcher
       {isOpen && (
         <div className="absolute left-0 mt-2 w-72 origin-top-left rounded-xl border border-border bg-card/95 p-1.5 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in-50 zoom-in-95">
           <div className="px-2.5 py-2 border-b border-border/50">
-            <div className="text-[11px] font-semibold text-foreground uppercase tracking-wider">Persona Switcher</div>
+            <div className="text-[11px] font-semibold text-foreground uppercase tracking-wider">Development Role Preview</div>
             <div className="text-[11px] text-muted-foreground">
               Preview OFC360 from different employee & stakeholder roles
             </div>
