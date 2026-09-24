@@ -512,7 +512,21 @@ export function PayrollFinalizationPage() {
               <Lock className="h-3.5 w-3.5" />
               <span>Finalize Payroll</span>
             </Button>
-          ) : null}
+          ) : (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() =>
+                navigate({
+                  to: `/dashboard/payroll/runs/${runId}/payment` as any,
+                })
+              }
+              className="h-9 gap-1.5 text-xs shadow-sm bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              <Banknote className="h-3.5 w-3.5" />
+              <span>Step 9: Payment & Disbursement</span>
+            </Button>
+          )}
         </div>
       </div>
 

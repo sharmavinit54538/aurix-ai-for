@@ -377,6 +377,14 @@ export function PayrollDashboardPage() {
           >
             <Link to="/dashboard/payroll/periods">Payroll Periods</Link>
           </Button>
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="text-xs h-7 px-3 font-semibold rounded-md cursor-pointer text-muted-foreground hover:text-foreground"
+          >
+            <Link to="/dashboard/payroll/payments">Disbursements</Link>
+          </Button>
         </div>
         {/* Period Selector */}
         <div className="w-auto min-w-[280px] sm:min-w-[300px]">

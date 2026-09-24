@@ -17,6 +17,8 @@ export const ROUTE_ROLE_ACCESS: Record<string, string[]> = {
   "/dashboard/executive": ["ceo", "cto", "cio", "cfo", "coo", "admin", "super_admin"],
 
   // ── Payroll & Financial Compensation ────────────────────────
+  "/dashboard/payroll/payments": ["admin", "super_admin", "hr", "hr_admin"],
+  "/dashboard/payroll/full-and-final": ["admin", "super_admin", "hr", "hr_admin"],
   "/dashboard/payroll": ["admin", "super_admin", "hr", "hr_admin"],
 
   // ── HR Administration & Offboarding ─────────────────────────

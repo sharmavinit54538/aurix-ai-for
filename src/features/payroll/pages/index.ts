@@ -1,0 +1,10 @@
+export { default as PayrollRunPaymentPage } from "./PayrollRunPaymentPage";
+export { default as PaymentBatchListPage } from "./PaymentBatchListPage";
+export { default as PaymentBatchDetailPage } from "./PaymentBatchDetailPage";
+export { default as PayrollReportsPage } from "./PayrollReportsPage";
+export { default as SalaryStructurePage } from "./SalaryStructurePage";
+export { default as EmployeeCompensationPage } from "./EmployeeCompensationPage";
+export { default as VariableInputsPage } from "./VariableInputsPage";
+export { default as StatutoryCompliancePage } from "./StatutoryCompliancePage";
+export { default as FullAndFinalPage } from "./FullAndFinalPage";
+export { default as EmployeeSelfServicePayrollPage } from "./EmployeeSelfServicePayrollPage";

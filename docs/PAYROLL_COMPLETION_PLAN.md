@@ -242,94 +242,88 @@ src/routes/
 
 ---
 
-## 9. Mermaid State Machine
+## 9. 9-Step Lifecycle State Machine & Transition Rules
+
+### 9.1 Canonical 9 Steps & Route Mappings
+| Step # | Lifecycle Step | Route Pattern | Allowed Roles | Transition Prerequisite |
+|--------|---------------|---------------|---------------|--------------------------|
+| 1 | **Period** | `/dashboard/payroll/periods` | HR, Admin | Cycle created & open |
+| 2 | **Run** | `/dashboard/payroll/runs/$runId/processing` | HR, Admin | Run initiated from period |
+| 3 | **Validation** | `/dashboard/payroll/runs/$runId/validation` | HR, Admin | Run calculation completed |
+| 4 | **Preview** | `/dashboard/payroll/runs/$runId/preview` | HR, Admin | Validation findings reviewed |
+| 5 | **Employee Detail** | `/dashboard/payroll/runs/$runId/employees/$employeeId` | HR, Admin | Drill-down from Preview |
+| 6 | **Review & Approval** | `/dashboard/payroll/runs/$runId/approval` | Admin (`payroll.approve`) | 0 blocking validation errors |
+| 7 | **Finalization** | `/dashboard/payroll/runs/$runId/finalize` | Admin (`payroll.finalize`) | Approved by authorized checker |
+| 8 | **Payslips** | `/dashboard/payroll/payslips` | Employee, HR, Admin | Finalized & locked run |
+| 9 | **Payment** | `/dashboard/payroll/runs/$runId/payment` | Admin (`payroll.disburse`) | Finalized run + source account |
+
+### 9.2 Mermaid State Machine Diagram
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Period: Create Period
-    Period --> Run: Run Payroll
-    Run --> Validation: Processing Complete
-    Validation --> Preview: Validation Done
-    Preview --> EmployeeDetail: Click Employee
-    EmployeeDetail --> Preview: Back
-    Preview --> ReviewApproval: Proceed to Review
-    ReviewApproval --> Finalization: Approved
-    ReviewApproval --> Preview: Rejected (Send Back)
-    Finalization --> Payslips: Finalized & Locked
-    Finalization --> ReviewApproval: Not Approved
-    Payslips --> Payment: Finalized Run Selected
-    Payment --> CreateBatch: Create Payment Batch
-    CreateBatch --> BankValidation: Batch Created
-    BankValidation --> Approval: Validation Passed (no blocking)
-    BankValidation --> CreateBatch: Fix Issues
-    Approval --> BankFile: Approved (maker != checker)
-    Approval --> BankValidation: Rejected
-    BankFile --> Submitted: Generate File
-    Submitted --> BankResponse: Mark Submitted
-    BankResponse --> Reconciliation: Import Response
-    Reconciliation --> Paid: Reconciled (expected = paid+failed+held)
-    Reconciliation --> BankResponse: Mismatch
-    Paid --> [*]: Complete
+    [*] --> Step1_Period: Create Cycle
+    Step1_Period --> Step2_Run: Trigger Run
+    Step2_Run --> Step3_Validation: Calculation Finished
+    Step3_Validation --> Step4_Preview: Validation Pass / Non-blocking
+    Step3_Validation --> Step2_Run: Calculation Errors (Recalculate)
+    Step4_Preview --> Step5_EmployeeDetail: Drilldown Employee
+    Step5_EmployeeDetail --> Step4_Preview: Back to Preview
+    Step4_Preview --> Step6_ReviewApproval: Proceed to Governance
+    Step6_ReviewApproval --> Step7_Finalization: Approved (Checker Sign-off)
+    Step6_ReviewApproval --> Step4_Preview: Rejected (Sent Back to Draft)
+    Step7_Finalization --> Step8_Payslips: Finalize & Lock Run
+    Step7_Finalization --> Step6_ReviewApproval: Unlock Request
+    Step8_Payslips --> Step9_Payment: Select Finalized Run for Disbursement
     
-    note right of CreateBatch
-      Idempotency-Key required
-      Source company bank account
-      Payment mode selection
-      Hold employees (reason mandatory)
-      Totals from backend only
-    end note
-    
-    note right of BankValidation
-      Checks: missing account, invalid IFSC,
-      name mismatch, duplicate account,
-      zero/negative net pay
-      Blocking errors prevent approval
-    end note
-    
-    note right of Approval
-      Maker-checker enforced
-      Creator cannot approve
-      Audit trail displayed
-    end note
-    
-    note right of BankFile
-      Backend generates file
-      Frontend downloads only
-      Configurable format
-    end note
-    
-    note right of Reconciliation
-      Integer paise only
-      expected = paid + failed + held + processing
-      Mismatch = blocking warning
-    end note
+    state Step9_Payment {
+        [*] --> CreateBatch: Select Source Account & Modes
+        CreateBatch --> BankValidation: Batch Created (Idempotent)
+        BankValidation --> BatchApproval: 0 Blocking Bank Errors
+        BankValidation --> CreateBatch: Fix Account / IFSC Issues
+        BatchApproval --> BankFileGen: Approved (Maker != Checker)
+        BatchApproval --> CreateBatch: Rejected by Checker
+        BankFileGen --> SubmittedToBank: Server Generates File & Hash
+        SubmittedToBank --> BankResponseImport: Upload Bank Outcome CSV
+        BankResponseImport --> Reconciliation: Apply UTRs & Success/Failure
+        Reconciliation --> Paid: 100% Integer Paise Reconciled
+        Reconciliation --> BankResponseImport: Paise Mismatch Warning
+        Paid --> [*]
+    }
 ```
 
-### Valid Transitions
+### 9.3 Valid Transitions
 | From | To | Condition |
 |------|-----|-----------|
-| Finalized | CreateBatch | Run is finalized & locked |
-| CreateBatch | BankValidation | Batch created successfully |
-| BankValidation | Approval | Zero blocking errors |
-| BankValidation | CreateBatch | User fixes issues |
-| Approval | BankFile | Approved by different user |
-| Approval | BankValidation | Rejected |
-| BankFile | Submitted | File generated, user confirms submit |
-| Submitted | BankResponse | User marks submitted |
-| BankResponse | Reconciliation | CSV imported & applied |
-| Reconciliation | Paid | Totals match (paise) |
-| Reconciliation | BankResponse | Mismatch detected |
+| Period | Run | Cycle active and open |
+| Run | Validation | Background calculation complete |
+| Validation | Preview | Zero blocking rule errors |
+| Preview | EmployeeDetail | Employee record clicked |
+| EmployeeDetail | Preview | Return to summary table |
+| Preview | Review & Approval | Preview verified by HR maker |
+| Review & Approval | Finalization | Checker sign-off completed |
+| Finalization | Payslips | Run finalized and cryptographically locked |
+| Payslips | Payment | Finalized run passed to disbursement engine |
+| CreateBatch | BankValidation | Batch record created with Idempotency-Key |
+| BankValidation | BatchApproval | Zero blocking bank/IFSC errors |
+| BatchApproval | BankFileGen | Checker != Maker sign-off |
+| BankFileGen | Submitted | Bank file downloaded, uploaded to bank portal |
+| Submitted | BankResponse | Bank disbursement report received |
+| BankResponse | Reconciliation | Row-level UTR & status applied |
+| Reconciliation | Paid | Expected paise == (paid + failed + held + processing) |
 
-### Invalid Transitions (Blocked by Frontend + Backend)
+### 9.4 Invalid Transitions (Blocked by Frontend + Backend)
 | From | To | Reason |
 |------|-----|--------|
-| Draft/Open | CreateBatch | Run not finalized |
-| CreateBatch | Approval | Validation not passed |
-| Approval | Approval | Same user (maker-checker) |
-| Submitted | Submitted | Duplicate submit (idempotency) |
-| Reconciliation | Paid | Paise mismatch |
-| Any | Paid | Backend not confirmed |
+| Draft / Open | Payment | Cannot disburse un-finalized run |
+| Validation | Review & Approval | Unresolved blocking validation errors |
+| Review & Approval | Review & Approval | Creator cannot approve their own run (maker-checker) |
+| CreateBatch | BatchApproval | Bank validation not executed |
+| BatchApproval | BatchApproval | Creator cannot approve their own payment batch (maker-checker) |
+| Submitted | Submitted | Duplicate submission blocked via idempotency key |
+| Reconciliation | Paid | Mathematical paise discrepancy (mismatch != 0) |
+| Any | Paid | Frontend cannot locally force status to Paid |
 
+---
 ---
 
 ## 10. Definition of Done (Part 1)
