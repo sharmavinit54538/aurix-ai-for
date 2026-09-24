@@ -264,15 +264,12 @@ export function genOtp() {
 
 export const rememberStore = {
   get: () => {
-    if (typeof window === "undefined") return "";
-    return localStorage.getItem(REMEMBER_KEY) || "";
+    return safeStorage.getItem(REMEMBER_KEY) || "";
   },
   set: (email: string) => {
-    if (typeof window === "undefined") return;
-    localStorage.setItem(REMEMBER_KEY, email);
+    safeStorage.setItem(REMEMBER_KEY, email);
   },
   clear: () => {
-    if (typeof window === "undefined") return;
-    localStorage.removeItem(REMEMBER_KEY);
+    safeStorage.removeItem(REMEMBER_KEY);
   },
 };

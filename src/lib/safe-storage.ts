@@ -1,20 +1,36 @@
 import { logger } from "./logger";
 
-export const safeStorage = {
-  getItem: (key: string, storage: Storage = localStorage): string | null => {
-    if (typeof window === "undefined") return null;
+function getStorage(customStorage?: Storage): Storage | null {
+  if (customStorage) return customStorage;
+  if (typeof window !== "undefined") {
     try {
-      return storage.getItem(key);
+      return window.localStorage;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+export const safeStorage = {
+  getItem: (key: string, storage?: Storage): string | null => {
+    if (typeof window === "undefined") return null;
+    const target = getStorage(storage);
+    if (!target) return null;
+    try {
+      return target.getItem(key);
     } catch (err) {
       logger.debug(`[safeStorage] Failed to getItem '${key}':`, err);
       return null;
     }
   },
 
-  setItem: (key: string, value: string, storage: Storage = localStorage): boolean => {
+  setItem: (key: string, value: string, storage?: Storage): boolean => {
     if (typeof window === "undefined") return false;
+    const target = getStorage(storage);
+    if (!target) return false;
     try {
-      storage.setItem(key, value);
+      target.setItem(key, value);
       return true;
     } catch (err) {
       logger.debug(`[safeStorage] Failed to setItem '${key}':`, err);
@@ -22,10 +38,12 @@ export const safeStorage = {
     }
   },
 
-  removeItem: (key: string, storage: Storage = localStorage): boolean => {
+  removeItem: (key: string, storage?: Storage): boolean => {
     if (typeof window === "undefined") return false;
+    const target = getStorage(storage);
+    if (!target) return false;
     try {
-      storage.removeItem(key);
+      target.removeItem(key);
       return true;
     } catch (err) {
       logger.debug(`[safeStorage] Failed to removeItem '${key}':`, err);
@@ -33,10 +51,12 @@ export const safeStorage = {
     }
   },
 
-  clear: (storage: Storage = localStorage): boolean => {
+  clear: (storage?: Storage): boolean => {
     if (typeof window === "undefined") return false;
+    const target = getStorage(storage);
+    if (!target) return false;
     try {
-      storage.clear();
+      target.clear();
       return true;
     } catch (err) {
       logger.debug("[safeStorage] Failed to clear storage:", err);
