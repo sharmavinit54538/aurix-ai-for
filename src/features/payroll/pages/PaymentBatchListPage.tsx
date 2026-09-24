@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
-  AlertCircle,
   Banknote,
   CheckCircle2,
   Clock,
@@ -16,9 +15,17 @@ import { GlassCard, StatCard } from "@/components/hrms/Shared";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { formatDate, formatCount } from "@/lib/format";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { paymentApi } from "../api/paymentApi";
+import { payrollApi } from "@/services/payrollApi";
 import type { PaymentBatch, PaymentBatchStatus } from "../types/payment";
 import { toast } from "sonner";
 
@@ -26,16 +33,77 @@ export default function PaymentBatchListPage() {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
-  const [backendUnavailable, setBackendUnavailable] = useState(false);
   const [batches, setBatches] = useState<PaymentBatch[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
+  // Run selection modal state
+  const [selectRunModalOpen, setSelectRunModalOpen] = useState(false);
+  const [loadingRuns, setLoadingRuns] = useState(false);
+  const [availableRuns, setAvailableRuns] = useState<
+    Array<{ id: string; name: string; status: string; employeeCount?: number | null }>
+  >([]);
+  const [selectedRunId, setSelectedRunId] = useState("");
+  const [customRunId, setCustomRunId] = useState("");
+
+  const fetchAvailableRuns = async () => {
+    setLoadingRuns(true);
+    try {
+      let runs: Array<{ id: string; name: string; status: string; employeeCount?: number | null }> = [];
+      const dash = await payrollApi.getDashboard().catch(() => null);
+      if (dash?.recentRuns && dash.recentRuns.length > 0) {
+        runs = dash.recentRuns.map((r) => ({
+          id: r.id,
+          name: r.periodName || `Run #${r.id}`,
+          status: r.status,
+          employeeCount: r.employeeCount,
+        }));
+      }
+
+      if (runs.length === 0) {
+        const periods = await payrollApi.getPeriodsList({ limit: 10 }).catch(() => null);
+        if (periods?.items && periods.items.length > 0) {
+          runs = periods.items.map((p) => ({
+            id: p.id,
+            name: p.name,
+            status: p.status,
+            employeeCount: p.employeeCount,
+          }));
+        }
+      }
+
+      setAvailableRuns(runs);
+      if (runs.length > 0) {
+        setSelectedRunId(runs[0].id);
+      }
+    } catch {
+      setAvailableRuns([]);
+    } finally {
+      setLoadingRuns(false);
+    }
+  };
+
+  const handleOpenNewBatchModal = () => {
+    setSelectRunModalOpen(true);
+    fetchAvailableRuns();
+  };
+
+  const handleProceedToRunPayment = (runIdToUse?: string) => {
+    const targetRunId = (runIdToUse || customRunId.trim() || selectedRunId).trim();
+    if (!targetRunId) {
+      toast.error("Please select a payroll run or enter a Run ID");
+      return;
+    }
+    setSelectRunModalOpen(false);
+    navigate({
+      to: `/dashboard/payroll/runs/${targetRunId}/payment` as any,
+    });
+  };
+
   const loadBatches = async () => {
     setLoading(true);
-    setBackendUnavailable(false);
     try {
       const data = await paymentApi.getPaymentBatches({
         page,
@@ -47,7 +115,8 @@ export default function PaymentBatchListPage() {
       setTotalCount(data?.total || 0);
     } catch (err: any) {
       if (err?.response?.status === 404 || err?.response?.status === 501) {
-        setBackendUnavailable(true);
+        setBatches([]);
+        setTotalCount(0);
       } else {
         toast.error("Failed to load payment batches");
       }
@@ -81,63 +150,28 @@ export default function PaymentBatchListPage() {
 
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-      {/* ── Page Header ─────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border/70 pb-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
-              Salary Payment & Disbursement Hub
-            </h1>
-            <Badge variant="outline" className="text-xs font-semibold border-primary/30 bg-primary/10 text-primary">
-              Disbursement Batches
-            </Badge>
-          </div>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Track, validate, approve, and reconcile salary payment batches across all finalized payroll cycles.
-          </p>
-        </div>
+      {/* ── Top Actions Bar ────────────────────────────────────────── */}
+      <div className="flex items-center justify-end gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={loadBatches}
+          disabled={loading}
+          className="h-8 gap-1.5 text-xs"
+        >
+          <RefreshCw className={loading ? "h-3.5 w-3.5 animate-spin" : "h-3.5 w-3.5"} />
+          <span>Refresh</span>
+        </Button>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={loadBatches}
-            disabled={loading}
-            className="h-8 gap-1.5 text-xs"
-          >
-            <RefreshCw className={loading ? "h-3.5 w-3.5 animate-spin" : "h-3.5 w-3.5"} />
-            <span>Refresh</span>
-          </Button>
-
-          <Button
-            size="sm"
-            onClick={() => navigate({ to: "/dashboard/payroll" as any })}
-            className="h-8 gap-1.5 text-xs"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            <span>New Batch from Run</span>
-          </Button>
-        </div>
+        <Button
+          size="sm"
+          onClick={handleOpenNewBatchModal}
+          className="h-8 gap-1.5 text-xs"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          <span>New Batch from Run</span>
+        </Button>
       </div>
-
-      {/* ── Backend Unavailable Banner ───────────────────────────────── */}
-      {backendUnavailable && (
-        <Alert className="border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle className="font-semibold text-sm">
-            Feature unavailable — backend pending
-          </AlertTitle>
-          <AlertDescription className="text-xs mt-1 space-y-1">
-            <p>
-              The Payment & Disbursement API endpoint (<code>GET /api/v2/payroll/payment-batches</code>) is not yet deployed on the backend.
-              Frontend architecture and contract mappings are ready.
-            </p>
-            <p className="font-mono text-[11px] opacity-80">
-              Contract reference: <code>docs/PAYROLL_BACKEND_CONTRACT.md</code> • Requirements: <code>docs/PAYROLL_BACKEND_TODO.md</code>
-            </p>
-          </AlertDescription>
-        </Alert>
-      )}
 
       {/* ── Summary Stat Cards ──────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -236,10 +270,18 @@ export default function PaymentBatchListPage() {
                     <Layers className="h-8 w-8 mx-auto mb-2 text-muted-foreground/60" />
                     <p className="font-semibold text-foreground text-sm">No Payment Batches Found</p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {backendUnavailable
-                        ? "Backend payment API endpoints pending deployment."
-                        : "Create a payment batch from any finalized payroll run to get started."}
+                      Create a payment batch from any finalized payroll run to get started.
                     </p>
+                    <div className="mt-4">
+                      <Button
+                        size="sm"
+                        onClick={handleOpenNewBatchModal}
+                        className="h-8 gap-1.5 text-xs"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        <span>New Batch from Run</span>
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ) : (
@@ -278,6 +320,121 @@ export default function PaymentBatchListPage() {
           </table>
         </div>
       </GlassCard>
+
+      {/* ── Select Payroll Run Dialog ─────────────────────────────── */}
+      <Dialog open={selectRunModalOpen} onOpenChange={setSelectRunModalOpen}>
+        <DialogContent className="sm:max-w-md rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+              <Banknote className="h-5 w-5 text-primary" />
+              <span>Create Payment Batch from Run</span>
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Select a finalized payroll run or enter a Run ID to initiate payment disbursements.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            {loadingRuns ? (
+              <div className="flex items-center justify-center py-6 text-muted-foreground gap-2 text-xs">
+                <RefreshCw className="h-4 w-4 animate-spin text-primary" />
+                <span>Loading available payroll runs...</span>
+              </div>
+            ) : availableRuns.length > 0 ? (
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-foreground">Available Payroll Runs</label>
+                <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1">
+                  {availableRuns.map((r) => {
+                    const isSelected = selectedRunId === r.id;
+                    return (
+                      <div
+                        key={r.id}
+                        onClick={() => {
+                          setSelectedRunId(r.id);
+                          setCustomRunId("");
+                        }}
+                        className={`flex items-center justify-between p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
+                          isSelected
+                            ? "border-primary bg-primary/10 shadow-xs"
+                            : "border-border/70 hover:border-border hover:bg-muted/40"
+                        }`}
+                      >
+                        <div className="min-w-0">
+                          <div className="font-semibold text-foreground truncate">{r.name}</div>
+                          <div className="text-[11px] text-muted-foreground font-mono">Run ID: {r.id}</div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Badge variant="outline" className="text-[10px] capitalize">
+                            {r.status || "Ready"}
+                          </Badge>
+                          <Button
+                            size="sm"
+                            variant={isSelected ? "default" : "ghost"}
+                            className="h-7 text-xs px-2.5"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleProceedToRunPayment(r.id);
+                            }}
+                          >
+                            <span>Select</span>
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed border-border/70 p-4 text-center">
+                <Clock className="h-6 w-6 text-muted-foreground/60 mx-auto mb-1.5" />
+                <p className="text-xs font-medium text-foreground">No recent payroll runs detected</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  Enter a Payroll Run ID below to configure its payment disbursement.
+                </p>
+              </div>
+            )}
+
+            {/* Manual Run ID Input */}
+            <div className="space-y-1.5 pt-1 border-t border-border/60">
+              <label className="text-xs font-medium text-muted-foreground">
+                Or enter Payroll Run ID directly:
+              </label>
+              <Input
+                placeholder="e.g. run-2026-09 or 1"
+                value={customRunId}
+                onChange={(e) => {
+                  setCustomRunId(e.target.value);
+                  if (e.target.value) setSelectedRunId("");
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleProceedToRunPayment();
+                }}
+                className="h-8 text-xs font-mono"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="flex items-center justify-between sm:justify-between gap-2 border-t border-border/60 pt-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectRunModalOpen(false)}
+              className="h-8 text-xs"
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => handleProceedToRunPayment()}
+              disabled={!selectedRunId && !customRunId.trim()}
+              className="h-8 text-xs gap-1.5"
+            >
+              <span>Continue to Payment Batch</span>
+              <ExternalLink className="h-3.5 w-3.5" />
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
