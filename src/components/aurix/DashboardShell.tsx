@@ -53,6 +53,8 @@ import {
 } from "lucide-react";
 import { useAurix } from "@/lib/aurix-store";
 import { useAuthReady } from "@/lib/auth-bootstrap";
+import { getRoleDefaultHome } from "@/lib/route-guards";
+import { normalizeRole } from "@/lib/rbac";
 import { UserProfileMenu } from "./UserProfileMenu";
 import { GeminiIcon } from "@/components/icons/GeminiIcon";
 import { hasValidAccessToken } from "@/api";
@@ -133,14 +135,14 @@ const NAV_SECTIONS: SidebarNavSection[] = [
         label: "Talent Management",
         icon: Briefcase,
         permission: "talent.view",
-        roles: ["admin", "hr", "manager"],
+        roles: ["super_admin", "hr_admin", "manager"],
       },
       {
         to: "/dashboard/hr-operations",
         label: "HR Operations",
         icon: Activity,
         permission: "hrops.view",
-        roles: ["admin", "hr", "manager"],
+        roles: ["super_admin", "hr_admin"],
       },
       {
         to: "/dashboard/resources",
@@ -153,14 +155,14 @@ const NAV_SECTIONS: SidebarNavSection[] = [
         label: "Payroll",
         icon: Banknote,
         permission: "payroll.view",
-        roles: ["admin", "hr", "hr_admin", "hradmin", "hr-admin", "super_admin", "superadmin"],
+        roles: ["super_admin", "hr_admin"],
       },
       {
         to: "/dashboard/analytics",
         label: "Analytics",
         icon: BarChart3,
         permission: "analytics.view",
-        roles: ["admin", "hr", "manager"],
+        roles: ["super_admin", "hr_admin", "manager"],
       },
       {
         to: "/dashboard/ai-hub",

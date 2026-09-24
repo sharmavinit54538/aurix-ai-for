@@ -1,167 +1,11 @@
 import apiInstance from "@/api/apiInstance";
+import { normalizeRole } from "@/lib/rbac";
 import type { SidebarPermissionsResponse } from "@/store/sidebar/sidebarTypes";
 
-export const DEFAULT_ROLE_PERMISSIONS: Record<string, string[]> = {
-  admin: [
-    "overview.view",
-    "workforce.view",
-    "workforce.people",
-    "workforce.departments",
-    "workforce.attendance",
-    "workforce.timesheets",
-    "workforce.leaves",
-    "talent.view",
-    "talent.recruitment",
-    "talent.performance",
-    "hrops.view",
-    "hrops.dashboard",
-    "hrops.timeline",
-    "hrops.visitors",
-    "hrops.onboarding",
-    "hrops.offboarding",
-    "hrops.exit",
-    "resources.view",
-    "resources.documents",
-    "resources.assets",
-    "resources.asset_management",
-    "payroll.view",
-    "payroll.process",
-    "payroll.approve",
-    "payroll.finalize",
-    "payroll.disburse",
-    "payroll.reports",
-    "payroll.compensation.view",
-    "payroll.compensation.edit",
-    "payroll.statutory",
-    "analytics.view",
-    "analytics.reports",
-    "analytics.ai_insights",
-    "ai.view",
-    "ai.hub",
-    "ai.document_generator",
-    "ai.assistant",
-    "ai.automation",
-    "settings.view",
-    "settings.general",
-    "settings.company",
-    "settings.roles_permissions",
-    "settings.audit_logs",
-    "settings.billing",
-    "settings.security",
-    "settings.notifications",
-    "settings.integrations",
-    "settings.profile",
-  ],
-  hr: [
-    "overview.view",
-    "workforce.view",
-    "workforce.people",
-    "workforce.departments",
-    "workforce.attendance",
-    "workforce.timesheets",
-    "workforce.leaves",
-    "talent.view",
-    "talent.recruitment",
-    "talent.performance",
-    "hrops.view",
-    "hrops.dashboard",
-    "hrops.timeline",
-    "hrops.visitors",
-    "hrops.onboarding",
-    "hrops.offboarding",
-    "hrops.exit",
-    "resources.view",
-    "resources.documents",
-    "resources.assets",
-    "resources.asset_management",
-    "payroll.view",
-    "payroll.process",
-    "payroll.disburse",
-    "analytics.view",
-    "analytics.reports",
-    "analytics.ai_insights",
-    "ai.view",
-    "ai.hub",
-    "ai.document_generator",
-    "ai.assistant",
-    "ai.automation",
-    "settings.view",
-    "settings.security",
-    "settings.notifications",
-    "settings.profile",
-  ],
-  manager: [
-    "overview.view",
-    "workforce.view",
-    "workforce.people",
-    "workforce.attendance",
-    "workforce.timesheets",
-    "workforce.leaves",
-    "talent.view",
-    "talent.recruitment",
-    "talent.performance",
-    "hrops.view",
-    "hrops.onboarding",
-    "resources.view",
-    "resources.documents",
-    "resources.assets",
-    "analytics.view",
-    "analytics.reports",
-    "analytics.ai_insights",
-    "ai.view",
-    "ai.hub",
-    "ai.document_generator",
-    "ai.assistant",
-    "ai.automation",
-    "settings.view",
-    "settings.security",
-    "settings.notifications",
-    "settings.profile",
-  ],
-  interviewer: [
-    "overview.view",
-    "talent.view",
-    "talent.recruitment",
-    "ai.view",
-    "ai.assistant",
-    "settings.view",
-    "settings.profile",
-  ],
-  candidate: [
-    "overview.view",
-    "talent.view",
-    "talent.recruitment",
-    "resources.view",
-    "resources.documents",
-    "settings.view",
-    "settings.profile",
-  ],
-  employee: [
-    "overview.view",
-    "workforce.view",
-    "workforce.attendance",
-    "workforce.timesheets",
-    "workforce.leaves",
-    "talent.view",
-    "talent.performance",
-    "resources.view",
-    "resources.documents",
-    "resources.assets",
-    "ai.view",
-    "ai.hub",
-    "ai.document_generator",
-    "ai.assistant",
-    "settings.view",
-    "settings.security",
-    "settings.notifications",
-    "settings.profile",
-  ],
-};
-
-DEFAULT_ROLE_PERMISSIONS.hr_admin = DEFAULT_ROLE_PERMISSIONS.admin;
-DEFAULT_ROLE_PERMISSIONS.hradmin = DEFAULT_ROLE_PERMISSIONS.admin;
-DEFAULT_ROLE_PERMISSIONS["hr-admin"] = DEFAULT_ROLE_PERMISSIONS.admin;
-
+/**
+ * Sidebar permissions belong to the authenticated backend identity. On a
+ * failed or malformed response we intentionally grant no inferred permissions.
+ */
 export const sidebarApi = {
   async getPermissions(userRole?: string): Promise<SidebarPermissionsResponse> {
     try {
@@ -169,31 +13,21 @@ export const sidebarApi = {
       const data = response.data?.data ?? response.data;
       if (data && Array.isArray(data.permissions)) {
         return {
-          role: data.role || userRole,
-          permissions: data.permissions,
+          role: normalizeRole(typeof data.role === "string" ? data.role : userRole),
+          permissions: data.permissions.filter((permission: unknown): permission is string => typeof permission === "string"),
         };
       }
       if (Array.isArray(data)) {
         return {
-          role: userRole,
-          permissions: data,
+          role: normalizeRole(userRole),
+          permissions: data.filter((permission: unknown): permission is string => typeof permission === "string"),
         };
       }
     } catch {
-      // Fallback permissions based on user role when API endpoint returns error or dev mock
+      // Route guards continue to enforce canonical role access.
     }
 
-    // Least-privilege fallback: If userRole is unknown or missing, default to employee permissions, NEVER admin.
-    const fallbackRole = (userRole || "employee").toLowerCase();
-    const permissions =
-      DEFAULT_ROLE_PERMISSIONS[fallbackRole] ||
-      (fallbackRole.includes("admin") ? DEFAULT_ROLE_PERMISSIONS.admin : null) ||
-      (fallbackRole.includes("hr") ? DEFAULT_ROLE_PERMISSIONS.hr : null) ||
-      DEFAULT_ROLE_PERMISSIONS.employee;
-    return {
-      role: fallbackRole,
-      permissions,
-    };
+    return { role: normalizeRole(userRole), permissions: [] };
   },
 };
 
