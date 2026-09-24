@@ -906,3 +906,146 @@ export type PaymentReconciliation = z.infer<typeof PaymentReconciliationSchema>;
 | `/api/v2/payroll/payment-batches/{id}/bank-response/preview` | POST | PROPOSED | New Part 1 Payment contract |
 | `/api/v2/payroll/payment-batches/{id}/bank-response/apply` | POST | PROPOSED | New Part 1 Payment contract |
 | `/api/v2/payroll/payment-batches/{id}/reconcile` | POST | PROPOSED | New Part 1 Payment contract |
+| `/api/v2/payroll/reports` | GET | PROPOSED | Part 2 Reports contract |
+| `/api/v2/payroll/reports/{key}/export` | GET | PROPOSED | Part 2 Reports export contract |
+| `/api/v2/payroll/salary-structures` | GET, POST, PUT | PROPOSED | Part 2 Salary Structure contract |
+| `/api/v2/payroll/compensation` | GET, POST | PROPOSED | Part 2 Compensation contract |
+| `/api/v2/payroll/compensation/revisions` | GET, POST | PROPOSED | Part 2 Compensation Revisions contract |
+| `/api/v2/payroll/compensation/bulk-preview` | POST | PROPOSED | Part 2 Bulk Compensation Preview contract |
+| `/api/v2/payroll/compensation/bulk-apply` | POST | PROPOSED | Part 2 Bulk Compensation Apply contract |
+| `/api/v2/payroll/variable-inputs` | GET, POST, DELETE | PROPOSED | Part 3 Variable Inputs contract |
+| `/api/v2/payroll/variable-inputs/bulk-preview` | POST | PROPOSED | Part 3 Bulk Variable Inputs contract |
+| `/api/v2/payroll/statutory/config` | GET | PROPOSED | Part 3 Statutory Config contract |
+| `/api/v2/payroll/statutory/summary` | GET | PROPOSED | Part 3 Statutory Summary contract |
+| `/api/v2/payroll/full-and-final` | GET, POST | PROPOSED | Part 4 F&F Settlement contract |
+| `/api/v2/payroll/full-and-final/{id}/approve` | POST | PROPOSED | Part 4 F&F Approval contract |
+| `/api/v2/payroll/full-and-final/{id}/finalize` | POST | PROPOSED | Part 4 F&F Finalization contract |
+| `/api/v2/payroll/employee/dashboard` | GET | PROPOSED | Part 4 ESS Dashboard contract |
+| `/api/v2/payroll/my-payslips/{runId}/download` | GET | PROPOSED | Part 4 ESS Payslip Download contract |
+| `/api/v2/payroll/employee/provision-slips` | GET | PROPOSED | Part 4 Provisional Slips contract |
+
+---
+
+## 4. Part 2 — Reports & Exports Contract
+
+### 4.1 Reports Registry & Execution
+- **Method**: `GET`
+- **Path**: `/api/v2/payroll/reports`
+- **Permission**: `payroll.report.view`
+- **Supported Reports**:
+  1. `payroll_register`: Master payroll register with complete earnings and deductions breakdown
+  2. `salary_statement`: Employee-by-employee salary statement with take-home pay
+  3. `department_payroll`: Aggregated departmental payroll expenditure
+  4. `cost_center_payroll`: Cost-center allocation and budget variance
+  5. `bank_advice`: RBI-compliant bank disbursement advice
+  6. `payroll_variance`: Month-over-month payroll variance and deviation report
+  7. `headcount_report`: Active payroll headcount, joiners, and leavers
+  8. `ytd_payroll`: Year-to-date cumulative earnings, taxes, and statutory contributions
+  9. `accounting_export`: General ledger journal voucher export (debits/credits)
+- **Response**: `200 OK` with paginated report rows, dynamic columns, and metadata.
+
+### 4.2 Reports Export Generator
+- **Method**: `GET`
+- **Path**: `/api/v2/payroll/reports/{reportKey}/export`
+- **Query Params**: `format` (`csv` | `xlsx`), plus active filters (period, department, etc.)
+- **Response**: `200 OK` with `Content-Type: text/csv` or `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`.
+- **Security**: Must apply formula injection sanitization to prevent CSV formula execution in Excel.
+
+---
+
+## 5. Part 2 — Salary Structure & Compensation Contract
+
+### 5.1 Pay Components Master
+- **Method**: `GET`, `POST`
+- **Path**: `/api/v2/payroll/salary-structures/components`
+- **Permission**: `payroll.structure.manage`
+- **Properties**: `code`, `name`, `type` (`earning` | `deduction` | `employer_contribution`), `taxable`, `statutory`, `calculationMethod`, `isActive`.
+
+### 5.2 Salary Structure Templates
+- **Method**: `GET`, `POST`, `PUT /:id`
+- **Path**: `/api/v2/payroll/salary-structures`
+- **Permission**: `payroll.structure.manage`
+
+### 5.3 Employee Compensation & Revisions
+- **Method**: `GET`, `POST`
+- **Path**: `/api/v2/payroll/compensation`
+- **Path**: `/api/v2/payroll/compensation/revisions`
+- **Approval Workflow**: Maker submits revision draft -> Checker approves (`POST /revisions/{id}/approve`) -> Effective date activates new structure.
+
+### 5.4 Bulk Compensation Import
+- **Method**: `POST`
+- **Path**: `/api/v2/payroll/compensation/bulk-preview`
+- **Path**: `/api/v2/payroll/compensation/bulk-apply`
+- **Validation**: Backend validates employee existence, component codes, non-negative amounts, duplicate rows, and creates an audit batch.
+
+---
+
+## 6. Part 3 — Variable Payroll Inputs Contract
+
+### 6.1 Variable Inputs CRUD
+- **Method**: `GET`, `POST`, `DELETE /:id`
+- **Path**: `/api/v2/payroll/variable-inputs`
+- **Permission**: `payroll.inputs.manage`
+- **Input Types**: `overtime`, `bonus`, `incentive`, `commission`, `reimbursement`, `deduction`, `advance_recovery`, `lop`, `other`.
+- **Period Guard**: Rejects mutations with HTTP `403` if target period is locked or pay run is finalized.
+
+### 6.2 Bulk Variable Inputs Preview & Apply
+- **Method**: `POST`
+- **Path**: `/api/v2/payroll/variable-inputs/bulk-preview`
+- **Path**: `/api/v2/payroll/variable-inputs/bulk-apply`
+
+---
+
+## 7. Part 3 — Statutory Compliance Contract
+
+### 7.1 Dynamic Statutory Configuration
+- **Method**: `GET`
+- **Path**: `/api/v2/payroll/statutory/config`
+- **Properties**:
+  - `pf`: `employeeContributionRate`, `employerEpsRate`, `employerEpfrate`, `wageCeilingPaise`.
+  - `esi`: `employeeContributionRate`, `employerContributionRate`, `grossWageCeilingPaise`.
+  - `professionalTax`: Array of state-specific slab rules with income brackets and tax amounts.
+  - `taxRegimes`: `NEW` vs `OLD` standard deductions, slabs, and exemptions.
+- **Rule**: Frontend NEVER hardcodes rates or thresholds; backend configuration is authoritative.
+
+### 7.2 Statutory Return Reports & Exports
+- **Method**: `GET`
+- **Path**: `/api/v2/payroll/statutory/summary`
+- **Path**: `/api/v2/payroll/statutory/export/{type}` (`pf-ecr`, `esi-return`, `pt-form5`, `tds-24q`)
+
+---
+
+## 8. Part 4 — Full & Final (F&F) Exit Settlement Contract
+
+### 8.1 F&F Records Management
+- **Method**: `GET`
+- **Path**: `/api/v2/payroll/full-and-final`
+- **Method**: `POST`
+- **Path**: `/api/v2/payroll/full-and-final` (Initiate exit settlement)
+- **Workflow**:
+  - `POST /api/v2/payroll/full-and-final/{id}/approve` (Maker-checker sign-off)
+  - `POST /api/v2/payroll/full-and-final/{id}/reject` (Rejection with audit reason)
+  - `POST /api/v2/payroll/full-and-final/{id}/finalize` (Lock settlement; prevents duplicate finalization)
+  - `GET /api/v2/payroll/full-and-final/{id}/statement/download` (Download signed exit statement)
+
+---
+
+## 9. Part 4 — Employee Self-Service (ESS) Contract
+
+### 9.1 Private Employee Dashboard
+- **Method**: `GET`
+- **Path**: `/api/v2/payroll/employee/dashboard`
+- **Permission**: Scoped to authenticated employee Bearer token.
+- **Payload**: Employee profile, masked disbursement account (`••••••••1234`), YTD gross/deductions/net figures, tax regime overview, and latest payslip summary.
+
+### 9.2 Payslip History & Download
+- **Method**: `GET`
+- **Path**: `/api/v2/payroll/my-payslips`
+- **Method**: `GET`
+- **Path**: `/api/v2/payroll/my-payslips/{runId}/download`
+- **Security**: Strict token-based isolation. An employee cannot download another employee's payslip.
+
+### 9.3 Provisional Payslips
+- **Method**: `GET`
+- **Path**: `/api/v2/payroll/employee/provision-slips`
+- **Status**: Tracked in `docs/PAYROLL_BACKEND_TODO.md` for backend deployment.
