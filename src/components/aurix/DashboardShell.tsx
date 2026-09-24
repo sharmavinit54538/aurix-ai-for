@@ -4,18 +4,52 @@ import { PageSkeleton } from "@/components/common/PageSkeleton";
 import { BackButton } from "@/components/common/BackButton";
 // Executive Dashboards Navigation Enabled
 import {
+  Activity,
   Banknote,
+  BarChart3,
   Bell,
+  Bot,
+  Brain,
+  Briefcase,
+  Building,
   Building2,
+  CalendarClock,
   CalendarDays,
+  ClipboardCheck,
+  Clock,
+  Compass,
+  FileCheck,
+  FileSearch,
+  FileSignature,
+  FileText,
+  Folder,
+  Globe,
+  HandCoins,
+  Home,
+  Laptop,
   LayoutDashboard,
+  LineChart as LineChartIcon,
+  Lock,
   Menu,
   Moon,
+  Package,
   PanelLeft,
+  Receipt,
+  Rocket,
   Search,
+  Send,
+  Settings,
+  ShieldCheck,
   Sparkles,
   Sun,
+  Target,
+  Timer,
+  TrendingUp,
+  User,
+  UserCheck,
   Users,
+  Video,
+  Wrench,
 } from "lucide-react";
 import { useAurix } from "@/lib/aurix-store";
 import { useAuthReady } from "@/lib/auth-bootstrap";
@@ -837,7 +871,7 @@ const NavGroup = memo(function NavGroup({
   if (collapsed) {
     return (
       <Link
-        to={item.basePath as any}
+        to={item.basePath as string}
         className={`group relative flex items-center justify-center rounded-lg py-1.5 text-sm font-medium transition-colors ${
           isActive ? "bg-accent text-foreground font-semibold" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
         }`}
@@ -859,7 +893,7 @@ const NavGroup = memo(function NavGroup({
       >
         {isActive ? <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r bg-foreground" /> : null}
         <Link
-          to={item.basePath as any}
+          to={item.basePath as string}
           onClick={() => {
             dispatch(toggleSectionExpand(item.id));
           }}
@@ -879,7 +913,7 @@ const NavGroup = memo(function NavGroup({
             return (
               <Link
                 key={child.to}
-                to={child.to as any}
+                to={child.to as string}
                 className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-xs transition-colors min-w-0 ${
                   childActive ? "bg-accent text-foreground font-medium" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
                 }`}
