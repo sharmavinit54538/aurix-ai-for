@@ -13,8 +13,10 @@ const LEGACY_TOKENS_KEY = "aurix:tokens";
 
 let inMemoryAccessToken: string | null = null;
 
-// Initial migration: Purge legacy tokens from localStorage if present
-safeStorage.removeItem(LEGACY_TOKENS_KEY);
+// Initial migration: Purge legacy tokens from localStorage if present in browser
+if (typeof window !== "undefined") {
+  safeStorage.removeItem(LEGACY_TOKENS_KEY);
+}
 
 export interface Tokens {
   accessToken: string;
