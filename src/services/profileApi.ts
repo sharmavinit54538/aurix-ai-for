@@ -1,4 +1,5 @@
 import apiInstance from "@/api/apiInstance";
+import { AUTH_ENDPOINTS } from "@/api";
 import { aurix } from "@/lib/aurix-store";
 import type {
   ChangePasswordPayload,
@@ -51,9 +52,9 @@ export const profileApi = {
       // Fall through to fallback
     }
 
-    // Fallback 1: GET /auth/me
+    // Fallback 1: GET /api/v1/auth/me
     try {
-      const authRes = await apiInstance.get("/auth/me");
+      const authRes = await apiInstance.get(AUTH_ENDPOINTS.me);
       const authData = extractData<Record<string, unknown>>(authRes);
       if (authData && typeof authData === "object") {
         return {

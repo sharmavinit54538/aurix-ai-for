@@ -11,14 +11,6 @@ import { toast } from "sonner";
  * or environment variable `VITE_API_URL`, defaulting to `https://api.ofc360.com/api/v1`.
  */
 export function getApiBaseUrl(): string {
-  if (typeof window !== "undefined") {
-    const isLocalhost =
-      window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-    if (isLocalhost) {
-      return "/api/v1";
-    }
-  }
-
   let url = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
   if (!url) {
     return "https://api.ofc360.com/api/v1";

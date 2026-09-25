@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { aurix } from "@/lib/aurix-store";
-import { api } from "@/api";
+import { authService } from "@/api";
 import { toast } from "sonner";
 
 const schema = z
@@ -86,7 +86,7 @@ export function RegisterPage() {
         password: form.password,
         company_name: form.companyName,
       };
-      const res = (await api.post("auth/register", payload)) as any;
+      const res = (await authService.register(payload)) as any;
       if (res.success) {
         aurix.set({
           user: {

@@ -89,15 +89,6 @@ export async function requireAuth(request: Request): Promise<AuthResult> {
       },
     });
 
-    if (response.status === 404) {
-      response = await fetch(`${baseUrl}/auth/me`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
-      });
-    }
 
     if (response.status === 401 || response.status === 403) {
       return {

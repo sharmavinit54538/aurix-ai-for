@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { api } from "@/api";
+import { authService } from "@/api";
 import { toast } from "sonner";
 import type { ApiResponse } from "@/api/types";
 
@@ -57,7 +57,7 @@ export function VerifyResetOtpPage() {
     setLoading(true);
 
     try {
-      const res = await api.post<ApiResponse<{ resetToken: string }>>("auth/verify-reset-otp", {
+      const res = await authService.verifyResetOtp({
         email,
         otp: code,
       });
@@ -88,7 +88,7 @@ export function VerifyResetOtpPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.post<ApiResponse>("auth/forgot-password", { email });
+      const res = await authService.forgotPassword({ email });
       if (res.success) {
         setExpiryTime(300);
         setResendCooldown(30);

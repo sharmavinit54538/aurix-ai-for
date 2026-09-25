@@ -2,6 +2,8 @@ import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { aurix } from "@/lib/aurix-store";
 import { isAccessTokenExpired } from "./token-utils";
 import { getTokens, getRefreshToken, setTokens } from "./tokens";
+import { AUTH_ENDPOINTS } from "./endpoints";
+import { normalizeApiPath } from "./client";
 
 declare module "axios" {
   export interface AxiosRequestConfig {
@@ -11,21 +13,9 @@ declare module "axios" {
 
 /**
  * Normalizes the API base origin, ensuring https:// protocol and no trailing slashes.
- * e.g., "https://www.api.ofc360.com"
+ * e.g., "https://api.ofc360.com"
  */
 export function getApiBaseUrl(): string {
-  // On localhost, ALWAYS route through the Vite dev server proxy.
-  // This is critical for auth cookies: when the browser sends requests to localhost,
-  // the proxy forwards them to api.ofc360.com with changeOrigin. Response cookies
-  // are rewritten to the localhost domain so the browser actually stores them.
-  // Without this, cross-origin Set-Cookie from api.ofc360.com is silently dropped.
-  if (typeof window !== "undefined") {
-    const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-    if (isLocalhost) {
-      return "";
-    }
-  }
-
   let url = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
   if (!url) {
     return "https://api.ofc360.com";
@@ -48,6 +38,32 @@ export function getApiBaseUrl(): string {
 export const API_BASE_URL = getApiBaseUrl();
 export const BASE_URL = `${API_BASE_URL}/api/v1`;
 
+function getEndpointTag(url: string): string {
+  if (url.includes("/auth/login")) return "LOGIN";
+  if (url.includes("/auth/refresh")) return "REFRESH";
+  if (url.includes("/auth/logout")) return "LOGOUT";
+  if (url.includes("/auth/me")) return "ME";
+  if (url.includes("/auth/register")) return "REGISTER";
+  if (url.includes("/auth/verify-email")) return "VERIFY_EMAIL";
+  if (url.includes("/auth/resend-otp")) return "RESEND_OTP";
+  if (url.includes("/auth/forgot-password")) return "FORGOT_PASSWORD";
+  if (url.includes("/auth/verify-reset-otp")) return "VERIFY_RESET_OTP";
+  if (url.includes("/auth/reset-password")) return "RESET_PASSWORD";
+  if (url.includes("/auth/google")) return "GOOGLE_AUTH";
+  if (url.includes("/auth/")) return "AUTH";
+  return "";
+}
+
+function resolveFullUrl(configUrl?: string, baseUrl?: string): string {
+  if (!configUrl) return baseUrl || "";
+  if (configUrl.startsWith("http://") || configUrl.startsWith("https://")) {
+    return configUrl;
+  }
+  const cleanBase = (baseUrl || "").replace(/\/+$/, "");
+  const cleanPath = configUrl.replace(/^\/+/, "");
+  return cleanBase ? `${cleanBase}/${cleanPath}` : `/${cleanPath}`;
+}
+
 const apiInstance = axios.create({
   baseURL: API_BASE_URL,
   timeout: 120000,
@@ -67,31 +83,52 @@ export async function refreshAccessToken(): Promise<string> {
   refreshPromise = (async () => {
     try {
       // Build request body: include the in-memory refresh token if available.
-      // Many backends (especially FastAPI) expect the refresh_token in the body.
-      // Also send withCredentials so the browser attaches any HttpOnly cookie.
+      // Remote backend supports refresh_token in request body and in HttpOnly cookie.
       const currentRefreshToken = getRefreshToken();
       const body: Record<string, string> = {};
       if (currentRefreshToken) {
         body.refresh_token = currentRefreshToken;
       }
 
+      const refreshUrl = `${API_BASE_URL}${AUTH_ENDPOINTS.refresh}`;
+      if (process.env.NODE_ENV !== "production") {
+        console.log(`[AUTH] Request: [REFRESH] POST ${refreshUrl}`);
+      }
+
       let res;
       try {
-        res = await axios.post(
-          `${BASE_URL}/auth/refresh`,
-          body,
-          { withCredentials: true },
-        );
-      } catch (postErr: any) {
-        if (postErr?.response?.status === 404) {
-          res = await axios.post(
-            `${API_BASE_URL}/auth/refresh`,
-            body,
-            { withCredentials: true },
-          );
-        } else {
-          throw postErr;
+        res = await axios.post(refreshUrl, body, {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        if (process.env.NODE_ENV !== "production") {
+          console.log(`[AUTH] Response: [REFRESH] POST ${refreshUrl} -> ${res.status}`);
         }
+      } catch (postErr: any) {
+        const status = postErr?.response?.status;
+        if (process.env.NODE_ENV !== "production") {
+          console.log(`[AUTH] Response: [REFRESH] POST ${refreshUrl} -> ${status || "NETWORK_ERROR"}`);
+        }
+
+        // Section 13: Only treat 401 Unauthorized as authentication failure.
+        // Do NOT treat 404 as "user is logged out."
+        if (status === 404) {
+          console.error(
+            `[AUTH] 404 Not Found received on refresh endpoint: ${refreshUrl}. Route configuration problem.`
+          );
+          throw new Error(`Refresh route configuration error: ${refreshUrl} returned 404`);
+        }
+
+        if (status === 401) {
+          // Authentication failure: refresh token expired or invalid
+          setTokens(null);
+          aurix.set({ isRestoring: false, user: null, company: null });
+          throw new Error("Failed to refresh session");
+        }
+
+        throw postErr;
       }
 
       const tokenData = res.data?.data ?? res.data;
@@ -101,18 +138,14 @@ export async function refreshAccessToken(): Promise<string> {
       if (!accessToken) {
         setTokens(null);
         aurix.set({ isRestoring: false, user: null, company: null });
-        throw new Error("Invalid session refresh response");
+        throw new Error("Invalid session refresh response: missing access token");
       }
 
-      // Store new tokens. If the backend rotates the refresh token, pick up the new one.
+      // Store new tokens. If the backend rotates the refresh token, store the new one in memory.
       const newRefreshToken =
         tokenData?.refresh_token || tokenData?.refreshToken || currentRefreshToken;
       setTokens({ accessToken, refreshToken: newRefreshToken || undefined });
       return accessToken;
-    } catch (error) {
-      setTokens(null);
-      aurix.set({ isRestoring: false, user: null, company: null });
-      throw new Error("Failed to refresh session");
     } finally {
       refreshPromise = null;
     }
@@ -128,36 +161,38 @@ apiInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   }
 
   if (config.url) {
-    let url = config.url.trim();
+    config.url = normalizeApiPath(config.url);
+  }
 
-    // Fix accidental local host or domain prepends
-    url = url.replace(/^(?:https?:\/\/[^/]+)?(?:\/)?(?:www\.)?api\.ofc360\.com(?:\/)?/, "/");
-    url = url.replace(/^\/?(?:http:\/\/localhost:\d+\/)?/, "/");
-
-    // If it's a full external URL, don't modify
-    if (url.startsWith("http://") || url.startsWith("https://")) {
-      config.url = url;
-      return config;
-    }
-
-    if (!url.startsWith("/")) {
-      url = `/${url}`;
-    }
-
-    // Automatically route to /api/v1 if not already prefixed with /api/
-    if (!url.startsWith("/api/")) {
-      url = `/api/v1${url}`;
-    }
-
-    config.url = url;
+  if (process.env.NODE_ENV !== "production") {
+    const method = (config.method || "GET").toUpperCase();
+    const fullUrl = resolveFullUrl(config.url, config.baseURL);
+    const endpointTag = getEndpointTag(config.url || "");
+    console.log(`[AUTH] Request:${endpointTag ? ` [${endpointTag}]` : ""} ${method} ${fullUrl}`);
   }
 
   return config;
 });
 
 apiInstance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (process.env.NODE_ENV !== "production") {
+      const method = (response.config.method || "GET").toUpperCase();
+      const fullUrl = resolveFullUrl(response.config.url, response.config.baseURL);
+      const endpointTag = getEndpointTag(response.config.url || "");
+      console.log(`[AUTH] Response:${endpointTag ? ` [${endpointTag}]` : ""} ${method} ${fullUrl} -> ${response.status}`);
+    }
+    return response;
+  },
   async (error: AxiosError) => {
+    if (process.env.NODE_ENV !== "production" && error.config) {
+      const method = (error.config.method || "GET").toUpperCase();
+      const fullUrl = resolveFullUrl(error.config.url, error.config.baseURL);
+      const endpointTag = getEndpointTag(error.config.url || "");
+      const status = error.response?.status ?? "NETWORK_ERROR";
+      console.log(`[AUTH] Response:${endpointTag ? ` [${endpointTag}]` : ""} ${method} ${fullUrl} -> ${status}`);
+    }
+
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
     // Don't retry refresh endpoint or non-401 or already retried requests
@@ -184,8 +219,11 @@ apiInstance.interceptors.response.use(
       const newAccessToken = await refreshAccessToken();
       originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
       return apiInstance(originalRequest);
-    } catch (refreshError) {
-      if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
+    } catch (refreshError: any) {
+      // Only treat 401 Unauthorized as authentication failure (Section 13)
+      // Do NOT treat 404 as "user is logged out"
+      const status = refreshError?.response?.status ?? refreshError?.status;
+      if (status === 401 && typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
         window.location.replace("/login");
       }
       return Promise.reject(refreshError);

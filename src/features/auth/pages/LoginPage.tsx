@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { rememberStore } from "@/lib/aurix-store";
 import { getPostLoginRoute, persistAuthSession } from "@/lib/auth-bootstrap";
-import { api } from "@/api";
+import { authService } from "@/api";
 import { getErrorMessage } from "@/api/utils";
 import { toast } from "sonner";
 
@@ -56,7 +56,7 @@ export function LoginPage() {
       if (remember) rememberStore.set(email);
       else rememberStore.clear();
 
-      const res = await api.post("/api/v1/auth/login", {
+      const res = await authService.login({
         identifier: email,
         password,
       });

@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { api, clearApiCache, getTokens, hasValidAccessToken, isAccessTokenExpired, setTokens } from "@/api";
+import { authService, clearApiCache, getTokens, hasValidAccessToken, isAccessTokenExpired, setTokens } from "@/api";
 import type { AuthMeResponse, AuthUserPayload } from "@/api";
 import { aurix } from "./aurix-store";
 import { safeStorage } from "./safe-storage";
@@ -43,8 +43,6 @@ function mapAuthUser(data: AuthUserPayload) {
   };
 }
 
-import { refreshAccessToken } from "@/api/apiInstance";
-
 export function persistAuthSession(
   user: AuthUserPayload,
   tokens: { accessToken: string; refreshToken?: string },
@@ -83,7 +81,7 @@ export async function bootstrapAuth(): Promise<void> {
     if (tokens?.accessToken && !isAccessTokenExpired(tokens.accessToken)) {
       if (!ws.user) {
         try {
-          const res = await api.get<AuthMeResponse>("auth/me");
+          const res = await authService.getMe();
           if (res.success && res.data) {
             aurix.set(mapAuthUser(res.data));
           }
@@ -97,8 +95,8 @@ export async function bootstrapAuth(): Promise<void> {
 
     // 2. If memory has no valid token (e.g. page refresh), attempt refresh via HttpOnly cookie:
     try {
-      await refreshAccessToken();
-      const res = await api.get<AuthMeResponse>("auth/me");
+      await authService.refresh();
+      const res = await authService.getMe();
       if (res.success && res.data) {
         aurix.set(mapAuthUser(res.data));
       } else {
@@ -143,7 +141,7 @@ export function useAuthReady(): boolean {
 
 export async function logout(options?: { redirect?: boolean }) {
   try {
-    await api.post("/auth/logout");
+    await authService.logout();
   } catch {
     // If backend is offline or logout endpoint fails, proceed with local session cleanup
   }

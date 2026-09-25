@@ -6,7 +6,7 @@ import { AuthLoadingScreen } from "@/features/auth/components/AuthLoadingScreen"
 import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { aurix, useAurix } from "@/lib/aurix-store";
-import { api } from "@/api";
+import { authService } from "@/api";
 import { toast } from "sonner";
 import type { ApiResponse } from "@/api/types";
 
@@ -48,7 +48,7 @@ export function VerifyEmailPage() {
 
     try {
       const email = ws.user?.email || "";
-      const res = await api.post<ApiResponse>("auth/verify-email", {
+      const res = await authService.verifyEmail({
         email,
         otp: code,
       });
@@ -76,7 +76,7 @@ export function VerifyEmailPage() {
     const payload = { email };
     setResending(true);
     try {
-      const res = await api.post<ApiResponse>("auth/resend-otp", payload);
+      const res = await authService.resendOtp(payload);
       if (res.success) {
         setSecondsLeft(30);
         toast.success(res.message || "OTP sent successfully.");

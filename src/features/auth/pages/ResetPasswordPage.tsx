@@ -5,7 +5,7 @@ import { AuthShell } from "@/features/auth/components/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { api } from "@/api";
+import { authService } from "@/api";
 import { toast } from "sonner";
 
 export function ResetPasswordPage() {
@@ -69,7 +69,7 @@ export function ResetPasswordPage() {
     setLoading(true);
 
     try {
-      const res = (await api.post("auth/reset-password", {
+      const res = (await authService.resetPassword({
         token: resetToken,
         password: password,
         confirm_password: confirmPassword,
