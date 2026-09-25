@@ -34,6 +34,12 @@ export default defineConfig(({ mode, isSsrBuild }) => {
             ".ofc360.com": "",
           },
         },
+        // Public backend health probes (/health, /health/ready) used by the Super Admin diagnostics.
+        "/health": {
+          target: targetApi,
+          changeOrigin: true,
+          secure: false,
+        },
       },
     },
     resolve: {
