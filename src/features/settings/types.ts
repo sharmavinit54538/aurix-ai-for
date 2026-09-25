@@ -1,4 +1,4 @@
-import type { Role as AurixRole } from "@/lib/aurix-store";
+import { normalizeRole, type AppRole } from "@/lib/roles";
 
 export type SettingsSectionKey =
   | "company"
@@ -11,13 +11,20 @@ export type SettingsSectionKey =
   | "assets"
   | "notifications";
 
-export type RbacRole =
-  | "SUPER ADMIN"
-  | "HR ADMIN"
-  | "MANAGER"
-  | "IT ADMIN"
-  | "EXECUTIVE"
-  | "EMPLOYEE";
+export type RbacRole = AppRole;
+
+export const RBAC_ROLE_LABELS: Record<AppRole, string> = {
+  superadmin: "SUPER ADMIN",
+  hr_admin: "HR ADMIN",
+  manager: "MANAGER",
+  it_admin: "IT ADMIN",
+  executive: "EXECUTIVE",
+  employee: "EMPLOYEE",
+};
+
+export function getRbacRoleLabel(role: AppRole): string {
+  return RBAC_ROLE_LABELS[role] ?? "EMPLOYEE";
+}
 
 export interface SettingsSectionMetadata {
   id: SettingsSectionKey;
@@ -86,42 +93,14 @@ export const SETTINGS_SECTIONS: SettingsSectionMetadata[] = [
 /**
  * Normalizes any role representation from backend/auth tokens into the 6 standard OFC360 roles.
  */
-export function resolveRbacRole(roleString?: string | null): RbacRole {
-  if (!roleString) return "EMPLOYEE";
-  const r = roleString.trim().toLowerCase().replace(/[-_]/g, " ");
-
-  if (r.includes("super") || r === "super admin" || r === "superadmin" || r === "platform admin") {
-    return "SUPER ADMIN";
-  }
-  if (r.includes("hr admin") || r === "hr" || r === "hr executive" || r === "human resources") {
-    return "HR ADMIN";
-  }
-  if (r === "admin") {
-    return "SUPER ADMIN";
-  }
-  if (r.includes("manager") || r === "hiring manager") {
-    return "MANAGER";
-  }
-  if (r.includes("it admin") || r.includes("it") || r === "sysadmin") {
-    return "IT ADMIN";
-  }
-  if (
-    r.includes("executive") ||
-    r.includes("ceo") ||
-    r.includes("cto") ||
-    r.includes("cio") ||
-    r.includes("cfo") ||
-    r.includes("coo")
-  ) {
-    return "EXECUTIVE";
-  }
-  return "EMPLOYEE";
+export function resolveRbacRole(roleString?: string | null): AppRole {
+  return normalizeRole(roleString) ?? "employee";
 }
 
 export type PermissionLevel = "edit" | "view" | "denied";
 
-export const RBAC_PERMISSIONS: Record<RbacRole, Record<SettingsSectionKey, PermissionLevel>> = {
-  "SUPER ADMIN": {
+export const RBAC_PERMISSIONS: Record<AppRole, Record<SettingsSectionKey, PermissionLevel>> = {
+  superadmin: {
     company: "edit",
     profile: "edit",
     employees: "edit",
@@ -132,7 +111,7 @@ export const RBAC_PERMISSIONS: Record<RbacRole, Record<SettingsSectionKey, Permi
     assets: "edit",
     notifications: "edit",
   },
-  "HR ADMIN": {
+  hr_admin: {
     company: "edit",
     profile: "edit",
     employees: "edit",
@@ -143,7 +122,7 @@ export const RBAC_PERMISSIONS: Record<RbacRole, Record<SettingsSectionKey, Permi
     assets: "edit",
     notifications: "edit",
   },
-  MANAGER: {
+  manager: {
     company: "denied",
     profile: "edit",
     employees: "view",
@@ -154,7 +133,7 @@ export const RBAC_PERMISSIONS: Record<RbacRole, Record<SettingsSectionKey, Permi
     assets: "view",
     notifications: "edit",
   },
-  "IT ADMIN": {
+  it_admin: {
     company: "denied",
     profile: "edit",
     employees: "denied",
@@ -165,7 +144,7 @@ export const RBAC_PERMISSIONS: Record<RbacRole, Record<SettingsSectionKey, Permi
     assets: "edit",
     notifications: "edit",
   },
-  EXECUTIVE: {
+  executive: {
     company: "view",
     profile: "edit",
     employees: "view",
@@ -176,7 +155,7 @@ export const RBAC_PERMISSIONS: Record<RbacRole, Record<SettingsSectionKey, Permi
     assets: "view",
     notifications: "edit",
   },
-  EMPLOYEE: {
+  employee: {
     company: "denied",
     profile: "edit",
     employees: "denied",

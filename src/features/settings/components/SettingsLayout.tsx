@@ -26,6 +26,7 @@ import {
   resolveRbacRole,
   canAccessSection,
   canEditSection,
+  getRbacRoleLabel,
   type SettingsSectionKey,
   type RbacRole,
 } from "../types";
@@ -250,8 +251,8 @@ export function SettingsLayout({ initialSection, onSectionChange }: SettingsLayo
           {!isAccessible ? (
             <AccessDeniedView
               title={`${currentCardMeta?.label} Settings Restricted`}
-              message={`Your role (${userRole}) does not have permission to access ${currentCardMeta?.label} settings. Only authorized administrators may modify this module.`}
-              currentRole={userRole}
+              message={`Your role (${getRbacRoleLabel(userRole)}) does not have permission to access ${currentCardMeta?.label} settings. Only authorized administrators may modify this module.`}
+              currentRole={getRbacRoleLabel(userRole)}
             />
           ) : (
             <div>

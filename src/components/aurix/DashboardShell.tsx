@@ -54,7 +54,7 @@ import {
 import { useAurix } from "@/lib/aurix-store";
 import { useAuthReady } from "@/lib/auth-bootstrap";
 import { getRoleDefaultHome } from "@/lib/route-guards";
-import { normalizeRole } from "@/lib/rbac";
+import { normalizeRole, useCurrentRole } from "@/lib/roles";
 import { UserProfileMenu } from "./UserProfileMenu";
 import { GeminiIcon } from "@/components/icons/GeminiIcon";
 import { hasValidAccessToken } from "@/api";
@@ -132,25 +132,25 @@ const NAV_SECTIONS: SidebarNavSection[] = [
         to: "/dashboard/attendance",
         label: "Attendance",
         icon: Clock,
-        roles: ["super_admin", "hr_admin", "manager"],
+        roles: ["superadmin", "hr_admin", "manager"],
       },
       {
         to: "/dashboard/leaves",
         label: "Leaves",
         icon: CalendarDays,
-        roles: ["super_admin", "hr_admin", "manager"],
+        roles: ["superadmin", "hr_admin", "manager"],
       },
       {
         to: "/dashboard/talent",
         label: "Talent Management",
         icon: Briefcase,
-        roles: ["super_admin", "hr_admin", "manager"],
+        roles: ["superadmin", "hr_admin", "manager"],
       },
       {
         to: "/dashboard/hr-operations",
         label: "HR Operations",
         icon: Activity,
-        roles: ["super_admin", "hr_admin"],
+        roles: ["superadmin", "hr_admin"],
       },
       {
         to: "/dashboard/resources",
@@ -161,13 +161,13 @@ const NAV_SECTIONS: SidebarNavSection[] = [
         to: "/dashboard/payroll",
         label: "Payroll",
         icon: Banknote,
-        roles: ["super_admin", "hr_admin"],
+        roles: ["superadmin", "hr_admin"],
       },
       {
         to: "/dashboard/analytics",
         label: "Analytics",
         icon: BarChart3,
-        roles: ["super_admin", "hr_admin", "manager"],
+        roles: ["superadmin", "hr_admin", "manager"],
       },
       {
         to: "/dashboard/ai-hub",
@@ -310,6 +310,7 @@ const MANAGER_NAV_SECTIONS: SidebarNavSection[] = [
   },
 ];
 
+// TODO: Merging separate executive (CEO/CTO/CIO) nav sections into a single unified navigation structure is a product decision. Preserved unified executive navigation for 'executive' role.
 const EXECUTIVE_NAV_SECTIONS: SidebarNavSection[] = [
   {
     title: "EXECUTIVE DASHBOARD",
@@ -341,7 +342,7 @@ const IT_ADMIN_NAV_SECTIONS: SidebarNavSection[] = [
 
 export function DashboardShell() {
   const ws = useAurix();
-  const role = ws.user?.role;
+  const currentRole = useCurrentRole();
   const navigate = useNavigate();
   const authReady = useAuthReady();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -356,9 +357,9 @@ export function DashboardShell() {
 
   useEffect(() => {
     if (authReady && ws.user) {
-      dispatch(fetchSidebarPermissions(role));
+      dispatch(fetchSidebarPermissions(currentRole));
     }
-  }, [dispatch, authReady, ws.user, role]);
+  }, [dispatch, authReady, ws.user, currentRole]);
 
   // ── Auth & Role guard ────────────────────────────────────────
   useEffect(() => {
@@ -373,49 +374,45 @@ export function DashboardShell() {
       return;
     }
 
-    const normalizedRole = normalizeRole(role);
-
-    if (pathname === "/dashboard/employee" && normalizedRole !== "employee") {
-      if (normalizedRole === "manager") {
+    if (pathname === "/dashboard/employee" && currentRole !== "employee") {
+      if (currentRole === "manager") {
         navigate({ to: "/dashboard/manager" });
         return;
       }
-      navigate({ to: getRoleDefaultHome(normalizedRole) });
+      navigate({ to: getRoleDefaultHome(currentRole) });
       return;
     }
 
     if (pathname === "/onboarding") {
-      if (normalizedRole === "employee") {
+      if (currentRole === "employee") {
         navigate({ to: "/dashboard/employee" });
         return;
       }
     }
-  }, [authReady, ws.isRestoring, ws.user, pathname, role, navigate]);
+  }, [authReady, ws.isRestoring, ws.user, pathname, currentRole, navigate]);
 
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
   const visibleNav = useMemo(() => {
-    const normalizedRole = normalizeRole(role);
-
     const isEmployeePortalPath = pathname === "/dashboard/employee" || pathname.startsWith("/dashboard/employee/");
     const isManagerPortalPath = pathname === "/dashboard/manager" || pathname.startsWith("/dashboard/manager/");
     const isExecutivePortalPath = pathname === "/dashboard/executive" || pathname.startsWith("/dashboard/executive/");
 
-    if (normalizedRole === "executive" || isExecutivePortalPath) {
-      return filterNavTree(EXECUTIVE_NAV_SECTIONS, role, userPermissions);
+    if (currentRole === "executive" || isExecutivePortalPath) {
+      return filterNavTree(EXECUTIVE_NAV_SECTIONS, currentRole || undefined, userPermissions);
     }
-    if (normalizedRole === "it_admin") {
-      return filterNavTree(IT_ADMIN_NAV_SECTIONS, role, userPermissions);
+    if (currentRole === "it_admin") {
+      return filterNavTree(IT_ADMIN_NAV_SECTIONS, currentRole || undefined, userPermissions);
     }
-    if (normalizedRole === "employee" || isEmployeePortalPath) {
-      return filterNavTree(EMPLOYEE_NAV_SECTIONS, role, userPermissions);
+    if (currentRole === "employee" || isEmployeePortalPath) {
+      return filterNavTree(EMPLOYEE_NAV_SECTIONS, currentRole || undefined, userPermissions);
     }
-    if (normalizedRole === "manager" || isManagerPortalPath) {
-      return filterNavTree(MANAGER_NAV_SECTIONS, normalizedRole, userPermissions);
+    if (currentRole === "manager" || isManagerPortalPath) {
+      return filterNavTree(MANAGER_NAV_SECTIONS, currentRole || undefined, userPermissions);
     }
-    const computed = filterNavTree(NAV_SECTIONS, normalizedRole, userPermissions);
+    const computed = filterNavTree(NAV_SECTIONS, currentRole || undefined, userPermissions);
     return computed && computed.length > 0 ? computed : NAV_SECTIONS;
-  }, [role, pathname, userPermissions]);
+  }, [currentRole, pathname, userPermissions]);
 
   if (!authReady || ws.isRestoring) {
     return <AuthLoadingScreen />;
@@ -425,7 +422,7 @@ export function DashboardShell() {
     return null;
   }
 
-  const homeLink = getRoleDefaultHome(role);
+  const homeLink = getRoleDefaultHome(currentRole);
 
   return (
     <div className="flex min-h-screen w-full flex-col overflow-x-hidden bg-background text-foreground">

@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useRouterState } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { useAurix } from "@/lib/aurix-store";
+import { useCurrentRole } from "@/lib/roles";
 import { EmployeeShiftsView } from "@/features/portal/employee/components/EmployeeShiftsView";
 import {
   Clock, Plus, Search, Users, Moon, Sun, Edit, Trash2, UserPlus,
@@ -59,9 +60,9 @@ function ShiftsPage() {
   const viewParam = searchParams?.view;
   const employeeIdParam = searchParams?.employeeId;
 
-  const normalizedRole = (ws.user?.role || "").toLowerCase();
+  const currentRole = useCurrentRole();
   const isEmployee =
-    normalizedRole === "employee" ||
+    currentRole === "employee" ||
     viewParam === "my" ||
     pathname.startsWith("/dashboard/employee");
 

@@ -1,14 +1,24 @@
 /** Central route authorization for the six canonical frontend roles. */
 import { hasValidAccessToken } from "@/api";
 import { aurix } from "@/lib/aurix-store";
-import { normalizeRole, type Role } from "@/lib/rbac";
+import { normalizeRole, type AppRole } from "@/lib/roles";
 
-const HR_OPERATIONS_ROLES: Role[] = ["super_admin", "hr_admin"];
-const TEAM_MANAGEMENT_ROLES: Role[] = ["super_admin", "hr_admin", "manager"];
-const SYSTEM_ADMIN_ROLES: Role[] = ["super_admin", "it_admin"];
-const EXECUTIVE_ROLES: Role[] = ["super_admin", "executive"];
+const HR_OPERATIONS_ROLES: AppRole[] = ["superadmin", "hr_admin"];
+const TEAM_MANAGEMENT_ROLES: AppRole[] = ["superadmin", "hr_admin", "manager"];
+const SYSTEM_ADMIN_ROLES: AppRole[] = ["superadmin", "it_admin"];
+const EXECUTIVE_ROLES: AppRole[] = ["superadmin", "executive"];
+const ALL_ROLES: AppRole[] = [
+  "superadmin",
+  "hr_admin",
+  "executive",
+  "manager",
+  "employee",
+  "it_admin",
+];
 
-export const ROUTE_ROLE_ACCESS: Record<string, Role[]> = {
+export const ROUTE_ROLE_ACCESS: Record<string, AppRole[]> = {
+  // IT Admin is granted access to CIO/IT routes as a reasonable starting point
+  "/dashboard/executive/cio": ["executive", "superadmin", "it_admin"],
   "/dashboard/executive": EXECUTIVE_ROLES,
   "/dashboard/payroll/payments": HR_OPERATIONS_ROLES,
   "/dashboard/payroll/full-and-final": HR_OPERATIONS_ROLES,
@@ -23,20 +33,26 @@ export const ROUTE_ROLE_ACCESS: Record<string, Role[]> = {
   "/dashboard/employees": TEAM_MANAGEMENT_ROLES,
   "/dashboard/managers": HR_OPERATIONS_ROLES,
   "/dashboard/admin": SYSTEM_ADMIN_ROLES,
-  "/dashboard/settings/roles-permissions": ["super_admin"],
-  "/dashboard/settings/billing": ["super_admin"],
+  "/dashboard/settings/roles-permissions": ["superadmin"],
+  "/dashboard/settings/billing": ["superadmin"],
   "/dashboard/settings/audit-logs": SYSTEM_ADMIN_ROLES,
-  "/dashboard/roles": ["super_admin"],
+  "/dashboard/roles": ["superadmin"],
   "/dashboard/manager": TEAM_MANAGEMENT_ROLES,
-  "/dashboard/employee": ["employee"],
+  "/dashboard/employee": ALL_ROLES,
 };
 
 export function getRoleDefaultHome(role?: string | null): string {
   switch (normalizeRole(role)) {
-    case "executive": return "/dashboard/executive";
-    case "manager": return "/dashboard/manager";
-    case "employee": return "/dashboard/employee";
-    default: return "/dashboard";
+    case "executive":
+      return "/dashboard/executive";
+    case "manager":
+      return "/dashboard/manager";
+    case "employee":
+      return "/dashboard/employee";
+    case "it_admin":
+      return "/dashboard";
+    default:
+      return "/dashboard";
   }
 }
 
@@ -53,17 +69,18 @@ export interface RouteAccessResult {
 
 export function checkRouteAccess(pathname: string, userRole?: string | null): RouteAccessResult {
   const role = normalizeRole(userRole);
-  if (pathname === "/dashboard/forbidden" || role === "super_admin") return { allowed: true };
+  if (pathname === "/dashboard/forbidden" || role === "superadmin") return { allowed: true };
 
   const matchedPrefix = Object.keys(ROUTE_ROLE_ACCESS)
     .filter((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
     .sort((a, b) => b.length - a.length)[0];
 
-  if (!matchedPrefix || ROUTE_ROLE_ACCESS[matchedPrefix].includes(role)) return { allowed: true };
+  if (!matchedPrefix) return { allowed: true };
+  if (role && ROUTE_ROLE_ACCESS[matchedPrefix].includes(role)) return { allowed: true };
 
   return {
     allowed: false,
     redirectPath: role === "executive" ? getRoleDefaultHome(role) : "/dashboard/forbidden",
-    reason: `Role '${role}' lacks permission to access '${matchedPrefix}'.`,
+    reason: `Role '${role ?? "unrecognized"}' lacks permission to access '${matchedPrefix}'.`,
   };
 }

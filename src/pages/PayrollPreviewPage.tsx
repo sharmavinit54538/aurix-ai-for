@@ -66,6 +66,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAurix } from "@/lib/aurix-store";
+import { useCurrentRole } from "@/lib/roles";
 import { useAppSelector } from "@/redux/hooks";
 import { selectUserPermissions } from "@/store/sidebar/sidebarSelectors";
 import {
@@ -184,34 +185,15 @@ export function PayrollPreviewPage() {
   const userPermissions = useAppSelector(selectUserPermissions);
 
   // RBAC Permission Check
-  const normalizedRole = (
-    ws.user?.role ||
-    (typeof window !== "undefined" ? localStorage.getItem("user_role") : null) ||
-    ""
-  ).toLowerCase().trim();
-
-  const isAdmin =
-    normalizedRole === "admin" ||
-    normalizedRole === "super_admin" ||
-    normalizedRole === "superadmin" ||
-    normalizedRole === "hr_admin" ||
-    normalizedRole === "hradmin" ||
-    normalizedRole === "hr-admin" ||
-    normalizedRole.includes("admin");
-
-  const isHr =
-    normalizedRole === "hr" ||
-    normalizedRole === "hr_manager" ||
-    normalizedRole === "hrmanager" ||
-    normalizedRole === "hr_executive" ||
-    normalizedRole.includes("hr");
+  const currentRole = useCurrentRole();
+  const isAdmin = currentRole === "superadmin";
+  const isHr = currentRole === "hr_admin";
 
   const canViewPayroll =
     isAdmin ||
     isHr ||
     userPermissions.includes("payroll.view") ||
-    userPermissions.includes("*") ||
-    !normalizedRole;
+    userPermissions.includes("*");
 
   const canRunPayroll =
     isAdmin ||

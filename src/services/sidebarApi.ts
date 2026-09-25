@@ -1,10 +1,9 @@
 import apiInstance from "@/api/apiInstance";
-import { normalizeRole } from "@/lib/rbac";
+import { normalizeRole, type AppRole } from "@/lib/roles";
 import type { SidebarPermissionsResponse } from "@/store/sidebar/sidebarTypes";
 
-export const DEFAULT_ROLE_PERMISSIONS: Record<string, string[]> = {
-  super_admin: ["*"],
-  admin: ["*"],
+export const DEFAULT_ROLE_PERMISSIONS: Record<AppRole, string[]> = {
+  superadmin: ["*"],
   hr_admin: [
     "overview.view",
     "workforce.view",
@@ -53,48 +52,6 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<string, string[]> = {
     "settings.security",
     "settings.notifications",
     "settings.integrations",
-    "settings.profile",
-  ],
-  hr: [
-    "overview.view",
-    "workforce.view",
-    "workforce.people",
-    "workforce.departments",
-    "workforce.attendance",
-    "workforce.timesheets",
-    "workforce.leaves",
-    "talent.view",
-    "talent.recruitment",
-    "talent.performance",
-    "hrops.view",
-    "hrops.dashboard",
-    "hrops.timeline",
-    "hrops.visitors",
-    "hrops.onboarding",
-    "hrops.offboarding",
-    "hrops.exit",
-    "resources.view",
-    "resources.documents",
-    "resources.assets",
-    "resources.asset_management",
-    "payroll.view",
-    "payroll.process",
-    "payroll.disburse",
-    "payroll.reports",
-    "payroll.compensation.view",
-    "payroll.compensation.edit",
-    "payroll.statutory",
-    "analytics.view",
-    "analytics.reports",
-    "analytics.ai_insights",
-    "ai.view",
-    "ai.hub",
-    "ai.document_generator",
-    "ai.assistant",
-    "ai.automation",
-    "settings.view",
-    "settings.security",
-    "settings.notifications",
     "settings.profile",
   ],
   manager: [
@@ -149,35 +106,47 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<string, string[]> = {
     "overview.view",
     "resources.view",
     "resources.assets",
+    "resources.asset_management",
     "settings.view",
     "settings.security",
+    "settings.audit_logs",
+    "settings.integrations",
   ],
   executive: [
     "overview.view",
     "analytics.view",
     "analytics.reports",
+    "analytics.ai_insights",
+    "ai.view",
+    "ai.hub",
   ],
 };
 
-DEFAULT_ROLE_PERMISSIONS.hradmin = DEFAULT_ROLE_PERMISSIONS.hr_admin;
-DEFAULT_ROLE_PERMISSIONS["hr-admin"] = DEFAULT_ROLE_PERMISSIONS.hr_admin;
-
 export const sidebarApi = {
-  async getPermissions(userRole?: string): Promise<SidebarPermissionsResponse> {
+  async getPermissions(userRole?: string | null): Promise<SidebarPermissionsResponse> {
     const normalized = normalizeRole(userRole);
+    // Least-privilege fallback to employee, never admin
+    const effectiveRole: AppRole = normalized || "employee";
+
     try {
       const response = await apiInstance.get("/sidebar/permissions");
       const data = response.data?.data ?? response.data;
       if (data && Array.isArray(data.permissions)) {
+        const rawRole = typeof data.role === "string" ? data.role : userRole;
+        const respRole = normalizeRole(rawRole) || effectiveRole;
         return {
-          role: normalizeRole(typeof data.role === "string" ? data.role : userRole),
-          permissions: data.permissions.filter((permission: unknown): permission is string => typeof permission === "string"),
+          role: respRole,
+          permissions: data.permissions.filter(
+            (permission: unknown): permission is string => typeof permission === "string"
+          ),
         };
       }
       if (Array.isArray(data)) {
         return {
-          role: normalized,
-          permissions: data.filter((permission: unknown): permission is string => typeof permission === "string"),
+          role: effectiveRole,
+          permissions: data.filter(
+            (permission: unknown): permission is string => typeof permission === "string"
+          ),
         };
       }
     } catch {
@@ -185,8 +154,8 @@ export const sidebarApi = {
     }
 
     return {
-      role: normalized,
-      permissions: DEFAULT_ROLE_PERMISSIONS[normalized] || DEFAULT_ROLE_PERMISSIONS[userRole || ""] || [],
+      role: effectiveRole,
+      permissions: DEFAULT_ROLE_PERMISSIONS[effectiveRole] || DEFAULT_ROLE_PERMISSIONS.employee,
     };
   },
 };

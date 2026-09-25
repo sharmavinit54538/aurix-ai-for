@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { useAurix } from "@/lib/aurix-store";
+import { useCurrentRole } from "@/lib/roles";
 import { EmployeeRostersView } from "@/features/portal/employee/components/EmployeeRostersView";
 import {
   ScrollText,
@@ -71,9 +72,9 @@ export default function RostersPage() {
   const viewParam = searchParams?.view;
   const employeeIdParam = searchParams?.employeeId;
 
-  const normalizedRole = (ws.user?.role || "").toLowerCase();
+  const currentRole = useCurrentRole();
   const isEmployee =
-    normalizedRole === "employee" ||
+    currentRole === "employee" ||
     viewParam === "my" ||
     pathname.startsWith("/dashboard/employee");
 

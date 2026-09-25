@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { useAurix } from "@/lib/aurix-store";
+import { useCurrentRole } from "@/lib/roles";
 import { MONTH_NAMES } from "@/lib/constants";
 import { EmployeeHolidaysView } from "@/features/portal/employee/components/EmployeeHolidaysView";
 import {
@@ -92,9 +93,9 @@ export default function HolidaysPage() {
   const searchParams = router.location.search as Record<string, any>;
   const viewParam = searchParams?.view;
 
-  const normalizedRole = (ws.user?.role || "").toLowerCase();
+  const currentRole = useCurrentRole();
   const isEmployee =
-    normalizedRole === "employee" ||
+    currentRole === "employee" ||
     viewParam === "my" ||
     pathname.startsWith("/dashboard/employee");
 

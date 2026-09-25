@@ -32,6 +32,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAurix } from "@/lib/aurix-store";
+import { useCurrentRole } from "@/lib/roles";
 import { useAppSelector } from "@/redux/hooks";
 import { selectUserPermissions } from "@/store/sidebar/sidebarSelectors";
 import {
@@ -120,28 +121,9 @@ export function PayrollPayslipPage() {
   const userPermissions = useAppSelector(selectUserPermissions);
 
   // RBAC Permission Check
-  const normalizedRole = (
-    ws.user?.role ||
-    (typeof window !== "undefined" ? localStorage.getItem("user_role") : null) ||
-    ""
-  )
-    .toLowerCase()
-    .trim();
-
-  const isAdmin =
-    normalizedRole === "admin" ||
-    normalizedRole === "super_admin" ||
-    normalizedRole === "superadmin" ||
-    normalizedRole === "hr_admin" ||
-    normalizedRole === "hradmin" ||
-    normalizedRole === "hr-admin" ||
-    normalizedRole.includes("admin");
-
-  const isHr =
-    isAdmin ||
-    normalizedRole === "hr" ||
-    normalizedRole.includes("payroll") ||
-    normalizedRole.includes("manager");
+  const currentRole = useCurrentRole();
+  const isAdmin = currentRole === "superadmin";
+  const isHr = currentRole === "hr_admin";
 
   // User is authorized to view if HR/Admin OR accessing own record
   const currentUserId = ws.user?.id || (ws.user as any)?.employeeId || "";
@@ -158,8 +140,7 @@ export function PayrollPayslipPage() {
     userPermissions.includes("payroll.view") ||
     userPermissions.includes("payroll.admin") ||
     userPermissions.includes("*") ||
-    isSelf ||
-    !normalizedRole;
+    isSelf;
 
   // Component State
   const [payslipData, setPayslipData] = useState<PayrollPayslipData | null>(null);

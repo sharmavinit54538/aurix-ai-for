@@ -37,7 +37,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useAurix } from "@/lib/aurix-store";
-import { canManagePayroll } from "@/lib/rbac";
+import { useCurrentRole, canManagePayroll } from "@/lib/roles";
 import { useAppSelector } from "@/redux/hooks";
 import { selectUserPermissions } from "@/store/sidebar/sidebarSelectors";
 import {
@@ -123,7 +123,8 @@ export function EmployeePayrollDetailPage() {
   const ws = useAurix();
   const userPermissions = useAppSelector(selectUserPermissions);
 
-  const isPayrollAdmin = canManagePayroll(ws.user?.role);
+  const currentRole = useCurrentRole();
+  const isPayrollAdmin = canManagePayroll(currentRole);
 
   const canViewPayroll =
     isPayrollAdmin ||

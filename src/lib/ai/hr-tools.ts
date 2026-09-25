@@ -6,6 +6,7 @@
 import { tool } from "ai";
 import { z } from "zod";
 import { apiInstance } from "@/api";
+import { normalizeRole } from "@/lib/roles";
 
 interface CreateHrToolsOptions {
   token?: string;
@@ -13,17 +14,11 @@ interface CreateHrToolsOptions {
 }
 
 export function createHrTools({ token, role = "employee" }: CreateHrToolsOptions = {}) {
-  const normRole = role.toLowerCase();
+  const normRole = normalizeRole(role);
   const isExecutiveOrHr =
-    normRole === "admin" ||
-    normRole === "super_admin" ||
-    normRole === "hr" ||
+    normRole === "superadmin" ||
     normRole === "hr_admin" ||
-    normRole === "ceo" ||
-    normRole === "cto" ||
-    normRole === "cio" ||
-    normRole === "cfo" ||
-    normRole === "coo";
+    normRole === "executive";
 
   const isManager = isExecutiveOrHr || normRole === "manager";
 

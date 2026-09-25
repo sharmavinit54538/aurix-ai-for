@@ -1,6 +1,6 @@
 import type { RootState } from "@/redux/store";
 import type { SidebarNavParent, SidebarNavSection } from "./sidebarTypes";
-import { normalizeRole } from "@/lib/rbac";
+import { normalizeRole } from "@/lib/roles";
 
 export const selectSidebarState = (state: RootState) => state.sidebar;
 
@@ -34,12 +34,14 @@ export function filterNavTree(
   userPermissions: string[] = []
 ): SidebarNavSection[] {
   const normalizedRole = normalizeRole(role);
-  const isSuperAdmin = normalizedRole === "super_admin";
+  const isSuperAdmin = normalizedRole === "superadmin";
   const isHrAdmin = normalizedRole === "hr_admin";
-  const isPrivilegedAdmin = isSuperAdmin || isHrAdmin;
 
-  const isAllowedByRole = (roles?: string[]) =>
-    isSuperAdmin || !roles || roles.length === 0 || roles.includes(normalizedRole);
+  const isAllowedByRole = (roles?: string[]) => {
+    if (isSuperAdmin || !roles || roles.length === 0) return true;
+    if (!normalizedRole) return false;
+    return roles.some((r) => normalizeRole(r) === normalizedRole || r === normalizedRole);
+  };
   const isAllowedByPerm = (perm?: string) => {
     // Both Super Admin and HR Admin have full access to navigation items
     if (isSuperAdmin || isHrAdmin) return true;
