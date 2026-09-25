@@ -20,6 +20,7 @@ import employeeHierarchyReducer from "@/store/employeeHierarchy/employeeHierarch
 
 import aiHubReducer from "@/store/aiHub/aiHubSlice";
 import analyticsReducer from "@/store/analytics/analyticsSlice";
+import superAdminReducer from "@/features/superAdmin/redux/superAdminSlice";
 import { settingsApi, settingsApiErrorLogger } from "./settingsApi";
 
 export const store = configureStore({
@@ -44,6 +45,7 @@ export const store = configureStore({
     employeeHierarchy: employeeHierarchyReducer,
     aiHub: aiHubReducer,
     analytics: analyticsReducer,
+    superAdmin: superAdminReducer,
     [settingsApi.reducerPath]: settingsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
