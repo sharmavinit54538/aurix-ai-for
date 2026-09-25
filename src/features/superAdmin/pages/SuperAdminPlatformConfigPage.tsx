@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { Bot, Database, Gauge, Server } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { usePublicHealth, useReadiness, useSystemHealth } from "../hooks";
@@ -8,9 +7,7 @@ import {
   AccessDeniedState,
   ErrorState,
   InlineNotice,
-  LastUpdated,
   Panel,
-  RefreshButton,
 } from "../components/SuperAdminStates";
 import { isAuthorizationError } from "../errors";
 import { ServiceDot, ServiceStatusBadge, type ServiceBadgeState } from "../components/Badges";
@@ -33,37 +30,12 @@ export function SuperAdminPlatformConfigPage() {
     return <AccessDeniedState error={systemHealth.error} />;
   }
 
-  const runChecks = () => {
-    void systemHealth.refetch();
-    void publicHealth.refetch();
-    void readiness.refetch();
-  };
-  const checking = systemHealth.isFetching || publicHealth.isFetching || readiness.isFetching;
-
   const apiState = connectivityState(publicHealth.data?.status);
   const dbState: ServiceBadgeState = systemHealth.data?.database.status ?? connectivityState(publicHealth.data?.database);
   const llm = readiness.data?.llm ?? null;
 
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              Platform Configuration &amp; Infrastructure
-            </h1>
-            <Badge className="shrink-0 whitespace-nowrap bg-amber-500/20 text-amber-300 border-amber-500/30 text-xs">System Health</Badge>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            Live results from the backend health, readiness and database probes.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <LastUpdated timestamp={systemHealth.dataUpdatedAt} />
-          <RefreshButton onClick={runChecks} refreshing={checking} label="Run Health Check" />
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <MetricCard
           icon={Server}

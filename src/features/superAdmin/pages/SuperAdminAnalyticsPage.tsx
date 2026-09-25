@@ -13,7 +13,6 @@ import {
   YAxis,
 } from "recharts";
 import { BarChart3, Briefcase, Building2, Clock, KeyRound, PieChartIcon, UserPlus, Users } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { useMounted } from "@/lib/aurix-store";
 import { cn } from "@/lib/utils";
 import { ANALYTICS_MAX_ORGANIZATIONS, ANALYTICS_MAX_USERS, useAnalyticsDataset, useSuperAdminStatistics } from "../hooks";
@@ -32,8 +31,6 @@ import {
   ErrorState,
   InlineNotice,
   KpiNumber,
-  LastUpdated,
-  RefreshButton,
 } from "../components/SuperAdminStates";
 import { isAuthorizationError } from "../errors";
 import { formatCount, formatTime } from "../formatters";
@@ -161,28 +158,6 @@ export function SuperAdminAnalyticsPage() {
 
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Usage &amp; Analytics</h1>
-            <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-xs">Platform Metrics</Badge>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            Growth, sign-in activity and distribution metrics aggregated from live platform records.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <LastUpdated timestamp={dataset.dataUpdatedAt} />
-          <RefreshButton
-            onClick={() => {
-              void statistics.refetch();
-              void dataset.refetch();
-            }}
-            refreshing={statistics.isFetching || dataset.isFetching}
-          />
-        </div>
-      </div>
-
       {dataset.data && (
         <InlineNotice tone={dataset.data.users.truncated || dataset.data.organizations.truncated ? "warning" : "info"}>
           Charts aggregate {formatCount(dataset.data.users.items.length)} user records and{" "}

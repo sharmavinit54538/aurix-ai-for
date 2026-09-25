@@ -1,6 +1,5 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { FileText, Search, X } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -9,9 +8,7 @@ import {
   AccessDeniedState,
   EmptyState,
   ErrorState,
-  LastUpdated,
   PaginationBar,
-  RefreshButton,
   SkeletonRows,
 } from "../components/SuperAdminStates";
 import { isAuthorizationError } from "../errors";
@@ -57,27 +54,6 @@ export function SuperAdminAuditLogsPage() {
 
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Platform Audit Logs</h1>
-            <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-xs">Compliance &amp; Security</Badge>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            Administrative and security events recorded in the platform audit trail, newest first.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <LastUpdated timestamp={logs.dataUpdatedAt} />
-          <RefreshButton
-            onClick={() => {
-              void logs.refetch();
-              void directory.refetch();
-            }}
-            refreshing={logs.isFetching}
-          />
-        </div>
-      </div>
 
       {/* Search (server-side: action, actor email, details) */}
       <form onSubmit={applySearch} className="flex items-center gap-2" role="search">

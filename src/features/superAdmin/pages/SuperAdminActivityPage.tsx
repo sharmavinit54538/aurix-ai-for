@@ -1,16 +1,12 @@
 import { useMemo, useState } from "react";
 import { Activity, KeyRound } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { useOrganizationDirectory, useSuperAdminAuditFeed, useSuperAdminSessions } from "../hooks";
 import {
   AccessDeniedState,
   EmptyState,
   ErrorState,
-  LastUpdated,
   Panel,
-  RefreshButton,
   SkeletonRows,
 } from "../components/SuperAdminStates";
 import { isAuthorizationError } from "../errors";
@@ -47,11 +43,8 @@ function groupByDay(events: PlatformAuditEvent[]): { label: string; events: Plat
 }
 
 export function SuperAdminActivityPage() {
-  const [autoRefresh, setAutoRefresh] = useState(false);
-  const interval = autoRefresh ? AUTO_REFRESH_MS : false;
-
-  const feed = useSuperAdminAuditFeed(FEED_PAGE_SIZE, interval);
-  const sessions = useSuperAdminSessions(interval);
+  const feed = useSuperAdminAuditFeed(FEED_PAGE_SIZE, false);
+  const sessions = useSuperAdminSessions(false);
   const directory = useOrganizationDirectory();
 
   const events = useMemo(() => feed.data?.pages.flat() ?? [], [feed.data]);
@@ -65,42 +58,11 @@ export function SuperAdminActivityPage() {
     return <AccessDeniedState error={feed.error} />;
   }
 
-  const refreshing = (feed.isFetching && !feed.isFetchingNextPage) || sessions.isFetching;
   const organizationLabel = (organizationId: string | null) =>
     organizationId ? organizationNames.get(organizationId) ?? `Tenant ${shortId(organizationId)}` : "Platform-level";
 
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">System Activity</h1>
-            <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-xs">
-              {autoRefresh ? "Auto-refresh · 30s" : "Audit trail"}
-            </Badge>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            Chronological feed of recorded platform events and currently active sign-in sessions.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <label className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Switch checked={autoRefresh} onCheckedChange={setAutoRefresh} aria-label="Auto-refresh every 30 seconds" />
-            Auto-refresh
-          </label>
-          <LastUpdated timestamp={feed.dataUpdatedAt} />
-          <RefreshButton
-            onClick={() => {
-              void feed.refetch();
-              void sessions.refetch();
-              void directory.refetch();
-            }}
-            refreshing={refreshing}
-          />
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Event timeline */}
         <Panel className="lg:col-span-2 p-0 overflow-hidden">

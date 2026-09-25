@@ -11,9 +11,7 @@ import {
   ErrorState,
   InlineNotice,
   KpiNumber,
-  LastUpdated,
   PaginationBar,
-  RefreshButton,
   SkeletonRows,
 } from "../components/SuperAdminStates";
 import { isAuthorizationError } from "../errors";
@@ -48,7 +46,6 @@ export function SuperAdminOrganizationsPage() {
   const statistics = useSuperAdminStatistics();
 
   const filtersActive = Boolean(search) || onboarding !== "ALL";
-  const refreshing = organizations.isFetching || statistics.isFetching;
 
   const applySearch = (event: FormEvent) => {
     event.preventDefault();
@@ -71,30 +68,6 @@ export function SuperAdminOrganizationsPage() {
 
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              Organizations &amp; Company Accounts
-            </h1>
-            <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-xs">Multi-Tenant</Badge>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            Platform-level management of all customer companies hosted on OFC360.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <LastUpdated timestamp={organizations.dataUpdatedAt} />
-          <RefreshButton
-            onClick={() => {
-              void organizations.refetch();
-              void statistics.refetch();
-            }}
-            refreshing={refreshing}
-          />
-        </div>
-      </div>
-
       {/* Tenant & subscription counters */}
       {statistics.isError ? (
         <ErrorState

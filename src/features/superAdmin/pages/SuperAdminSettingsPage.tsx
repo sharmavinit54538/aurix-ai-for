@@ -1,25 +1,19 @@
 import { useMemo, useState, type FormEvent } from "react";
-import { RotateCcw, Save, ShieldCheck, Sliders } from "lucide-react";
+import { RotateCcw, Save, Sliders } from "lucide-react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAurix } from "@/lib/aurix-store";
-import { useSuperAdminAccounts, useSuperAdminSettings, useUpdateSuperAdminSettings } from "../hooks";
+import { useSuperAdminSettings, useUpdateSuperAdminSettings } from "../hooks";
 import {
   AccessDeniedState,
   EmptyState,
   ErrorState,
-  InlineNotice,
-  LastUpdated,
   Panel,
-  RefreshButton,
 } from "../components/SuperAdminStates";
 import { isAuthorizationError } from "../errors";
-import { formatCount, formatDateTime, formatRelativeTime, MISSING_VALUE } from "../formatters";
 import type { PlatformSettingValue, PlatformSettings } from "../types";
 
 type Group = "General" | "Access & security" | "Operations" | "Other";
@@ -54,9 +48,7 @@ function isEmailKey(key: string): boolean {
 type EditValue = string | boolean;
 
 export function SuperAdminSettingsPage() {
-  const ws = useAurix();
   const settings = useSuperAdminSettings();
-  const accounts = useSuperAdminAccounts();
   const updateSettings = useUpdateSuperAdminSettings();
   const [edits, setEdits] = useState<Record<string, EditValue>>({});
 
@@ -130,106 +122,8 @@ export function SuperAdminSettingsPage() {
     }
   };
 
-  const superAdminAccounts = accounts.data ?? [];
-
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">System &amp; Platform Settings</h1>
-            <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-xs">Global Config</Badge>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            Platform owner identity and global configuration values served by the platform API.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <LastUpdated timestamp={settings.dataUpdatedAt} />
-          <RefreshButton
-            onClick={() => {
-              void settings.refetch();
-              void accounts.refetch();
-            }}
-            refreshing={settings.isFetching || accounts.isFetching}
-          />
-        </div>
-      </div>
-
-      {/* Platform Owner Identity */}
-      <Panel className="border-purple-500/30 bg-purple-950/10">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex items-center gap-3">
-            <div className="grid h-10 w-10 place-items-center rounded-xl bg-purple-500/20 text-purple-400 border border-purple-500/30">
-              <ShieldCheck className="h-5 w-5" />
-            </div>
-            <div>
-              <h3 className="font-bold text-base text-foreground">Platform Owner</h3>
-              <p className="text-xs text-muted-foreground">
-                The backend restricts Super Admin API access to a single designated, active account.
-              </p>
-            </div>
-          </div>
-          {accounts.data && (
-            <Badge
-              className={
-                superAdminAccounts.length === 1
-                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-xs"
-                  : "bg-amber-500/10 text-amber-400 border-amber-500/30 text-xs"
-              }
-            >
-              {formatCount(superAdminAccounts.length)} Super Admin account{superAdminAccounts.length === 1 ? "" : "s"} in database
-            </Badge>
-          )}
-        </div>
-
-        <div className="mt-4 grid grid-cols-1 gap-4 border-t border-purple-500/20 pt-4 text-xs sm:grid-cols-2">
-          <div>
-            <Label className="text-xs text-muted-foreground">Signed-in email (verified by /auth/me)</Label>
-            <Input value={ws.user?.email ?? ""} disabled className="mt-1 h-9 bg-muted/60 font-mono text-xs text-foreground cursor-not-allowed" />
-          </div>
-          <div>
-            <Label className="text-xs text-muted-foreground">Signed-in name</Label>
-            <Input value={ws.user?.fullName ?? ""} disabled className="mt-1 h-9 bg-muted/60 text-xs text-foreground cursor-not-allowed" />
-          </div>
-        </div>
-
-        <div className="mt-4">
-          {accounts.isPending ? (
-            <Skeleton className="h-12 w-full rounded-xl" />
-          ) : accounts.isError ? (
-            <ErrorState
-              title="Unable to load Super Admin account records."
-              error={accounts.error}
-              onRetry={() => void accounts.refetch()}
-              retrying={accounts.isFetching}
-            />
-          ) : superAdminAccounts.length === 0 ? (
-            <EmptyState icon={ShieldCheck} title="No Super Admin records returned" description="The users endpoint returned no accounts with the super_admin role." />
-          ) : (
-            <div className="space-y-2">
-              {superAdminAccounts.length > 1 && (
-                <InlineNotice tone="warning">More than one account holds the super_admin role. Only the designated account can use the Super Admin API.</InlineNotice>
-              )}
-              {superAdminAccounts.map((account) => (
-                <div key={account.id} className="flex flex-col gap-1 rounded-xl border border-border/40 bg-background/40 p-3 text-xs sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <div className="font-semibold text-foreground">
-                      {account.name ?? MISSING_VALUE}
-                      {account.id === ws.user?.id && <span className="ml-2 text-[10px] text-purple-300">(you)</span>}
-                    </div>
-                    <div className="font-mono text-muted-foreground">{account.email ?? MISSING_VALUE}</div>
-                  </div>
-                  <div className="text-muted-foreground sm:text-right">
-                    <div>Created {formatDateTime(account.createdAt)}</div>
-                    <div>Last sign-in {account.lastLoginAt ? formatRelativeTime(account.lastLoginAt) : "never"}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </Panel>
 
       {/* Configuration values */}
       {settings.isPending ? (
@@ -252,10 +146,6 @@ export function SuperAdminSettingsPage() {
         <EmptyState icon={Sliders} title="No data available" description="The settings endpoint returned no configuration values." />
       ) : (
         <form onSubmit={(event) => void handleSave(event)} className="space-y-6">
-          <InlineNotice tone="warning">
-            Values are read from and saved to <code className="font-mono">/api/v1/super-admin/settings</code>. The current backend keeps
-            them in server memory (they reset when the API restarts) and does not yet enforce them in other services.
-          </InlineNotice>
 
           {grouped.map(({ group, keys }) => {
             const booleanKeys = keys.filter((key) => typeof settings.data[key] === "boolean");

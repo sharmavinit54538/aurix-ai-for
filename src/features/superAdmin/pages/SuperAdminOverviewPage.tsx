@@ -6,7 +6,6 @@ import {
   Building2,
   FileText,
   Server,
-  ShieldCheck,
   Sliders,
   UserPlus,
   Users,
@@ -15,11 +14,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAurix } from "@/lib/aurix-store";
 import { cn } from "@/lib/utils";
 import {
   useOrganizationDirectory,
-  usePublicHealth,
   useSuperAdminAuditLogs,
   useSuperAdminStatistics,
   useSuperAdminUsers,
@@ -33,7 +30,6 @@ import {
   KpiNumber,
   LastUpdated,
   Panel,
-  RefreshButton,
   SkeletonRows,
 } from "../components/SuperAdminStates";
 import { isAuthorizationError } from "../errors";
@@ -68,19 +64,11 @@ const TONE_CLASSES: Record<(typeof ROLE_CARDS)[number]["tone"], { card: string; 
 };
 
 export function SuperAdminOverviewPage() {
-  const ws = useAurix();
   const statistics = useSuperAdminStatistics();
   const organizations = useOrganizationDirectory();
   const recentUsers = useSuperAdminUsers(RECENT_USERS_PARAMS);
   const recentActivity = useSuperAdminAuditLogs(RECENT_ACTIVITY_PARAMS);
   const systemHealth = useSystemHealth();
-  const publicHealth = usePublicHealth();
-
-  const queries = [statistics, organizations, recentUsers, recentActivity, systemHealth, publicHealth];
-  const refreshing = queries.some((query) => query.isFetching);
-  const refreshAll = () => {
-    for (const query of queries) void query.refetch();
-  };
 
   const organizationNames = useMemo(
     () => new Map((organizations.data ?? []).map((org) => [org.id, org.name] as const)),
@@ -95,71 +83,9 @@ export function SuperAdminOverviewPage() {
   const statsLoading = statistics.isPending;
   const totalOrganizations = stats?.organizations.total ?? null;
   const totalUsers = stats?.users.total ?? null;
-  const health = publicHealth.data;
 
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-      {/* Platform Owner Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl border border-purple-500/20 bg-gradient-to-r from-purple-950/40 via-card to-background p-6 shadow-xl backdrop-blur-xl">
-        <div className="absolute right-0 top-0 -mt-8 -mr-8 h-48 w-48 rounded-full bg-purple-500/10 blur-3xl" />
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between relative z-10">
-          <div className="space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-500/20 px-2.5 py-0.5 text-xs font-semibold text-purple-300 border border-purple-500/30">
-                <ShieldCheck className="h-3.5 w-3.5" />
-                Platform Owner
-              </span>
-              <ApiStatusPill
-                loading={publicHealth.isPending}
-                failed={publicHealth.isError}
-                status={health?.status ?? null}
-                database={health?.database ?? null}
-              />
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              Super Admin Command Center
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Platform-level oversight for OFC360. Completely separated from company HR &amp; employee hierarchies.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <RefreshButton onClick={refreshAll} refreshing={refreshing} label="Refresh Metrics" />
-            <Button asChild size="sm" className="gap-2 text-xs bg-purple-600 hover:bg-purple-700 text-white">
-              <Link to="/dashboard/super-admin/users">
-                <Users className="h-3.5 w-3.5" />
-                Manage All Users
-              </Link>
-            </Button>
-          </div>
-        </div>
-
-        <div className="mt-4 pt-4 border-t border-border/40 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground relative z-10">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-semibold text-foreground">Signed in as:</span>
-            <code className="rounded bg-muted px-1.5 py-0.5 text-foreground font-mono text-[11px]">
-              {ws.user?.email ?? MISSING_VALUE}
-            </code>
-            <span className="text-[11px]">
-              Super Admin accounts in database:{" "}
-              <span className="font-semibold text-foreground">
-                {statsLoading ? "…" : formatCount(stats?.users.superAdmins)}
-              </span>
-            </span>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            {health?.version && (
-              <span>
-                API version {health.version}
-                {health.environment ? ` · ${health.environment}` : ""}
-              </span>
-            )}
-            <LastUpdated timestamp={statistics.dataUpdatedAt} />
-          </div>
-        </div>
-      </div>
-
       {statistics.isError && (
         <ErrorState
           title="Unable to load Super Admin statistics. Please try again."
@@ -583,43 +509,6 @@ function HubLink({
       <div className="font-semibold text-sm text-foreground mt-2">{title}</div>
       <div className="text-xs text-muted-foreground mt-0.5">{description}</div>
     </Link>
-  );
-}
-
-function ApiStatusPill({
-  loading,
-  failed,
-  status,
-  database,
-}: {
-  loading: boolean;
-  failed: boolean;
-  status: string | null;
-  database: string | null;
-}) {
-  if (loading) {
-    return (
-      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-        <span className="h-2 w-2 rounded-full bg-muted-foreground/50" />
-        Checking API status…
-      </span>
-    );
-  }
-  if (failed || !status) {
-    return (
-      <span className="inline-flex items-center gap-1 text-xs text-rose-400">
-        <span className="h-2 w-2 rounded-full bg-rose-500" />
-        API health check failed
-      </span>
-    );
-  }
-  const healthy = status.toLowerCase() === "healthy";
-  return (
-    <span className={cn("inline-flex items-center gap-1 text-xs", healthy ? "text-muted-foreground" : "text-amber-400")}>
-      <span className={cn("h-2 w-2 rounded-full", healthy ? "bg-emerald-500 animate-pulse" : "bg-amber-500")} />
-      API {status}
-      {database ? ` · database ${database}` : ""}
-    </span>
   );
 }
 

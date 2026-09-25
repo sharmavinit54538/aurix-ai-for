@@ -127,8 +127,6 @@ describe("SuperAdminOverviewPage", () => {
     expect(await screen.findAllByText("Tenant One")).not.toHaveLength(0);
     expect(await screen.findByText("Account One")).toBeInTheDocument();
     expect(await screen.findByText("SUPER_ADMIN_UPDATE_SETTINGS")).toBeInTheDocument();
-    expect(await screen.findByText(/API version 1\.0\.0 · production/)).toBeInTheDocument();
-    expect(screen.getByText("owner@example.test", { selector: "code" })).toBeInTheDocument();
   });
 
   it("shows empty states when the platform has no records", async () => {
