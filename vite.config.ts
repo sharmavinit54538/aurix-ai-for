@@ -27,6 +27,12 @@ export default defineConfig(({ mode, isSsrBuild }) => {
           changeOrigin: true,
           secure: false,
         },
+        // Public backend health probes (/health, /health/ready) used by the Super Admin diagnostics.
+        "/health": {
+          target: targetApi,
+          changeOrigin: true,
+          secure: false,
+        },
       },
     },
     resolve: {
