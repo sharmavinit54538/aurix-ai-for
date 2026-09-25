@@ -26,6 +26,13 @@ export default defineConfig(({ mode, isSsrBuild }) => {
           target: targetApi,
           changeOrigin: true,
           secure: false,
+          // Rewrite cookie domains so the browser stores them for localhost.
+          // Without this, Set-Cookie with Domain=api.ofc360.com is silently
+          // dropped because the browser sees the response as coming from localhost.
+          cookieDomainRewrite: {
+            "api.ofc360.com": "",
+            ".ofc360.com": "",
+          },
         },
       },
     },

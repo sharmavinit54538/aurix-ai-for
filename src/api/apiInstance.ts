@@ -1,7 +1,7 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { aurix } from "@/lib/aurix-store";
 import { isAccessTokenExpired } from "./token-utils";
-import { getTokens, setTokens } from "./tokens";
+import { getTokens, getRefreshToken, setTokens } from "./tokens";
 
 declare module "axios" {
   export interface AxiosRequestConfig {
@@ -14,12 +14,14 @@ declare module "axios" {
  * e.g., "https://www.api.ofc360.com"
  */
 export function getApiBaseUrl(): string {
-  // If accessed from localhost on a port other than 8080 (e.g. 8081),
-  // backend rejects with '400 Disallowed CORS origin'.
-  // Using relative path routes through Vite dev server proxy (changeOrigin: true), bypassing CORS completely!
+  // On localhost, ALWAYS route through the Vite dev server proxy.
+  // This is critical for auth cookies: when the browser sends requests to localhost,
+  // the proxy forwards them to api.ofc360.com with changeOrigin. Response cookies
+  // are rewritten to the localhost domain so the browser actually stores them.
+  // Without this, cross-origin Set-Cookie from api.ofc360.com is silently dropped.
   if (typeof window !== "undefined") {
     const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-    if (isLocalhost && window.location.port !== "8080") {
+    if (isLocalhost) {
       return "";
     }
   }
@@ -64,20 +66,27 @@ export async function refreshAccessToken(): Promise<string> {
 
   refreshPromise = (async () => {
     try {
-      // POST to /auth/refresh with withCredentials: true.
-      // The browser automatically attaches the HttpOnly cookie.
+      // Build request body: include the in-memory refresh token if available.
+      // Many backends (especially FastAPI) expect the refresh_token in the body.
+      // Also send withCredentials so the browser attaches any HttpOnly cookie.
+      const currentRefreshToken = getRefreshToken();
+      const body: Record<string, string> = {};
+      if (currentRefreshToken) {
+        body.refresh_token = currentRefreshToken;
+      }
+
       let res;
       try {
         res = await axios.post(
           `${BASE_URL}/auth/refresh`,
-          {},
+          body,
           { withCredentials: true },
         );
       } catch (postErr: any) {
         if (postErr?.response?.status === 404) {
           res = await axios.post(
             `${API_BASE_URL}/auth/refresh`,
-            {},
+            body,
             { withCredentials: true },
           );
         } else {
@@ -95,7 +104,10 @@ export async function refreshAccessToken(): Promise<string> {
         throw new Error("Invalid session refresh response");
       }
 
-      setTokens({ accessToken });
+      // Store new tokens. If the backend rotates the refresh token, pick up the new one.
+      const newRefreshToken =
+        tokenData?.refresh_token || tokenData?.refreshToken || currentRefreshToken;
+      setTokens({ accessToken, refreshToken: newRefreshToken || undefined });
       return accessToken;
     } catch (error) {
       setTokens(null);

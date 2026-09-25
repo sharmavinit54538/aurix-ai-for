@@ -14,7 +14,7 @@ export function getApiBaseUrl(): string {
   if (typeof window !== "undefined") {
     const isLocalhost =
       window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-    if (isLocalhost && window.location.port !== "8080") {
+    if (isLocalhost) {
       return "/api/v1";
     }
   }
