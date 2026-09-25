@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { authService, clearApiCache, getTokens, hasValidAccessToken, isAccessTokenExpired, setTokens } from "@/api";
+import { authService, clearApiCache, getTokens, getRefreshToken, hasValidAccessToken, isAccessTokenExpired, setTokens } from "@/api";
 import type { AuthMeResponse, AuthUserPayload } from "@/api";
 import { aurix } from "./aurix-store";
 import { safeStorage } from "./safe-storage";
@@ -93,7 +93,31 @@ export async function bootstrapAuth(): Promise<void> {
       return;
     }
 
-    // 2. If memory has no valid token (e.g. page refresh), attempt refresh via HttpOnly cookie:
+    // 2. Determine if we should attempt a session refresh:
+    // Only attempt refresh if:
+    // - There is a cached user profile or restoring state (user was previously logged in), OR
+    // - There is an in-memory refresh token, OR
+    // - The user is on a protected route (not a public auth/landing page)
+    const isPublicPage =
+      typeof window !== "undefined" &&
+      (window.location.pathname === "/" ||
+        window.location.pathname === "/login" ||
+        window.location.pathname.startsWith("/auth/") ||
+        window.location.pathname === "/register" ||
+        window.location.pathname === "/forgot-password" ||
+        window.location.pathname === "/reset-password" ||
+        window.location.pathname === "/verify-email" ||
+        window.location.pathname === "/verify-reset-otp");
+
+    const hasStoredSession = Boolean(ws.user) || Boolean(ws.isRestoring) || Boolean(getRefreshToken());
+
+    if (!hasStoredSession && isPublicPage) {
+      // Unauthenticated guest on public route — do not trigger an unnecessary refresh request
+      finish();
+      return;
+    }
+
+    // 3. If memory has no valid token (e.g. page refresh), attempt refresh via HttpOnly cookie:
     try {
       await authService.refresh();
       const res = await authService.getMe();

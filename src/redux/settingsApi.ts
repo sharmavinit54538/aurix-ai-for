@@ -7,8 +7,7 @@ import { toast } from "sonner";
 
 /**
  * Resolves the backend base URL for API v1.
- * Supports Vite dev server proxy (relative path when localhost is on non-8080 port)
- * or environment variable `VITE_API_URL`, defaulting to `https://api.ofc360.com/api/v1`.
+ * Uses environment variable `VITE_API_URL`, defaulting to `https://api.ofc360.com/api/v1`.
  */
 export function getApiBaseUrl(): string {
   let url = (import.meta.env.VITE_API_URL as string | undefined)?.trim();

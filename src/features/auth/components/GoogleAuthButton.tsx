@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Loader2, ShieldAlert, Lock } from "lucide-react";
-import { api } from "@/api";
+import { authService } from "@/api";
 import { parseLoginResponse } from "@/features/auth/utils/parseLoginResponse";
 import { persistAuthSession, getPostLoginRoute } from "@/lib/auth-bootstrap";
 import { getErrorMessage } from "@/api/utils";
@@ -42,7 +42,7 @@ export function GoogleAuthButton({ action = "login" }: GoogleAuthButtonProps) {
     setErrorMsg(null);
 
     try {
-      const res = await api.post("auth/google", {
+      const res = await authService.googleAuth({
         email: googleEmail.trim(),
         action,
       });
