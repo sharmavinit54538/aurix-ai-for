@@ -452,45 +452,11 @@ async function fetchPublicJson(path: string): Promise<{ status: number; body: un
 
 // ─── Filter Helpers ──────────────────────────────────────────────────────────
 
-export function isTestOrDummyUser(user: PlatformUser): boolean {
-  const email = (user.email ?? "").toLowerCase().trim();
-  const name = (user.name ?? "").toLowerCase().trim();
-  if (
-    email === "john@example.com" ||
-    email.endsWith("@example.com") ||
-    email.includes("dummy") ||
-    email.includes("mock") ||
-    email.includes("fake")
-  ) {
-    return true;
-  }
-  if (
-    name === "john doe" ||
-    name === "jane doe" ||
-    name.includes("dummy") ||
-    name.includes("mock") ||
-    name.includes("fake")
-  ) {
-    return true;
-  }
+export function isTestOrDummyUser(_user: PlatformUser): boolean {
   return false;
 }
 
-export function isTestOrDummyOrganization(org: PlatformOrganization): boolean {
-  const name = (org.name ?? "").toLowerCase().trim();
-  const domain = (org.domain ?? "").toLowerCase().trim();
-  if (
-    name.includes("flow test") ||
-    name === "test company" ||
-    name.includes("dummy") ||
-    name.includes("mock") ||
-    name.includes("fake")
-  ) {
-    return true;
-  }
-  if (domain.includes("example.com") || domain.includes("dummy") || domain.includes("mock")) {
-    return true;
-  }
+export function isTestOrDummyOrganization(_org: PlatformOrganization): boolean {
   return false;
 }
 
@@ -525,7 +491,7 @@ export const superAdminApi = {
     };
     const body = await request("GET", "/organizations", { params: queryParams });
     const list = toList(body, "GET /super-admin/organizations");
-    return compact(list.map(normalizeOrganization)).filter((org) => !isTestOrDummyOrganization(org));
+    return compact(list.map(normalizeOrganization));
   },
 
   /** GET /api/v1/super-admin/organizations/{org_id} */
@@ -634,7 +600,7 @@ export const superAdminApi = {
     };
     const body = await request("GET", "/users", { params: queryParams });
     const list = toList(body, "GET /super-admin/users");
-    return compact(list.map(normalizeUser)).filter((u) => !isTestOrDummyUser(u));
+    return compact(list.map(normalizeUser));
   },
 
   /** Backward-compatible alias */

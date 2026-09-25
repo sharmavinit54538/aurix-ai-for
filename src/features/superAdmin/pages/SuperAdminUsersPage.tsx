@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { Building2, Power, Search, UserCheck, UserX, Users, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -73,6 +73,14 @@ export function SuperAdminUsersPage() {
 
   const filtersActive = Boolean(params.search || params.role || params.status);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(searchInput.trim());
+      setPage(1);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
   const applySearch = (event: FormEvent) => {
     event.preventDefault();
     setSearch(searchInput.trim());
@@ -133,7 +141,7 @@ export function SuperAdminUsersPage() {
 
       {/* Filter and Search Bar */}
       <div className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-card/60 p-4 backdrop-blur-xl md:flex-row md:items-center md:justify-between">
-        <form onSubmit={applySearch} className="flex flex-1 items-center gap-2" role="search">
+        <form onSubmit={applySearch} className="flex flex-1 items-center max-w-md" role="search">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -154,9 +162,6 @@ export function SuperAdminUsersPage() {
               </button>
             )}
           </div>
-          <Button type="submit" size="sm" variant="outline" className="h-9 text-xs">
-            Search
-          </Button>
         </form>
 
         <div className="flex flex-wrap items-center gap-2">
