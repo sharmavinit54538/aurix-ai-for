@@ -169,34 +169,45 @@ export function AccessDeniedState({ error }: { error?: unknown }) {
   const rejectedByApi = failure !== null;
   const unauthenticated = failure?.kind === "unauthenticated";
   return (
-    <div className="mx-auto flex max-w-lg flex-col items-center justify-center p-8 text-center" role="alert">
-      <div className="grid h-14 w-14 place-items-center rounded-2xl border border-rose-500/30 bg-rose-500/10 text-rose-400">
-        {unauthenticated ? <Lock className="h-7 w-7" /> : <ShieldAlert className="h-7 w-7" />}
-      </div>
-      <h1 className="mt-4 text-xl font-bold text-foreground">{unauthenticated ? "Session expired" : "Access denied"}</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        {unauthenticated
-          ? "Your session is no longer valid. Sign in again to continue."
-          : rejectedByApi
-            ? "The platform API rejected this session for Super Admin access. Sign in with the designated platform Super Admin account to continue."
-            : "The Super Admin area is restricted to the platform Super Admin account. HR Admin, Manager, Employee, IT Admin and Executive roles cannot access it."}
-      </p>
-      {failure && (
-        <p className="mt-2 font-mono text-[11px] text-rose-300/80">
-          {failure.status ? `HTTP ${failure.status} · ` : ""}
-          {failure.message}
+    <div className="flex min-h-[60vh] sm:min-h-[70vh] items-center justify-center px-4 py-8" role="alert">
+      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 sm:p-8 text-center shadow-lg">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20">
+          {unauthenticated ? <Lock className="h-6 w-6" /> : <ShieldAlert className="h-6 w-6" />}
+        </div>
+        <h1 className="text-xl font-semibold tracking-tight text-foreground">
+          {unauthenticated ? "Session expired" : "Access denied"}
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+          {unauthenticated
+            ? "Your session is no longer valid. Sign in again to continue."
+            : rejectedByApi
+              ? "The platform API rejected this session for Super Admin access. Sign in with the designated platform Super Admin account to continue."
+              : "The Super Admin area is restricted to the platform Super Admin account. HR Admin, Manager, Employee, IT Admin and Executive roles cannot access it."}
         </p>
-      )}
-      <div className="mt-5 flex gap-2">
-        {rejectedByApi ? (
-          <Button size="sm" onClick={() => void logout()}>
-            {unauthenticated ? "Sign in again" : "Sign out"}
-          </Button>
-        ) : (
-          <Button asChild variant="outline" size="sm">
-            <Link to="/dashboard">Go to my dashboard</Link>
-          </Button>
-        )}
+        <div className="mt-6 flex flex-col gap-2.5 w-full">
+          {rejectedByApi ? (
+            <button
+              type="button"
+              onClick={() => void logout()}
+              className="inline-flex w-full items-center justify-center rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            >
+              {unauthenticated ? "Sign in again" : "Sign out"}
+            </button>
+          ) : (
+            <Link
+              to="/dashboard"
+              className="inline-flex w-full items-center justify-center rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            >
+              Go to my dashboard
+            </Link>
+          )}
+          <Link
+            to="/"
+            className="inline-flex w-full items-center justify-center rounded-md border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            Back to Home
+          </Link>
+        </div>
       </div>
     </div>
   );

@@ -369,6 +369,52 @@ async function fetchPublicJson(path: string): Promise<{ status: number; body: un
   return { status: response.status, body };
 }
 
+export function isTestOrDummyUser(user: PlatformUser): boolean {
+  const email = (user.email ?? "").toLowerCase().trim();
+  const name = (user.name ?? "").toLowerCase().trim();
+  if (
+    email === "john@example.com" ||
+    email.endsWith("@example.com") ||
+    email.includes("dummy") ||
+    email.includes("mock") ||
+    email.includes("fake")
+  ) {
+    return true;
+  }
+  if (
+    name === "john doe" ||
+    name === "jane doe" ||
+    name.includes("dummy") ||
+    name.includes("mock") ||
+    name.includes("fake")
+  ) {
+    return true;
+  }
+  return false;
+}
+
+export function isTestOrDummyOrganization(org: PlatformOrganization): boolean {
+  const name = (org.name ?? "").toLowerCase().trim();
+  const domain = (org.domain ?? "").toLowerCase().trim();
+  if (
+    name.includes("flow test") ||
+    name === "test company" ||
+    name.includes("dummy") ||
+    name.includes("mock") ||
+    name.includes("fake")
+  ) {
+    return true;
+  }
+  if (
+    domain.includes("example.com") ||
+    domain.includes("dummy") ||
+    domain.includes("mock")
+  ) {
+    return true;
+  }
+  return false;
+}
+
 // ─── API surface ────────────────────────────────────────────────────────────
 
 export const superAdminApi = {
@@ -389,7 +435,9 @@ export const superAdminApi = {
         organization_id: params.organizationId,
       },
     });
-    return compact(toList(body, "GET /super-admin/users").map(normalizeUser));
+    return compact(toList(body, "GET /super-admin/users").map(normalizeUser)).filter(
+      (user) => !isTestOrDummyUser(user),
+    );
   },
 
   /** GET /super-admin/organizations — newest first; server-side search and onboarding filter. */
@@ -404,7 +452,9 @@ export const superAdminApi = {
           params.onboarding === "complete" ? "active" : params.onboarding === "pending" ? "trial" : undefined,
       },
     });
-    return compact(toList(body, "GET /super-admin/organizations").map(normalizeOrganization));
+    return compact(toList(body, "GET /super-admin/organizations").map(normalizeOrganization)).filter(
+      (org) => !isTestOrDummyOrganization(org),
+    );
   },
 
   /** GET /super-admin/audit-logs — newest first; search matches action, email and details. */

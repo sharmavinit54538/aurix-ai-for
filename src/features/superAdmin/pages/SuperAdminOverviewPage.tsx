@@ -48,11 +48,11 @@ const RECENT_USERS_PARAMS = { page: 1, pageSize: 5 } as const;
 const RECENT_ACTIVITY_PARAMS = { page: 1, pageSize: 6 } as const;
 
 const ROLE_CARDS = [
-  { key: "hrAdmins", label: "HR Admins", hint: "hr_admin, admin, hr_manager, company_admin", tone: "emerald" },
-  { key: "managers", label: "Managers", hint: "manager", tone: "blue" },
-  { key: "employees", label: "Employees", hint: "employee, intern", tone: "sky" },
-  { key: "itAdmins", label: "IT Admins", hint: "it_admin, cto, cio, ciso", tone: "cyan" },
-  { key: "executives", label: "Executives", hint: "executive, ceo, cto, cfo, coo, cmo, clo, ciso, cio", tone: "amber" },
+  { key: "hrAdmins", label: "HR Admins", description: "HR & company administrators", tone: "emerald" },
+  { key: "managers", label: "Managers", description: "Team & department managers", tone: "blue" },
+  { key: "employees", label: "Employees", description: "Workforce members", tone: "sky" },
+  { key: "itAdmins", label: "IT Admins", description: "IT & security administrators", tone: "cyan" },
+  { key: "executives", label: "Executives", description: "Leadership & C-Suite", tone: "amber" },
 ] as const;
 
 const TONE_CLASSES: Record<(typeof ROLE_CARDS)[number]["tone"], { card: string; label: string }> = {
@@ -100,7 +100,7 @@ export function SuperAdminOverviewPage() {
         <KpiCard label="Total Registered Users" icon={Users} accent="purple">
           <div className="mt-3 flex items-baseline gap-2">
             <KpiNumber value={totalUsers} loading={statsLoading} className="text-3xl font-extrabold tracking-tight text-foreground" />
-            <span className="text-xs font-medium text-muted-foreground">non-deleted accounts</span>
+            <span className="text-xs font-medium text-muted-foreground">registered accounts</span>
           </div>
           <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground border-t border-border/40 pt-2.5">
             <span className="text-emerald-400 font-medium">{statsLoading ? "…" : formatCount(stats?.users.active)} Active</span>
@@ -112,7 +112,7 @@ export function SuperAdminOverviewPage() {
         <KpiCard label="Organizations" icon={Building2} accent="blue">
           <div className="mt-3 flex items-baseline gap-2">
             <KpiNumber value={totalOrganizations} loading={statsLoading} className="text-3xl font-extrabold tracking-tight text-foreground" />
-            <span className="text-xs font-medium text-blue-400">tenant companies</span>
+            <span className="text-xs font-medium text-blue-400">organizations</span>
           </div>
           <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs text-muted-foreground border-t border-border/40 pt-2.5">
             <span title="Onboarding completed">Onboarded: {statsLoading ? "…" : formatCount(stats?.organizations.onboarded)}</span>
@@ -124,10 +124,10 @@ export function SuperAdminOverviewPage() {
         <KpiCard label="Active Workforce" icon={Briefcase} accent="amber">
           <div className="mt-3 flex items-baseline gap-2">
             <KpiNumber value={stats?.activeWorkforce ?? null} loading={statsLoading} className="text-3xl font-extrabold tracking-tight text-foreground" />
-            <span className="text-xs text-muted-foreground">employee records</span>
+            <span className="text-xs text-muted-foreground">employees</span>
           </div>
           <div className="mt-3 text-xs text-muted-foreground border-t border-border/40 pt-2.5">
-            Active, non-deleted employees across all organizations
+            Active workforce across all organizations
           </div>
         </KpiCard>
 
@@ -198,15 +198,12 @@ export function SuperAdminOverviewPage() {
               <div className="text-2xl font-extrabold text-foreground mt-1">
                 <KpiNumber value={stats?.users[card.key] ?? null} loading={statsLoading} />
               </div>
-              <div className="text-[11px] text-muted-foreground mt-1 truncate" title={card.hint}>
-                {card.hint}
+              <div className="text-[11px] text-muted-foreground mt-1 truncate" title={card.description}>
+                {card.description}
               </div>
             </div>
           ))}
         </div>
-        <p className="mt-3 text-[11px] text-muted-foreground">
-          CTO, CIO and CISO accounts are counted in both Executives and IT Admins, so role groups can add up to more than the total.
-        </p>
       </Panel>
 
       {/* Two-Column Grid: Organizations & Activity */}
