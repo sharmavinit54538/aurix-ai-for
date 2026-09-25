@@ -169,22 +169,22 @@ export function AccessDeniedState({ error }: { error?: unknown }) {
   const rejectedByApi = failure !== null;
   const unauthenticated = failure?.kind === "unauthenticated";
   return (
-    <div className="flex min-h-[60vh] sm:min-h-[70vh] items-center justify-center px-4 py-8" role="alert">
-      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 sm:p-8 text-center shadow-lg">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4" role="alert">
+      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 text-center shadow-lg">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
           {unauthenticated ? <Lock className="h-6 w-6" /> : <ShieldAlert className="h-6 w-6" />}
         </div>
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
           {unauthenticated ? "Session expired" : "Access denied"}
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+        <p className="mt-2 text-sm text-muted-foreground">
           {unauthenticated
             ? "Your session is no longer valid. Sign in again to continue."
             : rejectedByApi
               ? "The platform API rejected this session for Super Admin access. Sign in with the designated platform Super Admin account to continue."
               : "The Super Admin area is restricted to the platform Super Admin account. HR Admin, Manager, Employee, IT Admin and Executive roles cannot access it."}
         </p>
-        <div className="mt-6 flex flex-col gap-2.5 w-full">
+        <div className="mt-6 flex flex-col gap-2">
           {rejectedByApi ? (
             <button
               type="button"
