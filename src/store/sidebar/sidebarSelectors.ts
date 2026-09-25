@@ -35,11 +35,14 @@ export function filterNavTree(
 ): SidebarNavSection[] {
   const normalizedRole = normalizeRole(role);
   const isSuperAdmin = normalizedRole === "super_admin";
+  const isHrAdmin = normalizedRole === "hr_admin";
+  const isPrivilegedAdmin = isSuperAdmin || isHrAdmin;
 
   const isAllowedByRole = (roles?: string[]) =>
     isSuperAdmin || !roles || roles.length === 0 || roles.includes(normalizedRole);
   const isAllowedByPerm = (perm?: string) => {
-    if (isSuperAdmin) return true;
+    // Both Super Admin and HR Admin have full access to navigation items
+    if (isSuperAdmin || isHrAdmin) return true;
     if (!perm) return true;
     if (userPermissions.includes("*")) return true;
     if (userPermissions.includes(perm)) return true;

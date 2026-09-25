@@ -51,8 +51,7 @@ import {
   Video,
   Wrench,
 } from "lucide-react";
-import { aurix, useAurix } from "@/lib/aurix-store";
-import { RoleSwitcherDropdown } from "./RoleSwitcherDropdown";
+import { useAurix } from "@/lib/aurix-store";
 import { useAuthReady } from "@/lib/auth-bootstrap";
 import { getRoleDefaultHome } from "@/lib/route-guards";
 import { normalizeRole } from "@/lib/rbac";
@@ -123,73 +122,62 @@ const NAV_SECTIONS: SidebarNavSection[] = [
         label: "Overview",
         icon: LayoutDashboard,
         exact: true,
-        permission: "overview.view",
       },
       {
         to: "/dashboard/workforce",
         label: "Workforce",
         icon: Users,
-        permission: "workforce.view",
       },
       {
         to: "/dashboard/attendance",
         label: "Attendance",
         icon: Clock,
-        permission: "workforce.attendance",
         roles: ["super_admin", "hr_admin", "manager"],
       },
       {
         to: "/dashboard/leaves",
         label: "Leaves",
         icon: CalendarDays,
-        permission: "workforce.leaves",
         roles: ["super_admin", "hr_admin", "manager"],
       },
       {
         to: "/dashboard/talent",
         label: "Talent Management",
         icon: Briefcase,
-        permission: "talent.view",
         roles: ["super_admin", "hr_admin", "manager"],
       },
       {
         to: "/dashboard/hr-operations",
         label: "HR Operations",
         icon: Activity,
-        permission: "hrops.view",
         roles: ["super_admin", "hr_admin"],
       },
       {
         to: "/dashboard/resources",
         label: "Resources",
         icon: Folder,
-        permission: "resources.view",
       },
       {
         to: "/dashboard/payroll",
         label: "Payroll",
         icon: Banknote,
-        permission: "payroll.view",
         roles: ["super_admin", "hr_admin"],
       },
       {
         to: "/dashboard/analytics",
         label: "Analytics",
         icon: BarChart3,
-        permission: "analytics.view",
         roles: ["super_admin", "hr_admin", "manager"],
       },
       {
         to: "/dashboard/ai-hub",
         label: "AI Hub",
         icon: GeminiIcon,
-        permission: "ai.view",
       },
       {
         to: "/dashboard/settings",
         label: "Settings",
         icon: Settings,
-        permission: "settings.view",
       },
     ],
   },
@@ -423,9 +411,10 @@ export function DashboardShell() {
       return filterNavTree(EMPLOYEE_NAV_SECTIONS, role, userPermissions);
     }
     if (normalizedRole === "manager" || isManagerPortalPath) {
-      return filterNavTree(MANAGER_NAV_SECTIONS, role, userPermissions);
+      return filterNavTree(MANAGER_NAV_SECTIONS, normalizedRole, userPermissions);
     }
-    return filterNavTree(NAV_SECTIONS, role, userPermissions);
+    const computed = filterNavTree(NAV_SECTIONS, normalizedRole, userPermissions);
+    return computed && computed.length > 0 ? computed : NAV_SECTIONS;
   }, [role, pathname, userPermissions]);
 
   if (!authReady || ws.isRestoring) {
@@ -491,7 +480,7 @@ export function DashboardShell() {
           </div>
 
           <nav className="flex-1 space-y-1.5 overflow-y-auto overflow-x-hidden p-2">
-            {visibleNav.map((section, sIdx) => (
+            {(visibleNav.length > 0 ? visibleNav : NAV_SECTIONS).map((section, sIdx) => (
               <div key={section.id || sIdx} className="space-y-0.5">
                 {section.title && !collapsed ? (
                   <div className="px-2 pb-1 pt-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 truncate">
@@ -556,13 +545,6 @@ export function DashboardShell() {
             </div>
 
             <div className="flex items-center gap-3">
-              <RoleSwitcherDropdown
-                currentRole={normalizeRole(role)}
-                onSwitchRole={(newRole) => {
-                  aurix.switchRole(newRole);
-                  navigate({ to: getRoleDefaultHome(newRole) });
-                }}
-              />
               <button
                 onClick={() => setSearchOpen(true)}
                 className="flex items-center gap-2 rounded-lg border border-border/80 bg-card/60 px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer transition-all shadow-sm"
