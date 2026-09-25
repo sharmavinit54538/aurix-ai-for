@@ -196,17 +196,14 @@ export function PayrollProcessingPage() {
 
   // RBAC Permission Check
   const currentRole = useCurrentRole();
-  const isAdmin = currentRole === "superadmin";
   const isHr = currentRole === "hr_admin";
 
   const canViewPayroll =
-    isAdmin ||
     isHr ||
     userPermissions.includes("payroll.view") ||
     userPermissions.includes("*");
 
   const canRunPayroll =
-    isAdmin ||
     isHr ||
     userPermissions.includes("payroll.process") ||
     userPermissions.includes("*");

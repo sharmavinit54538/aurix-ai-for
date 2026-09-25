@@ -115,7 +115,12 @@ import { Route as DashboardWorkforceAttendanceRouteImport } from './routes/dashb
 import { Route as DashboardTalentRecruitmentRouteImport } from './routes/dashboard.talent.recruitment'
 import { Route as DashboardTalentPerformanceRouteImport } from './routes/dashboard.talent.performance'
 import { Route as DashboardSuperAdminUsersRouteImport } from './routes/dashboard.super-admin.users'
+import { Route as DashboardSuperAdminSettingsRouteImport } from './routes/dashboard.super-admin.settings'
+import { Route as DashboardSuperAdminPlatformConfigRouteImport } from './routes/dashboard.super-admin.platform-config'
 import { Route as DashboardSuperAdminOrganizationsRouteImport } from './routes/dashboard.super-admin.organizations'
+import { Route as DashboardSuperAdminAuditLogsRouteImport } from './routes/dashboard.super-admin.audit-logs'
+import { Route as DashboardSuperAdminAnalyticsRouteImport } from './routes/dashboard.super-admin.analytics'
+import { Route as DashboardSuperAdminActivityRouteImport } from './routes/dashboard.super-admin.activity'
 import { Route as DashboardSettingsSecurityRouteImport } from './routes/dashboard.settings.security'
 import { Route as DashboardSettingsRolesPermissionsRouteImport } from './routes/dashboard.settings.roles-permissions'
 import { Route as DashboardSettingsProfileRouteImport } from './routes/dashboard.settings.profile'
@@ -792,10 +797,40 @@ const DashboardSuperAdminUsersRoute =
     path: '/users',
     getParentRoute: () => DashboardSuperAdminRoute,
   } as any)
+const DashboardSuperAdminSettingsRoute =
+  DashboardSuperAdminSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => DashboardSuperAdminRoute,
+  } as any)
+const DashboardSuperAdminPlatformConfigRoute =
+  DashboardSuperAdminPlatformConfigRouteImport.update({
+    id: '/platform-config',
+    path: '/platform-config',
+    getParentRoute: () => DashboardSuperAdminRoute,
+  } as any)
 const DashboardSuperAdminOrganizationsRoute =
   DashboardSuperAdminOrganizationsRouteImport.update({
     id: '/organizations',
     path: '/organizations',
+    getParentRoute: () => DashboardSuperAdminRoute,
+  } as any)
+const DashboardSuperAdminAuditLogsRoute =
+  DashboardSuperAdminAuditLogsRouteImport.update({
+    id: '/audit-logs',
+    path: '/audit-logs',
+    getParentRoute: () => DashboardSuperAdminRoute,
+  } as any)
+const DashboardSuperAdminAnalyticsRoute =
+  DashboardSuperAdminAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => DashboardSuperAdminRoute,
+  } as any)
+const DashboardSuperAdminActivityRoute =
+  DashboardSuperAdminActivityRouteImport.update({
+    id: '/activity',
+    path: '/activity',
     getParentRoute: () => DashboardSuperAdminRoute,
   } as any)
 const DashboardSettingsSecurityRoute =
@@ -1733,7 +1768,12 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings/profile': typeof DashboardSettingsProfileRoute
   '/dashboard/settings/roles-permissions': typeof DashboardSettingsRolesPermissionsRoute
   '/dashboard/settings/security': typeof DashboardSettingsSecurityRoute
+  '/dashboard/super-admin/activity': typeof DashboardSuperAdminActivityRoute
+  '/dashboard/super-admin/analytics': typeof DashboardSuperAdminAnalyticsRoute
+  '/dashboard/super-admin/audit-logs': typeof DashboardSuperAdminAuditLogsRoute
   '/dashboard/super-admin/organizations': typeof DashboardSuperAdminOrganizationsRoute
+  '/dashboard/super-admin/platform-config': typeof DashboardSuperAdminPlatformConfigRoute
+  '/dashboard/super-admin/settings': typeof DashboardSuperAdminSettingsRoute
   '/dashboard/super-admin/users': typeof DashboardSuperAdminUsersRoute
   '/dashboard/talent/performance': typeof DashboardTalentPerformanceRoute
   '/dashboard/talent/recruitment': typeof DashboardTalentRecruitmentRoute
@@ -1955,7 +1995,12 @@ export interface FileRoutesByTo {
   '/dashboard/settings/profile': typeof DashboardSettingsProfileRoute
   '/dashboard/settings/roles-permissions': typeof DashboardSettingsRolesPermissionsRoute
   '/dashboard/settings/security': typeof DashboardSettingsSecurityRoute
+  '/dashboard/super-admin/activity': typeof DashboardSuperAdminActivityRoute
+  '/dashboard/super-admin/analytics': typeof DashboardSuperAdminAnalyticsRoute
+  '/dashboard/super-admin/audit-logs': typeof DashboardSuperAdminAuditLogsRoute
   '/dashboard/super-admin/organizations': typeof DashboardSuperAdminOrganizationsRoute
+  '/dashboard/super-admin/platform-config': typeof DashboardSuperAdminPlatformConfigRoute
+  '/dashboard/super-admin/settings': typeof DashboardSuperAdminSettingsRoute
   '/dashboard/super-admin/users': typeof DashboardSuperAdminUsersRoute
   '/dashboard/talent/performance': typeof DashboardTalentPerformanceRoute
   '/dashboard/talent/recruitment': typeof DashboardTalentRecruitmentRoute
@@ -2196,7 +2241,12 @@ export interface FileRoutesById {
   '/dashboard/settings/profile': typeof DashboardSettingsProfileRoute
   '/dashboard/settings/roles-permissions': typeof DashboardSettingsRolesPermissionsRoute
   '/dashboard/settings/security': typeof DashboardSettingsSecurityRoute
+  '/dashboard/super-admin/activity': typeof DashboardSuperAdminActivityRoute
+  '/dashboard/super-admin/analytics': typeof DashboardSuperAdminAnalyticsRoute
+  '/dashboard/super-admin/audit-logs': typeof DashboardSuperAdminAuditLogsRoute
   '/dashboard/super-admin/organizations': typeof DashboardSuperAdminOrganizationsRoute
+  '/dashboard/super-admin/platform-config': typeof DashboardSuperAdminPlatformConfigRoute
+  '/dashboard/super-admin/settings': typeof DashboardSuperAdminSettingsRoute
   '/dashboard/super-admin/users': typeof DashboardSuperAdminUsersRoute
   '/dashboard/talent/performance': typeof DashboardTalentPerformanceRoute
   '/dashboard/talent/recruitment': typeof DashboardTalentRecruitmentRoute
@@ -2438,7 +2488,12 @@ export interface FileRouteTypes {
     | '/dashboard/settings/profile'
     | '/dashboard/settings/roles-permissions'
     | '/dashboard/settings/security'
+    | '/dashboard/super-admin/activity'
+    | '/dashboard/super-admin/analytics'
+    | '/dashboard/super-admin/audit-logs'
     | '/dashboard/super-admin/organizations'
+    | '/dashboard/super-admin/platform-config'
+    | '/dashboard/super-admin/settings'
     | '/dashboard/super-admin/users'
     | '/dashboard/talent/performance'
     | '/dashboard/talent/recruitment'
@@ -2660,7 +2715,12 @@ export interface FileRouteTypes {
     | '/dashboard/settings/profile'
     | '/dashboard/settings/roles-permissions'
     | '/dashboard/settings/security'
+    | '/dashboard/super-admin/activity'
+    | '/dashboard/super-admin/analytics'
+    | '/dashboard/super-admin/audit-logs'
     | '/dashboard/super-admin/organizations'
+    | '/dashboard/super-admin/platform-config'
+    | '/dashboard/super-admin/settings'
     | '/dashboard/super-admin/users'
     | '/dashboard/talent/performance'
     | '/dashboard/talent/recruitment'
@@ -2900,7 +2960,12 @@ export interface FileRouteTypes {
     | '/dashboard/settings/profile'
     | '/dashboard/settings/roles-permissions'
     | '/dashboard/settings/security'
+    | '/dashboard/super-admin/activity'
+    | '/dashboard/super-admin/analytics'
+    | '/dashboard/super-admin/audit-logs'
     | '/dashboard/super-admin/organizations'
+    | '/dashboard/super-admin/platform-config'
+    | '/dashboard/super-admin/settings'
     | '/dashboard/super-admin/users'
     | '/dashboard/talent/performance'
     | '/dashboard/talent/recruitment'
@@ -3761,11 +3826,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSuperAdminUsersRouteImport
       parentRoute: typeof DashboardSuperAdminRoute
     }
+    '/dashboard/super-admin/settings': {
+      id: '/dashboard/super-admin/settings'
+      path: '/settings'
+      fullPath: '/dashboard/super-admin/settings'
+      preLoaderRoute: typeof DashboardSuperAdminSettingsRouteImport
+      parentRoute: typeof DashboardSuperAdminRoute
+    }
+    '/dashboard/super-admin/platform-config': {
+      id: '/dashboard/super-admin/platform-config'
+      path: '/platform-config'
+      fullPath: '/dashboard/super-admin/platform-config'
+      preLoaderRoute: typeof DashboardSuperAdminPlatformConfigRouteImport
+      parentRoute: typeof DashboardSuperAdminRoute
+    }
     '/dashboard/super-admin/organizations': {
       id: '/dashboard/super-admin/organizations'
       path: '/organizations'
       fullPath: '/dashboard/super-admin/organizations'
       preLoaderRoute: typeof DashboardSuperAdminOrganizationsRouteImport
+      parentRoute: typeof DashboardSuperAdminRoute
+    }
+    '/dashboard/super-admin/audit-logs': {
+      id: '/dashboard/super-admin/audit-logs'
+      path: '/audit-logs'
+      fullPath: '/dashboard/super-admin/audit-logs'
+      preLoaderRoute: typeof DashboardSuperAdminAuditLogsRouteImport
+      parentRoute: typeof DashboardSuperAdminRoute
+    }
+    '/dashboard/super-admin/analytics': {
+      id: '/dashboard/super-admin/analytics'
+      path: '/analytics'
+      fullPath: '/dashboard/super-admin/analytics'
+      preLoaderRoute: typeof DashboardSuperAdminAnalyticsRouteImport
+      parentRoute: typeof DashboardSuperAdminRoute
+    }
+    '/dashboard/super-admin/activity': {
+      id: '/dashboard/super-admin/activity'
+      path: '/activity'
+      fullPath: '/dashboard/super-admin/activity'
+      preLoaderRoute: typeof DashboardSuperAdminActivityRouteImport
       parentRoute: typeof DashboardSuperAdminRoute
     }
     '/dashboard/settings/security': {
@@ -5083,13 +5183,24 @@ const DashboardSettingsRouteWithChildren =
   DashboardSettingsRoute._addFileChildren(DashboardSettingsRouteChildren)
 
 interface DashboardSuperAdminRouteChildren {
+  DashboardSuperAdminActivityRoute: typeof DashboardSuperAdminActivityRoute
+  DashboardSuperAdminAnalyticsRoute: typeof DashboardSuperAdminAnalyticsRoute
+  DashboardSuperAdminAuditLogsRoute: typeof DashboardSuperAdminAuditLogsRoute
   DashboardSuperAdminOrganizationsRoute: typeof DashboardSuperAdminOrganizationsRoute
+  DashboardSuperAdminPlatformConfigRoute: typeof DashboardSuperAdminPlatformConfigRoute
+  DashboardSuperAdminSettingsRoute: typeof DashboardSuperAdminSettingsRoute
   DashboardSuperAdminUsersRoute: typeof DashboardSuperAdminUsersRoute
   DashboardSuperAdminIndexRoute: typeof DashboardSuperAdminIndexRoute
 }
 
 const DashboardSuperAdminRouteChildren: DashboardSuperAdminRouteChildren = {
+  DashboardSuperAdminActivityRoute: DashboardSuperAdminActivityRoute,
+  DashboardSuperAdminAnalyticsRoute: DashboardSuperAdminAnalyticsRoute,
+  DashboardSuperAdminAuditLogsRoute: DashboardSuperAdminAuditLogsRoute,
   DashboardSuperAdminOrganizationsRoute: DashboardSuperAdminOrganizationsRoute,
+  DashboardSuperAdminPlatformConfigRoute:
+    DashboardSuperAdminPlatformConfigRoute,
+  DashboardSuperAdminSettingsRoute: DashboardSuperAdminSettingsRoute,
   DashboardSuperAdminUsersRoute: DashboardSuperAdminUsersRoute,
   DashboardSuperAdminIndexRoute: DashboardSuperAdminIndexRoute,
 }

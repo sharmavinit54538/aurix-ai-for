@@ -113,7 +113,7 @@ export const Route = createFileRoute("/api/ai-brain")({
         // Scope HR tools with the user's verified token and role
         const tools = createHrTools({
           token: auth.token,
-          role: auth.user.role,
+          role: auth.user.role || undefined,
         });
 
         try {

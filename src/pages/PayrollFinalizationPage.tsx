@@ -161,9 +161,8 @@ export function PayrollFinalizationPage() {
 
   // RBAC Permission Check
   const currentRole = useCurrentRole();
-  const isAdmin = currentRole === "superadmin";
   const isHr = currentRole === "hr_admin";
-  const isPayrollAdmin = isAdmin || isHr;
+  const isPayrollAdmin = isHr;
 
   const canViewPayroll =
     isPayrollAdmin ||

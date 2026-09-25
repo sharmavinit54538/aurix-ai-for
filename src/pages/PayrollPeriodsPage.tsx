@@ -132,9 +132,8 @@ export function PayrollPeriodsPage() {
 
   // ── RBAC Permission Checks ──────────────────────────────────────────
   const currentRole = useCurrentRole();
-  const isAdmin = currentRole === "superadmin";
   const isHr = currentRole === "hr_admin";
-  const isPayrollAdmin = isAdmin || isHr;
+  const isPayrollAdmin = isHr;
 
   const canViewPeriods =
     isPayrollAdmin ||

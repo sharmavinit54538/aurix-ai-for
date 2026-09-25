@@ -14,17 +14,6 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<AppRole, string[]> = {
     "platform.settings",
     "platform.config",
   ],
-  superadmin: [
-    "platform.view",
-    "platform.overview",
-    "platform.users",
-    "platform.organizations",
-    "platform.analytics",
-    "platform.activity",
-    "platform.audit_logs",
-    "platform.settings",
-    "platform.config",
-  ],
   hr_admin: [
     "overview.view",
     "workforce.view",

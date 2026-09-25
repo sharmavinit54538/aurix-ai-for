@@ -171,7 +171,7 @@ export async function requireRole(
   if (auth.error) return auth;
 
   const userRole = auth.user.role;
-  const isAllowed = userRole && allowedRoles.some((r) => r === userRole || (r === "super_admin" && userRole === "superadmin"));
+  const isAllowed = userRole && allowedRoles.includes(userRole);
 
   if (!isAllowed) {
     return {

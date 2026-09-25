@@ -416,7 +416,7 @@ export function SuperAdminOverviewPage() {
           </Link>
 
           <Link
-            to="/dashboard/super-admin/platform"
+            to="/dashboard/super-admin/platform-config"
             className="rounded-xl border border-border/50 bg-background/40 p-4 hover:border-amber-500/50 hover:bg-accent/40 transition-all group"
           >
             <Server className="h-5 w-5 text-amber-400 group-hover:scale-110 transition-transform" />

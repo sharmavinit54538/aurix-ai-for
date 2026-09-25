@@ -39,7 +39,8 @@ export function UserProfileMenu({
     return null;
   }
 
-  const formattedRole = ROLE_LABELS[normalizeRole(ws.user.role)];
+  const currentNormRole = normalizeRole(ws.user.role);
+  const formattedRole = (currentNormRole && ROLE_LABELS[currentNormRole]) || "Employee";
 
   const initials =
     ws.user.fullName

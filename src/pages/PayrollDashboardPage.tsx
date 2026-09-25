@@ -128,19 +128,16 @@ export function PayrollDashboardPage() {
   const userPermissions = useAppSelector(selectUserPermissions);
   const navigate = useNavigate();
 
-  // RBAC Permission Check: superadmin and hr_admin have payroll access
+  // RBAC Permission Check: hr_admin manages company payroll
   const currentRole = useCurrentRole();
-  const isAdmin = currentRole === "superadmin";
   const isHr = currentRole === "hr_admin";
 
   const canViewPayroll =
-    isAdmin ||
     isHr ||
     userPermissions.includes("payroll.view") ||
     userPermissions.includes("*");
 
   const canRunPayroll =
-    isAdmin ||
     isHr ||
     userPermissions.includes("payroll.process") ||
     userPermissions.includes("*");

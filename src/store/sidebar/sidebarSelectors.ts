@@ -47,10 +47,7 @@ export function filterNavTree(
     if (!normalizedRole) return false;
     return roles.some((r) => {
       const normR = normalizeRole(r);
-      return (
-        normR === normalizedRole ||
-        (isSuperAdmin && (normR === "super_admin" || normR === "superadmin"))
-      );
+      return normR === normalizedRole;
     });
   };
 

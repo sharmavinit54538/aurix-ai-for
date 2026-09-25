@@ -16,7 +16,7 @@ interface CreateHrToolsOptions {
 export function createHrTools({ token, role = "employee" }: CreateHrToolsOptions = {}) {
   const normRole = normalizeRole(role);
   const isExecutiveOrHr =
-    normRole === "superadmin" ||
+    normRole === "super_admin" ||
     normRole === "hr_admin" ||
     normRole === "executive";
 

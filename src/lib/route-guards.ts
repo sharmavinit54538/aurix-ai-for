@@ -7,7 +7,7 @@ import { hasValidAccessToken } from "@/api";
 import { aurix } from "@/lib/aurix-store";
 import { normalizeRole, isSuperAdmin, type AppRole } from "@/lib/roles";
 
-export const PLATFORM_ROLES: AppRole[] = ["super_admin", "superadmin"];
+export const PLATFORM_ROLES: AppRole[] = ["super_admin"];
 export const HR_OPERATIONS_ROLES: AppRole[] = ["hr_admin"];
 export const TEAM_MANAGEMENT_ROLES: AppRole[] = ["hr_admin", "manager"];
 export const SYSTEM_ADMIN_ROLES: AppRole[] = ["it_admin"];
@@ -29,7 +29,7 @@ export const ROUTE_ROLE_ACCESS: Record<string, AppRole[]> = {
   "/dashboard/super-admin/activity": PLATFORM_ROLES,
   "/dashboard/super-admin/audit-logs": PLATFORM_ROLES,
   "/dashboard/super-admin/settings": PLATFORM_ROLES,
-  "/dashboard/super-admin/platform": PLATFORM_ROLES,
+  "/dashboard/super-admin/platform-config": PLATFORM_ROLES,
 
   // ── Executive Intelligence Routes ───────────────────────────────
   "/dashboard/executive/cio": ["executive", "it_admin"],
@@ -72,7 +72,6 @@ export function getRoleDefaultHome(role?: string | null): string {
   const norm = normalizeRole(role);
   switch (norm) {
     case "super_admin":
-    case "superadmin":
       return "/dashboard/super-admin";
     case "executive":
       return "/dashboard/executive";
@@ -150,7 +149,7 @@ export function checkRouteAccess(pathname: string, userRole?: string | null): Ro
   }
 
   const allowedRoles = ROUTE_ROLE_ACCESS[matchedPrefix];
-  if (role && (allowedRoles.includes(role) || (role === "super_admin" && allowedRoles.includes("superadmin")))) {
+  if (role && allowedRoles.includes(role)) {
     return { allowed: true };
   }
 

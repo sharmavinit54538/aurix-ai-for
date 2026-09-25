@@ -87,7 +87,7 @@ export function assertCanCreateRole(
 ): void {
   const norm = normalizeRole(requestedRole);
 
-  if (norm === "super_admin" || norm === "superadmin") {
+  if (norm === "super_admin") {
     // If a super admin already exists, unconditionally prevent creating a second one
     if (doesSuperAdminExist()) {
       const owner = getSingleSuperAdmin();

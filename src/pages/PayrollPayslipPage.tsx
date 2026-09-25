@@ -122,10 +122,9 @@ export function PayrollPayslipPage() {
 
   // RBAC Permission Check
   const currentRole = useCurrentRole();
-  const isAdmin = currentRole === "superadmin";
   const isHr = currentRole === "hr_admin";
 
-  // User is authorized to view if HR/Admin OR accessing own record
+  // User is authorized to view if HR OR accessing own record
   const currentUserId = ws.user?.id || (ws.user as any)?.employeeId || "";
   const isSelf = Boolean(
     currentUserId &&
@@ -135,7 +134,6 @@ export function PayrollPayslipPage() {
   );
 
   const canViewThisPayslip =
-    isAdmin ||
     isHr ||
     userPermissions.includes("payroll.view") ||
     userPermissions.includes("payroll.admin") ||

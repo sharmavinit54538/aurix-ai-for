@@ -47,11 +47,10 @@ const LEAVE_TYPES = ["Sick Leave", "Casual Leave", "Vacation Leave"];
 export function LeavesPage() {
   const ws = useAurix();
   const currentRole = useCurrentRole();
-  const isSuperAdmin = currentRole === "superadmin";
   const isHrAdmin = currentRole === "hr_admin";
   const isManager = currentRole === "manager";
-  const canReviewLeaves = isSuperAdmin || isHrAdmin || isManager;
-  const canViewAllEmployeeBalances = isSuperAdmin || isHrAdmin;
+  const canReviewLeaves = isHrAdmin || isManager;
+  const canViewAllEmployeeBalances = isHrAdmin;
   const employeesList = ws.employees || [];
 
   // Tabs routing based on role

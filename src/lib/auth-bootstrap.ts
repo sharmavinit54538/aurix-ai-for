@@ -30,7 +30,7 @@ function mapAuthUser(data: AuthUserPayload) {
       fullName: data.name,
       email: data.email,
       phone: data.phone || "",
-      role: normalizeRole(data.role),
+      role: normalizeRole(data.role) ?? "employee",
       companyId,
       emailVerified: data.is_verified,
       onboardingComplete: true,
@@ -56,6 +56,8 @@ export function persistAuthSession(
 export function getPostLoginRoute(user: AuthUserPayload): string {
   const role = normalizeRole(user.role);
   if (!user.is_verified) return "/verify-email";
+  if (role === "super_admin") return "/dashboard/super-admin";
+  if (role === "it_admin") return "/dashboard/admin";
   if (role === "executive") {
     return "/dashboard/executive";
   }

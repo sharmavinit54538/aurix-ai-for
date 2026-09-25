@@ -310,6 +310,72 @@ const MANAGER_NAV_SECTIONS: SidebarNavSection[] = [
   },
 ];
 
+const SUPER_ADMIN_NAV_SECTIONS: SidebarNavSection[] = [
+  {
+    title: "SUPER ADMIN DASHBOARD",
+    roles: ["super_admin"],
+    items: [
+      {
+        to: "/dashboard/super-admin",
+        label: "Overview",
+        icon: LayoutDashboard,
+        exact: true,
+        permission: "platform.overview",
+        roles: ["super_admin"],
+      },
+      {
+        to: "/dashboard/super-admin/users",
+        label: "Users",
+        icon: Users,
+        permission: "platform.users",
+        roles: ["super_admin"],
+      },
+      {
+        to: "/dashboard/super-admin/organizations",
+        label: "Organizations",
+        icon: Building2,
+        permission: "platform.organizations",
+        roles: ["super_admin"],
+      },
+      {
+        to: "/dashboard/super-admin/analytics",
+        label: "Usage & Analytics",
+        icon: BarChart3,
+        permission: "platform.analytics",
+        roles: ["super_admin"],
+      },
+      {
+        to: "/dashboard/super-admin/activity",
+        label: "System Activity",
+        icon: Activity,
+        permission: "platform.activity",
+        roles: ["super_admin"],
+      },
+      {
+        to: "/dashboard/super-admin/audit-logs",
+        label: "Audit Logs",
+        icon: FileText,
+        permission: "platform.audit_logs",
+        roles: ["super_admin"],
+      },
+      {
+        to: "/dashboard/super-admin/settings",
+        label: "System Settings",
+        icon: Settings,
+        permission: "platform.settings",
+        roles: ["super_admin"],
+      },
+      {
+        to: "/dashboard/super-admin/platform-config",
+        label: "Platform Configuration",
+        icon: ShieldCheck,
+        permission: "platform.config",
+        roles: ["super_admin"],
+      },
+    ],
+  },
+];
+
 // TODO: Merging separate executive (CEO/CTO/CIO) nav sections into a single unified navigation structure is a product decision. Preserved unified executive navigation for 'executive' role.
 const EXECUTIVE_NAV_SECTIONS: SidebarNavSection[] = [
   {
@@ -394,10 +460,14 @@ export function DashboardShell() {
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
   const visibleNav = useMemo(() => {
+    const isSuperAdminPortalPath = pathname === "/dashboard/super-admin" || pathname.startsWith("/dashboard/super-admin/");
     const isEmployeePortalPath = pathname === "/dashboard/employee" || pathname.startsWith("/dashboard/employee/");
     const isManagerPortalPath = pathname === "/dashboard/manager" || pathname.startsWith("/dashboard/manager/");
     const isExecutivePortalPath = pathname === "/dashboard/executive" || pathname.startsWith("/dashboard/executive/");
 
+    if (currentRole === "super_admin" || isSuperAdminPortalPath) {
+      return filterNavTree(SUPER_ADMIN_NAV_SECTIONS, currentRole || undefined, userPermissions);
+    }
     if (currentRole === "executive" || isExecutivePortalPath) {
       return filterNavTree(EXECUTIVE_NAV_SECTIONS, currentRole || undefined, userPermissions);
     }

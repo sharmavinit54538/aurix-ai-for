@@ -14,7 +14,7 @@ export type SettingsSectionKey =
 export type RbacRole = AppRole;
 
 export const RBAC_ROLE_LABELS: Record<AppRole, string> = {
-  superadmin: "SUPER ADMIN",
+  super_admin: "SUPER ADMIN",
   hr_admin: "HR ADMIN",
   manager: "MANAGER",
   it_admin: "IT ADMIN",
@@ -100,15 +100,15 @@ export function resolveRbacRole(roleString?: string | null): AppRole {
 export type PermissionLevel = "edit" | "view" | "denied";
 
 export const RBAC_PERMISSIONS: Record<AppRole, Record<SettingsSectionKey, PermissionLevel>> = {
-  superadmin: {
-    company: "edit",
+  super_admin: {
+    company: "denied",
     profile: "edit",
-    employees: "edit",
-    attendance: "edit",
-    leave: "edit",
-    payroll: "edit",
-    documents: "edit",
-    assets: "edit",
+    employees: "denied",
+    attendance: "denied",
+    leave: "denied",
+    payroll: "denied",
+    documents: "denied",
+    assets: "denied",
     notifications: "edit",
   },
   hr_admin: {

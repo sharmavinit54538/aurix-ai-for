@@ -4,7 +4,7 @@ import type { SidebarPermissionsResponse } from "./sidebarTypes";
 
 export const fetchSidebarPermissions = createAsyncThunk<
   SidebarPermissionsResponse,
-  string | undefined,
+  string | null | undefined,
   { rejectValue: string }
 >("sidebar/fetchPermissions", async (userRole, { rejectWithValue }) => {
   try {

@@ -11,7 +11,6 @@ import { useAurix } from "./aurix-store";
  */
 export type AppRole =
   | "super_admin"
-  | "superadmin"
   | "hr_admin"
   | "executive"
   | "manager"
@@ -131,8 +130,7 @@ export function useCurrentRole(): AppRole | null {
 
 /** Returns true if the role is the sole platform owner (SUPER_ADMIN). */
 export function isSuperAdmin(role?: string | null): boolean {
-  const norm = normalizeRole(role);
-  return norm === "super_admin" || norm === "superadmin";
+  return normalizeRole(role) === "super_admin";
 }
 
 export const isPlatformOwner = isSuperAdmin;

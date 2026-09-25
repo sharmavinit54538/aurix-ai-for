@@ -68,7 +68,6 @@ export function PayrollPayslipsHubPage() {
 
   // RBAC Permission Check
   const currentRole = useCurrentRole();
-  const isAdmin = currentRole === "superadmin";
   const isHr = currentRole === "hr_admin";
 
   const currentUserId = ws.user?.id || (ws.user as any)?.employeeId || "";
@@ -87,8 +86,8 @@ export function PayrollPayslipsHubPage() {
     setApiError(null);
 
     try {
-      if (isAdmin || isHr) {
-        // HR/Admin: check my-payslips or self history first
+      if (isHr) {
+        // HR Admin: check my-payslips or self history first
         const res = await payrollApi.getMyPayslips();
         setPayslips(res?.items || []);
       } else if (currentUserId) {
@@ -115,7 +114,7 @@ export function PayrollPayslipsHubPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [isAdmin, isHr, currentUserId]);
+  }, [isHr, currentUserId]);
 
   useEffect(() => {
     fetchPayslips();
@@ -188,7 +187,7 @@ export function PayrollPayslipsHubPage() {
           <span className="text-foreground font-semibold">My Payslips</span>
         </div>
 
-        {isAdmin || isHr ? (
+        {isHr ? (
           <Link
             to="/dashboard/payroll"
             className="hover:text-foreground transition-colors font-medium flex items-center gap-1 text-primary"
@@ -302,7 +301,7 @@ export function PayrollPayslipsHubPage() {
                 Clear Search
               </Button>
             ) : null}
-            {isAdmin || isHr ? (
+            {isHr ? (
               <Button
                 size="sm"
                 variant="default"

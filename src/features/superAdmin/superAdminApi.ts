@@ -215,7 +215,8 @@ export const superAdminApi = {
     }
 
     if (filters?.role && filters.role !== "ALL") {
-      users = users.filter((u) => u.role === filters.role.toLowerCase());
+      const targetRole = filters.role.toLowerCase();
+      users = users.filter((u) => u.role === targetRole);
     }
 
     if (filters?.status && filters.status !== "ALL") {

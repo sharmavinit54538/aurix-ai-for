@@ -13,7 +13,7 @@ export const EXECUTIVE_ROLES = ["executive"] as const;
 export const EMPLOYEE_ROLES = ["employee"] as const;
 
 // Platform role group (sole platform owner)
-export const PLATFORM_OWNER_ROLES = ["super_admin", "superadmin"] as const;
+export const PLATFORM_OWNER_ROLES = ["super_admin"] as const;
 
 export function canManageEmployees(role?: string | null): boolean {
   const norm = role?.trim().toLowerCase().replace(/[\s-]+/g, "_");
