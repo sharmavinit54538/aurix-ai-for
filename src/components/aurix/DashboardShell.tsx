@@ -51,7 +51,8 @@ import {
   Video,
   Wrench,
 } from "lucide-react";
-import { useAurix } from "@/lib/aurix-store";
+import { aurix, useAurix } from "@/lib/aurix-store";
+import { RoleSwitcherDropdown } from "./RoleSwitcherDropdown";
 import { useAuthReady } from "@/lib/auth-bootstrap";
 import { getRoleDefaultHome } from "@/lib/route-guards";
 import { normalizeRole } from "@/lib/rbac";
@@ -129,6 +130,20 @@ const NAV_SECTIONS: SidebarNavSection[] = [
         label: "Workforce",
         icon: Users,
         permission: "workforce.view",
+      },
+      {
+        to: "/dashboard/attendance",
+        label: "Attendance",
+        icon: Clock,
+        permission: "workforce.attendance",
+        roles: ["super_admin", "hr_admin", "manager"],
+      },
+      {
+        to: "/dashboard/leaves",
+        label: "Leaves",
+        icon: CalendarDays,
+        permission: "workforce.leaves",
+        roles: ["super_admin", "hr_admin", "manager"],
       },
       {
         to: "/dashboard/talent",
@@ -541,6 +556,13 @@ export function DashboardShell() {
             </div>
 
             <div className="flex items-center gap-3">
+              <RoleSwitcherDropdown
+                currentRole={normalizeRole(role)}
+                onSwitchRole={(newRole) => {
+                  aurix.switchRole(newRole);
+                  navigate({ to: getRoleDefaultHome(newRole) });
+                }}
+              />
               <button
                 onClick={() => setSearchOpen(true)}
                 className="flex items-center gap-2 rounded-lg border border-border/80 bg-card/60 px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer transition-all shadow-sm"

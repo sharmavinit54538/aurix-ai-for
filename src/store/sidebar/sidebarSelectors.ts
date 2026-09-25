@@ -38,11 +38,16 @@ export function filterNavTree(
 
   const isAllowedByRole = (roles?: string[]) =>
     isSuperAdmin || !roles || roles.length === 0 || roles.includes(normalizedRole);
-  const isAllowedByPerm = (perm?: string) =>
-    isSuperAdmin ||
-    !perm ||
-    userPermissions.includes(perm) ||
-    userPermissions.includes("*");
+  const isAllowedByPerm = (perm?: string) => {
+    if (isSuperAdmin) return true;
+    if (!perm) return true;
+    if (userPermissions.includes("*")) return true;
+    if (userPermissions.includes(perm)) return true;
+    // If userPermissions is empty (permissions not loaded or backend endpoint unavailable),
+    // default to allowing items so navigation does not completely disappear.
+    if (userPermissions.length === 0) return true;
+    return false;
+  };
 
   const filtered = sections
     .filter((section) => isAllowedByRole(section.roles))

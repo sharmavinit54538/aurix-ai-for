@@ -249,7 +249,7 @@ export function TimesheetsPage() {
   useEffect(() => {
     loadTimesheet();
     loadHistory();
-    if (userRole === "admin" || userRole === "manager" || activeTab === "approvals") {
+    if (userRole === "super_admin" || userRole === "hr_admin" || userRole === "manager" || activeTab === "approvals") {
       loadPendingApprovals();
     }
   }, [weekOffset, activeTab]);
@@ -428,7 +428,7 @@ export function TimesheetsPage() {
   return (
     <>
       <div className="flex justify-end gap-2">
-        {userRole !== "admin" && userRole !== "manager" && (
+        {userRole !== "super_admin" && userRole !== "hr_admin" && userRole !== "manager" && (
           <Button 
             variant="outline"
             className="gap-2 border-dashed border-indigo-500/50 hover:bg-indigo-500/10 text-indigo-400"
@@ -464,7 +464,7 @@ export function TimesheetsPage() {
         >
           My Timesheet
         </button>
-        {(userRole === "admin" || userRole === "manager" || activeTab === "approvals") && (
+        {(userRole === "super_admin" || userRole === "hr_admin" || userRole === "manager" || activeTab === "approvals") && (
           <button
             onClick={() => setActiveTab("approvals")}
             className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${

@@ -327,7 +327,7 @@ export const settingsApi = {
               fullName: newName || "User",
               email: newEmail || "",
               phone: newPhone || "",
-              role: "admin",
+              role: "super_admin",
               companyId: "workspace",
               emailVerified: true,
               onboardingComplete: true,
