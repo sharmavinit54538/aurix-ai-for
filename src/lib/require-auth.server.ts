@@ -1,14 +1,18 @@
 /**
- * Reusable server-side authentication guard for API routes in TanStack Start / Nitro.
- * Validates the Authorization header against the backend GET /auth/me endpoint.
+ * Reusable server-side authentication and authorization guards for API routes in TanStack Start / Nitro.
+ * Enforces:
+ * 1. Bearer token validation (401 Unauthorized)
+ * 2. Role-based backend authorization (403 Forbidden)
+ * 3. Platform Owner (Super Admin) separation (403 Forbidden)
+ * 4. Tenant / Organization isolation (403 Forbidden)
  */
-import { normalizeRole, type Role } from "./rbac";
+import { normalizeRole, isSuperAdmin, type AppRole, COMPANY_ROLES } from "./roles";
 
 export interface AuthenticatedUser {
   id: string;
   name?: string;
   email?: string;
-  role: Role;
+  role: AppRole | null;
   company_id?: string | number;
   [key: string]: unknown;
 }
@@ -38,7 +42,7 @@ function getBackendApiUrl(): string {
 
 /**
  * Validates that the incoming request contains a valid Bearer token,
- * and verifies it against the backend GET /auth/me endpoint.
+ * and verifies it against the backend identity service.
  */
 export async function requireAuth(request: Request): Promise<AuthResult> {
   const authHeader = request.headers.get("authorization") || request.headers.get("Authorization");
@@ -77,7 +81,6 @@ export async function requireAuth(request: Request): Promise<AuthResult> {
   const baseUrl = getBackendApiUrl();
 
   try {
-    // Try primary endpoint /api/v1/auth/me first, fallback to /auth/me
     let response = await fetch(`${baseUrl}/api/v1/auth/me`, {
       method: "GET",
       headers: {
@@ -154,4 +157,100 @@ export async function requireAuth(request: Request): Promise<AuthResult> {
       ),
     };
   }
+}
+
+/**
+ * Enforces that the authenticated user possesses one of the allowed roles.
+ * Returns 401 if unauthenticated, 403 Forbidden if role not permitted.
+ */
+export async function requireRole(
+  request: Request,
+  allowedRoles: AppRole[],
+): Promise<AuthResult> {
+  const auth = await requireAuth(request);
+  if (auth.error) return auth;
+
+  const userRole = auth.user.role;
+  const isAllowed = userRole && allowedRoles.some((r) => r === userRole || (r === "super_admin" && userRole === "superadmin"));
+
+  if (!isAllowed) {
+    return {
+      error: new Response(
+        JSON.stringify({
+          error: "Forbidden: You lack permission to perform this action.",
+          requiredRoles: allowedRoles,
+          currentRole: userRole,
+        }),
+        {
+          status: 403,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
+    };
+  }
+
+  return auth;
+}
+
+/**
+ * Enforces that the request is strictly made by the platform Super Admin owner.
+ * Any other role (HR_ADMIN, MANAGER, etc.) receives a 403 Forbidden.
+ */
+export async function requireSuperAdmin(request: Request): Promise<AuthResult> {
+  const auth = await requireAuth(request);
+  if (auth.error) return auth;
+
+  if (!isSuperAdmin(auth.user.role)) {
+    return {
+      error: new Response(
+        JSON.stringify({
+          error: "Forbidden: This platform management endpoint is strictly restricted to the Super Admin platform owner.",
+        }),
+        {
+          status: 403,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
+    };
+  }
+
+  return auth;
+}
+
+/**
+ * Enforces organization / tenant isolation.
+ * Normal users can ONLY access data belonging to their own companyId.
+ * Super Admin (platform owner) has cross-tenant oversight for platform operations.
+ */
+export async function requireTenantIsolation(
+  request: Request,
+  targetCompanyId: string | number | undefined,
+): Promise<AuthResult> {
+  const auth = await requireAuth(request);
+  if (auth.error) return auth;
+
+  // Platform owner has cross-tenant visibility
+  if (isSuperAdmin(auth.user.role)) {
+    return auth;
+  }
+
+  // Normal organization users must match company_id
+  if (
+    targetCompanyId !== undefined &&
+    String(auth.user.company_id) !== String(targetCompanyId)
+  ) {
+    return {
+      error: new Response(
+        JSON.stringify({
+          error: "Forbidden: Tenant isolation violation. You cannot access data outside your organization.",
+        }),
+        {
+          status: 403,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
+    };
+  }
+
+  return auth;
 }

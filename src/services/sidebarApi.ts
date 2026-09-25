@@ -3,7 +3,28 @@ import { normalizeRole, type AppRole } from "@/lib/roles";
 import type { SidebarPermissionsResponse } from "@/store/sidebar/sidebarTypes";
 
 export const DEFAULT_ROLE_PERMISSIONS: Record<AppRole, string[]> = {
-  superadmin: ["*"],
+  super_admin: [
+    "platform.view",
+    "platform.overview",
+    "platform.users",
+    "platform.organizations",
+    "platform.analytics",
+    "platform.activity",
+    "platform.audit_logs",
+    "platform.settings",
+    "platform.config",
+  ],
+  superadmin: [
+    "platform.view",
+    "platform.overview",
+    "platform.users",
+    "platform.organizations",
+    "platform.analytics",
+    "platform.activity",
+    "platform.audit_logs",
+    "platform.settings",
+    "platform.config",
+  ],
   hr_admin: [
     "overview.view",
     "workforce.view",
@@ -104,6 +125,8 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<AppRole, string[]> = {
   ],
   it_admin: [
     "overview.view",
+    "system.view",
+    "system.controls",
     "resources.view",
     "resources.assets",
     "resources.asset_management",

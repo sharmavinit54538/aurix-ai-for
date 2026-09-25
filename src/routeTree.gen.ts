@@ -38,6 +38,7 @@ import { Route as DashboardTravelRouteImport } from './routes/dashboard.travel'
 import { Route as DashboardTimesheetsRouteImport } from './routes/dashboard.timesheets'
 import { Route as DashboardTimelineRouteImport } from './routes/dashboard.timeline'
 import { Route as DashboardTalentRouteImport } from './routes/dashboard.talent'
+import { Route as DashboardSuperAdminRouteImport } from './routes/dashboard.super-admin'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard.settings'
 import { Route as DashboardRolesRouteImport } from './routes/dashboard.roles'
 import { Route as DashboardResourcesRouteImport } from './routes/dashboard.resources'
@@ -94,6 +95,7 @@ import { Route as AiAttendanceMonitorRouteImport } from './routes/ai.attendance-
 import { Route as AiAnalyticsCenterRouteImport } from './routes/ai.analytics-center'
 import { Route as DashboardWorkforceIndexRouteImport } from './routes/dashboard.workforce.index'
 import { Route as DashboardTalentIndexRouteImport } from './routes/dashboard.talent.index'
+import { Route as DashboardSuperAdminIndexRouteImport } from './routes/dashboard.super-admin.index'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard.settings.index'
 import { Route as DashboardResourcesIndexRouteImport } from './routes/dashboard.resources.index'
 import { Route as DashboardRecruitmentIndexRouteImport } from './routes/dashboard/recruitment/index'
@@ -112,6 +114,8 @@ import { Route as DashboardWorkforceDepartmentsRouteImport } from './routes/dash
 import { Route as DashboardWorkforceAttendanceRouteImport } from './routes/dashboard.workforce.attendance'
 import { Route as DashboardTalentRecruitmentRouteImport } from './routes/dashboard.talent.recruitment'
 import { Route as DashboardTalentPerformanceRouteImport } from './routes/dashboard.talent.performance'
+import { Route as DashboardSuperAdminUsersRouteImport } from './routes/dashboard.super-admin.users'
+import { Route as DashboardSuperAdminOrganizationsRouteImport } from './routes/dashboard.super-admin.organizations'
 import { Route as DashboardSettingsSecurityRouteImport } from './routes/dashboard.settings.security'
 import { Route as DashboardSettingsRolesPermissionsRouteImport } from './routes/dashboard.settings.roles-permissions'
 import { Route as DashboardSettingsProfileRouteImport } from './routes/dashboard.settings.profile'
@@ -387,6 +391,11 @@ const DashboardTimelineRoute = DashboardTimelineRouteImport.update({
 const DashboardTalentRoute = DashboardTalentRouteImport.update({
   id: '/talent',
   path: '/talent',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardSuperAdminRoute = DashboardSuperAdminRouteImport.update({
+  id: '/super-admin',
+  path: '/super-admin',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
@@ -671,6 +680,12 @@ const DashboardTalentIndexRoute = DashboardTalentIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardTalentRoute,
 } as any)
+const DashboardSuperAdminIndexRoute =
+  DashboardSuperAdminIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => DashboardSuperAdminRoute,
+  } as any)
 const DashboardSettingsIndexRoute = DashboardSettingsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -770,6 +785,18 @@ const DashboardTalentPerformanceRoute =
     id: '/performance',
     path: '/performance',
     getParentRoute: () => DashboardTalentRoute,
+  } as any)
+const DashboardSuperAdminUsersRoute =
+  DashboardSuperAdminUsersRouteImport.update({
+    id: '/users',
+    path: '/users',
+    getParentRoute: () => DashboardSuperAdminRoute,
+  } as any)
+const DashboardSuperAdminOrganizationsRoute =
+  DashboardSuperAdminOrganizationsRouteImport.update({
+    id: '/organizations',
+    path: '/organizations',
+    getParentRoute: () => DashboardSuperAdminRoute,
   } as any)
 const DashboardSettingsSecurityRoute =
   DashboardSettingsSecurityRouteImport.update({
@@ -1619,6 +1646,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/resources': typeof DashboardResourcesRouteWithChildren
   '/dashboard/roles': typeof DashboardRolesRoute
   '/dashboard/settings': typeof DashboardSettingsRouteWithChildren
+  '/dashboard/super-admin': typeof DashboardSuperAdminRouteWithChildren
   '/dashboard/talent': typeof DashboardTalentRouteWithChildren
   '/dashboard/timeline': typeof DashboardTimelineRoute
   '/dashboard/timesheets': typeof DashboardTimesheetsRoute
@@ -1705,6 +1733,8 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings/profile': typeof DashboardSettingsProfileRoute
   '/dashboard/settings/roles-permissions': typeof DashboardSettingsRolesPermissionsRoute
   '/dashboard/settings/security': typeof DashboardSettingsSecurityRoute
+  '/dashboard/super-admin/organizations': typeof DashboardSuperAdminOrganizationsRoute
+  '/dashboard/super-admin/users': typeof DashboardSuperAdminUsersRoute
   '/dashboard/talent/performance': typeof DashboardTalentPerformanceRoute
   '/dashboard/talent/recruitment': typeof DashboardTalentRecruitmentRoute
   '/dashboard/workforce/attendance': typeof DashboardWorkforceAttendanceRoute
@@ -1723,6 +1753,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/recruitment/': typeof DashboardRecruitmentIndexRoute
   '/dashboard/resources/': typeof DashboardResourcesIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
+  '/dashboard/super-admin/': typeof DashboardSuperAdminIndexRoute
   '/dashboard/talent/': typeof DashboardTalentIndexRoute
   '/dashboard/workforce/': typeof DashboardWorkforceIndexRoute
   '/dashboard/executive/ceo/ai-insights': typeof DashboardExecutiveCeoAiInsightsRoute
@@ -1924,6 +1955,8 @@ export interface FileRoutesByTo {
   '/dashboard/settings/profile': typeof DashboardSettingsProfileRoute
   '/dashboard/settings/roles-permissions': typeof DashboardSettingsRolesPermissionsRoute
   '/dashboard/settings/security': typeof DashboardSettingsSecurityRoute
+  '/dashboard/super-admin/organizations': typeof DashboardSuperAdminOrganizationsRoute
+  '/dashboard/super-admin/users': typeof DashboardSuperAdminUsersRoute
   '/dashboard/talent/performance': typeof DashboardTalentPerformanceRoute
   '/dashboard/talent/recruitment': typeof DashboardTalentRecruitmentRoute
   '/dashboard/workforce/attendance': typeof DashboardWorkforceAttendanceRoute
@@ -1942,6 +1975,7 @@ export interface FileRoutesByTo {
   '/dashboard/recruitment': typeof DashboardRecruitmentIndexRoute
   '/dashboard/resources': typeof DashboardResourcesIndexRoute
   '/dashboard/settings': typeof DashboardSettingsIndexRoute
+  '/dashboard/super-admin': typeof DashboardSuperAdminIndexRoute
   '/dashboard/talent': typeof DashboardTalentIndexRoute
   '/dashboard/workforce': typeof DashboardWorkforceIndexRoute
   '/dashboard/executive/ceo/ai-insights': typeof DashboardExecutiveCeoAiInsightsRoute
@@ -2075,6 +2109,7 @@ export interface FileRoutesById {
   '/dashboard/resources': typeof DashboardResourcesRouteWithChildren
   '/dashboard/roles': typeof DashboardRolesRoute
   '/dashboard/settings': typeof DashboardSettingsRouteWithChildren
+  '/dashboard/super-admin': typeof DashboardSuperAdminRouteWithChildren
   '/dashboard/talent': typeof DashboardTalentRouteWithChildren
   '/dashboard/timeline': typeof DashboardTimelineRoute
   '/dashboard/timesheets': typeof DashboardTimesheetsRoute
@@ -2161,6 +2196,8 @@ export interface FileRoutesById {
   '/dashboard/settings/profile': typeof DashboardSettingsProfileRoute
   '/dashboard/settings/roles-permissions': typeof DashboardSettingsRolesPermissionsRoute
   '/dashboard/settings/security': typeof DashboardSettingsSecurityRoute
+  '/dashboard/super-admin/organizations': typeof DashboardSuperAdminOrganizationsRoute
+  '/dashboard/super-admin/users': typeof DashboardSuperAdminUsersRoute
   '/dashboard/talent/performance': typeof DashboardTalentPerformanceRoute
   '/dashboard/talent/recruitment': typeof DashboardTalentRecruitmentRoute
   '/dashboard/workforce/attendance': typeof DashboardWorkforceAttendanceRoute
@@ -2179,6 +2216,7 @@ export interface FileRoutesById {
   '/dashboard/recruitment/': typeof DashboardRecruitmentIndexRoute
   '/dashboard/resources/': typeof DashboardResourcesIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
+  '/dashboard/super-admin/': typeof DashboardSuperAdminIndexRoute
   '/dashboard/talent/': typeof DashboardTalentIndexRoute
   '/dashboard/workforce/': typeof DashboardWorkforceIndexRoute
   '/dashboard/executive/ceo/ai-insights': typeof DashboardExecutiveCeoAiInsightsRoute
@@ -2313,6 +2351,7 @@ export interface FileRouteTypes {
     | '/dashboard/resources'
     | '/dashboard/roles'
     | '/dashboard/settings'
+    | '/dashboard/super-admin'
     | '/dashboard/talent'
     | '/dashboard/timeline'
     | '/dashboard/timesheets'
@@ -2399,6 +2438,8 @@ export interface FileRouteTypes {
     | '/dashboard/settings/profile'
     | '/dashboard/settings/roles-permissions'
     | '/dashboard/settings/security'
+    | '/dashboard/super-admin/organizations'
+    | '/dashboard/super-admin/users'
     | '/dashboard/talent/performance'
     | '/dashboard/talent/recruitment'
     | '/dashboard/workforce/attendance'
@@ -2417,6 +2458,7 @@ export interface FileRouteTypes {
     | '/dashboard/recruitment/'
     | '/dashboard/resources/'
     | '/dashboard/settings/'
+    | '/dashboard/super-admin/'
     | '/dashboard/talent/'
     | '/dashboard/workforce/'
     | '/dashboard/executive/ceo/ai-insights'
@@ -2618,6 +2660,8 @@ export interface FileRouteTypes {
     | '/dashboard/settings/profile'
     | '/dashboard/settings/roles-permissions'
     | '/dashboard/settings/security'
+    | '/dashboard/super-admin/organizations'
+    | '/dashboard/super-admin/users'
     | '/dashboard/talent/performance'
     | '/dashboard/talent/recruitment'
     | '/dashboard/workforce/attendance'
@@ -2636,6 +2680,7 @@ export interface FileRouteTypes {
     | '/dashboard/recruitment'
     | '/dashboard/resources'
     | '/dashboard/settings'
+    | '/dashboard/super-admin'
     | '/dashboard/talent'
     | '/dashboard/workforce'
     | '/dashboard/executive/ceo/ai-insights'
@@ -2768,6 +2813,7 @@ export interface FileRouteTypes {
     | '/dashboard/resources'
     | '/dashboard/roles'
     | '/dashboard/settings'
+    | '/dashboard/super-admin'
     | '/dashboard/talent'
     | '/dashboard/timeline'
     | '/dashboard/timesheets'
@@ -2854,6 +2900,8 @@ export interface FileRouteTypes {
     | '/dashboard/settings/profile'
     | '/dashboard/settings/roles-permissions'
     | '/dashboard/settings/security'
+    | '/dashboard/super-admin/organizations'
+    | '/dashboard/super-admin/users'
     | '/dashboard/talent/performance'
     | '/dashboard/talent/recruitment'
     | '/dashboard/workforce/attendance'
@@ -2872,6 +2920,7 @@ export interface FileRouteTypes {
     | '/dashboard/recruitment/'
     | '/dashboard/resources/'
     | '/dashboard/settings/'
+    | '/dashboard/super-admin/'
     | '/dashboard/talent/'
     | '/dashboard/workforce/'
     | '/dashboard/executive/ceo/ai-insights'
@@ -3171,6 +3220,13 @@ declare module '@tanstack/react-router' {
       path: '/talent'
       fullPath: '/dashboard/talent'
       preLoaderRoute: typeof DashboardTalentRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/super-admin': {
+      id: '/dashboard/super-admin'
+      path: '/super-admin'
+      fullPath: '/dashboard/super-admin'
+      preLoaderRoute: typeof DashboardSuperAdminRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/settings': {
@@ -3565,6 +3621,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardTalentIndexRouteImport
       parentRoute: typeof DashboardTalentRoute
     }
+    '/dashboard/super-admin/': {
+      id: '/dashboard/super-admin/'
+      path: '/'
+      fullPath: '/dashboard/super-admin/'
+      preLoaderRoute: typeof DashboardSuperAdminIndexRouteImport
+      parentRoute: typeof DashboardSuperAdminRoute
+    }
     '/dashboard/settings/': {
       id: '/dashboard/settings/'
       path: '/'
@@ -3690,6 +3753,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/talent/performance'
       preLoaderRoute: typeof DashboardTalentPerformanceRouteImport
       parentRoute: typeof DashboardTalentRoute
+    }
+    '/dashboard/super-admin/users': {
+      id: '/dashboard/super-admin/users'
+      path: '/users'
+      fullPath: '/dashboard/super-admin/users'
+      preLoaderRoute: typeof DashboardSuperAdminUsersRouteImport
+      parentRoute: typeof DashboardSuperAdminRoute
+    }
+    '/dashboard/super-admin/organizations': {
+      id: '/dashboard/super-admin/organizations'
+      path: '/organizations'
+      fullPath: '/dashboard/super-admin/organizations'
+      preLoaderRoute: typeof DashboardSuperAdminOrganizationsRouteImport
+      parentRoute: typeof DashboardSuperAdminRoute
     }
     '/dashboard/settings/security': {
       id: '/dashboard/settings/security'
@@ -5005,6 +5082,21 @@ const DashboardSettingsRouteChildren: DashboardSettingsRouteChildren = {
 const DashboardSettingsRouteWithChildren =
   DashboardSettingsRoute._addFileChildren(DashboardSettingsRouteChildren)
 
+interface DashboardSuperAdminRouteChildren {
+  DashboardSuperAdminOrganizationsRoute: typeof DashboardSuperAdminOrganizationsRoute
+  DashboardSuperAdminUsersRoute: typeof DashboardSuperAdminUsersRoute
+  DashboardSuperAdminIndexRoute: typeof DashboardSuperAdminIndexRoute
+}
+
+const DashboardSuperAdminRouteChildren: DashboardSuperAdminRouteChildren = {
+  DashboardSuperAdminOrganizationsRoute: DashboardSuperAdminOrganizationsRoute,
+  DashboardSuperAdminUsersRoute: DashboardSuperAdminUsersRoute,
+  DashboardSuperAdminIndexRoute: DashboardSuperAdminIndexRoute,
+}
+
+const DashboardSuperAdminRouteWithChildren =
+  DashboardSuperAdminRoute._addFileChildren(DashboardSuperAdminRouteChildren)
+
 interface DashboardTalentRouteChildren {
   DashboardTalentPerformanceRoute: typeof DashboardTalentPerformanceRoute
   DashboardTalentRecruitmentRoute: typeof DashboardTalentRecruitmentRoute
@@ -5176,6 +5268,7 @@ interface DashboardRouteChildren {
   DashboardResourcesRoute: typeof DashboardResourcesRouteWithChildren
   DashboardRolesRoute: typeof DashboardRolesRoute
   DashboardSettingsRoute: typeof DashboardSettingsRouteWithChildren
+  DashboardSuperAdminRoute: typeof DashboardSuperAdminRouteWithChildren
   DashboardTalentRoute: typeof DashboardTalentRouteWithChildren
   DashboardTimelineRoute: typeof DashboardTimelineRoute
   DashboardTimesheetsRoute: typeof DashboardTimesheetsRoute
@@ -5226,6 +5319,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardResourcesRoute: DashboardResourcesRouteWithChildren,
   DashboardRolesRoute: DashboardRolesRoute,
   DashboardSettingsRoute: DashboardSettingsRouteWithChildren,
+  DashboardSuperAdminRoute: DashboardSuperAdminRouteWithChildren,
   DashboardTalentRoute: DashboardTalentRouteWithChildren,
   DashboardTimelineRoute: DashboardTimelineRoute,
   DashboardTimesheetsRoute: DashboardTimesheetsRoute,

@@ -1,6 +1,6 @@
 import type { RootState } from "@/redux/store";
 import type { SidebarNavParent, SidebarNavSection } from "./sidebarTypes";
-import { normalizeRole } from "@/lib/roles";
+import { normalizeRole, isSuperAdmin as checkSuperAdmin, isHrAdmin as checkHrAdmin } from "@/lib/roles";
 
 export const selectSidebarState = (state: RootState) => state.sidebar;
 
@@ -27,6 +27,7 @@ export const selectUserRole = (state: RootState) =>
 
 /**
  * Filter navigation sections and items based on role and backend permissions.
+ * Strictly separates Super Admin platform navigation from normal company roles.
  */
 export function filterNavTree(
   sections: SidebarNavSection[],
@@ -34,20 +35,33 @@ export function filterNavTree(
   userPermissions: string[] = []
 ): SidebarNavSection[] {
   const normalizedRole = normalizeRole(role);
-  const isSuperAdmin = normalizedRole === "superadmin";
-  const isHrAdmin = normalizedRole === "hr_admin";
+  const isSuperAdmin = checkSuperAdmin(normalizedRole);
+  const isHrAdmin = checkHrAdmin(normalizedRole);
 
   const isAllowedByRole = (roles?: string[]) => {
-    if (isSuperAdmin || !roles || roles.length === 0) return true;
+    if (!roles || roles.length === 0) {
+      // If no explicit roles declared, general items are allowed for company roles,
+      // but platform owner has their own dedicated nav sections.
+      return true;
+    }
     if (!normalizedRole) return false;
-    return roles.some((r) => normalizeRole(r) === normalizedRole || r === normalizedRole);
+    return roles.some((r) => {
+      const normR = normalizeRole(r);
+      return (
+        normR === normalizedRole ||
+        (isSuperAdmin && (normR === "super_admin" || normR === "superadmin"))
+      );
+    });
   };
+
   const isAllowedByPerm = (perm?: string) => {
-    // Both Super Admin and HR Admin have full access to navigation items
-    if (isSuperAdmin || isHrAdmin) return true;
     if (!perm) return true;
     if (userPermissions.includes("*")) return true;
     if (userPermissions.includes(perm)) return true;
+    // HR Admin has full operational access to HRMS items if permissions not loaded from backend
+    if (isHrAdmin && !perm.startsWith("platform.")) return true;
+    // Super Admin has full platform access to platform items
+    if (isSuperAdmin && perm.startsWith("platform.")) return true;
     // If userPermissions is empty (permissions not loaded or backend endpoint unavailable),
     // default to allowing items so navigation does not completely disappear.
     if (userPermissions.length === 0) return true;

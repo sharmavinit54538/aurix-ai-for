@@ -14,11 +14,11 @@ export interface RoleConfig {
 
 export const AVAILABLE_ROLES: RoleConfig[] = [
   {
-    role: "superadmin",
+    role: "super_admin",
     label: "Super Admin",
-    badge: "Owner",
+    badge: "Platform Owner",
     description: "Full application, company, security and system control",
-    defaultPath: "/dashboard",
+    defaultPath: "/dashboard/super-admin",
   },
   {
     role: "hr_admin",
@@ -46,7 +46,7 @@ export const AVAILABLE_ROLES: RoleConfig[] = [
     label: "IT Admin",
     badge: "IT",
     description: "IT, assets, access and system operations",
-    defaultPath: "/dashboard",
+    defaultPath: "/dashboard/admin",
   },
   {
     role: "executive",

@@ -94,7 +94,7 @@ export function RegisterPage() {
             fullName: form.fullName,
             email: form.email,
             phone: form.phone,
-            role: "super_admin",
+            role: "hr_admin",
             companyId: "workspace",
             emailVerified: false,
             onboardingComplete: false,
@@ -143,7 +143,7 @@ export function RegisterPage() {
   return (
     <AuthShell
       title="Create your workspace"
-      subtitle="You'll be set up as the Super Admin"
+      subtitle="You'll be set up as the HR Administrator for your company"
       footer={
         <>
           Already have a workspace?{" "}
