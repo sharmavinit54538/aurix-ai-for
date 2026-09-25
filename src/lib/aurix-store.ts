@@ -1,8 +1,8 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { safeStorage } from "./safe-storage";
-import { normalizeRole, type Role } from "./rbac";
+import { normalizeRole, type AppRole } from "./roles";
 
-export type { Role } from "./rbac";
+export type Role = AppRole;
 
 export interface RoleConfig {
   role: Role;
@@ -14,7 +14,7 @@ export interface RoleConfig {
 
 export const AVAILABLE_ROLES: RoleConfig[] = [
   {
-    role: "super_admin",
+    role: "superadmin",
     label: "Super Admin",
     badge: "Owner",
     description: "Full application, company, security and system control",
@@ -188,7 +188,7 @@ function load() {
       state = {
         ...defaultState,
         ...parsed,
-        user: parsed.user ? { ...parsed.user, role: normalizeRole(parsed.user.role) } : null,
+        user: parsed.user ? { ...parsed.user, role: normalizeRole(parsed.user.role) || "employee" } : null,
       };
     } catch {
       state = { ...defaultState };
@@ -217,7 +217,7 @@ export const aurix = {
     state = {
       ...state,
       ...partial,
-      user: partial.user ? { ...partial.user, role: normalizeRole(partial.user.role) } : partial.user ?? state.user,
+      user: partial.user ? { ...partial.user, role: normalizeRole(partial.user.role) || "employee" } : partial.user ?? state.user,
     };
     persist();
     emit();

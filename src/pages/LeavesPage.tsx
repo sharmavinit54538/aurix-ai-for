@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { aurix, uid, useAurix } from "@/lib/aurix-store";
-import { normalizeRole } from "@/lib/rbac";
+import { useCurrentRole } from "@/lib/roles";
 import { api } from "@/api";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -46,12 +46,12 @@ const LEAVE_TYPES = ["Sick Leave", "Casual Leave", "Vacation Leave"];
 
 export function LeavesPage() {
   const ws = useAurix();
-  const normalizedRole = normalizeRole(ws.user?.role);
-  const isSuperAdmin = normalizedRole === "super_admin";
-  const isHrAdmin = normalizedRole === "hr_admin";
-  const isManager = normalizedRole === "manager";
-  const canReviewLeaves = isSuperAdmin || isHrAdmin || isManager || (ws.user?.role || "").toLowerCase().includes("admin") || (ws.user?.role || "").toLowerCase().includes("hr");
-  const canViewAllEmployeeBalances = isSuperAdmin || isHrAdmin || (ws.user?.role || "").toLowerCase().includes("admin") || (ws.user?.role || "").toLowerCase().includes("hr");
+  const currentRole = useCurrentRole();
+  const isSuperAdmin = currentRole === "superadmin";
+  const isHrAdmin = currentRole === "hr_admin";
+  const isManager = currentRole === "manager";
+  const canReviewLeaves = isSuperAdmin || isHrAdmin || isManager;
+  const canViewAllEmployeeBalances = isSuperAdmin || isHrAdmin;
   const employeesList = ws.employees || [];
 
   // Tabs routing based on role

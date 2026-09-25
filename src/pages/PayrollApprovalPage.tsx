@@ -43,7 +43,7 @@ import {
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAurix } from "@/lib/aurix-store";
-import { canManagePayroll } from "@/lib/rbac";
+import { useCurrentRole, canManagePayroll } from "@/lib/roles";
 import { useAppSelector } from "@/redux/hooks";
 import { selectUserPermissions } from "@/store/sidebar/sidebarSelectors";
 import {
@@ -197,7 +197,8 @@ export function PayrollApprovalPage() {
   const ws = useAurix();
   const userPermissions = useAppSelector(selectUserPermissions);
 
-  const isPayrollAdmin = canManagePayroll(ws.user?.role);
+  const currentRole = useCurrentRole();
+  const isPayrollAdmin = canManagePayroll(currentRole);
 
   const canViewPayroll =
     isPayrollAdmin ||
