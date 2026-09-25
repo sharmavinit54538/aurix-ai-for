@@ -1,24 +1,20 @@
 import React, { useEffect, useState } from "react";
-import { FileText, ShieldAlert, AlertTriangle, Info, Search, RefreshCw, Filter } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { superAdminApi } from "../superAdminApi";
 import type { PlatformAuditLog } from "../types";
 
 export function SuperAdminAuditLogsPage() {
   const [logs, setLogs] = useState<PlatformAuditLog[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [severityFilter, setSeverityFilter] = useState("ALL");
 
   const loadData = async () => {
-    setLoading(true);
     try {
       const data = await superAdminApi.getAuditLogs();
       setLogs(data);
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.error("Failed to load audit logs", err);
     }
   };
 
@@ -40,33 +36,6 @@ export function SuperAdminAuditLogsPage() {
 
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              Platform Audit Logs
-            </h1>
-            <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-xs">
-              Compliance &amp; Security
-            </Badge>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            Tamper-evident record of administrative events, security actions, and policy modifications.
-          </p>
-        </div>
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={loadData}
-          disabled={loading}
-          className="gap-2 text-xs"
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
-      </div>
-
       {/* Filters */}
       <div className="flex flex-col sm:flex-row items-center gap-3">
         <div className="relative flex-1 w-full">

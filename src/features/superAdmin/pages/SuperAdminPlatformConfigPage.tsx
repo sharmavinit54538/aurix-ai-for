@@ -1,21 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { Server, Cpu, Database, Activity, RefreshCw, CheckCircle2, Shield } from "lucide-react";
+import { Server, Cpu, Database, Activity, CheckCircle2, Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { superAdminApi } from "../superAdminApi";
 import type { PlatformSystemHealth } from "../types";
 
 export function SuperAdminPlatformConfigPage() {
   const [health, setHealth] = useState<PlatformSystemHealth | null>(null);
-  const [loading, setLoading] = useState(true);
 
   const loadData = async () => {
-    setLoading(true);
     try {
       const data = await superAdminApi.getSystemHealth();
       setHealth(data);
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.error("Failed to load platform config data", err);
     }
   };
 
@@ -25,32 +22,6 @@ export function SuperAdminPlatformConfigPage() {
 
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              Platform Configuration &amp; Infrastructure
-            </h1>
-            <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-xs">
-              System Health
-            </Badge>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            Real-time server infrastructure, database status, and cluster telemetry.
-          </p>
-        </div>
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={loadData}
-          disabled={loading}
-          className="gap-2 text-xs"
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-          Run Health Check
-        </Button>
-      </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="rounded-2xl border border-border/60 bg-card/60 p-5 shadow-sm">

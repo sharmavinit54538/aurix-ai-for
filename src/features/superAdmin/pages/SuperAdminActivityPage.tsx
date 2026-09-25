@@ -1,21 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { Activity, Clock, Shield, Globe, RefreshCw, Filter } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Activity } from "lucide-react";
 import { superAdminApi } from "../superAdminApi";
 import type { PlatformSystemActivity } from "../types";
 
 export function SuperAdminActivityPage() {
   const [activities, setActivities] = useState<PlatformSystemActivity[]>([]);
-  const [loading, setLoading] = useState(true);
 
   const loadData = async () => {
-    setLoading(true);
     try {
       const data = await superAdminApi.getSystemActivity();
       setActivities(data);
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.error("Failed to load activity data", err);
     }
   };
 
@@ -25,32 +21,6 @@ export function SuperAdminActivityPage() {
 
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              System Activity
-            </h1>
-            <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-xs">
-              Live Stream
-            </Badge>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            Real-time feed of events and user actions across all tenant organizations.
-          </p>
-        </div>
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={loadData}
-          disabled={loading}
-          className="gap-2 text-xs"
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
-      </div>
 
       <div className="rounded-2xl border border-border/60 bg-card/60 shadow-sm backdrop-blur-xl divide-y divide-border/40">
         {activities.map((act) => (

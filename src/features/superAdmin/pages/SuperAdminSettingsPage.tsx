@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Sliders, ShieldCheck, Lock, Save, AlertCircle, RefreshCw, KeyRound, Server } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Sliders, Lock, Save, AlertCircle, RefreshCw, KeyRound, Server } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { superAdminApi } from "../superAdminApi";
-import { getSingleSuperAdmin } from "@/lib/platform-owner";
 import { toast } from "sonner";
 import type { PlatformSettings } from "../types";
 
@@ -14,8 +12,6 @@ export function SuperAdminSettingsPage() {
   const [settings, setSettings] = useState<PlatformSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
-  const owner = getSingleSuperAdmin();
 
   useEffect(() => {
     void superAdminApi.getSettings().then((s) => {
@@ -50,64 +46,7 @@ export function SuperAdminSettingsPage() {
 
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
-      <div>
-        <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            System &amp; Platform Settings
-          </h1>
-          <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-xs">
-            Global Config
-          </Badge>
-        </div>
-        <p className="text-sm text-muted-foreground mt-1">
-          System-level settings, security policies, and single platform owner credentials.
-        </p>
-      </div>
-
       <form onSubmit={handleSave} className="space-y-6">
-        {/* Platform Owner Identity (Requirement 1 & 5: Single Instance restriction) */}
-        <div className="rounded-2xl border border-purple-500/30 bg-purple-950/10 p-6 shadow-sm backdrop-blur-xl">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-xl bg-purple-500/20 text-purple-400 border border-purple-500/30">
-                <ShieldCheck className="h-5 w-5" />
-              </div>
-              <div>
-                <h3 className="font-bold text-base text-foreground">
-                  Platform Owner (Single Instance)
-                </h3>
-                <p className="text-xs text-muted-foreground">
-                  OFC360 enforces a single platform owner account constraint.
-                </p>
-              </div>
-            </div>
-            <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-xs">
-              Verified 1 of 1
-            </Badge>
-          </div>
-
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-4 border-t border-purple-500/20">
-            <div>
-              <Label className="text-xs text-muted-foreground">Owner Email</Label>
-              <Input
-                value={owner.email}
-                disabled
-                className="mt-1 h-9 bg-muted/60 font-mono text-xs text-foreground cursor-not-allowed"
-              />
-              <p className="text-[11px] text-muted-foreground mt-1">
-                Configured via INITIAL_SUPER_ADMIN_EMAIL. Secondary creation is disabled.
-              </p>
-            </div>
-            <div>
-              <Label className="text-xs text-muted-foreground">Owner Name</Label>
-              <Input
-                value={owner.name}
-                disabled
-                className="mt-1 h-9 bg-muted/60 text-xs text-foreground cursor-not-allowed"
-              />
-            </div>
-          </div>
-        </div>
 
         {/* Platform Configuration Card */}
         <div className="rounded-2xl border border-border/60 bg-card/60 p-6 shadow-sm backdrop-blur-xl space-y-4">

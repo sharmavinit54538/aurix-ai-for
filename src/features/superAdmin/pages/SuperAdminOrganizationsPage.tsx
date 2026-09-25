@@ -37,20 +37,6 @@ export function SuperAdminOrganizationsPage() {
 
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div>
-        <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            Organizations &amp; Company Accounts
-          </h1>
-          <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-xs">
-            Multi-Tenant
-          </Badge>
-        </div>
-        <p className="text-sm text-muted-foreground mt-1">
-          Platform-level management of all customer companies hosted on OFC360.
-        </p>
-      </div>
-
       {/* Search Bar */}
       <div className="flex items-center gap-3">
         <div className="relative flex-1">

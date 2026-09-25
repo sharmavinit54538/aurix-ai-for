@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
-  ShieldCheck,
   Building2,
   Clock,
   MoreVertical,
@@ -17,7 +16,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -27,7 +25,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { superAdminApi } from "../superAdminApi";
-import { getSingleSuperAdmin } from "@/lib/platform-owner";
 import { toast } from "sonner";
 import type { SuperAdminUserStats, PlatformUser } from "../types";
 import type { AppRole } from "@/lib/roles";
@@ -87,8 +84,6 @@ export function SuperAdminUsersPage() {
   const [actionConfirmOpen, setActionConfirmOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
-  const owner = getSingleSuperAdmin();
-
   const loadData = async () => {
     setLoading(true);
     try {
@@ -145,36 +140,6 @@ export function SuperAdminUsersPage() {
 
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-      {/* Page Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              User Management
-            </h1>
-            <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-xs">
-              Platform Registry
-            </Badge>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            Global directory of all accounts registered across client organizations.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={loadData}
-            disabled={loading}
-            className="gap-2 text-xs"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
-        </div>
-      </div>
-
       {/* KPI Counters Banner (Requirement 9) */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
         <div className="rounded-xl border border-border/60 bg-card/60 p-3 shadow-sm text-center">
@@ -254,28 +219,6 @@ export function SuperAdminUsersPage() {
               <option value="inactive">Inactive</option>
             </select>
           </div>
-        </div>
-      </div>
-
-      {/* Sole Platform Owner Card */}
-      <div className="rounded-xl border border-purple-500/30 bg-purple-950/20 p-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="grid h-10 w-10 place-items-center rounded-xl bg-purple-500/20 text-purple-400 border border-purple-500/30">
-            <ShieldCheck className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-sm text-foreground">{owner.name}</span>
-              <Badge className="bg-purple-500/30 text-purple-300 border-purple-500/40 text-[10px]">
-                Platform Owner (Single Instance)
-              </Badge>
-            </div>
-            <div className="text-xs text-muted-foreground mt-0.5">{owner.email}</div>
-          </div>
-        </div>
-        <div className="text-xs text-muted-foreground text-right hidden sm:block">
-          <div>Status: <span className="text-emerald-400 font-semibold">Active</span></div>
-          <div className="text-[11px]">Sole Owner — Cannot be deleted or duplicated</div>
         </div>
       </div>
 

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
-  ShieldCheck,
   Users,
   Building2,
   Activity,
@@ -11,7 +10,6 @@ import {
   TrendingUp,
   Clock,
   CheckCircle2,
-  RefreshCw,
   UserCheck,
   UserX,
   FileText,
@@ -21,7 +19,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { superAdminApi } from "../superAdminApi";
-import { getSingleSuperAdmin } from "@/lib/platform-owner";
 import type {
   SuperAdminUserStats,
   PlatformOrganization,
@@ -34,12 +31,8 @@ export function SuperAdminOverviewPage() {
   const [orgs, setOrgs] = useState<PlatformOrganization[]>([]);
   const [activities, setActivities] = useState<PlatformSystemActivity[]>([]);
   const [health, setHealth] = useState<PlatformSystemHealth | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const owner = getSingleSuperAdmin();
 
   const loadData = async () => {
-    setLoading(true);
     try {
       const [s, o, a, h] = await Promise.all([
         superAdminApi.getStats(),
@@ -51,8 +44,8 @@ export function SuperAdminOverviewPage() {
       setOrgs(o);
       setActivities(a);
       setHealth(h);
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.error("Failed to load super admin data", err);
     }
   };
 
@@ -62,64 +55,6 @@ export function SuperAdminOverviewPage() {
 
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-      {/* Platform Owner Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl border border-purple-500/20 bg-gradient-to-r from-purple-950/40 via-card to-background p-6 shadow-xl backdrop-blur-xl">
-        <div className="absolute right-0 top-0 -mt-8 -mr-8 h-48 w-48 rounded-full bg-purple-500/10 blur-3xl" />
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between relative z-10">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-500/20 px-2.5 py-0.5 text-xs font-semibold text-purple-300 border border-purple-500/30">
-                <ShieldCheck className="h-3.5 w-3.5" />
-                Sole Platform Owner
-              </span>
-              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                Platform Operational
-              </span>
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              Super Admin Command Center
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Platform-level oversight for OFC360. Completely separated from company HR &amp; employee hierarchies.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={loadData}
-              disabled={loading}
-              className="gap-2 text-xs"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-              Refresh Metrics
-            </Button>
-            <Link to="/dashboard/super-admin/users">
-              <Button size="sm" className="gap-2 text-xs bg-purple-600 hover:bg-purple-700 text-white">
-                <Users className="h-3.5 w-3.5" />
-                Manage All Users
-              </Button>
-            </Link>
-          </div>
-        </div>
-
-        {/* Single-Instance Owner Notice */}
-        <div className="mt-4 pt-4 border-t border-border/40 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-foreground">Registered Platform Owner:</span>
-            <code className="rounded bg-muted px-1.5 py-0.5 text-foreground font-mono text-[11px]">
-              {owner.email}
-            </code>
-            <span className="text-[11px] text-emerald-400 font-medium">
-              (Single-Instance Verified: Exactly 1 Super Admin allowed)
-            </span>
-          </div>
-          <div>Version: {health?.version || "OFC360 Enterprise v2.4.0"}</div>
-        </div>
-      </div>
-
       {/* KPI Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-xl border border-border/60 bg-card/60 p-5 shadow-sm backdrop-blur-xl hover:border-purple-500/40 transition-all">

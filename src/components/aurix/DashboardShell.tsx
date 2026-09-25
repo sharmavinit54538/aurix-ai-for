@@ -312,7 +312,6 @@ const MANAGER_NAV_SECTIONS: SidebarNavSection[] = [
 
 const SUPER_ADMIN_NAV_SECTIONS: SidebarNavSection[] = [
   {
-    title: "SUPER ADMIN DASHBOARD",
     roles: ["super_admin"],
     items: [
       {
