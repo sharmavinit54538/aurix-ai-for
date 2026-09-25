@@ -81,8 +81,8 @@ export function SuperAdminOverviewPage() {
 
   const stats = statistics.data;
   const statsLoading = statistics.isPending;
-  const totalOrganizations = stats?.organizations.total ?? null;
-  const totalUsers = stats?.users.total ?? null;
+  const totalOrganizations = stats?.organizations?.total ?? null;
+  const totalUsers = stats?.users?.total ?? null;
 
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
@@ -103,9 +103,9 @@ export function SuperAdminOverviewPage() {
             <span className="text-xs font-medium text-muted-foreground">registered accounts</span>
           </div>
           <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground border-t border-border/40 pt-2.5">
-            <span className="text-emerald-400 font-medium">{statsLoading ? "…" : formatCount(stats?.users.active)} Active</span>
+            <span className="text-emerald-400 font-medium">{statsLoading ? "…" : formatCount(stats?.users?.active)} Active</span>
             <span>•</span>
-            <span className="text-rose-400 font-medium">{statsLoading ? "…" : formatCount(stats?.users.inactive)} Inactive</span>
+            <span className="text-rose-400 font-medium">{statsLoading ? "…" : formatCount(stats?.users?.inactive)} Inactive</span>
           </div>
         </KpiCard>
 
@@ -115,9 +115,9 @@ export function SuperAdminOverviewPage() {
             <span className="text-xs font-medium text-blue-400">organizations</span>
           </div>
           <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs text-muted-foreground border-t border-border/40 pt-2.5">
-            <span title="Onboarding completed">Onboarded: {statsLoading ? "…" : formatCount(stats?.organizations.onboarded)}</span>
-            <span>Trial: {statsLoading ? "…" : formatCount(stats?.organizations.trial)}</span>
-            <span>Suspended: {statsLoading ? "…" : formatCount(stats?.organizations.suspended)}</span>
+            <span title="Onboarding completed">Onboarded: {statsLoading ? "…" : formatCount(stats?.organizations?.onboarded)}</span>
+            <span>Trial: {statsLoading ? "…" : formatCount(stats?.organizations?.trial)}</span>
+            <span>Suspended: {statsLoading ? "…" : formatCount(stats?.organizations?.suspended)}</span>
           </div>
         </KpiCard>
 
@@ -147,6 +147,11 @@ export function SuperAdminOverviewPage() {
               >
                 Retry health check
               </button>
+            </div>
+          ) : !systemHealth.data || !systemHealth.data.database ? (
+            <div className="mt-3 space-y-2 text-xs">
+              <div className="text-lg font-bold text-muted-foreground">Unavailable</div>
+              <div className="text-muted-foreground">Database health telemetry unavailable</div>
             </div>
           ) : (
             <>
@@ -196,7 +201,7 @@ export function SuperAdminOverviewPage() {
                 {card.label}
               </div>
               <div className="text-2xl font-extrabold text-foreground mt-1">
-                <KpiNumber value={stats?.users[card.key] ?? null} loading={statsLoading} />
+                <KpiNumber value={stats?.users?.[card.key] ?? null} loading={statsLoading} />
               </div>
               <div className="text-[11px] text-muted-foreground mt-1 truncate" title={card.description}>
                 {card.description}

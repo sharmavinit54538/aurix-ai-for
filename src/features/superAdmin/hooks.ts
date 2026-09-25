@@ -165,6 +165,7 @@ export function useSuperAdminUsers(params: UserListParams) {
     isPending: users.loading && users.items.length === 0,
     isLoading: users.loading && users.items.length === 0,
     isFetching: users.loading,
+    isPlaceholderData: false,
     isError: Boolean(users.error),
     error: errorObj,
     refetch,
@@ -200,6 +201,7 @@ export function useSuperAdminOrganizations(params: OrganizationListParams) {
     isPending: organizations.loading && organizations.items.length === 0,
     isLoading: organizations.loading && organizations.items.length === 0,
     isFetching: organizations.loading,
+    isPlaceholderData: false,
     isError: Boolean(organizations.error),
     error: errorObj,
     refetch,
@@ -235,6 +237,7 @@ export function useSuperAdminAuditLogs(params: AuditLogListParams) {
     isPending: auditLogs.loading && auditLogs.items.length === 0,
     isLoading: auditLogs.loading && auditLogs.items.length === 0,
     isFetching: auditLogs.loading,
+    isPlaceholderData: false,
     isError: Boolean(auditLogs.error),
     error: errorObj,
     refetch,
@@ -346,7 +349,7 @@ export function useSystemHealth() {
   const dispatch = useAppDispatch();
   const systemHealth = useAppSelector((state) => state.superAdmin.systemHealth);
   const [snapshot, setSnapshot] = useState<SystemHealthSnapshot | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ApiError | null>(null);
 
   const load = useCallback(async () => {

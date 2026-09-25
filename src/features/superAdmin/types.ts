@@ -117,7 +117,7 @@ export interface OrganizationRecord {
   name: string | null;
   domain?: string | null;
   plan?: string | null;
-  status?: string | null;
+  status: string | null;
   access_status?: string | null;
   access_type?: string | null;
   payment_status?: string | null;
@@ -130,17 +130,17 @@ export interface OrganizationRecord {
   industry?: string | null;
   location?: string | null;
   user_count?: number | null;
-  userCount?: number | null;
+  userCount: number | null;
   employee_count?: number | null;
-  employeeCount?: number | null;
+  employeeCount: number | null;
   hr_admin?: PlatformHrAdminRef | null;
-  primaryHrAdmin?: PlatformHrAdminRef | null;
+  primaryHrAdmin: PlatformHrAdminRef | null;
   hr_admins?: PlatformHrAdminRef[];
   hrAdminName?: string | null;
   hrAdminEmail?: string | null;
   owner?: PlatformHrAdminRef | null;
   created_at?: string | null;
-  createdAt?: string | null;
+  createdAt: string | null;
 }
 
 export interface OrganizationDetail {
@@ -242,25 +242,25 @@ export interface PlatformUserRecord {
   id: string;
   name: string | null;
   email: string | null;
-  phone?: string | null;
+  phone: string | null;
   role: string | null;
   organization_id?: string | null;
-  organizationId?: string | null;
+  organizationId: string | null;
   companyId?: string | null;
   company_id?: string | null;
   company_name?: string | null;
   companyName?: string | null;
   organization?: string | null;
-  organizationName?: string | null;
+  organizationName: string | null;
   status?: string | null;
   is_active?: boolean | null;
-  isActive?: boolean | null;
+  isActive: boolean | null;
   is_verified?: boolean | null;
-  isVerified?: boolean | null;
+  isVerified: boolean | null;
   created_at?: string | null;
-  createdAt?: string | null;
+  createdAt: string | null;
   last_login?: string | null;
-  lastLoginAt?: string | null;
+  lastLoginAt: string | null;
   lastLogin?: string | null;
 }
 
@@ -428,16 +428,16 @@ export interface SecurityEventRecord {
 export interface SecuritySessionRecord {
   id: string;
   adminName?: string | null;
-  userName?: string | null;
+  userName: string | null;
   adminEmail?: string | null;
-  userEmail?: string | null;
+  userEmail: string | null;
   ipAddress?: string | null;
   location?: string | null;
   browser?: string | null;
   os?: string | null;
   device?: string | null;
   loginTime?: string | null;
-  startedAt?: string | null;
+  startedAt: string | null;
   lastActivity?: string | null;
   status?: string | null;
 }
@@ -454,15 +454,15 @@ export interface AuditLogRecord {
   id: string;
   timestamp: string | null;
   actor?: string | null;
-  actorEmail?: string | null;
+  actorEmail: string | null;
   action: string | null;
   resource?: string | null;
   targetCompany?: string | null;
-  organizationId?: string | null;
+  organizationId: string | null;
   result?: "SUCCESS" | "BLOCKED" | string | null;
   ip?: string | null;
   ip_address?: string | null;
-  details?: string | null;
+  details: string | null;
 }
 
 export type PlatformAuditEvent = AuditLogRecord;
