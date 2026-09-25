@@ -120,6 +120,16 @@ if (typeof window !== "undefined") {
   void bootstrapAuth();
 }
 
+/**
+ * Returns a promise that resolves once the initial auth bootstrap has completed.
+ * Route guards (e.g. TanStack Router `beforeLoad`) must `await` this before
+ * checking `isUserAuthenticated()`, otherwise they race ahead of the async
+ * refresh-token flow and incorrectly redirect to login on page refresh.
+ */
+export function waitForAuth(): Promise<void> {
+  return bootstrapPromise ?? Promise.resolve();
+}
+
 export function useAuthReady(): boolean {
   return useSyncExternalStore(
     (listener) => {
@@ -149,4 +159,3 @@ export async function logout(options?: { redirect?: boolean }) {
     window.location.replace("/login");
   }
 }
-

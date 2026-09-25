@@ -53,6 +53,7 @@ export const settingsApi = createApi({
   reducerPath: "settingsApi",
   baseQuery: fetchBaseQuery({
     baseUrl: getApiBaseUrl(),
+    credentials: "include",
     prepareHeaders: (headers) => {
       const tokens = getTokens();
       const token = tokens?.accessToken || getCookieAuthToken();
