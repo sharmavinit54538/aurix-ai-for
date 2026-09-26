@@ -1,5 +1,7 @@
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { JobDescriptionView } from "@/features/admin/recruitment/components/JobDescriptionView";
+import { JobQrModal } from "@/features/admin/recruitment/components/JobQrModal";
+import { getJobApplicationUrl, getPublicJobUrl, getReferralUrl } from "@/lib/publicUrl";
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -111,10 +113,6 @@ export function JobDetailPage() {
   const [publishChannels, setPublishChannels] = useState<any[]>([]);
   const [loadingChannels, setLoadingChannels] = useState(false);
 
-  // QR Modal state
-  const [qrData, setQrData] = useState<any>(null);
-  const [loadingQr, setLoadingQr] = useState(false);
-
   // Export Applicants state
   const [exportFormat, setExportFormat] = useState<"csv" | "excel" | "pdf">("csv");
   const [exportFilter, setExportFilter] = useState("all");
@@ -146,31 +144,11 @@ export function JobDetailPage() {
     }
   };
 
-  const handleFetchQr = async () => {
-    setLoadingQr(true);
-    try {
-      const res = await api.get<any>(`/jobs/${jobId}/qr`);
-      if (res) {
-        setQrData(res);
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Failed to load QR code.");
-    } finally {
-      setLoadingQr(false);
-    }
-  };
-
   useEffect(() => {
     if (showPublishModal) {
       fetchPublishChannels();
     }
   }, [showPublishModal]);
-
-  useEffect(() => {
-    if (showQrModal) {
-      handleFetchQr();
-    }
-  }, [showQrModal]);
 
   useEffect(() => {
     if (showDuplicateModal && job) {
@@ -282,45 +260,15 @@ export function JobDetailPage() {
   const handleCopySourcingLink = async () => {
     setIsCopyingLink(true);
     try {
-      const res = await api.get<any>(`/jobs/${jobId}/sourcing-link`);
-      if (res && res.url) {
-        await navigator.clipboard.writeText(res.url);
-        toast.success("Sourcing link copied successfully!");
-      } else {
-        throw new Error("No link found.");
+      const applyUrl = getJobApplicationUrl(jobId);
+      if (typeof navigator !== "undefined" && navigator.clipboard) {
+        await navigator.clipboard.writeText(applyUrl);
       }
+      toast.success("Job application link copied to clipboard!");
     } catch (err: any) {
-      toast.error(err.message || "Failed to retrieve sourcing link.");
+      toast.error(err?.message || "Failed to copy sourcing link.");
     } finally {
       setIsCopyingLink(false);
-    }
-  };
-
-
-
-  const handlePrintQr = () => {
-    if (!qrData) return;
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(`
-        <html>
-          <head>
-            <title>Print QR Code - ${job?.title}</title>
-            <style>
-              body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; }
-              img { width: 300px; height: 300px; }
-              h1 { margin-bottom: 5px; }
-              p { color: #666; margin-top: 5px; }
-            </style>
-          </head>
-          <body>
-            <h1>${job?.title}</h1>
-            <img src="${getFileUrl(qrData.qr_png_url)}" onload="window.print(); window.close();" />
-            <p>Scan to apply</p>
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
     }
   };
 
@@ -833,9 +781,9 @@ export function JobDetailPage() {
 
               <div className="space-y-4">
                 {[
-                  { label: "Public Career Site URL", url: `https://careers.ofc360.com/jobs/${jobId}` },
-                  { label: "Internal Employee Referral Link", url: `https://ofc360.com/portal/referrals?job=${jobId}` },
-                  { label: "Campus Sourcing URL", url: `https://careers.ofc360.com/campus/sourcing?tag=uni-${jobId}` },
+                  { label: "Public Job Application URL", url: getJobApplicationUrl(jobId) },
+                  { label: "Public Career Site URL", url: getPublicJobUrl(jobId) },
+                  { label: "Internal Employee Referral Link", url: getReferralUrl(jobId) },
                 ].map((linkItem) => (
                   <div key={linkItem.label} className="rounded-xl border border-border bg-card/40 p-4">
                     <span className="text-xs font-semibold block mb-2">{linkItem.label}</span>
@@ -852,24 +800,12 @@ export function JobDetailPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-xs font-semibold block">QR Code Sourcing Asset</span>
-                      <span className="text-[10px] text-muted-foreground mt-0.5">Generate printable asset for campus or office placement.</span>
+                      <span className="text-[10px] text-muted-foreground mt-0.5">Generate printable and shareable QR codes linking directly to the job apply page.</span>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => setShowQr(!showQr)}>
-                      <QrCode className="mr-1.5 h-4 w-4" />{showQr ? "Hide Asset" : "Generate QR"}
+                    <Button variant="outline" size="sm" onClick={() => setShowQrModal(true)}>
+                      <QrCode className="mr-1.5 h-4 w-4" />Generate Job QR Code
                     </Button>
                   </div>
-                  {showQr && (
-                    <div className="flex flex-col items-center justify-center p-6 bg-background/40 mt-4 rounded-xl border border-border">
-                      <div className="grid h-36 w-36 place-items-center bg-white p-2.5 rounded-lg shadow-lg border border-border">
-                        {/* SVG QR Code */}
-                        <svg className="h-full w-full text-slate-800" viewBox="0 0 100 100" fill="currentColor">
-                          <path d="M0 0h30v30H0zm40 0h20v20H40zm30 0h30v30H70zm-70 40h20v20H0zm30 0h40v40H30zm50 0h20v20H80zm-80 30h30v30H0zm80 10h20v20H80z" />
-                          <path d="M10 10h10v10H10zm60 0h10v10H70zm-60 60h10v10H10z" fill="none" stroke="white" strokeWidth="2" />
-                        </svg>
-                      </div>
-                      <span className="text-[10px] text-muted-foreground mt-3">Scan to apply directly via mobile.</span>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -1155,83 +1091,13 @@ export function JobDetailPage() {
         </DialogContent>
       </Dialog>
 
-      {/* QR Code Modal */}
-      <Dialog open={showQrModal} onOpenChange={setShowQrModal}>
-        <DialogContent className="max-w-sm bg-card/90 backdrop-blur-xl border border-border">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <QrCode className="h-5 w-5 text-primary" />
-              Generate Job QR Code
-            </DialogTitle>
-            <DialogDescription>
-              Generate printable and shareable QR codes linking directly to the job apply page.
-            </DialogDescription>
-          </DialogHeader>
-
-          {loadingQr ? (
-            <div className="flex flex-col items-center justify-center p-8 space-y-2">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-              <p className="text-xs text-muted-foreground">Generating QR assets...</p>
-            </div>
-          ) : qrData ? (
-            <div className="flex flex-col items-center justify-center py-4 space-y-4">
-              <div className="rounded-2xl border border-border bg-white p-3 shadow-inner">
-                <img 
-                  src={getFileUrl(qrData.qr_png_url)} 
-                  alt="Job Apply QR Code" 
-                  className="w-48 h-48 rounded-lg"
-                />
-              </div>
-
-              <div className="w-full flex flex-col gap-2">
-                <div className="flex gap-2 w-full">
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="flex-1 text-xs" 
-                    onClick={() => window.open(getFileUrl(qrData.qr_png_url), "_blank")}
-                  >
-                    <Download className="mr-1.5 h-3.5 w-3.5" />PNG
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="flex-1 text-xs" 
-                    onClick={() => window.open(getFileUrl(qrData.qr_svg_url), "_blank")}
-                  >
-                    <Download className="mr-1.5 h-3.5 w-3.5" />SVG
-                  </Button>
-                </div>
-
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  className="w-full text-xs" 
-                  onClick={() => {
-                    navigator.clipboard.writeText(qrData.apply_url);
-                    toast.success("Apply URL copied!");
-                  }}
-                >
-                  <Copy className="mr-1.5 h-3.5 w-3.5" />Copy Apply Link
-                </Button>
-
-                <Button 
-                  size="sm" 
-                  variant="default" 
-                  className="w-full text-xs" 
-                  onClick={handlePrintQr}
-                >
-                  <Printer className="mr-1.5 h-3.5 w-3.5" />Print QR Code
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center p-4 text-xs text-muted-foreground">
-              Failed to load QR asset.
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Job QR Code Modal */}
+      <JobQrModal
+        open={showQrModal}
+        onOpenChange={setShowQrModal}
+        jobId={jobId}
+        jobTitle={job?.title}
+      />
 
       {/* Export Applicants Modal */}
       <Dialog open={showExportModal} onOpenChange={setShowExportModal}>
