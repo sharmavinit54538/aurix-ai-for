@@ -2,14 +2,22 @@ import { useMemo } from "react";
 import {
   Award,
   BookOpen,
+  BookOpenCheck,
   Briefcase,
   Building,
   Calendar,
   CheckCircle2,
+  DollarSign,
+  Gem,
+  Gift,
   GraduationCap,
   Heart,
+  HeartPulse,
+  Home,
   Layers,
   MapPin,
+  Palmtree,
+  Shield,
   Sparkles,
   Star,
   Target,
@@ -89,49 +97,55 @@ function SkillChips({
 
 // ─── Benefit card ───────────────────────────────────────────────────────────
 
-const BENEFIT_ICONS: Record<string, string> = {
-  compensation: "💰",
-  salary: "💰",
-  bonus: "💰",
-  health: "❤️",
-  medical: "❤️",
-  wellness: "❤️",
-  remote: "🏠",
-  flexible: "🏠",
-  hybrid: "🏠",
-  learning: "📚",
-  growth: "📚",
-  professional: "📚",
-  insurance: "🛡️",
-  vacation: "🏖️",
-  leave: "🏖️",
-  retirement: "💎",
-  stock: "📈",
-  equity: "📈",
-};
+const BENEFIT_ICON_MAP: { keyword: string; icon: React.ElementType; color: string }[] = [
+  { keyword: "compensation", icon: DollarSign, color: "text-emerald-500 bg-emerald-500/15" },
+  { keyword: "salary",       icon: DollarSign, color: "text-emerald-500 bg-emerald-500/15" },
+  { keyword: "bonus",        icon: DollarSign, color: "text-emerald-500 bg-emerald-500/15" },
+  { keyword: "health",       icon: HeartPulse, color: "text-rose-500 bg-rose-500/15" },
+  { keyword: "medical",      icon: HeartPulse, color: "text-rose-500 bg-rose-500/15" },
+  { keyword: "wellness",     icon: HeartPulse, color: "text-rose-500 bg-rose-500/15" },
+  { keyword: "remote",       icon: Home,       color: "text-sky-500 bg-sky-500/15" },
+  { keyword: "flexible",     icon: Home,       color: "text-sky-500 bg-sky-500/15" },
+  { keyword: "hybrid",       icon: Home,       color: "text-sky-500 bg-sky-500/15" },
+  { keyword: "learning",     icon: BookOpenCheck, color: "text-violet-500 bg-violet-500/15" },
+  { keyword: "growth",       icon: BookOpenCheck, color: "text-violet-500 bg-violet-500/15" },
+  { keyword: "professional", icon: BookOpenCheck, color: "text-violet-500 bg-violet-500/15" },
+  { keyword: "insurance",    icon: Shield,     color: "text-amber-500 bg-amber-500/15" },
+  { keyword: "vacation",     icon: Palmtree,   color: "text-teal-500 bg-teal-500/15" },
+  { keyword: "leave",        icon: Palmtree,   color: "text-teal-500 bg-teal-500/15" },
+  { keyword: "retirement",   icon: Gem,        color: "text-indigo-500 bg-indigo-500/15" },
+  { keyword: "stock",        icon: TrendingUp, color: "text-cyan-500 bg-cyan-500/15" },
+  { keyword: "equity",       icon: TrendingUp, color: "text-cyan-500 bg-cyan-500/15" },
+];
 
-function getBenefitIcon(text: string): string {
+function getBenefitIcon(text: string): { Icon: React.ElementType; color: string } {
   const lower = text.toLowerCase();
-  for (const [keyword, icon] of Object.entries(BENEFIT_ICONS)) {
-    if (lower.includes(keyword)) return icon;
+  for (const entry of BENEFIT_ICON_MAP) {
+    if (lower.includes(entry.keyword)) return { Icon: entry.icon, color: entry.color };
   }
-  return "✨";
+  return { Icon: Gift, color: "text-primary bg-primary/15" };
 }
 
 function BenefitsList({ benefits }: { benefits: string[] }) {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
-      {benefits.map((benefit, i) => (
-        <div
-          key={i}
-          className="flex items-start gap-3 rounded-xl border border-border/60 bg-background/40 p-3.5 transition-colors hover:bg-accent/20"
-        >
-          <span className="text-base leading-none">{getBenefitIcon(benefit)}</span>
-          <span className="text-xs leading-relaxed text-muted-foreground">
-            {benefit}
-          </span>
-        </div>
-      ))}
+      {benefits.map((benefit, i) => {
+        const { Icon, color } = getBenefitIcon(benefit);
+        const [iconColor, bgColor] = color.split(" ");
+        return (
+          <div
+            key={i}
+            className="flex items-start gap-3 rounded-xl border border-border/60 bg-background/40 p-3.5 transition-colors hover:bg-accent/20"
+          >
+            <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${bgColor}`}>
+              <Icon className={`h-4 w-4 ${iconColor}`} />
+            </div>
+            <span className="text-xs leading-relaxed text-muted-foreground pt-1.5">
+              {benefit}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }
