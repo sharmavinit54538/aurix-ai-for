@@ -1,4 +1,5 @@
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
+import { JobDescriptionView } from "@/features/admin/recruitment/components/JobDescriptionView";
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -613,50 +614,21 @@ export function JobDetailPage() {
                     </Section>
                   </div>
 
-                  <Section title="Job Description" icon={Briefcase}>
-                    <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">
-                      {job.description}
-                    </p>
-                  </Section>
-
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <Section title="Key Responsibilities" icon={Award}>
-                      <Bullets items={job.responsibilities || [
-                        "Architect, develop, and maintain clean scalable web applications.",
-                        "Coordinate closely with product designers and business units.",
-                        "Perform thorough peer reviews and integration tests."
-                      ]} />
-                    </Section>
-
-                    <Section title="Qualifications & Requirements" icon={BookOpen}>
-                      <Bullets items={job.requirements || [
-                        "3+ years experience with React, TypeScript, and modern frameworks.",
-                        "Strong experience building and testing responsive user interfaces.",
-                        "Excellent problem solving and communication skills."
-                      ]} />
-                    </Section>
-                  </div>
-
-                  <Section title="Interview Stages & Pipeline" icon={CalendarClock}>
-                    <div className="flex flex-col gap-3">
-                      {[
-                        { step: 1, name: "Screening", desc: "CV shortlisting & initial HR screening" },
-                        { step: 2, name: "Technical Assessment", desc: "Take-home coding task or algorithmic challenge" },
-                        { step: 3, name: "Technical Interview", desc: "Live coding and system architecture review" },
-                        { step: 4, name: "HR & Culture Round", desc: "Value alignment and comp band negotiation" },
-                      ].map((stage) => (
-                        <div key={stage.step} className="flex items-start gap-3 rounded-lg bg-background/40 p-3">
-                          <span className="grid h-6 w-6 shrink-0 place-items-center rounded bg-primary/10 text-xs font-semibold text-primary">
-                            {stage.step}
-                          </span>
-                          <div>
-                            <span className="text-xs font-semibold block">{stage.name}</span>
-                            <span className="text-[10px] text-muted-foreground">{stage.desc}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </Section>
+                  {/* Professional Job Description View — renders structured JD or plain text */}
+                  <JobDescriptionView
+                    description={job.description}
+                    fallback={{
+                      responsibilities: job.responsibilities,
+                      requirements: job.requirements,
+                      benefits: job.benefits,
+                      location: job.location,
+                      workMode: job.workMode,
+                      employmentType: job.employmentType,
+                      department: job.department,
+                      experience: job.experience,
+                      skills: job.skills,
+                    }}
+                  />
                 </>
               )}
             </div>
