@@ -129,18 +129,6 @@ const NAV_SECTIONS: SidebarNavSection[] = [
         icon: Users,
       },
       {
-        to: "/dashboard/attendance",
-        label: "Attendance",
-        icon: Clock,
-        roles: ["superadmin", "hr_admin", "manager"],
-      },
-      {
-        to: "/dashboard/leaves",
-        label: "Leaves",
-        icon: CalendarDays,
-        roles: ["superadmin", "hr_admin", "manager"],
-      },
-      {
         to: "/dashboard/talent",
         label: "Talent Management",
         icon: Briefcase,
@@ -193,16 +181,6 @@ const EMPLOYEE_NAV_SECTIONS: SidebarNavSection[] = [
         exact: true,
       },
       {
-        to: "/dashboard/attendance",
-        label: "Attendance",
-        icon: Clock,
-      },
-      {
-        to: "/dashboard/leaves",
-        label: "Leaves",
-        icon: CalendarDays,
-      },
-      {
         to: "/dashboard/timesheets",
         label: "Timesheets",
         icon: Timer,
@@ -249,16 +227,6 @@ const MANAGER_NAV_SECTIONS: SidebarNavSection[] = [
         to: "/dashboard/workforce",
         label: "My Team",
         icon: Users,
-      },
-      {
-        to: "/dashboard/attendance",
-        label: "Attendance",
-        icon: Clock,
-      },
-      {
-        to: "/dashboard/leaves",
-        label: "Leave Approvals",
-        icon: CalendarDays,
       },
       {
         to: "/dashboard/timesheets",
