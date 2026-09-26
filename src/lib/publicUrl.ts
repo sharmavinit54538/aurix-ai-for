@@ -19,19 +19,23 @@
  *  3. Empty string (SSR fallback — relative URLs still work)
  */
 export function getPublicAppUrl(): string {
-  // 1. Explicit env var takes priority (set in .env.production / deployment config)
+  // 1. Explicit env var takes priority (set in .env / .env.production / deployment config)
   const envUrl = (import.meta.env.VITE_PUBLIC_APP_URL as string | undefined)?.trim();
   if (envUrl) {
     return envUrl.replace(/\/+$/, "");
   }
 
-  // 2. Browser context — use current origin (works in both dev and prod)
+  // 2. Browser context — use current origin ONLY IF it's a real public domain (not localhost / private IP)
   if (typeof window !== "undefined" && window.location?.origin) {
-    return window.location.origin;
+    const origin = window.location.origin;
+    const isLocalhost = /^https?:\/\/(?:localhost|127\.0\.0\.1|0\.0\.0\.0)(?::\d+)?/i.test(origin);
+    if (!isLocalhost) {
+      return origin.replace(/\/+$/, "");
+    }
   }
 
-  // 3. SSR fallback — return empty string so paths become relative
-  return "";
+  // 3. Production fallback default (never localhost)
+  return "https://app.ofc360.com";
 }
 
 // ─── Specific URL builders ──────────────────────────────────────────────────
