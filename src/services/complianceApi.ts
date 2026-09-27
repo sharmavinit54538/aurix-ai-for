@@ -9,8 +9,46 @@ import type {
   RiskByCategoryItem,
 } from "@/store/compliance/complianceTypes";
 
+export function normalizeRiskByCategoryItems(raw: unknown): RiskByCategoryItem[] {
+  if (!raw) return [];
+  const body: any =
+    typeof raw === "object" && raw !== null && "data" in (raw as Record<string, unknown>)
+      ? (raw as Record<string, unknown>).data
+      : raw;
+  if (!body) return [];
+
+  // If array already
+  if (Array.isArray(body)) {
+    return body.map((r: any) => ({
+      c: String(r.c ?? r.category ?? r.risk_category ?? r.name ?? "General"),
+      n: Number(r.n ?? r.risk_count ?? r.riskCount ?? r.count ?? 1),
+    }));
+  }
+
+  // If object with risks_by_category or risksByCategory
+  const catList = body.risks_by_category ?? body.risksByCategory;
+  if (Array.isArray(catList)) {
+    return catList.map((r: any) => ({
+      c: String(r.c ?? r.category ?? r.risk_category ?? r.name ?? "General"),
+      n: Number(r.n ?? r.risk_count ?? r.riskCount ?? r.count ?? 1),
+    }));
+  }
+
+  // If object with risks array (e.g. RiskDetectionResponse: { risks: RiskItem[] })
+  if (Array.isArray(body.risks)) {
+    const categoryCounts: Record<string, number> = {};
+    for (const item of body.risks) {
+      const cat = String(item.risk_category ?? item.category ?? item.title ?? "General");
+      categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+    }
+    return Object.entries(categoryCounts).map(([c, n]) => ({ c, n }));
+  }
+
+  return [];
+}
+
 export function normalizeComplianceDashboardData(
-  data: Partial<ComplianceDashboardData & ComplianceSummary> | null | undefined,
+  data: Partial<ComplianceDashboardData & ComplianceSummary & Record<string, unknown>> | null | undefined,
 ): ComplianceDashboardData {
   if (!data || typeof data !== "object") {
     return {
@@ -21,79 +59,110 @@ export function normalizeComplianceDashboardData(
     };
   }
 
-  // Handle summary either as nested data.summary or top-level properties
+  // Unwrap if nested data.data exists
+  const raw: Record<string, unknown> =
+    (data as any).data !== undefined && typeof (data as any).data === "object"
+      ? (data as any).data
+      : data;
+
+  // Handle summary: reads camelCase and snake_case duplicate fields
   let summary: ComplianceSummary | undefined = undefined;
-  if (data.summary && typeof data.summary === "object") {
+  if (raw.summary && typeof raw.summary === "object") {
+    const s = raw.summary as Record<string, unknown>;
+    const rawReadiness = s.auditReadiness ?? s.audit_readiness;
     summary = {
-      complianceScore: Number(data.summary.complianceScore ?? 0),
-      openRisks: Number(data.summary.openRisks ?? 0),
-      missingDocs: Number(data.summary.missingDocs ?? 0),
-      auditReadiness: Number(data.summary.auditReadiness ?? 0),
-      lastAnalysis: data.summary.lastAnalysis,
+      complianceScore: Number(s.complianceScore ?? s.compliance_score ?? 0),
+      openRisks: Number(s.openRisks ?? s.open_risks ?? 0),
+      missingDocs: Number(s.missingDocs ?? s.missing_docs ?? 0),
+      auditReadiness:
+        typeof rawReadiness === "string"
+          ? parseFloat(rawReadiness) || 0
+          : Number(rawReadiness ?? 0),
+      lastAnalysis: s.lastAnalysis ? String(s.lastAnalysis) : undefined,
     };
   } else if (
-    data.complianceScore !== undefined ||
-    data.openRisks !== undefined ||
-    data.missingDocs !== undefined ||
-    data.auditReadiness !== undefined
+    raw.complianceScore !== undefined ||
+    raw.compliance_score !== undefined ||
+    raw.openRisks !== undefined ||
+    raw.open_risks !== undefined ||
+    raw.missingDocs !== undefined ||
+    raw.missing_docs !== undefined ||
+    raw.auditReadiness !== undefined ||
+    raw.audit_readiness !== undefined
   ) {
+    const rawReadiness = raw.auditReadiness ?? raw.audit_readiness;
     summary = {
-      complianceScore: Number(data.complianceScore ?? 0),
-      openRisks: Number(data.openRisks ?? 0),
-      missingDocs: Number(data.missingDocs ?? 0),
-      auditReadiness: Number(data.auditReadiness ?? 0),
-      lastAnalysis: data.lastAnalysis,
+      complianceScore: Number(raw.complianceScore ?? raw.compliance_score ?? 0),
+      openRisks: Number(raw.openRisks ?? raw.open_risks ?? 0),
+      missingDocs: Number(raw.missingDocs ?? raw.missing_docs ?? 0),
+      auditReadiness:
+        typeof rawReadiness === "string"
+          ? parseFloat(rawReadiness) || 0
+          : Number(rawReadiness ?? 0),
+      lastAnalysis: raw.lastAnalysis ? String(raw.lastAnalysis) : undefined,
     };
   }
 
-  const complianceTrend: ComplianceTrendItem[] = Array.isArray(data.charts?.complianceTrend)
-    ? data.charts!.complianceTrend
-    : Array.isArray(data.complianceTrend)
-    ? data.complianceTrend
+  // Trend normalization: support { m, score } as well as { month, compliance_score }
+  const rawCharts = raw.charts as Record<string, unknown> | undefined;
+  const rawTrend = Array.isArray(rawCharts?.complianceTrend)
+    ? (rawCharts!.complianceTrend as unknown[])
+    : Array.isArray(raw.complianceTrend)
+    ? (raw.complianceTrend as unknown[])
+    : Array.isArray(raw.compliance_trend)
+    ? (raw.compliance_trend as unknown[])
     : [];
 
-  const risksByCategory: RiskByCategoryItem[] = Array.isArray(data.charts?.risksByCategory)
-    ? data.charts!.risksByCategory
-    : Array.isArray(data.risksByCategory)
-    ? data.risksByCategory
+  const complianceTrend: ComplianceTrendItem[] = rawTrend.map((t: any) => ({
+    m: String(t.m ?? t.month ?? t.label ?? t.period ?? ""),
+    score: Number(t.score ?? t.compliance_score ?? t.complianceScore ?? t.value ?? 0),
+  }));
+
+  // Risks by category normalization: support { c, n } as well as { category, risk_count }
+  const rawRisks = Array.isArray(rawCharts?.risksByCategory)
+    ? (rawCharts!.risksByCategory as unknown[])
+    : Array.isArray(raw.risksByCategory)
+    ? (raw.risksByCategory as unknown[])
+    : Array.isArray(raw.risks_by_category)
+    ? (raw.risks_by_category as unknown[])
     : [];
+
+  const risksByCategory: RiskByCategoryItem[] = rawRisks.map((r: any) => ({
+    c: String(r.c ?? r.category ?? r.risk_category ?? r.name ?? ""),
+    n: Number(r.n ?? r.risk_count ?? r.riskCount ?? r.count ?? 0),
+  }));
 
   const charts: ComplianceCharts = {
     complianceTrend,
     risksByCategory,
   };
 
+  const kpi: ComplianceKpiItem[] = Array.isArray(raw.kpi) ? (raw.kpi as ComplianceKpiItem[]) : [];
+  const risks: ComplianceRiskItem[] = Array.isArray(raw.risks)
+    ? (raw.risks as ComplianceRiskItem[])
+    : [];
+
   return {
     summary,
-    kpi: Array.isArray(data.kpi) ? data.kpi : [],
-    risks: Array.isArray(data.risks) ? data.risks : [],
+    kpi,
+    risks,
     charts,
+    complianceTrend,
+    risksByCategory,
   };
 }
 
 export const complianceApi = {
   async getDashboard(): Promise<ComplianceDashboardData> {
-    const response = await apiInstance.get("/compliance/dashboard");
+    const response = await apiInstance.get("/ai/compliance/dashboard");
     const data = response.data?.data ?? response.data;
     return normalizeComplianceDashboardData(data);
   },
 
-  async getKpi(): Promise<ComplianceKpiItem[]> {
-    const response = await apiInstance.get("/compliance/kpi");
-    const data = response.data?.data ?? response.data;
-    return Array.isArray(data) ? data : [];
-  },
-
   async getRisks(): Promise<RiskByCategoryItem[]> {
-    const response = await apiInstance.get("/compliance/risks");
+    const response = await apiInstance.get("/ai/compliance/risks");
     const data = response.data?.data ?? response.data;
-    return Array.isArray(data) ? data : [];
-  },
-
-  async getTrend(): Promise<ComplianceTrendItem[]> {
-    const response = await apiInstance.get("/compliance/trend");
-    const data = response.data?.data ?? response.data;
-    return Array.isArray(data) ? data : [];
+    return normalizeRiskByCategoryItems(data);
   },
 };
 

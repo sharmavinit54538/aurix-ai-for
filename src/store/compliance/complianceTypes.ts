@@ -47,6 +47,30 @@ export interface ComplianceDashboardData {
   risksByCategory?: RiskByCategoryItem[];
 }
 
+export interface ComplianceDashboardResponse {
+  complianceScore: number;
+  openRisks: number;
+  missingDocs: number;
+  auditReadiness: string | number;
+  complianceTrend: Array<Record<string, unknown>>;
+  risksByCategory: Array<Record<string, unknown>>;
+  complianceChecks?: Array<Record<string, unknown>>;
+  laborLawStatus?: Record<string, unknown>;
+  recommendations?: string[];
+  alerts?: Array<Record<string, unknown>>;
+  compliance_score?: number;
+  open_risks?: number;
+  missing_docs?: number;
+  audit_readiness?: string | number;
+  compliance_trend?: Array<Record<string, unknown>>;
+  risks_by_category?: Array<Record<string, unknown>>;
+  compliance_checks?: Array<Record<string, unknown>>;
+  labor_law_status?: Record<string, unknown>;
+  policy_violations?: number;
+  expired_documents?: number;
+  critical_risks?: number;
+}
+
 export interface ComplianceState {
   loading: boolean;
   error: string | null;

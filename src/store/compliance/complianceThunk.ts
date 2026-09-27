@@ -16,33 +16,29 @@ export const fetchComplianceDashboard = createAsyncThunk<
   try {
     return await complianceApi.getDashboard();
   } catch (err) {
-    // If combined dashboard endpoint fails, attempt to fetch individual sections in parallel
+    // If dashboard endpoint fails, retry getDashboard once or fall back to getRisks alone
     try {
-      const [kpiRes, risksRes, trendRes] = await Promise.allSettled([
-        complianceApi.getKpi(),
-        complianceApi.getRisks(),
-        complianceApi.getTrend(),
-      ]);
-
-      const dashboardData: ComplianceDashboardData = {
-        kpi: kpiRes.status === "fulfilled" ? kpiRes.value : undefined,
-        risksByCategory: risksRes.status === "fulfilled" ? risksRes.value : undefined,
-        complianceTrend: trendRes.status === "fulfilled" ? trendRes.value : undefined,
-        charts: {
-          complianceTrend: trendRes.status === "fulfilled" ? trendRes.value : [],
-          risksByCategory: risksRes.status === "fulfilled" ? risksRes.value : [],
-        },
-      };
-
-      const hasData = [kpiRes, risksRes, trendRes].some((res) => res.status === "fulfilled");
-
-      if (!hasData) {
-        return thunkAPI.rejectWithValue(getErrorMessage(err, "Failed to load compliance dashboard data"));
-      }
-
-      return dashboardData;
+      return await complianceApi.getDashboard();
     } catch {
-      return thunkAPI.rejectWithValue(getErrorMessage(err, "Failed to load compliance dashboard data"));
+      try {
+        const risks = await complianceApi.getRisks();
+        if (risks && risks.length > 0) {
+          return {
+            risksByCategory: risks,
+            charts: {
+              complianceTrend: [],
+              risksByCategory: risks,
+            },
+          };
+        }
+        return thunkAPI.rejectWithValue(
+          getErrorMessage(err, "Failed to load compliance dashboard data"),
+        );
+      } catch {
+        return thunkAPI.rejectWithValue(
+          getErrorMessage(err, "Failed to load compliance dashboard data"),
+        );
+      }
     }
   }
 });
@@ -51,7 +47,8 @@ export const fetchComplianceKpi = createAsyncThunk<ComplianceKpiItem[], void, { 
   "compliance/fetchKpi",
   async (_, thunkAPI) => {
     try {
-      return await complianceApi.getKpi();
+      const data = await complianceApi.getDashboard();
+      return data.kpi ?? [];
     } catch (err) {
       return thunkAPI.rejectWithValue(getErrorMessage(err, "Failed to load compliance KPI metrics"));
     }
@@ -73,7 +70,8 @@ export const fetchComplianceTrend = createAsyncThunk<ComplianceTrendItem[], void
   "compliance/fetchTrend",
   async (_, thunkAPI) => {
     try {
-      return await complianceApi.getTrend();
+      const data = await complianceApi.getDashboard();
+      return data.charts?.complianceTrend ?? data.complianceTrend ?? [];
     } catch (err) {
       return thunkAPI.rejectWithValue(getErrorMessage(err, "Failed to load compliance trend"));
     }
