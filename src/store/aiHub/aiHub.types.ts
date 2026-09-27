@@ -525,12 +525,60 @@ export interface ScanCompliancePayload {
 
 // ── 14. Chat Assistant ───────────────────────────────────────────
 
+export interface ChatActionRequired {
+  actionName: string;
+  description: string;
+  payload: Record<string, any>;
+}
+
+export interface ChatSourceCitation {
+  document: string;
+  section: string;
+  page?: number;
+  similarity?: number;
+}
+
+export interface ChatChartData {
+  title: string;
+  chart_type?: string;
+  data: Array<Record<string, unknown>>;
+}
+
+export interface ChatTableData {
+  title: string;
+  headers: string[];
+  rows: any[][];
+}
+
+export interface ChatAssistantResponse {
+  answer: string;
+  confidence?: number;
+  sources?: ChatSourceCitation[];
+  charts?: ChatChartData[];
+  tables?: ChatTableData[];
+  followUpQuestions?: string[];
+  follow_up_questions?: string[];
+  conversationId: string;
+  conversation_id?: string;
+  cardType?: "candidate" | "job" | "interview" | "offer" | "onboarding" | "payroll" | "employee";
+  cardData?: any;
+  actionRequired?: ChatActionRequired;
+}
+
 export interface ChatMessage {
   id: string;
   conversationId?: string;
   sender: "user" | "assistant" | "system";
+  role?: "user" | "ai" | "assistant" | "system";
   content: string;
   timestamp: string;
+  cardType?: "candidate" | "job" | "interview" | "offer" | "onboarding" | "payroll" | "employee";
+  cardData?: any;
+  actionRequired?: ChatActionRequired;
+  suggestions?: string[];
+  sources?: ChatSourceCitation[];
+  charts?: ChatChartData[];
+  tables?: ChatTableData[];
   metadata?: Record<string, unknown>;
 }
 

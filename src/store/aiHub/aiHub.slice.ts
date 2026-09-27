@@ -914,7 +914,25 @@ export const aiHubSlice = createSlice({
       .addCase(sendChatMessage.fulfilled, (state, action) => {
         state.operationLoading["sendChatMessage"] = false;
         state.operationSuccess["sendChatMessage"] = true;
-        if (state.chatAssistant.data?.activeConversation) {
+        if (state.chatAssistant.data) {
+          if (!state.chatAssistant.data.activeConversation) {
+            const found = state.chatAssistant.data.conversations.find(
+              (c) => c.id === action.payload.conversationId,
+            );
+            if (found) {
+              state.chatAssistant.data.activeConversation = found;
+            } else {
+              const newConv = {
+                id: action.payload.conversationId || `conv-${Date.now()}`,
+                title: "Chat Conversation",
+                messages: [],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              };
+              state.chatAssistant.data.conversations.unshift(newConv);
+              state.chatAssistant.data.activeConversation = newConv;
+            }
+          }
           state.chatAssistant.data.activeConversation.messages.push(action.payload);
           state.chatAssistant.data.totalMessages += 1;
         }

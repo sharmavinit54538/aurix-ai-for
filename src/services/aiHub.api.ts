@@ -82,6 +82,154 @@ function extractData<T>(res: unknown, fallback?: T): T {
   return (body ?? fallback) as T;
 }
 
+function mapToChatMessage(raw: any, fallbackConversationId?: string): ChatMessage {
+  if (!raw || typeof raw !== "object") {
+    return {
+      id: `msg-${Date.now()}`,
+      conversationId: fallbackConversationId,
+      sender: "assistant",
+      role: "ai",
+      content: String(raw ?? ""),
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  const rawRole = String(raw.role ?? raw.sender ?? "assistant").toLowerCase();
+  const sender: "user" | "assistant" | "system" =
+    rawRole === "user" ? "user" : rawRole === "system" ? "system" : "assistant";
+  const role: "user" | "ai" | "assistant" | "system" =
+    rawRole === "user" ? "user" : rawRole === "system" ? "system" : "ai";
+
+  const conversationId = String(
+    raw.conversationId ?? raw.conversation_id ?? fallbackConversationId ?? "",
+  );
+  const id = String(
+    raw.id ?? raw.messageId ?? raw.message_id ?? `msg-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+  );
+  const timestamp = String(
+    raw.timestamp ?? raw.createdAt ?? raw.created_at ?? new Date().toISOString(),
+  );
+
+  let content = String(raw.content ?? raw.message ?? raw.answer ?? raw.text ?? "");
+
+  let cardType = raw.cardType as ChatMessage["cardType"];
+  let cardData = raw.cardData;
+  let actionRequired = raw.actionRequired as ChatMessage["actionRequired"];
+
+  const suggestions: string[] = Array.isArray(raw.suggestions)
+    ? raw.suggestions
+    : Array.isArray(raw.followUpQuestions)
+    ? raw.followUpQuestions
+    : Array.isArray(raw.follow_up_questions)
+    ? raw.follow_up_questions
+    : [];
+
+  const sources = Array.isArray(raw.sources) ? raw.sources : undefined;
+  const charts = Array.isArray(raw.charts) ? raw.charts : undefined;
+  const tables = Array.isArray(raw.tables) ? raw.tables : undefined;
+
+  // 1. Check if metadata contains structured fields
+  if (raw.metadata && typeof raw.metadata === "object") {
+    if (!cardType && raw.metadata.cardType) cardType = raw.metadata.cardType;
+    if (!cardData && raw.metadata.cardData) cardData = raw.metadata.cardData;
+    if (!actionRequired && raw.metadata.actionRequired) actionRequired = raw.metadata.actionRequired;
+  }
+
+  // 2. Check if content contains an embedded JSON block: ```json ... ``` or pure JSON
+  if (content && typeof content === "string") {
+    const jsonBlockMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (jsonBlockMatch) {
+      try {
+        const parsed = JSON.parse(jsonBlockMatch[1]);
+        if (parsed && typeof parsed === "object") {
+          if (!cardType && parsed.cardType) cardType = parsed.cardType;
+          if (!cardData && parsed.cardData) cardData = parsed.cardData;
+          if (!actionRequired && parsed.actionRequired) actionRequired = parsed.actionRequired;
+          const cleaned = content.replace(/```(?:json)?\s*[\s\S]*?\s*```/, "").trim();
+          if (cleaned) {
+            content = cleaned;
+          } else if (parsed.message || parsed.answer || parsed.text) {
+            content = String(parsed.message || parsed.answer || parsed.text);
+          }
+        }
+      } catch {
+        // preserve content
+      }
+    } else if (content.trim().startsWith("{") && content.trim().endsWith("}")) {
+      try {
+        const parsed = JSON.parse(content.trim());
+        if (parsed && typeof parsed === "object") {
+          if (!cardType && parsed.cardType) cardType = parsed.cardType;
+          if (!cardData && parsed.cardData) cardData = parsed.cardData;
+          if (!actionRequired && parsed.actionRequired) actionRequired = parsed.actionRequired;
+          if (parsed.message || parsed.answer || parsed.text) {
+            content = String(parsed.message || parsed.answer || parsed.text);
+          }
+        }
+      } catch {
+        // preserve content
+      }
+    }
+  }
+
+  // 3. If tables are returned (e.g. workforce metrics) without cardType, map to payroll/metrics card
+  if (!cardType && tables && tables.length > 0) {
+    const firstTable = tables[0];
+    if (firstTable.headers && firstTable.rows && firstTable.rows.length > 0) {
+      cardType = "payroll";
+      cardData = {
+        metrics: firstTable.rows.slice(0, 6).map((row: any[]) => ({
+          label: String(row[0] ?? "Metric"),
+          val: String(row[1] ?? "—"),
+        })),
+      };
+    }
+  }
+
+  return {
+    id,
+    conversationId: conversationId || undefined,
+    sender,
+    role,
+    content,
+    timestamp,
+    cardType,
+    cardData,
+    actionRequired,
+    suggestions: suggestions.length > 0 ? suggestions : undefined,
+    sources,
+    charts,
+    tables,
+    metadata: raw.metadata as Record<string, unknown> | undefined,
+  };
+}
+
+function normalizeChatConversation(raw: any): ChatConversation {
+  if (!raw || typeof raw !== "object") {
+    const fallbackId = `conv-${Date.now()}`;
+    return {
+      id: fallbackId,
+      title: "Chat Conversation",
+      messages: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  const id = String(raw.id ?? raw.conversationId ?? raw.conversation_id ?? `conv-${Date.now()}`);
+  const messagesRaw = Array.isArray(raw.messages) ? raw.messages : [];
+  const messages: ChatMessage[] = messagesRaw.map((m: any) => mapToChatMessage(m, id));
+
+  return {
+    id,
+    title: String(raw.title || "Chat Conversation"),
+    agentId: raw.agentId ? String(raw.agentId) : undefined,
+    messages,
+    createdAt: String(raw.createdAt ?? raw.created_at ?? new Date().toISOString()),
+    updatedAt: String(raw.updatedAt ?? raw.updated_at ?? new Date().toISOString()),
+  };
+}
+
 export const aiHubApi = {
   // ── 1. AI Hub Overview & Agents ──────────────────────────────────
   async getOverview(): Promise<AIHubOverview> {
@@ -544,45 +692,123 @@ export const aiHubApi = {
 
   // ── 15. Chat Assistant ───────────────────────────────────────────
   async getChatConversations(params?: PaginationParams): Promise<ChatConversation[]> {
-    const res = await apiInstance.get("/ai-hub/chat-assistant/conversations", { params });
-    const raw = extractData<unknown>(res, []);
-    if (Array.isArray(raw)) return raw as ChatConversation[];
-    if (
-      raw &&
-      typeof raw === "object" &&
-      "items" in raw &&
-      Array.isArray((raw as { items: unknown }).items)
-    ) {
-      return (raw as { items: ChatConversation[] }).items;
+    try {
+      const res = await apiInstance.get("/ai-hub/chat-assistant/conversations", { params });
+      const raw = extractData<unknown>(res, []);
+      const items = Array.isArray(raw)
+        ? raw
+        : raw && typeof raw === "object" && "items" in raw && Array.isArray((raw as any).items)
+        ? (raw as any).items
+        : [];
+      return items.map(normalizeChatConversation);
+    } catch {
+      // Resilient fallback to /ai/chat/history
+      try {
+        const res = await apiInstance.get("/ai/chat/history");
+        const raw = extractData<{ history?: any[] }>(res, {});
+        const list = Array.isArray(raw?.history) ? raw.history : [];
+        return list.map((item: any) => ({
+          id: String(item.conversation_id || item.conversationId || `conv-${Date.now()}`),
+          title: String(item.title || "Conversation"),
+          messages: [],
+          createdAt: item.updated_at ? new Date(item.updated_at).toISOString() : new Date().toISOString(),
+          updatedAt: item.updated_at ? new Date(item.updated_at).toISOString() : new Date().toISOString(),
+        }));
+      } catch {
+        return [];
+      }
     }
-    return [];
   },
 
   async createChatConversation(payload?: CreateConversationPayload): Promise<ChatConversation> {
-    const res = await apiInstance.post("/ai-hub/chat-assistant/conversations", payload ?? {});
-    return extractData<ChatConversation>(res);
+    try {
+      const res = await apiInstance.post("/ai-hub/chat-assistant/conversations", payload ?? {});
+      const raw = extractData<Record<string, unknown>>(res);
+      return normalizeChatConversation(raw);
+    } catch {
+      // Resilient fallback: initialize local conversation session
+      const convId = `conv-${Date.now()}`;
+      return {
+        id: convId,
+        title: payload?.title || "Workforce Copilot Chat",
+        agentId: payload?.agentId || "general-copilot",
+        messages: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+    }
   },
 
   async getChatConversation(conversationId: string): Promise<ChatConversation> {
-    const res = await apiInstance.get(
-      `/ai-hub/chat-assistant/conversations/${encodeURIComponent(conversationId)}`,
-    );
-    return extractData<ChatConversation>(res);
+    try {
+      const res = await apiInstance.get(
+        `/ai-hub/chat-assistant/conversations/${encodeURIComponent(conversationId)}`,
+      );
+      const raw = extractData<Record<string, unknown>>(res);
+      return normalizeChatConversation(raw);
+    } catch {
+      // Resilient fallback: try /ai/chat/history/{conversation_id}
+      try {
+        const res = await apiInstance.get(`/ai/chat/history/${encodeURIComponent(conversationId)}`);
+        const raw = extractData<Record<string, unknown>>(res);
+        return {
+          id: conversationId,
+          title: "Workforce Copilot Chat",
+          messages: raw?.answer ? [mapToChatMessage(raw, conversationId)] : [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+      } catch {
+        return {
+          id: conversationId,
+          title: "Workforce Copilot Chat",
+          messages: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+      }
+    }
   },
 
   async sendChatMessage(payload: SendChatMessagePayload): Promise<ChatMessage> {
-    const res = await apiInstance.post("/ai-hub/chat-assistant/message", payload);
-    return extractData<ChatMessage>(res);
+    try {
+      const res = await apiInstance.post("/ai-hub/chat-assistant/message", payload);
+      const raw = extractData<Record<string, unknown>>(res);
+      return mapToChatMessage(raw, payload.conversationId);
+    } catch (err: any) {
+      // Resilient fallback to /ai/chat
+      try {
+        const res = await apiInstance.post("/ai/chat", {
+          conversation_id: payload.conversationId,
+          message: payload.content,
+          query: payload.content,
+        });
+        const raw = extractData<Record<string, unknown>>(res);
+        return mapToChatMessage(raw, payload.conversationId);
+      } catch {
+        throw err;
+      }
+    }
   },
 
   async deleteChatConversation(conversationId: string): Promise<{ success: boolean; id: string }> {
-    const res = await apiInstance.delete(
-      `/ai-hub/chat-assistant/conversations/${encodeURIComponent(conversationId)}`,
-    );
-    return extractData<{ success: boolean; id: string }>(res, {
-      success: true,
-      id: conversationId,
-    });
+    try {
+      const res = await apiInstance.delete(
+        `/ai-hub/chat-assistant/conversations/${encodeURIComponent(conversationId)}`,
+      );
+      return extractData<{ success: boolean; id: string }>(res, {
+        success: true,
+        id: conversationId,
+      });
+    } catch {
+      // Resilient fallback: try /ai/chat/history/{conversation_id}
+      try {
+        await apiInstance.delete(`/ai/chat/history/${encodeURIComponent(conversationId)}`);
+      } catch {
+        // silent
+      }
+      return { success: true, id: conversationId };
+    }
   },
 
   // ── 16. Analytics Center ─────────────────────────────────────────
