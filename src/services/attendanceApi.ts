@@ -28,6 +28,7 @@ export interface AttendanceAnalyticsSummary {
   onLeave: number;
   onTimeRate?: number;
   averageWorkingHours?: number;
+  checkedOutToday?: number;
 }
 
 export interface TodayPunchStatus {
@@ -560,35 +561,59 @@ export const attendanceApi = {
 
   /**
    * Fetch attendance dashboard analytics summary.
-   * Calls GET /api/v1/attendance/face/analytics (or /attendance/analytics).
+   * Calls GET /api/v1/attendance/face/analytics.
+   * Real backend fields:
+   * total_active_employees, checked_in_today, checked_out_today, absent_today,
+   * attendance_rate_percentage, average_working_hours_today, late_check_ins_today
    */
   getAttendanceAnalytics: async (): Promise<AttendanceAnalyticsSummary> => {
-    try {
-      const res: any = await api.get("attendance/face/analytics");
-      const data = extractObjectPayload<any>(res);
-      return {
-        totalEmployees: data.total_employees ?? data.totalEmployees ?? 0,
-        present: data.present_today ?? data.present ?? 0,
-        late: data.late_today ?? data.late ?? 0,
-        absent: data.absent_today ?? data.absent ?? 0,
-        onLeave: data.on_leave_today ?? data.onLeave ?? 0,
-        onTimeRate: data.on_time_rate ?? data.onTimeRate,
-        averageWorkingHours: data.average_working_hours ?? data.averageWorkingHours,
-      };
-    } catch {
-      // Try alternate analytics endpoint
-      const res: any = await api.get("attendance/analytics");
-      const data = extractObjectPayload<any>(res);
-      return {
-        totalEmployees: data.total_employees ?? data.totalEmployees ?? 0,
-        present: data.present_today ?? data.present ?? 0,
-        late: data.late_today ?? data.late ?? 0,
-        absent: data.absent_today ?? data.absent ?? 0,
-        onLeave: data.on_leave_today ?? data.onLeave ?? 0,
-        onTimeRate: data.on_time_rate ?? data.onTimeRate,
-        averageWorkingHours: data.average_working_hours ?? data.averageWorkingHours,
-      };
-    }
+    const res: any = await api.get("attendance/face/analytics");
+    const data = extractObjectPayload<any>(res);
+    return {
+      totalEmployees:
+        data.total_active_employees ??
+        data.totalActiveEmployees ??
+        data.total_employees ??
+        data.totalEmployees ??
+        0,
+      present:
+        data.checked_in_today ??
+        data.checkedInToday ??
+        data.present_today ??
+        data.present ??
+        0,
+      late:
+        data.late_check_ins_today ??
+        data.lateCheckInsToday ??
+        data.late_today ??
+        data.late ??
+        0,
+      absent:
+        data.absent_today ??
+        data.absentToday ??
+        data.absent ??
+        0,
+      onLeave:
+        data.on_leave_today ??
+        data.onLeaveToday ??
+        data.on_leave ??
+        data.onLeave ??
+        0,
+      onTimeRate:
+        data.attendance_rate_percentage ??
+        data.attendanceRatePercentage ??
+        data.on_time_rate ??
+        data.onTimeRate,
+      averageWorkingHours:
+        data.average_working_hours_today ??
+        data.averageWorkingHoursToday ??
+        data.average_working_hours ??
+        data.averageWorkingHours,
+      checkedOutToday:
+        data.checked_out_today ??
+        data.checkedOutToday ??
+        0,
+    };
   },
 
   // ───────────────────────────────────────────────────────────

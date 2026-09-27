@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Clock,
   AlertTriangle,
@@ -9,9 +9,12 @@ import {
   CheckCircle2,
   CalendarX,
   RefreshCw,
+  ArrowLeft,
 } from "lucide-react";
 import { AIModulePage, AIChart, AIKpi, AIFeature } from "@/components/aurix/AIModule";
+import { Button } from "@/components/ui/button";
 import { attendanceApi, AttendanceAnalyticsSummary, AttendanceHistoryItem } from "@/services/attendanceApi";
+import { useCurrentRole } from "@/lib/roles";
 
 export const Route = createFileRoute("/ai/attendance-monitor")({
   head: () => ({ meta: [{ title: "AI Attendance Monitor — OFC360" }] }),
@@ -19,9 +22,11 @@ export const Route = createFileRoute("/ai/attendance-monitor")({
 });
 
 function Page() {
+  const role = useCurrentRole();
   const [loading, setLoading] = useState(true);
   const [analytics, setAnalytics] = useState<AttendanceAnalyticsSummary | null>(null);
   const [history, setHistory] = useState<AttendanceHistoryItem[]>([]);
+  const [forbidden, setForbidden] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -35,6 +40,11 @@ function Page() {
         if (mounted) {
           if (analyticsRes.status === "fulfilled") {
             setAnalytics(analyticsRes.value);
+          } else if (analyticsRes.status === "rejected") {
+            const errStatus = analyticsRes.reason?.status ?? analyticsRes.reason?.response?.status;
+            if (errStatus === 403) {
+              setForbidden(true);
+            }
           }
           if (historyRes.status === "fulfilled" && historyRes.value?.items) {
             setHistory(historyRes.value.items);
@@ -51,6 +61,27 @@ function Page() {
       mounted = false;
     };
   }, []);
+
+  const isRoleRestricted = Boolean(role && !["super_admin", "hr_admin", "manager", "executive"].includes(role));
+
+  if (!loading && (forbidden || isRoleRestricted)) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center p-6 text-center">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-destructive/10 text-destructive">
+          <ShieldAlert className="h-8 w-8" />
+        </div>
+        <h2 className="text-xl font-bold tracking-tight">Access Restricted</h2>
+        <p className="mt-2 max-w-md text-sm text-muted-foreground">
+          You don't have permission to view company-wide attendance analytics. This enterprise module requires manager, HR administrator, or executive authorization.
+        </p>
+        <Button asChild variant="outline" className="mt-6 gap-2">
+          <Link to="/dashboard">
+            <ArrowLeft className="h-4 w-4" /> Return to Dashboard
+          </Link>
+        </Button>
+      </div>
+    );
+  }
 
   // Compute real KPIs from backend
   const totalEmployees = analytics?.totalEmployees ?? 0;

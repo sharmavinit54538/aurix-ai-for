@@ -308,12 +308,13 @@ export const aiHubApi = {
 
   // ── 3. Workforce Insights ────────────────────────────────────────
   async getWorkforceInsights(): Promise<WorkforceInsight[]> {
-    const res = await apiInstance.get("/ai-hub/workforce-insights");
+    const res = await apiInstance.get("/ai-brain/workforce-insights");
     const raw = extractData<unknown>(res, []);
     return Array.isArray(raw) ? (raw as WorkforceInsight[]) : [];
   },
 
   async analyzeWorkforceInsights(payload?: AnalyzeWorkforcePayload): Promise<WorkforceInsight[]> {
+    // TODO: verify against backend — no confirmed route
     const res = await apiInstance.post("/ai-hub/workforce-insights/analyze", payload ?? {});
     const raw = extractData<unknown>(res, []);
     return Array.isArray(raw) ? (raw as WorkforceInsight[]) : [];
@@ -490,7 +491,7 @@ export const aiHubApi = {
 
   // ── 9. Workforce Planning ────────────────────────────────────────
   async getWorkforcePlanning(): Promise<WorkforcePlanningData> {
-    const res = await apiInstance.get("/ai-hub/workforce-planning");
+    const res = await apiInstance.get("/ai/workforce/dashboard");
     return extractData<WorkforcePlanningData>(res, {
       currentHeadcount: 0,
       forecast: {
@@ -502,7 +503,7 @@ export const aiHubApi = {
   },
 
   async forecastWorkforce(payload?: ForecastWorkforcePayload): Promise<WorkforceForecast> {
-    const res = await apiInstance.post("/ai-hub/workforce-planning/forecast", payload ?? {});
+    const res = await apiInstance.post("/ai/workforce/forecast", payload ?? {});
     return extractData<WorkforceForecast>(res, {
       horizonMonths: payload?.horizonMonths ?? 12,
       projectedHeadcount: 0,
@@ -513,6 +514,7 @@ export const aiHubApi = {
   async forecastHeadcount(
     payload?: ForecastHeadcountPayload,
   ): Promise<{ recommendedHeadcount: number; budgetEstimated: number; summary?: string }> {
+    // TODO: verify against backend — no confirmed route
     const res = await apiInstance.post("/ai-hub/workforce-planning/headcount", payload ?? {});
     return extractData<{ recommendedHeadcount: number; budgetEstimated: number; summary?: string }>(
       res,
