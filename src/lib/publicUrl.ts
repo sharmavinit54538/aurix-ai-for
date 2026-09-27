@@ -6,7 +6,7 @@
  * In SSR / non-browser contexts, falls back to the env variable or empty string.
  *
  * IMPORTANT: This returns the FRONTEND origin, NOT the API origin.
- * - Frontend: https://app.ofc360.com  (or whatever the public domain is)
+ * - Frontend: https://www.ofc360.com  (or whatever the public domain is)
  * - API:      https://api.ofc360.com  (separate — do NOT use for public URLs)
  */
 
@@ -35,7 +35,7 @@ export function getPublicAppUrl(): string {
   }
 
   // 3. Production fallback default (never localhost)
-  return "https://app.ofc360.com";
+  return "https://www.ofc360.com";
 }
 
 // ─── Specific URL builders ──────────────────────────────────────────────────
@@ -43,7 +43,7 @@ export function getPublicAppUrl(): string {
 /**
  * Generates the public Job Application URL for a given job.
  * @param jobId - The job ID or unique key
- * @returns Full URL like `https://app.ofc360.com/jobs/apply/abc123`
+ * @returns Full URL like `https://www.ofc360.com/jobs/apply/abc123`
  */
 export function getJobApplicationUrl(jobId: string): string {
   return `${getPublicAppUrl()}/jobs/apply/${jobId}`;
@@ -52,7 +52,7 @@ export function getJobApplicationUrl(jobId: string): string {
 /**
  * Generates the public Career Site URL for a given slug.
  * @param slug - The career site slug
- * @returns Full URL like `https://app.ofc360.com/careers/acme-corp`
+ * @returns Full URL like `https://www.ofc360.com/careers/acme-corp`
  */
 export function getCareerSiteUrl(slug: string): string {
   return `${getPublicAppUrl()}/careers/${slug}`;
@@ -61,7 +61,7 @@ export function getCareerSiteUrl(slug: string): string {
 /**
  * Generates the employee onboarding invite URL.
  * @param token - The activation token
- * @returns Full URL like `https://app.ofc360.com/onboarding?token=xyz`
+ * @returns Full URL like `https://www.ofc360.com/onboarding?token=xyz`
  */
 export function getOnboardingUrl(token: string): string {
   return `${getPublicAppUrl()}/onboarding?token=${token}`;
@@ -70,7 +70,7 @@ export function getOnboardingUrl(token: string): string {
 /**
  * Generates a public job detail URL (for career site / board listings).
  * @param jobId - The job ID
- * @returns Full URL like `https://app.ofc360.com/jobs/abc123`
+ * @returns Full URL like `https://www.ofc360.com/jobs/abc123`
  */
 export function getPublicJobUrl(jobId: string): string {
   return `${getPublicAppUrl()}/jobs/${jobId}`;
@@ -79,7 +79,7 @@ export function getPublicJobUrl(jobId: string): string {
 /**
  * Generates an employee referral portal URL for a specific job.
  * @param jobId - The job ID
- * @returns Full URL like `https://app.ofc360.com/referrals?job=abc123`
+ * @returns Full URL like `https://www.ofc360.com/referrals?job=abc123`
  */
 export function getReferralUrl(jobId: string): string {
   return `${getPublicAppUrl()}/referrals?job=${jobId}`;

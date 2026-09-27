@@ -300,153 +300,182 @@ export function JobQrModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[460px] w-[95vw] bg-card border border-border shadow-2xl p-6 rounded-2xl sm:rounded-3xl gap-0 overflow-hidden">
-        {/* Header */}
-        <DialogHeader className="space-y-1 text-left pb-3">
-          <div className="flex items-center gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary border border-primary/20">
-              <QrCode className="h-5 w-5" />
-            </span>
-            <div className="min-w-0 flex-1 pr-6">
-              <DialogTitle className="text-base font-bold text-foreground leading-tight tracking-tight">
-                Generate Job QR Code
-              </DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground mt-0.5 leading-normal">
-                Share or print this QR code for instant mobile job application.
-              </DialogDescription>
-            </div>
-          </div>
-        </DialogHeader>
-
-        {/* Position Context Pill */}
-        {jobTitle && (
-          <div className="mt-1 mb-3 flex items-center justify-between rounded-xl bg-muted/60 border border-border px-3.5 py-2 w-full min-w-0">
-            <div className="min-w-0 flex-1 pr-2">
-              <span className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground/80 block">
-                Target Role
-              </span>
-              <span className="text-xs font-bold text-foreground truncate block">
-                {jobTitle}
-              </span>
-            </div>
-            <span className="shrink-0 text-[10px] font-semibold bg-primary/10 text-primary px-2.5 py-0.5 rounded-full border border-primary/25">
-              Public Link
-            </span>
-          </div>
-        )}
-
-        {/* QR Showcase Area */}
-        <div className="py-2 w-full">
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-14 space-y-3">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-              <p className="text-xs font-medium text-muted-foreground">Generating QR code...</p>
-            </div>
-          ) : error ? (
-            <div className="flex flex-col items-center justify-center py-10 space-y-3 text-center">
-              <div className="grid h-10 w-10 place-items-center rounded-full bg-destructive/10 text-destructive">
-                <AlertCircle className="h-5 w-5" />
-              </div>
-              <p className="text-xs text-muted-foreground max-w-xs">{error}</p>
-              <Button size="sm" variant="outline" onClick={generateQr} className="text-xs gap-1.5">
-                <RefreshCw className="h-3.5 w-3.5" /> Try Again
-              </Button>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center w-full space-y-3">
-              {/* White QR Frame with subtle shadow and border */}
-              <div className="rounded-2xl bg-white p-3.5 shadow-xl border border-slate-200/90 transition-transform duration-200 hover:scale-[1.01]">
-                <img
-                  src={pngDataUrl}
-                  alt={`QR code for ${jobTitle} job application`}
-                  aria-label={`QR code for ${jobTitle} job application`}
-                  className="w-44 h-44 rounded-lg object-contain block"
-                />
-              </div>
-
-              {/* Scan Subtitle */}
-              <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-foreground/90">
-                <Scan className="h-3.5 w-3.5 text-primary" />
-                <span>Scan with phone camera to apply</span>
-              </div>
-
-              {/* URL Display + Copy Button */}
-              <div className="w-full min-w-0">
-                <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/60 p-1.5 w-full min-w-0 transition-colors focus-within:border-primary/50">
-                  <span
-                    className="flex-1 min-w-0 truncate font-mono text-[11px] text-muted-foreground select-all px-2"
-                    title={applyUrl}
-                  >
-                    {applyUrl}
-                  </span>
-                  <Button
-                    size="sm"
-                    variant={copied ? "default" : "secondary"}
-                    className={`h-7 px-3 text-xs shrink-0 font-medium transition-all ${
-                      copied
-                        ? "bg-emerald-600 hover:bg-emerald-600 text-white"
-                        : "hover:bg-accent"
-                    }`}
-                    onClick={handleCopyLink}
-                    aria-label={copied ? "Link copied" : "Copy job application link"}
-                  >
-                    {copied ? (
-                      <>
-                        <Check className="mr-1 h-3.5 w-3.5" />
-                        Copied
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="mr-1 h-3.5 w-3.5" />
-                        Copy Link
-                      </>
-                    )}
-                  </Button>
+      <DialogContent
+        overlayClassName="backdrop-blur-md bg-black/85"
+        className={[
+          /* ── sizing & position ── */
+          "w-[calc(100vw-32px)] max-w-[640px]",
+          "max-h-[calc(100dvh-32px)]",
+          /* ── layout ── */
+          "flex flex-col overflow-hidden",
+          /* ── visual ── */
+          "bg-card border border-border rounded-2xl sm:rounded-3xl",
+          "shadow-2xl p-0 gap-0",
+        ].join(" ")}
+      >
+        {/* ═══ Scrollable inner wrapper ═══ */}
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+          {/* ── Header ── */}
+          <div className="px-5 sm:px-6 pt-5 sm:pt-6 pb-3">
+            <DialogHeader className="space-y-1 text-left">
+              <div className="flex items-center gap-3">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary border border-primary/20">
+                  <QrCode className="h-5 w-5" />
+                </span>
+                <div className="min-w-0 flex-1 pr-6">
+                  <DialogTitle className="text-base font-bold text-foreground leading-tight tracking-tight">
+                    Generate Job QR Code
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-muted-foreground mt-0.5 leading-normal">
+                    Share or print this QR code for instant mobile job application.
+                  </DialogDescription>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
-
-        {/* Footer Actions: 2-column download buttons + full-width Print button */}
-        <div className="mt-3 pt-3.5 border-t border-border flex flex-col gap-2 w-full">
-          <div className="grid grid-cols-2 gap-2 w-full">
-            <Button
-              size="sm"
-              variant="outline"
-              className="w-full text-xs gap-1.5 h-9 font-medium"
-              onClick={handleDownloadPng}
-              disabled={loading || !!error}
-              aria-label="Download QR code as PNG image"
-            >
-              <Download className="h-3.5 w-3.5" />
-              <span>Download PNG</span>
-            </Button>
-
-            <Button
-              size="sm"
-              variant="outline"
-              className="w-full text-xs gap-1.5 h-9 font-medium"
-              onClick={handleDownloadSvg}
-              disabled={loading || !!error}
-              aria-label="Download QR code as SVG vector"
-            >
-              <FileCode className="h-3.5 w-3.5" />
-              <span>Download SVG</span>
-            </Button>
+            </DialogHeader>
           </div>
 
-          <Button
-            size="sm"
-            variant="default"
-            className="w-full text-xs gap-1.5 h-9 font-semibold"
-            onClick={handlePrint}
-            disabled={loading || !!error}
-            aria-label="Print QR code"
-          >
-            <Printer className="h-3.5 w-3.5" />
-            <span>Print QR Poster</span>
-          </Button>
+          {/* ── Target Role Pill ── */}
+          {jobTitle && (
+            <div className="mx-5 sm:mx-6 mb-3 flex items-center justify-between rounded-xl bg-muted/60 border border-border px-3.5 py-2">
+              <div className="min-w-0 flex-1 pr-2">
+                <span className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground/80 block">
+                  Target Role
+                </span>
+                <span className="text-xs font-bold text-foreground truncate block">
+                  {jobTitle}
+                </span>
+              </div>
+              <span className="shrink-0 text-[10px] font-semibold bg-primary/10 text-primary px-2.5 py-0.5 rounded-full border border-primary/25">
+                Public Link
+              </span>
+            </div>
+          )}
+
+          {/* ── QR Showcase ── */}
+          <div className="px-5 sm:px-6 py-3">
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-12 space-y-3">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                <p className="text-xs font-medium text-muted-foreground">
+                  Generating QR code...
+                </p>
+              </div>
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center py-10 space-y-3 text-center">
+                <div className="grid h-10 w-10 place-items-center rounded-full bg-destructive/10 text-destructive">
+                  <AlertCircle className="h-5 w-5" />
+                </div>
+                <p className="text-xs text-muted-foreground max-w-xs">{error}</p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={generateQr}
+                  className="text-xs gap-1.5"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" /> Try Again
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center w-full space-y-3">
+                {/* White QR container — ~340px desktop, scales on mobile */}
+                <div
+                  className="rounded-2xl bg-white shadow-lg border border-slate-200/80 inline-flex items-center justify-center aspect-square p-6"
+                  style={{ width: "min(340px, calc(100vw - 80px))" }}
+                >
+                  <img
+                    src={pngDataUrl}
+                    alt={`QR code for ${jobTitle} job application`}
+                    aria-label={`QR code for ${jobTitle} job application`}
+                    className="w-full h-full rounded-lg object-contain block"
+                  />
+                </div>
+
+                {/* Scan helper text */}
+                <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-foreground/90">
+                  <Scan className="h-3.5 w-3.5 shrink-0 text-primary" />
+                  <span>Scan with phone camera to apply</span>
+                </div>
+
+                {/* URL + Copy */}
+                <div className="w-full">
+                  <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/60 p-1.5 sm:p-2 w-full transition-colors focus-within:border-primary/50">
+                    <span
+                      className="flex-1 min-w-0 font-mono text-[11px] text-muted-foreground select-all px-2 break-all leading-relaxed"
+                      title={applyUrl}
+                    >
+                      {applyUrl}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant={copied ? "default" : "secondary"}
+                      className={`h-7 px-3 text-xs shrink-0 font-medium transition-all ${
+                        copied
+                          ? "bg-emerald-600 hover:bg-emerald-600 text-white"
+                          : "hover:bg-accent"
+                      }`}
+                      onClick={handleCopyLink}
+                      aria-label={copied ? "Link copied" : "Copy job application link"}
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="mr-1 h-3.5 w-3.5" />
+                          Copied
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="mr-1 h-3.5 w-3.5" />
+                          Copy
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ── Action Buttons ── */}
+          <div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-3">
+            <div className="pt-3.5 border-t border-border flex flex-col gap-2">
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1 min-w-[140px] text-xs gap-1.5 h-9 font-medium"
+                  onClick={handleDownloadPng}
+                  disabled={loading || !!error}
+                  aria-label="Download QR code as PNG image"
+                >
+                  <Download className="h-3.5 w-3.5 shrink-0" />
+                  <span>Download PNG</span>
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1 min-w-[140px] text-xs gap-1.5 h-9 font-medium"
+                  onClick={handleDownloadSvg}
+                  disabled={loading || !!error}
+                  aria-label="Download QR code as SVG vector"
+                >
+                  <FileCode className="h-3.5 w-3.5 shrink-0" />
+                  <span>Download SVG</span>
+                </Button>
+              </div>
+
+              <Button
+                size="sm"
+                variant="default"
+                className="w-full text-xs gap-1.5 h-9 font-semibold"
+                onClick={handlePrint}
+                disabled={loading || !!error}
+                aria-label="Print QR code poster"
+              >
+                <Printer className="h-3.5 w-3.5 shrink-0" />
+                <span>Print QR Poster</span>
+              </Button>
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
