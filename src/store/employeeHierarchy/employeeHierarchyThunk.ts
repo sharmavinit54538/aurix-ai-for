@@ -1,6 +1,8 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { fetchEmployeeHierarchyApi, fetchEmployeeReportingDetailsApi } from "@/services/employeeHierarchyApi";
+import { fetchOrganizationalGraphApi } from "@/services/organizationalGraphApi";
 import type { BackendHierarchyNode, ReportingChainDetails } from "./employeeHierarchyTypes";
+import type { OrganizationalGraphData } from "./organizationalGraphTypes";
 
 export const fetchEmployeeHierarchy = createAsyncThunk<
   BackendHierarchyNode[],
@@ -31,3 +33,19 @@ export const fetchEmployeeReportingDetails = createAsyncThunk<
     );
   }
 });
+
+export const fetchOrganizationalGraph = createAsyncThunk<
+  OrganizationalGraphData,
+  void,
+  { rejectValue: string }
+>("employeeHierarchy/fetchOrganizationalGraph", async (_, { rejectWithValue }) => {
+  try {
+    const data = await fetchOrganizationalGraphApi();
+    return data;
+  } catch (err: any) {
+    return rejectWithValue(
+      err?.response?.data?.message || err?.message || "Failed to load organizational graph data."
+    );
+  }
+});
+

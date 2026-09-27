@@ -60,4 +60,34 @@ export interface EmployeeHierarchyState {
   connectorStyle: ConnectorStyleType;
   showAiInsights: boolean;
   showAnalyticsPanel: boolean;
+
+  // ── Organizational Graph State ──────────────────
+  /** Current view mode: "graph" or "hierarchy" */
+  viewMode: "graph" | "hierarchy";
+  /** Full organizational graph data */
+  graphData: import("./organizationalGraphTypes").OrganizationalGraphData | null;
+  /** Whether graph data is loading */
+  graphLoading: boolean;
+  /** Error from graph data fetch */
+  graphError: string | null;
+  /** Graph filter state */
+  graphFilters: import("./organizationalGraphTypes").OrgGraphFilterState;
+  /** Selected graph node details */
+  selectedGraphNode: import("./organizationalGraphTypes").OrgGraphNodeDetails | null;
+  /** Whether graph detail panel is open */
+  graphDetailPanelOpen: boolean;
+  /** Whether graph AI panel is open */
+  graphAiPanelOpen: boolean;
+  /** AI conversation messages */
+  graphAiMessages: { role: "user" | "assistant"; content: string; timestamp: string }[];
+  /** Whether AI is processing */
+  graphAiProcessing: boolean;
+  /** Organizational health metrics */
+  healthMetrics: import("./organizationalGraphTypes").OrgHealthMetrics | null;
+  /** Whether relationship explorer is active */
+  explorerActive: boolean;
+  /** Highlighted path for relationship traversal */
+  highlightedPath: string[];
+  /** Search results across all entity types */
+  graphSearchResults: import("./organizationalGraphTypes").OrgGraphSearchResult[];
 }

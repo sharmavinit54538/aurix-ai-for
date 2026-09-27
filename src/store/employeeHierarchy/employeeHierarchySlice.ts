@@ -6,7 +6,15 @@ import type {
   HierarchyLayoutType,
   ConnectorStyleType,
 } from "./employeeHierarchyTypes";
-import { fetchEmployeeHierarchy, fetchEmployeeReportingDetails } from "./employeeHierarchyThunk";
+import type {
+  OrgGraphFilterCategory,
+  OrgRelationshipType,
+  OrgGraphNodeDetails,
+  OrgGraphSearchResult,
+  OrgHealthMetrics,
+} from "./organizationalGraphTypes";
+import { fetchEmployeeHierarchy, fetchEmployeeReportingDetails, fetchOrganizationalGraph } from "./employeeHierarchyThunk";
+import { calculateHealthMetrics } from "@/services/organizationalGraphApi";
 
 const initialFilters: HierarchyFilterState = {
   department: "all",
@@ -15,6 +23,20 @@ const initialFilters: HierarchyFilterState = {
   employmentType: "all",
   reportingManagerId: "all",
   workLocationType: "all",
+};
+
+const initialGraphFilters = {
+  activeCategories: ["people", "teams"] as OrgGraphFilterCategory[],
+  activeRelationshipTypes: [
+    "REPORTS_TO",
+    "MANAGES",
+    "MEMBER_OF",
+    "BELONGS_TO",
+  ] as OrgRelationshipType[],
+  searchQuery: "",
+  focusedNodeId: null as string | null,
+  department: "all",
+  designation: "all",
 };
 
 const initialState: EmployeeHierarchyState = {
@@ -34,6 +56,22 @@ const initialState: EmployeeHierarchyState = {
   connectorStyle: "curved",
   showAiInsights: false,
   showAnalyticsPanel: true,
+
+  // ── Graph state ────────────────────────────────
+  viewMode: "hierarchy",
+  graphData: null,
+  graphLoading: false,
+  graphError: null,
+  graphFilters: initialGraphFilters,
+  selectedGraphNode: null,
+  graphDetailPanelOpen: false,
+  graphAiPanelOpen: false,
+  graphAiMessages: [],
+  graphAiProcessing: false,
+  healthMetrics: null,
+  explorerActive: false,
+  highlightedPath: [],
+  graphSearchResults: [],
 };
 
 function getAllNodeIds(nodes: BackendHierarchyNode[]): string[] {
@@ -130,9 +168,124 @@ export const employeeHierarchySlice = createSlice({
     toggleAnalyticsPanel(state) {
       state.showAnalyticsPanel = !state.showAnalyticsPanel;
     },
+
+    // ── Graph reducers ────────────────────────────
+    setViewMode(state, action: PayloadAction<"graph" | "hierarchy">) {
+      state.viewMode = action.payload;
+    },
+    setGraphSearchQuery(state, action: PayloadAction<string>) {
+      const query = action.payload.toLowerCase().trim();
+      state.graphFilters.searchQuery = action.payload;
+
+      // Update search results from current graph data
+      if (state.graphData && query.length > 0) {
+        state.graphSearchResults = state.graphData.nodes
+          .filter((n) => {
+            return (
+              n.label.toLowerCase().includes(query) ||
+              (n.subtitle && n.subtitle.toLowerCase().includes(query)) ||
+              (n.description && n.description.toLowerCase().includes(query)) ||
+              n.type.toLowerCase().includes(query) ||
+              (n.metadata?.employeeId && String(n.metadata.employeeId).toLowerCase().includes(query))
+            );
+          })
+          .slice(0, 20)
+          .map((n) => ({
+            nodeId: n.id,
+            type: n.type,
+            label: n.label,
+            subtitle: n.subtitle,
+          }));
+      } else {
+        state.graphSearchResults = [];
+      }
+    },
+    toggleGraphFilterCategory(state, action: PayloadAction<OrgGraphFilterCategory>) {
+      const cat = action.payload;
+      const idx = state.graphFilters.activeCategories.indexOf(cat);
+      if (idx >= 0) {
+        state.graphFilters.activeCategories.splice(idx, 1);
+      } else {
+        state.graphFilters.activeCategories.push(cat);
+      }
+    },
+    setGraphFilterCategories(state, action: PayloadAction<OrgGraphFilterCategory[]>) {
+      state.graphFilters.activeCategories = action.payload;
+    },
+    toggleRelationshipTypeFilter(state, action: PayloadAction<OrgRelationshipType>) {
+      const rType = action.payload;
+      const idx = state.graphFilters.activeRelationshipTypes.indexOf(rType);
+      if (idx >= 0) {
+        state.graphFilters.activeRelationshipTypes.splice(idx, 1);
+      } else {
+        state.graphFilters.activeRelationshipTypes.push(rType);
+      }
+    },
+    setFocusedNode(state, action: PayloadAction<string | null>) {
+      state.graphFilters.focusedNodeId = action.payload;
+      if (action.payload && state.graphData) {
+        // Build node details
+        const node = state.graphData.nodes.find((n) => n.id === action.payload);
+        if (node) {
+          const directRels = state.graphData.relationships.filter(
+            (r) => r.sourceNodeId === action.payload || r.targetNodeId === action.payload
+          );
+          const connectedIds = new Set(
+            directRels.map((r) =>
+              r.sourceNodeId === action.payload ? r.targetNodeId : r.sourceNodeId
+            )
+          );
+          const connectedNodes = state.graphData.nodes.filter((n) => connectedIds.has(n.id));
+
+          state.selectedGraphNode = {
+            node,
+            directConnections: directRels,
+            connectedNodes,
+          };
+          state.graphDetailPanelOpen = true;
+          state.highlightedPath = [action.payload, ...Array.from(connectedIds)];
+        }
+      } else {
+        state.selectedGraphNode = null;
+        state.graphDetailPanelOpen = false;
+        state.highlightedPath = [];
+      }
+    },
+    closeGraphDetailPanel(state) {
+      state.graphDetailPanelOpen = false;
+      state.selectedGraphNode = null;
+      state.graphFilters.focusedNodeId = null;
+      state.highlightedPath = [];
+      state.explorerActive = false;
+    },
+    toggleGraphAiPanel(state) {
+      state.graphAiPanelOpen = !state.graphAiPanelOpen;
+    },
+    addGraphAiMessage(state, action: PayloadAction<{ role: "user" | "assistant"; content: string }>) {
+      state.graphAiMessages.push({
+        ...action.payload,
+        timestamp: new Date().toISOString(),
+      });
+    },
+    setGraphAiProcessing(state, action: PayloadAction<boolean>) {
+      state.graphAiProcessing = action.payload;
+    },
+    toggleExplorer(state) {
+      state.explorerActive = !state.explorerActive;
+    },
+    setHighlightedPath(state, action: PayloadAction<string[]>) {
+      state.highlightedPath = action.payload;
+    },
+    resetGraphFilters(state) {
+      state.graphFilters = initialGraphFilters;
+      state.graphSearchResults = [];
+      state.highlightedPath = [];
+      state.explorerActive = false;
+    },
   },
   extraReducers: (builder) => {
     builder
+      // ── Hierarchy thunks ──────────────────────
       .addCase(fetchEmployeeHierarchy.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -164,6 +317,42 @@ export const employeeHierarchySlice = createSlice({
       .addCase(fetchEmployeeReportingDetails.rejected, (state, action) => {
         state.loadingDetails = false;
         state.detailsError = action.payload ?? "Failed to fetch employee details";
+      })
+      // ── Graph thunk ───────────────────────────
+      .addCase(fetchOrganizationalGraph.pending, (state) => {
+        state.graphLoading = true;
+        state.graphError = null;
+      })
+      .addCase(fetchOrganizationalGraph.fulfilled, (state, action) => {
+        state.graphLoading = false;
+        state.graphData = action.payload;
+
+        // Calculate health metrics from graph data
+        if (action.payload.nodes.length > 0) {
+          state.healthMetrics = calculateHealthMetrics(
+            action.payload.nodes,
+            action.payload.relationships
+          );
+        } else {
+          state.healthMetrics = {
+            totalWorkforce: 0,
+            totalManagers: 0,
+            hierarchyDepth: 0,
+            avgSpanOfControl: 0,
+            unassignedReportingManagers: 0,
+            teamsWithoutManagers: 0,
+            employeesWithoutDepartment: 0,
+            orphanedRelationships: 0,
+            projectsWithoutEmployees: 0,
+            goalsWithoutOwners: 0,
+            workflowsWithoutResponsible: 0,
+            sufficientData: false,
+          };
+        }
+      })
+      .addCase(fetchOrganizationalGraph.rejected, (state, action) => {
+        state.graphLoading = false;
+        state.graphError = action.payload ?? "Failed to load organizational graph data.";
       });
   },
 });
@@ -187,6 +376,20 @@ export const {
   setConnectorStyle,
   toggleAiInsights,
   toggleAnalyticsPanel,
+  // ── Graph actions ──────────────────
+  setViewMode,
+  setGraphSearchQuery,
+  toggleGraphFilterCategory,
+  setGraphFilterCategories,
+  toggleRelationshipTypeFilter,
+  setFocusedNode,
+  closeGraphDetailPanel,
+  toggleGraphAiPanel,
+  addGraphAiMessage,
+  setGraphAiProcessing,
+  toggleExplorer,
+  setHighlightedPath,
+  resetGraphFilters,
 } = employeeHierarchySlice.actions;
 
 export default employeeHierarchySlice.reducer;
