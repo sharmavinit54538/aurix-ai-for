@@ -352,16 +352,16 @@ export function JobQrModal({
           )}
 
           {/* ── QR Showcase ── */}
-          <div className="px-5 sm:px-6 py-3">
+          <div className="px-5 sm:px-6 pt-2 pb-1">
             {loading ? (
-              <div className="flex flex-col items-center justify-center py-12 space-y-3">
+              <div className="flex flex-col items-center justify-center py-10 space-y-3">
                 <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                 <p className="text-xs font-medium text-muted-foreground">
                   Generating QR code...
                 </p>
               </div>
             ) : error ? (
-              <div className="flex flex-col items-center justify-center py-10 space-y-3 text-center">
+              <div className="flex flex-col items-center justify-center py-8 space-y-3 text-center">
                 <div className="grid h-10 w-10 place-items-center rounded-full bg-destructive/10 text-destructive">
                   <AlertCircle className="h-5 w-5" />
                 </div>
@@ -376,22 +376,19 @@ export function JobQrModal({
                 </Button>
               </div>
             ) : (
-              <div className="flex flex-col items-center w-full space-y-3">
-                {/* White QR container — ~340px desktop, scales on mobile */}
-                <div
-                  className="rounded-2xl bg-white shadow-lg border border-slate-200/80 inline-flex items-center justify-center aspect-square p-6"
-                  style={{ width: "min(340px, calc(100vw - 80px))" }}
-                >
+              <div className="flex flex-col items-center w-full">
+                {/* White QR container — 260px desktop, 220px QR inside */}
+                <div className="rounded-2xl bg-white shadow-lg border border-slate-200/80 inline-flex items-center justify-center aspect-square p-5 w-[260px] max-w-[calc(100vw-48px)]">
                   <img
                     src={pngDataUrl}
                     alt={`QR code for ${jobTitle} job application`}
                     aria-label={`QR code for ${jobTitle} job application`}
-                    className="w-full h-full rounded-lg object-contain block"
+                    className="w-full h-full rounded-md object-contain block"
                   />
                 </div>
 
                 {/* Scan helper text */}
-                <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-foreground/90">
+                <div className="mt-3 mb-4 inline-flex items-center gap-1.5 text-[11px] font-semibold text-foreground/90">
                   <Scan className="h-3.5 w-3.5 shrink-0 text-primary" />
                   <span>Scan with phone camera to apply</span>
                 </div>
@@ -435,8 +432,8 @@ export function JobQrModal({
           </div>
 
           {/* ── Action Buttons ── */}
-          <div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-3">
-            <div className="pt-3.5 border-t border-border flex flex-col gap-2">
+          <div className="px-5 sm:px-6 pb-4 sm:pb-5 pt-2">
+            <div className="pt-3 border-t border-border flex flex-col gap-2">
               <div className="flex flex-wrap gap-2">
                 <Button
                   size="sm"
