@@ -165,8 +165,8 @@ export function GraphAIPanel({
     }
   }, [messages]);
 
-  const handleSend = () => {
-    const msg = input.trim();
+  const handleSend = (directMessage?: string) => {
+    const msg = (directMessage || input).trim();
     if (!msg) return;
     setInput("");
 
@@ -230,10 +230,7 @@ export function GraphAIPanel({
                   <button
                     key={q}
                     type="button"
-                    onClick={() => {
-                      setInput(q);
-                      setTimeout(() => handleSend(), 50);
-                    }}
+                    onClick={() => handleSend(q)}
                     className="text-[10px] px-2.5 py-1 rounded-full border border-brand/20 bg-brand/5 text-brand hover:bg-brand/10 cursor-pointer transition-colors"
                   >
                     {q}
