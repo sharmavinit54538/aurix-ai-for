@@ -88,8 +88,9 @@ export function DocumentsPage() {
   const fetchLiveDocumentsData = useCallback(async () => {
     setLoadingLive(true);
     try {
-      const [docsRes, empsRes, catsRes] = await Promise.allSettled([
+      const [docsRes, companyDocsRes, empsRes, catsRes] = await Promise.allSettled([
         apiInstance.get("/documents/employees", { params: { limit: 100 } }),
+        apiInstance.get("/documents/company", { params: { limit: 100 } }),
         apiInstance.get("/employees", { params: { limit: 100 } }),
         apiInstance.get("/documents/categories"),
       ]);
@@ -140,56 +141,78 @@ export function DocumentsPage() {
         setEmployeesList(liveEmps);
       }
 
+      const mapRawDoc = (d: any, sourceCategory?: HRDocument["category"]): HRDocument => {
+        const empName = d.employee
+          ? [d.employee.first_name, d.employee.last_name].filter(Boolean).join(" ").trim()
+          : (liveEmps.find((e) => e.id === d.employee_id)?.fullName || "Employee");
+
+        const rawCategory = d.category?.name || d.category || d.document_type || "Employee Documents";
+        let category: HRDocument["category"] = sourceCategory || "Employee Documents";
+        if (!sourceCategory) {
+          if (rawCategory.includes("Education") || rawCategory.includes("EDU") || rawCategory.includes("DEGREE") || rawCategory.includes("MARKSHEET")) {
+            category = "Education";
+          } else if (rawCategory.includes("Employment") || rawCategory.includes("OFFER") || rawCategory.includes("EXP") || rawCategory.includes("SALARY") || rawCategory.includes("RELIEVING")) {
+            category = "Employment";
+          } else if (rawCategory.includes("Company") || rawCategory.includes("POLICY") || rawCategory.includes("NDA")) {
+            category = "Company Documents";
+          }
+        }
+
+        const rawType = d.document_type || d.title || d.name || "General Document";
+        const cleanType = rawType.replace(/^Onboarding Document:\s*/i, "").replace(/_/g, " ");
+
+        const rawUrl = d.file_url || d.download_url || d.document_url || d.url || d.file_path || d.filePath || d.fileUrl || d.documentUrl;
+        const cleanUrl = rawUrl ? getFileUrl(rawUrl) : "";
+        const isPhoto = cleanType.toLowerCase().includes("photo") ||
+                        (d.title || "").toLowerCase().includes("photo") ||
+                        (d.document_type || "").toLowerCase().includes("photo") ||
+                        /\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?$/i.test(cleanUrl || d.file_name || d.name || "");
+        const detectedFileType = isPhoto ? "jpg" : (((cleanUrl || d.file_name || d.name || "pdf").split(".").pop() || "pdf").toLowerCase());
+
+        return {
+          id: d.id,
+          name: d.title || cleanType || "Employee Document",
+          employeeId: d.employee_id,
+          employeeName: empName,
+          category,
+          type: cleanType,
+          uploadedBy: "HR Admin",
+          uploadDate: d.created_at ? d.created_at.split("T")[0] : "2026-07-21",
+          expiryDate: d.expiry_date || undefined,
+          status: d.is_verified ? "Verified" : (d.status === "REJECTED" ? "Rejected" : "Pending"),
+          fileSize: d.file_size ? `${(d.file_size / 1024).toFixed(1)} KB` : "1.2 MB",
+          fileType: detectedFileType as any,
+          description: d.description || `Uploaded ${cleanType} for ${empName}`,
+          fileUrl: cleanUrl,
+        };
+      };
+
+      let allMapped: HRDocument[] = [];
+
       if (docsRes.status === "fulfilled" && docsRes.value.data?.data) {
         const rawDocs = docsRes.value.data.data;
         if (Array.isArray(rawDocs) && rawDocs.length > 0) {
-          const mapped: HRDocument[] = rawDocs.map((d: any) => {
-            const empName = d.employee
-              ? [d.employee.first_name, d.employee.last_name].filter(Boolean).join(" ").trim()
-              : (liveEmps.find((e) => e.id === d.employee_id)?.fullName || "Employee");
-
-            const rawCategory = d.category?.name || d.category || d.document_type || "Employee Documents";
-            let category: HRDocument["category"] = "Employee Documents";
-            if (rawCategory.includes("Education") || rawCategory.includes("EDU") || rawCategory.includes("DEGREE") || rawCategory.includes("MARKSHEET")) {
-              category = "Education";
-            } else if (rawCategory.includes("Employment") || rawCategory.includes("OFFER") || rawCategory.includes("EXP") || rawCategory.includes("SALARY") || rawCategory.includes("RELIEVING")) {
-              category = "Employment";
-            } else if (rawCategory.includes("Company") || rawCategory.includes("POLICY") || rawCategory.includes("NDA")) {
-              category = "Company Documents";
-            }
-
-            const rawType = d.document_type || d.title || d.name || "General Document";
-            const cleanType = rawType.replace(/^Onboarding Document:\s*/i, "").replace(/_/g, " ");
-
-            const rawUrl = d.file_url || d.download_url || d.document_url || d.url || d.file_path || d.filePath || d.fileUrl || d.documentUrl;
-            const cleanUrl = rawUrl ? getFileUrl(rawUrl) : "";
-            const isPhoto = cleanType.toLowerCase().includes("photo") ||
-                            (d.title || "").toLowerCase().includes("photo") ||
-                            (d.document_type || "").toLowerCase().includes("photo") ||
-                            /\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?$/i.test(cleanUrl || d.file_name || d.name || "");
-            const detectedFileType = isPhoto ? "jpg" : (((cleanUrl || d.file_name || d.name || "pdf").split(".").pop() || "pdf").toLowerCase());
-
-            return {
-              id: d.id,
-              name: d.title || cleanType || "Employee Document",
-              employeeId: d.employee_id,
-              employeeName: empName,
-              category,
-              type: cleanType,
-              uploadedBy: "HR Admin",
-              uploadDate: d.created_at ? d.created_at.split("T")[0] : "2026-07-21",
-              expiryDate: d.expiry_date || undefined,
-              status: d.is_verified ? "Verified" : (d.status === "REJECTED" ? "Rejected" : "Pending"),
-              fileSize: d.file_size ? `${(d.file_size / 1024).toFixed(1)} KB` : "1.2 MB",
-              fileType: detectedFileType as any,
-              description: d.description || `Uploaded ${cleanType} for ${empName}`,
-              fileUrl: cleanUrl,
-            };
-          });
-
-          setLiveDocs(mapped);
-          aurix.set({ documents: mapped });
+          allMapped.push(...rawDocs.map((d: any) => mapRawDoc(d)));
         }
+      }
+
+      if (companyDocsRes.status === "fulfilled" && companyDocsRes.value.data?.data) {
+        const rawCompanyDocs = companyDocsRes.value.data.data;
+        if (Array.isArray(rawCompanyDocs) && rawCompanyDocs.length > 0) {
+          const companyMapped = rawCompanyDocs.map((d: any) => mapRawDoc(d, "Company Documents"));
+          // Deduplicate by id in case any overlap
+          const existingIds = new Set(allMapped.map((d) => d.id));
+          for (const cd of companyMapped) {
+            if (!existingIds.has(cd.id)) {
+              allMapped.push(cd);
+            }
+          }
+        }
+      }
+
+      if (allMapped.length > 0) {
+        setLiveDocs(allMapped);
+        aurix.set({ documents: allMapped });
       }
 
       if (liveEmps.length > 0 && !genEmployee) {
@@ -247,7 +270,10 @@ export function DocumentsPage() {
       // 2. Fetch actual document blob from backend endpoint if id exists
       if (previewDoc.id) {
         try {
-          const res = await apiInstance.get(`/documents/employees/${previewDoc.id}/download`, {
+          const downloadPath = previewDoc.category === "Company Documents"
+            ? `/documents/company/${previewDoc.id}/download`
+            : `/documents/employees/${previewDoc.id}/download`;
+          const res = await apiInstance.get(downloadPath, {
             responseType: "blob",
           });
           if (!active) return;
@@ -533,7 +559,9 @@ Acknowledged and Signed electronically.`;
     }, 1200);
   };
 
-  const handleSaveGenerated = () => {
+  const [isSavingGenerated, setIsSavingGenerated] = useState(false);
+
+  const handleSaveGenerated = async () => {
     if (!generatedDraft) return;
 
     const template = DOCUMENT_TEMPLATES.find(x => x.id === genTemplateId);
@@ -541,45 +569,68 @@ Acknowledged and Signed electronically.`;
       toast.error("Document template not found.");
       return;
     }
-    const emp = ws.employees.find(x => x.id === genEmployee);
+    const activeEmps = employeesList.length > 0 ? employeesList : ws.employees;
+    const emp = activeEmps.find(x => x.id === genEmployee);
     const empName = emp ? emp.fullName : "Company-wide";
 
     const fileName = `${template.title.replace(/\s+/g, "_")}_${empName.replace(/\s+/g, "_")}.pdf`;
 
-    const newDocId = uid("doc");
-    const newDoc: HRDocument = {
-      id: newDocId,
-      name: fileName,
-      employeeId: genEmployee || undefined,
-      employeeName: empName,
-      category: template.category as any,
-      type: template.title.split(" (")[0],
-      uploadedBy: "AI Generator",
-      uploadDate: new Date().toISOString().split("T")[0],
-      status: "Verified", // AI templates generated by HR are verified instantly
-      fileSize: "140 KB",
-      fileType: "pdf",
-      description: `Generated AI Template for ${empName}`,
-    };
+    setIsSavingGenerated(true);
+    try {
+      // Convert the generated text into a Blob file for upload
+      const fileBlob = new Blob([generatedDraft], { type: "text/plain" });
+      const file = new File([fileBlob], fileName, { type: "text/plain" });
 
-    const newActivity: HRDocumentActivity = {
-      id: uid("act"),
-      documentId: newDocId,
-      documentName: fileName,
-      action: "Uploaded",
-      performedBy: ws.user?.fullName || "HR Admin",
-      timestamp: new Date().toISOString(),
-      details: `Generated AI ${template.title} for ${empName}.`
-    };
+      const formData = new FormData();
+      formData.append("file", file);
 
-    aurix.set({
-      documents: [newDoc, ...docs],
-      documentActivities: [newActivity, ...activities]
-    });
+      const targetEmpId = genEmployee === "general" ? "" : (genEmployee || "");
+      formData.append("employee_id", targetEmpId);
 
-    toast.success("Generated document saved to Vault!");
-    setGenerateOpen(false);
-    setGeneratedDraft(null);
+      // Map category name to backend category_id
+      const matchedCat = categoriesList.find(
+        (c) =>
+          c.name.toLowerCase() === template.category.toLowerCase() ||
+          c.id === template.category
+      );
+      formData.append("category_id", matchedCat?.id || "1");
+      formData.append("title", fileName);
+      formData.append("description", `AI-Generated ${template.title} for ${empName}`);
+      formData.append("issue_date", new Date().toISOString().split("T")[0]);
+      formData.append("expiry_date", "");
+      formData.append("visibility", targetEmpId ? "PRIVATE" : "COMPANY");
+      formData.append("status", "PENDING");
+      formData.append("tags", `type:${template.title},category:${template.category},source:ai-generator`);
+
+      const res = await apiInstance.post("/documents/employees", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      const newActivity: HRDocumentActivity = {
+        id: uid("act"),
+        documentId: res.data?.data?.id || uid("doc"),
+        documentName: fileName,
+        action: "Uploaded",
+        performedBy: ws.user?.fullName || "HR Admin",
+        timestamp: new Date().toISOString(),
+        details: `Generated AI ${template.title} for ${empName}.`
+      };
+
+      aurix.set({
+        documentActivities: [newActivity, ...activities]
+      });
+
+      toast.success(res.data?.message || "Generated document saved to Vault!");
+      setGenerateOpen(false);
+      setGeneratedDraft(null);
+
+      await fetchLiveDocumentsData();
+    } catch (err) {
+      console.error("Failed to save generated document:", err);
+      toast.error(getErrorMessage(err, "Failed to save generated document to server."));
+    } finally {
+      setIsSavingGenerated(false);
+    }
   };
 
   // 3. Verification Workflow Actions
@@ -589,10 +640,10 @@ Acknowledged and Signed electronically.`;
     try {
       let res;
       try {
-        res = await apiInstance.patch(`/documents/${doc.id}/verify`);
+        res = await apiInstance.patch(`/documents/${doc.id}/verify`, { comments: "" });
       } catch (err: unknown) {
         if ((err as { response?: { status?: number } })?.response?.status === 404) {
-          res = await apiInstance.patch(`/documents/employees/${doc.id}/verify`);
+          res = await apiInstance.patch(`/documents/employees/${doc.id}/verify`, { comments: "" });
         } else {
           throw err;
         }
@@ -650,14 +701,12 @@ Acknowledged and Signed electronically.`;
       let res;
       try {
         res = await apiInstance.patch(`/documents/${targetDoc.id}/reject`, {
-          reason: rejectionReason,
-          rejection_reason: rejectionReason,
+          comments: rejectionReason,
         });
       } catch (err: unknown) {
         if ((err as { response?: { status?: number } })?.response?.status === 404) {
           res = await apiInstance.patch(`/documents/employees/${targetDoc.id}/reject`, {
-            reason: rejectionReason,
-            rejection_reason: rejectionReason,
+            comments: rejectionReason,
           });
         } else {
           throw err;
@@ -705,24 +754,10 @@ Acknowledged and Signed electronically.`;
     setIsRequestingReupload(true);
     try {
       const reason = "Re-upload requested. Please supply a clear copy.";
-      let res;
-      try {
-        res = await apiInstance.patch(`/documents/${doc.id}/reupload`, { reason, status: "PENDING" });
-      } catch (err: unknown) {
-        if ((err as { response?: { status?: number } })?.response?.status === 404) {
-          try {
-            res = await apiInstance.patch(`/documents/${doc.id}/request-reupload`, { reason, status: "PENDING" });
-          } catch (err2: unknown) {
-            if ((err2 as { response?: { status?: number } })?.response?.status === 404) {
-              res = await apiInstance.post(`/documents/${doc.id}/request-reupload`, { reason, status: "PENDING" });
-            } else {
-              throw err2;
-            }
-          }
-        } else {
-          throw err;
-        }
-      }
+      const res = await apiInstance.put(`/documents/employees/${doc.id}`, {
+        status: "PENDING",
+        description: reason,
+      });
 
       const updatedDocs = docs.map(d => {
         if (d.id === doc.id) return { ...d, status: "Pending" as const, rejectionReason: reason };
@@ -845,7 +880,10 @@ Acknowledged and Signed electronically.`;
 
       if (doc.id) {
         try {
-          const res = await apiInstance.get(`/documents/employees/${doc.id}/download`, {
+          const dlPath = doc.category === "Company Documents"
+            ? `/documents/company/${doc.id}/download`
+            : `/documents/employees/${doc.id}/download`;
+          const res = await apiInstance.get(dlPath, {
             responseType: "blob",
           });
           const blob = res.data as Blob;
@@ -2044,7 +2082,7 @@ Acknowledged and Signed electronically.`;
                   </Button>
                   <div className="flex gap-2">
                     <Button variant="outline" onClick={() => setGeneratedDraft(null)} className="h-8 text-xs border-border bg-transparent cursor-pointer">Clear</Button>
-                    <Button onClick={handleSaveGenerated} className="h-8 text-xs bg-emerald-600 text-white hover:bg-emerald-700 gap-1.5 cursor-pointer"><CheckCircle className="h-3.5 w-3.5" />Save to Vault</Button>
+                    <Button onClick={handleSaveGenerated} disabled={isSavingGenerated} className="h-8 text-xs bg-emerald-600 text-white hover:bg-emerald-700 gap-1.5 cursor-pointer"><CheckCircle className="h-3.5 w-3.5" />{isSavingGenerated ? "Saving..." : "Save to Vault"}</Button>
                   </div>
                 </div>
               )}
