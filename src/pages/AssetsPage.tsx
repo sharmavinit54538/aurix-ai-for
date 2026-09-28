@@ -22,6 +22,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { hrms, newId, useHrms } from "@/lib/hrms/store";
 import { useAurix } from "@/lib/aurix-store";
 import type { Asset, AssetCategory, AssetStatus, AssetAssignmentHistory, AssetMaintenanceRecord, AssetTimelineEvent } from "@/lib/hrms/types";
+
+declare module "@/lib/hrms/types" {
+  interface Asset {
+    assignedToId?: string;
+  }
+}
 import { QrTile } from "@/components/hrms/Shared";
 import { toast } from "sonner";
 import {
@@ -59,6 +65,22 @@ const STATUSES: { value: AssetStatus; label: string; color: string; bg: string }
 
 const COLORS = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#3b82f6", "#6b7280"];
 
+// Collision-resistant asset tag generator (Prefix + timestamp suffix + 4-digit random integer)
+const generateAssetTag = (category: AssetCategory): string => {
+  const tagPrefix = {
+    laptop: "LAP",
+    desktop: "DKT",
+    monitor: "MON",
+    phone: "PHN",
+    accessory: "ACC",
+    vehicle: "VEH",
+    other: "AST"
+  }[category] || "AST";
+  const timePart = Date.now().toString().slice(-5);
+  const randPart = Math.floor(1000 + Math.random() * 9000);
+  return `${tagPrefix}-${timePart}${randPart}`;
+};
+
 // ----------------------------------------------------
 // MAIN COMPONENT
 // ----------------------------------------------------
@@ -95,7 +117,7 @@ export function AssetsPage() {
   const [model, setModel] = useState("");
   const [serial, setSerial] = useState("");
   const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().split("T")[0]);
-  const [purchaseCost, setPurchaseCost] = useState("1200");
+  const [purchaseCost, setPurchaseCost] = useState("");
   const [vendor, setVendor] = useState("");
   const [warrantyUntil, setWarrantyUntil] = useState("");
   const [location, setLocation] = useState("");
@@ -112,7 +134,7 @@ export function AssetsPage() {
 
   // Repair Form State
   const [repairVendor, setRepairVendor] = useState("");
-  const [repairCost, setRepairCost] = useState("150");
+  const [repairCost, setRepairCost] = useState("");
   const [repairNotes, setRepairNotes] = useState("");
 
   // Queries
@@ -146,6 +168,7 @@ export function AssetsPage() {
       warrantyUntil: a.warrantyUntil || a.warranty_until || "",
       status: a.status || "available",
       assignedTo: a.assignedTo || a.assigned_to || a.assigned_to_name || a.assigned_employee_name || "",
+      assignedToId: a.assignedToId || a.assigned_to_id || a.assigned_employee_id || a.employeeId || a.employee_id || a.userId || a.user_id || "",
       assignedAt: a.assignedAt || a.assigned_at || "",
       brand: a.brand || "",
       model: a.model || "",
@@ -159,18 +182,12 @@ export function AssetsPage() {
     }));
   }, [listData]);
 
-  const apiStats = analyticsData?.data || {
-    total_assets: 0,
-    available_assets: 0,
-    assigned_assets: 0,
-    under_repair_assets: 0,
-    lost_assets: 0,
-    expiring_warranty_assets: 0
-  };
+  const apiStats = analyticsData?.data ?? analyticsData;
 
   // ----------------------------------------------------
   // PARSE DEEP LINK QR SCAN
   // ----------------------------------------------------
+  const currentPathname = useRouterState({ select: (s) => s.location.pathname });
   const searchParams = useRouterState({ select: (s) => s.location.search }) as unknown as Record<string, string>;
   useEffect(() => {
     if (searchParams && searchParams.scan && assets.length > 0) {
@@ -178,11 +195,11 @@ export function AssetsPage() {
       if (matched) {
         setDetailAsset(matched);
         toast.success(`Scanned QR Code for asset: ${matched.tag} (${matched.name})`);
-        // Clean URL params
-        navigate({ to: "/dashboard/assets", search: {} as any, replace: true });
+        // Clean URL params while preserving current pathname
+        navigate({ to: currentPathname as any, search: {} as any, replace: true });
       }
     }
-  }, [searchParams, assets, navigate]);
+  }, [searchParams, assets, navigate, currentPathname]);
 
   const showApiError = (err: any, fallback: string) => {
     let msg = err.message || fallback;
@@ -208,13 +225,11 @@ export function AssetsPage() {
       setBrand("");
       setModel("");
       setSerial("");
-      setPurchaseCost("1200");
+      setPurchaseCost("");
       setVendor("");
+      setWarrantyUntil("");
       setNotes("");
       setLocation("");
-    },
-    onError: (err: any) => {
-      showApiError(err, "Failed to create asset");
     }
   });
 
@@ -333,40 +348,68 @@ export function AssetsPage() {
   // EVENT HANDLERS
   // ----------------------------------------------------
 
-  // 1. Create Asset
-  const handleAddSubmit = (e: React.FormEvent) => {
+  // 1. Create Asset (with collision-resistant tag and auto-retry on duplicate tag)
+  const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!assetName || !serial || !brand) {
       toast.error("Please fill in Asset Name, Brand, and Serial Number.");
       return;
     }
 
-    const tagPrefix = {
-      laptop: "LAP",
-      desktop: "DKT",
-      monitor: "MON",
-      phone: "PHN",
-      accessory: "ACC",
-      vehicle: "VEH",
-      other: "AST"
-    }[assetCategory] || "AST";
-    const assetTag = `${tagPrefix}-${Math.floor(1000 + Math.random() * 9000)}`;
-    const costNum = parseFloat(purchaseCost) || 0;
-
-    createMutation.mutate({
-      tag: assetTag,
+    const costNum = purchaseCost ? parseFloat(purchaseCost) : 0;
+    const basePayload = {
       name: assetName,
       category: assetCategory,
       serial: serial,
       vendor: vendor || "Unknown Vendor",
       purchase_date: purchaseDate,
-      warranty_until: warrantyUntil || new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split("T")[0],
+      warranty_until: warrantyUntil ? warrantyUntil : null,
       brand: brand,
       model: model,
       purchase_cost: costNum,
       location: location || "HQ IT Desk",
       notes: notes
-    });
+    };
+
+    const maxAttempts = 3;
+    let lastError: any = null;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      const assetTag = generateAssetTag(assetCategory);
+      try {
+        await createMutation.mutateAsync({
+          ...basePayload,
+          tag: assetTag
+        });
+        return; // Success handled in createMutation.onSuccess
+      } catch (err: any) {
+        lastError = err;
+        const errDetail = (err?.message || err?.data?.detail || JSON.stringify(err?.data || "")).toLowerCase();
+        const isCollision =
+          errDetail.includes("tag already exists") ||
+          errDetail.includes("asset tag") ||
+          (errDetail.includes("tag") && errDetail.includes("already exists")) ||
+          (errDetail.includes("tag") && errDetail.includes("exists")) ||
+          errDetail.includes("duplicate");
+
+        if (isCollision && attempt < maxAttempts) {
+          // Retry automatically with a new tag
+          continue;
+        }
+        break;
+      }
+    }
+
+    const errDetail = (lastError?.message || lastError?.data?.detail || JSON.stringify(lastError?.data || "")).toLowerCase();
+    if (
+      errDetail.includes("tag already exists") ||
+      errDetail.includes("asset tag") ||
+      (errDetail.includes("tag") && errDetail.includes("exists"))
+    ) {
+      toast.error("Failed to generate a unique asset tag after 3 attempts. Please try again.");
+    } else {
+      showApiError(lastError, "Failed to create asset");
+    }
   };
 
   // 2. Edit Asset Open
@@ -419,7 +462,11 @@ export function AssetsPage() {
     setTargetAsset(asset);
     setAssignNotes("");
     setAssignReturnDate("");
-    if (authWs.employees.length > 0) setAssignEmpId(authWs.employees[0].fullName);
+    if (authWs.employees.length > 0) {
+      setAssignEmpId(authWs.employees[0].id);
+    } else {
+      setAssignEmpId("");
+    }
     setAssignOpen(true);
   };
 
@@ -427,13 +474,19 @@ export function AssetsPage() {
     e.preventDefault();
     if (!targetAsset || !assignEmpId) return;
 
-    const emp = authWs.employees.find(x => x.fullName === assignEmpId) || { fullName: assignEmpId, department: "General Operations" };
+    const emp = authWs.employees.find(x => x.id === assignEmpId || x.employeeId === assignEmpId);
+    if (!emp) {
+      toast.error("Please select a valid employee.");
+      return;
+    }
 
     assignMutation.mutate({
       id: targetAsset.id,
       payload: {
+        employee_id: emp.id,
+        employee_code: emp.employeeId,
         employee_name: emp.fullName,
-        department: emp.department,
+        department: emp.department || "General Operations",
         expected_return_date: assignReturnDate || null,
         notes: assignNotes
       }
@@ -449,7 +502,17 @@ export function AssetsPage() {
   const handleTransferOpen = (asset: Asset) => {
     setTargetAsset(asset);
     setTransferNotes("");
-    if (authWs.employees.length > 0) setTransferEmpId(authWs.employees[0].fullName);
+    const assignedId = (asset as any)?.assignedToId || (asset as any)?.employeeId || (asset as any)?.employee_id;
+    const eligibleEmployees = authWs.employees.filter(emp =>
+      assignedId
+        ? emp.id !== assignedId && emp.employeeId !== assignedId
+        : emp.fullName !== asset.assignedTo
+    );
+    if (eligibleEmployees.length > 0) {
+      setTransferEmpId(eligibleEmployees[0].id);
+    } else {
+      setTransferEmpId("");
+    }
     setTransferOpen(true);
   };
 
@@ -457,13 +520,19 @@ export function AssetsPage() {
     e.preventDefault();
     if (!targetAsset || !transferEmpId) return;
 
-    const emp = authWs.employees.find(x => x.fullName === transferEmpId) || { fullName: transferEmpId, department: "Operations" };
+    const emp = authWs.employees.find(x => x.id === transferEmpId || x.employeeId === transferEmpId);
+    if (!emp) {
+      toast.error("Please select a valid employee to transfer to.");
+      return;
+    }
 
     transferMutation.mutate({
       id: targetAsset.id,
       payload: {
+        employee_id: emp.id,
+        employee_code: emp.employeeId,
         employee_name: emp.fullName,
-        department: emp.department,
+        department: emp.department || "Operations",
         notes: transferNotes
       }
     });
@@ -483,7 +552,7 @@ export function AssetsPage() {
   const handleRepairOpen = (asset: Asset) => {
     setTargetAsset(asset);
     setRepairVendor("");
-    setRepairCost("150");
+    setRepairCost("");
     setRepairNotes("");
     setRepairOpen(true);
   };
@@ -496,7 +565,7 @@ export function AssetsPage() {
       id: targetAsset.id,
       payload: {
         vendor: repairVendor || "Authorized Service Partner",
-        cost: parseFloat(repairCost) || 0,
+        cost: repairCost ? parseFloat(repairCost) : 0,
         notes: repairNotes
       }
     });
@@ -517,29 +586,48 @@ export function AssetsPage() {
 
   // ----------------------------------------------------
   // METRICS & REPORT CALCULATIONS
+  // Fallback safety net note:
+  // Global inventory totals are sourced from the backend analytics endpoint (`assets/analytics`).
+  // We only fall back to computing counts from the currently loaded assets array if `apiStats.<field>`
+  // is strictly `undefined` or `null` (e.g. analytics endpoint pending or field not provided).
+  // When the backend legitimately returns `0`, it is preserved and rendered as `0`.
+  // If fallback is used, it serves as an approximation based on the currently loaded/filtered page
+  // of assets (which is capped at up to 100 items from the current search/status filter).
   // ----------------------------------------------------
 
   const stats = useMemo(() => {
-    const total = apiStats.total_assets || assets.length;
-    const available = apiStats.available_assets !== undefined && apiStats.available_assets !== null && apiStats.available_assets > 0
-      ? apiStats.available_assets
-      : assets.filter(a => a.status === "available").length;
-    const assigned = apiStats.assigned_assets !== undefined && apiStats.assigned_assets !== null && apiStats.assigned_assets > 0
-      ? apiStats.assigned_assets
-      : assets.filter(a => a.status === "assigned").length;
-    const repair = apiStats.under_repair_assets !== undefined && apiStats.under_repair_assets !== null && apiStats.under_repair_assets > 0
-      ? apiStats.under_repair_assets
-      : assets.filter(a => a.status === "under-repair").length;
-    const lost = apiStats.lost_assets !== undefined && apiStats.lost_assets !== null && apiStats.lost_assets > 0
-      ? apiStats.lost_assets
-      : assets.filter(a => a.status === "lost").length;
-    const expiring = apiStats.expiring_warranty_assets !== undefined && apiStats.expiring_warranty_assets !== null && apiStats.expiring_warranty_assets > 0
-      ? apiStats.expiring_warranty_assets
-      : assets.filter(a => {
-          if (!a.warrantyUntil) return false;
-          const diff = new Date(a.warrantyUntil).getTime() - Date.now();
-          return diff > 0 && diff < 30 * 24 * 60 * 60 * 1000;
-        }).length;
+    const getStat = (val: any, fallbackCalc: () => number) => {
+      if (val !== undefined && val !== null) {
+        return Number(val);
+      }
+      return fallbackCalc();
+    };
+
+    const total = getStat(apiStats?.total_assets, () => assets.length);
+    const available = getStat(
+      apiStats?.available_assets,
+      () => assets.filter(a => a.status === "available").length
+    );
+    const assigned = getStat(
+      apiStats?.assigned_assets,
+      () => assets.filter(a => a.status === "assigned").length
+    );
+    const repair = getStat(
+      apiStats?.under_repair_assets,
+      () => assets.filter(a => a.status === "under-repair").length
+    );
+    const lost = getStat(
+      apiStats?.lost_assets,
+      () => assets.filter(a => a.status === "lost").length
+    );
+    const expiring = getStat(
+      apiStats?.expiring_warranty_assets,
+      () => assets.filter(a => {
+        if (!a.warrantyUntil) return false;
+        const diff = new Date(a.warrantyUntil).getTime() - Date.now();
+        return diff > 0 && diff < 30 * 24 * 60 * 60 * 1000;
+      }).length
+    );
 
     return { total, available, assigned, repair, lost, expiring };
   }, [apiStats, assets]);
@@ -605,12 +693,12 @@ export function AssetsPage() {
 
   // Recharts Category Allocation
   const categoryChartData = useMemo(() => {
-    return apiStats.category_distribution || [];
+    return apiStats?.category_distribution || [];
   }, [apiStats]);
 
   // Repair Cost analysis per category
   const repairCostChartData = useMemo(() => {
-    return apiStats.repair_costs_by_category || [];
+    return apiStats?.repair_costs_by_category || [];
   }, [apiStats]);
 
   // If viewing in Employee Portal self-service mode, render dedicated EmployeeMyAssetsView
@@ -1153,7 +1241,7 @@ export function AssetsPage() {
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-muted-foreground">Purchase Cost ($)</Label>
-                <Input type="number" value={purchaseCost} onChange={e => setPurchaseCost(e.target.value)} className="bg-background/50 border-border text-xs" />
+                <Input type="number" value={purchaseCost} onChange={e => setPurchaseCost(e.target.value)} placeholder="0.00" className="bg-background/50 border-border text-xs" />
               </div>
 
               <div className="space-y-1.5">
@@ -1162,8 +1250,9 @@ export function AssetsPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-muted-foreground">Warranty Expiry</Label>
+                <Label className="text-xs font-semibold text-muted-foreground">Warranty Expiry (Optional)</Label>
                 <Input type="date" value={warrantyUntil} onChange={e => setWarrantyUntil(e.target.value)} className="bg-background/50 border-border text-xs" />
+                <p className="text-[10px] text-muted-foreground">Leave blank if no warranty applies</p>
               </div>
 
               <div className="space-y-1.5 col-span-2">
@@ -1297,11 +1386,13 @@ export function AssetsPage() {
               <Label className="text-xs font-semibold text-muted-foreground">Employee Assignee</Label>
               <Select value={assignEmpId} onValueChange={setAssignEmpId}>
                 <SelectTrigger className="w-full bg-background/50 border-border">
-                  <SelectValue />
+                  <SelectValue placeholder="Select an employee..." />
                 </SelectTrigger>
                 <SelectContent>
                   {authWs.employees.map(emp => (
-                    <SelectItem key={emp.id} value={emp.fullName}>{emp.fullName} ({emp.employeeId})</SelectItem>
+                    <SelectItem key={emp.id} value={emp.id}>
+                      {emp.fullName} ({emp.employeeId || emp.id})
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -1346,12 +1437,21 @@ export function AssetsPage() {
               <Label className="text-xs font-semibold text-muted-foreground">New Employee Assignee</Label>
               <Select value={transferEmpId} onValueChange={setTransferEmpId}>
                 <SelectTrigger className="w-full bg-background/50 border-border">
-                  <SelectValue />
+                  <SelectValue placeholder="Select an employee..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {authWs.employees.filter(emp => emp.fullName !== targetAsset?.assignedTo).map(emp => (
-                    <SelectItem key={emp.id} value={emp.fullName}>{emp.fullName}</SelectItem>
-                  ))}
+                  {authWs.employees
+                    .filter(emp => {
+                      const assignedId = (targetAsset as any)?.assignedToId || (targetAsset as any)?.employeeId || (targetAsset as any)?.employee_id;
+                      return assignedId
+                        ? emp.id !== assignedId && emp.employeeId !== assignedId
+                        : emp.fullName !== targetAsset?.assignedTo;
+                    })
+                    .map(emp => (
+                      <SelectItem key={emp.id} value={emp.id}>
+                        {emp.fullName} ({emp.employeeId || emp.id})
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
@@ -1389,7 +1489,7 @@ export function AssetsPage() {
 
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground">Estimated Repair Cost ($)</Label>
-              <Input type="number" value={repairCost} onChange={e => setRepairCost(e.target.value)} className="bg-background/50 border-border text-xs" />
+              <Input type="number" value={repairCost} onChange={e => setRepairCost(e.target.value)} placeholder="0.00" className="bg-background/50 border-border text-xs" />
             </div>
 
             <div className="space-y-1.5">
@@ -1670,7 +1770,7 @@ export function AssetsPage() {
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-[11px] leading-relaxed pt-1">
                         <p><strong>Employee:</strong> {detailAsset.assignedTo}</p>
-                        <p><strong>Dept:</strong> {authWs.employees.find(x => x.fullName === detailAsset.assignedTo)?.department || "Operations"}</p>
+                        <p><strong>Dept:</strong> {authWs.employees.find(x => (detailAsset as any).assignedToId ? (x.id === (detailAsset as any).assignedToId || x.employeeId === (detailAsset as any).assignedToId) : x.fullName === detailAsset.assignedTo)?.department || "Operations"}</p>
                         <p className="col-span-2"><strong>Assigned At:</strong> {detailAsset.assignedAt ? new Date(detailAsset.assignedAt).toLocaleDateString() : "—"}</p>
                       </div>
                     </div>

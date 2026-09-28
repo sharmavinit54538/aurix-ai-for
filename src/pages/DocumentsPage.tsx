@@ -20,6 +20,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { aurix, uid, useAurix, type HRDocument, type HRDocumentActivity } from "@/lib/aurix-store";
 import { toast } from "sonner";
 import { apiInstance } from "@/api";
+import { getErrorMessage } from "@/api/utils";
 import { getFileUrl } from "@/lib/utils";
 
 // ----------------------------------------------------
@@ -82,14 +83,31 @@ export function DocumentsPage() {
   const [genTemplateId, setGenTemplateId] = useState("offer");
   const [genEmployee, setGenEmployee] = useState<string>("general");
   const [genFields, setGenFields] = useState<Record<string, string>>({});
+  const [categoriesList, setCategoriesList] = useState<Array<{ id: string; name: string }>>([]);
 
   const fetchLiveDocumentsData = useCallback(async () => {
     setLoadingLive(true);
     try {
-      const [docsRes, empsRes] = await Promise.allSettled([
+      const [docsRes, empsRes, catsRes] = await Promise.allSettled([
         apiInstance.get("/documents/employees", { params: { limit: 100 } }),
         apiInstance.get("/employees", { params: { limit: 100 } }),
+        apiInstance.get("/documents/categories"),
       ]);
+
+      if (catsRes.status === "fulfilled" && catsRes.value.data) {
+        const rawCats = catsRes.value.data.data ?? catsRes.value.data ?? [];
+        if (Array.isArray(rawCats)) {
+          const mappedCats = rawCats
+            .map((c: any) => ({
+              id: String(c.id ?? c.category_id ?? ""),
+              name: String(c.name ?? c.title ?? ""),
+            }))
+            .filter((c: any) => c.id && c.name);
+          if (mappedCats.length > 0) {
+            setCategoriesList(mappedCats);
+          }
+        }
+      }
 
       let liveEmps: Array<{
         id: string;
@@ -241,8 +259,11 @@ export function DocumentsPage() {
             setPreviewLoading(false);
             return;
           }
-        } catch {
-          // If download endpoint fails or is mock, fallback to direct URL
+        } catch (err) {
+          console.error("Failed to load document blob for preview:", err);
+          if (!previewDoc.fileUrl) {
+            toast.error("Failed to load document preview from server.");
+          }
         }
       }
 
@@ -251,6 +272,10 @@ export function DocumentsPage() {
         const resolved = getFileUrl(previewDoc.fileUrl);
         if (active) {
           setPreviewBlobUrl(resolved);
+        }
+      } else {
+        if (active) {
+          toast.error("Document preview unavailable: file not found.");
         }
       }
       if (active) {
@@ -277,6 +302,10 @@ export function DocumentsPage() {
   // Edit / Action state
   const [targetDoc, setTargetDoc] = useState<HRDocument | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isRequestingReupload, setIsRequestingReupload] = useState(false);
 
   // Upload Form State
   const [uploadEmployee, setUploadEmployee] = useState<string>("company");
@@ -304,66 +333,84 @@ export function DocumentsPage() {
   // ----------------------------------------------------
 
   // 1. Upload Handler
-  const handleUploadSubmit = (e: React.FormEvent) => {
+  const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!uploadFileName) {
+    if (!selectedUploadFile) {
       toast.error("Please select or drop a file to upload.");
       return;
     }
 
     setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", selectedUploadFile);
 
-    setTimeout(() => {
+      const targetEmpId = isEmployee
+        ? (ws.user?.id || "")
+        : (uploadEmployee === "company" ? "" : uploadEmployee);
+
+      const matchedCat = categoriesList.find(
+        (c) =>
+          c.name.toLowerCase() === uploadCategory.toLowerCase() ||
+          c.id === uploadCategory
+      );
+      const catId = matchedCat?.id || "1";
+
+      formData.append("employee_id", targetEmpId);
+      formData.append("category_id", catId);
+      formData.append("title", uploadFileName || selectedUploadFile.name);
+      formData.append("description", uploadDesc || "");
+      formData.append("issue_date", new Date().toISOString().split("T")[0]);
+      formData.append("expiry_date", uploadExpiry || "");
+      formData.append("visibility", uploadEmployee === "company" ? "COMPANY" : "PRIVATE");
+      formData.append("status", "PENDING");
+      formData.append("status_field", "PENDING");
+      formData.append("tags", `type:${uploadType},category:${uploadCategory}`);
+
+      const res = await apiInstance.post("/documents/employees", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
       let empName = "Company-wide";
-      if (uploadEmployee !== "company") {
-        const emp = ws.employees.find(x => x.id === uploadEmployee);
+      if (targetEmpId) {
+        const emp =
+          employeesList.find((x) => x.id === targetEmpId) ||
+          ws.employees.find((x) => x.id === targetEmpId);
         if (emp) empName = emp.fullName;
       }
 
-      const newDocId = uid("doc");
-      const localFileUrl = selectedUploadFile ? URL.createObjectURL(selectedUploadFile) : undefined;
-      const newDoc: HRDocument = {
-        id: newDocId,
-        name: uploadFileName,
-        employeeId: uploadEmployee === "company" ? undefined : uploadEmployee,
-        employeeName: empName,
-        category: uploadCategory as any,
-        type: uploadType,
-        uploadedBy: ws.user?.fullName || "HR Admin",
-        uploadDate: new Date().toISOString().split("T")[0],
-        expiryDate: uploadExpiry || undefined,
-        status: "Pending",
-        fileSize: uploadFileSize || "1.2 MB",
-        fileType: uploadFileName.split(".").pop() as any || "pdf",
-        description: uploadDesc,
-        fileUrl: localFileUrl,
-      };
-
       const newActivity: HRDocumentActivity = {
         id: uid("act"),
-        documentId: newDocId,
-        documentName: uploadFileName,
+        documentId: uid("doc"),
+        documentName: uploadFileName || selectedUploadFile.name,
         action: "Uploaded",
         performedBy: ws.user?.fullName || "HR Admin",
         timestamp: new Date().toISOString(),
-        details: `Uploaded ${uploadType} for ${empName}.`
+        details: `Uploaded ${uploadType} for ${empName}.`,
       };
 
       aurix.set({
-        documents: [newDoc, ...docs],
-        documentActivities: [newActivity, ...activities]
+        documentActivities: [newActivity, ...activities],
       });
 
-      toast.success("Document uploaded successfully!");
-      setIsUploading(false);
+      toast.success(res.data?.message || "Document uploaded successfully!");
       setUploadOpen(false);
 
       // Reset fields
+      setSelectedUploadFile(null);
       setUploadFileName("");
       setUploadFileSize("");
       setUploadDesc("");
       setUploadExpiry("");
-    }, 1200);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+
+      await fetchLiveDocumentsData();
+    } catch (err) {
+      console.error("Failed to upload document:", err);
+      toast.error(getErrorMessage(err, "Failed to upload document to server."));
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   // Real drag and drop file handler
@@ -427,7 +474,6 @@ export function DocumentsPage() {
     setGeneratedDraft(null);
 
     setTimeout(() => {
-      const template = DOCUMENT_TEMPLATES.find(x => x.id === genTemplateId);
       const activeEmps = employeesList.length > 0 ? employeesList : ws.employees;
       const emp = activeEmps.find(x => x.id === genEmployee);
       const recipient = emp ? emp.fullName : (genEmployee === "general" ? "General Employee" : (activeEmps[0]?.fullName || "Employee"));
@@ -490,7 +536,11 @@ Acknowledged and Signed electronically.`;
   const handleSaveGenerated = () => {
     if (!generatedDraft) return;
 
-    const template = DOCUMENT_TEMPLATES.find(x => x.id === genTemplateId)!;
+    const template = DOCUMENT_TEMPLATES.find(x => x.id === genTemplateId);
+    if (!template) {
+      toast.error("Document template not found.");
+      return;
+    }
     const emp = ws.employees.find(x => x.id === genEmployee);
     const empName = emp ? emp.fullName : "Company-wide";
 
@@ -533,33 +583,53 @@ Acknowledged and Signed electronically.`;
   };
 
   // 3. Verification Workflow Actions
-  const handleVerify = (doc: HRDocument) => {
-    const updatedDocs = docs.map(d => {
-      if (d.id === doc.id) return { ...d, status: "Verified" as const, rejectionReason: undefined };
-      return d;
-    });
+  const handleVerify = async (doc: HRDocument) => {
+    if (!doc.id) return;
+    setIsVerifying(true);
+    try {
+      let res;
+      try {
+        res = await apiInstance.patch(`/documents/${doc.id}/verify`);
+      } catch (err: unknown) {
+        if ((err as { response?: { status?: number } })?.response?.status === 404) {
+          res = await apiInstance.patch(`/documents/employees/${doc.id}/verify`);
+        } else {
+          throw err;
+        }
+      }
 
-    const newActivity: HRDocumentActivity = {
-      id: uid("act"),
-      documentId: doc.id,
-      documentName: doc.name,
-      action: "Verified",
-      performedBy: ws.user?.fullName || "HR Admin",
-      timestamp: new Date().toISOString(),
-      details: `Verified ${doc.type} for ${doc.employeeName || "Company"}.`
-    };
+      const updatedDocs = docs.map(d => {
+        if (d.id === doc.id) return { ...d, status: "Verified" as const, rejectionReason: undefined };
+        return d;
+      });
 
-    aurix.set({
-      documents: updatedDocs,
-      documentActivities: [newActivity, ...activities]
-    });
+      const newActivity: HRDocumentActivity = {
+        id: uid("act"),
+        documentId: doc.id,
+        documentName: doc.name,
+        action: "Verified",
+        performedBy: ws.user?.fullName || "HR Admin",
+        timestamp: new Date().toISOString(),
+        details: `Verified ${doc.type} for ${doc.employeeName || "Company"}.`
+      };
 
-    // Update preview doc if open
-    if (previewDoc?.id === doc.id) {
-      setPreviewDoc({ ...doc, status: "Verified" as const, rejectionReason: undefined });
+      aurix.set({
+        documents: updatedDocs,
+        documentActivities: [newActivity, ...activities]
+      });
+
+      if (previewDoc?.id === doc.id) {
+        setPreviewDoc({ ...doc, status: "Verified" as const, rejectionReason: undefined });
+      }
+
+      toast.success(res?.data?.message || `Verified document: ${doc.name}`);
+      await fetchLiveDocumentsData();
+    } catch (err) {
+      console.error("Failed to verify document:", err);
+      toast.error(getErrorMessage(err, `Failed to verify document: ${doc.name}`));
+    } finally {
+      setIsVerifying(false);
     }
-
-    toast.success(`Verified document: ${doc.name}`);
   };
 
   const handleRejectPrompt = (doc: HRDocument) => {
@@ -568,69 +638,124 @@ Acknowledged and Signed electronically.`;
     setRejectOpen(true);
   };
 
-  const handleRejectSubmit = () => {
+  const handleRejectSubmit = async () => {
     if (!targetDoc) return;
     if (!rejectionReason.trim()) {
       toast.error("Please enter a rejection reason.");
       return;
     }
 
-    const updatedDocs = docs.map(d => {
-      if (d.id === targetDoc.id) return { ...d, status: "Rejected" as const, rejectionReason };
-      return d;
-    });
+    setIsRejecting(true);
+    try {
+      let res;
+      try {
+        res = await apiInstance.patch(`/documents/${targetDoc.id}/reject`, {
+          reason: rejectionReason,
+          rejection_reason: rejectionReason,
+        });
+      } catch (err: unknown) {
+        if ((err as { response?: { status?: number } })?.response?.status === 404) {
+          res = await apiInstance.patch(`/documents/employees/${targetDoc.id}/reject`, {
+            reason: rejectionReason,
+            rejection_reason: rejectionReason,
+          });
+        } else {
+          throw err;
+        }
+      }
 
-    const newActivity: HRDocumentActivity = {
-      id: uid("act"),
-      documentId: targetDoc.id,
-      documentName: targetDoc.name,
-      action: "Rejected",
-      performedBy: ws.user?.fullName || "HR Admin",
-      timestamp: new Date().toISOString(),
-      details: `Rejected ${targetDoc.type}: ${rejectionReason}`
-    };
+      const updatedDocs = docs.map(d => {
+        if (d.id === targetDoc.id) return { ...d, status: "Rejected" as const, rejectionReason };
+        return d;
+      });
 
-    aurix.set({
-      documents: updatedDocs,
-      documentActivities: [newActivity, ...activities]
-    });
+      const newActivity: HRDocumentActivity = {
+        id: uid("act"),
+        documentId: targetDoc.id,
+        documentName: targetDoc.name,
+        action: "Rejected",
+        performedBy: ws.user?.fullName || "HR Admin",
+        timestamp: new Date().toISOString(),
+        details: `Rejected ${targetDoc.type}: ${rejectionReason}`
+      };
 
-    // Update preview doc if open
-    if (previewDoc?.id === targetDoc.id) {
-      setPreviewDoc({ ...targetDoc, status: "Rejected" as const, rejectionReason });
+      aurix.set({
+        documents: updatedDocs,
+        documentActivities: [newActivity, ...activities]
+      });
+
+      if (previewDoc?.id === targetDoc.id) {
+        setPreviewDoc({ ...targetDoc, status: "Rejected" as const, rejectionReason });
+      }
+
+      toast.warning(res?.data?.message || `Document rejected: ${targetDoc.name}`);
+      setRejectOpen(false);
+      setTargetDoc(null);
+      await fetchLiveDocumentsData();
+    } catch (err) {
+      console.error("Failed to reject document:", err);
+      toast.error(getErrorMessage(err, `Failed to reject document: ${targetDoc.name}`));
+    } finally {
+      setIsRejecting(false);
     }
-
-    toast.warning(`Document rejected: ${targetDoc.name}`);
-    setRejectOpen(false);
-    setTargetDoc(null);
   };
 
-  const handleRequestReupload = (doc: HRDocument) => {
-    const updatedDocs = docs.map(d => {
-      if (d.id === doc.id) return { ...d, status: "Pending" as const, rejectionReason: "Re-upload requested. Please supply a clear copy." };
-      return d;
-    });
+  const handleRequestReupload = async (doc: HRDocument) => {
+    if (!doc.id) return;
+    setIsRequestingReupload(true);
+    try {
+      const reason = "Re-upload requested. Please supply a clear copy.";
+      let res;
+      try {
+        res = await apiInstance.patch(`/documents/${doc.id}/reupload`, { reason, status: "PENDING" });
+      } catch (err: unknown) {
+        if ((err as { response?: { status?: number } })?.response?.status === 404) {
+          try {
+            res = await apiInstance.patch(`/documents/${doc.id}/request-reupload`, { reason, status: "PENDING" });
+          } catch (err2: unknown) {
+            if ((err2 as { response?: { status?: number } })?.response?.status === 404) {
+              res = await apiInstance.post(`/documents/${doc.id}/request-reupload`, { reason, status: "PENDING" });
+            } else {
+              throw err2;
+            }
+          }
+        } else {
+          throw err;
+        }
+      }
 
-    const newActivity: HRDocumentActivity = {
-      id: uid("act"),
-      documentId: doc.id,
-      documentName: doc.name,
-      action: "Updated",
-      performedBy: ws.user?.fullName || "HR Admin",
-      timestamp: new Date().toISOString(),
-      details: `Requested re-upload for ${doc.type}`
-    };
+      const updatedDocs = docs.map(d => {
+        if (d.id === doc.id) return { ...d, status: "Pending" as const, rejectionReason: reason };
+        return d;
+      });
 
-    aurix.set({
-      documents: updatedDocs,
-      documentActivities: [newActivity, ...activities]
-    });
+      const newActivity: HRDocumentActivity = {
+        id: uid("act"),
+        documentId: doc.id,
+        documentName: doc.name,
+        action: "Updated",
+        performedBy: ws.user?.fullName || "HR Admin",
+        timestamp: new Date().toISOString(),
+        details: `Requested re-upload for ${doc.type}`
+      };
 
-    if (previewDoc?.id === doc.id) {
-      setPreviewDoc({ ...doc, status: "Pending" as const, rejectionReason: "Re-upload requested. Please supply a clear copy." });
+      aurix.set({
+        documents: updatedDocs,
+        documentActivities: [newActivity, ...activities]
+      });
+
+      if (previewDoc?.id === doc.id) {
+        setPreviewDoc({ ...doc, status: "Pending" as const, rejectionReason: reason });
+      }
+
+      toast.info(res?.data?.message || `Requested re-upload for: ${doc.name}`);
+      await fetchLiveDocumentsData();
+    } catch (err) {
+      console.error("Failed to request re-upload:", err);
+      toast.error(getErrorMessage(err, `Failed to request re-upload for: ${doc.name}`));
+    } finally {
+      setIsRequestingReupload(false);
     }
-
-    toast.info(`Requested re-upload for: ${doc.name}`);
   };
 
   // 4. Delete Handler
@@ -639,48 +764,71 @@ Acknowledged and Signed electronically.`;
     setDeleteOpen(true);
   };
 
-  const handleDeleteSubmit = () => {
+  const handleDeleteSubmit = async () => {
     if (!targetDoc) return;
 
-    const filteredDocs = docs.filter(d => d.id !== targetDoc.id);
+    setIsDeleting(true);
+    try {
+      let res;
+      try {
+        res = await apiInstance.delete(`/documents/employees/${targetDoc.id}`);
+      } catch (err: unknown) {
+        if ((err as { response?: { status?: number } })?.response?.status === 404) {
+          res = await apiInstance.delete(`/documents/${targetDoc.id}`);
+        } else {
+          throw err;
+        }
+      }
 
-    const newActivity: HRDocumentActivity = {
-      id: uid("act"),
-      documentId: targetDoc.id,
-      documentName: targetDoc.name,
-      action: "Updated",
-      performedBy: ws.user?.fullName || "HR Admin",
-      timestamp: new Date().toISOString(),
-      details: `Deleted document: ${targetDoc.name}`
-    };
+      const filteredDocs = docs.filter(d => d.id !== targetDoc.id);
 
-    aurix.set({
-      documents: filteredDocs,
-      documentActivities: [newActivity, ...activities]
-    });
+      const newActivity: HRDocumentActivity = {
+        id: uid("act"),
+        documentId: targetDoc.id,
+        documentName: targetDoc.name,
+        action: "Updated",
+        performedBy: ws.user?.fullName || "HR Admin",
+        timestamp: new Date().toISOString(),
+        details: `Deleted document: ${targetDoc.name}`
+      };
 
-    if (previewDoc?.id === targetDoc.id) {
-      setPreviewDoc(null);
+      aurix.set({
+        documents: filteredDocs,
+        documentActivities: [newActivity, ...activities]
+      });
+
+      if (previewDoc?.id === targetDoc.id) {
+        setPreviewDoc(null);
+      }
+
+      toast.success(res?.data?.message || `Deleted document: ${targetDoc.name}`);
+      setDeleteOpen(false);
+      setTargetDoc(null);
+      await fetchLiveDocumentsData();
+    } catch (err) {
+      console.error("Failed to delete document:", err);
+      toast.error(getErrorMessage(err, `Failed to delete document: ${targetDoc.name}`));
+    } finally {
+      setIsDeleting(false);
     }
-
-    toast.error(`Deleted document: ${targetDoc.name}`);
-    setDeleteOpen(false);
-    setTargetDoc(null);
   };
 
   // Download & View File Handler
   const handleDownload = async (doc: HRDocument) => {
     toast.info(`Downloading ${doc.name}...`);
-    const newActivity: HRDocumentActivity = {
-      id: uid("act"),
-      documentId: doc.id,
-      documentName: doc.name,
-      action: "Downloaded",
-      performedBy: ws.user?.fullName || "HR Admin",
-      timestamp: new Date().toISOString(),
-      details: `Downloaded document ${doc.name}`
+
+    const logDownloadSuccess = () => {
+      const newActivity: HRDocumentActivity = {
+        id: uid("act"),
+        documentId: doc.id,
+        documentName: doc.name,
+        action: "Downloaded",
+        performedBy: ws.user?.fullName || "HR Admin",
+        timestamp: new Date().toISOString(),
+        details: `Downloaded document ${doc.name}`
+      };
+      aurix.set({ documentActivities: [newActivity, ...activities] });
     };
-    aurix.set({ documentActivities: [newActivity, ...activities] });
 
     try {
       if (doc.fileUrl && (doc.fileUrl.startsWith("blob:") || doc.fileUrl.startsWith("data:"))) {
@@ -690,49 +838,49 @@ Acknowledged and Signed electronically.`;
         document.body.appendChild(a);
         a.click();
         a.remove();
+        logDownloadSuccess();
         toast.success(`Downloaded ${doc.name}`);
         return;
       }
 
       if (doc.id) {
-        const res = await apiInstance.get(`/documents/employees/${doc.id}/download`, {
-          responseType: "blob",
-        });
-        const blob = res.data as Blob;
-        if (blob && blob.size > 0) {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          const ext = blob.type.includes("pdf") ? ".pdf" : (blob.type.includes("png") ? ".png" : (blob.type.includes("jpeg") || blob.type.includes("jpg") ? ".jpg" : ""));
-          a.download = doc.name.includes(".") ? doc.name : `${doc.name}${ext}`;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          setTimeout(() => URL.revokeObjectURL(url), 60000);
-          toast.success(`Downloaded ${doc.name}`);
-          return;
+        try {
+          const res = await apiInstance.get(`/documents/employees/${doc.id}/download`, {
+            responseType: "blob",
+          });
+          const blob = res.data as Blob;
+          if (blob && blob.size > 0) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            const ext = blob.type.includes("pdf") ? ".pdf" : (blob.type.includes("png") ? ".png" : (blob.type.includes("jpeg") || blob.type.includes("jpg") ? ".jpg" : ""));
+            a.download = doc.name.includes(".") ? doc.name : `${doc.name}${ext}`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 60000);
+            logDownloadSuccess();
+            toast.success(`Downloaded ${doc.name}`);
+            return;
+          }
+        } catch (apiErr) {
+          console.error("Download endpoint failed, trying fallback:", apiErr);
         }
       }
 
       if (doc.fileUrl) {
         const targetUrl = getFileUrl(doc.fileUrl);
         window.open(targetUrl, "_blank");
+        logDownloadSuccess();
+        toast.success(`Opened ${doc.name}`);
         return;
       }
-    } catch {
-      if (doc.fileUrl) {
-        window.open(getFileUrl(doc.fileUrl), "_blank");
-        return;
-      }
-    }
 
-    const element = document.createElement("a");
-    const file = new Blob([`OFC360 Vault. Document ID: ${doc.id}\nCategory: ${doc.category}\nName: ${doc.name}\nStatus: ${doc.status}`], {type: 'text/plain'});
-    element.href = URL.createObjectURL(file);
-    element.download = doc.name;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+      toast.error(`Unable to download ${doc.name}: file content is not available.`);
+    } catch (err) {
+      console.error("Failed to download document:", err);
+      toast.error(getErrorMessage(err, `Failed to download ${doc.name}`));
+    }
   };
 
   // ----------------------------------------------------
@@ -798,14 +946,26 @@ Acknowledged and Signed electronically.`;
 
   // Table Filtering & Searching
   const filteredDocs = useMemo(() => {
+    const currentEmployeeRecord =
+      employeesList.find(
+        (e) => e.id === ws.user?.id || (ws.user?.email && e.email === ws.user.email)
+      ) ||
+      ws.employees.find(
+        (e) => e.id === ws.user?.id || (ws.user?.email && e.email === ws.user.email)
+      );
+
+    const currentEmployeeIdSet = new Set(
+      [ws.user?.id, currentEmployeeRecord?.id, currentEmployeeRecord?.employeeId]
+        .filter(Boolean)
+        .map((id) => String(id).toLowerCase())
+    );
+
     return docs.filter(d => {
       if (isEmployee) {
-        const userFullName = (ws.user?.fullName || "").toLowerCase();
-        const userId = (ws.user?.id || "").toLowerCase();
+        const docEmpId = (d.employeeId || "").toLowerCase();
         const isMyDoc =
           d.category === "Company Documents" ||
-          (d.employeeName && d.employeeName.toLowerCase().includes(userFullName)) ||
-          d.employeeId === userId;
+          (docEmpId ? currentEmployeeIdSet.has(docEmpId) : false);
         if (!isMyDoc) return false;
       }
 
@@ -833,7 +993,7 @@ Acknowledged and Signed electronically.`;
 
       return matchesQ && matchesTab;
     });
-  }, [docs, q, activeFilter, isEmployee, ws.user]);
+  }, [docs, q, activeFilter, isEmployee, ws.user, ws.employees, employeesList]);
 
   // Table Sorting
   const sortedDocs = useMemo(() => {
@@ -971,7 +1131,7 @@ Acknowledged and Signed electronically.`;
                   className="text-xs font-bold text-muted-foreground cursor-pointer hover:text-foreground select-none"
                 >
                   {col.label}
-                  {sortField === col.key && (sortOrder === "asc" ? " â†‘" : " â†“")}
+                  {sortField === col.key && (sortOrder === "asc" ? " ↑" : " ↓")}
                 </TableHead>
               ))}
               <TableHead className="text-xs font-bold text-muted-foreground text-right">Actions</TableHead>
@@ -1022,7 +1182,7 @@ Acknowledged and Signed electronically.`;
         </Table>
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-border">
-            <p className="text-[11px] text-muted-foreground">Showing {((currentPage - 1) * itemsPerPage) + 1}â€“{Math.min(currentPage * itemsPerPage, sortedDocs.length)} of {sortedDocs.length}</p>
+            <p className="text-[11px] text-muted-foreground">Showing {((currentPage - 1) * itemsPerPage) + 1}–{Math.min(currentPage * itemsPerPage, sortedDocs.length)} of {sortedDocs.length}</p>
             <div className="flex gap-1">
               <Button variant="outline" size="sm" disabled={currentPage <= 1} onClick={() => setCurrentPage(p => p - 1)} className="h-7 text-xs cursor-pointer">Prev</Button>
               <Button variant="outline" size="sm" disabled={currentPage >= totalPages} onClick={() => setCurrentPage(p => p + 1)} className="h-7 text-xs cursor-pointer">Next</Button>
@@ -1884,7 +2044,7 @@ Acknowledged and Signed electronically.`;
                   </Button>
                   <div className="flex gap-2">
                     <Button variant="outline" onClick={() => setGeneratedDraft(null)} className="h-8 text-xs border-border bg-transparent cursor-pointer">Clear</Button>
-                    <Button onClick={handleSaveGenerated} className="h-8 text-xs bg-emerald-600 text-white hover:bg-emerald-700 gap-1.5 cursor-pointer"><CheckCircle className="h-3.5 w-3.5" />Save & Save to Vault</Button>
+                    <Button onClick={handleSaveGenerated} className="h-8 text-xs bg-emerald-600 text-white hover:bg-emerald-700 gap-1.5 cursor-pointer"><CheckCircle className="h-3.5 w-3.5" />Save to Vault</Button>
                   </div>
                 </div>
               )}
@@ -1904,8 +2064,8 @@ Acknowledged and Signed electronically.`;
             <Textarea value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} placeholder="e.g. Signature cut off, document blur, expired date, wrong employee ID..." className="min-h-[100px] border-border text-xs" />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setRejectOpen(false); setTargetDoc(null); }} className="h-9 border-border bg-transparent cursor-pointer">Cancel</Button>
-            <Button onClick={handleRejectSubmit} className="h-9 bg-rose-600 text-white hover:bg-rose-700 cursor-pointer">Confirm Rejection</Button>
+            <Button variant="outline" disabled={isRejecting} onClick={() => { setRejectOpen(false); setTargetDoc(null); }} className="h-9 border-border bg-transparent cursor-pointer">Cancel</Button>
+            <Button disabled={isRejecting} onClick={handleRejectSubmit} className="h-9 bg-rose-600 text-white hover:bg-rose-700 cursor-pointer">{isRejecting ? "Rejecting..." : "Confirm Rejection"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1918,8 +2078,8 @@ Acknowledged and Signed electronically.`;
           </DialogHeader>
           <div className="py-2 text-xs text-muted-foreground">Are you sure you want to permanently delete <strong className="font-semibold text-foreground">{targetDoc?.name}</strong>? This action will wipe the file and remove it from audit history.</div>
           <DialogFooter className="gap-1.5">
-            <Button variant="outline" onClick={() => { setDeleteOpen(false); setTargetDoc(null); }} className="h-9 border-border bg-transparent cursor-pointer">Cancel</Button>
-            <Button onClick={handleDeleteSubmit} className="h-9 bg-rose-600 text-white hover:bg-rose-700 cursor-pointer">Delete File</Button>
+            <Button variant="outline" disabled={isDeleting} onClick={() => { setDeleteOpen(false); setTargetDoc(null); }} className="h-9 border-border bg-transparent cursor-pointer">Cancel</Button>
+            <Button disabled={isDeleting} onClick={handleDeleteSubmit} className="h-9 bg-rose-600 text-white hover:bg-rose-700 cursor-pointer">{isDeleting ? "Deleting..." : "Delete File"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -2199,16 +2359,18 @@ Acknowledged and Signed electronically.`;
                     <Button
                       type="button"
                       variant="outline"
+                      disabled={isRequestingReupload}
                       onClick={() => handleRequestReupload(previewDoc)}
                       className="h-9 px-3.5 text-xs font-medium rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 gap-2 cursor-pointer transition-all duration-150 shadow-xs active:scale-[0.98]"
                     >
-                      <RefreshCw className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                      <span>Request Re-upload</span>
+                      <RefreshCw className={`h-3.5 w-3.5 text-amber-500 shrink-0 ${isRequestingReupload ? "animate-spin" : ""}`} />
+                      <span>{isRequestingReupload ? "Requesting..." : "Request Re-upload"}</span>
                     </Button>
 
                     <Button
                       type="button"
                       variant="outline"
+                      disabled={isRejecting}
                       onClick={() => handleRejectPrompt(previewDoc)}
                       className="h-9 px-3.5 text-xs font-medium rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 gap-2 cursor-pointer transition-all duration-150 shadow-xs active:scale-[0.98]"
                     >
@@ -2218,11 +2380,12 @@ Acknowledged and Signed electronically.`;
 
                     <Button
                       type="button"
+                      disabled={isVerifying}
                       onClick={() => handleVerify(previewDoc)}
                       className="h-9 px-4 text-xs font-semibold rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white gap-2 cursor-pointer shadow-md shadow-emerald-950/30 border border-emerald-400/20 transition-all duration-150 active:scale-[0.98]"
                     >
-                      <CheckCircle className="h-3.5 w-3.5 shrink-0" />
-                      <span>Verify & Approve</span>
+                      <CheckCircle className={`h-3.5 w-3.5 shrink-0 ${isVerifying ? "animate-spin" : ""}`} />
+                      <span>{isVerifying ? "Verifying..." : "Verify & Approve"}</span>
                     </Button>
                   </div>
                 )}
