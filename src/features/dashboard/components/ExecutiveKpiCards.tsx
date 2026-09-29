@@ -185,7 +185,7 @@ export const ExecutiveKpiCards = memo(function ExecutiveKpiCards({
   );
 
   const openingsData = buildSparklineData(
-    openings.bars?.length >= 2 ? openings.bars.map((b) => ({ v: b.count, label: b.name })) : undefined,
+    openings.bars?.length >= 2 ? openings.bars.map((b) => ({ v: b.count, label: b.label })) : undefined,
     openings.value,
     "fluctuate"
   );
@@ -198,7 +198,7 @@ export const ExecutiveKpiCards = memo(function ExecutiveKpiCards({
 
   const payrollData = buildSparklineData(
     payroll.history?.map((p) => ({ v: p.cost, label: p.month })),
-    payroll.value,
+    payroll.rawValue,
     "financial"
   );
 
