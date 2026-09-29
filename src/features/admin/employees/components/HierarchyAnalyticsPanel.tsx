@@ -2,15 +2,9 @@ import React from "react";
 import { motion } from "framer-motion";
 import {
   Users,
-  Building2,
   GitFork,
   Layers,
-  Sparkles,
-  AlertTriangle,
-  CheckCircle2,
-  TrendingUp,
   UserCheck,
-  Award,
 } from "lucide-react";
 import type { BackendHierarchyNode } from "@/store/employeeHierarchy/employeeHierarchyTypes";
 
@@ -26,8 +20,6 @@ function calculateHierarchyMetrics(trees: BackendHierarchyNode[]) {
   let maxDepth = 0;
   let maxTeamSize = 0;
   let largestTeamManager = "";
-  const overloadedManagers: { name: string; count: number }[] = [];
-  const missingManagers: string[] = [];
 
   function traverse(node: BackendHierarchyNode, depth: number) {
     totalEmployees += 1;
@@ -41,16 +33,6 @@ function calculateHierarchyMetrics(trees: BackendHierarchyNode[]) {
         maxTeamSize = directCount;
         largestTeamManager = `${node.first_name} ${node.last_name}`;
       }
-      if (directCount >= 5) {
-        overloadedManagers.push({
-          name: `${node.first_name} ${node.last_name}`,
-          count: directCount,
-        });
-      }
-    }
-
-    if (!node.reporting_to && !node.designation?.toLowerCase().includes("ceo")) {
-      missingManagers.push(`${node.first_name} ${node.last_name}`);
     }
 
     if (node.children) {
@@ -70,8 +52,6 @@ function calculateHierarchyMetrics(trees: BackendHierarchyNode[]) {
     maxTeamSize,
     largestTeamManager,
     avgSpanOfControl,
-    overloadedManagers,
-    missingManagers,
   };
 }
 
@@ -140,47 +120,6 @@ export function HierarchyAnalyticsPanel({ trees }: HierarchyAnalyticsPanelProps)
             </motion.div>
           );
         })}
-      </div>
-
-      {/* AI Intelligence Insights Alerts Box */}
-      <div className="rounded-xl border border-brand/30 bg-brand/5 p-4 backdrop-blur-md text-left space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-indigo-400 font-semibold text-xs">
-            <Sparkles className="h-4 w-4 text-brand" />
-            <span>AI Organizational Health & Optimization Insights</span>
-          </div>
-          <span className="text-[10px] font-mono bg-brand/10 text-brand px-2 py-0.5 rounded-full border border-brand/20">
-            Real-Time Analysis
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-          {/* Overloaded Managers Warning */}
-          <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 space-y-1">
-            <div className="flex items-center gap-1.5 text-amber-400 font-semibold">
-              <AlertTriangle className="h-3.5 w-3.5" />
-              <span>Overloaded Manager Span ({metrics.overloadedManagers.length})</span>
-            </div>
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
-              {metrics.overloadedManagers.length > 0
-                ? `Managers like ${metrics.overloadedManagers[0]?.name} lead ${metrics.overloadedManagers[0]?.count} direct reports. Consider delegating to Team Leads.`
-                : "All manager reporting spans are well-balanced within target parameters (<= 5 reports)."}
-            </p>
-          </div>
-
-          {/* Unassigned Manager Links */}
-          <div className="rounded-lg border border-blue-500/20 bg-blue-500/5 p-3 space-y-1">
-            <div className="flex items-center gap-1.5 text-blue-400 font-semibold">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              <span>Reporting Continuity & Succession</span>
-            </div>
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
-              {metrics.missingManagers.length > 0
-                ? `${metrics.missingManagers.length} active employee(s) require reporting manager assignment.`
-                : "100% of non-executive workforce records are attached to valid reporting managers."}
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );
