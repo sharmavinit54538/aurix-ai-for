@@ -422,6 +422,13 @@ export function DashboardShell() {
         return;
       }
     }
+
+    if ((currentRole === "hr_admin" || ws.user.role === "hr_admin") && ws.user.onboardingComplete === false) {
+      if (pathname.startsWith("/dashboard")) {
+        navigate({ to: "/onboarding", replace: true });
+        return;
+      }
+    }
   }, [authReady, ws.isRestoring, ws.user, pathname, currentRole, navigate]);
 
   useEffect(() => { setMobileOpen(false); }, [pathname]);

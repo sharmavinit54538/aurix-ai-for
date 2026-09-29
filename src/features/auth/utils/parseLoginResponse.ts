@@ -26,7 +26,7 @@ function normalizeUser(raw: unknown): AuthUserPayload | null {
     phone: typeof user.phone === "string" ? user.phone : undefined,
     role: normalizeRole(typeof user.role === "string" ? user.role : null) ?? "employee",
     is_verified: Boolean(user.is_verified ?? user.isVerified ?? user.email_verified),
-    onboarding_completed: true,
+    onboarding_completed: Boolean(user.onboarding_completed ?? user.onboardingCompleted ?? false),
     created_at: typeof user.created_at === "string" ? user.created_at : undefined,
     company_id:
       typeof user.company_id === "string" || typeof user.company_id === "number"

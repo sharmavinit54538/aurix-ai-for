@@ -1,5 +1,5 @@
 import { useNavigate, Link, useSearch } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Papa from "papaparse";
 import { z } from "zod";
@@ -17,7 +17,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Stepper } from "@/components/aurix/Stepper";
-import { aurix, useAurix, uid, type Employee, type HR, type Manager } from "@/lib/aurix-store";
+import { aurix, useAurix, uid, type Company, type Employee, type HR, type Manager } from "@/lib/aurix-store";
 import { api, setTokens } from "@/api";
 import { toast } from "sonner";
 
@@ -196,23 +196,32 @@ export function OnboardingPage() {
         }
 
         const progressRes: any = await api.get("onboarding/progress");
-        const progress = progressRes?.data;
+        const progress = progressRes?.data ?? progressRes;
         if (progress && !cancelled) {
-          if (progress.company_profile) {
-            aurix.set({
-              company: {
-                id: ws.company?.id ?? uid("co"),
-                name: progress.company_profile.company_name ?? "",
-                logoDataUrl: progress.company_profile.company_logo ?? undefined,
-                industry: progress.company_profile.industry ?? "",
-                size: progress.company_profile.company_size ?? "",
-                country: progress.company_profile.country ?? "",
-                state: progress.company_profile.state ?? "",
-                city: progress.company_profile.city ?? "",
-                timezone: progress.company_profile.timezone ?? "UTC",
-              } as any,
-            });
-          }
+          const profile = progress.company_profile;
+          const companyName =
+            profile?.company_name ??
+            progress.organization?.company_name ??
+            ws.company?.name ??
+            "";
+
+          aurix.set({
+            company: {
+              id: ws.company?.id ?? uid("co"),
+              name: companyName,
+              logoDataUrl: profile?.company_logo ?? ws.company?.logoDataUrl ?? undefined,
+              industry: profile?.industry ?? ws.company?.industry ?? "",
+              size: profile?.company_size ?? ws.company?.size ?? "",
+              website: profile?.website ?? ws.company?.website ?? "",
+              email: profile?.email ?? ws.company?.email ?? "",
+              phone: profile?.phone ?? ws.company?.phone ?? "",
+              address: profile?.address ?? ws.company?.address ?? "",
+              country: profile?.country ?? ws.company?.country ?? "",
+              state: profile?.state ?? ws.company?.state ?? "",
+              city: profile?.city ?? ws.company?.city ?? "",
+              timezone: profile?.timezone ?? ws.company?.timezone ?? "UTC",
+            } as any,
+          });
         }
 
         if (!cancelled) setStep(backendStepToUiIndex(backendStep));
@@ -226,7 +235,7 @@ export function OnboardingPage() {
     })();
 
     return () => { cancelled = true; };
-  }, [ws.user, navigate, token]);
+  }, [ws.user, ws.isRestoring, navigate, token]);
 
   function next() { setStep((s) => Math.min(STEPS.length - 1, s + 1)); }
   function back() { setStep((s) => Math.max(0, s - 1)); }
@@ -567,13 +576,54 @@ function CompanyStep({ onNext }: { onNext: () => void }) {
   const ws = useAurix();
   const [c, setC] = useState(ws.company ?? { id: uid("co"), name: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
-
   const [loading, setLoading] = useState(false);
+  const editedFields = useRef<Set<string>>(new Set());
 
-  function set<K extends keyof typeof c>(k: K, v: any) { setC((p) => ({ ...p, [k]: v })); }
+  useEffect(() => {
+    if (!ws.company) return;
+    setC((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      const company = ws.company!;
+      const fields: (keyof Company)[] = [
+        "name",
+        "logoDataUrl",
+        "industry",
+        "size",
+        "website",
+        "email",
+        "phone",
+        "address",
+        "city",
+        "state",
+        "country",
+        "timezone",
+      ];
+      for (const field of fields) {
+        if (!editedFields.current.has(field)) {
+          const val = company[field];
+          if (val !== undefined && val !== null && val !== "" && next[field] !== val) {
+            (next as any)[field] = val;
+            changed = true;
+          }
+        }
+      }
+      if (company.id && next.id !== company.id) {
+        next.id = company.id;
+        changed = true;
+      }
+      return changed ? next : prev;
+    });
+  }, [ws.company]);
+
+  function set<K extends keyof typeof c>(k: K, v: any) {
+    editedFields.current.add(k as string);
+    setC((p) => ({ ...p, [k]: v }));
+  }
 
   function onLogo(file: File | null) {
     if (!file) return;
+    editedFields.current.add("logoDataUrl");
     const reader = new FileReader();
     reader.onload = () => set("logoDataUrl", reader.result as string);
     reader.readAsDataURL(file);
