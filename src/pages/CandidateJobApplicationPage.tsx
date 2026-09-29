@@ -52,7 +52,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { toast } from "sonner";
-
+import { normalizeJobDescription } from "@/features/admin/recruitment/utils/normalizeJobDescription";
 
 const COUNTRY_CODES = [
   { code: "+91", label: "+91 (India)", flag: "🇮🇳" },
@@ -102,6 +102,7 @@ export default function JobApplyPage() {
   const [job, setJob] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [applyMode, setApplyMode] = useState<"job" | "channel">("job");
 
   // Form Fields - Personal Info
   const [firstName, setFirstName] = useState("");
@@ -143,6 +144,8 @@ export default function JobApplyPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    let active = true;
+
     async function fetchJobDetails() {
       if (!ukey) {
         setError("Invalid job application link.");
@@ -152,29 +155,133 @@ export default function JobApplyPage() {
       try {
         setLoading(true);
         setError(null);
-        const res = await axios.get(`${PUBLIC_API_URL}/apply/${ukey}`);
-        if (res.data && res.data.success && res.data.data) {
-          const apiData = res.data.data;
+
+        let apiData: any = null;
+        let mode: "job" | "channel" = "job";
+
+        // 1. First, attempt direct job lookup by ID or slug (/public/careers/{ukey})
+        try {
+          const res = await axios.get(`${PUBLIC_API_URL}/${ukey}`);
+          if (res.data && res.data.success && res.data.data) {
+            apiData = res.data.data;
+            mode = "job";
+          }
+        } catch {
+          // Direct job lookup failed, will attempt channel lookup
+        }
+
+        // 2. If not found via direct job lookup, try unique publish channel key (/public/careers/apply/{ukey})
+        if (!apiData) {
+          try {
+            const res = await axios.get(`${PUBLIC_API_URL}/apply/${ukey}`);
+            if (res.data && res.data.success && res.data.data) {
+              apiData = res.data.data;
+              mode = "channel";
+            } else {
+              if (active) {
+                setError(res.data?.message || "Job position not found or no longer active.");
+                setJob(null);
+              }
+              return;
+            }
+          } catch (chanErr: any) {
+            if (active) {
+              setError(chanErr.response?.data?.message || "Job position not found or unavailable.");
+              setJob(null);
+            }
+            return;
+          }
+        }
+
+        if (!active) return;
+
+        if (apiData) {
+          setApplyMode(mode);
+
+          const normalizedJd = normalizeJobDescription(
+            apiData.job_description || apiData.jobDescription
+          );
+
+          // Skills normalization
+          let resolvedSkills: Array<{ id?: string; skill_name: string }> = [];
+          if (Array.isArray(apiData.skills) && apiData.skills.length > 0) {
+            resolvedSkills = apiData.skills.map((s: any) =>
+              typeof s === "string" ? { skill_name: s } : { ...s, skill_name: s?.skill_name || String(s) }
+            );
+          } else if (normalizedJd.requiredSkills?.length) {
+            resolvedSkills = normalizedJd.requiredSkills.map((name) => ({ skill_name: name }));
+          }
+
+          // Responsibilities
+          let resolvedResp = apiData.responsibilities;
+          if (!resolvedResp || (Array.isArray(resolvedResp) && resolvedResp.length === 0)) {
+            resolvedResp = normalizedJd.responsibilities || [];
+          }
+
+          // Requirements
+          let resolvedReq = apiData.requirements;
+          if (!resolvedReq || (Array.isArray(resolvedReq) && resolvedReq.length === 0)) {
+            resolvedReq = normalizedJd.qualifications || [];
+          }
+
+          // Benefits
+          let resolvedBen = apiData.benefits;
+          if (!resolvedBen || (Array.isArray(resolvedBen) && resolvedBen.length === 0)) {
+            resolvedBen = normalizedJd.benefits || [];
+          }
+
+          // Description
+          const resolvedDesc =
+            normalizedJd.summary ||
+            normalizedJd.aboutRole ||
+            normalizedJd.plainText ||
+            (typeof apiData.job_description === "string" && !apiData.job_description.trim().startsWith("{")
+              ? apiData.job_description
+              : apiData.jobDescription || "");
+
           setJob({
             ...apiData,
-            skills: apiData.skills || [],
-            responsibilities: apiData.responsibilities || [],
-            requirements: apiData.requirements || [],
-            benefits: apiData.benefits || [],
-            aboutCompany: apiData.aboutCompany || "",
+            title: apiData.title || normalizedJd.title || "Open Position",
+            location: apiData.location || normalizedJd.location || "Remote",
+            employmentType:
+              apiData.employment_type ||
+              apiData.employmentType ||
+              normalizedJd.employmentType ||
+              "Full-time",
+            experienceRequired:
+              apiData.experience_required ||
+              apiData.experienceRequired ||
+              normalizedJd.experience?.text ||
+              (apiData.min_experience ? `${apiData.min_experience}-${apiData.max_experience || 0} yrs` : ""),
+            salaryMin:
+              apiData.min_salary ?? apiData.salaryMin ?? normalizedJd.salaryRange?.min,
+            salaryMax:
+              apiData.max_salary ?? apiData.salaryMax ?? normalizedJd.salaryRange?.max,
+            jobDescription: resolvedDesc,
+            skills: resolvedSkills,
+            responsibilities: resolvedResp,
+            requirements: resolvedReq,
+            benefits: resolvedBen,
+            aboutCompany: apiData.about_company || apiData.aboutCompany || "",
           });
-        } else {
-          setError(res.data?.message || "Job position not found or no longer active.");
-          setJob(null);
         }
       } catch (err: any) {
-        setError(err.response?.data?.message || "Job position not found or unavailable.");
-        setJob(null);
+        if (active) {
+          setError(err.response?.data?.message || "Job position not found or unavailable.");
+          setJob(null);
+        }
       } finally {
-        setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       }
     }
+
     fetchJobDetails();
+
+    return () => {
+      active = false;
+    };
   }, [ukey]);
 
   const formattedSalary = useMemo(() => {
@@ -389,17 +496,50 @@ export default function JobApplyPage() {
       if (portfolioUrl) formData.append("portfolio_url", portfolioUrl);
       if (coverLetter) formData.append("cover_letter", coverLetter);
 
-      const res = await axios.post(`${PUBLIC_API_URL}/apply/${ukey}`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      // Choose primary endpoint based on mode, with automatic fallback
+      const candidateKey = job?.id || job?.slug || ukey;
+      const targetEndpoints =
+        applyMode === "channel"
+          ? [
+              `${PUBLIC_API_URL}/apply/${ukey}`,
+              `${PUBLIC_API_URL}/${candidateKey}/apply`,
+            ]
+          : [
+              `${PUBLIC_API_URL}/${candidateKey}/apply`,
+              `${PUBLIC_API_URL}/apply/${ukey}`,
+            ];
 
-      if (res.data && res.data.success) {
+      let res: any = null;
+      let lastErr: any = null;
+
+      for (const endpoint of targetEndpoints) {
+        try {
+          res = await axios.post(endpoint, formData, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          });
+          if (res?.data?.success) {
+            break;
+          }
+        } catch (err: any) {
+          lastErr = err;
+          // If 404 or 405, fallback to the next candidate endpoint
+          if (err.response?.status !== 404 && err.response?.status !== 405) {
+            throw err;
+          }
+        }
+      }
+
+      if (!res && lastErr) {
+        throw lastErr;
+      }
+
+      if (res?.data?.success) {
         setSuccess(true);
         toast.success("Application submitted successfully!");
       } else {
-        toast.error(res.data?.message || "Failed to submit application. Please review your details.");
+        toast.error(res?.data?.message || "Failed to submit application. Please review your details.");
       }
     } catch (err: any) {
       toast.error(err.response?.data?.message || "An error occurred while submitting your application.");

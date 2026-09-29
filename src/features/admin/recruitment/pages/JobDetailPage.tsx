@@ -1,7 +1,7 @@
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { JobDescriptionView } from "@/features/admin/recruitment/components/JobDescriptionView";
 import { JobQrModal } from "@/features/admin/recruitment/components/JobQrModal";
-import { getJobApplicationUrl, getPublicJobUrl, getReferralUrl } from "@/lib/publicUrl";
+import { getJobApplicationUrl, getPublicJobUrl, getReferralUrl, sanitizePublicUrl } from "@/lib/publicUrl";
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -260,7 +260,20 @@ export function JobDetailPage() {
   const handleCopySourcingLink = async () => {
     setIsCopyingLink(true);
     try {
-      const applyUrl = getJobApplicationUrl(jobId);
+      let applyUrl = "";
+      try {
+        const res = await api.get<any>(`/jobs/${jobId}/sourcing-link`);
+        const serverUrl = res.data?.url || (res as any)?.url;
+        if (serverUrl) {
+          applyUrl = sanitizePublicUrl(serverUrl);
+        }
+      } catch {
+        // Fallback to direct application URL
+        applyUrl = getJobApplicationUrl(jobId);
+      }
+      if (!applyUrl) {
+        applyUrl = getJobApplicationUrl(jobId);
+      }
       if (typeof navigator !== "undefined" && navigator.clipboard) {
         await navigator.clipboard.writeText(applyUrl);
       }
@@ -1053,7 +1066,7 @@ export function JobDetailPage() {
                         {chanObj.url && (
                           <div className="flex items-center justify-between gap-2 mt-1">
                             <span className="truncate max-w-[200px] text-primary underline text-[10px]">
-                              {chanObj.url}
+                              {sanitizePublicUrl(chanObj.url)}
                             </span>
                             <div className="flex items-center gap-1">
                               <Button 
@@ -1061,7 +1074,7 @@ export function JobDetailPage() {
                                 variant="ghost" 
                                 className="h-6 w-6 text-muted-foreground" 
                                 onClick={() => {
-                                  navigator.clipboard.writeText(chanObj.url);
+                                  navigator.clipboard.writeText(sanitizePublicUrl(chanObj.url));
                                   toast.success("Link copied!");
                                 }}
                               >
@@ -1073,7 +1086,7 @@ export function JobDetailPage() {
                                 className="h-6 text-[10px] px-2"
                                 asChild
                               >
-                                <a href={chanObj.url} target="_blank" rel="noreferrer">Visit</a>
+                                <a href={sanitizePublicUrl(chanObj.url)} target="_blank" rel="noreferrer">Visit</a>
                               </Button>
                             </div>
                           </div>
