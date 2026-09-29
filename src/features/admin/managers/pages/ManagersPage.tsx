@@ -19,7 +19,6 @@ export function ManagersPage() {
     <div className="min-w-0 max-w-full overflow-x-hidden">
       <PageHeader
         title="Managers Directory"
-        description="View, manage, and coordinate your corporate department heads, product leads, and hierarchy rules."
         actions={
           <>
             <Button onClick={() => page.setImportOpen(true)} variant="outline" className="rounded-xl">

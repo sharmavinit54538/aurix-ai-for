@@ -51,6 +51,7 @@ import { Route as DashboardOffboardingRouteImport } from './routes/dashboard.off
 import { Route as DashboardManagersRouteImport } from './routes/dashboard.managers'
 import { Route as DashboardManagerRouteImport } from './routes/dashboard.manager'
 import { Route as DashboardLeavesRouteImport } from './routes/dashboard.leaves'
+import { Route as DashboardItAdminRouteImport } from './routes/dashboard.it-admin'
 import { Route as DashboardHrOpsRouteImport } from './routes/dashboard.hr-ops'
 import { Route as DashboardHrOperationsRouteImport } from './routes/dashboard.hr-operations'
 import { Route as DashboardHrRouteImport } from './routes/dashboard.hr'
@@ -59,6 +60,7 @@ import { Route as DashboardForbiddenRouteImport } from './routes/dashboard.forbi
 import { Route as DashboardExpensesRouteImport } from './routes/dashboard.expenses'
 import { Route as DashboardExitManagementRouteImport } from './routes/dashboard.exit-management'
 import { Route as DashboardExitRouteImport } from './routes/dashboard.exit'
+import { Route as DashboardExecutivesRouteImport } from './routes/dashboard.executives'
 import { Route as DashboardEmployeesRouteImport } from './routes/dashboard.employees'
 import { Route as DashboardEmployeeRouteImport } from './routes/dashboard.employee'
 import { Route as DashboardDocumentsRouteImport } from './routes/dashboard.documents'
@@ -464,6 +466,11 @@ const DashboardLeavesRoute = DashboardLeavesRouteImport.update({
   path: '/leaves',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardItAdminRoute = DashboardItAdminRouteImport.update({
+  id: '/it-admin',
+  path: '/it-admin',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardHrOpsRoute = DashboardHrOpsRouteImport.update({
   id: '/hr-ops',
   path: '/hr-ops',
@@ -502,6 +509,11 @@ const DashboardExitManagementRoute = DashboardExitManagementRouteImport.update({
 const DashboardExitRoute = DashboardExitRouteImport.update({
   id: '/exit',
   path: '/exit',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardExecutivesRoute = DashboardExecutivesRouteImport.update({
+  id: '/executives',
+  path: '/executives',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardEmployeesRoute = DashboardEmployeesRouteImport.update({
@@ -1661,6 +1673,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/documents': typeof DashboardDocumentsRoute
   '/dashboard/employee': typeof DashboardEmployeeRouteWithChildren
   '/dashboard/employees': typeof DashboardEmployeesRoute
+  '/dashboard/executives': typeof DashboardExecutivesRoute
   '/dashboard/exit': typeof DashboardExitRoute
   '/dashboard/exit-management': typeof DashboardExitManagementRoute
   '/dashboard/expenses': typeof DashboardExpensesRoute
@@ -1669,6 +1682,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/hr': typeof DashboardHrRoute
   '/dashboard/hr-operations': typeof DashboardHrOperationsRouteWithChildren
   '/dashboard/hr-ops': typeof DashboardHrOpsRoute
+  '/dashboard/it-admin': typeof DashboardItAdminRoute
   '/dashboard/leaves': typeof DashboardLeavesRoute
   '/dashboard/manager': typeof DashboardManagerRoute
   '/dashboard/managers': typeof DashboardManagersRoute
@@ -1900,6 +1914,7 @@ export interface FileRoutesByTo {
   '/dashboard/documents': typeof DashboardDocumentsRoute
   '/dashboard/employee': typeof DashboardEmployeeRouteWithChildren
   '/dashboard/employees': typeof DashboardEmployeesRoute
+  '/dashboard/executives': typeof DashboardExecutivesRoute
   '/dashboard/exit': typeof DashboardExitRoute
   '/dashboard/exit-management': typeof DashboardExitManagementRoute
   '/dashboard/expenses': typeof DashboardExpensesRoute
@@ -1907,6 +1922,7 @@ export interface FileRoutesByTo {
   '/dashboard/hierarchy': typeof DashboardHierarchyRoute
   '/dashboard/hr': typeof DashboardHrRoute
   '/dashboard/hr-ops': typeof DashboardHrOpsRoute
+  '/dashboard/it-admin': typeof DashboardItAdminRoute
   '/dashboard/leaves': typeof DashboardLeavesRoute
   '/dashboard/manager': typeof DashboardManagerRoute
   '/dashboard/managers': typeof DashboardManagersRoute
@@ -2134,6 +2150,7 @@ export interface FileRoutesById {
   '/dashboard/documents': typeof DashboardDocumentsRoute
   '/dashboard/employee': typeof DashboardEmployeeRouteWithChildren
   '/dashboard/employees': typeof DashboardEmployeesRoute
+  '/dashboard/executives': typeof DashboardExecutivesRoute
   '/dashboard/exit': typeof DashboardExitRoute
   '/dashboard/exit-management': typeof DashboardExitManagementRoute
   '/dashboard/expenses': typeof DashboardExpensesRoute
@@ -2142,6 +2159,7 @@ export interface FileRoutesById {
   '/dashboard/hr': typeof DashboardHrRoute
   '/dashboard/hr-operations': typeof DashboardHrOperationsRouteWithChildren
   '/dashboard/hr-ops': typeof DashboardHrOpsRoute
+  '/dashboard/it-admin': typeof DashboardItAdminRoute
   '/dashboard/leaves': typeof DashboardLeavesRoute
   '/dashboard/manager': typeof DashboardManagerRoute
   '/dashboard/managers': typeof DashboardManagersRoute
@@ -2381,6 +2399,7 @@ export interface FileRouteTypes {
     | '/dashboard/documents'
     | '/dashboard/employee'
     | '/dashboard/employees'
+    | '/dashboard/executives'
     | '/dashboard/exit'
     | '/dashboard/exit-management'
     | '/dashboard/expenses'
@@ -2389,6 +2408,7 @@ export interface FileRouteTypes {
     | '/dashboard/hr'
     | '/dashboard/hr-operations'
     | '/dashboard/hr-ops'
+    | '/dashboard/it-admin'
     | '/dashboard/leaves'
     | '/dashboard/manager'
     | '/dashboard/managers'
@@ -2620,6 +2640,7 @@ export interface FileRouteTypes {
     | '/dashboard/documents'
     | '/dashboard/employee'
     | '/dashboard/employees'
+    | '/dashboard/executives'
     | '/dashboard/exit'
     | '/dashboard/exit-management'
     | '/dashboard/expenses'
@@ -2627,6 +2648,7 @@ export interface FileRouteTypes {
     | '/dashboard/hierarchy'
     | '/dashboard/hr'
     | '/dashboard/hr-ops'
+    | '/dashboard/it-admin'
     | '/dashboard/leaves'
     | '/dashboard/manager'
     | '/dashboard/managers'
@@ -2853,6 +2875,7 @@ export interface FileRouteTypes {
     | '/dashboard/documents'
     | '/dashboard/employee'
     | '/dashboard/employees'
+    | '/dashboard/executives'
     | '/dashboard/exit'
     | '/dashboard/exit-management'
     | '/dashboard/expenses'
@@ -2861,6 +2884,7 @@ export interface FileRouteTypes {
     | '/dashboard/hr'
     | '/dashboard/hr-operations'
     | '/dashboard/hr-ops'
+    | '/dashboard/it-admin'
     | '/dashboard/leaves'
     | '/dashboard/manager'
     | '/dashboard/managers'
@@ -3378,6 +3402,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardLeavesRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/it-admin': {
+      id: '/dashboard/it-admin'
+      path: '/it-admin'
+      fullPath: '/dashboard/it-admin'
+      preLoaderRoute: typeof DashboardItAdminRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/hr-ops': {
       id: '/dashboard/hr-ops'
       path: '/hr-ops'
@@ -3432,6 +3463,13 @@ declare module '@tanstack/react-router' {
       path: '/exit'
       fullPath: '/dashboard/exit'
       preLoaderRoute: typeof DashboardExitRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/executives': {
+      id: '/dashboard/executives'
+      path: '/executives'
+      fullPath: '/dashboard/executives'
+      preLoaderRoute: typeof DashboardExecutivesRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/employees': {
@@ -5359,6 +5397,7 @@ interface DashboardRouteChildren {
   DashboardDocumentsRoute: typeof DashboardDocumentsRoute
   DashboardEmployeeRoute: typeof DashboardEmployeeRouteWithChildren
   DashboardEmployeesRoute: typeof DashboardEmployeesRoute
+  DashboardExecutivesRoute: typeof DashboardExecutivesRoute
   DashboardExitRoute: typeof DashboardExitRoute
   DashboardExitManagementRoute: typeof DashboardExitManagementRoute
   DashboardExpensesRoute: typeof DashboardExpensesRoute
@@ -5367,6 +5406,7 @@ interface DashboardRouteChildren {
   DashboardHrRoute: typeof DashboardHrRoute
   DashboardHrOperationsRoute: typeof DashboardHrOperationsRouteWithChildren
   DashboardHrOpsRoute: typeof DashboardHrOpsRoute
+  DashboardItAdminRoute: typeof DashboardItAdminRoute
   DashboardLeavesRoute: typeof DashboardLeavesRoute
   DashboardManagerRoute: typeof DashboardManagerRoute
   DashboardManagersRoute: typeof DashboardManagersRoute
@@ -5410,6 +5450,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardDocumentsRoute: DashboardDocumentsRoute,
   DashboardEmployeeRoute: DashboardEmployeeRouteWithChildren,
   DashboardEmployeesRoute: DashboardEmployeesRoute,
+  DashboardExecutivesRoute: DashboardExecutivesRoute,
   DashboardExitRoute: DashboardExitRoute,
   DashboardExitManagementRoute: DashboardExitManagementRoute,
   DashboardExpensesRoute: DashboardExpensesRoute,
@@ -5418,6 +5459,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardHrRoute: DashboardHrRoute,
   DashboardHrOperationsRoute: DashboardHrOperationsRouteWithChildren,
   DashboardHrOpsRoute: DashboardHrOpsRoute,
+  DashboardItAdminRoute: DashboardItAdminRoute,
   DashboardLeavesRoute: DashboardLeavesRoute,
   DashboardManagerRoute: DashboardManagerRoute,
   DashboardManagersRoute: DashboardManagersRoute,

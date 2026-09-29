@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Users, UserPlus, Network, ListFilter, ChevronLeft } from "lucide-react";
+import { Users, UserPlus, Network, ListFilter, ChevronLeft, Laptop, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmployeeHierarchyView } from "@/features/admin/employees/components/EmployeeHierarchyView";
 
@@ -31,6 +31,22 @@ export const PEOPLE_MODULES_LIST: PeopleModuleDef[] = [
     icon: UserPlus,
     to: "/dashboard/managers",
     color: "from-indigo-500/20 to-violet-500/20 text-indigo-400 border-indigo-500/30",
+  },
+  {
+    id: "it-admin",
+    title: "IT Admin",
+    description: "Manage system administrators, technical infrastructure access, and IT credentials.",
+    icon: Laptop,
+    to: "/dashboard/it-admin",
+    color: "from-cyan-500/20 to-teal-500/20 text-cyan-400 border-cyan-500/30",
+  },
+  {
+    id: "executive",
+    title: "Executive",
+    description: "Manage C-suite leadership, corporate officers, board designations, and governance.",
+    icon: Crown,
+    to: "/dashboard/executives",
+    color: "from-amber-500/20 to-orange-500/20 text-amber-400 border-amber-500/30",
   },
 ];
 
@@ -67,7 +83,7 @@ export function PeopleHubPage() {
 
       {activeTab === "directory" ? (
         <div className="space-y-6 animate-in fade-in duration-300">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {PEOPLE_MODULES_LIST.map((module) => {
               const Icon = module.icon;
               return (

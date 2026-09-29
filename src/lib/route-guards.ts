@@ -11,7 +11,7 @@ export const PLATFORM_ROLES: AppRole[] = ["super_admin"];
 export const HR_OPERATIONS_ROLES: AppRole[] = ["hr_admin"];
 export const TEAM_MANAGEMENT_ROLES: AppRole[] = ["hr_admin", "manager"];
 export const SYSTEM_ADMIN_ROLES: AppRole[] = ["it_admin"];
-export const EXECUTIVE_ROLES: AppRole[] = ["executive"];
+export const EXECUTIVE_ROLES: AppRole[] = ["executive", "hr_admin"];
 export const ALL_COMPANY_ROLES: AppRole[] = [
   "hr_admin",
   "executive",
@@ -32,7 +32,7 @@ export const ROUTE_ROLE_ACCESS: Record<string, AppRole[]> = {
   "/dashboard/super-admin/platform-config": PLATFORM_ROLES,
 
   // ── Executive Intelligence Routes ───────────────────────────────
-  "/dashboard/executive/cio": ["executive", "it_admin"],
+  "/dashboard/executive/cio": ["executive", "it_admin", "hr_admin"],
   "/dashboard/executive": EXECUTIVE_ROLES,
 
   // ── HR Operations & Payroll (HR_ADMIN) ──────────────────────────
@@ -46,6 +46,8 @@ export const ROUTE_ROLE_ACCESS: Record<string, AppRole[]> = {
   "/dashboard/onboarding-checklist": HR_OPERATIONS_ROLES,
   "/dashboard/offboarding": HR_OPERATIONS_ROLES,
   "/dashboard/managers": HR_OPERATIONS_ROLES,
+  "/dashboard/it-admin": HR_OPERATIONS_ROLES,
+  "/dashboard/executives": HR_OPERATIONS_ROLES,
 
   // ── Team Management Routes (HR_ADMIN, MANAGER) ──────────────────
   "/dashboard/exit": TEAM_MANAGEMENT_ROLES,

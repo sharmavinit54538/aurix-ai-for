@@ -1,6 +1,5 @@
 import React, { useEffect, useCallback, useMemo } from "react";
 import {
-  Search,
   ZoomIn,
   ZoomOut,
   Maximize2,
@@ -245,39 +244,7 @@ export function EmployeeHierarchyView() {
   return (
     <div className={`space-y-5 ${isFullscreen ? "fixed inset-0 z-50 overflow-auto bg-background p-6" : ""}`}>
       {/* ═══ TOP HEADER & CONTROLS TOOLBAR ═══ */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between text-left shadow-md">
-        {/* Search Bar */}
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={isGraphMode ? graphFilters.searchQuery : searchKeyword}
-            onChange={(e) =>
-              isGraphMode
-                ? dispatch(setGraphSearchQuery(e.target.value))
-                : dispatch(setSearchKeyword(e.target.value))
-            }
-            placeholder={
-              isGraphMode
-                ? "Search employees, departments, skills, projects..."
-                : "Search by Name, Employee ID, Department, or Role..."
-            }
-            className="pl-9 pr-8 h-9 text-xs bg-muted/20 border-border/60"
-          />
-          {(isGraphMode ? graphFilters.searchQuery : searchKeyword) && (
-            <button
-              type="button"
-              onClick={() =>
-                isGraphMode
-                  ? dispatch(setGraphSearchQuery(""))
-                  : dispatch(setSearchKeyword(""))
-              }
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
-
+      <div className="flex flex-wrap items-center justify-end gap-2 rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl text-left shadow-md">
         {/* Action Toolbar */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Graph / Hierarchy Toggle */}

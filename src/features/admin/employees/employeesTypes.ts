@@ -10,6 +10,7 @@ export interface Employee {
   managerName?: string;
   shift?: string;
   status?: string;
+  role?: string;
   activationToken?: string;
   activationTokenExpiresAt?: string;
 }
@@ -33,6 +34,7 @@ export interface FetchEmployeesParams {
   designation?: string;
   shift?: string;
   status?: string;
+  role?: string;
   sort?: string;
   order?: string;
   page?: number;

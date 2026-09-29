@@ -21,6 +21,7 @@ function mapEmployee(emp: Record<string, unknown>): Employee {
     managerName: "",
     shift: String(emp.shift ?? "General"),
     status: String(emp.status ?? "INVITED"),
+    role: String(emp.role ?? "employee"),
     activationToken: emp.activation_token as string | undefined,
     activationTokenExpiresAt: emp.activation_token_expires_at as string | undefined,
   };
@@ -54,6 +55,9 @@ export const fetchEmployees = createAsyncThunk<
     }
     if (params?.status && params.status !== "all") {
       searchParams.set("status", params.status);
+    }
+    if (params?.role && params.role !== "all") {
+      searchParams.set("role", params.role);
     }
     if (params?.sort) {
       searchParams.set("sort", params.sort);
