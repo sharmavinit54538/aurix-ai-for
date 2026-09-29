@@ -302,19 +302,19 @@ export function JobQrModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         overlayClassName="backdrop-blur-md bg-black/85"
-        className="w-[calc(100%-2rem)] max-w-[400px] max-h-[90vh] overflow-y-auto p-4 gap-0 space-y-3 rounded-2xl bg-card border border-border shadow-2xl text-left [&>button]:top-3.5 [&>button]:right-3.5 [&>button]:h-6 [&>button]:w-6 [&>button_svg]:h-[18px] [&>button_svg]:w-[18px]"
+        className="w-[calc(100vw-1.5rem)] max-w-[360px] max-h-[90vh] overflow-y-auto overflow-x-hidden p-3.5 sm:p-4 gap-0 space-y-2.5 sm:space-y-3 rounded-2xl bg-card border border-border shadow-2xl text-left box-border [&>button]:top-3 [&>button]:right-3 [&>button]:h-6 [&>button]:w-6 [&>button_svg]:h-4 [&>button_svg]:w-4"
       >
         {/* ── Header ── */}
-        <DialogHeader className="space-y-0 text-left">
-          <div className="flex items-center gap-2.5 pr-6">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary border border-primary/20">
-              <QrCode className="h-[18px] w-[18px]" />
+        <DialogHeader className="space-y-0 text-left w-full min-w-0">
+          <div className="flex items-center gap-2.5 pr-6 w-full min-w-0">
+            <span className="grid h-8 w-8 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary border border-primary/20">
+              <QrCode className="h-4 w-4 sm:h-[18px] sm:w-[18px]" />
             </span>
-            <div className="min-w-0 flex-1">
-              <DialogTitle className="text-base font-semibold text-foreground leading-tight tracking-tight">
+            <div className="min-w-0 flex-1 overflow-hidden">
+              <DialogTitle className="text-sm sm:text-base font-semibold text-foreground leading-tight tracking-tight truncate block">
                 Generate Job QR Code
               </DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground mt-0.5 leading-normal truncate">
+              <DialogDescription className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 leading-normal truncate block">
                 Share or print this QR code for instant mobile job application.
               </DialogDescription>
             </div>
@@ -323,33 +323,33 @@ export function JobQrModal({
 
         {/* ── Target Role Card ── */}
         {jobTitle && (
-          <div className="flex items-center justify-between rounded-xl bg-muted/60 border border-border px-3 py-2">
-            <div className="min-w-0 flex-1 pr-2">
-              <span className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground/80 block">
+          <div className="w-full min-w-0 flex items-center justify-between rounded-xl bg-muted/60 border border-border px-2.5 py-1.5 gap-2 overflow-hidden">
+            <div className="min-w-0 flex-1 overflow-hidden">
+              <span className="text-[9px] uppercase font-semibold tracking-wider text-muted-foreground/80 block leading-tight">
                 Target Role
               </span>
-              <span className="text-sm font-semibold text-foreground truncate block">
+              <span className="text-xs sm:text-sm font-semibold text-foreground truncate block leading-tight">
                 {jobTitle}
               </span>
             </div>
-            <span className="shrink-0 text-[11px] font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/25">
+            <span className="shrink-0 text-[10px] font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/25 whitespace-nowrap">
               Public Link
             </span>
           </div>
         )}
 
         {/* ── QR Showcase ── */}
-        <div className="pt-0.5 pb-0">
+        <div className="w-full min-w-0 pt-0.5 pb-0 flex flex-col items-center">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-8 space-y-2">
+            <div className="flex flex-col items-center justify-center py-6 space-y-2">
               <div className="h-7 w-7 animate-spin rounded-full border-2 border-primary border-t-transparent" />
               <p className="text-xs font-medium text-muted-foreground">
                 Generating QR code...
               </p>
             </div>
           ) : error ? (
-            <div className="flex flex-col items-center justify-center py-6 space-y-2 text-center">
-              <div className="grid h-9 w-9 place-items-center rounded-full bg-destructive/10 text-destructive">
+            <div className="flex flex-col items-center justify-center py-5 space-y-2 text-center w-full min-w-0">
+              <div className="grid h-8 w-8 place-items-center rounded-full bg-destructive/10 text-destructive">
                 <AlertCircle className="h-4 w-4" />
               </div>
               <p className="text-xs text-muted-foreground max-w-xs">{error}</p>
@@ -363,9 +363,9 @@ export function JobQrModal({
               </Button>
             </div>
           ) : (
-            <div className="flex flex-col items-center w-full">
-              {/* White QR container: 176px (160px on <420px), p-3, rounded-xl */}
-              <div className="rounded-xl bg-white shadow-md border border-slate-200/80 inline-flex items-center justify-center aspect-square p-3 w-[160px] h-[160px] min-[420px]:w-44 min-[420px]:h-44">
+            <div className="flex flex-col items-center w-full min-w-0">
+              {/* White QR container: compact and responsive */}
+              <div className="rounded-xl bg-white shadow-md border border-slate-200/80 inline-flex items-center justify-center aspect-square p-2.5 sm:p-3 w-36 h-36 sm:w-40 sm:h-40">
                 <img
                   src={pngDataUrl}
                   alt={`QR code for ${jobTitle} job application`}
@@ -375,7 +375,7 @@ export function JobQrModal({
               </div>
 
               {/* Scan caption: text-xs, mt-2 (8px) */}
-              <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-foreground/90">
+              <div className="mt-2 inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-medium text-foreground/90">
                 <Scan className="h-3.5 w-3.5 shrink-0 text-primary" />
                 <span>Scan with phone camera to apply</span>
               </div>
@@ -384,9 +384,9 @@ export function JobQrModal({
         </div>
 
         {/* ── URL + Copy Row ── */}
-        <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/60 px-3 py-2 w-full transition-colors focus-within:border-primary/50">
+        <div className="w-full min-w-0 flex items-center gap-1.5 sm:gap-2 rounded-xl border border-border bg-muted/60 px-2.5 py-1.5 transition-colors focus-within:border-primary/50 overflow-hidden">
           <span
-            className="flex-1 min-w-0 font-mono text-[11px] text-muted-foreground select-all truncate"
+            className="flex-1 min-w-0 font-mono text-[10px] sm:text-[11px] text-muted-foreground select-all truncate block overflow-hidden"
             title={applyUrl}
           >
             {applyUrl}
@@ -394,7 +394,7 @@ export function JobQrModal({
           <Button
             size="sm"
             variant={copied ? "default" : "secondary"}
-            className={`h-7 px-2.5 py-1.5 text-xs shrink-0 font-medium transition-all ${
+            className={`h-6 sm:h-7 px-2 sm:px-2.5 text-[11px] sm:text-xs shrink-0 font-medium transition-all ${
               copied
                 ? "bg-emerald-600 hover:bg-emerald-600 text-white"
                 : "hover:bg-accent"
@@ -404,12 +404,12 @@ export function JobQrModal({
           >
             {copied ? (
               <>
-                <Check className="mr-1 h-3.5 w-3.5" />
+                <Check className="mr-1 h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 Copied
               </>
             ) : (
               <>
-                <Copy className="mr-1 h-3.5 w-3.5" />
+                <Copy className="mr-1 h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 Copy
               </>
             )}
@@ -417,11 +417,11 @@ export function JobQrModal({
         </div>
 
         {/* ── Action Buttons: Single row of 3 equal columns ── */}
-        <div className="grid grid-cols-3 gap-2 w-full pt-1">
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full min-w-0 pt-0.5">
           <Button
             size="sm"
             variant="outline"
-            className="h-9 py-2 px-2 text-xs font-medium gap-1.5 min-w-0 cursor-pointer"
+            className="h-8 sm:h-9 py-1 px-1 sm:px-2 text-[11px] sm:text-xs font-medium gap-1 sm:gap-1.5 min-w-0 cursor-pointer overflow-hidden"
             onClick={handleDownloadPng}
             disabled={loading || !!error}
             aria-label="Download QR code as PNG image"
@@ -433,7 +433,7 @@ export function JobQrModal({
           <Button
             size="sm"
             variant="outline"
-            className="h-9 py-2 px-2 text-xs font-medium gap-1.5 min-w-0 cursor-pointer"
+            className="h-8 sm:h-9 py-1 px-1 sm:px-2 text-[11px] sm:text-xs font-medium gap-1 sm:gap-1.5 min-w-0 cursor-pointer overflow-hidden"
             onClick={handleDownloadSvg}
             disabled={loading || !!error}
             aria-label="Download QR code as SVG vector"
@@ -445,7 +445,7 @@ export function JobQrModal({
           <Button
             size="sm"
             variant="default"
-            className="h-9 py-2 px-2 text-xs font-semibold gap-1.5 min-w-0 cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90"
+            className="h-8 sm:h-9 py-1 px-1 sm:px-2 text-[11px] sm:text-xs font-semibold gap-1 sm:gap-1.5 min-w-0 cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 overflow-hidden"
             onClick={handlePrint}
             disabled={loading || !!error}
             aria-label="Print QR code poster"
