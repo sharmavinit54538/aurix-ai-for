@@ -51,20 +51,11 @@ export function persistAuthSession(
   aurix.set(mapAuthUser(user));
 }
 
+import { getDefaultDashboardPath } from "./role-routing";
+export { getDefaultDashboardPath, getSafeRedirectUrl } from "./role-routing";
+
 export function getPostLoginRoute(user: AuthUserPayload): string {
-  const role = normalizeRole(user.role);
-  if (!user.is_verified) return "/verify-email";
-  if (role === "hr_admin" && !user.onboarding_completed) {
-    return "/onboarding";
-  }
-  if (role === "super_admin") return "/dashboard/super-admin";
-  if (role === "it_admin") return "/dashboard/admin";
-  if (role === "executive") {
-    return "/dashboard/executive";
-  }
-  if (role === "manager") return "/dashboard/manager";
-  if (role === "employee") return "/dashboard/employee";
-  return "/dashboard";
+  return getDefaultDashboardPath(user);
 }
 
 export async function bootstrapAuth(): Promise<void> {

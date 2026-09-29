@@ -55,6 +55,13 @@ export const AVAILABLE_ROLES: RoleConfig[] = [
     description: "Executive business intelligence and reporting",
     defaultPath: "/dashboard/executive",
   },
+  {
+    role: "recruiter",
+    label: "Recruiter",
+    badge: "Talent",
+    description: "Talent acquisition, candidate pipelines and job requisitions",
+    defaultPath: "/dashboard/recruitment",
+  },
 ];
 
 export interface AurixUser {

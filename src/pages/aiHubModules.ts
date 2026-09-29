@@ -16,6 +16,7 @@ import {
   LineChart as LineChartIcon,
 } from "lucide-react";
 
+
 export interface AIModuleDef {
   id: string;
   title: string;

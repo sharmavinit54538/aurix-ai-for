@@ -15,7 +15,8 @@ export type AppRole =
   | "executive"
   | "manager"
   | "employee"
-  | "it_admin";
+  | "it_admin"
+  | "recruiter";
 
 export type CanonicalRole =
   | "SUPER_ADMIN"
@@ -23,7 +24,8 @@ export type CanonicalRole =
   | "MANAGER"
   | "EMPLOYEE"
   | "IT_ADMIN"
-  | "EXECUTIVE";
+  | "EXECUTIVE"
+  | "RECRUITER";
 
 export const ALL_APP_ROLES: readonly AppRole[] = [
   "super_admin",
@@ -32,6 +34,7 @@ export const ALL_APP_ROLES: readonly AppRole[] = [
   "manager",
   "employee",
   "it_admin",
+  "recruiter",
 ] as const;
 
 /** Organization / Company-level roles. SUPER_ADMIN is NEVER part of this list. */
@@ -41,6 +44,7 @@ export const COMPANY_ROLES: readonly AppRole[] = [
   "employee",
   "it_admin",
   "executive",
+  "recruiter",
 ] as const;
 
 /** Platform owner role. Single instance in the application. */
@@ -112,6 +116,14 @@ export function normalizeRole(raw?: string | null): AppRole | null {
     case "it":
       return "it_admin";
 
+    // 7. Recruiter (Talent Acquisition / ATS)
+    case "recruiter":
+    case "recruitment":
+    case "talent_acquisition":
+    case "ta":
+    case "recruiting":
+      return "recruiter";
+
     default:
       return null;
   }
@@ -138,6 +150,11 @@ export const isPlatformOwner = isSuperAdmin;
 /** Returns true if the role is an HR Administrator for a company. */
 export function isHrAdmin(role?: string | null): boolean {
   return normalizeRole(role) === "hr_admin";
+}
+
+/** Returns true if the role is a Recruiter. */
+export function isRecruiter(role?: string | null): boolean {
+  return normalizeRole(role) === "recruiter";
 }
 
 /** Returns true if the role is a Team / Department Manager. */

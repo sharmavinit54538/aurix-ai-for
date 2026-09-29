@@ -11,20 +11,47 @@ function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
 }
 
-function normalizeUser(raw: unknown): AuthUserPayload | null {
+function parseJwtRole(token: string): string | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const payload = JSON.parse(atob(base64));
+    if (payload && typeof payload === "object") {
+      return (
+        payload.role ||
+        payload.user_role ||
+        payload.userRole ||
+        payload.role_name ||
+        null
+      );
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeUser(raw: unknown, tokenRole?: string | null): AuthUserPayload | null {
   const user = asRecord(raw);
   if (!user || typeof user.email !== "string") return null;
 
   const first = typeof user.first_name === "string" ? user.first_name : "";
   const last = typeof user.last_name === "string" ? user.last_name : "";
   const combinedName = [first, last].filter(Boolean).join(" ");
+  const rawRole =
+    (typeof user.role === "string" ? user.role : null) ??
+    (typeof user.userRole === "string" ? user.userRole : null) ??
+    (typeof user.role_name === "string" ? user.role_name : null) ??
+    tokenRole ??
+    null;
 
   return {
     id: typeof user.id === "string" || typeof user.id === "number" ? user.id : "",
     name: String(user.name ?? user.full_name ?? user.fullName ?? combinedName ?? ""),
     email: user.email,
     phone: typeof user.phone === "string" ? user.phone : undefined,
-    role: normalizeRole(typeof user.role === "string" ? user.role : null) ?? "employee",
+    role: normalizeRole(rawRole) ?? "employee",
     is_verified: Boolean(user.is_verified ?? user.isVerified ?? user.email_verified),
     onboarding_completed: Boolean(user.onboarding_completed ?? user.onboardingCompleted ?? false),
     created_at: typeof user.created_at === "string" ? user.created_at : undefined,
@@ -67,7 +94,8 @@ export function parseLoginResponse(res: unknown): ParsedLoginResult | null {
       ? nested
       : null);
 
-  const user = normalizeUser(userCandidate);
+  const tokenRole = typeof accessToken === "string" ? parseJwtRole(accessToken) : null;
+  const user = normalizeUser(userCandidate, tokenRole);
 
   if (typeof accessToken !== "string" || typeof refreshToken !== "string" || !user) {
     return null;

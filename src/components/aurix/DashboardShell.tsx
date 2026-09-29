@@ -53,7 +53,7 @@ import {
 } from "lucide-react";
 import { useAurix } from "@/lib/aurix-store";
 import { useAuthReady } from "@/lib/auth-bootstrap";
-import { getRoleDefaultHome } from "@/lib/route-guards";
+import { getDefaultDashboardPath } from "@/lib/role-routing";
 import { normalizeRole, useCurrentRole } from "@/lib/roles";
 import { UserProfileMenu } from "./UserProfileMenu";
 import { NotificationDropdown } from "./NotificationDropdown";
@@ -373,6 +373,59 @@ const IT_ADMIN_NAV_SECTIONS: SidebarNavSection[] = [
   },
 ];
 
+const RECRUITER_NAV_SECTIONS: SidebarNavSection[] = [
+  {
+    items: [
+      {
+        to: "/dashboard/recruitment",
+        label: "Recruitment Hub",
+        icon: Briefcase,
+        exact: true,
+      },
+      {
+        to: "/dashboard/recruitment/jobs",
+        label: "Jobs & Requisitions",
+        icon: Briefcase,
+      },
+      {
+        to: "/dashboard/recruitment/candidates",
+        label: "Candidates",
+        icon: Users,
+      },
+      {
+        to: "/dashboard/recruitment/pipeline",
+        label: "Pipeline",
+        icon: LayoutDashboard,
+      },
+      {
+        to: "/dashboard/recruitment/interviews",
+        label: "Interviews",
+        icon: CalendarClock,
+      },
+      {
+        to: "/dashboard/recruitment/talent-pool",
+        label: "Talent Pool",
+        icon: UserCheck,
+      },
+      {
+        to: "/dashboard/recruitment/reports",
+        label: "Reports",
+        icon: BarChart3,
+      },
+      {
+        to: "/dashboard/ai-hub",
+        label: "AI Assistant",
+        icon: GeminiIcon,
+      },
+      {
+        to: "/dashboard/settings/profile",
+        label: "My Settings",
+        icon: Settings,
+      },
+    ],
+  },
+];
+
 
 export function DashboardShell() {
   const ws = useAurix();
@@ -413,7 +466,7 @@ export function DashboardShell() {
         navigate({ to: "/dashboard/manager" });
         return;
       }
-      navigate({ to: getRoleDefaultHome(currentRole) });
+      navigate({ to: getDefaultDashboardPath(ws.user) });
       return;
     }
 
@@ -439,6 +492,7 @@ export function DashboardShell() {
     const isEmployeePortalPath = pathname === "/dashboard/employee" || pathname.startsWith("/dashboard/employee/");
     const isManagerPortalPath = pathname === "/dashboard/manager" || pathname.startsWith("/dashboard/manager/");
     const isExecutivePortalPath = pathname === "/dashboard/executive" || pathname.startsWith("/dashboard/executive/");
+    const isRecruiterPortalPath = pathname === "/dashboard/recruitment" || pathname.startsWith("/dashboard/recruitment/");
 
     if (currentRole === "super_admin" || isSuperAdminPortalPath) {
       return filterNavTree(SUPER_ADMIN_NAV_SECTIONS, currentRole || undefined, userPermissions);
@@ -455,6 +509,9 @@ export function DashboardShell() {
     if (currentRole === "manager" || isManagerPortalPath) {
       return filterNavTree(MANAGER_NAV_SECTIONS, currentRole || undefined, userPermissions);
     }
+    if (currentRole === "recruiter" || isRecruiterPortalPath) {
+      return filterNavTree(RECRUITER_NAV_SECTIONS, currentRole || undefined, userPermissions);
+    }
     const computed = filterNavTree(NAV_SECTIONS, currentRole || undefined, userPermissions);
     return computed && computed.length > 0 ? computed : NAV_SECTIONS;
   }, [currentRole, pathname, userPermissions]);
@@ -467,7 +524,7 @@ export function DashboardShell() {
     return null;
   }
 
-  const homeLink = getRoleDefaultHome(currentRole);
+  const homeLink = getDefaultDashboardPath(ws.user);
 
   return (
     <div className="flex min-h-screen w-full flex-col overflow-x-hidden bg-background text-foreground">

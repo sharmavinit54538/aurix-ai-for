@@ -8,9 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { rememberStore } from "@/lib/aurix-store";
-import { getPostLoginRoute, persistAuthSession } from "@/lib/auth-bootstrap";
-import { authService } from "@/api";
+import { aurix, rememberStore } from "@/lib/aurix-store";
+import { persistAuthSession, useAuthReady } from "@/lib/auth-bootstrap";
+import { getSafeRedirectUrl } from "@/lib/role-routing";
+import { authService, hasValidAccessToken } from "@/api";
 import { getErrorMessage } from "@/api/utils";
 import { toast } from "sonner";
 
@@ -25,12 +26,25 @@ function formatLoginError(message: string) {
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const authReady = useAuthReady();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
   const [show, setShow] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+
+  // If already logged in, redirect immediately to role dashboard or allowed destination
+  useEffect(() => {
+    if (!authReady) return;
+    const ws = aurix.get();
+    if (ws.user && hasValidAccessToken()) {
+      const params = new URLSearchParams(window.location.search);
+      const redirectParam = params.get("redirect") || params.get("callbackUrl");
+      const target = getSafeRedirectUrl(redirectParam, ws.user);
+      navigate({ to: target as any, replace: true });
+    }
+  }, [authReady, navigate]);
 
   useEffect(() => {
     const savedEmail = rememberStore.get();
@@ -65,7 +79,11 @@ export function LoginPage() {
         const { accessToken, refreshToken, user } = login;
         persistAuthSession(user, { accessToken, refreshToken });
         toast.success(`Welcome back, ${user.name}!`);
-        navigate({ to: getPostLoginRoute(user) });
+
+        const params = new URLSearchParams(window.location.search);
+        const redirectParam = params.get("redirect") || params.get("callbackUrl");
+        const destination = getSafeRedirectUrl(redirectParam, user);
+        navigate({ to: destination as any });
         return;
       }
 

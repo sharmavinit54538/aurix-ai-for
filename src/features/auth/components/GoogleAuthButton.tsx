@@ -3,7 +3,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { Loader2, ShieldAlert, Lock } from "lucide-react";
 import { authService } from "@/api";
 import { parseLoginResponse } from "@/features/auth/utils/parseLoginResponse";
-import { persistAuthSession, getPostLoginRoute } from "@/lib/auth-bootstrap";
+import { persistAuthSession } from "@/lib/auth-bootstrap";
+import { getSafeRedirectUrl } from "@/lib/role-routing";
 import { getErrorMessage } from "@/api/utils";
 import { isSuperAdmin } from "@/lib/rbac";
 import { toast } from "sonner";
@@ -63,7 +64,9 @@ export function GoogleAuthButton({ action = "login" }: GoogleAuthButtonProps) {
         persistAuthSession(user, { accessToken, refreshToken });
         toast.success(`Welcome back, ${user.name}! (Super Admin)`);
         setDialogOpen(false);
-        navigate({ to: getPostLoginRoute(user) });
+        const params = new URLSearchParams(window.location.search);
+        const redirectParam = params.get("redirect") || params.get("callbackUrl");
+        navigate({ to: getSafeRedirectUrl(redirectParam, user) as any });
         return;
       }
     } catch (err: any) {

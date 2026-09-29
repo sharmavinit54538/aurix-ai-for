@@ -132,6 +132,16 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<AppRole, string[]> = {
     "ai.view",
     "ai.hub",
   ],
+  recruiter: [
+    "overview.view",
+    "talent.view",
+    "talent.recruitment",
+    "ai.view",
+    "ai.hub",
+    "ai.assistant",
+    "settings.view",
+    "settings.profile",
+  ],
 };
 
 export const sidebarApi = {

@@ -12,12 +12,14 @@ export const HR_OPERATIONS_ROLES: AppRole[] = ["hr_admin"];
 export const TEAM_MANAGEMENT_ROLES: AppRole[] = ["hr_admin", "manager"];
 export const SYSTEM_ADMIN_ROLES: AppRole[] = ["it_admin"];
 export const EXECUTIVE_ROLES: AppRole[] = ["executive", "hr_admin"];
+export const RECRUITMENT_ROLES: AppRole[] = ["recruiter", "hr_admin"];
 export const ALL_COMPANY_ROLES: AppRole[] = [
   "hr_admin",
   "executive",
   "manager",
   "employee",
   "it_admin",
+  "recruiter",
 ];
 
 export const ROUTE_ROLE_ACCESS: Record<string, AppRole[]> = {
@@ -34,6 +36,13 @@ export const ROUTE_ROLE_ACCESS: Record<string, AppRole[]> = {
   // ── Executive Intelligence Routes ───────────────────────────────
   "/dashboard/executive/cio": ["executive", "it_admin", "hr_admin"],
   "/dashboard/executive": EXECUTIVE_ROLES,
+
+  // ── Recruitment (ATS) Routes (RECRUITER & HR_ADMIN) ─────────────
+  "/dashboard/recruitment/hiring-manager": ["hr_admin", "manager", "recruiter"],
+  "/dashboard/recruitment/requisitions": ["hr_admin", "manager", "recruiter"],
+  "/dashboard/recruitment/interviews": ["hr_admin", "manager", "recruiter"],
+  "/dashboard/recruitment": RECRUITMENT_ROLES,
+  "/dashboard/talent/recruitment": RECRUITMENT_ROLES,
 
   // ── HR Operations & Payroll (HR_ADMIN) ──────────────────────────
   "/dashboard/payroll/payslips": ["hr_admin", "employee", "manager"],
@@ -53,7 +62,7 @@ export const ROUTE_ROLE_ACCESS: Record<string, AppRole[]> = {
   "/dashboard/exit": TEAM_MANAGEMENT_ROLES,
   "/dashboard/exit-management": TEAM_MANAGEMENT_ROLES,
   "/dashboard/employees": TEAM_MANAGEMENT_ROLES,
-  "/dashboard/manager": ["manager"],
+  "/dashboard/manager": ["manager", "hr_admin"],
 
   // ── IT Admin Routes ─────────────────────────────────────────────
   "/dashboard/admin": SYSTEM_ADMIN_ROLES,
@@ -70,23 +79,13 @@ export const ROUTE_ROLE_ACCESS: Record<string, AppRole[]> = {
   "/dashboard/roles": HR_OPERATIONS_ROLES,
 };
 
+import { getDefaultDashboardPath } from "./role-paths";
+export { getDefaultDashboardPath } from "./role-paths";
+export { getSafeRedirectUrl } from "./role-routing";
+
 export function getRoleDefaultHome(role?: string | null): string {
-  const norm = normalizeRole(role);
-  switch (norm) {
-    case "super_admin":
-      return "/dashboard/super-admin";
-    case "executive":
-      return "/dashboard/executive";
-    case "manager":
-      return "/dashboard/manager";
-    case "employee":
-      return "/dashboard/employee";
-    case "it_admin":
-      return "/dashboard/admin";
-    case "hr_admin":
-    default:
-      return "/dashboard";
-  }
+  // Delegate to central role dashboard resolver
+  return getDefaultDashboardPath(role);
 }
 
 export function isUserAuthenticated(): boolean {
@@ -117,16 +116,17 @@ export function checkRouteAccess(pathname: string, userRole?: string | null): Ro
     if (pathname === "/dashboard" || pathname === "/dashboard/") {
       return { allowed: false, redirectPath: "/dashboard/super-admin" };
     }
-    // Super Admin is separate from company employee and payroll operations
+    // Super Admin is separate from company employee, payroll, and recruitment operations
     if (
       pathname.startsWith("/dashboard/payroll") ||
       pathname.startsWith("/dashboard/employee") ||
-      pathname.startsWith("/dashboard/manager")
+      pathname.startsWith("/dashboard/manager") ||
+      pathname.startsWith("/dashboard/recruitment")
     ) {
       return {
         allowed: false,
         redirectPath: "/dashboard/super-admin",
-        reason: "Super Admin is the platform owner and does not belong to company employee or payroll workflows.",
+        reason: "Super Admin is the platform owner and does not belong to company operational workflows.",
       };
     }
     return { allowed: true };
@@ -141,7 +141,19 @@ export function checkRouteAccess(pathname: string, userRole?: string | null): Ro
     };
   }
 
-  // 3. Match against configured route role map
+  // 3. Root /dashboard and /dashboard/ access check:
+  // Executive command center is intended for HR Admin and Executive; other roles land on their dedicated portals.
+  if (pathname === "/dashboard" || pathname === "/dashboard/") {
+    if (role && role !== "hr_admin" && role !== "executive") {
+      return {
+        allowed: false,
+        redirectPath: getDefaultDashboardPath(role),
+        reason: `Role '${role}' redirected from generic dashboard to role dashboard.`,
+      };
+    }
+  }
+
+  // 4. Match against configured route role map
   const matchedPrefix = Object.keys(ROUTE_ROLE_ACCESS)
     .filter((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
     .sort((a, b) => b.length - a.length)[0];
@@ -157,7 +169,7 @@ export function checkRouteAccess(pathname: string, userRole?: string | null): Ro
 
   return {
     allowed: false,
-    redirectPath: role === "executive" ? getRoleDefaultHome(role) : "/dashboard/forbidden",
+    redirectPath: role ? getDefaultDashboardPath(role) : "/dashboard/forbidden",
     reason: `Role '${role ?? "unrecognized"}' lacks permission to access '${matchedPrefix}'.`,
   };
 }
