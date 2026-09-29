@@ -56,6 +56,7 @@ import { useAuthReady } from "@/lib/auth-bootstrap";
 import { getRoleDefaultHome } from "@/lib/route-guards";
 import { normalizeRole, useCurrentRole } from "@/lib/roles";
 import { UserProfileMenu } from "./UserProfileMenu";
+import { NotificationDropdown } from "./NotificationDropdown";
 import { GeminiIcon } from "@/components/icons/GeminiIcon";
 import { hasValidAccessToken } from "@/api";
 import { AuthLoadingScreen } from "@/features/auth/components/AuthLoadingScreen";
@@ -604,9 +605,7 @@ export function DashboardShell() {
               >
                 {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </button>
-              <button className="relative rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer" aria-label="Notifications">
-                <Bell className="h-4 w-4" />
-              </button>
+              <NotificationDropdown />
               <div className="hidden items-center gap-2 rounded-md border border-border bg-card/40 px-3 py-1.5 text-xs sm:flex">
                 <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
                 <span className="font-medium">{ws.company?.name || "Workspace"}</span>

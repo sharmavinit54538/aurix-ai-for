@@ -48,6 +48,7 @@ import {
 } from "recharts";
 import { useExecutiveDashboardData } from "./hooks/useExecutiveDashboardData";
 import { ExecutiveKpiCards } from "./components/ExecutiveKpiCards";
+import { useNotifications } from "@/lib/notifications";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -963,41 +964,48 @@ const NOTIF_ICON_COLORS = {
 };
 
 function NotificationCenter() {
-  const [dismissed, setDismissed] = useState<string[]>([]);
-  const visible = NOTIFICATIONS.filter((n) => !dismissed.includes(n.id));
+  const { notifications, dismissNotification } = useNotifications();
 
   return (
     <motion.div {...fadeUp}>
       <Card>
-        <SectionHeader title="Smart Notification Center" subtitle="Alerts, compliance & AI suggestions" />
+        <SectionHeader
+          title="Smart Notification Center"
+          subtitle="Alerts, compliance & AI suggestions"
+          link="/dashboard/settings/notifications"
+        />
         <div className="space-y-2">
-          {visible.map((n) => (
-            <div
-              key={n.id}
-              className={`flex items-start gap-3 rounded-xl border px-3 py-2.5 ${NOTIF_COLORS[n.severity]}`}
-            >
-              <AlertTriangle className={`mt-0.5 h-4 w-4 shrink-0 ${NOTIF_ICON_COLORS[n.severity]}`} />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">{n.title}</span>
-                  <Badge variant="outline" className="shrink-0 text-[10px] capitalize">
-                    {n.category}
-                  </Badge>
+          {notifications.map((n) => {
+            const sevKey = n.severity === "critical" ? "critical" : n.severity === "warning" ? "warn" : "info";
+            return (
+              <div
+                key={n.id}
+                className={`flex items-start gap-3 rounded-xl border px-3 py-2.5 ${NOTIF_COLORS[sevKey]}`}
+              >
+                <AlertTriangle className={`mt-0.5 h-4 w-4 shrink-0 ${NOTIF_ICON_COLORS[sevKey]}`} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">{n.title}</span>
+                    <Badge variant="outline" className="shrink-0 text-[10px] capitalize">
+                      {n.category}
+                    </Badge>
+                  </div>
+                  <div className="mt-0.5 text-xs text-muted-foreground">{n.message}</div>
                 </div>
-                <div className="mt-0.5 text-xs text-muted-foreground">{n.detail}</div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <span className="text-xs text-muted-foreground">{n.time}</span>
+                  <button
+                    onClick={() => dismissNotification(n.id)}
+                    className="rounded-md p-1 text-muted-foreground hover:bg-background/60 hover:text-foreground cursor-pointer"
+                    aria-label="Dismiss notification"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
               </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <span className="text-xs text-muted-foreground">{n.time}</span>
-                <button
-                  onClick={() => setDismissed((d) => [...d, n.id])}
-                  className="rounded-md p-1 text-muted-foreground hover:bg-background/60 hover:text-foreground"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
-            </div>
-          ))}
-          {visible.length === 0 && (
+            );
+          })}
+          {notifications.length === 0 && (
             <div className="py-8 text-center text-sm text-muted-foreground">
               <CheckCircle2 className="mx-auto mb-2 h-8 w-8 text-emerald-500" />
               All caught up! No active notifications.

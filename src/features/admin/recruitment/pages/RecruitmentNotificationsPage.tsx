@@ -9,7 +9,48 @@ interface N { id: string; kind: Kind; title: string; detail: string; at: string;
 
 const ICON: Record<Kind, any> = { mention: AtSign, interview: UserCheck, offer: FileText, candidate: Bell, sla: MessageSquare, email: Mail };
 
-const seed: N[] = [];
+const seed: N[] = [
+  {
+    id: "rn-1",
+    kind: "candidate",
+    title: "New applicant for Full Stack Developer",
+    detail: "A candidate submitted their profile via the Job QR Code mobile application.",
+    at: "10m ago",
+    read: false,
+  },
+  {
+    id: "rn-2",
+    kind: "interview",
+    title: "Technical Interview Scheduled",
+    detail: "Candidate interview confirmed with Engineering Panel for tomorrow 2:00 PM.",
+    at: "45m ago",
+    read: false,
+  },
+  {
+    id: "rn-3",
+    kind: "offer",
+    title: "Offer Letter Ready for Executive Sign-off",
+    detail: "Offer package prepared for Senior Systems Engineer. Compensation review completed.",
+    at: "2h ago",
+    read: false,
+  },
+  {
+    id: "rn-4",
+    kind: "sla",
+    title: "Application SLA Reminder",
+    detail: "2 candidates have been in Screening stage for over 48 hours. Review required.",
+    at: "4h ago",
+    read: true,
+  },
+  {
+    id: "rn-5",
+    kind: "mention",
+    title: "@Mention from Hiring Manager",
+    detail: "Vinit Sharma mentioned you on Candidate profile #EXEC-104: 'Candidate looks solid for CTO role.'",
+    at: "Yesterday",
+    read: true,
+  },
+];
 
 export function RecruitmentNotificationsPage() {
   const [items, setItems] = useState<N[]>(seed);
