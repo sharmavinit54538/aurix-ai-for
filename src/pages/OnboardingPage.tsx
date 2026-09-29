@@ -579,12 +579,12 @@ function CompanyStep({ onNext }: { onNext: () => void }) {
   const [loading, setLoading] = useState(false);
   const editedFields = useRef<Set<string>>(new Set());
 
+  const wsCompany = ws.company;
   useEffect(() => {
-    if (!ws.company) return;
+    if (!wsCompany) return;
     setC((prev) => {
       let changed = false;
       const next = { ...prev };
-      const company = ws.company!;
       const fields: (keyof Company)[] = [
         "name",
         "logoDataUrl",
@@ -601,20 +601,20 @@ function CompanyStep({ onNext }: { onNext: () => void }) {
       ];
       for (const field of fields) {
         if (!editedFields.current.has(field)) {
-          const val = company[field];
+          const val = wsCompany[field];
           if (val !== undefined && val !== null && val !== "" && next[field] !== val) {
             (next as any)[field] = val;
             changed = true;
           }
         }
       }
-      if (company.id && next.id !== company.id) {
-        next.id = company.id;
+      if (wsCompany.id && next.id !== wsCompany.id) {
+        next.id = wsCompany.id;
         changed = true;
       }
       return changed ? next : prev;
     });
-  }, [ws.company]);
+  }, [wsCompany]);
 
   function set<K extends keyof typeof c>(k: K, v: any) {
     editedFields.current.add(k as string);
