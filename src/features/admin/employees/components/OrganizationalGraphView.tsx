@@ -210,7 +210,7 @@ const GraphNodeCard = React.memo(function GraphNodeCard({
             {node.type.charAt(0).toUpperCase() + node.type.slice(1)}
           </span>
 
-          {isEmployee && meta.department && (
+          {isEmployee && Boolean(meta.department) && (
             <span className="text-[9px] text-muted-foreground truncate max-w-[100px]">
               {String(meta.department)}
             </span>

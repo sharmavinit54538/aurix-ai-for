@@ -10,11 +10,15 @@ export interface LeaveAssistantKpiItem {
 export interface LeaveForecastItem {
   w: string;
   leaves: number;
+  req?: number;
+  conf?: number;
 }
 
 export interface LeaveTypeDistributionItem {
   t: string;
   days: number;
+  type?: string;
+  pct?: number;
 }
 
 export interface LeaveAssistantSummary {

@@ -174,31 +174,31 @@ export function GraphDetailPanel({
           {/* Metadata Grid (employee-specific) */}
           {isEmployee && (
             <div className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-accent/20 p-3">
-              {meta.employeeId && (
+              {Boolean(meta.employeeId) && (
                 <div>
                   <span className="text-[10px] uppercase font-semibold text-muted-foreground/60 block">Employee ID</span>
                   <p className="font-mono font-medium text-foreground">{String(meta.employeeId)}</p>
                 </div>
               )}
-              {meta.department && (
+              {Boolean(meta.department) && (
                 <div>
                   <span className="text-[10px] uppercase font-semibold text-muted-foreground/60 block">Department</span>
                   <p className="font-medium text-foreground">{String(meta.department)}</p>
                 </div>
               )}
-              {meta.designation && (
+              {Boolean(meta.designation) && (
                 <div>
                   <span className="text-[10px] uppercase font-semibold text-muted-foreground/60 block">Designation</span>
                   <p className="font-medium text-foreground">{String(meta.designation)}</p>
                 </div>
               )}
-              {meta.reportingManagerName && (
+              {Boolean(meta.reportingManagerName) && (
                 <div>
                   <span className="text-[10px] uppercase font-semibold text-muted-foreground/60 block">Manager</span>
                   <p className="font-medium text-foreground">{String(meta.reportingManagerName)}</p>
                 </div>
               )}
-              {meta.branch && (
+              {Boolean(meta.branch) && (
                 <div>
                   <span className="text-[10px] uppercase font-semibold text-muted-foreground/60 block">Location</span>
                   <p className="font-medium text-foreground flex items-center gap-1">
@@ -207,7 +207,7 @@ export function GraphDetailPanel({
                   </p>
                 </div>
               )}
-              {meta.employmentType && (
+              {Boolean(meta.employmentType) && (
                 <div>
                   <span className="text-[10px] uppercase font-semibold text-muted-foreground/60 block">Employment</span>
                   <p className="font-medium text-foreground capitalize">
@@ -221,7 +221,7 @@ export function GraphDetailPanel({
                   <p className="font-medium text-foreground">{String(meta.directReportsCount)}</p>
                 </div>
               )}
-              {meta.joiningDate && (
+              {Boolean(meta.joiningDate) && (
                 <div>
                   <span className="text-[10px] uppercase font-semibold text-muted-foreground/60 block">Joined</span>
                   <p className="font-medium text-foreground">{String(meta.joiningDate)}</p>
@@ -233,7 +233,7 @@ export function GraphDetailPanel({
           {/* Department-specific metadata */}
           {node.type === "department" && (
             <div className="rounded-xl border border-border bg-accent/20 p-3 space-y-1">
-              {meta.managerName && (
+              {Boolean(meta.managerName) && (
                 <div>
                   <span className="text-[10px] uppercase font-semibold text-muted-foreground/60 block">Department Head</span>
                   <p className="font-medium text-foreground">{String(meta.managerName)}</p>

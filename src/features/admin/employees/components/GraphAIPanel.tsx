@@ -287,7 +287,7 @@ export function GraphAIPanel({
             <Button
               variant="default"
               size="icon"
-              onClick={handleSend}
+              onClick={() => handleSend()}
               disabled={!input.trim() || processing}
               className="h-8 w-8 shrink-0 cursor-pointer"
             >

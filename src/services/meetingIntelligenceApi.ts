@@ -113,6 +113,8 @@ export function normalizeMeetingDashboardData(
 
   const meetingVolume: MeetingVolumeItem[] = Array.isArray(rawVolume)
     ? rawVolume.map((item: any, idx: number) => ({
+        d: item.d ?? item.w ?? item.week ?? `W${idx + 1}`,
+        n: Number(item.n ?? item.count ?? item.meetings ?? item.volume ?? 0),
         w: item.w ?? item.week ?? `W${idx + 1}`,
         count: Number(item.count ?? item.meetings ?? item.volume ?? 0),
       }))
@@ -169,8 +171,15 @@ export const meetingIntelligenceApi = {
   },
 
   async getKpi(): Promise<MeetingIntelligenceKpiItem[]> {
-    const dashboard = await this.getDashboard();
-    return dashboard.kpi ?? [];
+    try {
+      const response = await apiInstance.get("/ai/meeting/kpi");
+      const data = response.data?.data ?? response.data;
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data?.kpi)) return data.kpi;
+      return [];
+    } catch {
+      return [];
+    }
   },
 
   async getActionItems(): Promise<ActionItemsByWeekItem[] | MeetingActionItemSummary[]> {

@@ -15,6 +15,8 @@ export interface ActionItemsByWeekItem {
 export interface MeetingVolumeItem {
   d: string;
   n: number;
+  w?: string;
+  count?: number;
 }
 
 export interface MeetingActionItemSummary {

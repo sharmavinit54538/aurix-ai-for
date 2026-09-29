@@ -97,6 +97,7 @@ export function normalizeLeaveAssistantData(
   const leaveForecast: LeaveForecastItem[] = Array.isArray(rawForecast)
     ? rawForecast.map((item: any, idx: number) => ({
         w: item.w ?? item.week ?? item.period ?? `W${idx + 1}`,
+        leaves: Number(item.leaves ?? item.req ?? item.requests ?? item.count ?? 0),
         req: Number(item.req ?? item.requests ?? item.count ?? 0),
         conf: Number(item.conf ?? item.conflicts ?? 0),
       }))
@@ -109,6 +110,8 @@ export function normalizeLeaveAssistantData(
 
   const leaveTypeDistribution: LeaveTypeDistributionItem[] = Array.isArray(rawDist)
     ? rawDist.map((item: any) => ({
+        t: item.t ?? item.type ?? item.leave_type ?? item.label ?? "General",
+        days: Number(item.days ?? item.pct ?? item.percentage ?? item.share ?? 0),
         type: item.type ?? item.leave_type ?? item.label ?? "General",
         pct: Number(item.pct ?? item.percentage ?? item.share ?? 0),
       }))
