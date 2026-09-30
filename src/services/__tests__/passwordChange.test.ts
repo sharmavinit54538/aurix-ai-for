@@ -12,9 +12,9 @@ describe("Password Change API Integration", () => {
     interceptedRequests = [];
   });
 
-  it("sends POST to /api/v1/auth/change-password with only canonical backend fields", async () => {
+  it("sends PATCH to /api/v1/auth/change-password with only canonical backend fields", async () => {
     server.use(
-      http.post("*/api/v1/auth/change-password", async ({ request }) => {
+      http.patch("*/api/v1/auth/change-password", async ({ request }) => {
         const body = await request.json();
         interceptedRequests.push({
           method: request.method,
@@ -41,7 +41,7 @@ describe("Password Change API Integration", () => {
     expect(interceptedRequests.length).toBe(1);
 
     const req = interceptedRequests[0];
-    expect(req.method).toBe("POST");
+    expect(req.method).toBe("PATCH");
     expect(req.url).toContain("/api/v1/auth/change-password");
 
     // Canonical snake_case fields only
@@ -59,7 +59,7 @@ describe("Password Change API Integration", () => {
 
   it("handles 400 bad request (same password / mismatch) with backend error message", async () => {
     server.use(
-      http.post("*/api/v1/auth/change-password", () => {
+      http.patch("*/api/v1/auth/change-password", () => {
         return HttpResponse.json(
           {
             success: false,
@@ -83,7 +83,7 @@ describe("Password Change API Integration", () => {
 
   it("handles 401 unauthorized (incorrect current password)", async () => {
     server.use(
-      http.post("*/api/v1/auth/change-password", () => {
+      http.patch("*/api/v1/auth/change-password", () => {
         return HttpResponse.json(
           {
             success: false,
@@ -105,9 +105,33 @@ describe("Password Change API Integration", () => {
     ).rejects.toThrow("Current password is incorrect.");
   });
 
+  it("handles 404 not found (user not found)", async () => {
+    server.use(
+      http.patch("*/api/v1/auth/change-password", () => {
+        return HttpResponse.json(
+          {
+            success: false,
+            message: "User not found.",
+            data: null,
+            errors: null,
+          },
+          { status: 404 }
+        );
+      })
+    );
+
+    await expect(
+      profileApi.changePassword({
+        currentPassword: "OldPassword@123",
+        newPassword: "NewPassword@123",
+        confirmPassword: "NewPassword@123",
+      })
+    ).rejects.toThrow("User not found.");
+  });
+
   it("handles 422 unprocessable entity (FastAPI validation errors)", async () => {
     server.use(
-      http.post("*/api/v1/auth/change-password", () => {
+      http.patch("*/api/v1/auth/change-password", () => {
         return HttpResponse.json(
           {
             detail: [
@@ -132,9 +156,33 @@ describe("Password Change API Integration", () => {
     ).rejects.toThrow("Password must contain at least one uppercase letter");
   });
 
-  it("verifies authService.changePassword calls canonical POST /api/v1/auth/change-password", async () => {
+  it("handles 500 internal server error", async () => {
     server.use(
-      http.post("*/api/v1/auth/change-password", async ({ request }) => {
+      http.patch("*/api/v1/auth/change-password", () => {
+        return HttpResponse.json(
+          {
+            success: false,
+            message: "Internal server error occurred while changing password. Please try again later.",
+            data: null,
+            errors: null,
+          },
+          { status: 500 }
+        );
+      })
+    );
+
+    await expect(
+      profileApi.changePassword({
+        currentPassword: "OldPassword@123",
+        newPassword: "NewPassword@123",
+        confirmPassword: "NewPassword@123",
+      })
+    ).rejects.toThrow("Internal server error occurred while changing password. Please try again later.");
+  });
+
+  it("verifies authService.changePassword calls canonical PATCH /api/v1/auth/change-password", async () => {
+    server.use(
+      http.patch("*/api/v1/auth/change-password", async ({ request }) => {
         const body = await request.json();
         interceptedRequests.push({
           method: request.method,
@@ -156,7 +204,7 @@ describe("Password Change API Integration", () => {
 
     expect(res).toBeDefined();
     expect(interceptedRequests.length).toBe(1);
-    expect(interceptedRequests[0].method).toBe("POST");
+    expect(interceptedRequests[0].method).toBe("PATCH");
     expect(interceptedRequests[0].url).toContain("/api/v1/auth/change-password");
   });
 });

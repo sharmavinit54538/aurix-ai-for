@@ -189,18 +189,20 @@ export const profileApi = {
     payload: ChangePasswordPayload,
   ): Promise<{ success: boolean; message: string }> {
     try {
-      const res = await apiInstance.post(AUTH_ENDPOINTS.changePassword, {
+      const res = await apiInstance.patch(AUTH_ENDPOINTS.changePassword, {
         current_password: payload.currentPassword,
         new_password: payload.newPassword,
         confirm_password: payload.confirmPassword ?? payload.newPassword,
       });
-      const data = extractData<{ success?: boolean; message?: string }>(res, {
-        success: true,
-        message: "Password changed successfully.",
-      });
+      const resObj = (res as { data?: any })?.data ?? res;
+      const success = resObj?.success ?? true;
+      const message =
+        resObj?.message ||
+        resObj?.data?.message ||
+        "Password changed successfully.";
       return {
-        success: data?.success ?? true,
-        message: data?.message ?? "Password changed successfully.",
+        success,
+        message,
       };
     } catch (err: unknown) {
       const parsed = parseApiError(err, "Failed to change password");
@@ -216,11 +218,21 @@ export const profileApi = {
       ) {
         message = "Current password is incorrect.";
       } else if (
+        parsed.status === 404 &&
+        (!message || message === "Failed to change password" || message === "An error occurred")
+      ) {
+        message = "User not found.";
+      } else if (
         parsed.status === 422 &&
         (!message || message === "Failed to change password" || message === "An error occurred")
       ) {
         const firstFieldErr = Object.values(parsed.fieldErrors)[0];
         message = firstFieldErr || "Invalid password format. Please verify password requirements.";
+      } else if (
+        parsed.status === 500 &&
+        (!message || message === "Failed to change password" || message === "An error occurred")
+      ) {
+        message = "Internal server error occurred while changing password. Please try again later.";
       }
       throw new ApiError(message, parsed.status, parsed.fieldErrors);
     }

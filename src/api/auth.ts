@@ -77,7 +77,7 @@ export const authService = {
     new_password: string;
     confirm_password: string;
   }): Promise<ApiResponse> {
-    return api.post<ApiResponse>(AUTH_ENDPOINTS.changePassword, payload);
+    return api.patch<ApiResponse>(AUTH_ENDPOINTS.changePassword, payload);
   },
 
   /**

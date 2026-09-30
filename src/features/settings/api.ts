@@ -172,11 +172,10 @@ export async function uploadCompanyLogo(file: File): Promise<{ logoUrl: string }
   formData.append("file", file);
 
   try {
-    const res = await apiInstance.post("/settings/company/logo", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    // Let browser/Axios set multipart/form-data boundary automatically
+    const res = await apiInstance.post("/settings/company/logo", formData);
     const data = extractPayload<Record<string, unknown>>(res, {});
-    const logoUrl = String(data.logoUrl || data.url || data.logo_url || "");
+    const logoUrl = String(data.logo || data.logoUrl || data.url || data.logo_url || "");
     return { logoUrl };
   } catch (err: unknown) {
     if (getErrorStatus(err) === 404) {
