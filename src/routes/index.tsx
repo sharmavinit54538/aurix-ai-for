@@ -27,7 +27,7 @@ function Index() {
 
     const workspace = aurix.get();
 
-    if (!workspace.user && !hasValidAccessToken()) {
+    if (!workspace.user || !hasValidAccessToken()) {
       navigate({ to: "/login", replace: true });
     } else {
       const params = new URLSearchParams(window.location.search);

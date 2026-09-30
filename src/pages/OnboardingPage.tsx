@@ -162,6 +162,7 @@ export function OnboardingPage() {
   }, [token]);
 
   const [resuming, setResuming] = useState(true);
+  const statusFetchedRef = useRef(false);
 
   useEffect(() => {
     if (token) { setResuming(false); return; } // skip for employee onboarding
@@ -178,6 +179,9 @@ export function OnboardingPage() {
       navigate({ to: "/dashboard" });
       return;
     }
+
+    if (statusFetchedRef.current) return;
+    statusFetchedRef.current = true;
 
     // Resume where the admin left off, using the backend as the source of
     // truth (not localStorage) — this is what makes "close tab, log back in"

@@ -90,7 +90,7 @@ export function getRoleDefaultHome(role?: string | null): string {
 
 export function isUserAuthenticated(): boolean {
   if (typeof window === "undefined") return true;
-  return Boolean(aurix.get().user) || hasValidAccessToken();
+  return Boolean(aurix.get().user) && hasValidAccessToken();
 }
 
 export interface RouteAccessResult {

@@ -223,8 +223,11 @@ apiInstance.interceptors.response.use(
       // Only treat 401 Unauthorized as authentication failure (Section 13)
       // Do NOT treat 404 as "user is logged out"
       const status = refreshError?.response?.status ?? refreshError?.status;
-      if (status === 401 && typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
-        window.location.replace("/login");
+      if (status === 401) {
+        setTokens(null);
+        aurix.set({ isRestoring: false, user: null, company: null });
+        safeStorage.removeItem("aurix:workspace:v1");
+        safeStorage.removeItem("aurix:tokens");
       }
       return Promise.reject(refreshError);
     }

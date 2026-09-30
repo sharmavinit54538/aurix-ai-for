@@ -13,7 +13,9 @@ export const Route = createFileRoute("/auth/login")({
         const ws = aurix.get();
         const redirectParam = (search as any)?.redirect || (search as any)?.callbackUrl;
         const destination = getSafeRedirectUrl(redirectParam, ws.user);
-        throw redirect({ to: destination as any });
+        if (destination && destination !== "/login" && destination !== "/auth/login") {
+          throw redirect({ to: destination as any });
+        }
       }
     }
   },

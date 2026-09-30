@@ -226,7 +226,12 @@ export const aurix = {
     state = {
       ...state,
       ...partial,
-      user: partial.user ? { ...partial.user, role: normalizeRole(partial.user.role) || "employee" } : partial.user ?? state.user,
+      user:
+        partial.user !== undefined
+          ? partial.user
+            ? { ...partial.user, role: normalizeRole(partial.user.role) || "employee" }
+            : null
+          : state.user,
     };
     persist();
     emit();
