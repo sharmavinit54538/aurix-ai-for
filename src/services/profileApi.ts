@@ -182,28 +182,46 @@ export const profileApi = {
     };
   },
 
-  // ── Password Management ────────────────────────────────────────
+  // ── Password Management ───────────────────────────────────────────
   async changePassword(
     payload: ChangePasswordPayload,
   ): Promise<{ success: boolean; message: string }> {
-    // Passwords are sent securely over HTTPS; never logged
-    const res = await apiInstance.patch("/users/me/password", {
-      currentPassword: payload.currentPassword,
-      newPassword: payload.newPassword,
-      confirmPassword: payload.confirmPassword,
-      // also supply snake_case for backend compatibility
-      current_password: payload.currentPassword,
-      new_password: payload.newPassword,
-      confirm_password: payload.confirmPassword,
-    });
-    const data = extractData<{ success?: boolean; message?: string }>(res, {
-      success: true,
-      message: "Password changed successfully",
-    });
-    return {
-      success: data?.success ?? true,
-      message: data?.message ?? "Password updated successfully",
-    };
+    try {
+      const res = await apiInstance.post(AUTH_ENDPOINTS.changePassword, {
+        current_password: payload.currentPassword,
+        new_password: payload.newPassword,
+        confirm_password: payload.confirmPassword ?? payload.newPassword,
+      });
+      const data = extractData<{ success?: boolean; message?: string }>(res, {
+        success: true,
+        message: "Password changed successfully.",
+      });
+      return {
+        success: data?.success ?? true,
+        message: data?.message ?? "Password changed successfully.",
+      };
+    } catch (err: unknown) {
+      const parsed = parseApiError(err, "Failed to change password");
+      let message = parsed.message;
+      if (
+        parsed.status === 400 &&
+        (!message || message === "Failed to change password" || message === "An error occurred")
+      ) {
+        message = "New password must be different from current password or passwords do not match.";
+      } else if (
+        parsed.status === 401 &&
+        (!message || message === "Failed to change password" || message === "An error occurred")
+      ) {
+        message = "Current password is incorrect.";
+      } else if (
+        parsed.status === 422 &&
+        (!message || message === "Failed to change password" || message === "An error occurred")
+      ) {
+        const firstFieldErr = Object.values(parsed.fieldErrors)[0];
+        message = firstFieldErr || "Invalid password format. Please verify password requirements.";
+      }
+      throw new ApiError(message, parsed.status, parsed.fieldErrors);
+    }
   },
 
   // ── Active Sessions ────────────────────────────────────────────

@@ -2,6 +2,7 @@ import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { aurix } from "@/lib/aurix-store";
 import { isAccessTokenExpired } from "./token-utils";
 import { getTokens, getRefreshToken, setTokens } from "./tokens";
+import { safeStorage } from "@/lib/safe-storage";
 import { AUTH_ENDPOINTS } from "./endpoints";
 import { normalizeApiPath } from "./client";
 
@@ -39,6 +40,7 @@ export const API_BASE_URL = getApiBaseUrl();
 export const BASE_URL = `${API_BASE_URL}/api/v1`;
 
 function getEndpointTag(url: string): string {
+  if (url.includes("/auth/change-password")) return "CHANGE_PASSWORD";
   if (url.includes("/auth/login")) return "LOGIN";
   if (url.includes("/auth/refresh")) return "REFRESH";
   if (url.includes("/auth/logout")) return "LOGOUT";

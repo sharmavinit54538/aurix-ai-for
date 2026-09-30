@@ -19,6 +19,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { fetchMyProfile, updateMyProfile, uploadProfileAvatar, changeMyPassword } from "../../api";
 import type { MyProfileForm } from "../../types";
+import { authService } from "@/api/auth";
+import { parseLoginResponse } from "@/features/auth/utils/parseLoginResponse";
+import { persistAuthSession, logout } from "@/lib/auth-bootstrap";
+import { aurix } from "@/lib/aurix-store";
 import { UnsavedChangesBanner } from "../UnsavedChangesBanner";
 
 interface MyProfileSectionProps {
@@ -164,6 +168,10 @@ export function MyProfileSection({ canEdit = true, onDirtyChange }: MyProfileSec
     e.preventDefault();
     const errs: Record<string, string> = {};
 
+    if (!passwordData.currentPassword) {
+      errs.currentPassword = "Current password is required";
+    }
+
     if (!passwordData.newPassword) {
       errs.newPassword = "New password is required";
     } else if (passwordData.newPassword.length < 8) {
@@ -172,6 +180,14 @@ export function MyProfileSection({ canEdit = true, onDirtyChange }: MyProfileSec
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       errs.confirmPassword = "Passwords do not match";
+    }
+
+    if (
+      passwordData.currentPassword &&
+      passwordData.newPassword &&
+      passwordData.currentPassword === passwordData.newPassword
+    ) {
+      errs.newPassword = "New password must be different from current password";
     }
 
     setPasswordErrors(errs);
@@ -184,12 +200,57 @@ export function MyProfileSection({ canEdit = true, onDirtyChange }: MyProfileSec
         newPassword: passwordData.newPassword,
         confirmPassword: passwordData.confirmPassword,
       });
-      toast.success(res.message || "Password changed successfully!");
+
+      // Handle backend session/refresh token revocation:
+      // The backend revokes all tokens on password change.
+      // Re-authenticate with new credentials to establish a fresh session, or redirect to login.
+      const userEmail = formData.email || aurix.get().user?.email;
+      let sessionRefreshed = false;
+      if (userEmail) {
+        try {
+          const loginRes = await authService.login({
+            identifier: userEmail,
+            password: passwordData.newPassword,
+          });
+          const loginData = parseLoginResponse(loginRes);
+          if (loginData?.accessToken) {
+            persistAuthSession(loginData.user, {
+              accessToken: loginData.accessToken,
+              refreshToken: loginData.refreshToken,
+            });
+            sessionRefreshed = true;
+          }
+        } catch {
+          sessionRefreshed = false;
+        }
+      }
+
       setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+
+      if (sessionRefreshed) {
+        toast.success(res.message || "Password changed successfully! Session renewed.");
+      } else {
+        toast.success("Password changed successfully. Please log in with your new password.");
+        setTimeout(() => {
+          void logout({ redirect: true });
+        }, 1500);
+      }
     } catch (err: unknown) {
-      const msg =
-        (err as { message?: string })?.message ||
-        "Failed to change password. Please verify current password.";
+      const apiErr = err as { message?: string; status?: number; data?: Record<string, string> };
+      const msg = apiErr?.message || "Failed to change password. Please verify current password.";
+      if (apiErr?.status === 401) {
+        setPasswordErrors({ currentPassword: "Incorrect current password" });
+      } else if (apiErr?.status === 400 && msg.toLowerCase().includes("different")) {
+        setPasswordErrors({ newPassword: "New password must be different from current password" });
+      } else if (apiErr?.data && typeof apiErr.data === "object") {
+        const fieldMap: Record<string, string> = {};
+        if (apiErr.data.current_password) fieldMap.currentPassword = apiErr.data.current_password;
+        if (apiErr.data.new_password) fieldMap.newPassword = apiErr.data.new_password;
+        if (apiErr.data.confirm_password) fieldMap.confirmPassword = apiErr.data.confirm_password;
+        if (Object.keys(fieldMap).length > 0) {
+          setPasswordErrors(fieldMap);
+        }
+      }
       toast.error(msg);
     } finally {
       setChangingPassword(false);
@@ -430,7 +491,7 @@ export function MyProfileSection({ canEdit = true, onDirtyChange }: MyProfileSec
                   }
                   placeholder="Enter current password"
                   autoComplete="current-password"
-                  className="pr-10"
+                  className={`pr-10 ${passwordErrors.currentPassword ? "border-destructive" : ""}`}
                 />
                 <button
                   type="button"
@@ -445,6 +506,9 @@ export function MyProfileSection({ canEdit = true, onDirtyChange }: MyProfileSec
                   )}
                 </button>
               </div>
+              {passwordErrors.currentPassword && (
+                <p className="text-[11px] text-destructive">{passwordErrors.currentPassword}</p>
+              )}
             </div>
 
             <div className="space-y-1.5">

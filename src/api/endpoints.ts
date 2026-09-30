@@ -14,6 +14,7 @@ export const AUTH_ENDPOINTS = {
   verifyResetOtp: "/api/v1/auth/verify-reset-otp",
   resetPassword: "/api/v1/auth/reset-password",
   google: "/api/v1/auth/google",
+  changePassword: "/api/v1/auth/change-password",
 } as const;
 
 export type AuthEndpointKey = keyof typeof AUTH_ENDPOINTS;

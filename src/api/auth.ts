@@ -70,6 +70,17 @@ export const authService = {
   },
 
   /**
+   * Changes the authenticated user's password using the canonical auth endpoint.
+   */
+  async changePassword(payload: {
+    current_password: string;
+    new_password: string;
+    confirm_password: string;
+  }): Promise<ApiResponse> {
+    return api.post<ApiResponse>(AUTH_ENDPOINTS.changePassword, payload);
+  },
+
+  /**
    * Logs the user out on the remote backend and terminates the active session.
    */
   async logout(): Promise<unknown> {
