@@ -1,5 +1,7 @@
 import apiInstance from "@/api/apiInstance";
 import { AUTH_ENDPOINTS } from "@/api";
+import { ApiError } from "@/api/client";
+import { parseApiError } from "@/api/utils";
 import { aurix } from "@/lib/aurix-store";
 import type {
   ChangePasswordPayload,
