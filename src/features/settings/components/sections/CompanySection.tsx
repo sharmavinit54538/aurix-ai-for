@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { Building2, Globe, Mail, Phone, Upload, Save, RotateCcw } from "lucide-react";
+import { Building2, Globe, Mail, Phone, Upload, Save, RotateCcw, Stamp } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,9 @@ import {
 } from "../../api";
 import type { CompanySettingsForm } from "../../types";
 import { UnsavedChangesBanner } from "../UnsavedChangesBanner";
+import { TimezoneSelect } from "@/components/common/TimezoneSelect";
+import { CountrySelect } from "@/components/common/CountrySelect";
+import { getDefaultTimezoneForCountry } from "@/lib/country-timezone-data";
 
 interface CompanySectionProps {
   canEdit: boolean;
@@ -66,6 +69,8 @@ export function CompanySection({ canEdit, onDirtyChange }: CompanySectionProps) 
     name: "",
     logoUrl: "",
     logoDataUrl: "",
+    stampUrl: "",
+    stampDataUrl: "",
     address: "",
     city: "",
     state: "",
@@ -85,6 +90,21 @@ export function CompanySection({ canEdit, onDirtyChange }: CompanySectionProps) 
   const [logoUploadProgress, setLogoUploadProgress] = useState(0);
   const [logoApiNotice, setLogoApiNotice] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const stampInputRef = useRef<HTMLInputElement>(null);
+
+  const handleStampUpload = (file: File | null) => {
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Stamp file size must be less than 2MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setFormData((prev) => ({ ...prev, stampDataUrl: reader.result as string }));
+      toast.success("Company stamp uploaded successfully!");
+    };
+    reader.readAsDataURL(file);
+  };
 
   const isDirty = initialData ? JSON.stringify(initialData) !== JSON.stringify(formData) : false;
 
@@ -273,6 +293,45 @@ export function CompanySection({ canEdit, onDirtyChange }: CompanySectionProps) 
             )}
           </div>
 
+          {/* Stamp container */}
+          <div className="flex flex-col items-center gap-2 sm:items-start">
+            <Label className="text-xs font-medium text-foreground">Company Stamp / Seal</Label>
+            <div className="relative grid h-24 w-24 place-items-center rounded-2xl border-2 border-dashed border-border bg-muted/40 overflow-hidden shadow-inner">
+              {formData.stampDataUrl || formData.stampUrl ? (
+                <img
+                  src={formData.stampDataUrl || formData.stampUrl}
+                  alt="Company Stamp"
+                  className="h-full w-full object-contain p-2"
+                />
+              ) : (
+                <Stamp className="h-8 w-8 text-muted-foreground/60" />
+              )}
+            </div>
+
+            {canEdit && (
+              <>
+                <input
+                  type="file"
+                  ref={stampInputRef}
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handleStampUpload(e.target.files?.[0] || null)}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => stampInputRef.current?.click()}
+                  className="mt-1 h-8 gap-1.5 text-xs cursor-pointer"
+                >
+                  <Upload className="h-3.5 w-3.5" />
+                  {formData.stampDataUrl || formData.stampUrl ? "Change Stamp" : "Upload Stamp"}
+                </Button>
+                <p className="text-[10px] text-muted-foreground">Official seal under 2MB</p>
+              </>
+            )}
+          </div>
+
           {/* Core Info */}
           <div className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5 sm:col-span-2">
@@ -407,12 +466,18 @@ export function CompanySection({ canEdit, onDirtyChange }: CompanySectionProps) 
             <Label htmlFor="company-country" className="text-xs font-medium">
               Country
             </Label>
-            <Input
+            <CountrySelect
               id="company-country"
               value={formData.country}
-              onChange={(e) => setFormData({ ...formData, country: e.target.value })}
               disabled={!canEdit}
-              placeholder="India"
+              onChange={(countryName, countryOpt) => {
+                const targetTz = countryOpt?.primaryTimezone || getDefaultTimezoneForCountry(countryName).id;
+                setFormData({
+                  ...formData,
+                  country: countryName,
+                  timezone: targetTz || formData.timezone,
+                });
+              }}
             />
           </div>
 
@@ -445,22 +510,13 @@ export function CompanySection({ canEdit, onDirtyChange }: CompanySectionProps) 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Operating Timezone</Label>
-            <Select
+            <TimezoneSelect
+              id="company-timezone"
               value={formData.timezone}
-              onValueChange={(v) => setFormData({ ...formData, timezone: v })}
+              country={formData.country}
               disabled={!canEdit}
-            >
-              <SelectTrigger id="company-timezone" className="w-full">
-                <SelectValue placeholder="Select timezone" />
-              </SelectTrigger>
-              <SelectContent>
-                {TIMEZONES.map((tz) => (
-                  <SelectItem key={tz} value={tz}>
-                    {tz}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onChange={(v) => setFormData({ ...formData, timezone: v })}
+            />
           </div>
 
           <div className="space-y-1.5">

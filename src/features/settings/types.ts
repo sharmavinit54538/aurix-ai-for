@@ -188,6 +188,8 @@ export interface CompanySettingsForm {
   name: string;
   logoUrl?: string;
   logoDataUrl?: string;
+  stampUrl?: string;
+  stampDataUrl?: string;
   address: string;
   city: string;
   state: string;

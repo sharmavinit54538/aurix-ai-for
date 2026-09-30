@@ -5,7 +5,7 @@ import Papa from "papaparse";
 import { z } from "zod";
 import {
   ArrowLeft, ArrowRight, Building2, CheckCircle2, ChevronLeft, Pencil,
-  Plus, Sparkles, Trash2, Upload, UserCog, UserPlus, Users, Loader2,
+  Plus, Sparkles, Trash2, Upload, UserCog, UserPlus, Users, Loader2, Stamp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,11 +22,13 @@ import { api, setTokens } from "@/api";
 import { toast } from "sonner";
 
 import { AuthLoadingScreen } from "@/features/auth/components/AuthLoadingScreen";
+import { TimezoneSelect } from "@/components/common/TimezoneSelect";
+import { CountrySelect } from "@/components/common/CountrySelect";
+import { getDefaultTimezoneForCountry } from "@/lib/country-timezone-data";
 
 const STEPS = ["Company", "Admin Profile", "HR Settings", "Departments & Designations", "Invite Employees", "Complete"];
 const INDUSTRIES = ["Software", "Finance", "Healthcare", "Retail", "Manufacturing", "Education", "Other"];
 const SIZES = ["1–10", "11–50", "51–200", "201–500", "501–1000", "1000+"];
-const TIMEZONES = ["UTC", "America/New_York", "America/Los_Angeles", "Europe/London", "Europe/Berlin", "Asia/Kolkata", "Asia/Singapore", "Australia/Sydney"];
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 // Maps the backend's onboarding_step (1-6) to the index of STEPS.
@@ -588,6 +590,7 @@ function CompanyStep({ onNext }: { onNext: () => void }) {
       const fields: (keyof Company)[] = [
         "name",
         "logoDataUrl",
+        "stampDataUrl",
         "industry",
         "size",
         "website",
@@ -629,6 +632,14 @@ function CompanyStep({ onNext }: { onNext: () => void }) {
     reader.readAsDataURL(file);
   }
 
+  function onStamp(file: File | null) {
+    if (!file) return;
+    editedFields.current.add("stampDataUrl");
+    const reader = new FileReader();
+    reader.onload = () => set("stampDataUrl", reader.result as string);
+    reader.readAsDataURL(file);
+  }
+
   async function submit() {
     const fe: Record<string, string> = {};
     if (!c.name) fe.name = "Required";
@@ -644,6 +655,7 @@ function CompanyStep({ onNext }: { onNext: () => void }) {
       const companyPayload = {
         company_name: c.name,
         company_logo: c.logoDataUrl || null,
+        company_stamp: c.stampDataUrl || null,
         industry: c.industry || "Software",
         company_size: c.size || "11–50",
         country: c.country || "USA",
@@ -679,7 +691,7 @@ function CompanyStep({ onNext }: { onNext: () => void }) {
       }
     >
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <div className="sm:col-span-2">
+        <div>
           <Label>Company logo</Label>
           <div className="mt-2 flex items-center gap-4">
             <div className="grid h-16 w-16 place-items-center overflow-hidden rounded-xl border border-border bg-muted text-muted-foreground">
@@ -689,6 +701,20 @@ function CompanyStep({ onNext }: { onNext: () => void }) {
               <Upload className="h-4 w-4" />
               Upload logo
               <input type="file" accept="image/*" className="hidden" onChange={(e) => onLogo(e.target.files?.[0] ?? null)} />
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <Label>Company stamp / seal</Label>
+          <div className="mt-2 flex items-center gap-4">
+            <div className="grid h-16 w-16 place-items-center overflow-hidden rounded-xl border border-dashed border-border bg-muted/60 text-muted-foreground">
+              {c.stampDataUrl ? <img src={c.stampDataUrl} alt="Stamp" className="h-full w-full object-contain p-1" /> : <Stamp className="h-6 w-6 text-muted-foreground/70" />}
+            </div>
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm font-medium hover:bg-accent">
+              <Upload className="h-4 w-4" />
+              Upload stamp
+              <input type="file" accept="image/*" className="hidden" onChange={(e) => onStamp(e.target.files?.[0] ?? null)} />
             </label>
           </div>
         </div>
@@ -718,12 +744,24 @@ function CompanyStep({ onNext }: { onNext: () => void }) {
         </div>
         <Field label="City"><Input value={c.city ?? ""} onChange={(e) => set("city", e.target.value)} /></Field>
         <Field label="State / Region"><Input value={c.state ?? ""} onChange={(e) => set("state", e.target.value)} /></Field>
-        <Field label="Country" error={errors.country}><Input value={c.country ?? ""} onChange={(e) => set("country", e.target.value)} /></Field>
+        <Field label="Country" error={errors.country}>
+          <CountrySelect
+            value={c.country ?? ""}
+            onChange={(countryName, countryOpt) => {
+              set("country", countryName);
+              const targetTz = countryOpt?.primaryTimezone || getDefaultTimezoneForCountry(countryName).id;
+              if (targetTz) {
+                set("timezone", targetTz);
+              }
+            }}
+          />
+        </Field>
         <Field label="Timezone">
-          <Select value={c.timezone} onValueChange={(v) => set("timezone", v)}>
-            <SelectTrigger><SelectValue placeholder="Select timezone" /></SelectTrigger>
-            <SelectContent>{TIMEZONES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-          </Select>
+          <TimezoneSelect
+            value={c.timezone}
+            country={c.country}
+            onChange={(v) => set("timezone", v)}
+          />
         </Field>
       </div>
     </StepCard>

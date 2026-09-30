@@ -52,10 +52,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 
   useEffect(() => {
     console.error("Root error boundary caught error:", error);
-    if (isChunkError) {
-      safeReloadOnChunkFailure("ErrorComponent");
-    }
-  }, [error, isChunkError]);
+  }, [error]);
 
   if (isChunkError) {
     return (
@@ -191,16 +188,7 @@ function RootShell({ children }: { children: ReactNode }) {
                 try {
                   window.addEventListener('vite:preloadError', function(event) {
                     event.preventDefault();
-                    var tsKey = 'ofc360_chunk_reload_ts';
-                    var last = parseInt(sessionStorage.getItem(tsKey) || '0', 10);
-                    var now = Date.now();
-                    if (now - last > 15000) {
-                      sessionStorage.setItem(tsKey, String(now));
-                      sessionStorage.setItem('ofc360_chunk_reload_attempted', 'true');
-                      var url = new URL(window.location.href);
-                      url.searchParams.set('_v', String(now));
-                      window.location.replace(url.toString());
-                    }
+                    console.warn('[Vite] vite:preloadError event caught');
                   });
 
                   if ('serviceWorker' in navigator) {
@@ -208,7 +196,6 @@ function RootShell({ children }: { children: ReactNode }) {
                       regs.forEach(function(r) { r.unregister(); });
                     }).catch(function() {});
                   }
-                  // Intentionally ignored: Raw inline browser bootstrap script (cannot import modules or safely log before page loads)
                 } catch(e) {}
               })();
             `,

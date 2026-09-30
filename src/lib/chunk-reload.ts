@@ -57,51 +57,15 @@ export function isChunkLoadError(error: unknown): boolean {
  * Returns true if reload was initiated, false if suppressed by loop prevention.
  */
 export function safeReloadOnChunkFailure(source: string = "unknown"): boolean {
-  if (typeof window === "undefined" || !window.sessionStorage) {
-    return false;
-  }
-
-  try {
-    const lastReloadStr = window.sessionStorage.getItem(CHUNK_RETRY_TIMESTAMP_KEY);
-    const lastReload = lastReloadStr ? parseInt(lastReloadStr, 10) : 0;
-    const now = Date.now();
-
-    // If we already reloaded recently within the cooldown window, do NOT reload again
-    if (now - lastReload < COOLDOWN_MS) {
-      console.warn(`[ChunkRecovery] Suppressed auto-reload for ${source}: cooldown active (${now - lastReload}ms < ${COOLDOWN_MS}ms)`);
-      return false;
-    }
-
-    console.warn(`[ChunkRecovery] Chunk load failure detected (${source}). Reloading page to fetch latest build...`);
-    window.sessionStorage.setItem(CHUNK_RETRY_TIMESTAMP_KEY, String(now));
-    window.sessionStorage.setItem(CHUNK_RETRY_KEY, "true");
-
-    // Perform hard reload with cache-busting timestamp to bypass stale browser caches
-    const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.set("_v", String(now));
-    window.location.replace(currentUrl.toString());
-    return true;
-  } catch (err) {
-    console.error("[ChunkRecovery] Failed to execute safe reload:", err);
-    return false;
-  }
+  console.warn(`[ChunkRecovery] Chunk load issue reported (${source}). Automatic page reload is disabled to preserve SPA state and prevent infinite refresh loops.`);
+  return false;
 }
 
 /**
  * Checks if the current page load was the result of a chunk reload attempt
  */
 export function wasReloadAttempted(): boolean {
-  if (typeof window === "undefined" || !window.sessionStorage) return false;
-  try {
-    const attempted = window.sessionStorage.getItem(CHUNK_RETRY_KEY) === "true";
-    const lastReloadStr = window.sessionStorage.getItem(CHUNK_RETRY_TIMESTAMP_KEY);
-    const lastReload = lastReloadStr ? parseInt(lastReloadStr, 10) : 0;
-    const now = Date.now();
-    // Only consider attempted if within the last 30 seconds
-    return attempted && now - lastReload < 30000;
-  } catch {
-    return false;
-  }
+  return false;
 }
 
 /**
@@ -111,14 +75,7 @@ export function clearChunkReloadFlag(): void {
   if (typeof window === "undefined" || !window.sessionStorage) return;
   try {
     window.sessionStorage.removeItem(CHUNK_RETRY_KEY);
-    // Keep timestamp for a short while to ensure cooldown holds, or clear after 10s
-    setTimeout(() => {
-      try {
-        window.sessionStorage.removeItem(CHUNK_RETRY_TIMESTAMP_KEY);
-      } catch {
-        // ignore
-      }
-    }, 10000);
+    window.sessionStorage.removeItem(CHUNK_RETRY_TIMESTAMP_KEY);
   } catch {
     // ignore
   }
@@ -153,20 +110,16 @@ export function unregisterLegacyServiceWorkers(): void {
 export function setupGlobalChunkErrorListeners(): () => void {
   if (typeof window === "undefined") return () => {};
 
-  // 1. Vite's official preload error event
+  // 1. Vite's official preload error event - log only, do not force-reload page
   const onPreloadError = (event: Event) => {
-    // Prevent default Vite error logging if we handle it
     event.preventDefault();
-    console.warn("[Vite] vite:preloadError event caught");
-    safeReloadOnChunkFailure("vite:preloadError");
+    console.warn("[Vite] vite:preloadError event caught:", event);
   };
 
   // 2. Unhandled promise rejections (dynamic imports reject their promise)
   const onUnhandledRejection = (event: PromiseRejectionEvent) => {
     if (isChunkLoadError(event.reason)) {
-      event.preventDefault();
       console.warn("[Vite] Dynamic import promise rejection caught:", event.reason);
-      safeReloadOnChunkFailure("unhandledrejection");
     }
   };
 
@@ -174,7 +127,6 @@ export function setupGlobalChunkErrorListeners(): () => void {
   const onError = (event: ErrorEvent) => {
     if (isChunkLoadError(event.error || event.message)) {
       console.warn("[Vite] Global script error caught:", event.message);
-      safeReloadOnChunkFailure("window.onerror");
     }
   };
 

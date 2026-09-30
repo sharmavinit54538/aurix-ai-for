@@ -80,6 +80,8 @@ export interface Company {
   id: string;
   name: string;
   logoDataUrl?: string;
+  stampDataUrl?: string;
+  stampUrl?: string;
   industry?: string;
   size?: string;
   website?: string;
