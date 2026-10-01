@@ -862,9 +862,6 @@ export const aiHubSlice = createSlice({
         state.chatAssistant.lastUpdated = new Date().toISOString();
         if (state.chatAssistant.data) {
           state.chatAssistant.data.conversations = action.payload;
-          if (!state.chatAssistant.data.activeConversation && action.payload.length > 0) {
-            state.chatAssistant.data.activeConversation = action.payload[0];
-          }
         }
       })
       .addCase(fetchChatConversations.rejected, (state, action) => {
@@ -875,10 +872,12 @@ export const aiHubSlice = createSlice({
 
       .addCase(createChatConversation.pending, (state) => {
         state.operationLoading["createChatConversation"] = true;
+        state.operationErrors["createChatConversation"] = null;
       })
       .addCase(createChatConversation.fulfilled, (state, action) => {
         state.operationLoading["createChatConversation"] = false;
         state.operationSuccess["createChatConversation"] = true;
+        state.operationErrors["createChatConversation"] = null;
         if (state.chatAssistant.data) {
           state.chatAssistant.data.conversations = [
             action.payload,
@@ -914,6 +913,7 @@ export const aiHubSlice = createSlice({
       .addCase(sendChatMessage.fulfilled, (state, action) => {
         state.operationLoading["sendChatMessage"] = false;
         state.operationSuccess["sendChatMessage"] = true;
+        state.operationErrors["sendChatMessage"] = null;
         if (state.chatAssistant.data) {
           if (!state.chatAssistant.data.activeConversation) {
             const found = state.chatAssistant.data.conversations.find(
@@ -948,8 +948,7 @@ export const aiHubSlice = createSlice({
             (c) => c.id !== action.payload.id,
           );
           if (state.chatAssistant.data.activeConversation?.id === action.payload.id) {
-            state.chatAssistant.data.activeConversation =
-              state.chatAssistant.data.conversations[0] || null;
+            state.chatAssistant.data.activeConversation = null;
           }
         }
       });

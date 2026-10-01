@@ -20,8 +20,14 @@ import type {
   AskPolicyPayload,
   AttendanceAnomaly,
   AttendanceMonitorData,
+  ChatActionRequired,
+  ChatCardData,
+  ChatCardType,
+  ChatChart,
   ChatConversation,
   ChatMessage,
+  ChatSourceCitation,
+  ChatTable,
   CheckCompliancePayload,
   ComplianceChecklistItem,
   ComplianceMonitorData,
@@ -82,7 +88,7 @@ function extractData<T>(res: unknown, fallback?: T): T {
   return (body ?? fallback) as T;
 }
 
-function mapToChatMessage(raw: any, fallbackConversationId?: string): ChatMessage {
+export function mapToChatMessage(raw: unknown, fallbackConversationId?: string): ChatMessage {
   if (!raw || typeof raw !== "object") {
     return {
       id: `msg-${Date.now()}`,
@@ -94,45 +100,47 @@ function mapToChatMessage(raw: any, fallbackConversationId?: string): ChatMessag
     };
   }
 
-  const rawRole = String(raw.role ?? raw.sender ?? "assistant").toLowerCase();
+  const r = raw as Record<string, unknown>;
+  const rawRole = String(r.role ?? r.sender ?? "assistant").toLowerCase();
   const sender: "user" | "assistant" | "system" =
     rawRole === "user" ? "user" : rawRole === "system" ? "system" : "assistant";
   const role: "user" | "ai" | "assistant" | "system" =
     rawRole === "user" ? "user" : rawRole === "system" ? "system" : "ai";
 
   const conversationId = String(
-    raw.conversationId ?? raw.conversation_id ?? fallbackConversationId ?? "",
+    r.conversationId ?? r.conversation_id ?? fallbackConversationId ?? "",
   );
   const id = String(
-    raw.id ?? raw.messageId ?? raw.message_id ?? `msg-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    r.id ?? r.messageId ?? r.message_id ?? `msg-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
   );
   const timestamp = String(
-    raw.timestamp ?? raw.createdAt ?? raw.created_at ?? new Date().toISOString(),
+    r.timestamp ?? r.createdAt ?? r.created_at ?? new Date().toISOString(),
   );
 
-  let content = String(raw.content ?? raw.message ?? raw.answer ?? raw.text ?? "");
+  let content = String(r.content ?? r.message ?? r.answer ?? r.text ?? "");
 
-  let cardType = raw.cardType as ChatMessage["cardType"];
-  let cardData = raw.cardData;
-  let actionRequired = raw.actionRequired as ChatMessage["actionRequired"];
+  let cardType = r.cardType as ChatCardType | undefined;
+  let cardData = r.cardData as ChatCardData | undefined;
+  let actionRequired = r.actionRequired as ChatActionRequired | undefined;
 
-  const suggestions: string[] = Array.isArray(raw.suggestions)
-    ? raw.suggestions
-    : Array.isArray(raw.followUpQuestions)
-    ? raw.followUpQuestions
-    : Array.isArray(raw.follow_up_questions)
-    ? raw.follow_up_questions
+  const suggestions: string[] = Array.isArray(r.suggestions)
+    ? (r.suggestions as string[])
+    : Array.isArray(r.followUpQuestions)
+    ? (r.followUpQuestions as string[])
+    : Array.isArray(r.follow_up_questions)
+    ? (r.follow_up_questions as string[])
     : [];
 
-  const sources = Array.isArray(raw.sources) ? raw.sources : undefined;
-  const charts = Array.isArray(raw.charts) ? raw.charts : undefined;
-  const tables = Array.isArray(raw.tables) ? raw.tables : undefined;
+  const sources = Array.isArray(r.sources) ? (r.sources as ChatSourceCitation[]) : undefined;
+  const charts = Array.isArray(r.charts) ? (r.charts as ChatChart[]) : undefined;
+  const tables = Array.isArray(r.tables) ? (r.tables as ChatTable[]) : undefined;
 
   // 1. Check if metadata contains structured fields
-  if (raw.metadata && typeof raw.metadata === "object") {
-    if (!cardType && raw.metadata.cardType) cardType = raw.metadata.cardType;
-    if (!cardData && raw.metadata.cardData) cardData = raw.metadata.cardData;
-    if (!actionRequired && raw.metadata.actionRequired) actionRequired = raw.metadata.actionRequired;
+  if (r.metadata && typeof r.metadata === "object") {
+    const meta = r.metadata as Record<string, unknown>;
+    if (!cardType && meta.cardType) cardType = meta.cardType as ChatCardType;
+    if (!cardData && meta.cardData) cardData = meta.cardData as ChatCardData;
+    if (!actionRequired && meta.actionRequired) actionRequired = meta.actionRequired as ChatActionRequired;
   }
 
   // 2. Check if content contains an embedded JSON block: ```json ... ``` or pure JSON
@@ -142,9 +150,9 @@ function mapToChatMessage(raw: any, fallbackConversationId?: string): ChatMessag
       try {
         const parsed = JSON.parse(jsonBlockMatch[1]);
         if (parsed && typeof parsed === "object") {
-          if (!cardType && parsed.cardType) cardType = parsed.cardType;
-          if (!cardData && parsed.cardData) cardData = parsed.cardData;
-          if (!actionRequired && parsed.actionRequired) actionRequired = parsed.actionRequired;
+          if (!cardType && parsed.cardType) cardType = parsed.cardType as ChatCardType;
+          if (!cardData && parsed.cardData) cardData = parsed.cardData as ChatCardData;
+          if (!actionRequired && parsed.actionRequired) actionRequired = parsed.actionRequired as ChatActionRequired;
           const cleaned = content.replace(/```(?:json)?\s*[\s\S]*?\s*```/, "").trim();
           if (cleaned) {
             content = cleaned;
@@ -159,9 +167,9 @@ function mapToChatMessage(raw: any, fallbackConversationId?: string): ChatMessag
       try {
         const parsed = JSON.parse(content.trim());
         if (parsed && typeof parsed === "object") {
-          if (!cardType && parsed.cardType) cardType = parsed.cardType;
-          if (!cardData && parsed.cardData) cardData = parsed.cardData;
-          if (!actionRequired && parsed.actionRequired) actionRequired = parsed.actionRequired;
+          if (!cardType && parsed.cardType) cardType = parsed.cardType as ChatCardType;
+          if (!cardData && parsed.cardData) cardData = parsed.cardData as ChatCardData;
+          if (!actionRequired && parsed.actionRequired) actionRequired = parsed.actionRequired as ChatActionRequired;
           if (parsed.message || parsed.answer || parsed.text) {
             content = String(parsed.message || parsed.answer || parsed.text);
           }
@@ -172,20 +180,7 @@ function mapToChatMessage(raw: any, fallbackConversationId?: string): ChatMessag
     }
   }
 
-  // 3. If tables are returned (e.g. workforce metrics) without cardType, map to payroll/metrics card
-  if (!cardType && tables && tables.length > 0) {
-    const firstTable = tables[0];
-    if (firstTable.headers && firstTable.rows && firstTable.rows.length > 0) {
-      cardType = "payroll";
-      cardData = {
-        metrics: firstTable.rows.slice(0, 6).map((row: any[]) => ({
-          label: String(row[0] ?? "Metric"),
-          val: String(row[1] ?? "—"),
-        })),
-      };
-    }
-  }
-
+  // Tables are retained under `tables`. No synthetic cardType="payroll" is generated.
   return {
     id,
     conversationId: conversationId || undefined,
@@ -200,15 +195,14 @@ function mapToChatMessage(raw: any, fallbackConversationId?: string): ChatMessag
     sources,
     charts,
     tables,
-    metadata: raw.metadata as Record<string, unknown> | undefined,
+    metadata: r.metadata as Record<string, unknown> | undefined,
   };
 }
 
-function normalizeChatConversation(raw: any): ChatConversation {
+function normalizeChatConversation(raw: unknown, defaultId?: string): ChatConversation {
   if (!raw || typeof raw !== "object") {
-    const fallbackId = `conv-${Date.now()}`;
     return {
-      id: fallbackId,
+      id: defaultId || "",
       title: "Chat Conversation",
       messages: [],
       createdAt: new Date().toISOString(),
@@ -216,17 +210,25 @@ function normalizeChatConversation(raw: any): ChatConversation {
     };
   }
 
-  const id = String(raw.id ?? raw.conversationId ?? raw.conversation_id ?? `conv-${Date.now()}`);
-  const messagesRaw = Array.isArray(raw.messages) ? raw.messages : [];
-  const messages: ChatMessage[] = messagesRaw.map((m: any) => mapToChatMessage(m, id));
+  const r = raw as Record<string, unknown>;
+  const id = String(r.id ?? r.conversationId ?? r.conversation_id ?? defaultId ?? "");
+  const messagesRaw = Array.isArray(r.messages)
+    ? r.messages
+    : Array.isArray(r.history)
+    ? r.history
+    : r.answer
+    ? [r]
+    : [];
+
+  const messages: ChatMessage[] = messagesRaw.map((m: unknown) => mapToChatMessage(m, id));
 
   return {
     id,
-    title: String(raw.title || "Chat Conversation"),
-    agentId: raw.agentId ? String(raw.agentId) : undefined,
+    title: String(r.title || "Chat Conversation"),
+    agentId: r.agentId ? String(r.agentId) : undefined,
     messages,
-    createdAt: String(raw.createdAt ?? raw.created_at ?? new Date().toISOString()),
-    updatedAt: String(raw.updatedAt ?? raw.updated_at ?? new Date().toISOString()),
+    createdAt: String(r.createdAt ?? r.created_at ?? new Date().toISOString()),
+    updatedAt: String(r.updatedAt ?? r.updated_at ?? new Date().toISOString()),
   };
 }
 
@@ -727,17 +729,14 @@ export const aiHubApi = {
       const res = await apiInstance.post("/ai-hub/chat-assistant/conversations", payload ?? {});
       const raw = extractData<Record<string, unknown>>(res);
       return normalizeChatConversation(raw);
-    } catch {
-      // Resilient fallback: initialize local conversation session
-      const convId = `conv-${Date.now()}`;
-      return {
-        id: convId,
-        title: payload?.title || "Workforce Copilot Chat",
-        agentId: payload?.agentId || "general-copilot",
-        messages: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
+    } catch (primaryErr) {
+      try {
+        const res = await apiInstance.post("/ai/chat/conversation", payload ?? {});
+        const raw = extractData<Record<string, unknown>>(res);
+        return normalizeChatConversation(raw);
+      } catch {
+        throw primaryErr;
+      }
     }
   },
 
@@ -747,27 +746,14 @@ export const aiHubApi = {
         `/ai-hub/chat-assistant/conversations/${encodeURIComponent(conversationId)}`,
       );
       const raw = extractData<Record<string, unknown>>(res);
-      return normalizeChatConversation(raw);
-    } catch {
-      // Resilient fallback: try /ai/chat/history/{conversation_id}
+      return normalizeChatConversation(raw, conversationId);
+    } catch (primaryErr) {
       try {
         const res = await apiInstance.get(`/ai/chat/history/${encodeURIComponent(conversationId)}`);
         const raw = extractData<Record<string, unknown>>(res);
-        return {
-          id: conversationId,
-          title: "Workforce Copilot Chat",
-          messages: raw?.answer ? [mapToChatMessage(raw, conversationId)] : [],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
+        return normalizeChatConversation(raw, conversationId);
       } catch {
-        return {
-          id: conversationId,
-          title: "Workforce Copilot Chat",
-          messages: [],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
+        throw primaryErr;
       }
     }
   },
@@ -777,7 +763,7 @@ export const aiHubApi = {
       const res = await apiInstance.post("/ai-hub/chat-assistant/message", payload);
       const raw = extractData<Record<string, unknown>>(res);
       return mapToChatMessage(raw, payload.conversationId);
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Resilient fallback to /ai/chat
       try {
         const res = await apiInstance.post("/ai/chat", {
@@ -790,6 +776,72 @@ export const aiHubApi = {
       } catch {
         throw err;
       }
+    }
+  },
+
+  async getChatSuggestions(): Promise<Array<{ label: string; cmd: string }>> {
+    try {
+      const res = await apiInstance.get("/ai/chat/suggestions");
+      const raw = extractData<unknown>(res, []);
+      if (Array.isArray(raw)) {
+        return raw
+          .map((item: unknown) => {
+            if (typeof item === "string") return { label: item, cmd: item };
+            if (item && typeof item === "object") {
+              const rec = item as Record<string, unknown>;
+              return {
+                label: String(rec.label || rec.cmd || rec.title || rec.query || ""),
+                cmd: String(rec.cmd || rec.query || rec.label || rec.title || ""),
+              };
+            }
+            return { label: "", cmd: "" };
+          })
+          .filter((s) => s.cmd);
+      }
+      if (
+        raw &&
+        typeof raw === "object" &&
+        "suggestions" in raw &&
+        Array.isArray((raw as Record<string, unknown>).suggestions)
+      ) {
+        return ((raw as Record<string, unknown>).suggestions as unknown[])
+          .map((item: unknown) => {
+            if (typeof item === "string") return { label: item, cmd: item };
+            if (item && typeof item === "object") {
+              const rec = item as Record<string, unknown>;
+              return {
+                label: String(rec.label || rec.cmd || rec.title || rec.query || ""),
+                cmd: String(rec.cmd || rec.query || rec.label || rec.title || ""),
+              };
+            }
+            return { label: "", cmd: "" };
+          })
+          .filter((s) => s.cmd);
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  },
+
+  async sendChatFeedback(payload: {
+    messageId: string;
+    conversationId?: string;
+    rating?: "up" | "down" | 1 | -1;
+    feedback?: string;
+  }): Promise<{ success: boolean }> {
+    try {
+      const res = await apiInstance.post("/ai/chat/feedback", {
+        message_id: payload.messageId,
+        messageId: payload.messageId,
+        conversation_id: payload.conversationId,
+        conversationId: payload.conversationId,
+        rating: payload.rating,
+        feedback: payload.feedback,
+      });
+      return extractData<{ success: boolean }>(res, { success: true });
+    } catch {
+      return { success: true };
     }
   },
 

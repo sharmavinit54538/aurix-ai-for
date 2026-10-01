@@ -525,10 +525,19 @@ export interface ScanCompliancePayload {
 
 // ── 14. Chat Assistant ───────────────────────────────────────────
 
+export type ChatCardType =
+  | "candidate"
+  | "job"
+  | "interview"
+  | "offer"
+  | "onboarding"
+  | "payroll"
+  | "employee";
+
 export interface ChatActionRequired {
   actionName: string;
   description: string;
-  payload: Record<string, any>;
+  payload: Record<string, unknown>;
 }
 
 export interface ChatSourceCitation {
@@ -538,30 +547,93 @@ export interface ChatSourceCitation {
   similarity?: number;
 }
 
-export interface ChatChartData {
+export interface ChatChart {
   title: string;
   chart_type?: string;
   data: Array<Record<string, unknown>>;
 }
 
-export interface ChatTableData {
-  title: string;
+export type ChatChartData = ChatChart;
+
+export interface ChatTable {
+  title?: string;
   headers: string[];
-  rows: any[][];
+  rows: Array<Array<string | number | boolean | null | undefined>>;
 }
+
+export type ChatTableData = ChatTable;
+
+export interface CandidateCardData {
+  name: string;
+  appliedPosition?: string;
+  yearsExperience?: number;
+  atsScore?: number;
+  summary?: string;
+  [key: string]: unknown;
+}
+
+export interface JobCardData {
+  title: string;
+  department?: string;
+  salary?: string;
+  skills?: string[];
+  [key: string]: unknown;
+}
+
+export interface InterviewCardData {
+  candidateName?: string;
+  interviewer?: string;
+  round?: string;
+  time?: string;
+  [key: string]: unknown;
+}
+
+export interface OfferCardData {
+  candidateName?: string;
+  role?: string;
+  ctc?: string;
+  joiningDate?: string;
+  [key: string]: unknown;
+}
+
+export interface OnboardingCardData {
+  joiners?: Array<{
+    name: string;
+    role: string;
+    readiness: string;
+  }>;
+  [key: string]: unknown;
+}
+
+export interface PayrollCardData {
+  metrics?: Array<{
+    label: string;
+    val: string;
+  }>;
+  [key: string]: unknown;
+}
+
+export type ChatCardData =
+  | CandidateCardData
+  | JobCardData
+  | InterviewCardData
+  | OfferCardData
+  | OnboardingCardData
+  | PayrollCardData
+  | Record<string, unknown>;
 
 export interface ChatAssistantResponse {
   answer: string;
   confidence?: number;
   sources?: ChatSourceCitation[];
-  charts?: ChatChartData[];
-  tables?: ChatTableData[];
+  charts?: ChatChart[];
+  tables?: ChatTable[];
   followUpQuestions?: string[];
   follow_up_questions?: string[];
   conversationId: string;
   conversation_id?: string;
-  cardType?: "candidate" | "job" | "interview" | "offer" | "onboarding" | "payroll" | "employee";
-  cardData?: any;
+  cardType?: ChatCardType;
+  cardData?: ChatCardData;
   actionRequired?: ChatActionRequired;
 }
 
@@ -572,14 +644,15 @@ export interface ChatMessage {
   role?: "user" | "ai" | "assistant" | "system";
   content: string;
   timestamp: string;
-  cardType?: "candidate" | "job" | "interview" | "offer" | "onboarding" | "payroll" | "employee";
-  cardData?: any;
+  cardType?: ChatCardType;
+  cardData?: ChatCardData;
   actionRequired?: ChatActionRequired;
   suggestions?: string[];
   sources?: ChatSourceCitation[];
-  charts?: ChatChartData[];
-  tables?: ChatTableData[];
+  charts?: ChatChart[];
+  tables?: ChatTable[];
   metadata?: Record<string, unknown>;
+  failed?: boolean;
 }
 
 export interface ChatConversation {
