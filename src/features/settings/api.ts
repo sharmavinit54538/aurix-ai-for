@@ -636,21 +636,20 @@ export async function fetchNotificationSettings(): Promise<NotificationSettingsF
   const data = await settingsApi.getNotificationSettings();
   return {
     emailNotifications: Boolean(data?.emailNotifications ?? true),
-    attendanceAlerts: Boolean(data?.inAppAlerts ?? true),
-    leaveAlerts: Boolean(data?.slackAlerts ?? true),
-    payrollAlerts: Boolean(data?.weeklyDigest ?? true),
-    documentExpiryAlerts: Boolean(data?.securityAlerts ?? true),
-    weeklyDigest: Boolean(data?.weeklyDigest ?? true),
+    inAppAlerts: Boolean(data?.inAppAlerts ?? true),
+    slackAlerts: Boolean(data?.slackAlerts ?? false),
+    weeklyDigest: Boolean(data?.weeklyDigest ?? false),
+    securityAlerts: Boolean(data?.securityAlerts ?? true),
   };
 }
 
 export async function updateNotificationSettings(form: NotificationSettingsForm): Promise<void> {
   await settingsApi.updateNotificationSettings({
     emailNotifications: form.emailNotifications,
-    inAppAlerts: form.attendanceAlerts,
-    slackAlerts: form.leaveAlerts,
-    weeklyDigest: form.payrollAlerts,
-    securityAlerts: form.documentExpiryAlerts,
+    inAppAlerts: form.inAppAlerts,
+    slackAlerts: form.slackAlerts,
+    weeklyDigest: form.weeklyDigest,
+    securityAlerts: form.securityAlerts,
   });
 }
 

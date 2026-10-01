@@ -23,6 +23,9 @@ export const ALL_COMPANY_ROLES: AppRole[] = [
 ];
 
 export const ROUTE_ROLE_ACCESS: Record<string, AppRole[]> = {
+  // ── Universal Notifications Route (ALL AUTHENTICATED ROLES) ─────
+  "/dashboard/notifications": [...ALL_COMPANY_ROLES, ...PLATFORM_ROLES],
+
   // ── Platform Owner Routes (STRICTLY SUPER_ADMIN ONLY) ───────────
   "/dashboard/super-admin": PLATFORM_ROLES,
   "/dashboard/super-admin/users": PLATFORM_ROLES,

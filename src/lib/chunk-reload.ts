@@ -89,11 +89,13 @@ export function unregisterLegacyServiceWorkers(): void {
   try {
     navigator.serviceWorker.getRegistrations().then((registrations) => {
       for (const registration of registrations) {
-        registration.unregister().then((success) => {
-          if (success) {
-            logger.info("[ServiceWorker] Successfully unregistered stale service worker:", registration.scope);
-          }
-        });
+        if (!registration.active?.scriptURL.endsWith("/push-sw.js")) {
+          registration.unregister().then((success) => {
+            if (success) {
+              logger.info("[ServiceWorker] Successfully unregistered stale service worker:", registration.scope);
+            }
+          });
+        }
       }
     }).catch(() => {
       // ignore

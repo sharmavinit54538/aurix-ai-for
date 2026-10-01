@@ -4,6 +4,7 @@ import type { AuthMeResponse, AuthUserPayload } from "@/api";
 import { aurix } from "./aurix-store";
 import { safeStorage } from "./safe-storage";
 import { normalizeRole } from "./rbac";
+import { clearQueryCache } from "@/router";
 
 type AuthStatus = "loading" | "ready";
 
@@ -168,10 +169,25 @@ export async function logout(options?: { redirect?: boolean }) {
   safeStorage.removeItem("aurix:tokens");
   safeStorage.removeItem("aurix:workspace:v1");
   safeStorage.removeItem("aurix:remember");
+  safeStorage.removeItem("ofc360_notifications_state_v1");
   safeStorage.clear(typeof window !== "undefined" ? window.sessionStorage : undefined);
   clearApiCache();
+  clearQueryCache();
   setStatus("ready");
   if (options?.redirect !== false && typeof window !== "undefined") {
     window.location.replace("/login");
   }
 }
+
+// Automatically clear caches and notification state when switching users
+let lastActiveUserId: string | null | undefined = undefined;
+
+aurix.subscribe(() => {
+  const currentUserId = aurix.get().user?.id ?? null;
+  if (lastActiveUserId !== undefined && lastActiveUserId !== currentUserId) {
+    clearQueryCache();
+    clearApiCache();
+    safeStorage.removeItem("ofc360_notifications_state_v1");
+  }
+  lastActiveUserId = currentUserId;
+});

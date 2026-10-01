@@ -25,6 +25,7 @@ const ROLE_LABELS: Record<Role, string> = {
   manager: "Manager",
   it_admin: "IT Admin",
   executive: "Executive",
+  recruiter: "Recruiter",
 };
 
 export function UserProfileMenu({

@@ -26,6 +26,8 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import { useNotifications, useArchive } from "@/features/notifications";
+import { formatRelativeTime } from "@/lib/notification-utils";
 import {
   Bar,
   BarChart,
@@ -52,7 +54,6 @@ const MY_PAYSLIPS: any[] = [];
 const MY_DOCUMENTS: any[] = [];
 const MY_ASSETS: any[] = [];
 const COMPANY_EVENTS: any[] = [];
-const EMP_NOTIFICATIONS: any[] = [];
 const MY_ATTENDANCE_TREND: any[] = [];
 
 // ── Animation helpers ─────────────────────────────────────────
@@ -542,30 +543,51 @@ function EmployeeCalendar() {
 
 // ── 10. Notifications ─────────────────────────────────────────
 function EmployeeNotifications() {
-  const [dismissed, setDismissed] = useState<string[]>([]);
-  const visible = EMP_NOTIFICATIONS.filter((n) => !dismissed.includes(n.id));
+  const { items } = useNotifications({ limit: 5 });
+  const archiveMutation = useArchive();
 
   return (
     <motion.div {...fadeUp}>
       <Card>
-        <SectionHeader title="Notifications" />
+        <SectionHeader title="Notifications" link="/dashboard/notifications" />
         <div className="space-y-2">
-          {visible.map((n) => {
-            const Icon = NOTIF_ICON[n.type] ?? Bell;
+          {items.map((n) => {
+            const isUrgent = n.priority === "critical" || n.priority === "high";
             return (
-              <div key={n.id} className="flex items-start gap-3 rounded-xl border border-border bg-background/50 px-3 py-2.5">
-                <div className={`mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg ${NOTIF_COLOR[n.type]}`}>
-                  <Icon className="h-3.5 w-3.5" />
+              <div
+                key={n.id}
+                className="flex items-start gap-3 rounded-xl border border-border bg-background/50 px-3 py-2.5"
+              >
+                <div
+                  className={`mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg ${
+                    isUrgent ? "bg-rose-500/10 text-rose-500" : "bg-primary/10 text-primary"
+                  }`}
+                >
+                  <Bell className="h-3.5 w-3.5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-sm font-medium">{n.title}</div>
-                  <div className="text-xs text-muted-foreground">{n.detail}</div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">{n.title}</span>
+                    {isUrgent && (
+                      <Badge variant="destructive" className="h-4 px-1.5 text-[10px] uppercase font-bold">
+                        {n.priority}
+                      </Badge>
+                    )}
+                    <Badge variant="outline" className="h-4 px-1 text-[9px] capitalize">
+                      {n.category.replace(/_/g, " ")}
+                    </Badge>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{n.body}</div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  <span className="text-xs text-muted-foreground">{n.time}</span>
+                  <span className="text-xs text-muted-foreground font-mono">
+                    {formatRelativeTime(n.createdAt)}
+                  </span>
                   <button
-                    onClick={() => setDismissed((d) => [...d, n.id])}
-                    className="rounded-md p-1 text-muted-foreground hover:bg-background/60 hover:text-foreground"
+                    onClick={() => archiveMutation.mutate(n.id)}
+                    className="rounded-md p-1 text-muted-foreground hover:bg-background/60 hover:text-foreground cursor-pointer"
+                    aria-label="Dismiss notification"
+                    title="Dismiss"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -573,10 +595,10 @@ function EmployeeNotifications() {
               </div>
             );
           })}
-          {visible.length === 0 && (
+          {items.length === 0 && (
             <div className="py-6 text-center text-sm text-muted-foreground">
               <CheckCircle2 className="mx-auto mb-2 h-7 w-7 text-emerald-500" />
-              All caught up!
+              All caught up! No notifications.
             </div>
           )}
         </div>

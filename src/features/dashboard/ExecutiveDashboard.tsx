@@ -48,7 +48,8 @@ import {
 } from "recharts";
 import { useExecutiveDashboardData } from "./hooks/useExecutiveDashboardData";
 import { ExecutiveKpiCards } from "./components/ExecutiveKpiCards";
-import { useNotifications } from "@/lib/notifications";
+import { useNotifications, useArchive } from "@/features/notifications";
+import { formatRelativeTime } from "@/lib/notification-utils";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -58,7 +59,6 @@ import type {
   ApprovalItem,
   CalendarEvent,
   ActivityItem,
-  NotificationItem,
   DeptCard,
 } from "./types/executiveDashboardTypes";
 
@@ -92,7 +92,6 @@ const HEADCOUNT_GROWTH: any[] = [];
 const INTERVIEWS_TODAY: any[] = [];
 const KPI_CARDS: any[] = [];
 const MONTHLY_PAYROLL: any[] = [];
-const NOTIFICATIONS: NotificationItem[] = [];
 const ONBOARDING_STAGES: any[] = [];
 const PAYROLL_STATUS: any[] = [];
 const PIPELINE_STAGES: any[] = [];
@@ -964,7 +963,8 @@ const NOTIF_ICON_COLORS = {
 };
 
 function NotificationCenter() {
-  const { notifications, dismissNotification } = useNotifications();
+  const { items } = useNotifications({ priority: "high,critical", limit: 5 });
+  const archiveMutation = useArchive();
 
   return (
     <motion.div {...fadeUp}>
@@ -972,11 +972,11 @@ function NotificationCenter() {
         <SectionHeader
           title="Smart Notification Center"
           subtitle="Alerts, compliance & AI suggestions"
-          link="/dashboard/settings/notifications"
+          link="/dashboard/notifications"
         />
         <div className="space-y-2">
-          {notifications.map((n) => {
-            const sevKey = n.severity === "critical" ? "critical" : n.severity === "warning" ? "warn" : "info";
+          {items.map((n) => {
+            const sevKey = n.priority === "critical" ? "critical" : n.priority === "high" ? "warn" : "info";
             return (
               <div
                 key={n.id}
@@ -987,17 +987,20 @@ function NotificationCenter() {
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">{n.title}</span>
                     <Badge variant="outline" className="shrink-0 text-[10px] capitalize">
-                      {n.category}
+                      {n.category.replace(/_/g, " ")}
                     </Badge>
                   </div>
-                  <div className="mt-0.5 text-xs text-muted-foreground">{n.message}</div>
+                  <div className="mt-0.5 text-xs text-muted-foreground">{n.body}</div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  <span className="text-xs text-muted-foreground">{n.time}</span>
+                  <span className="text-xs text-muted-foreground font-mono">
+                    {formatRelativeTime(n.createdAt)}
+                  </span>
                   <button
-                    onClick={() => dismissNotification(n.id)}
+                    onClick={() => archiveMutation.mutate(n.id)}
                     className="rounded-md p-1 text-muted-foreground hover:bg-background/60 hover:text-foreground cursor-pointer"
                     aria-label="Dismiss notification"
+                    title="Dismiss"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -1005,10 +1008,10 @@ function NotificationCenter() {
               </div>
             );
           })}
-          {notifications.length === 0 && (
+          {items.length === 0 && (
             <div className="py-8 text-center text-sm text-muted-foreground">
               <CheckCircle2 className="mx-auto mb-2 h-8 w-8 text-emerald-500" />
-              All caught up! No active notifications.
+              All caught up! No active high-priority alerts.
             </div>
           )}
         </div>

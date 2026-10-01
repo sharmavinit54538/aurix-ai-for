@@ -27,6 +27,8 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import { useNotifications, useArchive } from "@/features/notifications";
+import { formatRelativeTime } from "@/lib/notification-utils";
 import {
   Area,
   AreaChart,
@@ -72,7 +74,6 @@ const CANDIDATE_PIPELINE: any[] = [];
 const TEAM_ASSET_SUMMARY: any[] = [];
 const TEAM_ASSETS: any[] = [];
 const AI_TEAM_INSIGHTS: any[] = [];
-const MANAGER_NOTIFICATIONS: any[] = [];
 
 // ── UI navigation config (not backend data) ───────────────────
 const MANAGER_REPORTS = [
@@ -1003,56 +1004,57 @@ function AIInsights() {
 
 // ── 10. Notifications + Reports ───────────────────────────────
 function NotificationsSection() {
-  const [dismissed, setDismissed] = useState<string[]>([]);
-  const visible = MANAGER_NOTIFICATIONS.filter((n) => !dismissed.includes(n.id));
-
-  const TYPE_ICON: Record<string, React.ElementType> = {
-    approval: CheckCircle2,
-    joiner: UserPlus,
-    exit: UserCheck,
-    document: FileText,
-    alert: AlertTriangle,
-  };
-
-  const TYPE_COLOR: Record<string, string> = {
-    approval: "bg-amber-500/10 text-amber-500",
-    joiner: "bg-emerald-500/10 text-emerald-500",
-    exit: "bg-rose-500/10 text-rose-500",
-    document: "bg-blue-500/10 text-blue-500",
-    alert: "bg-violet-500/10 text-violet-500",
-  };
+  const { items } = useNotifications({ limit: 5 });
+  const archiveMutation = useArchive();
 
   return (
     <motion.div {...fadeUp}>
       <Card>
-        <SectionHeader title="Notifications" subtitle="Pending actions and alerts" />
+        <SectionHeader
+          title="Notifications"
+          subtitle="Pending actions and alerts"
+          link="/dashboard/notifications"
+        />
         <div className="space-y-2">
-          {visible.map((n) => {
-            const Icon = TYPE_ICON[n.type] ?? AlertTriangle;
+          {items.map((n) => {
+            const isUrgent = n.priority === "critical" || n.priority === "high";
             return (
               <div
                 key={n.id}
                 className={`flex items-start gap-3 rounded-xl border border-border px-3 py-2.5 ${
-                  n.urgent ? "bg-rose-500/5 border-rose-200" : "bg-background/50"
+                  isUrgent ? "bg-rose-500/5 border-rose-200 dark:border-rose-900/50" : "bg-background/50"
                 }`}
               >
-                <div className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg ${TYPE_COLOR[n.type]}`}>
-                  <Icon className="h-3.5 w-3.5" />
+                <div
+                  className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg ${
+                    isUrgent ? "bg-rose-500/10 text-rose-500" : "bg-primary/10 text-primary"
+                  }`}
+                >
+                  <AlertTriangle className="h-3.5 w-3.5" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">{n.title}</span>
-                    {n.urgent && (
-                      <Badge variant="destructive" className="h-4 px-1.5 text-[10px]">Urgent</Badge>
+                    {isUrgent && (
+                      <Badge variant="destructive" className="h-4 px-1.5 text-[10px] uppercase font-bold">
+                        {n.priority}
+                      </Badge>
                     )}
+                    <Badge variant="outline" className="h-4 px-1 text-[9px] capitalize">
+                      {n.category.replace(/_/g, " ")}
+                    </Badge>
                   </div>
-                  <div className="text-xs text-muted-foreground">{n.detail}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{n.body}</div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  <span className="text-xs text-muted-foreground">{n.time}</span>
+                  <span className="text-xs text-muted-foreground font-mono">
+                    {formatRelativeTime(n.createdAt)}
+                  </span>
                   <button
-                    onClick={() => setDismissed((d) => [...d, n.id])}
-                    className="rounded-md p-1 text-muted-foreground hover:bg-background/60 hover:text-foreground"
+                    onClick={() => archiveMutation.mutate(n.id)}
+                    className="rounded-md p-1 text-muted-foreground hover:bg-background/60 hover:text-foreground cursor-pointer"
+                    aria-label="Dismiss notification"
+                    title="Dismiss"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -1060,10 +1062,10 @@ function NotificationsSection() {
               </div>
             );
           })}
-          {visible.length === 0 && (
+          {items.length === 0 && (
             <div className="py-8 text-center text-sm text-muted-foreground">
               <CheckCircle2 className="mx-auto mb-2 h-8 w-8 text-emerald-500" />
-              All caught up!
+              All caught up! No pending notifications.
             </div>
           )}
         </div>

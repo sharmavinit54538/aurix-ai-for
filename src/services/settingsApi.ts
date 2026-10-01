@@ -59,7 +59,7 @@ export const settingsApi = {
   async updateNotificationSettings(
     payload: Partial<NotificationSettings>,
   ): Promise<NotificationSettings> {
-    const res = await apiInstance.patch("/settings/notifications", payload);
+    const res = await apiInstance.put("/settings/notifications", payload);
     return extractData<NotificationSettings>(res);
   },
 

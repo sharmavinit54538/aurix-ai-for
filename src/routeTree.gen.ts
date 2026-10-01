@@ -48,6 +48,7 @@ import { Route as DashboardPerformanceRouteImport } from './routes/dashboard.per
 import { Route as DashboardPayrollRouteImport } from './routes/dashboard.payroll'
 import { Route as DashboardOnboardingChecklistRouteImport } from './routes/dashboard.onboarding-checklist'
 import { Route as DashboardOffboardingRouteImport } from './routes/dashboard.offboarding'
+import { Route as DashboardNotificationsRouteImport } from './routes/dashboard.notifications'
 import { Route as DashboardManagersRouteImport } from './routes/dashboard.managers'
 import { Route as DashboardManagerRouteImport } from './routes/dashboard.manager'
 import { Route as DashboardLeavesRouteImport } from './routes/dashboard.leaves'
@@ -449,6 +450,11 @@ const DashboardOnboardingChecklistRoute =
 const DashboardOffboardingRoute = DashboardOffboardingRouteImport.update({
   id: '/offboarding',
   path: '/offboarding',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardNotificationsRoute = DashboardNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardManagersRoute = DashboardManagersRouteImport.update({
@@ -1686,6 +1692,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/leaves': typeof DashboardLeavesRoute
   '/dashboard/manager': typeof DashboardManagerRoute
   '/dashboard/managers': typeof DashboardManagersRoute
+  '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/offboarding': typeof DashboardOffboardingRoute
   '/dashboard/onboarding-checklist': typeof DashboardOnboardingChecklistRoute
   '/dashboard/payroll': typeof DashboardPayrollRouteWithChildren
@@ -1926,6 +1933,7 @@ export interface FileRoutesByTo {
   '/dashboard/leaves': typeof DashboardLeavesRoute
   '/dashboard/manager': typeof DashboardManagerRoute
   '/dashboard/managers': typeof DashboardManagersRoute
+  '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/offboarding': typeof DashboardOffboardingRoute
   '/dashboard/onboarding-checklist': typeof DashboardOnboardingChecklistRoute
   '/dashboard/performance': typeof DashboardPerformanceRoute
@@ -2163,6 +2171,7 @@ export interface FileRoutesById {
   '/dashboard/leaves': typeof DashboardLeavesRoute
   '/dashboard/manager': typeof DashboardManagerRoute
   '/dashboard/managers': typeof DashboardManagersRoute
+  '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/offboarding': typeof DashboardOffboardingRoute
   '/dashboard/onboarding-checklist': typeof DashboardOnboardingChecklistRoute
   '/dashboard/payroll': typeof DashboardPayrollRouteWithChildren
@@ -2412,6 +2421,7 @@ export interface FileRouteTypes {
     | '/dashboard/leaves'
     | '/dashboard/manager'
     | '/dashboard/managers'
+    | '/dashboard/notifications'
     | '/dashboard/offboarding'
     | '/dashboard/onboarding-checklist'
     | '/dashboard/payroll'
@@ -2652,6 +2662,7 @@ export interface FileRouteTypes {
     | '/dashboard/leaves'
     | '/dashboard/manager'
     | '/dashboard/managers'
+    | '/dashboard/notifications'
     | '/dashboard/offboarding'
     | '/dashboard/onboarding-checklist'
     | '/dashboard/performance'
@@ -2888,6 +2899,7 @@ export interface FileRouteTypes {
     | '/dashboard/leaves'
     | '/dashboard/manager'
     | '/dashboard/managers'
+    | '/dashboard/notifications'
     | '/dashboard/offboarding'
     | '/dashboard/onboarding-checklist'
     | '/dashboard/payroll'
@@ -3379,6 +3391,13 @@ declare module '@tanstack/react-router' {
       path: '/offboarding'
       fullPath: '/dashboard/offboarding'
       preLoaderRoute: typeof DashboardOffboardingRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/notifications': {
+      id: '/dashboard/notifications'
+      path: '/notifications'
+      fullPath: '/dashboard/notifications'
+      preLoaderRoute: typeof DashboardNotificationsRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/managers': {
@@ -5410,6 +5429,7 @@ interface DashboardRouteChildren {
   DashboardLeavesRoute: typeof DashboardLeavesRoute
   DashboardManagerRoute: typeof DashboardManagerRoute
   DashboardManagersRoute: typeof DashboardManagersRoute
+  DashboardNotificationsRoute: typeof DashboardNotificationsRoute
   DashboardOffboardingRoute: typeof DashboardOffboardingRoute
   DashboardOnboardingChecklistRoute: typeof DashboardOnboardingChecklistRoute
   DashboardPayrollRoute: typeof DashboardPayrollRouteWithChildren
@@ -5463,6 +5483,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardLeavesRoute: DashboardLeavesRoute,
   DashboardManagerRoute: DashboardManagerRoute,
   DashboardManagersRoute: DashboardManagersRoute,
+  DashboardNotificationsRoute: DashboardNotificationsRoute,
   DashboardOffboardingRoute: DashboardOffboardingRoute,
   DashboardOnboardingChecklistRoute: DashboardOnboardingChecklistRoute,
   DashboardPayrollRoute: DashboardPayrollRouteWithChildren,

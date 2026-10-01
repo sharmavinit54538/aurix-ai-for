@@ -40,11 +40,10 @@ export function NotificationsSection({ canEdit, onDirtyChange }: NotificationsSe
   const [initialData, setInitialData] = useState<NotificationSettingsForm | null>(null);
   const [formData, setFormData] = useState<NotificationSettingsForm>({
     emailNotifications: true,
-    attendanceAlerts: true,
-    leaveAlerts: true,
-    payrollAlerts: true,
-    documentExpiryAlerts: true,
+    inAppAlerts: true,
+    slackAlerts: false,
     weeklyDigest: false,
+    securityAlerts: true,
   });
 
   const isDirty = initialData ? JSON.stringify(initialData) !== JSON.stringify(formData) : false;
@@ -156,95 +155,95 @@ export function NotificationsSection({ canEdit, onDirtyChange }: NotificationsSe
         </div>
       </div>
 
-      {/* HR Module Alert Categories */}
+      {/* Organization Channels & Delivery Settings */}
       <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-xl shadow-xs">
         <div className="mb-5 border-b border-border/60 pb-4">
-          <h3 className="text-sm font-semibold tracking-tight text-foreground">HR Module Alerts</h3>
+          <h3 className="text-sm font-semibold tracking-tight text-foreground">Notification Channels & Delivery</h3>
           <p className="text-xs text-muted-foreground">
-            Notification channels for core HR operations.
+            Configure system-wide alert destinations and cadence.
           </p>
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {/* Attendance Alerts */}
+          {/* In-App Alerts */}
           <div className="flex items-center justify-between rounded-xl border border-border bg-card/80 p-4">
             <div className="flex items-start gap-3">
               <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-blue-500/10 text-blue-500">
-                <Clock className="h-4 w-4" />
+                <Bell className="h-4 w-4" />
               </div>
               <div className="space-y-0.5">
-                <Label className="text-xs font-medium text-foreground">Attendance Alerts</Label>
+                <Label className="text-xs font-medium text-foreground">In-App Alerts</Label>
                 <p className="text-[11px] text-muted-foreground">
-                  Late arrival notices, missed check-outs, and shift rosters.
+                  Real-time notification bell alerts and unread counters in the dashboard.
                 </p>
               </div>
             </div>
             <Switch
-              checked={formData.attendanceAlerts}
-              onCheckedChange={(c) => setFormData({ ...formData, attendanceAlerts: c })}
-              disabled={!canEdit || !formData.emailNotifications}
+              checked={formData.inAppAlerts}
+              onCheckedChange={(c) => setFormData({ ...formData, inAppAlerts: c })}
+              disabled={!canEdit}
             />
           </div>
 
-          {/* Leave Alerts */}
+          {/* Slack Alerts */}
           <div className="flex items-center justify-between rounded-xl border border-border bg-card/80 p-4">
             <div className="flex items-start gap-3">
               <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-purple-500/10 text-purple-500">
-                <CalendarDays className="h-4 w-4" />
+                <AlertCircle className="h-4 w-4" />
               </div>
               <div className="space-y-0.5">
-                <Label className="text-xs font-medium text-foreground">Leave Alerts</Label>
+                <Label className="text-xs font-medium text-foreground">Slack Alerts</Label>
                 <p className="text-[11px] text-muted-foreground">
-                  New leave requests, manager approvals, and balance warnings.
+                  Forward key organizational events and system notices to Slack channels.
                 </p>
               </div>
             </div>
             <Switch
-              checked={formData.leaveAlerts}
-              onCheckedChange={(c) => setFormData({ ...formData, leaveAlerts: c })}
-              disabled={!canEdit || !formData.emailNotifications}
+              checked={formData.slackAlerts}
+              onCheckedChange={(c) => setFormData({ ...formData, slackAlerts: c })}
+              disabled={!canEdit}
             />
           </div>
 
-          {/* Payroll Alerts */}
+          {/* Weekly Digest */}
           <div className="flex items-center justify-between rounded-xl border border-border bg-card/80 p-4">
             <div className="flex items-start gap-3">
               <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-emerald-500/10 text-emerald-500">
-                <Banknote className="h-4 w-4" />
+                <CalendarDays className="h-4 w-4" />
               </div>
               <div className="space-y-0.5">
-                <Label className="text-xs font-medium text-foreground">Payroll Alerts</Label>
+                <Label className="text-xs font-medium text-foreground">Weekly Digest</Label>
                 <p className="text-[11px] text-muted-foreground">
-                  Payslip published notifications and monthly disbursal confirmations.
+                  Send a weekly activity summary and pending review digest to users.
                 </p>
               </div>
             </div>
             <Switch
-              checked={formData.payrollAlerts}
-              onCheckedChange={(c) => setFormData({ ...formData, payrollAlerts: c })}
-              disabled={!canEdit || !formData.emailNotifications}
+              checked={formData.weeklyDigest}
+              onCheckedChange={(c) => setFormData({ ...formData, weeklyDigest: c })}
+              disabled={!canEdit}
             />
           </div>
 
-          {/* Document Expiry Alerts */}
+          {/* Security Alerts */}
           <div className="flex items-center justify-between rounded-xl border border-border bg-card/80 p-4">
             <div className="flex items-start gap-3">
-              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-amber-500/10 text-amber-500">
-                <FileCheck className="h-4 w-4" />
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-rose-500/10 text-rose-500">
+                <Check className="h-4 w-4" />
               </div>
               <div className="space-y-0.5">
                 <Label className="text-xs font-medium text-foreground">
-                  Document Expiry Alerts
+                  Security Alerts
                 </Label>
                 <p className="text-[11px] text-muted-foreground">
-                  Advance notices for passports, compliance documents, and contracts.
+                  Immediate alerts for logins, permission escalations, and MFA changes.
                 </p>
               </div>
             </div>
             <Switch
-              checked={formData.documentExpiryAlerts}
-              onCheckedChange={(c) => setFormData({ ...formData, documentExpiryAlerts: c })}
-              disabled={!canEdit || !formData.emailNotifications}
+              checked={formData.securityAlerts}
+              onCheckedChange={(c) => setFormData({ ...formData, securityAlerts: c })}
+              disabled={!canEdit}
             />
           </div>
         </div>

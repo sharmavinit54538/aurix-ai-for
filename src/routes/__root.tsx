@@ -193,7 +193,11 @@ function RootShell({ children }: { children: ReactNode }) {
 
                   if ('serviceWorker' in navigator) {
                     navigator.serviceWorker.getRegistrations().then(function(regs) {
-                      regs.forEach(function(r) { r.unregister(); });
+                      regs.forEach(function(r) {
+                        if (!r.active || !r.active.scriptURL.endsWith('/push-sw.js')) {
+                          r.unregister();
+                        }
+                      });
                     }).catch(function() {});
                   }
                 } catch(e) {}

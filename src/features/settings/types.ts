@@ -20,6 +20,7 @@ export const RBAC_ROLE_LABELS: Record<AppRole, string> = {
   it_admin: "IT ADMIN",
   executive: "EXECUTIVE",
   employee: "EMPLOYEE",
+  recruiter: "RECRUITER",
 };
 
 export function getRbacRoleLabel(role: AppRole): string {
@@ -165,6 +166,17 @@ export const RBAC_PERMISSIONS: Record<AppRole, Record<SettingsSectionKey, Permis
     documents: "denied",
     assets: "denied",
     notifications: "view",
+  },
+  recruiter: {
+    company: "denied",
+    profile: "edit",
+    employees: "view",
+    attendance: "denied",
+    leave: "view",
+    payroll: "denied",
+    documents: "view",
+    assets: "denied",
+    notifications: "edit",
   },
 };
 
@@ -351,9 +363,8 @@ export interface AssetSettingsForm {
 
 export interface NotificationSettingsForm {
   emailNotifications: boolean;
-  attendanceAlerts: boolean;
-  leaveAlerts: boolean;
-  payrollAlerts: boolean;
-  documentExpiryAlerts: boolean;
+  inAppAlerts: boolean;
+  slackAlerts: boolean;
   weeklyDigest: boolean;
+  securityAlerts: boolean;
 }

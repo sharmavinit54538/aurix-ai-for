@@ -572,7 +572,8 @@ export function InterviewsPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowReminderModal(false)}>Close</Button>
             <Button onClick={() => {
-              toast.success(`Reminder dispatched to ${selectedIv?.candidateName}!`);
+              // TODO(backend): dispatch endpoint
+              toast.info(`Reminder preview prepared for ${selectedIv?.candidateName || "candidate"}. Dispatch endpoint pending backend support.`);
               setShowReminderModal(false);
             }}>
               Send Reminder Now
