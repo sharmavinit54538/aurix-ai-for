@@ -2,9 +2,8 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { apiInstance } from "@/api";
 import { tryApi } from "@/api/utils";
 import { aurix } from "@/lib/aurix-store";
-import type { Department } from "./types";
+import type { Department, DepartmentsSummary } from "./types";
 import {
-  mergeDepartmentRecord,
   normalizeIconName,
   normalizeThemeColor,
   unwrapDepartmentApiRecord,
@@ -17,7 +16,12 @@ function readScalar(value: unknown): string {
   return "";
 }
 
-export function mapBackendToFrontend(d: any): Department {
+function getErrorMessage(error: unknown, fallback: string): string {
+  const err = error as { response?: { data?: { message?: string } }; message?: string };
+  return err.response?.data?.message || err.message || fallback;
+}
+
+export function mapBackendToFrontend(d: unknown): Department {
   const data = unwrapDepartmentApiRecord(d);
   const manager = data.manager_details ?? data.manager ?? data.department_head;
   let departmentHeadId =
@@ -39,9 +43,47 @@ export function mapBackendToFrontend(d: any): Department {
     if (mgrName) departmentHeadName = mgrName;
   }
 
-  const openPositions = Number(data.open_positions ?? data.openPositions ?? data.open_positions_count ?? 0);
-  const hiringStatus = String(data.hiring_status ?? data.hiringStatus ?? "").toLowerCase();
-  const rawStatus = String(data.status ?? "active").toLowerCase();
+  const rawPositions = data.open_positions ?? data.openPositions ?? data.open_positions_count;
+  const openPositions =
+    rawPositions != null && rawPositions !== "" && !isNaN(Number(rawPositions))
+      ? Number(rawPositions)
+      : 0;
+
+  const rawHiring = String(data.hiring_status ?? data.hiringStatus ?? "").toLowerCase();
+  const hiringStatus: Department["hiringStatus"] = ["open", "paused", "closed"].includes(rawHiring)
+    ? (rawHiring as Department["hiringStatus"])
+    : openPositions > 0
+      ? "open"
+      : "closed";
+
+  const rawStatus = String(data.status ?? "active").trim().toLowerCase();
+
+  const rawPerformance = data.performance_score ?? data.performanceScore;
+  const performanceScore =
+    rawPerformance != null && rawPerformance !== "" && !isNaN(Number(rawPerformance))
+      ? Number(rawPerformance)
+      : null;
+
+  const rawAttendance = data.attendance_score ?? data.attendanceScore;
+  const attendanceScore =
+    rawAttendance != null && rawAttendance !== "" && !isNaN(Number(rawAttendance))
+      ? Number(rawAttendance)
+      : null;
+
+  const rawCapacity = data.employee_capacity ?? data.employeeCapacity;
+  const employeeCapacity =
+    rawCapacity != null && rawCapacity !== "" && !isNaN(Number(rawCapacity))
+      ? Number(rawCapacity)
+      : null;
+
+  const rawEmpCount = data.employee_count ?? data.currentEmployeeCount;
+  const currentEmployeeCount =
+    rawEmpCount != null && rawEmpCount !== "" && !isNaN(Number(rawEmpCount))
+      ? Number(rawEmpCount)
+      : 0;
+
+  const rawEmpIds = data.employee_ids ?? data.employeeIds;
+  const employeeIds = Array.isArray(rawEmpIds) ? rawEmpIds.map(String) : [];
 
   return {
     id: String(data.id ?? ""),
@@ -60,10 +102,10 @@ export function mapBackendToFrontend(d: any): Department {
     reportingManagerName: readScalar(data.reporting_manager_name ?? data.reportingManagerName) || "None",
     office: readScalar(data.location ?? data.office),
     budget: Number(data.budget ?? 0),
-    employeeCapacity: Number(data.employee_capacity ?? data.employeeCapacity ?? 30),
-    currentEmployeeCount: Number(data.employee_count ?? data.currentEmployeeCount ?? 0),
+    employeeCapacity,
+    currentEmployeeCount,
     extensionNumber: readScalar(data.extension_number ?? data.extensionNumber),
-    status: (rawStatus === "active" ? "active" : "inactive") as Department["status"],
+    status: (rawStatus === "inactive" ? "inactive" : "active") as Department["status"],
     themeColor: normalizeThemeColor(readScalar(data.theme_color ?? data.themeColor) || undefined),
     iconName: normalizeIconName(readScalar(data.icon_name ?? data.iconName) || undefined),
     parentId:
@@ -74,21 +116,15 @@ export function mapBackendToFrontend(d: any): Department {
           : null,
     parentName: readScalar(data.parent_department_name ?? data.parentName) || "None",
     createdDate: data.created_at ? String(data.created_at).split("T")[0] : readScalar(data.createdDate),
-    employeeIds: Array.isArray(data.employee_ids ?? data.employeeIds)
-      ? ((data.employee_ids ?? data.employeeIds) as unknown[]).map(String)
-      : [],
+    employeeIds,
     openPositions,
-    performanceScore: Number(data.performance_score ?? data.performanceScore ?? 85),
-    attendanceScore: Number(data.attendance_score ?? data.attendanceScore ?? 92),
-    hiringStatus: ["open", "paused", "closed"].includes(hiringStatus)
-      ? (hiringStatus as Department["hiringStatus"])
-      : openPositions > 0
-        ? "open"
-        : "closed",
+    performanceScore,
+    attendanceScore,
+    hiringStatus,
     recentActivity: Array.isArray(data.recent_activity ?? data.recentActivity)
       ? ((data.recent_activity ?? data.recentActivity) as Department["recentActivity"])
       : [],
-    documents: Array.isArray(data.documents) ? data.documents : [],
+    documents: Array.isArray(data.documents) ? (data.documents as Department["documents"]) : [],
   };
 }
 
@@ -113,32 +149,22 @@ export function mapFrontendToBackend(department: Partial<Department>): Record<st
   return payload;
 }
 
-function syncWithEmployees(departments: Department[]): Department[] {
-  const workspace = aurix.get();
-  if (workspace.employees.length === 0) return departments;
-
-  return departments.map((d) => {
-    const matches = workspace.employees.filter(
-      (e) => e.department && e.department.toLowerCase() === d.name.toLowerCase(),
-    );
-    const matchIds = matches.map((m) => m.id);
-    return {
-      ...d,
-      employeeIds: matchIds,
-      currentEmployeeCount: matches.length > 0 ? matches.length : d.currentEmployeeCount,
-    };
-  });
+export interface FetchDepartmentsParams {
+  search?: string;
+  status?: string;
+  page?: number;
+  limit?: number;
 }
 
 export const fetchDepartments = createAsyncThunk<
   { items: Department[]; total: number; page: number; limit: number; pages: number },
-  { search?: string; status?: string; page?: number; limit?: number } | void,
+  FetchDepartmentsParams | void,
   { rejectValue: string }
 >(
   "departments/fetchDepartments",
   async (params, { rejectWithValue }) => {
     try {
-      const queryParams: any = {};
+      const queryParams: Record<string, unknown> = {};
       if (params) {
         if (params.search) queryParams.search = params.search;
         if (params.status && params.status !== "all") {
@@ -147,26 +173,81 @@ export const fetchDepartments = createAsyncThunk<
         if (params.page) queryParams.page = params.page;
         if (params.limit) queryParams.limit = params.limit;
       }
-      
+
       const response = await apiInstance.get("/departments", { params: queryParams });
       const data = response.data?.data;
       if (!data) {
         throw new Error("No data received from backend");
       }
-      
-      const items = data.items ?? [];
-      const mappedItems = items.map((item: any) => mapBackendToFrontend(item));
+
+      const rawItems = Array.isArray(data.items) ? data.items : [];
+      let mappedItems: Department[] = rawItems.map((item: unknown) => mapBackendToFrontend(item));
+      const total = Number(data.total ?? mappedItems.length);
+      const page = Number(data.page ?? 1);
+      const limit = Number(data.limit ?? 20);
+      const pages = Number(data.pages ?? (limit > 0 ? Math.ceil(total / limit) : 1));
+
+      // If backend total exceeds fetched page 1 items and limit >= 500 (e.g. reloadDepartments)
+      // fetch remaining pages so client list is never silently truncated
+      if (total > mappedItems.length && pages > 1 && (!params || (params.limit && params.limit >= 500))) {
+        const pagePromises = [];
+        for (let p = 2; p <= pages; p++) {
+          pagePromises.push(apiInstance.get("/departments", { params: { ...queryParams, page: p, limit } }));
+        }
+        const extraResponses = await Promise.all(pagePromises);
+        for (const resp of extraResponses) {
+          const extraItems = resp.data?.data?.items;
+          if (Array.isArray(extraItems)) {
+            mappedItems = mappedItems.concat(extraItems.map((item: unknown) => mapBackendToFrontend(item)));
+          }
+        }
+      }
 
       return {
-        items: syncWithEmployees(mappedItems),
-        total: data.total ?? 0,
-        page: data.page ?? 1,
-        limit: data.limit ?? 20,
-        pages: data.pages ?? 1,
+        items: mappedItems,
+        total,
+        page,
+        limit,
+        pages,
       };
-    } catch (error: any) {
-      const msg = error.response?.data?.message || error.message || "Failed to load departments";
-      return rejectWithValue(msg);
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error, "Failed to load departments"));
+    }
+  },
+);
+
+export const fetchDepartmentsSummary = createAsyncThunk<
+  DepartmentsSummary,
+  void,
+  { rejectValue: string }
+>(
+  "departments/fetchDepartmentsSummary",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await apiInstance.get("/departments/summary");
+      const data = (response.data?.data ?? response.data) as Record<string, unknown> | undefined;
+      if (!data || typeof data !== "object") {
+        throw new Error("No summary data received from backend");
+      }
+
+      return {
+        totalDepartments: Number(data.total_departments ?? data.totalDepartments ?? 0),
+        activeDepartments: Number(data.active_departments ?? data.activeDepartments ?? 0),
+        inactiveDepartments: Number(data.inactive_departments ?? data.inactiveDepartments ?? 0),
+        totalEmployees: Number(data.total_employees ?? data.totalEmployees ?? 0),
+        totalManagers: Number(
+          data.total_managers ??
+            data.totalManagers ??
+            data.assigned_managers ??
+            data.assignedManagers ??
+            0,
+        ),
+        avgTeamSize: Number(data.avg_team_size ?? data.avgTeamSize ?? 0),
+        openPositions: Number(data.open_positions ?? data.openPositions ?? 0),
+        hiringDepartments: Number(data.hiring_departments ?? data.hiringDepartments ?? 0),
+      };
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error, "Failed to load departments summary"));
     }
   },
 );
@@ -178,12 +259,9 @@ export const fetchDepartmentById = createAsyncThunk<Department, string, { reject
       const response = await apiInstance.get(`/departments/${id}`);
       const body = response.data?.data ?? response.data;
       const raw = unwrapDepartmentApiRecord(body);
-      const mapped = mapBackendToFrontend(raw);
-      const [synced] = syncWithEmployees([mapped]);
-      return synced;
-    } catch (error: any) {
-      const msg = error.response?.data?.message || error.message || "Failed to load department details";
-      return rejectWithValue(msg);
+      return mapBackendToFrontend(raw);
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error, "Failed to load department details"));
     }
   },
 );
@@ -201,9 +279,8 @@ export const createDepartment = createAsyncThunk<Department, Partial<Department>
         themeColor: normalizeThemeColor(department.themeColor ?? mapped.themeColor),
         iconName: normalizeIconName(department.iconName ?? mapped.iconName),
       };
-    } catch (error: any) {
-      const msg = error.response?.data?.message || error.message || "Failed to create department";
-      return rejectWithValue(msg);
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error, "Failed to create department"));
     }
   },
 );
@@ -221,9 +298,8 @@ export const updateDepartment = createAsyncThunk<Department, Partial<Department>
         themeColor: normalizeThemeColor(department.themeColor ?? mapped.themeColor),
         iconName: normalizeIconName(department.iconName ?? mapped.iconName),
       };
-    } catch (error: any) {
-      const msg = error.response?.data?.message || error.message || "Failed to update department";
-      return rejectWithValue(msg);
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error, "Failed to update department"));
     }
   },
 );

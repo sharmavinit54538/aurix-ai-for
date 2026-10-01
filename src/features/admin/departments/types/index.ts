@@ -1,6 +1,6 @@
 // ─── Department Types ─────────────────────────────────────────────────────────
 
-export type DepartmentStatus = "active" | "inactive" | "hiring" | "growing";
+export type DepartmentStatus = "active" | "inactive";
 export type HiringStatus = "open" | "paused" | "closed";
 
 export interface DepartmentActivity {
@@ -13,6 +13,17 @@ export interface DepartmentDocument {
   name: string;
   size: string;
   date: string;
+}
+
+export interface DepartmentsSummary {
+  totalDepartments?: number;
+  activeDepartments?: number;
+  inactiveDepartments?: number;
+  totalEmployees?: number;
+  totalManagers?: number;
+  avgTeamSize?: number;
+  openPositions?: number;
+  hiringDepartments?: number;
 }
 
 export interface Department {
@@ -29,7 +40,7 @@ export interface Department {
   reportingManagerName: string;
   office: string;
   budget: number;
-  employeeCapacity: number;
+  employeeCapacity: number | null;
   currentEmployeeCount: number;
   extensionNumber: string;
   status: DepartmentStatus;
@@ -38,10 +49,10 @@ export interface Department {
   parentId: string | null; // For reporting hierarchy
   parentName: string;
   createdDate: string;
-  employeeIds: string[]; // Assigned employee IDs from store
+  employeeIds: string[]; // Assigned employee IDs from backend
   openPositions: number;
-  performanceScore: number; // 0 - 100
-  attendanceScore: number; // 0 - 100
+  performanceScore: number | null; // 0 - 100, null if not provided
+  attendanceScore: number | null; // 0 - 100, null if not provided
   hiringStatus: HiringStatus;
   recentActivity: DepartmentActivity[];
   documents: DepartmentDocument[];

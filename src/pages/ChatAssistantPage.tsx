@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/chart";
 import { toast } from "sonner";
 import { useRecruitment, newId } from "@/features/admin/recruitment/hooks/useRecruitment";
-import type { Stage } from "@/features/admin/recruitment/types";
+import type { Stage, EmploymentType, WorkMode } from "@/features/admin/recruitment/types";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
   createChatConversation,
@@ -483,7 +483,7 @@ export default function ChatAssistantPage() {
           id: String(jobData.id || newId()),
           title,
           department,
-          employmentType: (jobData.employmentType as any) || "Full-time",
+          employmentType: (jobData.employmentType as EmploymentType) || "Full-time",
           experience: String(jobData.experience || "Mid"),
           skills: Array.isArray(jobData.skills) ? (jobData.skills as string[]) : [],
           salaryMin: Number(jobData.salaryMin || 0),
@@ -491,7 +491,7 @@ export default function ChatAssistantPage() {
           currency: String(jobData.currency || "INR"),
           vacancies: Number(jobData.vacancies || 1),
           location: String(jobData.location || "Remote"),
-          workMode: (jobData.workMode as any) || "Remote",
+          workMode: (jobData.workMode as WorkMode) || "Remote",
           description: String(jobData.description || ""),
           responsibilities: Array.isArray(jobData.responsibilities)
             ? (jobData.responsibilities as string[])
@@ -645,6 +645,22 @@ export default function ChatAssistantPage() {
               })
             )}
           </div>
+
+          {/* Activity History Log */}
+          {activityHistory.length > 0 && (
+            <div className="mt-2 pt-2 border-t border-border/60">
+              <div className="text-[10px] font-semibold uppercase text-muted-foreground mb-1.5 flex items-center gap-1">
+                <Sparkles className="h-3 w-3 text-indigo-400" /> Recent Actions
+              </div>
+              <div className="space-y-1 max-h-24 overflow-y-auto pr-1">
+                {activityHistory.slice(0, 4).map((act, aIdx) => (
+                  <div key={aIdx} className="text-[10px] text-muted-foreground truncate" title={act}>
+                    • {act}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Main Chat Window */}

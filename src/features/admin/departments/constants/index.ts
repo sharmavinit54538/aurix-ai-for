@@ -6,8 +6,6 @@ export { OFFICES };
 export const STATUS_OPTIONS = [
   { value: "active", label: "Active", color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" },
   { value: "inactive", label: "Inactive", color: "text-slate-500 bg-slate-500/10 border-slate-500/20" },
-  { value: "hiring", label: "Hiring", color: "text-amber-500 bg-amber-500/10 border-amber-500/20" },
-  { value: "growing", label: "Growing", color: "text-blue-500 bg-blue-500/10 border-blue-500/20" },
 ];
 
 export const HIRING_STATUS_OPTIONS = [

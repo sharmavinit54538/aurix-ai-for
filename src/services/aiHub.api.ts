@@ -699,24 +699,32 @@ export const aiHubApi = {
     try {
       const res = await apiInstance.get("/ai-hub/chat-assistant/conversations", { params });
       const raw = extractData<unknown>(res, []);
-      const items = Array.isArray(raw)
-        ? raw
-        : raw && typeof raw === "object" && "items" in raw && Array.isArray((raw as any).items)
-        ? (raw as any).items
-        : [];
-      return items.map(normalizeChatConversation);
+      let items: unknown[] = [];
+      if (Array.isArray(raw)) {
+        items = raw;
+      } else if (raw && typeof raw === "object" && "items" in raw) {
+        const withItems = raw as { items?: unknown[] };
+        if (Array.isArray(withItems.items)) {
+          items = withItems.items;
+        }
+      }
+      return items.map((item) => normalizeChatConversation(item));
     } catch {
       // Resilient fallback to /ai/chat/history
       try {
         const res = await apiInstance.get("/ai/chat/history");
-        const raw = extractData<{ history?: any[] }>(res, {});
+        const raw = extractData<{ history?: Array<Record<string, unknown>> }>(res, {});
         const list = Array.isArray(raw?.history) ? raw.history : [];
-        return list.map((item: any) => ({
-          id: String(item.conversation_id || item.conversationId || `conv-${Date.now()}`),
+        return list.map((item) => ({
+          id: String(item.conversation_id || item.conversationId || ""),
           title: String(item.title || "Conversation"),
           messages: [],
-          createdAt: item.updated_at ? new Date(item.updated_at).toISOString() : new Date().toISOString(),
-          updatedAt: item.updated_at ? new Date(item.updated_at).toISOString() : new Date().toISOString(),
+          createdAt: item.updated_at
+            ? new Date(String(item.updated_at)).toISOString()
+            : new Date().toISOString(),
+          updatedAt: item.updated_at
+            ? new Date(String(item.updated_at)).toISOString()
+            : new Date().toISOString(),
         }));
       } catch {
         return [];
