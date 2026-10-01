@@ -27,7 +27,7 @@ import {
   EmployeeShiftScheduleData,
   AttendancePunchResult,
 } from "@/services/attendanceApi";
-import { FaceAttendanceDialog } from "../components/FaceAttendanceDialog";
+import { FaceAttendanceDialog, type FaceAttendanceMode } from "../components/FaceAttendanceDialog";
 
 // ── Types ─────────────────────────────────────────────────────
 type AttendanceStatus = "not-checked-in" | "checked-in" | "on-break" | "checked-out";
@@ -323,7 +323,7 @@ function CheckInPage() {
 
   // ── Face Attendance Dialog State ─────────────────────────────
   const [faceModalOpen, setFaceModalOpen] = useState(false);
-  const [faceModalMode, setFaceModalMode] = useState<"check-in" | "check-out">("check-in");
+  const [faceModalMode, setFaceModalMode] = useState<FaceAttendanceMode>("check-in");
 
   // ── Face Enrollment & Biometric Registration Modal State ─────
   const [isFaceEnrolled, setIsFaceEnrolled] = useState<boolean | null>(null);
@@ -586,11 +586,17 @@ function CheckInPage() {
   // ── Successful Face Punch Callback ───────────────────────────
   const handleFaceSuccess = useCallback(
     async (result: AttendancePunchResult) => {
-      const msg =
-        result.message ||
-        (faceModalMode === "check-in"
-          ? "Attendance verified & check-in marked successfully!"
-          : "Attendance verified & check-out marked successfully!");
+      let defaultMsg = "Attendance verified successfully!";
+      if (faceModalMode === "check-in") {
+        defaultMsg = "Attendance verified & check-in marked successfully!";
+      } else if (faceModalMode === "check-out") {
+        defaultMsg = "Attendance verified & check-out marked successfully!";
+      } else if (faceModalMode === "break-in") {
+        defaultMsg = "Break started. Face verified.";
+      } else if (faceModalMode === "break-out") {
+        defaultMsg = "Break ended. Welcome back!";
+      }
+      const msg = result.message || defaultMsg;
       showToast(msg, "success");
       sonnerToast.success(msg);
       await loadAttendanceState();
@@ -598,40 +604,51 @@ function CheckInPage() {
     [faceModalMode, loadAttendanceState]
   );
 
-  // ── Break In & Out Controls ──────────────────────────────────
-  async function handleBreakIn() {
-    setLoading("breakin");
-    try {
-      const res = await attendanceApi.startBreak({
-        reason: "Rest Break",
-        notes: noteEmp || undefined,
-      });
-      showToast(res.message || "Break started.", "info");
-      sonnerToast.info(res.message || "Break started.");
-      await loadAttendanceState();
-    } catch (err: any) {
-      const msg = err?.message || "Failed to start break.";
-      showToast(msg, "error");
-      sonnerToast.error(msg);
-    } finally {
-      setLoading(null);
+  // ── Break In & Out Controls (Face-Verified) ───────────────────
+  function handleBreakIn() {
+    if (status !== "checked-in") {
+      const msg =
+        status === "on-break"
+          ? "You are already on a break."
+          : status === "checked-out"
+          ? "You have already completed attendance for today."
+          : "You must be checked in to start a break.";
+      showToast(msg, "info");
+      sonnerToast.info(msg);
+      return;
     }
+    if (isFaceEnrolled === false) {
+      setShowEnrollModal(true);
+      startModalCamera();
+      showToast("Face registration required before starting break.", "error");
+      sonnerToast.error("Face registration required before starting break.");
+      return;
+    }
+    setFaceModalMode("break-in");
+    setFaceModalOpen(true);
   }
 
-  async function handleBreakOut() {
-    setLoading("breakout");
-    try {
-      const res = await attendanceApi.endBreak();
-      showToast(res.message || "Break ended. Welcome back!", "success");
-      sonnerToast.success(res.message || "Break ended. Welcome back!");
-      await loadAttendanceState();
-    } catch (err: any) {
-      const msg = err?.message || "Failed to end break.";
-      showToast(msg, "error");
-      sonnerToast.error(msg);
-    } finally {
-      setLoading(null);
+  function handleBreakOut() {
+    if (status !== "on-break") {
+      const msg =
+        status === "checked-in"
+          ? "You are not currently on a break."
+          : status === "checked-out"
+          ? "You have already completed attendance for today."
+          : "You must be on a break to end break.";
+      showToast(msg, "info");
+      sonnerToast.info(msg);
+      return;
     }
+    if (isFaceEnrolled === false) {
+      setShowEnrollModal(true);
+      startModalCamera();
+      showToast("Face registration required before ending break.", "error");
+      sonnerToast.error("Face registration required before ending break.");
+      return;
+    }
+    setFaceModalMode("break-out");
+    setFaceModalOpen(true);
   }
 
   // ── Overtime & Late calculation based on real backend data ────
@@ -837,7 +854,7 @@ function CheckInPage() {
                     }
                     icon={LogIn}
                     onClick={handleCheckIn}
-                    disabled={status !== "not-checked-in" || isFaceEnrolled === false || loading !== null}
+                    disabled={status !== "not-checked-in" || isFaceEnrolled === false || loading !== null || faceModalOpen}
                     variant="success"
                     loading={loading === "checkin"}
                   />
@@ -851,7 +868,7 @@ function CheckInPage() {
                   label="Break In"
                   icon={Coffee}
                   onClick={handleBreakIn}
-                  disabled={status !== "checked-in" || loading !== null}
+                  disabled={status !== "checked-in" || loading !== null || faceModalOpen}
                   variant="warning"
                   loading={loading === "breakin"}
                 />
@@ -859,7 +876,7 @@ function CheckInPage() {
                   label="Break Out"
                   icon={Play}
                   onClick={handleBreakOut}
-                  disabled={status !== "on-break" || loading !== null}
+                  disabled={status !== "on-break" || loading !== null || faceModalOpen}
                   variant="primary"
                   loading={loading === "breakout"}
                 />
@@ -873,7 +890,7 @@ function CheckInPage() {
                   }
                   icon={LogOut}
                   onClick={handleCheckOut}
-                  disabled={(status !== "checked-in" && status !== "on-break") || loading !== null}
+                  disabled={(status !== "checked-in" && status !== "on-break") || loading !== null || faceModalOpen}
                   variant="danger"
                   loading={loading === "checkout"}
                 />
@@ -1371,7 +1388,7 @@ function CheckInPage() {
         </div>
       </div>
 
-      {/* ── Automated Face Attendance Verification Dialog (Check-In & Check-Out) ── */}
+      {/* ── Automated Face Attendance Verification Dialog (Check-In, Check-Out, Break-In & Break-Out) ── */}
       <FaceAttendanceDialog
         open={faceModalOpen}
         mode={faceModalMode}

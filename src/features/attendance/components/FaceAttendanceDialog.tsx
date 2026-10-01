@@ -112,9 +112,11 @@ function formatPunchTimestamp(rawTime?: string | null): { time: string; tag: str
 }
 
 
+export type FaceAttendanceMode = "check-in" | "check-out" | "break-in" | "break-out";
+
 export interface FaceAttendanceDialogProps {
   open: boolean;
-  mode: "check-in" | "check-out";
+  mode: FaceAttendanceMode;
   onOpenChange: (open: boolean) => void;
   onSuccess: (result: AttendancePunchResult) => void;
   employeeDetails?: {
@@ -221,7 +223,7 @@ export function FaceAttendanceDialog({
             deviceInfo,
             notes: notesRef.current,
           });
-        } else {
+        } else if (modeRef.current === "check-out") {
           result = await attendanceApi.checkOut({
             image_base64: base64Image,
             latitude: currentCoords?.lat,
@@ -229,6 +231,23 @@ export function FaceAttendanceDialog({
             accuracy: currentCoords?.accuracy,
             deviceInfo,
             notes: notesRef.current,
+          });
+        } else if (modeRef.current === "break-in") {
+          result = await attendanceApi.startBreak({
+            image_base64: base64Image,
+            latitude: currentCoords?.lat,
+            longitude: currentCoords?.lng,
+            accuracy: currentCoords?.accuracy,
+            deviceInfo,
+            notes: notesRef.current,
+          });
+        } else {
+          result = await attendanceApi.endBreak({
+            image_base64: base64Image,
+            latitude: currentCoords?.lat,
+            longitude: currentCoords?.lng,
+            accuracy: currentCoords?.accuracy,
+            deviceInfo,
           });
         }
 
@@ -384,7 +403,13 @@ export function FaceAttendanceDialog({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-primary font-semibold text-xs tracking-wider uppercase">
               <ScanFace className="h-4 w-4" />
-              {mode === "check-in" ? "Biometric Check-In" : "Biometric Check-Out"}
+              {mode === "check-in"
+                ? "Biometric Check-In"
+                : mode === "check-out"
+                ? "Biometric Check-Out"
+                : mode === "break-in"
+                ? "Biometric Break In"
+                : "Biometric Break Out"}
             </div>
             <span
               className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${
@@ -416,15 +441,29 @@ export function FaceAttendanceDialog({
             </span>
           </div>
           <DialogTitle className="font-display text-lg font-bold">
-            {mode === "check-in" ? "Face Attendance Check-In" : "Face Attendance Check-Out"}
+            {mode === "check-in"
+              ? "Face Attendance Check-In"
+              : mode === "check-out"
+              ? "Face Attendance Check-Out"
+              : mode === "break-in"
+              ? "Verify Face to Start Break"
+              : "Verify Face to End Break"}
           </DialogTitle>
           <DialogDescription className="text-xs text-muted-foreground">
             {stage === "success"
-              ? "Biometric identity verified and attendance recorded successfully."
+              ? mode === "break-in"
+                ? "Biometric identity verified and break started successfully."
+                : mode === "break-out"
+                ? "Biometric identity verified and break ended successfully."
+                : "Biometric identity verified and attendance recorded successfully."
               : stage === "verifying"
               ? "Verifying facial features against enrolled biometric profile with backend..."
               : stage === "error"
-              ? "Attendance was not marked. Please review the backend error below and retry."
+              ? "Verification was not completed. Please review the backend error below and retry."
+              : mode === "break-in"
+              ? "Look directly into the camera to verify your face and start break."
+              : mode === "break-out"
+              ? "Look directly into the camera to verify your face and end break."
               : "Look directly into the camera. Face will be auto-detected without manual clicks."}
           </DialogDescription>
         </DialogHeader>
@@ -527,7 +566,13 @@ export function FaceAttendanceDialog({
             </div>
 
             <h3 className="font-display text-base font-bold text-foreground tracking-tight">
-              {mode === "check-in" ? "Check-In Verified & Recorded!" : "Check-Out Verified & Recorded!"}
+              {mode === "check-in"
+                ? "Check-In Verified & Recorded!"
+                : mode === "check-out"
+                ? "Check-Out Verified & Recorded!"
+                : mode === "break-in"
+                ? "Break Started & Verified!"
+                : "Break Ended & Verified!"}
             </h3>
             <p className="text-[11px] text-muted-foreground mt-0.5">
               Biometric identity verified with high confidence
@@ -585,7 +630,14 @@ export function FaceAttendanceDialog({
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  {punchResult?.status || (mode === "check-in" ? "Present" : "Checked Out")}
+                  {punchResult?.status ||
+                    (mode === "check-in"
+                      ? "Present"
+                      : mode === "check-out"
+                      ? "Checked Out"
+                      : mode === "break-in"
+                      ? "On Break"
+                      : "Checked In")}
                 </span>
               </div>
 

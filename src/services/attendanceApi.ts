@@ -78,8 +78,15 @@ export interface CheckOutPayload {
 }
 
 export interface BreakPayload {
-  reason?: string;
+  image_base64?: string;
+  file?: Blob | File;
+  latitude?: number | null;
+  longitude?: number | null;
+  accuracy?: number | null;
+  deviceInfo?: string;
   notes?: string;
+  reason?: string;
+  ipAddress?: string;
 }
 
 export interface AttendancePunchResult {
@@ -443,6 +450,18 @@ export function extractFaceApiError(err: any): string {
   }
   if (code === "OUTSIDE_GEOFENCE" || rawMsg.toLowerCase().includes("geofence") || rawMsg.toLowerCase().includes("outside")) {
     return "Outside office radius. Attendance verification must be completed inside the authorized office location.";
+  }
+  if (code === "NO_ACTIVE_CHECKIN" || rawMsg.toLowerCase().includes("no active checkin") || rawMsg.toLowerCase().includes("not checked in")) {
+    return "No active check-in found. You must check in before starting a break.";
+  }
+  if (code === "ALREADY_CHECKED_OUT" || rawMsg.toLowerCase().includes("already checked out")) {
+    return "You have already checked out for today.";
+  }
+  if (code === "BREAK_ACTIVE" || rawMsg.toLowerCase().includes("break active") || rawMsg.toLowerCase().includes("already on break")) {
+    return "A break is already in progress. Please end your current break first.";
+  }
+  if (code === "NO_ACTIVE_BREAK" || rawMsg.toLowerCase().includes("no active break") || rawMsg.toLowerCase().includes("not on break")) {
+    return "No active break found to end.";
   }
 
   // HTTP Status Code mappings
@@ -983,51 +1002,111 @@ export const attendanceApi = {
   },
 
   /**
-   * Start employee break.
+   * Start employee break with live face verification.
    * Calls POST /api/v1/attendance/break/start.
    */
   startBreak: async (payload?: BreakPayload): Promise<AttendancePunchResult> => {
+    if (!payload?.image_base64 && !payload?.file) {
+      throw new Error("A face photo is required for break verification. Please look directly into the camera.");
+    }
+
     try {
-      const res: any = await api.post("attendance/break/start", payload || {});
+      const body: Record<string, any> = {
+        image_base64: payload.image_base64,
+        device_info: payload.deviceInfo || (typeof navigator !== "undefined" ? navigator.userAgent : "Web"),
+      };
+      if (payload.latitude != null || payload.longitude != null) {
+        body.location = {
+          latitude: payload.latitude,
+          longitude: payload.longitude,
+          accuracy: payload.accuracy,
+        };
+        body.latitude = payload.latitude;
+        body.longitude = payload.longitude;
+        body.accuracy = payload.accuracy;
+      }
+      const noteContent = payload.notes || payload.reason;
+      if (noteContent) {
+        body.notes = noteContent;
+      }
+      if (payload.ipAddress) {
+        body.ip_address = payload.ipAddress;
+      }
+
+      const res: any = await api.post("attendance/break/start", body);
       const data = extractObjectPayload<any>(res);
       return {
-        id: data.id || data.break_id || "",
+        id: data.id || data.break_id || data.attendance_id || "",
         time: data.time || data.break_start || new Date().toISOString(),
-        status: "on-break",
+        status: data.status || "on-break",
         success: true,
         message: res.message || data.message || "Break started successfully",
+        employeeId: data.employee_id || data.employeeId,
+        employeeName: data.employee_name || data.employeeName,
+        isInsideGeofence: data.is_inside_geofence ?? data.isInsideGeofence,
       };
     } catch (err: any) {
+      const errorCode = extractErrorCode(err);
       const errorMsg = extractFaceApiError(err);
+      const httpStatus = err?.response?.status || err?.status;
+
       const enrichedError: any = new Error(errorMsg);
-      enrichedError.status = err?.response?.status || err?.status;
-      enrichedError.errorCode = extractErrorCode(err);
+      enrichedError.status = httpStatus;
+      enrichedError.errorCode = errorCode;
       enrichedError.response = err?.response;
       throw enrichedError;
     }
   },
 
   /**
-   * End employee break.
+   * End employee break with live face verification.
    * Calls POST /api/v1/attendance/break/end.
    */
-  endBreak: async (): Promise<AttendancePunchResult> => {
+  endBreak: async (payload?: BreakPayload): Promise<AttendancePunchResult> => {
+    if (!payload?.image_base64 && !payload?.file) {
+      throw new Error("A face photo is required for break verification. Please look directly into the camera.");
+    }
+
     try {
-      const res: any = await api.post("attendance/break/end", {});
+      const body: Record<string, any> = {
+        image_base64: payload.image_base64,
+        device_info: payload.deviceInfo || (typeof navigator !== "undefined" ? navigator.userAgent : "Web"),
+      };
+      if (payload.latitude != null || payload.longitude != null) {
+        body.location = {
+          latitude: payload.latitude,
+          longitude: payload.longitude,
+          accuracy: payload.accuracy,
+        };
+        body.latitude = payload.latitude;
+        body.longitude = payload.longitude;
+        body.accuracy = payload.accuracy;
+      }
+      if (payload.ipAddress) {
+        body.ip_address = payload.ipAddress;
+      }
+
+      const res: any = await api.post("attendance/break/end", body);
       const data = extractObjectPayload<any>(res);
       return {
-        id: data.id || data.break_id || "",
+        id: data.id || data.break_id || data.attendance_id || "",
         time: data.time || data.break_end || new Date().toISOString(),
-        status: "checked-in",
+        status: data.status || "checked-in",
         workingHours: data.working_hours ?? data.workingHours ?? null,
         success: true,
         message: res.message || data.message || "Break ended successfully",
+        employeeId: data.employee_id || data.employeeId,
+        employeeName: data.employee_name || data.employeeName,
+        isInsideGeofence: data.is_inside_geofence ?? data.isInsideGeofence,
       };
     } catch (err: any) {
+      const errorCode = extractErrorCode(err);
       const errorMsg = extractFaceApiError(err);
+      const httpStatus = err?.response?.status || err?.status;
+
       const enrichedError: any = new Error(errorMsg);
-      enrichedError.status = err?.response?.status || err?.status;
-      enrichedError.errorCode = extractErrorCode(err);
+      enrichedError.status = httpStatus;
+      enrichedError.errorCode = errorCode;
       enrichedError.response = err?.response;
       throw enrichedError;
     }
