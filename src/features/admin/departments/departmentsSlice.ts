@@ -81,6 +81,18 @@ const departmentsSlice = createSlice({
         state.loading = false;
         state.error = action.payload ?? "Failed to load departments";
       })
+      .addCase(fetchDepartmentsSummary.pending, (state) => {
+        state.summaryLoading = true;
+        state.summaryError = null;
+      })
+      .addCase(fetchDepartmentsSummary.fulfilled, (state, action) => {
+        state.summaryLoading = false;
+        state.summary = action.payload;
+      })
+      .addCase(fetchDepartmentsSummary.rejected, (state, action) => {
+        state.summaryLoading = false;
+        state.summaryError = action.payload ?? "Failed to load departments summary";
+      })
       .addCase(fetchDepartmentById.pending, (state) => {
         state.selectedDepartmentLoading = true;
         state.selectedDepartmentError = null;

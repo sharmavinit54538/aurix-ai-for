@@ -199,7 +199,9 @@ export function DepartmentsTable({
                       <Users className="h-3.5 w-3.5 text-muted-foreground/50" />
                       <span>
                         {d.currentEmployeeCount} /{" "}
-                        <span className="text-[10px] text-muted-foreground">{d.employeeCapacity} Cap</span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {d.employeeCapacity != null ? `${d.employeeCapacity} Cap` : "—"}
+                        </span>
                       </span>
                     </div>
                   </TableCell>

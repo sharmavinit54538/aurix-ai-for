@@ -1,25 +1,53 @@
 import React from "react";
 import { Building, Activity, Users, UserCheck, ShieldCheck, Landmark } from "lucide-react";
-import type { Department } from "../types";
+import type { Department, DepartmentsSummary } from "../types";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface DepartmentStatsCardsProps {
   departments: Department[];
+  summary?: DepartmentsSummary | null;
+  loading?: boolean;
 }
 
-export function DepartmentStatsCards({ departments }: DepartmentStatsCardsProps) {
-  const totalDepartments = departments.length;
-  const activeDepartments = departments.filter((d) => d.status === "active").length;
-  const inactiveDepartments = totalDepartments - activeDepartments;
-  const totalEmployees = departments.reduce((acc, d) => acc + (Number(d.currentEmployeeCount) || 0), 0);
-  const assignedManagers = new Set(
-    departments
-      .map((d) => d.departmentHeadId || d.departmentHeadName)
-      .filter((value): value is string => Boolean(value) && value !== "Unassigned" && value !== "None"),
-  ).size;
-  const avgTeamSize = totalDepartments > 0 ? Math.round(totalEmployees / totalDepartments) : 0;
-  const openPositions = departments.reduce((acc, d) => acc + (d.openPositions || 0), 0);
-  const hiringDepartments = departments.filter((d) => (d.openPositions || 0) > 0).length;
+export function DepartmentStatsCards({ departments, summary, loading }: DepartmentStatsCardsProps) {
+  if (loading) {
+    return (
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6" data-testid="department-stats-skeleton">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Card
+            key={i}
+            className="relative overflow-hidden rounded-2xl border border-border/80 bg-card/40 shadow-sm min-h-[120px]"
+          >
+            <CardContent className="p-4 flex flex-col justify-between h-full min-h-[120px]">
+              <div className="flex items-center justify-between">
+                <div className="h-3 w-20 rounded bg-muted/60 animate-pulse" />
+                <div className="h-8 w-8 rounded-xl bg-muted/50 animate-pulse" />
+              </div>
+              <div className="mt-2 space-y-1.5">
+                <div className="h-7 w-12 rounded bg-muted/70 animate-pulse" />
+                <div className="h-2.5 w-24 rounded bg-muted/40 animate-pulse" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  const totalDepartments = summary?.totalDepartments ?? departments.length;
+  const activeDepartments = summary?.activeDepartments ?? departments.filter((d) => d.status === "active").length;
+  const inactiveDepartments = summary?.inactiveDepartments ?? (totalDepartments - activeDepartments);
+  const totalEmployees = summary?.totalEmployees ?? departments.reduce((acc, d) => acc + (Number(d.currentEmployeeCount) || 0), 0);
+  const assignedManagers =
+    summary?.totalManagers ??
+    new Set(
+      departments
+        .map((d) => d.departmentHeadId || d.departmentHeadName)
+        .filter((value): value is string => Boolean(value) && value !== "Unassigned" && value !== "None"),
+    ).size;
+  const avgTeamSize = summary?.avgTeamSize ?? (totalDepartments > 0 ? Math.round(totalEmployees / totalDepartments) : 0);
+  const openPositions = summary?.openPositions ?? departments.reduce((acc, d) => acc + (d.openPositions || 0), 0);
+  const hiringDepartments = summary?.hiringDepartments ?? departments.filter((d) => (d.openPositions || 0) > 0).length;
 
   const stats = [
     {

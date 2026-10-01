@@ -169,7 +169,7 @@ export function ImportDialog({
         if (draft.budget !== undefined && draft.budget < 0) {
           rowErrors.push("Budget must be positive");
         }
-        if (draft.employeeCapacity !== undefined && draft.employeeCapacity < 0) {
+        if (draft.employeeCapacity !== undefined && draft.employeeCapacity !== null && draft.employeeCapacity < 0) {
           rowErrors.push("Capacity cannot be negative");
         }
 
@@ -241,10 +241,10 @@ export function ImportDialog({
         budget: d.budget || 0,
         cost_center: d.costCenter || `CC-IMP-${idx + 1}`,
         costCenter: d.costCenter || `CC-IMP-${idx + 1}`,
-        employeeCapacity: d.employeeCapacity || 30,
+        employeeCapacity: d.employeeCapacity ? Number(d.employeeCapacity) : null,
         currentEmployeeCount: 0,
         extensionNumber: d.extensionNumber || "",
-        status: (d.status as any) || "active",
+        status: d.status === "inactive" ? "inactive" : "active",
         themeColor: "#64748b",
         iconName: "Building2",
         parentId: null,
@@ -252,8 +252,8 @@ export function ImportDialog({
         createdDate: new Date().toISOString().split("T")[0],
         employeeIds: [],
         openPositions: 0,
-        performanceScore: 0,
-        attendanceScore: 0,
+        performanceScore: null,
+        attendanceScore: null,
         hiringStatus: "closed",
         recentActivity: [],
         documents: [],

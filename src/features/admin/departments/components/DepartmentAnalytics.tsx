@@ -43,26 +43,47 @@ export function DepartmentAnalytics({ departments }: DepartmentAnalyticsProps) {
   const hiringData = departments.map((d) => ({
     name: d.department_code,
     current: d.currentEmployeeCount,
-    capacity: d.employeeCapacity,
+    capacity: d.employeeCapacity ?? null,
     positions: d.openPositions,
   }));
 
-  // 4. Data mapping for Efficiency Indicators (Line Chart)
-  const metricsData = departments.map((d) => ({
-    name: d.department_code,
-    performance: d.performanceScore,
-    attendance: d.attendanceScore,
-  }));
+  // 4. Data mapping for Efficiency Indicators (Line Chart) - exclude missing values
+  const metricsData = departments
+    .filter((d) => d.performanceScore != null || d.attendanceScore != null)
+    .map((d) => ({
+      name: d.department_code,
+      performance: d.performanceScore,
+      attendance: d.attendanceScore,
+    }));
+
+  interface TooltipPayloadItem {
+    name?: string;
+    value?: number | string | null;
+    color?: string;
+    fill?: string;
+    payload?: { name?: string };
+  }
 
   // Custom tooltips styling
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({
+    active,
+    payload,
+    label,
+  }: {
+    active?: boolean;
+    payload?: TooltipPayloadItem[];
+    label?: string;
+  }) => {
     if (active && payload && payload.length) {
       return (
         <div className="rounded-xl border border-border bg-card/90 p-3 shadow-lg text-xs leading-none backdrop-blur-md">
-          <p className="font-bold mb-2 text-foreground">{label || payload[0].payload.name}</p>
-          {payload.map((p: any, idx: number) => (
+          <p className="font-bold mb-2 text-foreground">{label || payload[0]?.payload?.name}</p>
+          {payload.map((p, idx) => (
             <p key={idx} className="mt-1" style={{ color: p.color || p.fill }}>
-              {p.name}: <span className="font-semibold text-foreground">{p.value.toLocaleString()}</span>
+              {p.name}:{" "}
+              <span className="font-semibold text-foreground">
+                {p.value != null ? p.value.toLocaleString() : "—"}
+              </span>
             </p>
           ))}
         </div>
@@ -182,31 +203,37 @@ export function DepartmentAnalytics({ departments }: DepartmentAnalyticsProps) {
         </CardHeader>
         <CardContent className="h-[280px]">
           {mounted ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={metricsData} margin={{ top: 10, right: 15, left: -15, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" vertical={false} />
-                <XAxis dataKey="name" stroke="#888888" fontSize={10} tickLine={false} axisLine={false} />
-                <YAxis stroke="#888888" fontSize={10} tickLine={false} axisLine={false} domain={[50, 100]} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend wrapperStyle={{ fontSize: "10px" }} />
-                <Line
-                  type="monotone"
-                  dataKey="performance"
-                  stroke="#ec4899"
-                  strokeWidth={2.5}
-                  activeDot={{ r: 6 }}
-                  name="Performance Score (%)"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="attendance"
-                  stroke="#10b981"
-                  strokeWidth={2.5}
-                  activeDot={{ r: 6 }}
-                  name="Attendance Score (%)"
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            metricsData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={metricsData} margin={{ top: 10, right: 15, left: -15, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" vertical={false} />
+                  <XAxis dataKey="name" stroke="#888888" fontSize={10} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#888888" fontSize={10} tickLine={false} axisLine={false} domain={[50, 100]} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend wrapperStyle={{ fontSize: "10px" }} />
+                  <Line
+                    type="monotone"
+                    dataKey="performance"
+                    stroke="#ec4899"
+                    strokeWidth={2.5}
+                    activeDot={{ r: 6 }}
+                    name="Performance Score (%)"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="attendance"
+                    stroke="#10b981"
+                    strokeWidth={2.5}
+                    activeDot={{ r: 6 }}
+                    name="Attendance Score (%)"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground italic">
+                No performance or attendance score data available
+              </div>
+            )
           ) : (
             <div className="h-full w-full bg-muted/10 rounded-2xl animate-pulse" />
           )}

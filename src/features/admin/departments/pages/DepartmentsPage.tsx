@@ -1,4 +1,4 @@
-import { Plus, Upload, Building, BarChart, Network, Link, ChevronLeft } from "lucide-react";
+import { Plus, Upload, Building, BarChart, Network } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DepartmentFormDialog } from "../components/DepartmentFormDialog";
@@ -7,18 +7,14 @@ import { DepartmentHierarchy } from "../components/DepartmentHierarchy";
 import { DepartmentAnalytics } from "../components/DepartmentAnalytics";
 import { ImportDialog } from "../components/ImportDialog";
 import { DepartmentsDirectoryTab } from "../components/DepartmentsDirectoryTab";
-// import { DepartmentsBulkDialogs } from "../components/DepartmentsBulkDialogs";
 import { DepartmentsDeleteDialogs } from "../components/DepartmentsDeleteDialogs";
 import { useDepartmentsPage } from "../hooks/useDepartmentsPage";
-import { Link as TanstackLink } from "@tanstack/react-router";
-
 
 export function DepartmentsPage() {
   const page = useDepartmentsPage();
 
   return (
     <div className="space-y-6">
-
       <div className="flex justify-end items-center gap-2">
         <Button
           onClick={() => page.setImportOpen(true)}
@@ -57,8 +53,11 @@ export function DepartmentsPage() {
 
         <TabsContent value="directory" className="space-y-6 mt-0">
           <DepartmentsDirectoryTab
-            allDeptsForStats={page.allDeptsForStats}
             loading={page.loading}
+            error={page.error}
+            summary={page.summary}
+            summaryLoading={page.summaryLoading}
+            onRetry={page.reloadDepartments}
             departments={page.departments}
             processedDepartments={page.processedDepartments}
             paginatedDepartments={page.paginatedDepartments}
@@ -126,24 +125,6 @@ export function DepartmentsPage() {
         existingDepartments={page.existingDepartments}
         onImport={page.handleImportDepartments}
       />
-
-      {/* Bulk dialogs disabled */}
-      {/* <DepartmentsBulkDialogs
-        bulkAssignManagerOpen={page.bulkAssignManagerOpen}
-        onBulkAssignManagerOpenChange={page.setBulkAssignManagerOpen}
-        bulkManagerId={page.bulkManagerId}
-        onBulkManagerIdChange={page.setBulkManagerId}
-        managers={page.managers}
-        selectedCount={page.selectedIds.length}
-        onConfirmBulkAssignManager={page.handleConfirmBulkAssignManager}
-        bulkTransferOpen={page.bulkTransferOpen}
-        onBulkTransferOpenChange={page.setBulkTransferOpen}
-        bulkTransferTargetDeptId={page.bulkTransferTargetDeptId}
-        onBulkTransferTargetDeptIdChange={page.setBulkTransferTargetDeptId}
-        departments={page.departments}
-        selectedIds={page.selectedIds}
-        onConfirmBulkTransfer={page.handleConfirmBulkTransfer}
-      /> */}
 
       <DepartmentsDeleteDialogs
         deleteAlertOpen={page.deleteAlertOpen}

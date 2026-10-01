@@ -22,31 +22,30 @@ import {
   Search,
   Filter,
   Download,
-  // Trash2,
-  // CheckCircle,
-  // XCircle,
   FileSpreadsheet,
   FileText,
-  // UserCheck,
-  // ArrowRightLeft,
   Building,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { DepartmentStatsCards } from "./DepartmentStatsCards";
 import { DepartmentsTable } from "./DepartmentsTable";
-import type { Department, DepartmentFilters, SortDir, SortField } from "../types";
+import type { Department, DepartmentFilters, DepartmentsSummary, SortDir, SortField } from "../types";
 import { OFFICES, STATUS_OPTIONS, EMPLOYEE_COUNT_RANGES } from "../constants";
 import type { useManagersList } from "../../managers/hooks/useManagersList";
 
 interface DepartmentsDirectoryTabProps {
-  allDeptsForStats: Department[];
   loading: boolean;
+  error?: string | null;
+  summary?: DepartmentsSummary | null;
+  summaryLoading?: boolean;
+  onRetry?: () => void;
   departments: Department[];
   processedDepartments: Department[];
   paginatedDepartments: Department[];
   searchQuery: string;
   filters: DepartmentFilters;
   showAdvancedFilters: boolean;
-  // selectedIds: string[];
   sortField: SortField;
   sortDir: SortDir;
   currentPage: number;
@@ -57,15 +56,9 @@ interface DepartmentsDirectoryTabProps {
   onToggleAdvancedFilters: () => void;
   onClearFilters: () => void;
   onFiltersChange: (filters: DepartmentFilters) => void;
-  // onBulkStatusChange: (status: Department["status"]) => void;
-  // onBulkAssignManagerClick: () => void;
-  // onBulkTransferClick: () => void;
-  // onBulkDeleteClick: () => void;
   onExportCSV: () => void;
   onExportExcel: () => void;
   onExportPDF: () => void;
-  // onSelectAll: (checked: boolean) => void;
-  // onSelectRow: (id: string, checked: boolean) => void;
   onView: (dept: Department) => void;
   onEdit: (dept: Department) => void;
   onDelete: (dept: Department) => void;
@@ -76,15 +69,17 @@ interface DepartmentsDirectoryTabProps {
 }
 
 export function DepartmentsDirectoryTab({
-  allDeptsForStats,
   loading,
+  error,
+  summary,
+  summaryLoading,
+  onRetry,
   departments,
   processedDepartments,
   paginatedDepartments,
   searchQuery,
   filters,
   showAdvancedFilters,
-  // selectedIds,
   sortField,
   sortDir,
   currentPage,
@@ -95,15 +90,9 @@ export function DepartmentsDirectoryTab({
   onToggleAdvancedFilters,
   onClearFilters,
   onFiltersChange,
-  // onBulkStatusChange,
-  // onBulkAssignManagerClick,
-  // onBulkTransferClick,
-  // onBulkDeleteClick,
   onExportCSV,
   onExportExcel,
   onExportPDF,
-  // onSelectAll,
-  // onSelectRow,
   onView,
   onEdit,
   onDelete,
@@ -116,7 +105,11 @@ export function DepartmentsDirectoryTab({
 
   return (
     <div className="space-y-6">
-      <DepartmentStatsCards departments={allDeptsForStats} />
+      <DepartmentStatsCards
+        departments={departments}
+        summary={summary}
+        loading={loading || summaryLoading}
+      />
 
       <div className="rounded-2xl border border-border/60 bg-card/40 p-5 shadow-sm backdrop-blur-xl space-y-4">
         <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3">
@@ -282,7 +275,7 @@ export function DepartmentsDirectoryTab({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Locations</SelectItem>
-                  {Array.from(new Set([...OFFICES, ...allDeptsForStats.map(d => d.office), ...departments.map(d => d.office)].filter(Boolean))).sort().map((off) => (
+                  {Array.from(new Set([...OFFICES, ...departments.map((d) => d.office)].filter(Boolean))).sort().map((off) => (
                     <SelectItem key={off} value={off}>
                       {off}
                     </SelectItem>
@@ -342,7 +335,24 @@ export function DepartmentsDirectoryTab({
           </div>
         ) : null}
 
-        {loading ? (
+        {error ? (
+          <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-12 text-center flex flex-col items-center justify-center min-h-[300px]">
+            <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-destructive/10 text-destructive shadow-sm">
+              <AlertCircle className="h-6 w-6" />
+            </div>
+            <h4 className="font-semibold text-lg text-foreground">Failed to Load Departments</h4>
+            <p className="mt-1 text-sm text-muted-foreground max-w-sm">{error}</p>
+            {onRetry && (
+              <Button
+                onClick={onRetry}
+                className="mt-5 rounded-xl bg-brand text-brand-foreground shadow-glow hover:bg-brand/90 font-semibold text-xs h-9 px-4 cursor-pointer gap-1.5"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                Retry
+              </Button>
+            )}
+          </div>
+        ) : loading ? (
           <div className="space-y-4 py-6 text-left">
             <div className="h-6 w-full rounded bg-muted/65 animate-pulse" />
             {Array.from({ length: 5 }).map((_, i) => (
@@ -359,7 +369,9 @@ export function DepartmentsDirectoryTab({
             <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-muted/60 text-muted-foreground shadow-sm">
               <Building className="h-6 w-6" />
             </div>
-            <h4 className="font-semibold text-lg text-foreground">No Departments Found</h4>
+            <h4 className="font-semibold text-lg text-foreground">
+              {departments.length === 0 ? "No Departments Yet" : "No Departments Found"}
+            </h4>
             <p className="mt-1 text-sm text-muted-foreground max-w-sm">
               {departments.length === 0
                 ? "Create your first department division to organize your corporate directory hierarchy."

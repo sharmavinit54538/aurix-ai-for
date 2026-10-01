@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { apiInstance } from "@/api";
 import { useAppDispatch } from "@/redux/hooks";
-import { useAurix } from "@/lib/aurix-store";
 import { useManagersList } from "../../managers/hooks/useManagersList";
 import { useManagers } from "../../managers/hooks/useManagers";
 import { useDepartments } from "./useDepartments";
@@ -11,10 +9,8 @@ import {
   updateDepartment as updateDepartmentThunk,
   deleteDepartment as deleteDepartmentThunk,
   fetchDepartmentById,
-  // bulkDeleteDepartments,
   importDepartments as importDepartmentsThunk,
   promoteDepartmentEmployee,
-  mapBackendToFrontend,
 } from "../departmentsThunk";
 import type { Department, DepartmentFilters, SortDir, SortField } from "../types";
 import { DEFAULT_FILTERS } from "../constants";
@@ -25,24 +21,20 @@ import {
   getDepartmentsExportData,
 } from "../utils/departmentExport";
 
-function countDepartmentEmployees(
-  dept: Department,
-  employees: ReturnType<typeof useAurix>["employees"],
-) {
-  return employees.filter(
-    (e) =>
-      (e.department && e.department.toLowerCase() === dept.name.toLowerCase()) ||
-      dept.employeeIds.includes(e.id),
-  ).length;
+function countDepartmentEmployees(dept: Department): number {
+  return Number(dept.currentEmployeeCount) || (dept.employeeIds ? dept.employeeIds.length : 0);
 }
 
 export function useDepartmentsPage() {
   const dispatch = useAppDispatch();
-  const ws = useAurix();
   const {
     departments,
     loading,
+    error,
+    summary,
+    summaryLoading,
     fetchDepartments,
+    fetchDepartmentsSummary,
     fetchDepartmentById: fetchDepartmentByIdAction,
     clearSelectedDepartment,
     setSelectedDepartment,
@@ -51,12 +43,8 @@ export function useDepartmentsPage() {
     createDepartment,
     updateDepartment,
     deleteDepartment,
-    // bulkDelete,
-    // bulkSetStatus,
-    // bulkAssignManager,
     addEmployeeToDept,
     removeEmployeeFromDept,
-    transferEmployees,
   } = useDepartments();
 
   const managers = useManagersList();
@@ -70,7 +58,6 @@ export function useDepartmentsPage() {
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
-  // const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const [formOpen, setFormOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -79,26 +66,19 @@ export function useDepartmentsPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Bulk action state disabled
-  // const [bulkAssignManagerOpen, setBulkAssignManagerOpen] = useState(false);
-  // const [bulkManagerId, setBulkManagerId] = useState("");
-  // const [bulkTransferOpen, setBulkTransferOpen] = useState(false);
-  // const [bulkTransferTargetDeptId, setBulkTransferTargetDeptId] = useState("");
-
   const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
   const [deptToDelete, setDeptToDelete] = useState<Department | null>(null);
   const [cannotDeleteAlertOpen, setCannotDeleteAlertOpen] = useState(false);
-  // const [bulkDeleteAlertOpen, setBulkDeleteAlertOpen] = useState(false);
-  // const [cannotBulkDeleteAlertOpen, setCannotBulkDeleteAlertOpen] = useState(false);
 
-  const [allDeptsForStats, setAllDeptsForStats] = useState<Department[]>([]);
+  // TODO: Bulk department actions (assign manager, status, delete, transfer) can be enabled once backend bulk endpoints are active.
 
   const reloadDepartments = useCallback(() => {
     fetchDepartments({
       page: 1,
       limit: 500,
     });
-  }, [fetchDepartments]);
+    fetchDepartmentsSummary();
+  }, [fetchDepartments, fetchDepartmentsSummary]);
 
   const initialLoaded = useRef(false);
   useEffect(() => {
@@ -110,7 +90,7 @@ export function useDepartmentsPage() {
   }, [fetchManagersList, reloadDepartments]);
 
   const processedDepartments = useMemo(() => {
-    let list = departments && departments.length > 0 ? departments : allDeptsForStats;
+    let list = departments;
 
     // Search query filter
     if (searchQuery && searchQuery.trim()) {
@@ -189,13 +169,13 @@ export function useDepartmentsPage() {
     }
 
     return applySorting(list, sortField, sortDir);
-  }, [departments, allDeptsForStats, searchQuery, filters, sortField, sortDir]);
+  }, [departments, searchQuery, filters, sortField, sortDir]);
 
   const start = (currentPage - 1) * perPage;
   const paginatedDepartments = processedDepartments.slice(start, start + perPage);
 
   const totalPages = Math.max(1, Math.ceil(processedDepartments.length / perPage) || 1);
-  const existingDepartments = allDeptsForStats.length > 0 ? allDeptsForStats : departments;
+  const existingDepartments = departments;
 
   function resetToFirstPage() {
     setCurrentPage(1);
@@ -226,15 +206,6 @@ export function useDepartmentsPage() {
     resetToFirstPage();
   }
 
-  // Bulk select disabled
-  // function handleSelectAll(checked: boolean) {
-  //   setSelectedIds(checked ? paginatedDepartments.map((d) => d.id) : []);
-  // }
-  //
-  // function handleSelectRow(id: string, checked: boolean) {
-  //   setSelectedIds((prev) => (checked ? [...prev, id] : prev.filter((x) => x !== id)));
-  // }
-
   function handleAddClick() {
     clearSelectedDepartment();
     setIsEditMode(false);
@@ -261,7 +232,7 @@ export function useDepartmentsPage() {
   }
 
   function handleDeleteClick(d: Department) {
-    const empCount = countDepartmentEmployees(d, ws.employees);
+    const empCount = countDepartmentEmployees(d);
     setDeptToDelete(d);
     if (empCount > 0) {
       setCannotDeleteAlertOpen(true);
@@ -276,7 +247,6 @@ export function useDepartmentsPage() {
     const action = await deleteDepartment(deptToDelete.id);
     if (deleteDepartmentThunk.fulfilled.match(action)) {
       toast.success("Department Deleted Successfully");
-      // setSelectedIds((prev) => prev.filter((id) => id !== deptToDelete.id));
       reloadDepartments();
     } else {
       toast.error(typeof action.payload === "string" ? action.payload : "Failed to delete department");
@@ -314,77 +284,6 @@ export function useDepartmentsPage() {
     }
   }
 
-  // Bulk actions disabled
-  // function handleBulkDeleteClick() {
-  //   const hasEmployees = selectedIds.some((id) => {
-  //     const dept = departments.find((d) => d.id === id);
-  //     return dept ? countDepartmentEmployees(dept, ws.employees) > 0 : false;
-  //   });
-  //
-  //   if (hasEmployees) {
-  //     setCannotBulkDeleteAlertOpen(true);
-  //   } else {
-  //     setBulkDeleteAlertOpen(true);
-  //   }
-  // }
-  //
-  // async function handleConfirmBulkDelete() {
-  //   const action = await bulkDelete(selectedIds);
-  //   if (bulkDeleteDepartments.fulfilled.match(action)) {
-  //     toast.success(`${selectedIds.length} Departments Deleted Successfully`);
-  //     setSelectedIds([]);
-  //     reloadDepartments();
-  //   } else {
-  //     toast.error(typeof action.payload === "string" ? action.payload : "Failed to bulk delete departments");
-  //   }
-  //   setBulkDeleteAlertOpen(false);
-  // }
-  //
-  // function handleBulkStatusChange(status: Department["status"]) {
-  //   bulkSetStatus(selectedIds, status);
-  //   const statusLabels: Record<Department["status"], string> = {
-  //     active: "Activated",
-  //     inactive: "Deactivated",
-  //     hiring: "Hired Status Opened",
-  //     growing: "Growing Status Set",
-  //   };
-  //   toast.success(`${selectedIds.length} Departments ${statusLabels[status]} Successfully`);
-  //   setSelectedIds([]);
-  // }
-  //
-  // function handleBulkAssignManagerClick() {
-  //   setBulkManagerId(managers[0]?.id || "");
-  //   setBulkAssignManagerOpen(true);
-  // }
-  //
-  // function handleConfirmBulkAssignManager() {
-  //   const mgr = managers.find((m) => m.id === bulkManagerId);
-  //   if (!mgr) return;
-  //
-  //   bulkAssignManager(selectedIds, mgr.id, mgr.fullName);
-  //   toast.success(`Assigned ${mgr.fullName} as Head Manager of ${selectedIds.length} departments`);
-  //   setSelectedIds([]);
-  //   setBulkAssignManagerOpen(false);
-  // }
-  //
-  // function handleBulkTransferClick() {
-  //   const validTargets = departments.filter((d) => !selectedIds.includes(d.id));
-  //   setBulkTransferTargetDeptId(validTargets[0]?.id || "");
-  //   setBulkTransferOpen(true);
-  // }
-  //
-  // function handleConfirmBulkTransfer() {
-  //   const targetDept = departments.find((d) => d.id === bulkTransferTargetDeptId);
-  //   if (!targetDept) return;
-  //
-  //   selectedIds.forEach((fromId) => {
-  //     transferEmployees(fromId, targetDept.id);
-  //   });
-  //   toast.success(`Transferred employees from selected divisions into ${targetDept.name}`);
-  //   setSelectedIds([]);
-  //   setBulkTransferOpen(false);
-  // }
-
   function handleClearFilters() {
     setSearchQuery("");
     setFilters({ ...DEFAULT_FILTERS });
@@ -394,7 +293,6 @@ export function useDepartmentsPage() {
 
   function getExportData() {
     return getDepartmentsExportData(processedDepartments);
-    // return getDepartmentsExportData(departments, processedDepartments, selectedIds);
   }
 
   function handleExportCSV() {
@@ -423,12 +321,8 @@ export function useDepartmentsPage() {
     }
   }
 
-  function onTransferEmployee(fromId: string, toId: string, empId: string) {
-    const fromDept = departments.find((d) => d.id === fromId);
-    const toDept = departments.find((d) => d.id === toId);
-    if (fromDept && toDept) {
-      addEmployeeToDept(toId, empId);
-    }
+  function onTransferEmployee(_fromId: string, toId: string, empId: string) {
+    addEmployeeToDept(toId, empId);
   }
 
   return {
@@ -436,6 +330,10 @@ export function useDepartmentsPage() {
     setActiveTab,
     departments,
     loading,
+    error,
+    summary,
+    summaryLoading,
+    reloadDepartments,
     managers,
     searchQuery,
     filters,
@@ -446,7 +344,6 @@ export function useDepartmentsPage() {
     currentPage,
     setCurrentPage,
     perPage,
-    // selectedIds,
     processedDepartments,
     paginatedDepartments,
     totalPages,
@@ -462,45 +359,23 @@ export function useDepartmentsPage() {
     importOpen,
     setImportOpen,
     isSaving,
-    // bulkAssignManagerOpen,
-    // setBulkAssignManagerOpen,
-    // bulkManagerId,
-    // setBulkManagerId,
-    // bulkTransferOpen,
-    // setBulkTransferOpen,
-    // bulkTransferTargetDeptId,
-    // setBulkTransferTargetDeptId,
     deleteAlertOpen,
     setDeleteAlertOpen,
     deptToDelete,
     cannotDeleteAlertOpen,
     setCannotDeleteAlertOpen,
-    // bulkDeleteAlertOpen,
-    // setBulkDeleteAlertOpen,
-    // cannotBulkDeleteAlertOpen,
-    // setCannotBulkDeleteAlertOpen,
-    allDeptsForStats,
     addEmployeeToDept,
     removeEmployeeFromDept,
     handleSearchChange,
     handleFiltersChange,
     handlePerPageChange,
     handleSort,
-    // handleSelectAll,
-    // handleSelectRow,
     handleAddClick,
     handleEditClick,
     handleDeleteClick,
     handleConfirmDelete,
     handleViewClick,
     handleSaveDepartment,
-    // handleBulkDeleteClick,
-    // handleConfirmBulkDelete,
-    // handleBulkStatusChange,
-    // handleBulkAssignManagerClick,
-    // handleConfirmBulkAssignManager,
-    // handleBulkTransferClick,
-    // handleConfirmBulkTransfer,
     handleClearFilters,
     handleExportCSV,
     handleExportExcel,

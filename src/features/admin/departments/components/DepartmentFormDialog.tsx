@@ -131,7 +131,7 @@ export function DepartmentFormDialog({
       setReportingManagerId(department.reportingManagerId || "none");
       setOffice(department.office);
       setBudget(String(department.budget));
-      setEmployeeCapacity(String(department.employeeCapacity));
+      setEmployeeCapacity(department.employeeCapacity != null ? String(department.employeeCapacity) : "");
       setCurrentEmployeeCount(String(department.currentEmployeeCount));
       setExtensionNumber(department.extensionNumber);
       setStatus(department.status);
@@ -145,7 +145,7 @@ export function DepartmentFormDialog({
         setReportingManagerId("none");
         setOffice(OFFICES[0] || "");
         setBudget("");
-        setEmployeeCapacity("30");
+        setEmployeeCapacity("");
         setCurrentEmployeeCount("0");
         setExtensionNumber("");
         setStatus("active");
@@ -184,7 +184,7 @@ export function DepartmentFormDialog({
       reportingManagerName: reportingManagerId === "none" ? "None" : selectedReport?.fullName || "None",
       office,
       budget: budget ? parseFloat(budget) : 0,
-      employeeCapacity: employeeCapacity ? parseInt(employeeCapacity) : 30,
+      employeeCapacity: employeeCapacity.trim() ? parseInt(employeeCapacity) : null,
       currentEmployeeCount: parseInt(currentEmployeeCount) || 0,
       extensionNumber: extensionNumber.trim(),
       status,
@@ -215,7 +215,7 @@ export function DepartmentFormDialog({
       reportingManagerName: reportingManagerId === "none" ? "None" : selectedReport?.fullName || "None",
       office,
       budget: budget ? parseFloat(budget) : 0,
-      employeeCapacity: employeeCapacity ? parseInt(employeeCapacity) : 30,
+      employeeCapacity: employeeCapacity.trim() ? parseInt(employeeCapacity) : null,
       currentEmployeeCount: department?.currentEmployeeCount ?? (parseInt(currentEmployeeCount) || 0),
       extensionNumber: extensionNumber.trim(),
       status,
@@ -226,8 +226,8 @@ export function DepartmentFormDialog({
       createdDate: department?.createdDate || new Date().toISOString().split("T")[0],
       employeeIds: department?.employeeIds || [],
       openPositions: department?.openPositions ?? 0,
-      performanceScore: department?.performanceScore ?? 0,
-      attendanceScore: department?.attendanceScore ?? 0,
+      performanceScore: department?.performanceScore ?? null,
+      attendanceScore: department?.attendanceScore ?? null,
       hiringStatus: department?.hiringStatus ?? "closed",
       recentActivity: department?.recentActivity || [],
       documents: department?.documents || [],

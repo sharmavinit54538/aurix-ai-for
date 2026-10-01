@@ -53,7 +53,7 @@ export function exportDepartmentsPDF(data: Department[]) {
         <td style="padding: 10px; font-size: 11px; font-weight: bold;">${d.name}</td>
         <td style="padding: 10px; font-size: 11px;">${d.departmentHeadName}</td>
         <td style="padding: 10px; font-size: 11px;">${d.office}</td>
-        <td style="padding: 10px; font-size: 11px;">${d.currentEmployeeCount} / ${d.employeeCapacity}</td>
+        <td style="padding: 10px; font-size: 11px;">${d.currentEmployeeCount} / ${d.employeeCapacity != null ? d.employeeCapacity : "—"}</td>
         <td style="padding: 10px; font-size: 11px;">$${d.budget.toLocaleString()}</td>
         <td style="padding: 10px; font-size: 11px;">${d.status.toUpperCase()}</td>
         <td style="padding: 10px; font-size: 11px;">${d.createdDate}</td>

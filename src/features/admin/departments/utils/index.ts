@@ -25,7 +25,7 @@ export function validateDepartmentForm(
     errors.budget = "Budget must be a positive number";
   }
 
-  if (draft.employeeCapacity !== undefined && draft.employeeCapacity < 0) {
+  if (draft.employeeCapacity !== undefined && draft.employeeCapacity !== null && draft.employeeCapacity < 0) {
     errors.employeeCapacity = "Employee capacity cannot be negative";
   }
 

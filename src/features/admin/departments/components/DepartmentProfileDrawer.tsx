@@ -101,15 +101,11 @@ export function DepartmentProfileDrawer({
   const statusColors: Record<Department["status"], string> = {
     active: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
     inactive: "bg-slate-500/10 text-slate-500 border-slate-500/20",
-    hiring: "bg-amber-500/10 text-amber-500 border-amber-500/20",
-    growing: "bg-blue-500/10 text-blue-500 border-blue-500/20",
   };
 
   const statusLabels: Record<Department["status"], string> = {
     active: "Active",
     inactive: "Inactive",
-    hiring: "Hiring",
-    growing: "Growing",
   };
 
   const handleHiringStatusChange = (val: Department["hiringStatus"]) => {
@@ -146,7 +142,7 @@ export function DepartmentProfileDrawer({
   };
 
   const handleAddEmployeeSelect = (empId: string) => {
-    if (department.employeeIds.length >= department.employeeCapacity) {
+    if (department.employeeCapacity != null && department.employeeIds.length >= department.employeeCapacity) {
       toast.warning("Department has reached its maximum employee capacity limit!");
       return;
     }
@@ -247,7 +243,7 @@ export function DepartmentProfileDrawer({
                   <div className="min-w-0">
                     <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Capacity limit</p>
                     <p className="text-xs font-medium truncate text-foreground">
-                      {teamMembers.length} / {department.employeeCapacity} employees
+                      {teamMembers.length} / {department.employeeCapacity != null ? `${department.employeeCapacity} employees` : "—"}
                     </p>
                   </div>
                 </div>
@@ -272,10 +268,14 @@ export function DepartmentProfileDrawer({
                       <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Performance Score</h4>
                     </div>
                     <Badge variant="outline" className="font-bold text-brand bg-brand/5 border-brand/20 text-[10px]">
-                      {department.performanceScore}%
+                      {department.performanceScore != null ? `${department.performanceScore}%` : "—"}
                     </Badge>
                   </div>
-                  <Progress value={department.performanceScore} className="h-1.5" />
+                  {department.performanceScore != null ? (
+                    <Progress value={department.performanceScore} className="h-1.5" />
+                  ) : (
+                    <p className="text-[10px] text-muted-foreground italic">No data</p>
+                  )}
                 </div>
 
                 <div className="rounded-2xl border border-border/60 bg-card p-4">
@@ -285,10 +285,14 @@ export function DepartmentProfileDrawer({
                       <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Attendance (Avg)</h4>
                     </div>
                     <Badge variant="outline" className="font-bold text-emerald-500 bg-emerald-500/5 border-emerald-500/10 text-[10px]">
-                      {department.attendanceScore}%
+                      {department.attendanceScore != null ? `${department.attendanceScore}%` : "—"}
                     </Badge>
                   </div>
-                  <Progress value={department.attendanceScore} className="h-1.5" />
+                  {department.attendanceScore != null ? (
+                    <Progress value={department.attendanceScore} className="h-1.5" />
+                  ) : (
+                    <p className="text-[10px] text-muted-foreground italic">No data</p>
+                  )}
                 </div>
               </div>
 

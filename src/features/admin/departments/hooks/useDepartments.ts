@@ -4,6 +4,7 @@ import { clearSelectedDepartment, setSelectedDepartment } from "../departmentsSl
 import type { Department } from "../types";
 import {
   fetchDepartments,
+  fetchDepartmentsSummary,
   fetchDepartmentById,
   createDepartment,
   updateDepartment,
@@ -16,6 +17,7 @@ import {
   removeEmployeeFromDepartment,
   transferDepartmentEmployees,
   promoteDepartmentEmployee,
+  type FetchDepartmentsParams,
 } from "../departmentsThunk";
 
 export function useDepartments() {
@@ -23,7 +25,12 @@ export function useDepartments() {
   const state = useAppSelector((state) => state.departments);
 
   const fetchDepartmentsAction = useCallback(
-    (params?: any) => dispatch(fetchDepartments(params)),
+    (params?: FetchDepartmentsParams) => dispatch(fetchDepartments(params)),
+    [dispatch],
+  );
+
+  const fetchDepartmentsSummaryAction = useCallback(
+    () => dispatch(fetchDepartmentsSummary()),
     [dispatch],
   );
 
@@ -111,10 +118,14 @@ export function useDepartments() {
     page: state.page || 1,
     limit: state.limit || 20,
     pages: state.pages || 1,
+    summary: state.summary,
+    summaryLoading: state.summaryLoading,
+    summaryError: state.summaryError,
     selectedDepartment: state.selectedDepartment,
     selectedDepartmentLoading: state.selectedDepartmentLoading,
     selectedDepartmentError: state.selectedDepartmentError,
     fetchDepartments: fetchDepartmentsAction,
+    fetchDepartmentsSummary: fetchDepartmentsSummaryAction,
     fetchDepartmentById: fetchDepartmentByIdAction,
     clearSelectedDepartment: clearSelectedDepartmentAction,
     setSelectedDepartment: setSelectedDepartmentAction,
