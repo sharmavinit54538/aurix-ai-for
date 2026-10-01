@@ -194,6 +194,9 @@ function load() {
   if (raw) {
     try {
       const parsed = JSON.parse(raw);
+      // Migrate / ignore persisted documents to keep document data only in memory query cache
+      delete parsed.documents;
+      delete parsed.documentActivities;
       state = {
         ...defaultState,
         ...parsed,
@@ -213,6 +216,8 @@ load();
 function persist() {
   const toSave = { ...state };
   delete toSave.isRestoring;
+  delete toSave.documents;
+  delete toSave.documentActivities;
   safeStorage.setItem(KEY, JSON.stringify(toSave));
 }
 
