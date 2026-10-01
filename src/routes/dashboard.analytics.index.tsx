@@ -3,7 +3,6 @@ import { useMemo } from "react";
 import {
   BarChart3,
   Sparkles,
-  LineChart,
   Brain,
   UserCheck,
   ShieldCheck,
@@ -87,15 +86,7 @@ function AnalyticsHubPage() {
     });
   }, [currentRole]);
 
-  return (
-    <ModuleHubView
-      eyebrow="Intelligence Center"
-      title="Analytics & AI Insights"
-      description="Executive analytics dashboards, custom HR report builders, and predictive AI insights for workforce planning."
-      headerIcon={LineChart}
-      modules={visibleModules}
-    />
-  );
+  return <ModuleHubView modules={visibleModules} />;
 }
 
 export default AnalyticsHubPage;

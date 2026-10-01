@@ -174,3 +174,57 @@ export interface Offer {
   respondedAt?: string;
   approvals: { stage: string; by: string; at: string; status: "pending" | "approved" | "rejected" }[];
 }
+
+export interface ScreeningThresholds {
+  shortlist: number;
+  reject: number;
+}
+
+export type ScreeningDecision = "SHORTLIST" | "REVIEW" | "REJECT";
+export type HumanDecision = "SHORTLIST" | "REJECT" | "KEEP_REVIEW";
+export type ScreeningStatus = "PENDING" | "RUNNING" | "COMPLETED" | "FAILED";
+
+export interface ScreeningResult {
+  id: ID;
+  screeningId?: ID;
+  applicationId: ID;
+  candidateId: ID;
+  candidateName: string;
+  status: ScreeningStatus;
+  decision: ScreeningDecision | null;
+  confidence: number;
+  matchScore: number;
+  strengths: string[];
+  weaknesses: string[];
+  missingSkills: string[];
+  redFlags: string[];
+  greenFlags: string[];
+  hiringRecommendation: string;
+  hrNotes: string;
+  questionsToAsk: string[];
+  modelUsed: string;
+  screenedAt: string | null;
+  humanDecision: HumanDecision | null;
+  humanDecisionBy: string | null;
+  humanDecisionReason: string | null;
+}
+
+export interface ScreeningRun {
+  runId: string;
+  status: string;
+  completed: number;
+  total: number;
+}
+
+export interface ScreeningResultsData {
+  thresholds: ScreeningThresholds;
+  run: ScreeningRun | null;
+  results: ScreeningResult[];
+}
+
+export interface CandidateWithScreening extends Candidate {
+  screening?: ScreeningResult;
+  calculatedScore?: number;
+  decisionCategory?: "shortlisted" | "review" | "rejected" | "unscreened";
+}
+

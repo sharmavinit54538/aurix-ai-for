@@ -1,10 +1,16 @@
 import type {
   Candidate,
   EmploymentType,
+  HumanDecision,
   Interview,
   Job,
   Offer,
   OfferStatus,
+  ScreeningDecision,
+  ScreeningResult,
+  ScreeningResultsData,
+  ScreeningRun,
+  ScreeningStatus,
   Stage,
 } from "../types";
 
@@ -258,3 +264,120 @@ export function parseRecruitmentApiResults(
 
   return { data, anySuccess };
 }
+
+export function mapScreeningResultItemToFrontend(raw: Record<string, unknown>): ScreeningResult {
+  const statusRaw = String(raw.status ?? "PENDING").toUpperCase();
+  const validStatus: ScreeningStatus =
+    statusRaw === "COMPLETED"
+      ? "COMPLETED"
+      : statusRaw === "RUNNING"
+        ? "RUNNING"
+        : statusRaw === "FAILED"
+          ? "FAILED"
+          : "PENDING";
+
+  let decision: ScreeningDecision | null = null;
+  const decRaw = raw.decision ? String(raw.decision).toUpperCase() : null;
+  if (decRaw === "SHORTLIST" || decRaw === "REVIEW" || decRaw === "REJECT") {
+    decision = decRaw;
+  }
+
+  let humanDecision: HumanDecision | null = null;
+  const humanDecRaw =
+    raw.human_decision || raw.humanDecision
+      ? String(raw.human_decision || raw.humanDecision).toUpperCase()
+      : null;
+  if (humanDecRaw === "SHORTLIST" || humanDecRaw === "REJECT" || humanDecRaw === "KEEP_REVIEW") {
+    humanDecision = humanDecRaw;
+  }
+
+  const confidenceRaw = Number(raw.confidence ?? 0);
+  const matchScoreRaw = Number(raw.match_score ?? raw.matchScore ?? 0);
+
+  const id = String(raw.id ?? raw.screening_id ?? raw.screeningId ?? raw.application_id ?? "");
+  const screeningId =
+    raw.screening_id || raw.screeningId || raw.id
+      ? String(raw.screening_id || raw.screeningId || raw.id)
+      : undefined;
+
+  return {
+    id,
+    screeningId,
+    applicationId: String(raw.application_id ?? raw.applicationId ?? ""),
+    candidateId: String(raw.candidate_id ?? raw.candidateId ?? ""),
+    candidateName: String(raw.candidate_name ?? raw.candidateName ?? "Candidate"),
+    status: validStatus,
+    decision,
+    confidence: confidenceRaw,
+    matchScore: matchScoreRaw,
+    strengths: Array.isArray(raw.strengths) ? raw.strengths.map(String) : [],
+    weaknesses: Array.isArray(raw.weaknesses) ? raw.weaknesses.map(String) : [],
+    missingSkills: Array.isArray(raw.missing_skills ?? raw.missingSkills)
+      ? ((raw.missing_skills ?? raw.missingSkills) as unknown[]).map(String)
+      : [],
+    redFlags: Array.isArray(raw.red_flags ?? raw.redFlags)
+      ? ((raw.red_flags ?? raw.redFlags) as unknown[]).map(String)
+      : [],
+    greenFlags: Array.isArray(raw.green_flags ?? raw.greenFlags)
+      ? ((raw.green_flags ?? raw.greenFlags) as unknown[]).map(String)
+      : [],
+    hiringRecommendation: String(raw.hiring_recommendation ?? raw.hiringRecommendation ?? ""),
+    hrNotes: String(raw.hr_notes ?? raw.hrNotes ?? ""),
+    questionsToAsk: Array.isArray(raw.questions_to_ask ?? raw.questionsToAsk)
+      ? ((raw.questions_to_ask ?? raw.questionsToAsk) as unknown[]).map(String)
+      : [],
+    modelUsed: String(raw.model_used ?? raw.modelUsed ?? "AI"),
+    screenedAt:
+      raw.screened_at || raw.screenedAt ? String(raw.screened_at || raw.screenedAt) : null,
+    humanDecision,
+    humanDecisionBy:
+      raw.human_decision_by || raw.humanDecisionBy
+        ? String(raw.human_decision_by || raw.humanDecisionBy)
+        : null,
+    humanDecisionReason:
+      raw.human_decision_reason || raw.humanDecisionReason
+        ? String(raw.human_decision_reason || raw.humanDecisionReason)
+        : null,
+  };
+}
+
+export function mapScreeningResultsToFrontend(raw: unknown): ScreeningResultsData {
+  if (!raw || typeof raw !== "object") {
+    return {
+      thresholds: { shortlist: 85, reject: 60 },
+      run: null,
+      results: [],
+    };
+  }
+
+  const obj = raw as Record<string, unknown>;
+  const data = (obj.data && typeof obj.data === "object" ? obj.data : obj) as Record<
+    string,
+    unknown
+  >;
+
+  const thresholdsRaw = data.thresholds as Record<string, unknown> | undefined;
+  const thresholds = {
+    shortlist: Number(thresholdsRaw?.shortlist ?? 85),
+    reject: Number(thresholdsRaw?.reject ?? 60),
+  };
+
+  let run: ScreeningRun | null = null;
+  const runRaw = data.run as Record<string, unknown> | undefined;
+  if (runRaw && typeof runRaw === "object") {
+    run = {
+      runId: String(runRaw.run_id ?? runRaw.runId ?? ""),
+      status: String(runRaw.status ?? ""),
+      completed: Number(runRaw.completed ?? 0),
+      total: Number(runRaw.total ?? 0),
+    };
+  }
+
+  const rawResults = Array.isArray(data.results) ? data.results : [];
+  const results = rawResults
+    .filter((r): r is Record<string, unknown> => Boolean(r && typeof r === "object"))
+    .map(mapScreeningResultItemToFrontend);
+
+  return { thresholds, run, results };
+}
+

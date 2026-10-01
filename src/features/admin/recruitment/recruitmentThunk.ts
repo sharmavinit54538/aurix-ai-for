@@ -3,10 +3,22 @@ import { apiInstance } from "@/api";
 import { parseApiError } from "@/api/utils";
 import type { RootState } from "@/redux/store";
 import type { RecruitmentDataPayload } from "./recruitmentTypes";
-import type { Candidate, Interview, Job, Offer, Stage } from "./types";
+import type {
+  Candidate,
+  Interview,
+  Job,
+  Offer,
+  ScreeningResult,
+  ScreeningResultsData,
+  ScreeningRun,
+  Stage,
+} from "./types";
 import {
   mapJobToFrontend,
+  mapScreeningResultItemToFrontend,
+  mapScreeningResultsToFrontend,
 } from "./utils/apiMappers";
+import screeningApi from "@/services/screeningApi";
 
 function isUuid(id: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
@@ -255,3 +267,98 @@ export const upsertOffer = createAsyncThunk<Offer, Offer, { rejectValue: string 
     }
   },
 );
+
+export const runScreening = createAsyncThunk<
+  ScreeningRun,
+  { jobId: string; applicationIds?: string[]; model?: string },
+  { rejectValue: string }
+>("recruitment/runScreening", async ({ jobId, applicationIds, model }, thunkAPI) => {
+  try {
+    const res = await screeningApi.runScreening(jobId, {
+      application_ids: applicationIds,
+      model,
+    });
+    return {
+      runId: res.run_id,
+      status: res.status,
+      completed: 0,
+      total: res.total,
+    };
+  } catch (error) {
+    return thunkAPI.rejectWithValue(parseApiError(error, "Failed to run AI screening").message);
+  }
+});
+
+export const fetchScreeningResults = createAsyncThunk<
+  ScreeningResultsData,
+  string,
+  { rejectValue: string }
+>("recruitment/fetchScreeningResults", async (jobId, thunkAPI) => {
+  try {
+    const raw = await screeningApi.getScreeningResults(jobId);
+    return mapScreeningResultsToFrontend(raw);
+  } catch (error) {
+    return thunkAPI.rejectWithValue(
+      parseApiError(error, "Failed to fetch screening results").message,
+    );
+  }
+});
+
+export const submitDecision = createAsyncThunk<
+  ScreeningResult,
+  {
+    screeningId: string;
+    action: "SHORTLIST" | "REJECT" | "KEEP_REVIEW";
+    reason?: string;
+    jobId?: string;
+  },
+  { rejectValue: string }
+>(
+  "recruitment/submitDecision",
+  async ({ screeningId, action, reason, jobId }, thunkAPI) => {
+    try {
+      const res = await screeningApi.submitDecision(screeningId, {
+        action,
+        reason,
+      });
+
+      if (jobId) {
+        await thunkAPI.dispatch(fetchScreeningResults(jobId));
+      }
+
+      if (res?.data) {
+        return mapScreeningResultItemToFrontend(res.data as Record<string, unknown>);
+      }
+
+      return {
+        id: screeningId,
+        screeningId,
+        applicationId: "",
+        candidateId: "",
+        candidateName: "",
+        status: "COMPLETED",
+        decision: action === "SHORTLIST" ? "SHORTLIST" : action === "REJECT" ? "REJECT" : "REVIEW",
+        confidence: 1,
+        matchScore: 0,
+        strengths: [],
+        weaknesses: [],
+        missingSkills: [],
+        redFlags: [],
+        greenFlags: [],
+        hiringRecommendation: "",
+        hrNotes: "",
+        questionsToAsk: [],
+        modelUsed: "AI",
+        screenedAt: new Date().toISOString(),
+        humanDecision: action,
+        humanDecisionBy: "You",
+        humanDecisionReason: reason || null,
+      };
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        parseApiError(error, "Failed to submit screening decision").message,
+      );
+    }
+  },
+);
+

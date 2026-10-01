@@ -8,14 +8,27 @@ import {
   duplicateJob,
   fetchJobById,
   fetchRecruitmentData,
+  fetchScreeningResults,
   moveStage,
+  runScreening,
+  submitDecision,
   upsertCandidate,
   upsertInterview,
   upsertJob,
   upsertOffer,
 } from "../recruitmentThunk";
 import type { RecruitmentResources } from "../recruitmentTypes";
-import type { Candidate, Interview, Job, Offer, Stage } from "../types";
+import type {
+  Candidate,
+  Interview,
+  Job,
+  Offer,
+  ScreeningResult,
+  ScreeningResultsData,
+  ScreeningRun,
+  ScreeningThresholds,
+  Stage,
+} from "../types";
 import { newId } from "../utils/newId";
 
 export { newId };
@@ -35,13 +48,45 @@ export interface UseRecruitmentReturn extends RecruitmentResources {
   addNote: (candidateId: string, text: string) => void;
   upsertInterview: (interview: Interview) => Promise<void>;
   upsertOffer: (offer: Offer) => Promise<void>;
+  // Screening state and actions
+  screeningThresholds: ScreeningThresholds;
+  screeningRun: ScreeningRun | null;
+  screeningResults: ScreeningResult[];
+  screeningLoading: boolean;
+  screeningSubmitting: boolean;
+  screeningError: string | null;
+  runScreening: (params: {
+    jobId: string;
+    applicationIds?: string[];
+    model?: string;
+  }) => Promise<ScreeningRun>;
+  fetchScreeningResults: (jobId: string) => Promise<ScreeningResultsData>;
+  submitDecision: (params: {
+    screeningId: string;
+    action: "SHORTLIST" | "REJECT" | "KEEP_REVIEW";
+    reason?: string;
+    jobId?: string;
+  }) => Promise<ScreeningResult>;
 }
+
 
 function useRecruitmentBase() {
   const dispatch = useAppDispatch();
-  const { jobs, candidates, interviews, offers, loading, submitting, error } = useAppSelector(
-    (state) => state.recruitment,
-  );
+  const {
+    jobs,
+    candidates,
+    interviews,
+    offers,
+    loading,
+    submitting,
+    error,
+    screeningThresholds,
+    screeningRun,
+    screeningResults,
+    screeningLoading,
+    screeningSubmitting,
+    screeningError,
+  } = useAppSelector((state) => state.recruitment);
 
   const shouldFetch =
     !loading &&
@@ -139,6 +184,44 @@ function useRecruitmentBase() {
     [dispatch],
   );
 
+  const runScreeningAction = useCallback(
+    async (params: { jobId: string; applicationIds?: string[]; model?: string }) => {
+      const result = await dispatch(runScreening(params));
+      if (runScreening.rejected.match(result)) {
+        throw new Error(result.payload ?? "Failed to run screening");
+      }
+      return result.payload;
+    },
+    [dispatch],
+  );
+
+  const fetchScreeningResultsAction = useCallback(
+    async (jobId: string) => {
+      const result = await dispatch(fetchScreeningResults(jobId));
+      if (fetchScreeningResults.rejected.match(result)) {
+        throw new Error(result.payload ?? "Failed to fetch screening results");
+      }
+      return result.payload;
+    },
+    [dispatch],
+  );
+
+  const submitDecisionAction = useCallback(
+    async (params: {
+      screeningId: string;
+      action: "SHORTLIST" | "REJECT" | "KEEP_REVIEW";
+      reason?: string;
+      jobId?: string;
+    }) => {
+      const result = await dispatch(submitDecision(params));
+      if (submitDecision.rejected.match(result)) {
+        throw new Error(result.payload ?? "Failed to submit decision");
+      }
+      return result.payload;
+    },
+    [dispatch],
+  );
+
   return {
     jobs,
     candidates,
@@ -158,6 +241,16 @@ function useRecruitmentBase() {
     addNote: addNoteAction,
     upsertInterview: upsertInterviewAction,
     upsertOffer: upsertOfferAction,
+    // Screening
+    screeningThresholds,
+    screeningRun,
+    screeningResults,
+    screeningLoading,
+    screeningSubmitting,
+    screeningError,
+    runScreening: runScreeningAction,
+    fetchScreeningResults: fetchScreeningResultsAction,
+    submitDecision: submitDecisionAction,
   };
 }
 
