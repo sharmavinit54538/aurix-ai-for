@@ -28,6 +28,9 @@ export function normalizeDashboardData(data: Partial<AIInsightsDashboardData> | 
   }
 
   return {
+    has_data: data.has_data,
+    partial: data.partial,
+    errors: data.errors,
     summary: data.summary ?? undefined,
     kpi: Array.isArray(data.kpi) ? data.kpi : [],
     attrition: Array.isArray(data.attrition) ? data.attrition : [],

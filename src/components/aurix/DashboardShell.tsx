@@ -156,7 +156,7 @@ const NAV_SECTIONS: SidebarNavSection[] = [
         to: "/dashboard/analytics",
         label: "Analytics",
         icon: BarChart3,
-        roles: ["superadmin", "hr_admin", "manager"],
+        roles: ["superadmin", "super_admin", "hr_admin", "executive", "manager"],
       },
       {
         to: "/dashboard/ai-hub",
@@ -357,6 +357,7 @@ const EXECUTIVE_NAV_SECTIONS: SidebarNavSection[] = [
       { to: "/dashboard/executive/cio/it-operations", label: "Technology Operations", icon: Laptop },
       { to: "/dashboard/executive/cto/engineering", label: "Engineering", icon: Wrench },
       { to: "/dashboard/executive/cto/security", label: "Security", icon: Lock },
+      { to: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
     ],
   },
 ];

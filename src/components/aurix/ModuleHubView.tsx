@@ -20,10 +20,45 @@ export interface ModuleHubViewProps {
 }
 
 export function ModuleHubView({
+  eyebrow,
+  title,
+  description,
+  headerIcon: HeaderIcon,
   modules,
 }: ModuleHubViewProps) {
+  const hasHeader = Boolean(eyebrow || title || description || HeaderIcon);
+
   return (
     <div className="space-y-6">
+      {hasHeader ? (
+        <div className="mb-6 flex flex-col min-w-0 gap-2 text-left">
+          {eyebrow ? (
+            <div className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+              {eyebrow}
+            </div>
+          ) : null}
+          <div className="flex min-w-0 items-center gap-3">
+            {HeaderIcon ? (
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary border border-primary/20">
+                <HeaderIcon className="h-5 w-5" />
+              </div>
+            ) : null}
+            <div className="min-w-0 flex-1">
+              {title ? (
+                <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">
+                  {title}
+                </h1>
+              ) : null}
+              {description ? (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {description}
+                </p>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {/* Grid of Module Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {modules.map((m) => {

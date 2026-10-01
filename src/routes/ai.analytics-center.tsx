@@ -65,13 +65,8 @@ function Page() {
         invert: k.invert,
       }));
     }
-    return [
-      { label: "Insights generated", value: summary?.totalInsights ? `${summary.totalInsights}` : "18", trend: 14.0, icon: Sparkles },
-      { label: "Predictive models", value: 18, trend: 6.0, icon: Brain },
-      { label: "Open Requisitions", value: recruitment?.openPositions ? `${recruitment.openPositions}` : "12", icon: Briefcase },
-      { label: "Avg Accuracy", value: "94%", trend: 1.2, icon: Gauge },
-    ];
-  }, [backendKpis, summary, recruitment]);
+    return [];
+  }, [backendKpis]);
 
   const charts: AIChart[] = useMemo(() => {
     const list: AIChart[] = [];
@@ -179,6 +174,16 @@ function Page() {
           <Button size="sm" variant="outline" onClick={() => dispatch(fetchAIInsightsDashboard())} className="gap-1.5">
             <RefreshCw className="h-3 w-3" /> Retry
           </Button>
+        </div>
+      ) : null}
+
+      {!loading && !error && kpis.length === 0 && charts.length === 0 ? (
+        <div className="my-8 flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/80 bg-card/40 p-12 text-center text-muted-foreground">
+          <Brain className="mb-3 h-10 w-10 stroke-1 text-muted-foreground/60" />
+          <h3 className="font-display text-base font-semibold text-foreground">No insights available yet</h3>
+          <p className="mt-1 max-w-sm text-xs text-muted-foreground">
+            Workforce intelligence and predictive analytics will appear once the system collects enough operational metrics.
+          </p>
         </div>
       ) : null}
     </AIModulePage>

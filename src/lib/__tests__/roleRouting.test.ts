@@ -197,5 +197,31 @@ describe("Role-Based Dashboard Routing", () => {
       const execRes = checkRouteAccess("/dashboard", "executive");
       expect(execRes.allowed).toBe(true);
     });
+
+    it("enforces route access for /dashboard/analytics: allowed for hr_admin, executive, manager; redirected for employee, recruiter, it_admin", () => {
+      // Allowed roles
+      expect(checkRouteAccess("/dashboard/analytics", "hr_admin").allowed).toBe(true);
+      expect(checkRouteAccess("/dashboard/analytics", "executive").allowed).toBe(true);
+      expect(checkRouteAccess("/dashboard/analytics", "manager").allowed).toBe(true);
+
+      // Child routes also covered by longest-prefix match
+      expect(checkRouteAccess("/dashboard/analytics/reports", "hr_admin").allowed).toBe(true);
+      expect(checkRouteAccess("/dashboard/analytics/reports", "executive").allowed).toBe(true);
+      expect(checkRouteAccess("/dashboard/analytics/reports", "manager").allowed).toBe(true);
+      expect(checkRouteAccess("/dashboard/analytics/ai-insights", "manager").allowed).toBe(true);
+
+      // Redirected roles
+      const empRes = checkRouteAccess("/dashboard/analytics", "employee");
+      expect(empRes.allowed).toBe(false);
+      expect(empRes.redirectPath).toBe("/dashboard/employee");
+
+      const recRes = checkRouteAccess("/dashboard/analytics", "recruiter");
+      expect(recRes.allowed).toBe(false);
+      expect(recRes.redirectPath).toBe("/dashboard/recruitment");
+
+      const itRes = checkRouteAccess("/dashboard/analytics", "it_admin");
+      expect(itRes.allowed).toBe(false);
+      expect(itRes.redirectPath).toBe("/dashboard/admin");
+    });
   });
 });

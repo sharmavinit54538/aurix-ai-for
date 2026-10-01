@@ -40,6 +40,9 @@ export const ROUTE_ROLE_ACCESS: Record<string, AppRole[]> = {
   "/dashboard/executive/cio": ["executive", "it_admin", "hr_admin"],
   "/dashboard/executive": EXECUTIVE_ROLES,
 
+  // ── Company Analytics & Intelligence Routes ─────────────────────
+  "/dashboard/analytics": ["hr_admin", "executive", "manager"],
+
   // ── Recruitment (ATS) Routes (RECRUITER & HR_ADMIN) ─────────────
   "/dashboard/recruitment/hiring-manager": ["hr_admin", "manager", "recruiter"],
   "/dashboard/recruitment/requisitions": ["hr_admin", "manager", "recruiter"],

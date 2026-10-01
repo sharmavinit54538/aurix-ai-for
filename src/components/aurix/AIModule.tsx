@@ -46,8 +46,50 @@ const toneStyles: Record<NonNullable<AIFeature["tone"]>, string> = {
   info: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20",
 };
 
-export function AIHero(_props: any) {
-  return null;
+export function AIHero({
+  icon: Icon,
+  eyebrow,
+  title,
+  description,
+  lastAnalysis,
+}: {
+  icon?: LucideIcon;
+  eyebrow?: string;
+  title: string;
+  description?: string;
+  lastAnalysis?: string;
+}) {
+  return (
+    <div className="mb-6 flex flex-col min-w-0 gap-2 text-left">
+      {eyebrow ? (
+        <div className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+          {eyebrow}
+        </div>
+      ) : null}
+      <div className="flex min-w-0 items-center justify-between gap-4">
+        <div className="flex min-w-0 items-center gap-3">
+          {Icon ? (
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary border border-primary/20">
+              <Icon className="h-5 w-5" />
+            </div>
+          ) : null}
+          <div className="min-w-0 flex-1">
+            <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">
+              {title}
+            </h1>
+            {description ? (
+              <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+            ) : null}
+          </div>
+        </div>
+        {lastAnalysis ? (
+          <span className="shrink-0 rounded-full border border-border bg-card/60 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur-xl">
+            {lastAnalysis}
+          </span>
+        ) : null}
+      </div>
+    </div>
+  );
 }
 
 export function KpiGrid({ items }: { items: AIKpi[] }) {

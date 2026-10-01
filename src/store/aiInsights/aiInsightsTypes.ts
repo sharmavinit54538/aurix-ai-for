@@ -131,6 +131,9 @@ export interface SummaryData {
 }
 
 export interface AIInsightsDashboardData {
+  has_data?: boolean;
+  partial?: boolean;
+  errors?: string[] | Record<string, string> | null;
   summary?: SummaryData;
   kpi?: KpiItem[];
   attrition?: AttritionItem[];
@@ -148,6 +151,9 @@ export interface AIInsightsState {
   loading: boolean;
   error: string | null;
   lastUpdated: string | null;
+  hasDataFlag?: boolean;
+  partial?: boolean;
+  partialErrors?: string[] | Record<string, string> | null;
   dashboard: SummaryData | null;
   kpi: KpiItem[];
   attrition: AttritionItem[];

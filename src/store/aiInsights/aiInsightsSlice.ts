@@ -52,6 +52,9 @@ export const aiInsightsSlice = createSlice({
         state.lastUpdated = new Date().toISOString();
         const data = action.payload;
 
+        if (data.has_data !== undefined) state.hasDataFlag = data.has_data;
+        if (data.partial !== undefined) state.partial = data.partial;
+        if (data.errors !== undefined) state.partialErrors = data.errors;
         if (data.summary !== undefined) state.dashboard = data.summary;
         if (Array.isArray(data.kpi)) state.kpi = data.kpi;
         if (Array.isArray(data.attrition)) state.attrition = data.attrition;

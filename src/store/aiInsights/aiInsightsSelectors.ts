@@ -128,3 +128,18 @@ export const selectAIInsightsPayrollTrend = createSelector(
   (state: any) => (Array.isArray(state?.charts?.payrollTrend) ? state.charts.payrollTrend : []),
 );
 
+export const selectAIInsightsHasDataFlag = createSelector(
+  [selectAIInsightsState],
+  (state) => state?.hasDataFlag,
+);
+
+export const selectAIInsightsPartial = createSelector(
+  [selectAIInsightsState],
+  (state) => state?.partial ?? false,
+);
+
+export const selectAIInsightsPartialErrors = createSelector(
+  [selectAIInsightsState],
+  (state) => state?.partialErrors ?? null,
+);
+

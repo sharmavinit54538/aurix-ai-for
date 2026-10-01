@@ -41,6 +41,9 @@ import {
   selectAIInsightsSummary,
   selectAIInsightsSupportPerformers,
   selectAIInsightsTopPerformers,
+  selectAIInsightsHasDataFlag,
+  selectAIInsightsPartial,
+  selectAIInsightsPartialErrors,
 } from "@/store/aiInsights/aiInsightsSelectors";
 import type {
   AlertItem,
@@ -107,6 +110,9 @@ export function AIInsightsPage() {
   const alerts = useAppSelector(selectAIInsightsAlerts);
   const recommendations = useAppSelector(selectAIInsightsRecommendations);
   const documents = useAppSelector(selectAIInsightsDocuments);
+  const hasDataFlag = useAppSelector(selectAIInsightsHasDataFlag);
+  const partial = useAppSelector(selectAIInsightsPartial);
+  const partialErrors = useAppSelector(selectAIInsightsPartialErrors);
 
   useEffect(() => {
     dispatch(fetchAIInsightsDashboard());
@@ -117,6 +123,7 @@ export function AIInsightsPage() {
   };
 
   const hasData = useMemo(() => {
+    if (hasDataFlag === false) return false;
     return Boolean(
       (Array.isArray(kpis) && kpis.length > 0) ||
       (Array.isArray(attrition) && attrition.length > 0) ||
@@ -126,16 +133,37 @@ export function AIInsightsPage() {
       (Array.isArray(topPerformers) && topPerformers.length > 0) ||
       (Array.isArray(recommendations) && recommendations.length > 0) ||
       (Array.isArray(alerts) && alerts.length > 0) ||
-      summary !== null
+      (summary !== null && (summary.totalInsights > 0 || summary.actionedCount > 0))
     );
-  }, [kpis, attrition, burnout, attendance, candidates, topPerformers, recommendations, alerts, summary]);
+  }, [hasDataFlag, kpis, attrition, burnout, attendance, candidates, topPerformers, recommendations, alerts, summary]);
 
   return (
     <>
+      <PageHeader
+        title="AI Predictive Insights"
+        description="Predictive attrition analytics, team sentiment monitoring, burnout risk alerts, and salary benchmarks."
+      />
 
+      {partial ? (
+        <div className="mb-6 flex items-center justify-between rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs text-amber-500">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            <span>
+              Notice: Some insight metrics are based on partial workforce data.
+              {partialErrors && typeof partialErrors === "object"
+                ? ` (${Object.keys(partialErrors).length} section(s) reported issues)`
+                : ""}
+            </span>
+          </div>
+        </div>
+      ) : null}
 
       {error ? (
         <ErrorBanner message={error} onRetry={handleRetry} />
+      ) : null}
+
+      {summary && summary.totalInsights > 0 ? (
+        <HeroBanner summary={summary} />
       ) : null}
 
       {loading && !hasData ? (
