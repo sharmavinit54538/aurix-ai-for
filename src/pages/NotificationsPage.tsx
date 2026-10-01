@@ -4,7 +4,6 @@ import {
   Bell,
   CheckCheck,
   CheckCircle2,
-  X,
   AlertTriangle,
   Briefcase,
   IndianRupee,
@@ -18,7 +17,6 @@ import {
   UserCheck,
   ShieldAlert,
   Inbox,
-  Filter,
   RefreshCw,
   MailCheck,
   Mail,
@@ -176,7 +174,7 @@ export function NotificationsPage() {
       markReadMutation.mutate(item.id);
     }
     if (isInternalSafeLink(item.link)) {
-      navigate({ to: item.link as any });
+      navigate({ to: item.link });
     }
   };
 

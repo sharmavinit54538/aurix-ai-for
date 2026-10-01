@@ -8,7 +8,6 @@ import {
   Briefcase,
   IndianRupee,
   ShieldCheck,
-  Users,
   ExternalLink,
   Sparkles,
   Calendar,
@@ -154,7 +153,7 @@ export function NotificationDropdown() {
     }
     if (isInternalSafeLink(item.link)) {
       setOpen(false);
-      navigate({ to: item.link as any });
+      navigate({ to: item.link });
     }
   };
 
