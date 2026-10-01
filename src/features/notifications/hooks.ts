@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-query";
 import {
   notificationsApi,
+  isUnreadCountCircuitBroken,
   type NotificationItem,
   type NotificationListData,
   type NotificationListParams,
@@ -120,24 +121,69 @@ export function useNotifications(filters?: NotificationListParams) {
 }
 
 /**
- * Real-time unread count query with 45s polling interval and window focus refetch.
+ * Real-time unread count query.
+ * Polling no more often than every 60s, refetchIntervalInBackground: false.
+ * If 404 occurs, session circuit breaker stops polling and derives count from notifications list.
  */
 export function useUnreadCount() {
   const { user } = useAurix();
   const userId = user?.id || "anonymous";
+  const queryClient = useQueryClient();
+  const isCircuitBroken = isUnreadCountCircuitBroken();
 
   const query = useQuery<UnreadCountData, Error>({
     queryKey: notificationKeys.unreadCount(userId),
     queryFn: () => notificationsApi.getUnreadCount(),
-    refetchInterval: 45_000,
-    refetchOnWindowFocus: true,
-    staleTime: 1000 * 20,
+    enabled: !isCircuitBroken,
+    refetchInterval: isCircuitBroken ? false : 60_000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: !isCircuitBroken,
+    staleTime: 1000 * 30,
+    retry: (failureCount, error: any) => {
+      if (error?.status === 404 || error?.response?.status === 404) return false;
+      return failureCount < 2;
+    },
   });
+
+  // Derive unread count from notifications list if circuit breaker is tripped or query failed
+  const derivedFromList = useMemo(() => {
+    const listQueries = queryClient.getQueriesData<InfiniteData<NotificationListData, string | null>>({
+      queryKey: notificationKeys.lists(userId),
+    });
+    let count = 0;
+    const byCategory: Record<string, number> = {};
+    for (const [, data] of listQueries) {
+      if (!data?.pages) continue;
+      for (const page of data.pages) {
+        for (const item of page.items || []) {
+          if (!item.readAt && !item.archivedAt) {
+            count++;
+            if (item.category) {
+              byCategory[item.category] = (byCategory[item.category] || 0) + 1;
+            }
+          }
+        }
+        if (typeof page.totalUnread === "number" && page.totalUnread > count) {
+          count = page.totalUnread;
+        }
+      }
+      return { total: count, byCategory };
+    }
+    return { total: 0, byCategory };
+  }, [queryClient, userId, query.data, query.isError, isCircuitBroken]);
+
+  const effectiveTotal = isCircuitBroken || query.isError
+    ? derivedFromList.total
+    : (query.data?.total ?? derivedFromList.total);
+
+  const effectiveByCategory = isCircuitBroken || query.isError
+    ? derivedFromList.byCategory
+    : (query.data?.byCategory ?? derivedFromList.byCategory);
 
   return {
     ...query,
-    unreadCount: query.data?.total ?? 0,
-    byCategory: query.data?.byCategory ?? {},
+    unreadCount: effectiveTotal,
+    byCategory: effectiveByCategory,
   };
 }
 

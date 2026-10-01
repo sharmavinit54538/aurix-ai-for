@@ -1,25 +1,27 @@
 /**
- * In-memory Token Manager
+ * Token Manager
  *
  * Security:
- * - Both access and refresh tokens are stored exclusively in module-scoped memory variables.
- * - Refresh token is kept in memory so it can be sent in the refresh request body,
- *   supporting backends that don't use (or fail to deliver) HttpOnly cookies.
- * - Neither token is persisted in localStorage, sessionStorage, or any other
- *   JavaScript-readable persistent storage.
- * - Legacy localStorage keys ("aurix:tokens") are cleaned up to mitigate XSS risks.
+ * - Access token is kept in-memory for active API authorizations.
+ * - Refresh token is kept in memory and persisted in safeStorage to allow
+ *   session continuity and token refresh 4 minutes after login or on page reloads.
  */
 
 import { safeStorage } from "@/lib/safe-storage";
 
+export const REFRESH_TOKEN_KEY = "aurix:refresh_token";
 const LEGACY_TOKENS_KEY = "aurix:tokens";
 
 let inMemoryAccessToken: string | null = null;
 let inMemoryRefreshToken: string | null = null;
 
-// Initial migration: Purge legacy tokens from localStorage if present in browser
+// Initial migration: Load stored refresh token if present
 if (typeof window !== "undefined") {
   safeStorage.removeItem(LEGACY_TOKENS_KEY);
+  const storedRefresh = safeStorage.getItem(REFRESH_TOKEN_KEY);
+  if (storedRefresh) {
+    inMemoryRefreshToken = storedRefresh;
+  }
 }
 
 export interface Tokens {
@@ -29,21 +31,29 @@ export interface Tokens {
 
 export function getTokens(): Tokens | null {
   if (!inMemoryAccessToken) return null;
+  const refreshToken = getRefreshToken() || undefined;
   return {
     accessToken: inMemoryAccessToken,
-    refreshToken: inMemoryRefreshToken || "",
+    refreshToken,
   };
 }
 
 export function setTokens(tokens: { accessToken?: string; refreshToken?: string } | null) {
   inMemoryAccessToken = tokens?.accessToken || null;
-  // Preserve existing refresh token if new value is not provided
+
   if (tokens && tokens.refreshToken !== undefined) {
     inMemoryRefreshToken = tokens.refreshToken || null;
+    if (tokens.refreshToken) {
+      safeStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
+    } else {
+      safeStorage.removeItem(REFRESH_TOKEN_KEY);
+    }
   }
+
   // When clearing all tokens (null), also clear refresh
   if (!tokens) {
     inMemoryRefreshToken = null;
+    safeStorage.removeItem(REFRESH_TOKEN_KEY);
   }
   safeStorage.removeItem(LEGACY_TOKENS_KEY);
 }
@@ -57,11 +67,18 @@ export function setAccessToken(token: string | null) {
 }
 
 export function getRefreshToken(): string | null {
-  return inMemoryRefreshToken;
+  if (inMemoryRefreshToken) return inMemoryRefreshToken;
+  const stored = safeStorage.getItem(REFRESH_TOKEN_KEY);
+  if (stored) {
+    inMemoryRefreshToken = stored;
+    return stored;
+  }
+  return null;
 }
 
 export function clearTokens() {
   inMemoryAccessToken = null;
   inMemoryRefreshToken = null;
+  safeStorage.removeItem(REFRESH_TOKEN_KEY);
   safeStorage.removeItem(LEGACY_TOKENS_KEY);
 }

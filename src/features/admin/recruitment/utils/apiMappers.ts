@@ -200,18 +200,36 @@ export function mapOfferToFrontend(o: Record<string, unknown>): Offer {
   };
 }
 
-function extractItems(
+export function extractItems(
   result: PromiseSettledResult<unknown>,
-  nestedItems = true,
 ): Record<string, unknown>[] {
-  if (result.status !== "fulfilled") return [];
+  if (result.status !== "fulfilled" || !result.value) return [];
 
-  const value = result.value as { data?: { items?: unknown[] } | unknown[] };
-  const items = nestedItems
-    ? (value?.data as { items?: unknown[] })?.items || value?.data || []
-    : value?.data || [];
+  const raw = result.value as any;
+  const payload = raw && typeof raw === "object" && "data" in raw && raw.data !== undefined
+    ? raw.data
+    : raw;
 
-  return Array.isArray(items) ? (items as Record<string, unknown>[]) : [];
+  if (Array.isArray(payload)) {
+    return payload as Record<string, unknown>[];
+  }
+
+  if (payload && typeof payload === "object") {
+    if (Array.isArray(payload.items)) {
+      return payload.items as Record<string, unknown>[];
+    }
+    if (Array.isArray(payload.results)) {
+      return payload.results as Record<string, unknown>[];
+    }
+    if (payload.data && Array.isArray(payload.data)) {
+      return payload.data as Record<string, unknown>[];
+    }
+    if (payload.data && typeof payload.data === "object" && Array.isArray(payload.data.items)) {
+      return payload.data.items as Record<string, unknown>[];
+    }
+  }
+
+  return [];
 }
 
 export interface RecruitmentResources {
@@ -235,7 +253,9 @@ export function parseRecruitmentApiResults(
     data.jobs = jobItems.map(mapJobToFrontend);
     anySuccess = true;
   } else if (jobsResult.status === "rejected") {
-    console.warn("Jobs API failed:", jobsResult.reason);
+    if (import.meta.env.DEV) {
+      console.warn("Jobs API failed:", jobsResult.reason);
+    }
   }
 
   const candidateItems = extractItems(candidatesResult);
@@ -243,15 +263,19 @@ export function parseRecruitmentApiResults(
     data.candidates = candidateItems.map(mapCandidateToFrontend);
     anySuccess = true;
   } else if (candidatesResult.status === "rejected") {
-    console.warn("Candidates API failed:", candidatesResult.reason);
+    if (import.meta.env.DEV) {
+      console.warn("Candidates API failed:", candidatesResult.reason);
+    }
   }
 
-  const interviewItems = extractItems(interviewsResult, false);
+  const interviewItems = extractItems(interviewsResult);
   if (interviewsResult.status === "fulfilled" && interviewItems.length >= 0) {
     data.interviews = interviewItems.map(mapInterviewToFrontend);
     anySuccess = true;
   } else if (interviewsResult.status === "rejected") {
-    console.warn("Interviews API failed:", interviewsResult.reason);
+    if (import.meta.env.DEV) {
+      console.warn("Interviews API failed:", interviewsResult.reason);
+    }
   }
 
   const offerItems = extractItems(offersResult);
@@ -259,7 +283,9 @@ export function parseRecruitmentApiResults(
     data.offers = offerItems.map(mapOfferToFrontend);
     anySuccess = true;
   } else if (offersResult.status === "rejected") {
-    console.warn("Offers API failed:", offersResult.reason);
+    if (import.meta.env.DEV) {
+      console.warn("Offers API failed:", offersResult.reason);
+    }
   }
 
   return { data, anySuccess };

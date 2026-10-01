@@ -1,10 +1,37 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
+import { toast } from "sonner";
 import { aurix } from "@/lib/aurix-store";
 import { isAccessTokenExpired } from "./token-utils";
 import { getTokens, getRefreshToken, setTokens } from "./tokens";
 import { safeStorage } from "@/lib/safe-storage";
 import { AUTH_ENDPOINTS } from "./endpoints";
 import { normalizeApiPath } from "./client";
+
+let isSessionExpiredHandled = false;
+
+export function handleSessionExpired() {
+  setTokens(null);
+  aurix.set({ isRestoring: false, user: null, company: null });
+  safeStorage.removeItem("aurix:workspace:v1");
+  safeStorage.removeItem("aurix:tokens");
+  safeStorage.removeItem("aurix:refresh_token");
+
+  if (!isSessionExpiredHandled) {
+    isSessionExpiredHandled = true;
+    toast.error("Session expired. Please sign in again.");
+    if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
+      window.location.replace("/login");
+    }
+    setTimeout(() => {
+      isSessionExpiredHandled = false;
+    }, 5000);
+  }
+}
+
+export function resetSessionExpiredFlag() {
+  isSessionExpiredHandled = false;
+}
+
 
 declare module "axios" {
   export interface AxiosRequestConfig {
@@ -84,16 +111,17 @@ export async function refreshAccessToken(): Promise<string> {
 
   refreshPromise = (async () => {
     try {
-      // Build request body: include the in-memory refresh token if available.
+      // Build request body: include the in-memory or persisted refresh token if available.
       // Remote backend supports refresh_token in request body and in HttpOnly cookie.
       const currentRefreshToken = getRefreshToken();
       const body: Record<string, string> = {};
       if (currentRefreshToken) {
         body.refresh_token = currentRefreshToken;
+        body.refreshToken = currentRefreshToken;
       }
 
       const refreshUrl = `${API_BASE_URL}${AUTH_ENDPOINTS.refresh}`;
-      if (process.env.NODE_ENV !== "production") {
+      if (import.meta.env.DEV) {
         console.log(`[AUTH] Request: [REFRESH] POST ${refreshUrl}`);
       }
 
@@ -105,28 +133,29 @@ export async function refreshAccessToken(): Promise<string> {
             "Content-Type": "application/json",
           },
         });
-        if (process.env.NODE_ENV !== "production") {
+        if (import.meta.env.DEV) {
           console.log(`[AUTH] Response: [REFRESH] POST ${refreshUrl} -> ${res.status}`);
         }
       } catch (postErr: any) {
         const status = postErr?.response?.status;
-        if (process.env.NODE_ENV !== "production") {
+        if (import.meta.env.DEV) {
           console.log(`[AUTH] Response: [REFRESH] POST ${refreshUrl} -> ${status || "NETWORK_ERROR"}`);
         }
 
         // Section 13: Only treat 401 Unauthorized as authentication failure.
         // Do NOT treat 404 as "user is logged out."
         if (status === 404) {
-          console.error(
-            `[AUTH] 404 Not Found received on refresh endpoint: ${refreshUrl}. Route configuration problem.`
-          );
+          if (import.meta.env.DEV) {
+            console.error(
+              `[AUTH] 404 Not Found received on refresh endpoint: ${refreshUrl}. Route configuration problem.`
+            );
+          }
           throw new Error(`Refresh route configuration error: ${refreshUrl} returned 404`);
         }
 
         if (status === 401) {
           // Authentication failure: refresh token expired or invalid
-          setTokens(null);
-          aurix.set({ isRestoring: false, user: null, company: null });
+          handleSessionExpired();
           throw new Error("Failed to refresh session");
         }
 
@@ -138,12 +167,11 @@ export async function refreshAccessToken(): Promise<string> {
         tokenData?.access_token || tokenData?.accessToken || tokenData?.token;
 
       if (!accessToken) {
-        setTokens(null);
-        aurix.set({ isRestoring: false, user: null, company: null });
+        handleSessionExpired();
         throw new Error("Invalid session refresh response: missing access token");
       }
 
-      // Store new tokens. If the backend rotates the refresh token, store the new one in memory.
+      // Store new tokens. If the backend rotates the refresh token, store the new one in memory and storage.
       const newRefreshToken =
         tokenData?.refresh_token || tokenData?.refreshToken || currentRefreshToken;
       setTokens({ accessToken, refreshToken: newRefreshToken || undefined });
@@ -166,7 +194,7 @@ apiInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     config.url = normalizeApiPath(config.url);
   }
 
-  if (process.env.NODE_ENV !== "production") {
+  if (import.meta.env.DEV) {
     const method = (config.method || "GET").toUpperCase();
     const fullUrl = resolveFullUrl(config.url, config.baseURL);
     const endpointTag = getEndpointTag(config.url || "");
@@ -178,7 +206,7 @@ apiInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 
 apiInstance.interceptors.response.use(
   (response) => {
-    if (process.env.NODE_ENV !== "production") {
+    if (import.meta.env.DEV) {
       const method = (response.config.method || "GET").toUpperCase();
       const fullUrl = resolveFullUrl(response.config.url, response.config.baseURL);
       const endpointTag = getEndpointTag(response.config.url || "");
@@ -187,7 +215,7 @@ apiInstance.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
-    if (process.env.NODE_ENV !== "production" && error.config) {
+    if (import.meta.env.DEV && error.config) {
       const method = (error.config.method || "GET").toUpperCase();
       const fullUrl = resolveFullUrl(error.config.url, error.config.baseURL);
       const endpointTag = getEndpointTag(error.config.url || "");
@@ -209,10 +237,10 @@ apiInstance.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    const currentRefreshToken = getRefreshToken();
     const tokens = getTokens();
-
-    // Access token is still valid — don't clear session on unrelated 401 responses.
-    if (tokens?.accessToken && !isAccessTokenExpired(tokens.accessToken)) {
+    if (!tokens?.accessToken && !currentRefreshToken) {
+      handleSessionExpired();
       return Promise.reject(error);
     }
 
@@ -223,14 +251,9 @@ apiInstance.interceptors.response.use(
       originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
       return apiInstance(originalRequest);
     } catch (refreshError: any) {
-      // Only treat 401 Unauthorized as authentication failure (Section 13)
-      // Do NOT treat 404 as "user is logged out"
       const status = refreshError?.response?.status ?? refreshError?.status;
-      if (status === 401) {
-        setTokens(null);
-        aurix.set({ isRestoring: false, user: null, company: null });
-        safeStorage.removeItem("aurix:workspace:v1");
-        safeStorage.removeItem("aurix:tokens");
+      if (status === 401 || refreshError?.message === "Failed to refresh session") {
+        handleSessionExpired();
       }
       return Promise.reject(refreshError);
     }
@@ -259,9 +282,19 @@ export function clearApiCache(urlPattern?: string) {
   }
 }
 
+function cloneResponseData(data: any): any {
+  if (data == null || typeof data !== "object") return data;
+  if (Array.isArray(data)) return [...data];
+  const copy: Record<string, any> = { ...data };
+  if (Array.isArray(copy.items)) copy.items = [...copy.items];
+  if (Array.isArray(copy.results)) copy.results = [...copy.results];
+  if (Array.isArray(copy.data)) copy.data = [...copy.data];
+  return copy;
+}
+
 function getRequestKey(config: any): string {
   const method = (config.method || "get").toLowerCase();
-  const url = config.url || "";
+  const url = normalizeApiPath(config.url || "");
   let paramsStr = "";
   if (config.params) {
     try {
@@ -299,11 +332,7 @@ apiInstance.request = async function <T = any, R = any, D = any>(config: any): P
         // Return shallow clone so caller modifications do not affect cached object
         return Promise.resolve({
           ...cached.response,
-          data: typeof cached.response.data === "object" && cached.response.data !== null
-            ? Array.isArray(cached.response.data)
-              ? [...cached.response.data]
-              : { ...cached.response.data }
-            : cached.response.data,
+          data: cloneResponseData(cached.response.data),
         });
       }
 

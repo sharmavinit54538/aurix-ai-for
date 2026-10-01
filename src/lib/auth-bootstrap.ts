@@ -89,25 +89,11 @@ export async function bootstrapAuth(): Promise<void> {
     }
 
     // 2. Determine if we should attempt a session refresh:
-    // Only attempt refresh if:
-    // - There is a cached user profile or restoring state (user was previously logged in), OR
-    // - There is an in-memory refresh token, OR
-    // - The user is on a protected route (not a public auth/landing page)
-    const isPublicPage =
-      typeof window !== "undefined" &&
-      (window.location.pathname === "/" ||
-        window.location.pathname === "/login" ||
-        window.location.pathname.startsWith("/auth/") ||
-        window.location.pathname === "/register" ||
-        window.location.pathname === "/forgot-password" ||
-        window.location.pathname === "/reset-password" ||
-        window.location.pathname === "/verify-email" ||
-        window.location.pathname === "/verify-reset-otp");
+    // Do NOT call /auth/refresh on app boot when there is no stored session at all (just show the login page).
+    const hasStoredSession = Boolean(ws.user) || Boolean(getRefreshToken());
 
-    const hasStoredSession = Boolean(ws.user) || Boolean(ws.isRestoring) || Boolean(getRefreshToken());
-
-    if (!hasStoredSession && isPublicPage) {
-      // Unauthenticated guest on public route — do not trigger an unnecessary refresh request
+    if (!hasStoredSession) {
+      // Unauthenticated guest or no stored session — do not trigger an unnecessary refresh request
       finish();
       return;
     }

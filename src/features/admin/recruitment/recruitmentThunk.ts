@@ -28,15 +28,31 @@ import recruitmentApi from "@/services/recruitmentApi";
 
 export const fetchRecruitmentData = createAsyncThunk<
   RecruitmentDataPayload,
-  void,
+  { force?: boolean } | void,
   { rejectValue: string }
->("recruitment/fetchData", async (_, thunkAPI) => {
-  try {
-    return await recruitmentApi.fetchRecruitmentDashboardData();
-  } catch (error) {
-    return thunkAPI.rejectWithValue(parseApiError(error, "Failed to fetch recruitment data").message);
-  }
-});
+>(
+  "recruitment/fetchData",
+  async (_, thunkAPI) => {
+    try {
+      return await recruitmentApi.fetchRecruitmentDashboardData();
+    } catch (error) {
+      return thunkAPI.rejectWithValue(parseApiError(error, "Failed to fetch recruitment data").message);
+    }
+  },
+  {
+    condition: (arg, { getState }) => {
+      if (arg?.force) return true;
+      const { recruitment } = getState() as RootState;
+      if (recruitment.loading) {
+        return false;
+      }
+      if (recruitment.lastFetchedAt && Date.now() - recruitment.lastFetchedAt < 30_000) {
+        return false;
+      }
+      return true;
+    },
+  },
+);
 
 /** @deprecated Use fetchRecruitmentData */
 export const fetchRecruitmentDashboard = fetchRecruitmentData;
@@ -101,7 +117,7 @@ export const upsertJob = createAsyncThunk<unknown, Job, { rejectValue: string }>
         ? await apiInstance.put(`/jobs/${job.id}`, payload)
         : await apiInstance.post("/jobs", payload);
 
-      await thunkAPI.dispatch(fetchRecruitmentData());
+      await thunkAPI.dispatch(fetchRecruitmentData({ force: true }));
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(parseApiError(error, "Failed to save job").message);
@@ -114,7 +130,7 @@ export const deleteJob = createAsyncThunk<string, string, { rejectValue: string 
   async (id, thunkAPI) => {
     try {
       await apiInstance.delete(`/jobs/${id}`);
-      await thunkAPI.dispatch(fetchRecruitmentData());
+      await thunkAPI.dispatch(fetchRecruitmentData({ force: true }));
       return id;
     } catch (error) {
       return thunkAPI.rejectWithValue(parseApiError(error, "Failed to delete job").message);
@@ -127,7 +143,7 @@ export const archiveJob = createAsyncThunk<string, string, { rejectValue: string
   async (id, thunkAPI) => {
     try {
       await apiInstance.post(`/jobs/${id}/close`);
-      await thunkAPI.dispatch(fetchRecruitmentData());
+      await thunkAPI.dispatch(fetchRecruitmentData({ force: true }));
       return id;
     } catch (error) {
       return thunkAPI.rejectWithValue(parseApiError(error, "Failed to archive job").message);
@@ -140,7 +156,7 @@ export const duplicateJob = createAsyncThunk<string, string, { rejectValue: stri
   async (id, thunkAPI) => {
     try {
       await apiInstance.post(`/jobs/${id}/duplicate`);
-      await thunkAPI.dispatch(fetchRecruitmentData());
+      await thunkAPI.dispatch(fetchRecruitmentData({ force: true }));
       return id;
     } catch (error) {
       return thunkAPI.rejectWithValue(parseApiError(error, "Failed to duplicate job").message);
@@ -178,7 +194,7 @@ export const upsertCandidate = createAsyncThunk<void, Candidate, { rejectValue: 
         await apiInstance.post("/candidates", payload);
       }
 
-      await thunkAPI.dispatch(fetchRecruitmentData());
+      await thunkAPI.dispatch(fetchRecruitmentData({ force: true }));
     } catch (error) {
       return thunkAPI.rejectWithValue(parseApiError(error, "Failed to save candidate").message);
     }
@@ -201,7 +217,7 @@ export const moveStage = createAsyncThunk<
       await apiInstance.patch(`/applications/${targetId}/stage`, { stage });
     }
 
-    await thunkAPI.dispatch(fetchRecruitmentData());
+    await thunkAPI.dispatch(fetchRecruitmentData({ force: true }));
     return { id, stage };
   } catch (error) {
     return thunkAPI.rejectWithValue(parseApiError(error, "Failed to move candidate stage").message);
@@ -215,7 +231,7 @@ export const addNote = createAsyncThunk<
 >("recruitment/addNote", async ({ candidateId, text }, thunkAPI) => {
   try {
     await apiInstance.post("/crm/notes", { candidate_id: candidateId, note_text: text });
-    await thunkAPI.dispatch(fetchRecruitmentData());
+    await thunkAPI.dispatch(fetchRecruitmentData({ force: true }));
     return { candidateId, text };
   } catch (error) {
     return thunkAPI.rejectWithValue(parseApiError(error, "Failed to add note").message);
@@ -236,7 +252,7 @@ export const upsertInterview = createAsyncThunk<Interview, Interview, { rejectVa
         await apiInstance.post("/scorecards/submissions", payload);
       }
 
-      await thunkAPI.dispatch(fetchRecruitmentData());
+      await thunkAPI.dispatch(fetchRecruitmentData({ force: true }));
       return interview;
     } catch (error) {
       return thunkAPI.rejectWithValue(parseApiError(error, "Failed to save interview").message);
@@ -260,7 +276,7 @@ export const upsertOffer = createAsyncThunk<Offer, Offer, { rejectValue: string 
       };
 
       await apiInstance.post(`/applications/${appId}/offer`, payload);
-      await thunkAPI.dispatch(fetchRecruitmentData());
+      await thunkAPI.dispatch(fetchRecruitmentData({ force: true }));
       return offer;
     } catch (error) {
       return thunkAPI.rejectWithValue(parseApiError(error, "Failed to save offer").message);
@@ -327,7 +343,7 @@ export const submitDecision = createAsyncThunk<
       }
 
       if (res?.data) {
-        return mapScreeningResultItemToFrontend(res.data as Record<string, unknown>);
+        return mapScreeningResultItemToFrontend(res.data as unknown as Record<string, unknown>);
       }
 
       return {

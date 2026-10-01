@@ -141,8 +141,21 @@ function isNotFoundOrNetworkError(err: unknown): boolean {
 }
 
 // ─────────────────────────────────────────────────────────────
-// 4. Notifications API Client
+// 4. Notifications API Client & Circuit Breaker
 // ─────────────────────────────────────────────────────────────
+
+// Session-level circuit breaker for /notifications/unread-count 404
+let unreadCount404Breaker = false;
+let hasLogged404Once = false;
+
+export function isUnreadCountCircuitBroken(): boolean {
+  return unreadCount404Breaker;
+}
+
+export function resetUnreadCountCircuitBreaker(): void {
+  unreadCount404Breaker = false;
+  hasLogged404Once = false;
+}
 
 export const notificationsApi = {
   /**
@@ -176,8 +189,15 @@ export const notificationsApi = {
   /**
    * GET /notifications/unread-count
    * Total unread count and category breakdown.
+   * If endpoint returns 404, trips session circuit breaker and throws 404.
    */
   async getUnreadCount(): Promise<UnreadCountData> {
+    if (unreadCount404Breaker) {
+      const err = new Error("Unread count endpoint unavailable (404)");
+      (err as any).status = 404;
+      throw err;
+    }
+
     try {
       const res = await apiInstance.get("/notifications/unread-count");
       const data = extractData<UnreadCountData>(res, { total: 0, byCategory: {} });
@@ -186,8 +206,19 @@ export const notificationsApi = {
         byCategory: data?.byCategory || {},
       };
     } catch (err: unknown) {
-      if (isNotFoundOrNetworkError(err)) {
-        return { total: 0, byCategory: {} };
+      if (axios.isAxiosError(err) && err.response?.status === 404) {
+        unreadCount404Breaker = true;
+        if (!hasLogged404Once) {
+          hasLogged404Once = true;
+          if (import.meta.env.DEV) {
+            console.warn(
+              "[Notifications] GET /notifications/unread-count returned 404. Circuit breaker tripped: polling disabled for this session. Deriving unread count from list.",
+            );
+          }
+        }
+        const notFoundErr = new Error("Unread count endpoint unavailable (404)");
+        (notFoundErr as any).status = 404;
+        throw notFoundErr;
       }
       throw err;
     }

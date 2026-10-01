@@ -21,6 +21,7 @@ const initialState: RecruitmentState = {
   interviews: [],
   offers: [],
   loading: false,
+  lastFetchedAt: null,
   submitting: false,
   error: null,
   screeningThresholds: { shortlist: 85, reject: 60 },
@@ -53,6 +54,7 @@ const recruitmentSlice = createSlice({
       state.interviews = [];
       state.offers = [];
       state.error = null;
+      state.lastFetchedAt = null;
     },
     optimisticMoveStage(
       state,
@@ -88,6 +90,7 @@ const recruitmentSlice = createSlice({
       })
       .addCase(fetchRecruitmentData.fulfilled, (state, action) => {
         state.loading = false;
+        state.lastFetchedAt = Date.now();
         state.jobs = action.payload.jobs;
         state.candidates = action.payload.candidates;
         state.interviews = action.payload.interviews;

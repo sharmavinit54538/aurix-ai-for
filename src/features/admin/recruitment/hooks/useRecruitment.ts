@@ -78,6 +78,7 @@ function useRecruitmentBase() {
     interviews,
     offers,
     loading,
+    lastFetchedAt,
     submitting,
     error,
     screeningThresholds,
@@ -90,6 +91,7 @@ function useRecruitmentBase() {
 
   const shouldFetch =
     !loading &&
+    (!lastFetchedAt || Date.now() - lastFetchedAt >= 30_000) &&
     jobs.length === 0 &&
     candidates.length === 0 &&
     interviews.length === 0 &&
@@ -102,7 +104,7 @@ function useRecruitmentBase() {
   }, [dispatch, shouldFetch]);
 
   const refreshAll = useCallback(() => {
-    dispatch(fetchRecruitmentData());
+    dispatch(fetchRecruitmentData({ force: true }));
   }, [dispatch]);
 
   const getJob = useCallback(

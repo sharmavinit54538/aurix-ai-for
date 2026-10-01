@@ -18,6 +18,7 @@ export interface RecruitmentResources {
 
 export interface RecruitmentState extends RecruitmentResources {
   loading: boolean;
+  lastFetchedAt: number | null;
   submitting: boolean;
   error: string | null;
   // AI Screening State

@@ -83,25 +83,37 @@ export const screeningApi = {
   /**
    * Fetch AI screening results and run status for a job requisition.
    * GET /api/v2/screening/jobs/{job_id}/results
+   * 404 is treated as "no results yet / endpoint unavailable" without throwing or retrying.
    */
   getScreeningResults: async (jobId: string): Promise<ScreeningResultsResponse> => {
-    const res = await apiInstance.get(`/api/v2/screening/jobs/${jobId}/results`);
-    const data = res.data?.data ?? res.data;
-    return {
-      thresholds: {
-        shortlist: Number(data?.thresholds?.shortlist ?? 85),
-        reject: Number(data?.thresholds?.reject ?? 60),
-      },
-      run: data?.run
-        ? {
-            run_id: String(data.run.run_id ?? data.run.runId ?? ""),
-            status: String(data.run.status ?? ""),
-            completed: Number(data.run.completed ?? 0),
-            total: Number(data.run.total ?? 0),
-          }
-        : null,
-      results: Array.isArray(data?.results) ? data.results : [],
-    };
+    try {
+      const res = await apiInstance.get(`/api/v2/screening/jobs/${jobId}/results`);
+      const data = res.data?.data ?? res.data;
+      return {
+        thresholds: {
+          shortlist: Number(data?.thresholds?.shortlist ?? 85),
+          reject: Number(data?.thresholds?.reject ?? 60),
+        },
+        run: data?.run
+          ? {
+              run_id: String(data.run.run_id ?? data.run.runId ?? ""),
+              status: String(data.run.status ?? ""),
+              completed: Number(data.run.completed ?? 0),
+              total: Number(data.run.total ?? 0),
+            }
+          : null,
+        results: Array.isArray(data?.results) ? data.results : [],
+      };
+    } catch (err: any) {
+      if (err?.response?.status === 404 || err?.status === 404) {
+        return {
+          thresholds: { shortlist: 85, reject: 60 },
+          run: null,
+          results: [],
+        };
+      }
+      throw err;
+    }
   },
 
   /**
