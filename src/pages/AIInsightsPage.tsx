@@ -1,11 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { memo, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Activity, AlertCircle, AlertTriangle, ArrowDownRight, ArrowUpRight, Award, Brain,
-  Briefcase, CheckCircle2, Cpu, Download, FileText, Flame, GraduationCap,
+  Briefcase, CheckCircle2, Cpu, FileText, Flame, GraduationCap,
   HeartPulse, Inbox, LineChart as LineChartIcon, MessageSquare, RefreshCw, Send, Shield,
-  ShieldAlert, Sparkles, Target, TrendingUp, UserMinus, UserPlus, Users, Wand2, Zap,
+  ShieldAlert, Sparkles, Target, TrendingUp, UserMinus, UserPlus, Users, Zap,
 } from "lucide-react";
 import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, Line, LineChart,
@@ -46,17 +46,10 @@ import {
   selectAIInsightsPartialErrors,
 } from "@/store/aiInsights/aiInsightsSelectors";
 import type {
-  AlertItem,
-  AttendanceInsightItem,
-  AttritionItem,
-  BurnoutItem,
-  CandidateMatchItem,
   DocumentItem,
   KpiItem,
   PayrollAlertItem,
   SummaryData,
-  SupportPerformerItem,
-  TopPerformerItem,
 } from "@/store/aiInsights/aiInsightsTypes";
 
 

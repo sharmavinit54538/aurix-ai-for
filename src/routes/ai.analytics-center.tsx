@@ -14,8 +14,6 @@ import {
   selectAIInsightsHiringDemand,
   selectAIInsightsPayrollTrend,
   selectAIInsightsSkillGap,
-  selectAIInsightsRecruitment,
-  selectAIInsightsSummary,
 } from "@/store/aiInsights/aiInsightsSelectors";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -47,8 +45,6 @@ function Page() {
   const hiringDemand = useAppSelector(selectAIInsightsHiringDemand);
   const payrollTrend = useAppSelector(selectAIInsightsPayrollTrend);
   const skillGap = useAppSelector(selectAIInsightsSkillGap);
-  const recruitment = useAppSelector(selectAIInsightsRecruitment);
-  const summary = useAppSelector(selectAIInsightsSummary);
 
   useEffect(() => {
     dispatch(fetchAIInsightsDashboard());
