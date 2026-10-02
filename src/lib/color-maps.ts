@@ -24,3 +24,20 @@ export const PRIORITY_DOT: Record<string, string> = {
 
 export const getPriorityDot = (priority?: string): string =>
   PRIORITY_DOT[(priority ?? "").toLowerCase().trim()] ?? "bg-muted-foreground";
+
+export const TONE_DOT: Record<string, string> = {
+  crit: "bg-destructive",
+  critical: "bg-destructive",
+  high: "bg-destructive",
+  warn: "bg-amber-500",
+  warning: "bg-amber-500",
+  medium: "bg-amber-500",
+  ok: "bg-emerald-500",
+  positive: "bg-emerald-500",
+  success: "bg-emerald-500",
+  low: "bg-muted-foreground",
+  info: "bg-muted-foreground",
+};
+
+export const getToneDot = (tone?: string): string =>
+  TONE_DOT[(tone ?? "").toLowerCase().trim()] ?? "bg-muted-foreground";
