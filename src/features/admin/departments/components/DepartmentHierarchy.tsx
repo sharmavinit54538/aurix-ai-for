@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import type { Department, HierarchyNode } from "../types";
-import { ChevronDown, ChevronRight, Users, User, ArrowRight, Building } from "lucide-react";
+import { ChevronDown, ChevronRight, Users, User, Building } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 

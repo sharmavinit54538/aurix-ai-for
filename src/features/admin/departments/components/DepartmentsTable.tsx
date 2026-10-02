@@ -27,7 +27,6 @@ import {
   Calendar,
   Users,
   DollarSign,
-  HelpCircle,
 } from "lucide-react";
 import type { Department, SortField, SortDir } from "../types";
 import { STATUS_OPTIONS } from "../constants";
@@ -55,8 +54,8 @@ export function DepartmentsTable({
   onView,
   onEdit,
   onDelete,
-  sortField,
-  sortDir,
+  sortField: _sortField,
+  sortDir: _sortDir,
   onSort,
 }: DepartmentsTableProps) {
   // Bulk select disabled

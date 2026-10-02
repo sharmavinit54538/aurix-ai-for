@@ -1,4 +1,4 @@
-import type { Department, DepartmentFilters } from "../types";
+import type { DepartmentFilters } from "../types";
 import { OFFICES } from "@/lib/constants";
 
 export { OFFICES };

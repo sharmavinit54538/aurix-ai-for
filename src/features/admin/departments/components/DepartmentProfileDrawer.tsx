@@ -27,11 +27,9 @@ import {
 import { Label } from "@/components/ui/label";
 import type { Department } from "../types";
 import {
-  Mail,
   Calendar,
   Building,
   User,
-  ShieldAlert,
   FileText,
   Clock,
   Award,
@@ -44,7 +42,6 @@ import {
   Briefcase,
   MapPin,
   Building2,
-  Trash2,
 } from "lucide-react";
 import { fmtDate, fmtBudget } from "../utils";
 import { useAurix } from "@/lib/aurix-store";
