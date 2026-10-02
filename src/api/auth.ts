@@ -65,8 +65,8 @@ export const authService = {
    * Refreshes the session access token using the canonical refresh endpoint.
    * Sends in-memory refresh token if available and forwards HttpOnly cookies.
    */
-  async refresh(): Promise<string> {
-    return refreshAccessToken();
+  async refresh(options?: { silent?: boolean }): Promise<string> {
+    return refreshAccessToken(options);
   },
 
   /**

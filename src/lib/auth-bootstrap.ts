@@ -1,5 +1,16 @@
 import { useSyncExternalStore } from "react";
-import { authService, clearApiCache, getTokens, getRefreshToken, hasValidAccessToken, isAccessTokenExpired, setTokens } from "@/api";
+import {
+  authService,
+  clearApiCache,
+  getTokens,
+  hasValidAccessToken,
+  isAccessTokenExpired,
+  setTokens,
+  clearTokens,
+  hasSessionHint,
+  setSessionHint,
+  clearSessionHint,
+} from "@/api";
 import type { AuthMeResponse, AuthUserPayload } from "@/api";
 import { aurix } from "./aurix-store";
 import { safeStorage } from "./safe-storage";
@@ -49,6 +60,7 @@ export function persistAuthSession(
   tokens: { accessToken: string; refreshToken?: string },
 ) {
   setTokens(tokens);
+  setSessionHint();
   aurix.set(mapAuthUser(user));
 }
 
@@ -79,6 +91,7 @@ export async function bootstrapAuth(): Promise<void> {
           const res = await authService.getMe();
           if (res.success && res.data) {
             aurix.set(mapAuthUser(res.data));
+            setSessionHint();
           }
         } catch {
           // Keep session while access token is valid
@@ -89,27 +102,29 @@ export async function bootstrapAuth(): Promise<void> {
     }
 
     // 2. Determine if we should attempt a session refresh:
-    // Do NOT call /auth/refresh on app boot when there is no stored session at all (just show the login page).
-    const hasStoredSession = Boolean(ws.user) || Boolean(getRefreshToken());
-
-    if (!hasStoredSession) {
-      // Unauthenticated guest or no stored session — do not trigger an unnecessary refresh request
+    // Call refresh ONLY if ofc_session_hint exists to avoid pre-login 401
+    if (!hasSessionHint()) {
+      aurix.set({ user: null, company: null });
       finish();
       return;
     }
 
-    // 3. If memory has no valid token (e.g. page refresh), attempt refresh via HttpOnly cookie:
+    // 3. Attempt silent session refresh via HttpOnly cookie:
     try {
-      await authService.refresh();
+      await authService.refresh({ silent: true });
       const res = await authService.getMe();
       if (res.success && res.data) {
         aurix.set(mapAuthUser(res.data));
+        setSessionHint();
       } else {
-        setTokens(null);
+        clearTokens();
+        clearSessionHint();
         aurix.set({ user: null, company: null });
       }
     } catch {
-      setTokens(null);
+      // Boot-time 401 is silent: no toast, no console error, clears hint and shows login
+      clearTokens();
+      clearSessionHint();
       aurix.set({ user: null, company: null });
     } finally {
       finish();
@@ -150,9 +165,11 @@ export async function logout(options?: { redirect?: boolean }) {
   } catch {
     // If backend is offline or logout endpoint fails, proceed with local session cleanup
   }
-  setTokens(null);
+  clearTokens();
+  clearSessionHint();
   aurix.reset();
   safeStorage.removeItem("aurix:tokens");
+  safeStorage.removeItem("aurix:refresh_token");
   safeStorage.removeItem("aurix:workspace:v1");
   safeStorage.removeItem("aurix:remember");
   safeStorage.removeItem("ofc360_notifications_state_v1");

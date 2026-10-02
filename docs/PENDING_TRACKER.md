@@ -5,11 +5,11 @@
 | **F-00.1** | DONE | `docs/PENDING_TRACKER.md` | None | Baseline recorded: typecheck green (0 errors), lint green (0 errors, 2036 warnings), build green, tests 30 passed / 4 pre-existing failures |
 | **F-00.2** | DONE | `docs/API_GAPS.md`, `docs/CONTRACT_DECISIONS.md`, `scripts/analyze-api-gaps.py` | None | Analyzed 460 frontend API calls vs backend route catalog; categorized FRONTEND_FIX, BACKEND_ADD, REMOVE_DEAD |
 | **F-00.3** | DONE | `docs/ROUTES.md`, `scripts/generate-routes-doc.py` | None | Route inventory generated across all 247 route files with component and data source mapping |
-| **F-01.1** | TODO | None | None | HttpOnly cookie refresh restoration on reload |
-| **F-01.2** | TODO | None | None | Session hint flag ofc_session_hint to avoid pre-login 401 |
-| **F-01.3** | TODO | None | None | Single-flight refresh with navigator.locks & BroadcastChannel |
-| **F-01.4** | TODO | None | None | Zero token storage in localStorage/sessionStorage; in-memory access token |
-| **F-01.5** | TODO | None | None | Auth session & refresh tests |
+| **F-01.1** | DONE | `src/api/apiInstance.ts`, `src/api/tokens.ts`, `src/api/auth.ts`, `src/lib/auth-bootstrap.ts` | `src/api/__tests__/authSession.test.ts` | HttpOnly cookie refresh restoration on reload via POST /api/v1/auth/refresh with empty body & withCredentials |
+| **F-01.2** | DONE | `src/api/tokens.ts`, `src/lib/auth-bootstrap.ts`, `src/api/apiInstance.ts` | `src/api/__tests__/authSession.test.ts` | Non-sensitive ofc_session_hint=1 flag in localStorage; boot refreshes ONLY if hint exists; silent 401 on boot |
+| **F-01.3** | DONE | `src/api/apiInstance.ts` | `src/api/__tests__/authSession.test.ts` | Single-flight refresh in tab; navigator.locks with BroadcastChannel fallback across tabs; session expired toast & return redirect |
+| **F-01.4** | DONE | `src/api/tokens.ts` | `src/api/__tests__/authSession.test.ts` | In-memory token storage only; safeStorage refresh token persistence completely removed |
+| **F-01.5** | DONE | `src/api/__tests__/authSession.test.ts` | `src/api/__tests__/authSession.test.ts` | Complete Vitest test suite for cookie reload, no refresh without hint, single-flight refresh, failed refresh logout, hint clearing |
 | **F-02.1** | TODO | None | None | useRecruitmentBase condition/deduping & StrictMode prevention |
 | **F-02.2** | TODO | None | None | Notifications unread-count circuit breaker & interval backoff |
 | **F-02.3** | TODO | None | None | Self-scheduling polling with back-off & stop on unmount/hidden/errors |

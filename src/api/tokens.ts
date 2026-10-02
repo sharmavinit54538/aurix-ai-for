@@ -3,25 +3,40 @@
  *
  * Security:
  * - Access token is kept in-memory for active API authorizations.
- * - Refresh token is kept in memory and persisted in safeStorage to allow
- *   session continuity and token refresh 4 minutes after login or on page reloads.
+ * - Refresh token is kept strictly in-memory (and forwarded via HttpOnly cookie).
+ * - Refresh token is NEVER persisted in localStorage or sessionStorage.
+ * - A non-sensitive session hint `ofc_session_hint=1` is stored in localStorage
+ *   to avoid pre-login 401s on app boot.
  */
 
 import { safeStorage } from "@/lib/safe-storage";
 
+export const SESSION_HINT_KEY = "ofc_session_hint";
 export const REFRESH_TOKEN_KEY = "aurix:refresh_token";
 const LEGACY_TOKENS_KEY = "aurix:tokens";
 
 let inMemoryAccessToken: string | null = null;
 let inMemoryRefreshToken: string | null = null;
 
-// Initial migration: Load stored refresh token if present
+// Initial migration: Clean up any legacy persisted tokens from previous versions
 if (typeof window !== "undefined") {
   safeStorage.removeItem(LEGACY_TOKENS_KEY);
-  const storedRefresh = safeStorage.getItem(REFRESH_TOKEN_KEY);
-  if (storedRefresh) {
-    inMemoryRefreshToken = storedRefresh;
-  }
+  safeStorage.removeItem(REFRESH_TOKEN_KEY);
+}
+
+export function hasSessionHint(): boolean {
+  if (typeof window === "undefined") return false;
+  return safeStorage.getItem(SESSION_HINT_KEY) === "1";
+}
+
+export function setSessionHint(): void {
+  if (typeof window === "undefined") return;
+  safeStorage.setItem(SESSION_HINT_KEY, "1");
+}
+
+export function clearSessionHint(): void {
+  if (typeof window === "undefined") return;
+  safeStorage.removeItem(SESSION_HINT_KEY);
 }
 
 export interface Tokens {
@@ -31,31 +46,32 @@ export interface Tokens {
 
 export function getTokens(): Tokens | null {
   if (!inMemoryAccessToken) return null;
-  const refreshToken = getRefreshToken() || undefined;
   return {
     accessToken: inMemoryAccessToken,
-    refreshToken,
+    refreshToken: inMemoryRefreshToken || undefined,
   };
 }
 
 export function setTokens(tokens: { accessToken?: string; refreshToken?: string } | null) {
   inMemoryAccessToken = tokens?.accessToken || null;
+  inMemoryRefreshToken = tokens?.refreshToken || null;
 
-  if (tokens && tokens.refreshToken !== undefined) {
-    inMemoryRefreshToken = tokens.refreshToken || null;
-    if (tokens.refreshToken) {
-      safeStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
-    } else {
-      safeStorage.removeItem(REFRESH_TOKEN_KEY);
-    }
+  if (tokens?.accessToken) {
+    setSessionHint();
   }
 
-  // When clearing all tokens (null), also clear refresh
+  // When clearing all tokens (null)
   if (!tokens) {
+    inMemoryAccessToken = null;
     inMemoryRefreshToken = null;
-    safeStorage.removeItem(REFRESH_TOKEN_KEY);
+    clearSessionHint();
   }
-  safeStorage.removeItem(LEGACY_TOKENS_KEY);
+
+  // Ensure no residual tokens exist in storage
+  if (typeof window !== "undefined") {
+    safeStorage.removeItem(REFRESH_TOKEN_KEY);
+    safeStorage.removeItem(LEGACY_TOKENS_KEY);
+  }
 }
 
 export function getAccessToken(): string | null {
@@ -64,21 +80,26 @@ export function getAccessToken(): string | null {
 
 export function setAccessToken(token: string | null) {
   inMemoryAccessToken = token;
+  if (token) {
+    setSessionHint();
+  }
 }
 
 export function getRefreshToken(): string | null {
-  if (inMemoryRefreshToken) return inMemoryRefreshToken;
-  const stored = safeStorage.getItem(REFRESH_TOKEN_KEY);
-  if (stored) {
-    inMemoryRefreshToken = stored;
-    return stored;
-  }
-  return null;
+  return inMemoryRefreshToken;
+}
+
+export function setRefreshToken(token: string | null) {
+  inMemoryRefreshToken = token;
 }
 
 export function clearTokens() {
   inMemoryAccessToken = null;
   inMemoryRefreshToken = null;
-  safeStorage.removeItem(REFRESH_TOKEN_KEY);
-  safeStorage.removeItem(LEGACY_TOKENS_KEY);
+  clearSessionHint();
+  if (typeof window !== "undefined") {
+    safeStorage.removeItem(REFRESH_TOKEN_KEY);
+    safeStorage.removeItem(LEGACY_TOKENS_KEY);
+  }
 }
+

@@ -14,7 +14,18 @@ export type {
   ResetPasswordPayload,
   GoogleAuthPayload,
 } from "./auth";
-export { getTokens, setTokens, getAccessToken, setAccessToken, getRefreshToken, clearTokens } from "./tokens";
+export {
+  getTokens,
+  setTokens,
+  getAccessToken,
+  setAccessToken,
+  getRefreshToken,
+  clearTokens,
+  hasSessionHint,
+  setSessionHint,
+  clearSessionHint,
+  SESSION_HINT_KEY,
+} from "./tokens";
 export type { Tokens } from "./tokens";
 export { hasValidAccessToken, isAccessTokenExpired } from "./token-utils";
 export { getErrorMessage, tryApi, parseApiError } from "./utils";
