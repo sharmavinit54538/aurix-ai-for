@@ -494,134 +494,138 @@ describe("F-03: AI Resume Screening Reconciliation & Safety Tests", () => {
   // ========================================================
   it("F-03.5 / F-03.12: polls while status is PENDING and stops on FAILED showing backend error + Retry", async () => {
     vi.useFakeTimers();
-
-    const getResultsSpy = vi
-      .spyOn(screeningApiModule.screeningApi, "getScreeningResults")
-      .mockResolvedValueOnce({
-        thresholds: { shortlist: 85, reject: 60 },
-        run: {
-          run_id: "run-pending-1",
-          status: "PENDING",
-          completed: 0,
-          total: 1,
-        },
-        results: [],
-      })
-      .mockResolvedValueOnce({
-        thresholds: { shortlist: 85, reject: 60 },
-        run: {
-          run_id: "run-pending-1",
-          status: "FAILED",
-          completed: 0,
-          total: 1,
-        },
-        results: [
-          {
-            screening_id: "scr-failed",
-            application_id: "app-fail",
-            candidate_id: "cand-fail",
-            candidate_name: "Failed Resume",
-            status: "FAILED",
-            error: "PDF parser encountered corrupted binary structure.",
-            decision: null,
-            confidence: 0,
-            match_score: 0,
-            strengths: [],
-            weaknesses: [],
-            missing_skills: [],
-            red_flags: [],
-            green_flags: [],
-            hiring_recommendation: "",
-            hr_notes: "",
-            questions_to_ask: [],
-            model_used: "gpt-4o",
-            screened_at: null,
-            human_decision: null,
-            human_decision_by: null,
-            human_decision_reason: null,
+    try {
+      const getResultsSpy = vi
+        .spyOn(screeningApiModule.screeningApi, "getScreeningResults")
+        .mockResolvedValueOnce({
+          thresholds: { shortlist: 85, reject: 60 },
+          run: {
+            run_id: "run-pending-1",
+            status: "PENDING",
+            completed: 0,
+            total: 1,
           },
-        ],
+          results: [],
+        })
+        .mockResolvedValueOnce({
+          thresholds: { shortlist: 85, reject: 60 },
+          run: {
+            run_id: "run-pending-1",
+            status: "FAILED",
+            completed: 0,
+            total: 1,
+          },
+          results: [
+            {
+              screening_id: "scr-failed",
+              application_id: "app-fail",
+              candidate_id: "cand-fail",
+              candidate_name: "Failed Resume",
+              status: "FAILED",
+              error: "PDF parser encountered corrupted binary structure.",
+              decision: null,
+              confidence: 0,
+              match_score: 0,
+              strengths: [],
+              weaknesses: [],
+              missing_skills: [],
+              redFlags: [],
+              greenFlags: [],
+              hiring_recommendation: "",
+              hr_notes: "",
+              questions_to_ask: [],
+              model_used: "gpt-4o",
+              screened_at: null,
+              human_decision: null,
+              human_decision_by: null,
+              human_decision_reason: null,
+            },
+          ],
+        });
+
+      const store = createTestStore({
+        recruitment: {
+          jobs: [mockJob1],
+          candidates: [
+            {
+              id: "cand-fail",
+              name: "Failed Resume",
+              email: "fail@test.com",
+              phone: "123",
+              location: "BLR",
+              jobId: "job-1",
+              applicationId: "app-fail",
+              appliedPosition: "Frontend Architect",
+              stage: "applied",
+              atsScore: null,
+              jobMatch: null,
+              source: "DIRECT",
+              tags: [],
+              skills: [],
+              yearsExperience: 2,
+              resumeName: "corrupt.pdf",
+              summary: "",
+              experience: [],
+              education: [],
+              projects: [],
+              certifications: [],
+              languages: [],
+              feedback: [],
+              notes: [],
+              documents: [],
+              timeline: [],
+              appliedAt: "2026-09-01T00:00:00Z",
+            },
+          ],
+          interviews: [],
+          offers: [],
+          loading: false,
+          submitting: false,
+          error: null,
+          screeningThresholds: { shortlist: 85, reject: 60 },
+          screeningJobId: "job-1",
+          screeningRun: {
+            runId: "run-pending-1",
+            status: "PENDING",
+            completed: 0,
+            total: 1,
+          },
+          screeningResults: [],
+          screeningLoading: false,
+          screeningSubmitting: false,
+          screeningError: null,
+        },
       });
 
-    const store = createTestStore({
-      recruitment: {
-        jobs: [mockJob1],
-        candidates: [
-          {
-            id: "cand-fail",
-            name: "Failed Resume",
-            email: "fail@test.com",
-            phone: "123",
-            location: "BLR",
-            jobId: "job-1",
-            applicationId: "app-fail",
-            appliedPosition: "Frontend Architect",
-            stage: "applied",
-            atsScore: null,
-            jobMatch: null,
-            source: "DIRECT",
-            tags: [],
-            skills: [],
-            yearsExperience: 2,
-            resumeName: "corrupt.pdf",
-            summary: "",
-            experience: [],
-            education: [],
-            projects: [],
-            certifications: [],
-            languages: [],
-            feedback: [],
-            notes: [],
-            documents: [],
-            timeline: [],
-            appliedAt: "2026-09-01T00:00:00Z",
-          },
-        ],
-        interviews: [],
-        offers: [],
-        loading: false,
-        submitting: false,
-        error: null,
-        screeningThresholds: { shortlist: 85, reject: 60 },
-        screeningJobId: "job-1",
-        screeningRun: {
-          runId: "run-pending-1",
-          status: "PENDING",
-          completed: 0,
-          total: 1,
-        },
-        screeningResults: [],
-        screeningLoading: false,
-        screeningSubmitting: false,
-        screeningError: null,
-      },
-    });
+      render(
+        <Provider store={store}>
+          <AIScreeningPage />
+        </Provider>,
+      );
 
-    render(
-      <Provider store={store}>
-        <AIScreeningPage />
-      </Provider>,
-    );
+      // Initial mount fetch
+      await act(async () => {
+        await Promise.resolve();
+      });
+      expect(getResultsSpy).toHaveBeenCalledTimes(1);
 
-    // Initial mount fetch
-    await act(async () => {
-      await Promise.resolve();
-    });
-    expect(getResultsSpy).toHaveBeenCalledTimes(1);
+      // Advance 3s -> polling triggers
+      await act(async () => {
+        vi.advanceTimersByTime(3000);
+        await Promise.resolve();
+      });
+      expect(getResultsSpy).toHaveBeenCalledTimes(2);
 
-    // Advance 3s -> polling triggers
-    await act(async () => {
-      vi.advanceTimersByTime(3000);
-      await Promise.resolve();
-    });
-    expect(getResultsSpy).toHaveBeenCalledTimes(2);
-
-    // Status is now FAILED, subsequent advance does not poll again
-    await act(async () => {
-      vi.advanceTimersByTime(10000);
-      await Promise.resolve();
-    });
-    expect(getResultsSpy).toHaveBeenCalledTimes(2);
+      // Status is now FAILED, subsequent advance does not poll again
+      await act(async () => {
+        vi.advanceTimersByTime(10000);
+        await Promise.resolve();
+      });
+      expect(getResultsSpy).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.clearAllTimers();
+      vi.useRealTimers();
+    }
   });
 
   // ========================================================
