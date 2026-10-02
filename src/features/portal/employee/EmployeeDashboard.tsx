@@ -1,3 +1,4 @@
+import { statusBadgeClass } from "@/lib/status-styles";
 // ============================================================
 // OFC360 — Employee Dashboard Component
 // Self-service portal for individual employees.
@@ -72,7 +73,7 @@ const stagger = (i: number) => ({
 // ── Shared card ───────────────────────────────────────────────
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-2xl border border-border bg-card/60 backdrop-blur-xl shadow-sm p-5 ${className}`}>
+    <div className={`rounded-2xl border border-border bg-card shadow-sm p-5 ${className}`}>
       {children}
     </div>
   );
@@ -109,11 +110,11 @@ function SectionHeader({
 
 // ── Status helpers ────────────────────────────────────────────
 const ATTENDANCE_STATUS: Record<string, string> = {
-  present: "bg-emerald-500/15 text-emerald-600 border-emerald-200",
-  late: "bg-amber-500/15 text-amber-600 border-amber-200",
-  leave: "bg-violet-500/15 text-violet-600 border-violet-200",
-  wfh: "bg-blue-500/15 text-blue-600 border-blue-200",
-  absent: "bg-rose-500/15 text-rose-600 border-rose-200",
+  present: statusBadgeClass("approved"),
+  late: statusBadgeClass("warning"),
+  leave: statusBadgeClass("info"),
+  wfh: statusBadgeClass("info"),
+  absent: statusBadgeClass("critical"),
 };
 
 const NOTIF_ICON: Record<string, React.ElementType> = {
@@ -123,25 +124,25 @@ const NOTIF_ICON: Record<string, React.ElementType> = {
 };
 
 const NOTIF_COLOR: Record<string, string> = {
-  success: "bg-emerald-500/10 text-emerald-500",
-  warn: "bg-amber-500/10 text-amber-500",
-  info: "bg-blue-500/10 text-blue-500",
+  success: "bg-primary/10 text-primary",
+  warn: "bg-muted text-foreground",
+  info: "bg-primary/10 text-primary",
 };
 
 const EVENT_COLOR: Record<string, string> = {
-  meeting: "bg-blue-500/15 text-blue-600 border-blue-200",
-  holiday: "bg-emerald-500/15 text-emerald-600 border-emerald-200",
-  event: "bg-amber-500/15 text-amber-600 border-amber-200",
+  meeting: statusBadgeClass("info"),
+  holiday: statusBadgeClass("approved"),
+  event: statusBadgeClass("warning"),
 };
 
 // ── Quick Actions ─────────────────────────────────────────────
 const EMP_QUICK_ACTIONS = [
-  { label: "Apply Leave", icon: FileText, link: "/dashboard/leaves", color: "from-amber-600 to-orange-600" },
-  { label: "View Payslip", icon: Download, link: "/dashboard/payroll/payslips", color: "from-green-600 to-emerald-600" },
-  { label: "My Attendance", icon: Clock, link: "/dashboard/attendance", color: "from-teal-600 to-cyan-600" },
-  { label: "My Documents", icon: FileText, link: "/dashboard/documents", color: "from-blue-600 to-indigo-600" },
-  { label: "My Assets", icon: Package, link: "/dashboard/assets", color: "from-slate-600 to-gray-700" },
-  { label: "AI Assistant", icon: Bot, link: "/ai/chat-assistant", color: "from-violet-600 to-purple-600" },
+  { label: "Apply Leave", icon: FileText, link: "/dashboard/leaves" },
+  { label: "View Payslip", icon: Download, link: "/dashboard/payroll/payslips" },
+  { label: "My Attendance", icon: Clock, link: "/dashboard/attendance" },
+  { label: "My Documents", icon: FileText, link: "/dashboard/documents" },
+  { label: "My Assets", icon: Package, link: "/dashboard/assets" },
+  { label: "AI Assistant", icon: Bot, link: "/ai/chat-assistant" },
 ];
 
 // ── 1. Employee Header ────────────────────────────────────────
@@ -151,12 +152,12 @@ function EmployeeHeader({ firstName: _firstName, companyName: _companyName }: { 
       initial={{ opacity: 0, y: -16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, ease: "easeOut" }}
-      className="rounded-2xl border border-border bg-card/60 p-5 backdrop-blur-xl"
+      className="rounded-2xl border border-border bg-card p-5"
     >
       <div className="flex items-center justify-end gap-3">
         <Link
           to="/ai/chat-assistant"
-          className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 px-3 py-2 text-xs font-semibold text-white shadow transition-all hover:shadow-md hover:-translate-y-0.5"
+          className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 hover:-translate-y-0.5"
         >
           <Sparkles className="h-3.5 w-3.5" /> AI Assistant
         </Link>
@@ -172,8 +173,8 @@ function EmployeeHeader({ firstName: _firstName, companyName: _companyName }: { 
                 to={a.link as any}
                 className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-background/60 p-3 text-center transition-all hover:border-foreground/20 hover:shadow-md hover:-translate-y-0.5"
               >
-                <div className={`grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br ${a.color}`}>
-                  <Icon className="h-4 w-4 text-white" />
+                <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10 text-primary">
+                  <Icon className="h-4 w-4" />
                 </div>
                 <span className="text-[11px] font-medium leading-tight text-muted-foreground group-hover:text-foreground">
                   {a.label}
@@ -201,7 +202,7 @@ function EmployeeKpiCards() {
             <div className="mt-0.5 text-[11px] text-muted-foreground">{kpi.label}</div>
             <div
               className={`mt-1.5 flex items-center gap-1 text-[11px] font-medium ${
-                kpi.changeType === "up" ? "text-emerald-500" : kpi.changeType === "down" ? "text-rose-500" : "text-muted-foreground"
+                kpi.changeType === "up" ? "text-foreground" : kpi.changeType === "down" ? "text-destructive" : "text-muted-foreground"
               }`}
             >
               {kpi.changeType === "up" ? <TrendingUp className="h-3 w-3" /> : kpi.changeType === "down" ? <TrendingDown className="h-3 w-3" /> : null}
@@ -213,14 +214,7 @@ function EmployeeKpiCards() {
                   <Line
                     type="monotone"
                     dataKey="v"
-                    stroke={
-                      kpi.accent.includes("emerald") ? "#10b981"
-                        : kpi.accent.includes("blue") ? "#3b82f6"
-                        : kpi.accent.includes("violet") ? "#8b5cf6"
-                        : kpi.accent.includes("amber") ? "#f59e0b"
-                        : kpi.accent.includes("green") ? "#22c55e"
-                        : "#f43f5e"
-                    }
+                    stroke="var(--primary)"
                     strokeWidth={2}
                     dot={false}
                   />
@@ -252,7 +246,7 @@ function MyAttendance() {
                 contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }}
                 formatter={(v) => [`${v} days`, "Days Present"]}
               />
-              <Bar dataKey="days" radius={[4, 4, 0, 0]} fill="#10b981" />
+              <Bar dataKey="days" radius={[4, 4, 0, 0]} fill="var(--primary)" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -319,7 +313,7 @@ function MyLeaves() {
                     <div className="text-xs text-muted-foreground">
                       {l.from} → {l.to} · {l.days} day{l.days !== 1 ? "s" : ""} · Applied {l.appliedOn}
                     </div>
-                    {l.approvedBy && <div className="text-xs text-emerald-600">Approved by {l.approvedBy}</div>}
+                    {l.approvedBy && <div className="text-xs text-muted-foreground">Approved by {l.approvedBy}</div>}
                   </div>
                 </div>
               ))}
@@ -337,7 +331,7 @@ function MyLeaves() {
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-muted">
                     <div
-                      className="h-full rounded-full bg-blue-500 transition-all duration-700"
+                      className="h-full rounded-full bg-primary transition-all duration-700"
                       style={{ width: `${(q.remaining / q.total) * 100}%` }}
                     />
                   </div>
@@ -366,16 +360,16 @@ function MyPerformance() {
         <SectionHeader title="My Performance" subtitle="Goals and self-assessment" link="/dashboard/performance" />
         <div className="mb-4 flex items-center gap-4 rounded-xl border border-border bg-background/50 px-4 py-3">
           <div className="text-center">
-            <div className="font-display text-3xl font-bold text-violet-500">87</div>
+            <div className="font-display text-3xl font-bold text-foreground">87</div>
             <div className="text-xs text-muted-foreground">Score</div>
           </div>
           <div className="flex-1">
             <div className="mb-1 flex justify-between text-xs">
               <span className="text-muted-foreground">Performance Rating</span>
-              <span className="font-semibold text-violet-500">87/100</span>
+              <span className="font-semibold text-foreground">87/100</span>
             </div>
             <Progress value={87} className="h-2" />
-            <p className="mt-1 text-[11px] text-emerald-600">+5pts from last quarter · Excellent trajectory</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">+5pts from last quarter · Excellent trajectory</p>
           </div>
         </div>
         <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">My Goals</p>
@@ -388,7 +382,7 @@ function MyPerformance() {
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-muted">
                 <div
-                  className={`h-full rounded-full transition-all duration-700 ${g.progress >= 70 ? "bg-emerald-500" : g.progress >= 40 ? "bg-amber-500" : "bg-rose-500"}`}
+                  className="h-full rounded-full bg-primary transition-all duration-700"
                   style={{ width: `${g.progress}%` }}
                 />
               </div>
@@ -414,15 +408,15 @@ function MyPayslips() {
           ) : (
             MY_PAYSLIPS.map((p) => (
               <div key={p.month} className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-3">
-                <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-green-500/10">
-                  <Download className="h-4 w-4 text-green-500" />
+                <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
+                  <Download className="h-4 w-4" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-medium">{p.month}</div>
                   <div className="text-xs text-muted-foreground">Gross: {p.gross} · Paid on {p.date}</div>
                 </div>
                 <div className="text-right">
-                  <div className="font-semibold text-emerald-500">{p.net}</div>
+                  <div className="font-semibold text-foreground">{p.net}</div>
                   <Badge variant="default" className="text-[10px]">Paid</Badge>
                 </div>
               </div>
@@ -437,9 +431,9 @@ function MyPayslips() {
 // ── 7. My Documents ───────────────────────────────────────────
 function MyDocuments() {
   const DOC_STATUS_STYLE: Record<string, string> = {
-    verified: "bg-emerald-500/10 text-emerald-600 border-emerald-200",
-    pending: "bg-amber-500/10 text-amber-600 border-amber-200",
-    rejected: "bg-rose-500/10 text-rose-600 border-rose-200",
+    verified: statusBadgeClass("approved"),
+    pending: statusBadgeClass("pending"),
+    rejected: statusBadgeClass("critical"),
   };
 
   return (
@@ -452,7 +446,7 @@ function MyDocuments() {
               <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-medium">{d.name}</div>
-                {d.dueDate && <div className="text-xs text-amber-600">{d.dueDate}</div>}
+                {d.dueDate && <div className="text-xs text-muted-foreground">{d.dueDate}</div>}
               </div>
               <span className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-medium capitalize ${DOC_STATUS_STYLE[d.status]}`}>
                 {d.status}
@@ -560,7 +554,7 @@ function EmployeeNotifications() {
               >
                 <div
                   className={`mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg ${
-                    isUrgent ? "bg-rose-500/10 text-rose-500" : "bg-primary/10 text-primary"
+                    isUrgent ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"
                   }`}
                 >
                   <Bell className="h-3.5 w-3.5" />
@@ -597,7 +591,7 @@ function EmployeeNotifications() {
           })}
           {items.length === 0 && (
             <div className="py-6 text-center text-sm text-muted-foreground">
-              <CheckCircle2 className="mx-auto mb-2 h-7 w-7 text-emerald-500" />
+              <CheckCircle2 className="mx-auto mb-2 h-7 w-7 text-muted-foreground" />
               All caught up! No notifications.
             </div>
           )}

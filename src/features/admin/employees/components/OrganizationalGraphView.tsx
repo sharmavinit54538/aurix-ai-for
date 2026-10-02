@@ -26,70 +26,61 @@ import type {
 // ── Node type visual config ──────────────────────────────────────
 const nodeTypeConfig: Record<
   OrgGraphNodeType,
-  { icon: React.ElementType; color: string; bg: string; ringColor: string; gradient: string }
+  { icon: React.ElementType; color: string; bg: string; ringColor: string }
 > = {
   employee: {
     icon: User,
-    color: "text-blue-400",
-    bg: "bg-blue-500/15",
-    ringColor: "ring-blue-500/40",
-    gradient: "from-blue-600/20 to-blue-500/5",
+    color: "text-primary",
+    bg: "bg-primary/10",
+    ringColor: "ring-primary/30",
   },
   manager: {
     icon: Crown,
-    color: "text-amber-400",
-    bg: "bg-amber-500/15",
-    ringColor: "ring-amber-500/40",
-    gradient: "from-amber-600/20 to-amber-500/5",
+    color: "text-primary",
+    bg: "bg-primary/15",
+    ringColor: "ring-primary/40",
   },
   team: {
     icon: Users,
-    color: "text-cyan-400",
-    bg: "bg-cyan-500/15",
-    ringColor: "ring-cyan-500/40",
-    gradient: "from-cyan-600/20 to-cyan-500/5",
+    color: "text-foreground",
+    bg: "bg-muted",
+    ringColor: "ring-border",
   },
   department: {
     icon: Building2,
-    color: "text-violet-400",
-    bg: "bg-violet-500/15",
-    ringColor: "ring-violet-500/40",
-    gradient: "from-violet-600/20 to-violet-500/5",
+    color: "text-primary",
+    bg: "bg-primary/10",
+    ringColor: "ring-primary/30",
   },
   project: {
     icon: FolderKanban,
-    color: "text-emerald-400",
-    bg: "bg-emerald-500/15",
-    ringColor: "ring-emerald-500/40",
-    gradient: "from-emerald-600/20 to-emerald-500/5",
+    color: "text-foreground",
+    bg: "bg-muted",
+    ringColor: "ring-border",
   },
   skill: {
     icon: Lightbulb,
-    color: "text-yellow-400",
-    bg: "bg-yellow-500/15",
-    ringColor: "ring-yellow-500/40",
-    gradient: "from-yellow-600/20 to-yellow-500/5",
+    color: "text-muted-foreground",
+    bg: "bg-muted",
+    ringColor: "ring-border",
   },
   goal: {
     icon: Target,
-    color: "text-rose-400",
-    bg: "bg-rose-500/15",
-    ringColor: "ring-rose-500/40",
-    gradient: "from-rose-600/20 to-rose-500/5",
+    color: "text-primary",
+    bg: "bg-primary/10",
+    ringColor: "ring-primary/30",
   },
   policy: {
     icon: Shield,
-    color: "text-indigo-400",
-    bg: "bg-indigo-500/15",
-    ringColor: "ring-indigo-500/40",
-    gradient: "from-indigo-600/20 to-indigo-500/5",
+    color: "text-muted-foreground",
+    bg: "bg-muted",
+    ringColor: "ring-border",
   },
   workflow: {
     icon: Workflow,
-    color: "text-teal-400",
-    bg: "bg-teal-500/15",
-    ringColor: "ring-teal-500/40",
-    gradient: "from-teal-600/20 to-teal-500/5",
+    color: "text-foreground",
+    bg: "bg-muted",
+    ringColor: "ring-border",
   },
 };
 
@@ -144,20 +135,18 @@ const GraphNodeCard = React.memo(function GraphNodeCard({
       whileHover={{ scale: 1.04, y: -2 }}
       transition={{ duration: 0.15 }}
       onClick={onClick}
-      className={`relative cursor-pointer rounded-xl border bg-card/85 shadow-lg backdrop-blur-xl transition-all duration-200 p-3 w-[220px] text-left group ${
+      className={`relative cursor-pointer rounded-xl border bg-card shadow-sm transition-all duration-200 p-3 w-[220px] text-left group ${
         isSelected
-          ? `border-primary ring-2 ring-primary/50 shadow-xl bg-card/95`
+          ? `border-primary ring-2 ring-primary/50 shadow-md bg-card`
           : isHighlighted
-          ? `border-brand-accent ring-2 ${config.ringColor} shadow-lg`
+          ? `border-primary ring-2 ${config.ringColor} shadow-md`
           : isConnected
-          ? `border-border/80 ring-1 ${config.ringColor}`
+          ? `border-border ring-1 ${config.ringColor}`
           : isDimmed
           ? "border-border/40 opacity-40 hover:opacity-70"
-          : "border-border/80 hover:border-foreground/40 hover:shadow-xl"
+          : "border-border hover:border-foreground/40 hover:shadow-md"
       }`}
     >
-      {/* Gradient accent */}
-      <div className={`absolute inset-0 rounded-xl bg-gradient-to-b ${config.gradient} pointer-events-none`} />
 
       {/* Content */}
       <div className="relative z-10">
@@ -359,12 +348,12 @@ export function OrganizationalGraphCanvas({
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
-      className={`relative w-full overflow-hidden rounded-2xl border border-border bg-card/40 backdrop-blur-xl min-h-[650px] ${
+      className={`relative w-full overflow-hidden rounded-2xl border border-border bg-card min-h-[650px] ${
         isDragging ? "cursor-grabbing select-none" : "cursor-grab"
       }`}
     >
       {/* Background grid */}
-      <div className="absolute inset-0 bg-[radial-gradient(#ffffff08_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(var(--border)_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none opacity-40" />
 
       {/* Canvas transform wrapper */}
       <div
@@ -405,7 +394,7 @@ export function OrganizationalGraphCanvas({
                         : `${nodeType}s`}{" "}
                       ({group.length})
                     </span>
-                    <div className={`flex-1 h-px ${config.bg}`} />
+                    <div className="flex-1 h-px bg-border" />
                   </div>
 
                   {/* Node cards */}

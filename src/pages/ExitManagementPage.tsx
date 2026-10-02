@@ -1,3 +1,4 @@
+import { statusBadgeClass } from "@/lib/status-styles";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo, useEffect } from "react";
 import apiInstance from "@/api/apiInstance";
@@ -108,46 +109,62 @@ const STAGE_FILTERS = [
   { id: "cancelled", label: "Cancelled" },
 ];
 
-const STAGE_BADGES: Record<string, { label: string; color: string; bg: string }> = {
-  requested: { label: "Requested", color: "text-blue-500", bg: "bg-blue-500/10" },
-  "under-review": { label: "Under Review", color: "text-amber-500", bg: "bg-amber-500/10" },
-  approved: { label: "Approved", color: "text-indigo-500", bg: "bg-indigo-500/10" },
-  notice: { label: "Notice Period", color: "text-purple-500", bg: "bg-purple-500/10" },
-  clearance: { label: "Clearance", color: "text-orange-500", bg: "bg-orange-500/10" },
-  settlement: { label: "Settlement", color: "text-pink-500", bg: "bg-pink-500/10" },
-  completed: { label: "Completed", color: "text-emerald-500", bg: "bg-emerald-500/10" },
-  cancelled: { label: "Cancelled", color: "text-neutral-500", bg: "bg-neutral-500/10" },
-  // Map older hrms exitStages
-  resignation: { label: "Resignation", color: "text-blue-500", bg: "bg-blue-500/10" },
-  interview: { label: "Interview Scheduled", color: "text-violet-500", bg: "bg-violet-500/10" },
-  assets: { label: "Assets Verification", color: "text-orange-500", bg: "bg-orange-500/10" },
-  hr: { label: "HR Clearance", color: "text-cyan-500", bg: "bg-cyan-500/10" },
-  manager: { label: "Manager Clearance", color: "text-indigo-500", bg: "bg-indigo-500/10" },
-  it: { label: "IT Clearance", color: "text-rose-500", bg: "bg-rose-500/10" },
-  finance: { label: "Finance Clearance", color: "text-yellow-500", bg: "bg-yellow-500/10" },
-  settled: { label: "Settled", color: "text-emerald-500", bg: "bg-emerald-500/10" },
+const STAGE_BADGES: Record<string, { label: string }> = {
+  requested: { label: "Requested" },
+  "under-review": { label: "Under Review" },
+  approved: { label: "Approved" },
+  notice: { label: "Notice Period" },
+  clearance: { label: "Clearance" },
+  settlement: { label: "Settlement" },
+  completed: { label: "Completed" },
+  cancelled: { label: "Cancelled" },
+  resignation: { label: "Resignation" },
+  interview: { label: "Interview Scheduled" },
+  assets: { label: "Assets Verification" },
+  hr: { label: "HR Clearance" },
+  manager: { label: "Manager Clearance" },
+  it: { label: "IT Clearance" },
+  finance: { label: "Finance Clearance" },
+  settled: { label: "Settled" },
+};
+
+const getExitBadge = (stage: string) => {
+  switch (stage) {
+    case "completed":
+    case "settled":
+    case "approved":
+      return statusBadgeClass("approved");
+    case "under-review":
+    case "notice":
+    case "clearance":
+    case "settlement":
+    case "interview":
+    case "assets":
+    case "hr":
+    case "manager":
+    case "it":
+    case "finance":
+      return statusBadgeClass("warning");
+    case "cancelled":
+    case "rejected":
+      return statusBadgeClass("critical");
+    case "requested":
+    case "resignation":
+    default:
+      return statusBadgeClass("info");
+  }
 };
 
 const STATS_CARDS = [
-  { key: "total", title: "Total Requests", color: "text-blue-500", bg: "bg-blue-500/10" },
-  { key: "approvals", title: "Pending Approvals", color: "text-amber-500", bg: "bg-amber-500/10" },
-  { key: "notice", title: "Notice Period", color: "text-purple-500", bg: "bg-purple-500/10" },
-  {
-    key: "clearance",
-    title: "Clearance Pending",
-    color: "text-orange-500",
-    bg: "bg-orange-500/10",
-  },
-  { key: "settlement", title: "Settlement Pending", color: "text-pink-500", bg: "bg-pink-500/10" },
-  {
-    key: "completed",
-    title: "Completed Exits",
-    color: "text-emerald-500",
-    bg: "bg-emerald-500/10",
-  },
+  { key: "total", title: "Total Requests" },
+  { key: "approvals", title: "Pending Approvals" },
+  { key: "notice", title: "Notice Period" },
+  { key: "clearance", title: "Clearance Pending" },
+  { key: "settlement", title: "Settlement Pending" },
+  { key: "completed", title: "Completed Exits" },
 ];
 
-const COLORS = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
+const COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
 
 // ----------------------------------------------------
 // MAIN MODULE COMPONENT
@@ -968,7 +985,7 @@ Finance Operations Partner`;
             URL.revokeObjectURL(url);
             toast.success("Exit report exported as CSV");
           }}
-          className="h-8 gap-1.5 text-xs border-border bg-card/60 hover:bg-accent/60 cursor-pointer"
+          className="h-8 gap-1.5 text-xs cursor-pointer"
         >
           <Download className="h-3.5 w-3.5" />
           Export
@@ -976,7 +993,7 @@ Finance Operations Partner`;
         <Button
           size="sm"
           onClick={() => setCreateOpen(true)}
-          className="h-8 gap-1.5 text-xs bg-gradient-brand text-brand-foreground hover:opacity-90 transition-opacity cursor-pointer"
+          className="h-8 gap-1.5 text-xs cursor-pointer"
         >
           <Plus className="h-3.5 w-3.5" />
           Create Exit Request
@@ -988,30 +1005,30 @@ Finance Operations Partner`;
         {STATS_CARDS.map((card) => {
           const count = stats[card.key as keyof typeof stats];
           return (
-            <Card key={card.key} className="border-border bg-card/40 backdrop-blur-xl">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-muted-foreground truncate leading-none">
-                    {card.title}
-                  </span>
-                  <span className={`grid h-7 w-7 place-items-center rounded-lg ${card.bg}`}>
-                    <LogOut className={`h-3.5 w-3.5 ${card.color}`} />
-                  </span>
-                </div>
-                <div className="mt-2.5 flex items-baseline gap-1">
-                  <span className="text-2xl font-bold font-display tracking-tight leading-none">
-                    {count}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
+            <Card key={card.key} className="border-border bg-card">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-muted-foreground truncate leading-none">
+                  {card.title}
+                </span>
+                <span className="grid h-7 w-7 place-items-center rounded-lg bg-primary/10 text-primary">
+                  <LogOut className="h-3.5 w-3.5" />
+                </span>
+              </div>
+              <div className="mt-2.5 flex items-baseline gap-1">
+                <span className="text-2xl font-semibold font-display tracking-tight leading-none text-foreground">
+                  {count}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
           );
         })}
       </div>
 
       {/* 3. TABS CONTAINER */}
       <Tabs defaultValue="requests" className="space-y-4">
-        <TabsList className="bg-card/60 border border-border p-1 rounded-xl h-10 w-fit shrink-0">
+        <TabsList className="bg-muted border border-border p-1 rounded-xl h-10 w-fit shrink-0">
           <TabsTrigger
             value="requests"
             className="text-xs h-8 px-4 font-medium rounded-lg cursor-pointer"
@@ -1030,7 +1047,7 @@ Finance Operations Partner`;
           <div>
             {/* PIPELINE TABLE */}
             <div className="space-y-4">
-              <div className="rounded-2xl border border-border bg-card/40 backdrop-blur-xl">
+              <div className="rounded-2xl border border-border bg-card">
                 {/* Filter / Search bars */}
                 <div className="flex flex-col gap-4 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="relative max-w-sm flex-1">
@@ -1169,7 +1186,7 @@ Finance Operations Partner`;
                                   <span
                                     className={
                                       exit.remainingDays <= 15 && exit.remainingDays > 0
-                                        ? "text-purple-500 font-bold"
+                                        ? "text-foreground font-bold"
                                         : "text-foreground"
                                     }
                                   >
@@ -1181,7 +1198,7 @@ Finance Operations Partner`;
                               </TableCell>
                               <TableCell className="px-4 py-3 text-center">
                                 <Badge
-                                  className={`${badge.bg} ${badge.color} border-none shadow-none text-[11px] font-semibold`}
+                                  className={`${getExitBadge(exit.stage)} border shadow-none text-[11px] font-semibold`}
                                 >
                                   {badge.label}
                                 </Badge>
@@ -1205,7 +1222,7 @@ Finance Operations Partner`;
                                         size="sm"
                                         variant="outline"
                                         onClick={() => handleApproval(exit, "hr")}
-                                        className="h-7 text-[10px] text-emerald-600 border-border cursor-pointer hover:bg-emerald-500/10"
+                                        className="h-7 text-[10px] text-emerald-600 dark:text-emerald-400 border-border cursor-pointer"
                                       >
                                         Approve
                                       </Button>
@@ -1213,7 +1230,7 @@ Finance Operations Partner`;
                                         size="sm"
                                         variant="outline"
                                         onClick={() => handleRejectPrompt(exit)}
-                                        className="h-7 text-[10px] text-rose-500 border-border cursor-pointer hover:bg-rose-500/10"
+                                        className="h-7 text-[10px] text-destructive border-destructive/30 cursor-pointer"
                                       >
                                         Reject
                                       </Button>
@@ -1224,7 +1241,7 @@ Finance Operations Partner`;
                                       size="sm"
                                       variant="outline"
                                       onClick={() => handleStartClearance(exit)}
-                                      className="h-7 text-[10px] text-indigo-500 border-border cursor-pointer hover:bg-indigo-500/10"
+                                      className="h-7 text-[10px] text-emerald-600 dark:text-emerald-400 border-border cursor-pointer"
                                     >
                                       Clearance
                                     </Button>
@@ -1234,7 +1251,7 @@ Finance Operations Partner`;
                                       size="sm"
                                       variant="outline"
                                       onClick={() => handleDeactivatePrompt(exit)}
-                                      className="h-7 text-[10px] text-purple-600 border-border cursor-pointer hover:bg-purple-500/10"
+                                      className="h-7 text-[10px] text-destructive border-destructive/30 cursor-pointer"
                                       title="Mark Completed & Archive"
                                     >
                                       Archive
@@ -1288,7 +1305,7 @@ Finance Operations Partner`;
         <TabsContent value="analytics" className="space-y-6">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {/* Chart 1: Attrition by Department */}
-            <Card className="border-border bg-card/40 backdrop-blur-xl">
+            <Card className="border-border bg-card">
               <CardHeader>
                 <CardTitle className="text-sm font-bold">Department-wise Exits</CardTitle>
                 <CardDescription className="text-xs">
@@ -1303,14 +1320,14 @@ Finance Operations Partner`;
                     <YAxis style={{ fontSize: 9 }} />
                     <Tooltip contentStyle={{ fontSize: 11 }} />
                     <Legend wrapperStyle={{ fontSize: 11 }} />
-                    <Bar dataKey="Exit Count" fill="#ec4899" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Exit Count" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
 
             {/* Chart 2: Monthly Exit Trends */}
-            <Card className="border-border bg-card/40 backdrop-blur-xl">
+            <Card className="border-border bg-card">
               <CardHeader>
                 <CardTitle className="text-sm font-bold">Monthly Exit Trends</CardTitle>
                 <CardDescription className="text-xs">
@@ -1426,7 +1443,7 @@ Finance Operations Partner`;
               </Button>
               <Button
                 type="submit"
-                className="h-9 bg-gradient-brand text-brand-foreground hover:opacity-90 cursor-pointer"
+                className="h-9 bg-primary text-brand-foreground hover:opacity-90 cursor-pointer"
               >
                 Create Request
               </Button>
@@ -1441,7 +1458,7 @@ Finance Operations Partner`;
       <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
         <DialogContent className="sm:max-w-md bg-background border-border">
           <DialogHeader>
-            <DialogTitle className="font-display font-bold text-rose-500">
+            <DialogTitle className="font-display font-bold text-destructive">
               Cancel/Reject Resignation
             </DialogTitle>
           </DialogHeader>
@@ -1466,7 +1483,7 @@ Finance Operations Partner`;
             </Button>
             <Button
               onClick={handleRejectSubmit}
-              className="h-9 bg-rose-600 text-white hover:bg-rose-750 cursor-pointer"
+              className="h-9 bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer"
             >
               Confirm Rejection
             </Button>
@@ -1480,7 +1497,7 @@ Finance Operations Partner`;
       <Dialog open={deactivateOpen} onOpenChange={setDeactivateOpen}>
         <DialogContent className="sm:max-w-md bg-background border-border text-center">
           <DialogHeader>
-            <DialogTitle className="font-display font-bold text-rose-500 flex items-center justify-center gap-1.5">
+            <DialogTitle className="font-display font-bold text-destructive flex items-center justify-center gap-1.5">
               <PowerOff className="h-5 w-5 animate-pulse" />
               Revoke Employee SSO Credentials
             </DialogTitle>
@@ -1507,7 +1524,7 @@ Finance Operations Partner`;
             </Button>
             <Button
               onClick={handleDeactivateConfirm}
-              className="h-9 bg-rose-600 text-white hover:bg-rose-750 cursor-pointer gap-1.5"
+              className="h-9 bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer gap-1.5"
             >
               <Archive className="h-4 w-4" />
               Deactivate & Archive
@@ -1523,11 +1540,11 @@ Finance Operations Partner`;
         <DialogContent className="sm:max-w-lg bg-background border-border">
           <DialogHeader>
             <DialogTitle className="font-display font-bold flex items-center gap-1.5">
-              <ShieldCheck className="h-5 w-5 text-indigo-500" />
+              <ShieldCheck className="h-5 w-5 text-primary" />
               Official Documentation Preview
             </DialogTitle>
           </DialogHeader>
-          <div className="bg-muted/30 rounded-xl border border-border p-5 text-slate-800 dark:text-slate-100 font-mono text-[11px] leading-relaxed whitespace-pre-wrap select-none min-h-[300px]">
+          <div className="bg-muted/30 rounded-xl border border-border p-5 text-foreground font-mono text-[11px] leading-relaxed whitespace-pre-wrap select-none min-h-[300px]">
             {previewDocText}
           </div>
           <DialogFooter>
@@ -1566,7 +1583,7 @@ Finance Operations Partner`;
                     };
                     return (
                       <Badge
-                        className={`${badge.bg} ${badge.color} border-none shadow-none text-xs font-bold`}
+                        className={`${getExitBadge(detailCase.stage)} border shadow-none text-xs font-bold`}
                       >
                         {badge.label}
                       </Badge>
@@ -1619,14 +1636,14 @@ Finance Operations Partner`;
                   {/* OVERVIEW TAB */}
                   <TabsContent value="overview" className="space-y-5 mt-0">
                     {/* Progress tracker */}
-                    <div className="rounded-xl border border-border bg-card/40 p-4 space-y-3 text-left">
+                    <div className="rounded-xl border border-border bg-card p-4 space-y-3 text-left">
                       <div className="flex justify-between items-center text-xs font-semibold">
                         <span>Notice Period Progress</span>
                         <span>{detailCase.remainingDays || 0} days remaining</span>
                       </div>
                       <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                         <div
-                          className="h-full rounded-full transition-all bg-gradient-brand"
+                          className="h-full rounded-full transition-all bg-primary"
                           style={{
                             width: `${Math.max(0, Math.min(100, ((detailCase.noticeDays - (detailCase.remainingDays || 0)) / detailCase.noticeDays) * 100))}%`,
                           }}
@@ -1639,7 +1656,7 @@ Finance Operations Partner`;
                     </div>
 
                     {/* Employee specifications */}
-                    <div className="rounded-xl border border-border bg-card/40 p-4 space-y-3 text-left">
+                    <div className="rounded-xl border border-border bg-card p-4 space-y-3 text-left">
                       <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                         Employee Profile
                       </h4>
@@ -1684,7 +1701,7 @@ Finance Operations Partner`;
                       <Label className="text-xs font-semibold text-muted-foreground">
                         Resignation timeline logs
                       </Label>
-                      <div className="rounded-xl border border-border bg-card/40 p-4 space-y-3.5">
+                      <div className="rounded-xl border border-border bg-card p-4 space-y-3.5">
                         {(detailCase.timeline || []).length === 0 ? (
                           <p className="text-xs text-muted-foreground italic">
                             No timelines logged for this exit.
@@ -1695,7 +1712,7 @@ Finance Operations Partner`;
                               key={tl.id}
                               className={`flex gap-3 text-xs relative ${idx < (detailCase.timeline || []).length - 1 ? "before:absolute before:left-2 before:top-4 before:bottom-0 before:w-[1px] before:bg-border pb-3" : ""}`}
                             >
-                              <span className="grid h-4 w-4 place-items-center rounded-full bg-indigo-500 text-white shrink-0">
+                              <span className="grid h-4 w-4 place-items-center rounded-full bg-primary/10 text-primary shrink-0">
                                 <Check className="h-2 w-2" />
                               </span>
                               <div className="text-left">
@@ -1717,7 +1734,7 @@ Finance Operations Partner`;
                   {/* CLEARANCE & ASSETS TAB */}
                   <TabsContent value="clearance" className="space-y-6 mt-0">
                     {/* Manager & HR Resignation Approval Status */}
-                    <div className="rounded-xl border border-border bg-card/40 p-4 space-y-3 text-left">
+                    <div className="rounded-xl border border-border bg-card p-4 space-y-3 text-left">
                       <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                         Resignation Signoff Approvals
                       </h4>
@@ -1732,15 +1749,15 @@ Finance Operations Partner`;
                           </strong>
                           <div className="pt-2 flex items-center justify-between">
                             {detailCase.managerApprovalStatus === "approved" ? (
-                              <Badge className="bg-emerald-500/10 text-emerald-500 border-none text-[10px]">
+                              <Badge variant="outline" className={`text-[10px] ${statusBadgeClass("approved")}`}>
                                 Approved
                               </Badge>
                             ) : detailCase.managerApprovalStatus === "rejected" ? (
-                              <Badge className="bg-rose-500/10 text-rose-500 border-none text-[10px]">
+                              <Badge className="bg-destructive/10 text-destructive border-destructive/20 text-[10px]">
                                 Rejected
                               </Badge>
                             ) : (
-                              <Badge className="bg-amber-500/10 text-amber-500 border-none text-[10px]">
+                              <Badge variant="outline" className={`text-[10px] ${statusBadgeClass("warning")}`}>
                                 Pending Approval
                               </Badge>
                             )}
@@ -1765,15 +1782,15 @@ Finance Operations Partner`;
                           <strong className="text-foreground block">{(detailCase as any).hrApproverName || "HR Business Partner"}</strong>
                           <div className="pt-2 flex items-center justify-between">
                             {detailCase.hrApprovalStatus === "approved" ? (
-                              <Badge className="bg-emerald-500/10 text-emerald-500 border-none text-[10px]">
+                              <Badge variant="outline" className={`text-[10px] ${statusBadgeClass("approved")}`}>
                                 Approved
                               </Badge>
                             ) : detailCase.hrApprovalStatus === "rejected" ? (
-                              <Badge className="bg-rose-500/10 text-rose-500 border-none text-[10px]">
+                              <Badge className="bg-destructive/10 text-destructive border-destructive/20 text-[10px]">
                                 Rejected
                               </Badge>
                             ) : (
-                              <Badge className="bg-amber-500/10 text-amber-500 border-none text-[10px]">
+                              <Badge variant="outline" className={`text-[10px] ${statusBadgeClass("warning")}`}>
                                 Pending Approval
                               </Badge>
                             )}
@@ -1801,12 +1818,12 @@ Finance Operations Partner`;
                         {(detailCase.assignedAssets || []).every(
                           (a) => a.status === "returned",
                         ) && (
-                          <span className="text-[11px] font-bold text-emerald-500 flex items-center gap-1">
+                          <span className="text-[11px] font-bold text-foreground flex items-center gap-1">
                             <CheckCircle2 className="h-3.5 w-3.5" /> Asset Clearance Completed
                           </span>
                         )}
                       </div>
-                      <div className="rounded-xl border border-border bg-card/40 p-0 overflow-hidden">
+                      <div className="rounded-xl border border-border bg-card p-0 overflow-hidden">
                         <Table className="text-xs border-collapse">
                           <TableHeader className="bg-muted/10 border-b border-border">
                             <TableRow>
@@ -1840,19 +1857,19 @@ Finance Operations Partner`;
                                   </TableCell>
                                   <TableCell className="px-3 py-2 text-center">
                                     {ast.status === "returned" ? (
-                                      <Badge className="bg-emerald-500/10 text-emerald-500 border-none font-semibold text-[10px]">
+                                      <Badge variant="outline" className={`text-[10px] font-semibold ${statusBadgeClass("approved")}`}>
                                         Returned
                                       </Badge>
                                     ) : ast.status === "damaged" ? (
-                                      <Badge className="bg-rose-500/10 text-rose-500 border-none font-semibold text-[10px]">
+                                      <Badge className="bg-destructive/10 text-destructive border-destructive/20 font-semibold text-[10px]">
                                         Damaged
                                       </Badge>
                                     ) : ast.status === "missing" ? (
-                                      <Badge className="bg-rose-500/10 text-rose-500 border-none font-semibold text-[10px]">
+                                      <Badge className="bg-destructive/10 text-destructive border-destructive/20 font-semibold text-[10px]">
                                         Missing
                                       </Badge>
                                     ) : (
-                                      <Badge className="bg-amber-500/10 text-amber-500 border-none font-semibold text-[10px]">
+                                      <Badge variant="outline" className={`text-[10px] font-semibold ${statusBadgeClass("warning")}`}>
                                         Pending Return
                                       </Badge>
                                     )}
@@ -1871,7 +1888,7 @@ Finance Operations Partner`;
                                               "Good condition.",
                                             )
                                           }
-                                          className="h-6 text-[9px] px-1.5 border-border cursor-pointer hover:bg-emerald-500/15"
+                                          className="h-6 text-[9px] px-1.5 border-border cursor-pointer hover:bg-muted"
                                         >
                                           Return
                                         </Button>
@@ -1886,7 +1903,7 @@ Finance Operations Partner`;
                                               "Screen scratch",
                                             )
                                           }
-                                          className="h-6 text-[9px] px-1.5 border-border cursor-pointer hover:bg-rose-500/15 text-rose-500"
+                                          className="h-6 text-[9px] px-1.5 border-border cursor-pointer hover:bg-destructive/10 text-destructive"
                                         >
                                           Damage
                                         </Button>
@@ -1906,7 +1923,7 @@ Finance Operations Partner`;
                       <Label className="text-xs font-semibold text-muted-foreground">
                         Department-wise clearance sign-offs
                       </Label>
-                      <div className="rounded-xl border border-border bg-card/40 p-0 overflow-hidden">
+                      <div className="rounded-xl border border-border bg-card p-0 overflow-hidden">
                         <Table className="text-xs border-collapse">
                           <TableHeader className="bg-muted/10 border-b border-border">
                             <TableRow>
@@ -1924,15 +1941,15 @@ Finance Operations Partner`;
                                 </TableCell>
                                 <TableCell className="px-3 py-2">
                                   {clear.status === "approved" ? (
-                                    <Badge className="bg-emerald-500/10 text-emerald-500 border-none font-semibold text-[10px]">
+                                    <Badge variant="outline" className={`text-[10px] font-semibold ${statusBadgeClass("approved")}`}>
                                       Cleared
                                     </Badge>
                                   ) : clear.status === "rejected" ? (
-                                    <Badge className="bg-rose-500/10 text-rose-500 border-none font-semibold text-[10px]">
+                                    <Badge className="bg-destructive/10 text-destructive border-destructive/20 font-semibold text-[10px]">
                                       Flagged
                                     </Badge>
                                   ) : (
-                                    <Badge className="bg-amber-500/10 text-amber-500 border-none font-semibold text-[10px]">
+                                    <Badge variant="outline" className={`text-[10px] font-semibold ${statusBadgeClass("warning")}`}>
                                       Clearance Pending
                                     </Badge>
                                   )}
@@ -1956,7 +1973,7 @@ Finance Operations Partner`;
                                           "Dues checks compiled.",
                                         )
                                       }
-                                      className="h-6 text-[9px] px-1.5 border-border cursor-pointer hover:bg-emerald-500/10"
+                                      className="h-6 text-[9px] px-1.5 border-border cursor-pointer hover:bg-muted"
                                     >
                                       Approve
                                     </Button>
@@ -1973,13 +1990,13 @@ Finance Operations Partner`;
                   {/* SETTLEMENT & DOCS TAB */}
                   <TabsContent value="settlement" className="space-y-6 mt-0">
                     {/* Calculations Form */}
-                    <div className="rounded-xl border border-border bg-card/40 p-4 space-y-4 text-left">
+                    <div className="rounded-xl border border-border bg-card p-4 space-y-4 text-left">
                       <div className="flex justify-between items-center">
                         <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                           Final Settlement Calculations
                         </h4>
                         {detailCase.settlementDetails?.status === "paid" && (
-                          <Badge className="bg-emerald-500/10 text-emerald-500 border-none font-bold">
+                          <Badge variant="outline" className={`font-bold ${statusBadgeClass("approved")}`}>
                             PAID OUT
                           </Badge>
                         )}
@@ -2073,7 +2090,7 @@ Finance Operations Partner`;
                                 <Button
                                   type="button"
                                   onClick={() => handlePaySettlement(detailCase)}
-                                  className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
+                                  className="h-8 text-xs cursor-pointer"
                                 >
                                   Pay Out Wire
                                 </Button>
@@ -2088,7 +2105,7 @@ Finance Operations Partner`;
                       <Label className="text-xs font-semibold text-muted-foreground">
                         Auto-generated offboarding certificates
                       </Label>
-                      <div className="rounded-xl border border-border bg-card/40 p-0 overflow-hidden">
+                      <div className="rounded-xl border border-border bg-card p-0 overflow-hidden">
                         <Table className="text-xs border-collapse">
                           <TableHeader className="bg-muted/10 border-b border-border">
                             <TableRow>
@@ -2105,11 +2122,11 @@ Finance Operations Partner`;
                                 <TableCell className="px-3 py-2 font-bold">{doc.name}</TableCell>
                                 <TableCell className="px-3 py-2">
                                   {doc.issued ? (
-                                    <Badge className="bg-emerald-500/10 text-emerald-500 border-none text-[10px] font-semibold">
+                                    <Badge variant="outline" className={`text-[10px] font-semibold ${statusBadgeClass("approved")}`}>
                                       Issued & Signed
                                     </Badge>
                                   ) : (
-                                    <Badge className="bg-amber-500/10 text-amber-500 border-none text-[10px] font-semibold">
+                                    <Badge variant="outline" className={`text-[10px] font-semibold ${statusBadgeClass("warning")}`}>
                                       Not Generated
                                     </Badge>
                                   )}
@@ -2130,7 +2147,7 @@ Finance Operations Partner`;
                                         size="sm"
                                         variant="outline"
                                         onClick={() => handleGenerateDoc(detailCase, doc.name)}
-                                        className="h-6 text-[9px] px-1.5 border-border cursor-pointer hover:bg-indigo-500/15"
+                                        className="h-6 text-[9px] px-1.5 border-border cursor-pointer hover:bg-muted"
                                       >
                                         Generate
                                       </Button>
@@ -2143,7 +2160,7 @@ Finance Operations Partner`;
                                             `Sent PDF document to ${detailCase.employee}'s personal email.`,
                                           );
                                         }}
-                                        className="h-6 w-6 text-indigo-500 hover:bg-indigo-500/10 cursor-pointer"
+                                        className="h-6 w-6 text-primary hover:bg-primary/10 cursor-pointer"
                                         title="Email PDF to employee"
                                       >
                                         <Mail className="h-3.5 w-3.5" />
@@ -2186,7 +2203,7 @@ Finance Operations Partner`;
                             className="cursor-pointer"
                           >
                             <Star
-                              className={`h-5 w-5 ${star <= intRating ? "text-amber-500 fill-amber-500" : "text-muted-foreground"}`}
+                              className={`h-5 w-5 ${star <= intRating ? "text-primary fill-primary" : "text-muted-foreground"}`}
                             />
                           </button>
                         ))}
@@ -2233,7 +2250,7 @@ Finance Operations Partner`;
                       <Button
                         type="button"
                         onClick={() => handleSaveInterview(detailCase)}
-                        className="h-8 text-xs bg-indigo-600 text-white hover:bg-indigo-750 cursor-pointer"
+                        className="h-8 text-xs cursor-pointer"
                       >
                         Save Interview Responses
                       </Button>
@@ -2247,7 +2264,7 @@ Finance Operations Partner`;
                     <Button
                       variant="outline"
                       onClick={() => handleDeactivatePrompt(detailCase)}
-                      className="h-9 text-xs border-border bg-transparent hover:bg-rose-500/10 hover:text-rose-500 cursor-pointer gap-1.5"
+                      className="h-9 text-xs border-border bg-transparent hover:bg-destructive/10 hover:text-destructive cursor-pointer gap-1.5"
                     >
                       <PowerOff className="h-3.5 w-3.5" />
                       Deactivate Login

@@ -81,7 +81,7 @@ const KIND_META: Record<
   TimelineKind,
   {
     icon: any;
-    tone: "emerald" | "blue" | "violet" | "amber" | "rose" | "cyan";
+    tone: "emerald" | "blue" | "violet" | "amber" | "rose" | "cyan" | "primary" | "muted" | "destructive" | string;
     label: string;
     gradient: string;
     bg: string;
@@ -89,94 +89,94 @@ const KIND_META: Record<
 > = {
   joining: {
     icon: UserCheck,
-    tone: "emerald",
+    tone: "primary",
     label: "Joining & Onboarding",
-    gradient: "from-emerald-500 to-teal-600",
-    bg: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+    gradient: "",
+    bg: "bg-primary/10 text-primary border-primary/20",
   },
   promotion: {
     icon: TrendingUp,
-    tone: "emerald",
+    tone: "primary",
     label: "Promotion & Rank",
-    gradient: "from-emerald-600 to-green-500",
-    bg: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+    gradient: "",
+    bg: "bg-primary/10 text-primary border-primary/20",
   },
   "department-change": {
     icon: UserCog,
-    tone: "blue",
+    tone: "primary",
     label: "Department Transfer",
-    gradient: "from-blue-600 to-indigo-600",
-    bg: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+    gradient: "",
+    bg: "bg-primary/10 text-primary border-primary/20",
   },
   "salary-revision": {
     icon: Wallet,
-    tone: "violet",
+    tone: "primary",
     label: "Salary & Compensation",
-    gradient: "from-violet-600 to-purple-600",
-    bg: "bg-violet-500/10 text-violet-500 border-violet-500/20",
+    gradient: "",
+    bg: "bg-primary/10 text-primary border-primary/20",
   },
   attendance: {
     icon: CalendarCheck,
-    tone: "blue",
+    tone: "primary",
     label: "Attendance & Shift",
-    gradient: "from-sky-600 to-blue-600",
-    bg: "bg-sky-500/10 text-sky-500 border-sky-500/20",
+    gradient: "",
+    bg: "bg-primary/10 text-primary border-primary/20",
   },
   leave: {
     icon: Plane,
-    tone: "amber",
+    tone: "muted",
     label: "Leave & Sabbatical",
-    gradient: "from-amber-600 to-orange-600",
-    bg: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+    gradient: "",
+    bg: "bg-muted text-muted-foreground border-border",
   },
   performance: {
     icon: Sparkles,
-    tone: "violet",
+    tone: "primary",
     label: "Performance Review",
-    gradient: "from-purple-600 to-pink-600",
-    bg: "bg-purple-500/10 text-purple-500 border-purple-500/20",
+    gradient: "",
+    bg: "bg-primary/10 text-primary border-primary/20",
   },
   training: {
     icon: GraduationCap,
-    tone: "cyan",
+    tone: "muted",
     label: "Training & Upskilling",
-    gradient: "from-cyan-600 to-teal-600",
-    bg: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
+    gradient: "",
+    bg: "bg-muted text-foreground border-border",
   },
   certification: {
     icon: FileSignature,
-    tone: "emerald",
+    tone: "primary",
     label: "Certification",
-    gradient: "from-teal-600 to-emerald-600",
-    bg: "bg-teal-500/10 text-teal-500 border-teal-500/20",
+    gradient: "",
+    bg: "bg-primary/10 text-primary border-primary/20",
   },
   award: {
     icon: Award,
-    tone: "amber",
+    tone: "primary",
     label: "Award & Recognition",
-    gradient: "from-amber-500 to-yellow-500",
-    bg: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+    gradient: "",
+    bg: "bg-primary/10 text-primary border-primary/20",
   },
   warning: {
     icon: ShieldAlert,
-    tone: "rose",
+    tone: "destructive",
     label: "Compliance & Warning",
-    gradient: "from-rose-600 to-red-600",
-    bg: "bg-rose-500/10 text-rose-500 border-rose-500/20",
+    gradient: "",
+    bg: "bg-destructive/10 text-destructive border-destructive/20",
   },
   project: {
     icon: Briefcase,
-    tone: "blue",
+    tone: "muted",
     label: "Project Assignment",
-    gradient: "from-blue-500 to-cyan-500",
-    bg: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+    gradient: "",
+    bg: "bg-muted text-foreground border-border",
   },
   exit: {
     icon: LogOutIcon,
-    tone: "rose",
+    tone: "destructive",
     label: "Exit & Offboarding",
-    gradient: "from-red-600 to-rose-700",
-    bg: "bg-rose-500/10 text-rose-500 border-rose-500/20",
+    gradient: "",
+    bg: "bg-destructive/10 text-destructive border-destructive/20",
   },
 };
 
@@ -425,12 +425,12 @@ export function TimelinePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl shadow-sm">
+          <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Total Events
               </span>
-              <div className="grid h-8 w-8 place-items-center rounded-lg bg-blue-500/10 text-blue-500">
+              <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10 text-primary">
                 <Calendar className="h-4 w-4" />
               </div>
             </div>
@@ -444,17 +444,17 @@ export function TimelinePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.05 }}
         >
-          <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl shadow-sm">
+          <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Onboarding & Joins
               </span>
-              <div className="grid h-8 w-8 place-items-center rounded-lg bg-emerald-500/10 text-emerald-500">
+              <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10 text-primary">
                 <UserCheck className="h-4 w-4" />
               </div>
             </div>
             <div className="mt-2 font-display text-2xl font-bold">{joiningCount}</div>
-            <div className="mt-1 text-xs text-emerald-500 font-medium">New team members</div>
+            <div className="mt-1 text-xs text-muted-foreground">New team members</div>
           </div>
         </motion.div>
 
@@ -463,17 +463,17 @@ export function TimelinePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.1 }}
         >
-          <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl shadow-sm">
+          <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Promotions & Awards
               </span>
-              <div className="grid h-8 w-8 place-items-center rounded-lg bg-amber-500/10 text-amber-500">
+              <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10 text-primary">
                 <Award className="h-4 w-4" />
               </div>
             </div>
             <div className="mt-2 font-display text-2xl font-bold">{promotionCount}</div>
-            <div className="mt-1 text-xs text-amber-500 font-medium">Recognitions & rank ups</div>
+            <div className="mt-1 text-xs text-muted-foreground">Recognitions & rank ups</div>
           </div>
         </motion.div>
 
@@ -482,12 +482,12 @@ export function TimelinePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.15 }}
         >
-          <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl shadow-sm">
+          <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Transfers & Salaries
               </span>
-              <div className="grid h-8 w-8 place-items-center rounded-lg bg-violet-500/10 text-violet-500">
+              <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10 text-primary">
                 <TrendingUp className="h-4 w-4" />
               </div>
             </div>
@@ -498,7 +498,7 @@ export function TimelinePage() {
       </div>
 
       {/* Ultra-Sleek Compact Filter Control Bar */}
-      <div className="rounded-2xl border border-border bg-card/60 p-3 backdrop-blur-xl space-y-2.5 shadow-sm">
+      <div className="rounded-2xl border border-border bg-card p-3 space-y-2.5 shadow-sm">
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Search box */}
           <div className="relative flex-1 min-w-[220px]">
@@ -587,7 +587,7 @@ export function TimelinePage() {
 
       {/* Timeline Stream */}
       {filteredEvents.length === 0 ? (
-        <div className="rounded-2xl border border-border bg-card/40 p-12 text-center">
+        <div className="rounded-2xl border border-border bg-card p-12 text-center">
           <div className="grid h-12 w-12 place-items-center rounded-xl bg-muted mx-auto text-muted-foreground mb-3">
             <Calendar className="h-6 w-6" />
           </div>
@@ -639,20 +639,21 @@ export function TimelinePage() {
                     >
                       {/* Timeline Dot Node */}
                       <div
-                        className={`absolute -left-[35px] top-1.5 grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br ${meta.gradient} text-white shadow-md ring-4 ring-background transition-transform group-hover:scale-110`}
+                        className="absolute -left-[35px] top-1.5 grid h-7 w-7 place-items-center rounded-full bg-primary/10 text-primary shadow-sm ring-4 ring-background transition-transform group-hover:scale-110"
                       >
                         <Icon className="h-3.5 w-3.5" />
                       </div>
 
                       {/* Event Card Content */}
-                      <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl shadow-sm transition-all group-hover:border-foreground/20 group-hover:shadow-md">
+                      <div className="rounded-2xl border border-border bg-card p-4 shadow-sm transition-all group-hover:border-foreground/20 group-hover:shadow-md">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div className="space-y-1">
                             <div className="flex items-center gap-2 flex-wrap">
                               <h3 className="font-display text-sm font-semibold text-foreground">
                                 {evt.title}
                               </h3>
-                              <Badge className={`text-[10px] font-medium border ${meta.bg}`}>
+                              <Badge variant="outline" className={`text-[10px] font-medium border ${meta.bg}`}>
+
                                 {meta.label}
                               </Badge>
                             </div>

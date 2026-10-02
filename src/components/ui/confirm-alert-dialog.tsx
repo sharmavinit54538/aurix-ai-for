@@ -50,7 +50,7 @@ export function ConfirmAlertDialog({
             className={cn(
               "rounded-xl border-none shadow-glow",
               destructive
-                ? "bg-rose-500 text-white hover:bg-rose-600"
+                ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 : "bg-brand text-brand-foreground hover:bg-brand/90",
             )}
           >

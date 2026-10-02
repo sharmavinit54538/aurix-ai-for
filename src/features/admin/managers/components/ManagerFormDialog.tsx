@@ -162,7 +162,6 @@ export function ManagerFormDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        overlayClassName="bg-black/60 backdrop-blur-sm"
         className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl border-border bg-card p-6 md:max-w-4xl"
         onPointerDownOutside={(e) => e.preventDefault()}
       >
@@ -175,7 +174,7 @@ export function ManagerFormDialog({
         {isEdit && detailLoading ? (
           <Loader variant="panel" label="Loading manager details..." className="py-12" />
         ) : isEdit && detailError ? (
-          <div className="py-12 text-center text-sm text-rose-500">{detailError}</div>
+          <div className="py-12 text-center text-sm text-destructive">{detailError}</div>
         ) : (
         <form key={manager?.id ?? "new-manager"} onSubmit={handleSubmit} className="space-y-6 py-4">
           <div className="space-y-4">
@@ -184,29 +183,29 @@ export function ManagerFormDialog({
             </h3>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               <div className="space-y-2">
-                <Label htmlFor="first_name" className="after:content-['*'] after:text-rose-500 after:ml-0.5">First Name</Label>
+                <Label htmlFor="first_name" className="after:content-['*'] after:text-destructive after:ml-0.5">First Name</Label>
                 <Input
                   id="first_name"
                   value={form.first_name}
                   onChange={(e) => updateField("first_name", e.target.value)}
                   placeholder="e.g. John"
-                  className={formErrors.first_name ? "border-rose-500" : ""}
+                  className={formErrors.first_name ? "border-destructive" : ""}
                 />
-                {formErrors.first_name && <p className="text-[10px] text-rose-500">{formErrors.first_name}</p>}
+                {formErrors.first_name && <p className="text-[10px] text-destructive">{formErrors.first_name}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="last_name" className="after:content-['*'] after:text-rose-500 after:ml-0.5">Last Name</Label>
+                <Label htmlFor="last_name" className="after:content-['*'] after:text-destructive after:ml-0.5">Last Name</Label>
                 <Input
                   id="last_name"
                   value={form.last_name}
                   onChange={(e) => updateField("last_name", e.target.value)}
                   placeholder="e.g. Doe"
-                  className={formErrors.last_name ? "border-rose-500" : ""}
+                  className={formErrors.last_name ? "border-destructive" : ""}
                 />
-                {formErrors.last_name && <p className="text-[10px] text-rose-500">{formErrors.last_name}</p>}
+                {formErrors.last_name && <p className="text-[10px] text-destructive">{formErrors.last_name}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="personal_email" className="after:content-['*'] after:text-rose-500 after:ml-0.5">Email Address</Label>
+                <Label htmlFor="personal_email" className="after:content-['*'] after:text-destructive after:ml-0.5">Email Address</Label>
                 <Input
                   id="personal_email"
                   type="email"
@@ -216,40 +215,40 @@ export function ManagerFormDialog({
                     dispatch(setManagerForm({ personal_email: email, company_email: email }));
                   }}
                   placeholder="e.g. john.doe@ofc360.com"
-                  className={formErrors.personal_email ? "border-rose-500" : ""}
+                  className={formErrors.personal_email ? "border-destructive" : ""}
                 />
-                {formErrors.personal_email && <p className="text-[10px] text-rose-500">{formErrors.personal_email}</p>}
+                {formErrors.personal_email && <p className="text-[10px] text-destructive">{formErrors.personal_email}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone" className="after:content-['*'] after:text-rose-500 after:ml-0.5">Phone Number</Label>
+                <Label htmlFor="phone" className="after:content-['*'] after:text-destructive after:ml-0.5">Phone Number</Label>
                 <Input
                   id="phone"
                   value={form.phone}
                   onChange={(e) => updateField("phone", e.target.value)}
                   placeholder="e.g. +91 98765 43210"
-                  className={formErrors.phone ? "border-rose-500" : ""}
+                  className={formErrors.phone ? "border-destructive" : ""}
                 />
-                {formErrors.phone && <p className="text-[10px] text-rose-500">{formErrors.phone}</p>}
+                {formErrors.phone && <p className="text-[10px] text-destructive">{formErrors.phone}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="date_of_birth" className="after:content-['*'] after:text-rose-500 after:ml-0.5">Date of Birth</Label>
+                <Label htmlFor="date_of_birth" className="after:content-['*'] after:text-destructive after:ml-0.5">Date of Birth</Label>
                 <Input
                   id="date_of_birth"
                   type="date"
                   value={form.date_of_birth}
                   onChange={(e) => updateField("date_of_birth", e.target.value)}
-                  className={formErrors.date_of_birth ? "border-rose-500" : ""}
+                  className={formErrors.date_of_birth ? "border-destructive" : ""}
                 />
-                {formErrors.date_of_birth && <p className="text-[10px] text-rose-500">{formErrors.date_of_birth}</p>}
+                {formErrors.date_of_birth && <p className="text-[10px] text-destructive">{formErrors.date_of_birth}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="gender" className="after:content-['*'] after:text-rose-500 after:ml-0.5">Gender</Label>
+                <Label htmlFor="gender" className="after:content-['*'] after:text-destructive after:ml-0.5">Gender</Label>
                 <Select
                   key={`gender-${form.gender}`}
                   value={form.gender || undefined}
                   onValueChange={(val) => updateField("gender", val)}
                 >
-                  <SelectTrigger id="gender" className={formErrors.gender ? "border-rose-500" : ""}>
+                  <SelectTrigger id="gender" className={formErrors.gender ? "border-destructive" : ""}>
                     <SelectValue placeholder="Select Gender" />
                   </SelectTrigger>
                   <SelectContent>
@@ -260,10 +259,10 @@ export function ManagerFormDialog({
                     ))}
                   </SelectContent>
                 </Select>
-                {formErrors.gender && <p className="text-[10px] text-rose-500">{formErrors.gender}</p>}
+                {formErrors.gender && <p className="text-[10px] text-destructive">{formErrors.gender}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="blood_group" className="after:content-['*'] after:text-rose-500 after:ml-0.5">Blood Group</Label>
+                <Label htmlFor="blood_group" className="after:content-['*'] after:text-destructive after:ml-0.5">Blood Group</Label>
                 <Input
                   id="blood_group"
                   value={form.blood_group}
@@ -272,7 +271,7 @@ export function ManagerFormDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="marital_status" className="after:content-['*'] after:text-rose-500 after:ml-0.5">Marital Status</Label>
+                <Label htmlFor="marital_status" className="after:content-['*'] after:text-destructive after:ml-0.5">Marital Status</Label>
                 <Input
                   id="marital_status"
                   value={form.marital_status}
@@ -300,13 +299,13 @@ export function ManagerFormDialog({
             </h3>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               <div className="space-y-2">
-                <Label htmlFor="department" className="after:content-['*'] after:text-rose-500 after:ml-0.5">Department</Label>
+                <Label htmlFor="department" className="after:content-['*'] after:text-destructive after:ml-0.5">Department</Label>
                 <Select
                   key={`department-${departmentValue ?? form.department}`}
                   value={departmentValue}
                   onValueChange={(val) => updateField("department", val)}
                 >
-                  <SelectTrigger id="department" className={formErrors.department ? "border-rose-500" : ""}>
+                  <SelectTrigger id="department" className={formErrors.department ? "border-destructive" : ""}>
                     <SelectValue placeholder="Select Department" />
                   </SelectTrigger>
                   <DepartmentSelectContent
@@ -315,19 +314,19 @@ export function ManagerFormDialog({
                     extraValues={form.department ? [form.department] : []}
                   />
                 </Select>
-                {formErrors.department && <p className="text-[10px] text-rose-500">{formErrors.department}</p>}
+                {formErrors.department && <p className="text-[10px] text-destructive">{formErrors.department}</p>}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="designation" className="after:content-['*'] after:text-rose-500 after:ml-0.5">Designation</Label>
+                <Label htmlFor="designation" className="after:content-['*'] after:text-destructive after:ml-0.5">Designation</Label>
                 <Input
                   id="designation"
                   value={form.designation}
                   onChange={(e) => updateField("designation", e.target.value)}
                   placeholder="e.g. Senior Engineering Manager"
-                  className={formErrors.designation ? "border-rose-500" : ""}
+                  className={formErrors.designation ? "border-destructive" : ""}
                 />
-                {formErrors.designation && <p className="text-[10px] text-rose-500">{formErrors.designation}</p>}
+                {formErrors.designation && <p className="text-[10px] text-destructive">{formErrors.designation}</p>}
               </div>
 
               <div className="space-y-2">
@@ -351,13 +350,13 @@ export function ManagerFormDialog({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="branch" className="after:content-['*'] after:text-rose-500 after:ml-0.5">Office Location</Label>
+                <Label htmlFor="branch" className="after:content-['*'] after:text-destructive after:ml-0.5">Office Location</Label>
                 <Select
                   key={`branch-${form.branch}`}
                   value={form.branch || undefined}
                   onValueChange={(val) => updateField("branch", val)}
                 >
-                  <SelectTrigger id="branch" className={formErrors.branch ? "border-rose-500" : ""}>
+                  <SelectTrigger id="branch" className={formErrors.branch ? "border-destructive" : ""}>
                     <SelectValue placeholder="Select Office" />
                   </SelectTrigger>
                   <SelectContent>
@@ -368,17 +367,17 @@ export function ManagerFormDialog({
                     ))}
                   </SelectContent>
                 </Select>
-                {formErrors.branch && <p className="text-[10px] text-rose-500">{formErrors.branch}</p>}
+                {formErrors.branch && <p className="text-[10px] text-destructive">{formErrors.branch}</p>}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="work_location" className="after:content-['*'] after:text-rose-500 after:ml-0.5">Work Location Mode</Label>
+                <Label htmlFor="work_location" className="after:content-['*'] after:text-destructive after:ml-0.5">Work Location Mode</Label>
                 <Select
                   key={`work-location-${form.work_location}`}
                   value={form.work_location || undefined}
                   onValueChange={(val) => updateField("work_location", val)}
                 >
-                  <SelectTrigger id="work_location" className={formErrors.work_location ? "border-rose-500" : ""}>
+                  <SelectTrigger id="work_location" className={formErrors.work_location ? "border-destructive" : ""}>
                     <SelectValue placeholder="Select Location Mode" />
                   </SelectTrigger>
                   <SelectContent>
@@ -389,19 +388,19 @@ export function ManagerFormDialog({
                     ))}
                   </SelectContent>
                 </Select>
-                {formErrors.work_location && <p className="text-[10px] text-rose-500">{formErrors.work_location}</p>}
+                {formErrors.work_location && <p className="text-[10px] text-destructive">{formErrors.work_location}</p>}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="joining_date" className="after:content-['*'] after:text-rose-500 after:ml-0.5">Joining Date</Label>
+                <Label htmlFor="joining_date" className="after:content-['*'] after:text-destructive after:ml-0.5">Joining Date</Label>
                 <Input
                   id="joining_date"
                   type="date"
                   value={form.joining_date}
                   onChange={(e) => updateField("joining_date", e.target.value)}
-                  className={formErrors.joining_date ? "border-rose-500" : ""}
+                  className={formErrors.joining_date ? "border-destructive" : ""}
                 />
-                {formErrors.joining_date && <p className="text-[10px] text-rose-500">{formErrors.joining_date}</p>}
+                {formErrors.joining_date && <p className="text-[10px] text-destructive">{formErrors.joining_date}</p>}
               </div>
 
               <div className="space-y-2">

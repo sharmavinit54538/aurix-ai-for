@@ -1,3 +1,4 @@
+import { statusBadgeClass } from "@/lib/status-styles";
 import { createFileRoute, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState, useMemo } from "react";
 import {
@@ -54,16 +55,28 @@ const CATEGORIES: { value: AssetCategory; label: string }[] = [
   { value: "other", label: "Other Equipment" },
 ];
 
-const STATUSES: { value: AssetStatus; label: string; color: string; bg: string }[] = [
-  { value: "available", label: "Available", color: "text-emerald-500", bg: "bg-emerald-500/10" },
-  { value: "assigned", label: "Assigned", color: "text-blue-500", bg: "bg-blue-500/10" },
-  { value: "under-repair", label: "Under Repair", color: "text-amber-500", bg: "bg-amber-500/10" },
-  { value: "lost", label: "Lost", color: "text-rose-500", bg: "bg-rose-500/10" },
-  { value: "expired", label: "Expired/Retired", color: "text-neutral-500", bg: "bg-neutral-500/10" },
-  { value: "retired", label: "Retired", color: "text-purple-500", bg: "bg-purple-500/10" },
+const STATUSES: { value: AssetStatus; label: string }[] = [
+  { value: "available", label: "Available" },
+  { value: "assigned", label: "Assigned" },
+  { value: "under-repair", label: "Under Repair" },
+  { value: "lost", label: "Lost" },
+  { value: "expired", label: "Expired/Retired" },
+  { value: "retired", label: "Retired" },
 ];
 
-const COLORS = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#3b82f6", "#6b7280"];
+const getAssetStatusBadge = (status: AssetStatus | string) => {
+  switch (status) {
+    case "available": return statusBadgeClass("approved");
+    case "under-repair": return statusBadgeClass("warning");
+    case "lost": return statusBadgeClass("critical");
+    case "assigned": return statusBadgeClass("default");
+    case "retired":
+    case "expired":
+    default: return statusBadgeClass("inactive");
+  }
+};
+
+const COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
 
 // Collision-resistant asset tag generator (Prefix + timestamp suffix + 4-digit random integer)
 const generateAssetTag = (category: AssetCategory): string => {
@@ -714,7 +727,7 @@ export function AssetsPage() {
           <Button
             variant="outline"
             onClick={() => setScanOpen(true)}
-            className="h-9 gap-2 border-border bg-card/60 hover:bg-accent/60 cursor-pointer"
+            className="h-9 gap-2 cursor-pointer"
           >
             <QrIcon className="h-4 w-4" />
             Scan QR Code
@@ -735,14 +748,14 @@ export function AssetsPage() {
               URL.revokeObjectURL(url);
               toast.success("Inventory exported as CSV");
             }}
-            className="h-9 gap-2 border-border bg-card/60 hover:bg-accent/60 cursor-pointer"
+            className="h-9 gap-2 cursor-pointer"
           >
             <Download className="h-4 w-4" />
             Export CSV
           </Button>
           <Button
             onClick={() => setAddOpen(true)}
-            className="h-9 gap-2 bg-gradient-brand text-brand-foreground hover:opacity-90 transition-opacity cursor-pointer"
+            className="h-9 gap-2 cursor-pointer"
           >
             <Plus className="h-4 w-4" />
             Add Asset
@@ -754,28 +767,28 @@ export function AssetsPage() {
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
         {(isEmployee
           ? [
-              { key: "assigned", title: "My Assigned Assets", count: filteredAssets.length, color: "text-indigo-500", bg: "bg-indigo-500/10" },
-              { key: "available", title: "Active Devices", count: filteredAssets.filter(a => a.status === "assigned").length, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+              { key: "assigned", title: "My Assigned Assets", count: filteredAssets.length },
+              { key: "available", title: "Active Devices", count: filteredAssets.filter(a => a.status === "assigned").length },
             ]
           : [
-              { key: "total", title: "Total Assets", count: stats.total, color: "text-blue-500", bg: "bg-blue-500/10" },
-              { key: "available", title: "Available Assets", count: stats.available, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-              { key: "assigned", title: "Assigned Assets", count: stats.assigned, color: "text-indigo-500", bg: "bg-indigo-500/10" },
-              { key: "repair", title: "Under Repair", count: stats.repair, color: "text-amber-500", bg: "bg-amber-500/10" },
-              { key: "lost", title: "Lost Assets", count: stats.lost, color: "text-rose-500", bg: "bg-rose-500/10" },
-              { key: "expiring", title: "Expiring Warranty", count: stats.expiring, color: "text-purple-500", bg: "bg-purple-500/10" },
+              { key: "total", title: "Total Assets", count: stats.total },
+              { key: "available", title: "Available Assets", count: stats.available },
+              { key: "assigned", title: "Assigned Assets", count: stats.assigned },
+              { key: "repair", title: "Under Repair", count: stats.repair },
+              { key: "lost", title: "Lost Assets", count: stats.lost },
+              { key: "expiring", title: "Expiring Warranty", count: stats.expiring },
             ]
         ).map(card => (
-          <Card key={card.key} className="border-border bg-card/40 backdrop-blur-xl">
+          <Card key={card.key} className="border-border bg-card">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-semibold text-muted-foreground truncate leading-none">{card.title}</span>
-                <span className={`grid h-7 w-7 place-items-center rounded-lg ${card.bg}`}>
-                  <Package className={`h-3.5 w-3.5 ${card.color}`} />
+                <span className="grid h-7 w-7 place-items-center rounded-lg bg-primary/10 text-primary">
+                  <Package className="h-3.5 w-3.5" />
                 </span>
               </div>
               <div className="mt-2.5 flex items-baseline gap-1">
-                <span className="text-2xl font-bold font-display tracking-tight leading-none">{card.count}</span>
+                <span className="text-2xl font-semibold font-display tracking-tight leading-none text-foreground">{card.count}</span>
               </div>
             </CardContent>
           </Card>
@@ -784,7 +797,7 @@ export function AssetsPage() {
 
       {/* 3. TABS CONTAINER: INVENTORY TABLE OR ANALYTICS REPORTS */}
       <Tabs defaultValue="inventory" className="space-y-4">
-        <TabsList className="bg-card/60 border border-border p-1 rounded-xl h-10 w-fit shrink-0">
+        <TabsList className="bg-muted border border-border p-1 rounded-xl h-10 w-fit shrink-0">
           <TabsTrigger value="inventory" className="text-xs h-8 px-4 font-medium rounded-lg cursor-pointer">
             Assets Inventory
           </TabsTrigger>
@@ -797,7 +810,7 @@ export function AssetsPage() {
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
             {/* INVENTORY TABLE PANEL */}
             <div className="space-y-4 lg:col-span-3">
-              <div className="rounded-2xl border border-border bg-card/40 backdrop-blur-xl">
+              <div className="rounded-2xl border border-border bg-card">
                 {/* Search / Filter pill row */}
                 <div className="flex flex-col gap-4 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="relative max-w-sm flex-1">
@@ -876,8 +889,8 @@ export function AssetsPage() {
                             >
                               {/* QR Code Col */}
                               <TableCell className="px-4 py-2 text-center" onClick={e => { e.stopPropagation(); setTargetAsset(asset); setQrOpen(true); }}>
-                                <div className="grid place-items-center h-8 w-8 rounded border border-border bg-white cursor-pointer hover:scale-105 transition-transform" title="Click to view full sticker">
-                                  <QrCode className="h-5 w-5 text-slate-800" />
+                                <div className="grid place-items-center h-8 w-8 rounded border border-border bg-muted cursor-pointer hover:scale-105 transition-transform" title="Click to view full sticker">
+                                  <QrCode className="h-5 w-5 text-foreground" />
                                 </div>
                               </TableCell>
                               <TableCell className="px-4 py-3 font-semibold font-mono text-xs text-foreground/90">
@@ -902,13 +915,13 @@ export function AssetsPage() {
                                 {asset.assignedTo ? (authWs.employees.find(x => x.fullName === asset.assignedTo)?.department || "Operations") : "—"}
                               </TableCell>
                               <TableCell className="px-4 py-3 text-xs">
-                                <span className={isWSoon ? "text-purple-500 font-semibold" : "text-muted-foreground"}>
+                                <span className={isWSoon ? "text-foreground font-semibold" : "text-muted-foreground"}>
                                   {asset.warrantyUntil || "—"}
                                 </span>
                               </TableCell>
                               {/* Status Badge */}
                               <TableCell className="px-4 py-3 text-center">
-                                <Badge className={`${statusInfo.bg} ${statusInfo.color} border-none shadow-none text-xs font-semibold capitalize`}>
+                                <Badge className={`${getAssetStatusBadge(asset.status)} border shadow-none text-xs font-semibold capitalize`}>
                                   {statusInfo.label}
                                 </Badge>
                               </TableCell>
@@ -931,7 +944,7 @@ export function AssetsPage() {
                                         size="sm"
                                         variant="outline"
                                         onClick={() => handleReturnAsset(asset)}
-                                        className="h-7 text-[10px] px-2 text-emerald-600 border-border cursor-pointer hover:bg-emerald-500/10"
+                                        className="h-7 text-[10px] px-2 text-emerald-600 dark:text-emerald-400 border-border cursor-pointer"
                                       >
                                         Return
                                       </Button>
@@ -939,7 +952,7 @@ export function AssetsPage() {
                                         size="sm"
                                         variant="outline"
                                         onClick={() => handleTransferOpen(asset)}
-                                        className="h-7 text-[10px] px-2 text-indigo-500 border-border cursor-pointer hover:bg-indigo-500/10"
+                                        className="h-7 text-[10px] px-2 border-border cursor-pointer"
                                       >
                                         Transfer
                                       </Button>
@@ -950,7 +963,7 @@ export function AssetsPage() {
                                       size="sm"
                                       variant="outline"
                                       onClick={() => handleRepairOpen(asset)}
-                                      className="h-7 text-[10px] px-2 text-amber-600 border-border cursor-pointer hover:bg-amber-500/10"
+                                      className="h-7 text-[10px] px-2 border-border cursor-pointer"
                                     >
                                       Repair
                                     </Button>
@@ -967,7 +980,7 @@ export function AssetsPage() {
                                     size="icon"
                                     variant="ghost"
                                     onClick={() => { setTargetAsset(asset); setDeleteOpen(true); }}
-                                    className="h-7 w-7 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 cursor-pointer"
+                                    className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer"
                                   >
                                     <Trash2 className="h-3.5 w-3.5" />
                                   </Button>
@@ -1015,10 +1028,10 @@ export function AssetsPage() {
             {/* RIGHT COLUMN: NOTIFICATION ALERTS & SIMULATED SCANNER */}
             <div className="space-y-6 lg:col-span-1">
               {/* Scan simulation Widget */}
-              <Card className="border-border bg-card/40 backdrop-blur-xl">
+              <Card className="border-border bg-card">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                    <QrCode className="h-4 w-4 text-indigo-500" />
+                    <QrCode className="h-4 w-4 text-primary" />
                     Mobile QR Scanner
                   </CardTitle>
                   <CardDescription className="text-xs text-muted-foreground">Simulate scanning asset labels</CardDescription>
@@ -1041,7 +1054,7 @@ export function AssetsPage() {
                     <Button
                       onClick={handleScanSimulation}
                       disabled={!scannedAssetTag}
-                      className="h-8 px-3 text-xs bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
+                      className="h-8 px-3 text-xs cursor-pointer"
                     >
                       Scan
                     </Button>
@@ -1050,10 +1063,10 @@ export function AssetsPage() {
               </Card>
 
               {/* Alerts Box */}
-              <Card className="border-border bg-card/40 backdrop-blur-xl">
+              <Card className="border-border bg-card">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4 text-rose-500 animate-pulse" />
+                    <AlertCircle className="h-4 w-4 text-destructive animate-pulse" />
                     Alerts & Notifications
                   </CardTitle>
                   <CardDescription className="text-xs text-muted-foreground">Asset events needing attention</CardDescription>
@@ -1069,10 +1082,10 @@ export function AssetsPage() {
                         key={alert.id}
                         className={`flex gap-2.5 rounded-lg border p-2.5 text-xs transition-colors ${
                           alert.type === "error"
-                            ? "bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400"
+                            ? statusBadgeClass("critical")
                             : alert.type === "warning"
-                            ? "bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400"
-                            : "bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400"
+                            ? statusBadgeClass("warning")
+                            : statusBadgeClass("info")
                         }`}
                       >
                         <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
@@ -1099,7 +1112,7 @@ export function AssetsPage() {
         <TabsContent value="reports" className="space-y-6">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {/* Chart 1: Category Allocation */}
-            <Card className="border-border bg-card/40 backdrop-blur-xl">
+            <Card className="border-border bg-card">
               <CardHeader>
                 <CardTitle className="text-sm font-bold">Category Allocation</CardTitle>
                 <CardDescription className="text-xs">Count of assets by category classification</CardDescription>
@@ -1128,7 +1141,7 @@ export function AssetsPage() {
             </Card>
 
             {/* Chart 2: Repair Costs per Category */}
-            <Card className="border-border bg-card/40 backdrop-blur-xl">
+            <Card className="border-border bg-card">
               <CardHeader>
                 <CardTitle className="text-sm font-bold">Maintenance Repair Costs ($)</CardTitle>
                 <CardDescription className="text-xs">Accumulated service and parts expenditure by category</CardDescription>
@@ -1141,14 +1154,14 @@ export function AssetsPage() {
                     <YAxis style={{ fontSize: 9 }} />
                     <Tooltip contentStyle={{ fontSize: 11 }} />
                     <Legend wrapperStyle={{ fontSize: 11 }} />
-                    <Bar dataKey="Total Repair Cost ($)" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Total Repair Cost ($)" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
 
             {/* Cost and inventory summary lists */}
-            <Card className="border-border bg-card/40 backdrop-blur-xl lg:col-span-2">
+            <Card className="border-border bg-card lg:col-span-2">
               <CardHeader>
                 <CardTitle className="text-sm font-bold">Asset Financial Summary</CardTitle>
                 <CardDescription className="text-xs">Capital expenditures and maintenance records per asset item</CardDescription>
@@ -1177,7 +1190,7 @@ export function AssetsPage() {
                           <TableCell className="px-4 py-2">{a.assignedTo || "Available"}</TableCell>
                           <TableCell className="px-4 py-2 text-muted-foreground">{a.purchaseDate}</TableCell>
                           <TableCell className="px-4 py-2 text-right">${a.purchaseCost || 0}</TableCell>
-                          <TableCell className="px-4 py-2 text-right text-amber-500">${repCost}</TableCell>
+                          <TableCell className="px-4 py-2 text-right text-foreground font-medium">${repCost}</TableCell>
                           <TableCell className="px-4 py-2 text-right font-semibold">${lifeCost}</TableCell>
                         </TableRow>
                       );
@@ -1278,7 +1291,7 @@ export function AssetsPage() {
               <Button type="button" variant="outline" onClick={() => setAddOpen(false)} className="h-9 border-border bg-transparent hover:bg-accent/60 cursor-pointer">
                 Cancel
               </Button>
-              <Button type="submit" className="h-9 bg-gradient-brand text-brand-foreground hover:opacity-90 cursor-pointer">
+              <Button type="submit" className="h-9 cursor-pointer">
                 Generate ID & Save
               </Button>
             </DialogFooter>
@@ -1365,7 +1378,7 @@ export function AssetsPage() {
               <Button type="button" variant="outline" onClick={() => setEditOpen(false)} className="h-9 border-border bg-transparent hover:bg-accent/60 cursor-pointer">
                 Cancel
               </Button>
-              <Button type="submit" className="h-9 bg-gradient-brand text-brand-foreground hover:opacity-90 cursor-pointer">
+              <Button type="submit" className="h-9 cursor-pointer">
                 Save Changes
               </Button>
             </DialogFooter>
@@ -1412,7 +1425,7 @@ export function AssetsPage() {
               <Button type="button" variant="outline" onClick={() => setAssignOpen(false)} className="h-9 border-border bg-transparent hover:bg-accent/60 cursor-pointer">
                 Cancel
               </Button>
-              <Button type="submit" className="h-9 bg-indigo-600 text-white hover:bg-indigo-750 cursor-pointer">
+              <Button type="submit" className="h-9 cursor-pointer">
                 Assign Asset
               </Button>
             </DialogFooter>
@@ -1429,7 +1442,7 @@ export function AssetsPage() {
             <DialogTitle className="font-display font-bold">Transfer Asset: {targetAsset?.tag}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleTransferSubmit} className="space-y-4">
-            <div className="rounded-lg bg-indigo-500/5 border border-indigo-500/10 p-3 text-xs text-indigo-600 dark:text-indigo-400">
+            <div className="rounded-lg bg-muted border border-border p-3 text-xs text-muted-foreground">
               Transferring asset currently assigned to: <strong>{targetAsset?.assignedTo}</strong>
             </div>
 
@@ -1465,7 +1478,7 @@ export function AssetsPage() {
               <Button type="button" variant="outline" onClick={() => setTransferOpen(false)} className="h-9 border-border bg-transparent hover:bg-accent/60 cursor-pointer">
                 Cancel
               </Button>
-              <Button type="submit" className="h-9 bg-indigo-600 text-white hover:bg-indigo-750 cursor-pointer">
+              <Button type="submit" className="h-9 cursor-pointer">
                 Transfer Asset
               </Button>
             </DialogFooter>
@@ -1501,7 +1514,7 @@ export function AssetsPage() {
               <Button type="button" variant="outline" onClick={() => setRepairOpen(false)} className="h-9 border-border bg-transparent hover:bg-accent/60 cursor-pointer">
                 Cancel
               </Button>
-              <Button type="submit" className="h-9 bg-amber-600 text-white hover:bg-amber-700 cursor-pointer">
+              <Button type="submit" className="h-9 cursor-pointer">
                 Log to Maintenance
               </Button>
             </DialogFooter>
@@ -1515,7 +1528,7 @@ export function AssetsPage() {
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent className="sm:max-w-sm bg-background border-border">
           <DialogHeader>
-            <DialogTitle className="font-display font-bold text-rose-500">Delete Asset Record</DialogTitle>
+            <DialogTitle className="font-display font-bold text-destructive">Delete Asset Record</DialogTitle>
           </DialogHeader>
           <p className="text-xs text-muted-foreground leading-relaxed">
             Are you sure you want to permanently erase the record for asset <strong className="font-semibold text-foreground">{targetAsset?.tag} ({targetAsset?.name})</strong>? This will clear all historical timelines.
@@ -1524,7 +1537,7 @@ export function AssetsPage() {
             <Button variant="outline" onClick={() => setDeleteOpen(false)} className="h-9 border-border bg-transparent hover:bg-accent/60 cursor-pointer">
               Cancel
             </Button>
-            <Button onClick={handleDeleteSubmit} className="h-9 bg-rose-600 text-white hover:bg-rose-700 cursor-pointer">
+            <Button variant="destructive" onClick={handleDeleteSubmit} className="h-9 cursor-pointer">
               Delete Record
             </Button>
           </DialogFooter>
@@ -1542,24 +1555,24 @@ export function AssetsPage() {
           {targetAsset && (
             <div className="space-y-4 pt-3 flex flex-col items-center">
               {/* Sticker frame */}
-              <div className="rounded-xl border border-slate-300 bg-white p-4 shadow-md w-[220px] flex flex-col items-center select-none text-slate-800">
-                <div className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">OFC360 ASSET</div>
-                <div className="font-mono text-sm font-extrabold text-slate-900 border-b border-slate-200 pb-1.5 w-full text-center">
+              <div className="rounded-xl border border-border bg-card p-4 shadow-sm w-[220px] flex flex-col items-center select-none text-foreground">
+                <div className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">OFC360 ASSET</div>
+                <div className="font-mono text-sm font-extrabold text-foreground border-b border-border pb-1.5 w-full text-center">
                   {targetAsset.tag}
                 </div>
                 
                 {/* QR Canvas */}
-                <div className="my-3 p-1.5 border border-slate-100 bg-white rounded shadow-inner flex flex-col items-center justify-center">
+                <div className="my-3 p-1.5 border border-border bg-muted/30 rounded shadow-inner flex flex-col items-center justify-center">
                   {(targetAsset as any).qrCodeData ? (
                     <img src={(targetAsset as any).qrCodeData} width={130} height={130} className="w-[130px] h-[130px]" alt="Asset QR Code" />
                   ) : (
-                    <div className="w-[130px] h-[130px] flex items-center justify-center bg-slate-50 text-[10px] text-slate-400">Generating QR...</div>
+                    <div className="w-[130px] h-[130px] flex items-center justify-center bg-muted text-[10px] text-muted-foreground">Generating QR...</div>
                   )}
-                  <div className="font-mono text-[10px] text-slate-500 mt-1.5">{targetAsset.serial ?? targetAsset.id}</div>
+                  <div className="font-mono text-[10px] text-muted-foreground mt-1.5">{targetAsset.serial ?? targetAsset.id}</div>
                 </div>
 
-                <div className="text-[10px] font-semibold text-slate-700 truncate max-w-full">{targetAsset.name}</div>
-                <div className="text-[8px] text-slate-400 italic">Company: OFC360</div>
+                <div className="text-[10px] font-semibold text-foreground truncate max-w-full">{targetAsset.name}</div>
+                <div className="text-[8px] text-muted-foreground italic">Company: OFC360</div>
               </div>
 
               {/* Actions */}
@@ -1590,7 +1603,7 @@ export function AssetsPage() {
                     toast.success(`Sticker sent to printer queue.`);
                     setQrOpen(false);
                   }}
-                  className="flex-1 h-9 text-xs bg-indigo-600 text-white hover:bg-indigo-700 cursor-pointer gap-1.5"
+                  className="flex-1 h-9 text-xs cursor-pointer gap-1.5"
                 >
                   <Printer className="h-3.5 w-3.5" />
                   Print Label
@@ -1631,7 +1644,7 @@ export function AssetsPage() {
             <Button variant="outline" onClick={() => setScanOpen(false)} className="h-9 border-border bg-transparent cursor-pointer">
               Cancel
             </Button>
-            <Button onClick={handleScanSimulation} disabled={!scannedAssetTag} className="h-9 bg-indigo-600 text-white hover:bg-indigo-750 cursor-pointer">
+            <Button onClick={handleScanSimulation} disabled={!scannedAssetTag} className="h-9 cursor-pointer">
               Confirm Scan
             </Button>
           </DialogFooter>
@@ -1653,7 +1666,7 @@ export function AssetsPage() {
                   {STATUSES.map(stat => {
                     if (stat.value !== detailAsset.status) return null;
                     return (
-                      <Badge key={stat.value} className={`${stat.bg} ${stat.color} border-none shadow-none text-xs font-bold capitalize`}>
+                      <Badge key={stat.value} className={`${getAssetStatusBadge(stat.value)} border shadow-none text-xs font-bold capitalize`}>
                         {stat.label}
                       </Badge>
                     );
@@ -1674,13 +1687,13 @@ export function AssetsPage() {
                   <div className="space-y-1.5">
                     <Label className="text-xs font-semibold text-muted-foreground">Asset QR Sticker Identification</Label>
                     <div className="rounded-xl border border-border bg-muted/30 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                      <div className="rounded bg-white p-2 border border-slate-200 flex flex-col items-center justify-center">
+                      <div className="rounded bg-card p-2 border border-border flex flex-col items-center justify-center">
                         {(detailAsset as any).qrCodeData ? (
                           <img src={(detailAsset as any).qrCodeData} width={110} height={110} className="w-[110px] h-[110px]" alt="Asset QR Code" />
                         ) : (
-                          <div className="w-[110px] h-[110px] flex items-center justify-center bg-slate-50 text-[10px] text-slate-400">Generating QR...</div>
+                          <div className="w-[110px] h-[110px] flex items-center justify-center bg-muted text-[10px] text-muted-foreground">Generating QR...</div>
                         )}
-                        <div className="font-mono text-[10px] text-slate-500 mt-1">{detailAsset.serial ?? detailAsset.id}</div>
+                        <div className="font-mono text-[10px] text-muted-foreground mt-1">{detailAsset.serial ?? detailAsset.id}</div>
                       </div>
                       <div className="text-xs text-left space-y-2 flex-1">
                         <p className="font-semibold text-foreground">Scannable QR Label</p>
@@ -1723,7 +1736,7 @@ export function AssetsPage() {
                   </div>
 
                   {/* SPECIFICATION GRID */}
-                  <div className="rounded-xl border border-border bg-card/40 p-4 space-y-3 text-left">
+                  <div className="rounded-xl border border-border bg-card p-4 space-y-3 text-left">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Hardware Specifications</h4>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
                       <div>
@@ -1751,9 +1764,9 @@ export function AssetsPage() {
                         <strong className="text-foreground mt-0.5 block">
                           {detailAsset.warrantyUntil ? (
                             new Date(detailAsset.warrantyUntil).getTime() < new Date("2026-06-28").getTime() ? (
-                              <span className="text-rose-500">Warranty Expired ({detailAsset.warrantyUntil})</span>
+                              <span className="text-destructive font-medium">Warranty Expired ({detailAsset.warrantyUntil})</span>
                             ) : (
-                              <span className="text-emerald-500">Warranty Active (Expires: {detailAsset.warrantyUntil})</span>
+                              <span className="text-foreground font-medium">Warranty Active (Expires: {detailAsset.warrantyUntil})</span>
                             )
                           ) : "No Warranty Data"}
                         </strong>
@@ -1763,7 +1776,7 @@ export function AssetsPage() {
 
                   {/* ACTIVE ASSIGNEE WARNING */}
                   {detailAsset.status === "assigned" && (
-                    <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 p-3.5 text-xs text-indigo-600 dark:text-indigo-400 space-y-1 text-left">
+                    <div className="rounded-xl border border-border bg-muted/40 p-3.5 text-xs text-muted-foreground space-y-1 text-left">
                       <div className="flex items-center gap-1.5 font-bold">
                         <User className="h-4 w-4" />
                         Current Assignment:
@@ -1779,23 +1792,13 @@ export function AssetsPage() {
                   {/* TIMELINE EVENTS OF ASSET */}
                   <div className="space-y-2 text-left">
                     <Label className="text-xs font-semibold text-muted-foreground">Asset Timeline Audit Logs</Label>
-                    <div className="rounded-xl border border-border bg-card/40 p-4 space-y-3.5">
+                    <div className="rounded-xl border border-border bg-card p-4 space-y-3.5">
                       {(detailAsset.timeline || []).length === 0 ? (
                         <p className="text-xs text-muted-foreground italic">No timelines logged for this asset.</p>
                       ) : (
                         (detailAsset.timeline || []).map((tl, idx) => (
                           <div key={tl.id} className={`flex gap-3 text-xs relative ${idx < (detailAsset.timeline || []).length - 1 ? 'before:absolute before:left-2 before:top-4 before:bottom-0 before:w-[1px] before:bg-border pb-3' : ''}`}>
-                            <span className={`grid h-4 w-4 place-items-center rounded-full shrink-0 ${
-                              tl.event === 'Created'
-                                ? 'bg-blue-500 text-white'
-                                : tl.event === 'Assigned'
-                                ? 'bg-indigo-500 text-white'
-                                : tl.event === 'Returned'
-                                ? 'bg-emerald-500 text-white'
-                                : tl.event === 'Repaired'
-                                ? 'bg-amber-500 text-white'
-                                : 'bg-rose-500 text-white'
-                            }`}>
+                            <span className="grid h-4 w-4 place-items-center rounded-full shrink-0 bg-primary/10 text-primary">
                               <Package className="h-2 w-2" />
                             </span>
                             <div>
@@ -1814,7 +1817,7 @@ export function AssetsPage() {
                   {/* ASSIGNMENT HISTORY LIST */}
                   <div className="space-y-2 text-left">
                     <Label className="text-xs font-semibold text-muted-foreground">Assignment History Logs</Label>
-                    <div className="rounded-xl border border-border bg-card/40 p-0 overflow-hidden">
+                    <div className="rounded-xl border border-border bg-card p-0 overflow-hidden">
                       <Table className="text-[11px] border-collapse">
                         <TableHeader className="bg-muted/10 border-b border-border">
                           <TableRow>
@@ -1839,9 +1842,9 @@ export function AssetsPage() {
                                 <TableCell className="px-3 py-2 text-muted-foreground">{hist.assignDate}</TableCell>
                                 <TableCell className="px-3 py-2">
                                   {hist.actualReturnDate ? (
-                                    <span className="text-emerald-500">{hist.actualReturnDate}</span>
+                                    <span>{hist.actualReturnDate}</span>
                                   ) : (
-                                    <span className="text-amber-500 font-semibold">Active</span>
+                                    <span className="text-foreground font-medium font-semibold">Active</span>
                                   )}
                                 </TableCell>
                               </TableRow>
@@ -1855,7 +1858,7 @@ export function AssetsPage() {
                   {/* MAINTENANCE LOGS LIST */}
                   <div className="space-y-2 text-left">
                     <Label className="text-xs font-semibold text-muted-foreground">Maintenance Repair logs</Label>
-                    <div className="rounded-xl border border-border bg-card/40 p-0 overflow-hidden">
+                    <div className="rounded-xl border border-border bg-card p-0 overflow-hidden">
                       <Table className="text-[11px] border-collapse">
                         <TableHeader className="bg-muted/10 border-b border-border">
                           <TableRow>
@@ -1877,7 +1880,7 @@ export function AssetsPage() {
                               <TableRow key={mr.id} className="border-t border-border">
                                 <TableCell className="px-3 py-2 font-mono">{mr.serviceDate}</TableCell>
                                 <TableCell className="px-3 py-2 text-muted-foreground">{mr.vendor}</TableCell>
-                                <TableCell className="px-3 py-2 text-right text-amber-500 font-semibold">${mr.cost}</TableCell>
+                                <TableCell className="px-3 py-2 text-right text-foreground font-medium font-semibold">${mr.cost}</TableCell>
                                 <TableCell className="px-3 py-2 text-muted-foreground truncate max-w-[120px]" title={mr.notes}>
                                   {mr.notes || "—"}
                                 </TableCell>
@@ -1890,9 +1893,9 @@ export function AssetsPage() {
                   </div>
 
                   {/* FUTURE COMPLIANCE PLACEHOLDER */}
-                  <div className="rounded-xl border border-dashed border-indigo-500/20 bg-indigo-500/5 p-3.5 text-xs text-indigo-600 dark:text-indigo-400 space-y-1 text-left">
+                  <div className="rounded-xl border border-dashed border-border bg-muted/40 p-3.5 text-xs text-muted-foreground space-y-1 text-left">
                     <h5 className="font-bold flex items-center gap-1 text-[11px]">
-                      <ShieldCheck className="h-3.5 w-3.5 text-indigo-500" />
+                      <ShieldCheck className="h-3.5 w-3.5 text-primary" />
                       Decommissioning & Auditing Protocols
                     </h5>
                     <p className="text-[10px] leading-relaxed text-muted-foreground">
@@ -1907,7 +1910,7 @@ export function AssetsPage() {
                 {detailAsset.status === "available" && (
                   <Button
                     onClick={() => handleAssignOpen(detailAsset)}
-                    className="h-9 text-xs bg-indigo-600 text-white hover:bg-indigo-750 cursor-pointer"
+                    className="h-9 text-xs cursor-pointer"
                   >
                     Assign Asset
                   </Button>
@@ -1917,14 +1920,14 @@ export function AssetsPage() {
                     <Button
                       variant="outline"
                       onClick={() => handleReturnAsset(detailAsset)}
-                      className="h-9 text-xs border-border bg-transparent hover:bg-accent/60 cursor-pointer text-emerald-600"
+                      className="h-9 text-xs border-border cursor-pointer text-emerald-600 dark:text-emerald-400"
                     >
                       Return Asset
                     </Button>
                     <Button
                       variant="outline"
                       onClick={() => handleTransferOpen(detailAsset)}
-                      className="h-9 text-xs border-border bg-transparent hover:bg-accent/60 cursor-pointer text-indigo-500"
+                      className="h-9 text-xs border-border cursor-pointer"
                     >
                       Transfer
                     </Button>
@@ -1934,7 +1937,7 @@ export function AssetsPage() {
                   <Button
                     variant="outline"
                     onClick={() => handleRepairOpen(detailAsset)}
-                    className="h-9 text-xs border-border bg-transparent hover:bg-accent/60 cursor-pointer text-amber-600"
+                    className="h-9 text-xs border-border cursor-pointer"
                   >
                     Log Fault
                   </Button>
@@ -1943,7 +1946,7 @@ export function AssetsPage() {
                   <Button
                     variant="outline"
                     onClick={() => handleMarkRetired(detailAsset)}
-                    className="h-9 text-xs border-border bg-transparent hover:bg-accent/60 cursor-pointer text-purple-600"
+                    className="h-9 text-xs border-border cursor-pointer"
                   >
                     Decommission
                   </Button>
@@ -1952,7 +1955,7 @@ export function AssetsPage() {
                   <Button
                     variant="outline"
                     onClick={() => handleMarkLost(detailAsset)}
-                    className="h-9 text-xs border-border bg-transparent hover:bg-accent/60 cursor-pointer text-rose-500"
+                    className="h-9 text-xs border-destructive/30 text-destructive cursor-pointer"
                   >
                     Flag Lost
                   </Button>
@@ -1960,7 +1963,7 @@ export function AssetsPage() {
                 <Button
                   variant="outline"
                   onClick={() => { setTargetAsset(detailAsset); setQrOpen(true); }}
-                  className="h-9 text-xs border-border bg-transparent hover:bg-accent/60 cursor-pointer gap-1.5"
+                  className="h-9 text-xs border-border cursor-pointer gap-1.5"
                 >
                   <QrIcon className="h-3.5 w-3.5" />
                   QR Sticker

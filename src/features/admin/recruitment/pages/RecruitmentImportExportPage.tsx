@@ -48,7 +48,7 @@ export function RecruitmentImportExportPage() {
       <PageHeader title="Import & Export" description="Bulk move candidates in and out of OFC360 — CSV, Excel, JSON." />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl">
+        <div className="rounded-2xl border border-border bg-card p-4">
           <div className="mb-3 inline-flex items-center gap-2 font-display text-base font-semibold"><Upload className="h-4 w-4" /> Candidate Import Wizard</div>
 
           <ol className="mb-3 flex items-center gap-2 text-[11px]">
@@ -73,7 +73,7 @@ export function RecruitmentImportExportPage() {
               <div className="text-xs text-muted-foreground">Parsed {rows.length} rows. Map your columns:</div>
               {[...REQUIRED, ...OPTIONAL].map((f) => (
                 <div key={f} className="flex items-center gap-2">
-                  <span className="w-40 text-xs"><span className="font-medium">{f}</span>{REQUIRED.includes(f) ? <span className="text-rose-500"> *</span> : null}</span>
+                  <span className="w-40 text-xs"><span className="font-medium">{f}</span>{REQUIRED.includes(f) ? <span className="text-destructive"> *</span> : null}</span>
                   <select className="flex-1 rounded-md border border-border bg-background p-1.5 text-xs" value={mapping[f] ?? ""} onChange={(e) => setMapping((m) => ({ ...m, [f]: e.target.value }))}>
                     <option value="">— Skip —</option>
                     {Object.keys(rows[0] ?? {}).map((h) => <option key={h} value={h}>{h}</option>)}
@@ -86,7 +86,7 @@ export function RecruitmentImportExportPage() {
 
           {step === 3 && (
             <div>
-              <div className="mb-2 inline-flex items-center gap-2 text-sm text-emerald-600"><CheckCircle2 className="h-4 w-4" /> Ready to import {rows.length} candidates.</div>
+              <div className="mb-2 inline-flex items-center gap-2 text-sm text-foreground"><CheckCircle2 className="h-4 w-4 text-primary" /> Ready to import {rows.length} candidates.</div>
               <div className="max-h-56 overflow-auto rounded-lg border border-border text-xs">
                 <table className="w-full">
                   <thead className="bg-muted/40"><tr>{REQUIRED.map((f) => <th key={f} className="px-2 py-1 text-left">{f}</th>)}</tr></thead>
@@ -98,13 +98,13 @@ export function RecruitmentImportExportPage() {
           )}
         </div>
 
-        <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl">
+        <div className="rounded-2xl border border-border bg-card p-4">
           <div className="mb-3 inline-flex items-center gap-2 font-display text-base font-semibold"><Download className="h-4 w-4" /> Export</div>
           <div className="space-y-2">
-            <div className="flex items-center justify-between rounded-lg border border-border p-3"><div className="inline-flex items-center gap-2 text-sm"><FileSpreadsheet className="h-4 w-4 text-emerald-500" />Candidates CSV<Badge variant="secondary">{candidates.length}</Badge></div><Button size="sm" onClick={exportCsv}>Download</Button></div>
-            <div className="flex items-center justify-between rounded-lg border border-border p-3"><div className="inline-flex items-center gap-2 text-sm"><FileText className="h-4 w-4 text-sky-500" />Candidates JSON</div><Button size="sm" variant="outline" onClick={exportJson}>Download</Button></div>
-            <div className="flex items-center justify-between rounded-lg border border-border p-3"><div className="inline-flex items-center gap-2 text-sm"><FileSpreadsheet className="h-4 w-4 text-violet-500" />Excel report (.xlsx)</div><Button size="sm" variant="outline" disabled>Coming soon</Button></div>
-            <div className="flex items-center justify-between rounded-lg border border-border p-3"><div className="inline-flex items-center gap-2 text-sm"><FileText className="h-4 w-4 text-rose-500" />Hiring summary PDF</div><Button size="sm" variant="outline" disabled>Coming soon</Button></div>
+            <div className="flex items-center justify-between rounded-lg border border-border p-3"><div className="inline-flex items-center gap-2 text-sm"><FileSpreadsheet className="h-4 w-4 text-primary" />Candidates CSV<Badge variant="secondary">{candidates.length}</Badge></div><Button size="sm" onClick={exportCsv}>Download</Button></div>
+            <div className="flex items-center justify-between rounded-lg border border-border p-3"><div className="inline-flex items-center gap-2 text-sm"><FileText className="h-4 w-4 text-primary" />Candidates JSON</div><Button size="sm" variant="outline" onClick={exportJson}>Download</Button></div>
+            <div className="flex items-center justify-between rounded-lg border border-border p-3"><div className="inline-flex items-center gap-2 text-sm"><FileSpreadsheet className="h-4 w-4 text-primary" />Excel report (.xlsx)</div><Button size="sm" variant="outline" disabled>Coming soon</Button></div>
+            <div className="flex items-center justify-between rounded-lg border border-border p-3"><div className="inline-flex items-center gap-2 text-sm"><FileText className="h-4 w-4 text-primary" />Hiring summary PDF</div><Button size="sm" variant="outline" disabled>Coming soon</Button></div>
           </div>
 
           <div className="mt-4 rounded-xl border border-border p-3">

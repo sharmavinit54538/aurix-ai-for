@@ -1,3 +1,4 @@
+import { statusBadgeClass } from "@/lib/status-styles";
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import {
   Sparkles,
@@ -472,7 +473,7 @@ export function AIScreeningPage() {
         <div className="flex justify-end">
           <Button
             onClick={() => setShowCompareModal(true)}
-            className="gap-1.5 bg-gradient-brand text-brand-foreground shadow-glow"
+            className="gap-1.5"
           >
             <GitCompare className="h-4 w-4" />
             Compare ({compareIds.length}) Candidates
@@ -483,10 +484,10 @@ export function AIScreeningPage() {
       {/* Target Job Selector & Screening Weights Configuration */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Requisition Card */}
-        <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl lg:col-span-1 space-y-3">
+        <div className="rounded-2xl border border-border bg-card p-4 lg:col-span-1 space-y-3">
           <div className="flex items-center justify-between">
             <span className="font-semibold text-sm">Active Requisition</span>
-            <Sparkles className="h-4 w-4 text-indigo-500" />
+            <Sparkles className="h-4 w-4 text-primary" />
           </div>
 
           {jobs.length === 0 ? (
@@ -540,7 +541,7 @@ export function AIScreeningPage() {
           {/* Run AI Screening Button & Progress */}
           <div className="pt-2 border-t border-border space-y-2">
             <Button
-              className="w-full text-xs h-9 bg-gradient-brand text-brand-foreground shadow-glow gap-1.5"
+              className="w-full text-xs h-9 gap-1.5"
               onClick={handleRunScreening}
               disabled={isRunning || !selectedJobId || screeningSubmitting}
             >
@@ -586,11 +587,11 @@ export function AIScreeningPage() {
         </div>
 
         {/* 8. Weight Sliders: Auto-Normalized & Renamed Education */}
-        <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl lg:col-span-2 space-y-4">
+        <div className="rounded-2xl border border-border bg-card p-4 lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-semibold text-sm flex items-center gap-1.5">
-                <Sliders className="h-4 w-4 text-indigo-500" />
+                <Sliders className="h-4 w-4 text-primary" />
                 Screening Criteria Weightings
               </h3>
               <p className="text-xs text-muted-foreground">
@@ -601,9 +602,7 @@ export function AIScreeningPage() {
               <Badge
                 variant="outline"
                 className={`text-xs font-semibold ${
-                  totalWeight === 100
-                    ? "border-emerald-500/40 text-emerald-500 bg-emerald-500/10"
-                    : "border-amber-500/40 text-amber-500"
+                  totalWeight === 100 ? statusBadgeClass("approved") : statusBadgeClass("warning")
                 }`}
               >
                 Total: {totalWeight}%
@@ -688,14 +687,14 @@ export function AIScreeningPage() {
           {/* Backend Thresholds Display */}
           <div className="pt-2 border-t border-border flex flex-wrap items-center justify-between text-[11px] text-muted-foreground">
             <div className="flex items-center gap-1.5">
-              <TrendingUp className="h-3.5 w-3.5 text-indigo-400" />
+              <TrendingUp className="h-3.5 w-3.5 text-primary" />
               <span>Backend AI Thresholds:</span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-emerald-500 font-medium">
+              <span className="text-foreground font-medium">
                 Shortlist: ≥ {screeningThresholds.shortlist}%
               </span>
-              <span className="text-rose-500 font-medium">
+              <span className="text-destructive font-medium">
                 Reject: &lt; {screeningThresholds.reject}%
               </span>
             </div>
@@ -739,13 +738,13 @@ export function AIScreeningPage() {
 
       {/* Candidates Screening Grid / Empty States */}
       {screeningLoading && mergedCandidates.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border border-dashed border-border bg-card/20">
-          <Loader2 className="h-8 w-8 text-indigo-500 animate-spin mb-2" />
+        <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border border-dashed border-border bg-card">
+          <Loader2 className="h-8 w-8 text-primary animate-spin mb-2" />
           <p className="text-sm font-medium text-foreground">Loading screening results...</p>
         </div>
       ) : jobCandidates.length === 0 && mergedCandidates.length === 0 ? (
         // 5. Zero Candidates Empty State for Selected Job (NEVER fall back to other jobs)
-        <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border border-dashed border-border bg-card/20">
+        <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border border-dashed border-border bg-card">
           <Sparkles className="h-8 w-8 text-muted-foreground/30 mb-2" />
           <p className="text-sm font-medium text-muted-foreground">
             No candidates found for this job requisition
@@ -755,7 +754,7 @@ export function AIScreeningPage() {
           </p>
         </div>
       ) : filteredCandidates.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border border-dashed border-border bg-card/20">
+        <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border border-dashed border-border bg-card">
           <Sparkles className="h-8 w-8 text-muted-foreground/30 mb-2" />
           <p className="text-sm font-medium text-muted-foreground">No candidates in this tab</p>
           <p className="text-xs text-muted-foreground/60 mt-1">
@@ -767,9 +766,9 @@ export function AIScreeningPage() {
           {filteredCandidates.map((cand) => (
             <div
               key={cand.id}
-              className={`rounded-2xl border bg-card/60 p-4 backdrop-blur-xl transition-all duration-200 flex flex-col justify-between ${
+              className={`rounded-2xl border bg-card p-4 transition-all duration-200 flex flex-col justify-between ${
                 compareIds.includes(cand.id)
-                  ? "border-indigo-500 ring-1 ring-indigo-500/30"
+                  ? "border-primary ring-1 ring-primary/30"
                   : "border-border"
               }`}
             >
@@ -792,10 +791,10 @@ export function AIScreeningPage() {
                           variant="outline"
                           className={`text-[9px] uppercase tracking-wider font-bold ${
                             cand.effectiveDecision === "SHORTLIST"
-                              ? "bg-emerald-500/15 text-emerald-600 border-emerald-500/30"
+                              ? statusBadgeClass("approved")
                               : cand.effectiveDecision === "REJECT"
-                                ? "bg-rose-500/15 text-rose-600 border-rose-500/30"
-                                : "bg-amber-500/15 text-amber-600 border-amber-500/30"
+                                ? statusBadgeClass("critical")
+                                : statusBadgeClass("warning")
                           }`}
                         >
                           {cand.effectiveDecision || "Review"}
@@ -804,7 +803,7 @@ export function AIScreeningPage() {
                     ) : (
                       <Badge
                         variant="outline"
-                        className="text-[9px] uppercase tracking-wider font-bold border-amber-500/40 text-amber-500 bg-amber-500/10"
+                        className={`text-[9px] uppercase tracking-wider font-bold ${statusBadgeClass("pending")}`}
                       >
                         Not screened yet
                       </Badge>
@@ -817,7 +816,7 @@ export function AIScreeningPage() {
                   {cand.status === "RUNNING" ? (
                     <Badge
                       variant="outline"
-                      className="border-indigo-500/40 text-indigo-400 bg-indigo-500/10 text-[10px] flex items-center gap-1"
+                      className={`text-[10px] flex items-center gap-1 ${statusBadgeClass("info")}`}
                     >
                       <Loader2 className="h-2.5 w-2.5 animate-spin" />
                       Running
@@ -830,14 +829,14 @@ export function AIScreeningPage() {
                     <div className="flex items-center gap-1.5">
                       <Badge
                         variant="outline"
-                        className="border-rose-500/40 text-rose-500 bg-rose-500/10 text-[10px]"
+                        className={`text-[10px] ${statusBadgeClass("critical")}`}
                       >
                         Failed
                       </Badge>
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-5 px-1.5 text-[10px] text-indigo-400 hover:text-indigo-300"
+                        className="h-5 px-1.5 text-[10px] text-primary hover:text-primary/80"
                         onClick={() => handleRetryCandidate(cand)}
                       >
                         <RotateCw className="h-2.5 w-2.5 mr-1" />
@@ -859,7 +858,7 @@ export function AIScreeningPage() {
                 {cand.isScreened && (cand.hiringRecommendation || cand.hrNotes) ? (
                   <div className="mt-3 rounded-xl bg-muted/40 p-2.5 text-[11px] text-muted-foreground leading-relaxed border border-border/60">
                     <span className="font-semibold text-foreground flex items-center gap-1 mb-1">
-                      <Sparkles className="h-3 w-3 text-indigo-400" />
+                      <Sparkles className="h-3 w-3 text-primary" />
                       AI Rationale:
                     </span>
                     <p className="line-clamp-2">
@@ -876,7 +875,7 @@ export function AIScreeningPage() {
                 {cand.strengths.length > 0 && (
                   <div className="mt-2.5 space-y-1">
                     <div className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
-                      <CheckCircle className="h-3 w-3 text-emerald-500" />
+                      <CheckCircle className="h-3 w-3 text-primary" />
                       Top Strengths:
                     </div>
                     <div className="flex flex-wrap gap-1">
@@ -884,7 +883,7 @@ export function AIScreeningPage() {
                         <Badge
                           key={s}
                           variant="secondary"
-                          className="text-[9px] bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
+                          className="text-[9px] bg-primary/10 text-primary border border-primary/20"
                         >
                           {s}
                         </Badge>
@@ -896,7 +895,7 @@ export function AIScreeningPage() {
                 {cand.missingSkills.length > 0 && (
                   <div className="mt-2 space-y-1">
                     <div className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
-                      <AlertTriangle className="h-3 w-3 text-amber-500" />
+                      <AlertTriangle className="h-3 w-3 text-muted-foreground" />
                       Missing Skills:
                     </div>
                     <div className="flex flex-wrap gap-1">
@@ -904,7 +903,7 @@ export function AIScreeningPage() {
                         <Badge
                           key={s}
                           variant="secondary"
-                          className="text-[9px] bg-amber-500/10 text-amber-600 border border-amber-500/20"
+                          className="text-[9px] bg-muted text-muted-foreground border border-border"
                         >
                           {s}
                         </Badge>
@@ -918,7 +917,7 @@ export function AIScreeningPage() {
                   <div className="mt-3 rounded-lg border border-border/80 bg-accent/30 p-2 text-xs">
                     <div className="flex items-center justify-between font-semibold">
                       <span className="flex items-center gap-1 text-[11px] text-foreground">
-                        <UserCheck className="h-3.5 w-3.5 text-indigo-500" />
+                        <UserCheck className="h-3.5 w-3.5 text-primary" />
                         Human: {cand.humanDecision}
                       </span>
                       {cand.humanDecisionBy && (
@@ -943,7 +942,7 @@ export function AIScreeningPage() {
                     type="checkbox"
                     checked={compareIds.includes(cand.id)}
                     onChange={() => handleToggleCompare(cand.id)}
-                    className="rounded border-border text-indigo-600"
+                    className="rounded border-border text-primary"
                     aria-label={`Compare ${cand.name}`}
                   />
                   Compare
@@ -963,7 +962,7 @@ export function AIScreeningPage() {
                   {/* 7. Shortlist Button (disabled if already decided) */}
                   <Button
                     size="sm"
-                    className="h-7 text-xs px-2 bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-40"
+                    variant="outline" className="h-7 text-xs px-2 text-emerald-600 dark:text-emerald-400 border-border hover:bg-muted/50 disabled:opacity-40"
                     disabled={Boolean(cand.humanDecision)}
                     onClick={() => openConfirmDialog(cand, "SHORTLIST")}
                     title={cand.humanDecision ? "Decision already recorded" : "Shortlist Candidate"}
@@ -976,7 +975,7 @@ export function AIScreeningPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-7 text-xs px-2 text-rose-600 border-rose-500/30 hover:bg-rose-500/10 disabled:opacity-40"
+                    className="h-7 text-xs px-2 text-destructive border-destructive/30 hover:bg-destructive/10 disabled:opacity-40"
                     disabled={Boolean(cand.humanDecision)}
                     onClick={() => openConfirmDialog(cand, "REJECT")}
                     title={cand.humanDecision ? "Decision already recorded" : "Reject Candidate"}
@@ -1001,11 +1000,11 @@ export function AIScreeningPage() {
                   {inspectCandidate.stage || "Screening"}
                 </Badge>
                 {inspectCandidate.matchScore !== null ? (
-                  <span className="font-display text-lg font-bold text-indigo-500">
+                  <span className="font-display text-lg font-bold text-foreground">
                     {inspectCandidate.matchScore}% Match
                   </span>
                 ) : (
-                  <Badge variant="outline" className="border-amber-500/40 text-amber-500">
+                  <Badge variant="outline" className={statusBadgeClass("pending")}>
                     Not screened yet
                   </Badge>
                 )}
@@ -1031,10 +1030,10 @@ export function AIScreeningPage() {
               {inspectCandidate.hiringRecommendation && (
                 <div>
                   <Label className="font-semibold text-foreground flex items-center gap-1.5">
-                    <Sparkles className="h-3.5 w-3.5 text-indigo-500" />
+                    <Sparkles className="h-3.5 w-3.5 text-primary" />
                     AI Hiring Recommendation
                   </Label>
-                  <p className="mt-1 p-3 rounded-xl border border-border bg-card/60 leading-relaxed text-foreground">
+                  <p className="mt-1 p-3 rounded-xl border border-border bg-card leading-relaxed text-foreground">
                     {inspectCandidate.hiringRecommendation}
                   </p>
                 </div>
@@ -1052,8 +1051,8 @@ export function AIScreeningPage() {
               {/* Strengths & Weaknesses */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <Label className="font-semibold text-emerald-600 flex items-center gap-1">
-                    <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+                  <Label className="font-semibold text-foreground flex items-center gap-1">
+                    <CheckCircle className="h-3.5 w-3.5 text-primary" />
                     Key Strengths ({inspectCandidate.strengths.length})
                   </Label>
                   <div className="mt-1.5 space-y-1">
@@ -1061,7 +1060,7 @@ export function AIScreeningPage() {
                       inspectCandidate.strengths.map((s) => (
                         <div
                           key={s}
-                          className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[11px]"
+                          className="p-2 rounded-lg bg-primary/10 border border-primary/20 text-primary text-[11px]"
                         >
                           {s}
                         </div>
@@ -1073,8 +1072,8 @@ export function AIScreeningPage() {
                 </div>
 
                 <div>
-                  <Label className="font-semibold text-amber-600 flex items-center gap-1">
-                    <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+                  <Label className="font-semibold text-foreground flex items-center gap-1">
+                    <AlertTriangle className="h-3.5 w-3.5 text-muted-foreground" />
                     Identified Weaknesses ({inspectCandidate.weaknesses.length})
                   </Label>
                   <div className="mt-1.5 space-y-1">
@@ -1082,7 +1081,7 @@ export function AIScreeningPage() {
                       inspectCandidate.weaknesses.map((w) => (
                         <div
                           key={w}
-                          className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-[11px]"
+                          className="p-2 rounded-lg bg-muted border border-border text-foreground text-[11px]"
                         >
                           {w}
                         </div>
@@ -1100,7 +1099,7 @@ export function AIScreeningPage() {
                   <Label className="font-semibold text-muted-foreground">Missing Required Skills</Label>
                   <div className="mt-1.5 flex flex-wrap gap-1">
                     {inspectCandidate.missingSkills.map((ms) => (
-                      <Badge key={ms} variant="outline" className="border-amber-500/40 text-amber-500 text-[10px]">
+                      <Badge key={ms} variant="outline" className="border-border text-muted-foreground text-[10px]">
                         {ms}
                       </Badge>
                     ))}
@@ -1112,7 +1111,7 @@ export function AIScreeningPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {inspectCandidate.greenFlags.length > 0 && (
                   <div>
-                    <Label className="font-semibold text-emerald-600 flex items-center gap-1">
+                    <Label className="font-semibold text-foreground flex items-center gap-1">
                       <Check className="h-3.5 w-3.5" />
                       Green Flags
                     </Label>
@@ -1126,11 +1125,11 @@ export function AIScreeningPage() {
 
                 {inspectCandidate.redFlags.length > 0 && (
                   <div>
-                    <Label className="font-semibold text-rose-600 flex items-center gap-1">
-                      <AlertOctagon className="h-3.5 w-3.5 text-rose-500" />
+                    <Label className="font-semibold text-destructive flex items-center gap-1">
+                      <AlertOctagon className="h-3.5 w-3.5 text-destructive" />
                       Red Flags
                     </Label>
-                    <ul className="mt-1 space-y-1 list-disc list-inside text-rose-500/80 text-[11px]">
+                    <ul className="mt-1 space-y-1 list-disc list-inside text-destructive text-[11px]">
                       {inspectCandidate.redFlags.map((rf) => (
                         <li key={rf}>{rf}</li>
                       ))}
@@ -1143,10 +1142,10 @@ export function AIScreeningPage() {
               {inspectCandidate.questionsToAsk.length > 0 && (
                 <div>
                   <Label className="font-semibold text-foreground flex items-center gap-1.5">
-                    <HelpCircle className="h-3.5 w-3.5 text-indigo-500" />
+                    <HelpCircle className="h-3.5 w-3.5 text-primary" />
                     Suggested Interview Questions
                   </Label>
-                  <ol className="mt-1.5 space-y-1.5 list-decimal list-inside p-3 rounded-xl border border-border bg-card/60 text-foreground text-[11px]">
+                  <ol className="mt-1.5 space-y-1.5 list-decimal list-inside p-3 rounded-xl border border-border bg-card text-foreground text-[11px]">
                     {inspectCandidate.questionsToAsk.map((q) => (
                       <li key={q} className="leading-relaxed">
                         {q}
@@ -1160,7 +1159,7 @@ export function AIScreeningPage() {
               {inspectCandidate.humanDecision && (
                 <div className="p-3 rounded-xl border border-border bg-accent/20">
                   <div className="font-semibold text-foreground flex items-center gap-1.5">
-                    <UserCheck className="h-4 w-4 text-indigo-500" />
+                    <UserCheck className="h-4 w-4 text-primary" />
                     Recorded Human Decision: {inspectCandidate.humanDecision}
                   </div>
                   {inspectCandidate.humanDecisionBy && (
@@ -1185,7 +1184,7 @@ export function AIScreeningPage() {
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
-                    className="text-rose-600 border-rose-500/30 hover:bg-rose-500/10 disabled:opacity-40"
+                    className="text-destructive border-destructive/30 hover:bg-destructive/10 disabled:opacity-40"
                     disabled={Boolean(inspectCandidate.humanDecision)}
                     onClick={() => openConfirmDialog(inspectCandidate, "REJECT")}
                   >
@@ -1193,7 +1192,7 @@ export function AIScreeningPage() {
                     Reject Candidate
                   </Button>
                   <Button
-                    className="bg-gradient-brand text-brand-foreground shadow-glow disabled:opacity-40"
+                    className="disabled:opacity-40"
                     disabled={Boolean(inspectCandidate.humanDecision)}
                     onClick={() => openConfirmDialog(inspectCandidate, "SHORTLIST")}
                   >
@@ -1212,7 +1211,7 @@ export function AIScreeningPage() {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold flex items-center gap-2">
-              <GitCompare className="h-5 w-5 text-indigo-500" />
+              <GitCompare className="h-5 w-5 text-primary" />
               Side-by-Side Candidate Comparison
             </DialogTitle>
             <DialogDescription>
@@ -1240,7 +1239,7 @@ export function AIScreeningPage() {
                 <tr>
                   <td className="p-2.5 font-medium text-muted-foreground">ATS Match Score</td>
                   {compareList.map((c) => (
-                    <td key={c.id} className="p-2.5 font-bold text-sm text-indigo-500">
+                    <td key={c.id} className="p-2.5 font-bold text-sm text-foreground">
                       {c.matchScore !== null ? `${c.matchScore}%` : "Not Screened"} (
                       {c.effectiveDecision || "Review"})
                     </td>
@@ -1264,7 +1263,7 @@ export function AIScreeningPage() {
                             <Badge
                               key={s}
                               variant="secondary"
-                              className="text-[9px] bg-emerald-500/10 text-emerald-600"
+                              className="text-[9px] bg-primary/10 text-primary"
                             >
                               {s}
                             </Badge>
@@ -1286,7 +1285,7 @@ export function AIScreeningPage() {
                             <Badge
                               key={s}
                               variant="outline"
-                              className="text-[9px] border-amber-500/30 text-amber-600"
+                              className="text-[9px] border-border text-muted-foreground"
                             >
                               {s}
                             </Badge>
@@ -1303,12 +1302,12 @@ export function AIScreeningPage() {
                   {compareList.map((c) => (
                     <td key={c.id} className="p-2.5 text-[11px] space-y-1">
                       {c.greenFlags.map((gf) => (
-                        <div key={gf} className="text-emerald-600 flex items-center gap-1">
+                        <div key={gf} className="text-foreground flex items-center gap-1">
                           <Check className="h-3 w-3 shrink-0" /> {gf}
                         </div>
                       ))}
                       {c.redFlags.map((rf) => (
-                        <div key={rf} className="text-rose-600 flex items-center gap-1">
+                        <div key={rf} className="text-destructive flex items-center gap-1">
                           <AlertOctagon className="h-3 w-3 shrink-0" /> {rf}
                         </div>
                       ))}
@@ -1353,7 +1352,7 @@ export function AIScreeningPage() {
                       ) : (
                         <Button
                           size="sm"
-                          className="w-full h-8 text-xs bg-gradient-brand text-brand-foreground shadow-glow"
+                          className="w-full h-8 text-xs"
                           onClick={() => {
                             setShowCompareModal(false);
                             openConfirmDialog(c, "SHORTLIST");
@@ -1379,12 +1378,12 @@ export function AIScreeningPage() {
               <DialogTitle className="flex items-center gap-2">
                 {confirmDialog.type === "SHORTLIST" ? (
                   <>
-                    <CheckCircle className="h-5 w-5 text-emerald-500" />
+                    <CheckCircle className="h-5 w-5 text-primary" />
                     Confirm Shortlist Decision
                   </>
                 ) : (
                   <>
-                    <AlertTriangle className="h-5 w-5 text-rose-500" />
+                    <AlertTriangle className="h-5 w-5 text-destructive" />
                     Confirm Rejection Decision
                   </>
                 )}
@@ -1400,7 +1399,7 @@ export function AIScreeningPage() {
               {confirmDialog.type === "REJECT" && (
                 <div className="space-y-1.5">
                   <Label htmlFor="reject-reason" className="font-semibold text-foreground">
-                    Rejection Reason <span className="text-rose-500">*</span>
+                    Rejection Reason <span className="text-destructive">*</span>
                   </Label>
                   <Textarea
                     id="reject-reason"
@@ -1424,11 +1423,11 @@ export function AIScreeningPage() {
                       {rejectReason.trim().length} / 10 minimum characters
                     </span>
                     {rejectReason.trim().length >= 10 && (
-                      <span className="text-emerald-500 font-medium">Valid</span>
+                      <span className="text-foreground font-medium">Valid</span>
                     )}
                   </div>
                   {rejectReasonError && (
-                    <p className="text-rose-500 text-[11px] font-medium" role="alert">
+                    <p className="text-destructive text-[11px] font-medium" role="alert">
                       {rejectReasonError}
                     </p>
                   )}
@@ -1456,11 +1455,7 @@ export function AIScreeningPage() {
                   Cancel
                 </Button>
                 <Button
-                  className={
-                    confirmDialog.type === "SHORTLIST"
-                      ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                      : "bg-rose-600 hover:bg-rose-700 text-white"
-                  }
+                  variant={confirmDialog.type === "REJECT" ? "destructive" : "default"}
                   disabled={
                     screeningSubmitting ||
                     (confirmDialog.type === "REJECT" && rejectReason.trim().length < 10)

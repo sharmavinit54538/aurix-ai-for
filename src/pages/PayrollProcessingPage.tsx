@@ -1,3 +1,4 @@
+import { statusBadgeClass } from "@/lib/status-styles";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useParams, useNavigate } from "@tanstack/react-router";
 import {
@@ -99,49 +100,42 @@ function getStatusTone(status: string | null | undefined): {
     return {
       tone: "success",
       label: status,
-      badgeClass: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+      badgeClass: statusBadgeClass("approved"),
     };
   }
   if (s === "failed" || s.includes("fail") || s.includes("error")) {
     return {
       tone: "danger",
       label: status,
-      badgeClass: "border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400",
+      badgeClass: statusBadgeClass("critical"),
     };
   }
   if (s === "cancelled" || s === "canceled" || s === "void") {
     return {
       tone: "muted",
       label: status,
-      badgeClass: "border-slate-500/30 bg-slate-500/10 text-slate-600 dark:text-slate-400",
+      badgeClass: statusBadgeClass("default"),
     };
   }
-  if (s === "provision generated" || s.includes("provision")) {
+  if (s.includes("provision") || s.includes("validat")) {
     return {
       tone: "warning",
       label: status,
-      badgeClass: "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
-    };
-  }
-  if (s === "validation" || s.includes("validat")) {
-    return {
-      tone: "warning",
-      label: status,
-      badgeClass: "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+      badgeClass: statusBadgeClass("warning"),
     };
   }
   if (s === "queued" || s.includes("queue") || s === "draft") {
     return {
       tone: "info",
       label: status,
-      badgeClass: "border-sky-500/30 bg-sky-500/10 text-sky-600 dark:text-sky-400",
+      badgeClass: statusBadgeClass("info"),
     };
   }
   if (s === "processing" || s.includes("process") || s.includes("running")) {
     return {
       tone: "warning",
       label: status,
-      badgeClass: "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400",
+      badgeClass: statusBadgeClass("warning"),
     };
   }
   return {
@@ -161,22 +155,22 @@ function getStepStatusTone(status: string): {
   if (s === "completed" || s === "success" || s === "done") {
     return {
       icon: CheckCircle2,
-      color: "text-emerald-500",
-      badge: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+      color: "text-primary",
+      badge: statusBadgeClass("completed"),
     };
   }
   if (s === "in_progress" || s === "running" || s === "processing") {
     return {
       icon: RefreshCw,
-      color: "text-blue-500 animate-spin",
-      badge: "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400",
+      color: "text-primary animate-spin",
+      badge: statusBadgeClass("info"),
     };
   }
   if (s === "failed" || s === "error") {
     return {
       icon: XCircle,
-      color: "text-rose-500",
-      badge: "border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400",
+      color: "text-destructive",
+      badge: statusBadgeClass("critical"),
     };
   }
   return {
@@ -508,7 +502,7 @@ export function PayrollProcessingPage() {
               variant="outline"
               size="sm"
               onClick={() => setCancelModalOpen(true)}
-              className="h-9 gap-1.5 text-xs border-rose-500/30 text-rose-600 hover:bg-rose-500/10 dark:text-rose-400 shadow-sm"
+              className="h-9 gap-1.5 text-xs border-destructive/30 text-destructive hover:bg-destructive/10 shadow-sm"
               title="Cancel this payroll calculation run on the backend"
             >
               <StopCircle className="h-3.5 w-3.5" />
@@ -532,13 +526,13 @@ export function PayrollProcessingPage() {
       </div>
 
       {/* ── CRITICAL MANDATORY NOTICE: PROVISIONAL PAYROLL ────────────── */}
-      <Alert className="border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200">
-        <ShieldAlert className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5" />
+      <Alert className="border-border bg-muted text-foreground">
+        <ShieldAlert className="h-4 w-4 text-primary mt-0.5" />
         <div className="ml-2">
-          <AlertTitle className="text-xs font-bold uppercase tracking-wider text-amber-900 dark:text-amber-200">
+          <AlertTitle className="text-xs font-bold uppercase tracking-wider text-foreground">
             Provisional Payroll Run
           </AlertTitle>
-          <AlertDescription className="mt-1 text-xs leading-relaxed text-amber-800 dark:text-amber-300">
+          <AlertDescription className="mt-1 text-xs leading-relaxed text-muted-foreground">
             Payroll processing produces <strong>provisional calculations</strong> for auditing, statutory compliance, and executive preview.
             {" "}<strong>Payroll processing does NOT finalize payroll or initiate employee payment transfers.</strong>
           </AlertDescription>
@@ -552,7 +546,7 @@ export function PayrollProcessingPage() {
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="rounded-2xl border border-border bg-card/40 p-4"
+                className="rounded-2xl border border-border bg-card p-4"
               >
                 <Skeleton className="h-3 w-20" />
                 <Skeleton className="mt-3 h-7 w-28" />
@@ -570,7 +564,7 @@ export function PayrollProcessingPage() {
       {/* ── Backend Unavailable / Error State ────────────────────────── */}
       {!loadingInitial && (isUnavailable || apiError) ? (
         <GlassCard className="border-border/80 p-8 text-center">
-          <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 ring-1 ring-amber-500/20">
+          <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20">
             <AlertTriangle className="h-6 w-6" />
           </div>
           <h2 className="font-display text-base font-semibold text-foreground">
@@ -696,8 +690,8 @@ export function PayrollProcessingPage() {
                     Current Operational Status
                   </span>
                   {!isTerminalStatus(runData.status) ? (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-600 dark:text-blue-400">
-                      <span className="h-1.5 w-1.5 animate-ping rounded-full bg-blue-500" />
+                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-primary">
+                      <span className="h-1.5 w-1.5 animate-ping rounded-full bg-primary" />
                       Live polling active
                     </span>
                   ) : (
@@ -786,9 +780,9 @@ export function PayrollProcessingPage() {
                   <div
                     className={`h-full rounded-full ${
                       statusTone.tone === "success"
-                        ? "w-full bg-emerald-500"
+                        ? "w-full bg-primary"
                         : statusTone.tone === "danger"
-                        ? "w-full bg-rose-500"
+                        ? "w-full bg-destructive"
                         : "w-full bg-muted-foreground/30"
                     }`}
                   />
@@ -798,14 +792,14 @@ export function PayrollProcessingPage() {
 
             {/* Backend Error banner if run failed */}
             {runData.error?.message ? (
-              <div className="mt-4 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-800 dark:text-rose-200">
+              <div className="mt-4 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
                 <div className="flex items-start gap-2">
-                  <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" />
+                  <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
                   <div>
                     <span className="font-semibold">Backend Failure:</span>{" "}
                     {runData.error.message}
                     {runData.error.code ? (
-                      <span className="ml-1 font-mono text-[10px] text-rose-600 dark:text-rose-400">
+                      <span className="ml-1 font-mono text-[10px] text-destructive">
                         ({runData.error.code})
                       </span>
                     ) : null}
@@ -880,7 +874,7 @@ export function PayrollProcessingPage() {
                   {CONCEPTUAL_PIPELINE_STEPS.map((step, idx) => (
                     <div
                       key={step.id}
-                      className="flex items-start gap-2.5 rounded-xl border border-border/70 bg-card/40 p-2.5 text-xs"
+                      className="flex items-start gap-2.5 rounded-xl border border-border bg-card p-2.5 text-xs"
                     >
                       <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
                         {idx + 1}
@@ -919,15 +913,15 @@ export function PayrollProcessingPage() {
                     key={issue.id}
                     className={`flex items-start justify-between gap-3 rounded-xl border p-3 text-xs ${
                       issue.severity === "critical"
-                        ? "border-rose-500/30 bg-rose-500/10 text-rose-900 dark:text-rose-200"
-                        : "border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-200"
+                        ? "border-destructive/30 bg-destructive/10 text-destructive"
+                        : "border-border bg-muted text-foreground"
                     }`}
                   >
                     <div className="flex items-start gap-2">
                       {issue.severity === "critical" ? (
-                        <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" />
+                        <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
                       ) : (
-                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                       )}
                       <div>
                         <span className="font-semibold">
@@ -956,10 +950,10 @@ export function PayrollProcessingPage() {
           {/* ── Next Workflow Action on Completion ──────────────────── */}
           {runData.status?.toLowerCase() === "completed" ||
           runData.status?.toLowerCase() === "provision generated" ? (
-            <GlassCard className="border-emerald-500/30 bg-emerald-500/5 p-6">
+            <GlassCard className="border-border bg-card p-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold text-sm">
+                  <div className="flex items-center gap-2 text-foreground font-semibold text-sm">
                     <CheckCircle2 className="h-4 w-4" />
                     <span>Calculation Run Finished</span>
                   </div>
@@ -1000,7 +994,7 @@ export function PayrollProcessingPage() {
       <Dialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 font-display text-base text-rose-600 dark:text-rose-400">
+            <DialogTitle className="flex items-center gap-2 font-display text-base text-destructive">
               <StopCircle className="h-4 w-4" />
               Cancel Payroll Processing Run
             </DialogTitle>

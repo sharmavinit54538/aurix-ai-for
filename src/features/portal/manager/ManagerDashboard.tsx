@@ -1,3 +1,4 @@
+import { statusBadgeClass, trendTextClass } from "@/lib/status-styles";
 // ============================================================
 // OFC360 — Manager Dashboard Component
 // Production-ready manager view for team leads and managers.
@@ -77,12 +78,12 @@ const AI_TEAM_INSIGHTS: any[] = [];
 
 // ── UI navigation config (not backend data) ───────────────────
 const MANAGER_REPORTS = [
-  { label: "Team Attendance", color: "from-teal-600 to-cyan-600", link: "/dashboard/attendance" },
-  { label: "Team Performance", color: "from-violet-600 to-purple-600", link: "/dashboard/performance" },
-  { label: "Leave Summary", color: "from-amber-600 to-orange-600", link: "/dashboard/leaves" },
-  { label: "Productivity", color: "from-blue-600 to-indigo-600", link: "/dashboard/reports" },
-  { label: "Hiring Status", color: "from-emerald-600 to-teal-600", link: "/dashboard/recruitment" },
-  { label: "Asset Report", color: "from-slate-600 to-gray-700", link: "/dashboard/assets" },
+  { label: "Team Attendance", link: "/dashboard/attendance" },
+  { label: "Team Performance", link: "/dashboard/performance" },
+  { label: "Leave Summary", link: "/dashboard/leaves" },
+  { label: "Productivity", link: "/dashboard/reports" },
+  { label: "Hiring Status", link: "/dashboard/recruitment" },
+  { label: "Asset Report", link: "/dashboard/assets" },
 ];
 
 // ── Animation helpers ─────────────────────────────────────────
@@ -110,7 +111,7 @@ function Card({
 }) {
   return (
     <div
-      className={`rounded-2xl border border-border bg-card/60 backdrop-blur-xl shadow-sm ${
+      className={`rounded-2xl border border-border bg-card shadow-sm shadow-sm ${
         noPad ? "" : "p-5"
       } ${className}`}
     >
@@ -153,11 +154,11 @@ function SectionHeader({
 
 // ── Status badge for employees ────────────────────────────────
 const STATUS_CONFIG: Record<EmployeeStatus, { label: string; class: string }> = {
-  present: { label: "Present", class: "bg-emerald-500/15 text-emerald-600 border-emerald-200" },
-  absent: { label: "Absent", class: "bg-rose-500/15 text-rose-600 border-rose-200" },
-  leave: { label: "On Leave", class: "bg-violet-500/15 text-violet-600 border-violet-200" },
-  wfh: { label: "WFH", class: "bg-blue-500/15 text-blue-600 border-blue-200" },
-  late: { label: "Late", class: "bg-amber-500/15 text-amber-600 border-amber-200" },
+  present: { label: "Present", class: statusBadgeClass("active") },
+  absent: { label: "Absent", class: statusBadgeClass("critical") },
+  leave: { label: "On Leave", class: statusBadgeClass("warning") },
+  wfh: { label: "WFH", class: statusBadgeClass("info") },
+  late: { label: "Late", class: statusBadgeClass("warning") },
 };
 
 // ── Live Clock util ───────────────────────────────────────────
@@ -168,12 +169,12 @@ function getGreeting() {
 
 // ── Quick Actions ─────────────────────────────────────────────
 const QUICK_ACTIONS = [
-  { label: "Approve Leave", icon: FileText, link: "/dashboard/leaves", color: "from-amber-600 to-orange-600" },
-  { label: "Approve Attendance", icon: CheckCircle2, link: "/dashboard/attendance", color: "from-teal-600 to-cyan-600" },
-  { label: "Performance Review", icon: Target, link: "/dashboard/performance", color: "from-violet-600 to-purple-600" },
-  { label: "Assign Asset", icon: Package, link: "/dashboard/assets", color: "from-slate-600 to-gray-700" },
-  { label: "Schedule Interview", icon: CalendarDays, link: "/dashboard/recruitment/calendar", color: "from-blue-600 to-indigo-600" },
-  { label: "Add Team Member", icon: UserPlus, link: "/dashboard/employees", color: "from-emerald-600 to-teal-600" },
+  { label: "Approve Leave", icon: FileText, link: "/dashboard/leaves" },
+  { label: "Approve Attendance", icon: CheckCircle2, link: "/dashboard/attendance" },
+  { label: "Performance Review", icon: Target, link: "/dashboard/performance" },
+  { label: "Assign Asset", icon: Package, link: "/dashboard/assets" },
+  { label: "Schedule Interview", icon: CalendarDays, link: "/dashboard/recruitment/calendar" },
+  { label: "Add Team Member", icon: UserPlus, link: "/dashboard/employees" },
 ];
 
 // ── 1. Header ─────────────────────────────────────────────────
@@ -183,7 +184,7 @@ function ManagerHeader({ greeting, userName, companyName }: { greeting: string; 
       initial={{ opacity: 0, y: -16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, ease: "easeOut" }}
-      className="rounded-2xl border border-border bg-card/60 p-5 backdrop-blur-xl"
+      className="rounded-2xl border border-border bg-card p-5 shadow-sm"
     >
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -191,7 +192,7 @@ function ManagerHeader({ greeting, userName, companyName }: { greeting: string; 
             className="grid h-12 w-12 shrink-0 place-items-center rounded-xl shadow-lg"
             style={{ background: "var(--gradient-brand)" }}
           >
-            <Users className="h-6 w-6 text-white" />
+            <Users className="h-6 w-6 text-primary" />
           </div>
           <div>
             <h1 className="font-display text-xl font-semibold tracking-tight">
@@ -211,7 +212,7 @@ function ManagerHeader({ greeting, userName, companyName }: { greeting: string; 
               {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })}
             </div>
           </div>
-          <Link to="/ai/chat-assistant" className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 px-3 py-2 text-xs font-semibold text-white shadow transition-all hover:shadow-md hover:-translate-y-0.5">
+          <Link to="/ai/chat-assistant" className="flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground px-3 py-2 text-xs font-semibold shadow transition-all hover:bg-primary/90">
             <Bot className="h-3.5 w-3.5" /> AI Copilot
           </Link>
         </div>
@@ -227,9 +228,9 @@ function ManagerHeader({ greeting, userName, companyName }: { greeting: string; 
                 to={a.link as any}
                 className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-background/60 p-3 text-center transition-all hover:border-foreground/20 hover:shadow-md hover:-translate-y-0.5"
               >
-                <div className={`grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br ${a.color}`}>
-                  <Icon className="h-4 w-4 text-white" />
-                </div>
+                <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10 text-primary">
+              <Icon className="h-4 w-4" />
+            </div>
                 <span className="text-[11px] font-medium leading-tight text-muted-foreground group-hover:text-foreground">
                   {a.label}
                 </span>
@@ -257,9 +258,9 @@ function KpiCards() {
             <div
               className={`mt-1.5 flex items-center gap-1 text-[11px] font-medium ${
                 kpi.changeType === "up"
-                  ? "text-emerald-500"
+                  ? trendTextClass(true)
                   : kpi.changeType === "down"
-                  ? "text-rose-500"
+                  ? trendTextClass(false)
                   : "text-muted-foreground"
               }`}
             >
@@ -276,23 +277,7 @@ function KpiCards() {
                   <Line
                     type="monotone"
                     dataKey="v"
-                    stroke={
-                      kpi.accent.includes("emerald")
-                        ? "#10b981"
-                        : kpi.accent.includes("indigo")
-                        ? "#6366f1"
-                        : kpi.accent.includes("amber")
-                        ? "#f59e0b"
-                        : kpi.accent.includes("teal")
-                        ? "#14b8a6"
-                        : kpi.accent.includes("rose")
-                        ? "#f43f5e"
-                        : kpi.accent.includes("violet")
-                        ? "#8b5cf6"
-                        : kpi.accent.includes("orange")
-                        ? "#f97316"
-                        : "#06b6d4"
-                    }
+                    stroke="var(--chart-1)"
                     strokeWidth={2}
                     dot={false}
                   />
@@ -331,7 +316,7 @@ function TeamOverview() {
                     key={m.id}
                     className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-2.5 transition-colors hover:bg-accent/30"
                   >
-                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-sm font-semibold text-white">
+                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/10 text-primary text-sm font-semibold">
                       {m.avatar}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -351,7 +336,7 @@ function TeamOverview() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm font-semibold text-violet-500">{m.performanceScore}</div>
+                      <div className="text-sm font-semibold text-foreground">{m.performanceScore}</div>
                       <div className="text-[10px] text-muted-foreground">perf</div>
                     </div>
                   </div>
@@ -395,19 +380,19 @@ function TeamOverview() {
               <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">Work Location</p>
               <div className="flex items-center gap-3">
                 <div className="text-center">
-                  <div className="font-display text-2xl font-bold text-indigo-500">{office}</div>
+                  <div className="font-display text-2xl font-semibold text-foreground">{office}</div>
                   <div className="text-xs text-muted-foreground">In Office</div>
                 </div>
                 <div className="flex-1">
                   <div className="h-2 overflow-hidden rounded-full bg-muted">
                     <div
-                      className="h-full rounded-full bg-indigo-500"
+                      className="h-full rounded-full bg-primary"
                       style={{ width: `${(office / TEAM_MEMBERS.length) * 100}%` }}
                     />
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="font-display text-2xl font-bold text-violet-500">{remote}</div>
+                  <div className="font-display text-2xl font-semibold text-foreground">{remote}</div>
                   <div className="text-xs text-muted-foreground">Remote</div>
                 </div>
               </div>
@@ -449,10 +434,10 @@ function AttendanceCenter() {
               <XAxis dataKey="day" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
               <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
               <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
-              <Bar dataKey="present" name="Present" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} />
-              <Bar dataKey="wfh" name="WFH" stackId="a" fill="#6366f1" />
-              <Bar dataKey="late" name="Late" stackId="a" fill="#f59e0b" />
-              <Bar dataKey="absent" name="Absent" stackId="a" fill="#f43f5e" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="present" name="Present" stackId="a" fill="var(--chart-1)" radius={[0, 0, 0, 0]} />
+              <Bar dataKey="wfh" name="WFH" stackId="a" fill="var(--chart-2)" />
+              <Bar dataKey="late" name="Late" stackId="a" fill="var(--chart-3)" />
+              <Bar dataKey="absent" name="Absent" stackId="a" fill="var(--chart-4)" radius={[4, 4, 0, 0]} />
               <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
             </BarChart>
           </ResponsiveContainer>
@@ -466,17 +451,9 @@ function AttendanceCenter() {
           {ATTENDANCE_RECORDS.filter((r) => r.status === "late" || r.status === "absent" || r.regularisationRequired).map((r) => (
             <div
               key={r.id}
-              className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-2.5"
+              className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5"
             >
-              <div
-                className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg text-xs font-semibold ${
-                  r.status === "absent"
-                    ? "bg-rose-500/10 text-rose-500"
-                    : r.status === "late"
-                    ? "bg-amber-500/10 text-amber-500"
-                    : "bg-blue-500/10 text-blue-500"
-                }`}
-              >
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-xs font-semibold bg-primary/10 text-primary">
                 {r.name.split(" ").map((n: string) => n[0]).join("")}
               </div>
               <div className="min-w-0 flex-1">
@@ -484,13 +461,7 @@ function AttendanceCenter() {
                   <span className="text-sm font-medium">{r.name}</span>
                   <Badge
                     variant="outline"
-                    className={`text-[10px] capitalize ${
-                      r.status === "absent"
-                        ? "border-rose-200 text-rose-600"
-                        : r.status === "late"
-                        ? "border-amber-200 text-amber-600"
-                        : "border-blue-200 text-blue-600"
-                    }`}
+                    className={`text-[10px] capitalize ${statusBadgeClass(r.status)}`}
                   >
                     {r.status}
                   </Badge>
@@ -501,12 +472,12 @@ function AttendanceCenter() {
                 </div>
               </div>
               <div className="flex shrink-0 gap-1.5">
-                <button className="rounded-lg bg-emerald-500/10 px-2.5 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-500/20 transition-colors">
+                <Button variant="outline" size="sm" className="h-7 text-xs text-emerald-600 dark:text-emerald-400 border-border">
                   Approve
-                </button>
-                <button className="rounded-lg bg-blue-500/10 px-2.5 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-500/20 transition-colors">
+                </Button>
+                <Button variant="outline" size="sm" className="h-7 text-xs border-border">
                   Correct
-                </button>
+                </Button>
               </div>
             </div>
           ))}
@@ -630,7 +601,7 @@ function LeaveCenter() {
           >
             {filtered[tab].length === 0 && (
               <div className="py-8 text-center text-sm text-muted-foreground">
-                <CheckCircle2 className="mx-auto mb-2 h-8 w-8 text-emerald-500" />
+                <CheckCircle2 className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
                 No {tab.toLowerCase()} leave requests.
               </div>
             )}
@@ -656,12 +627,12 @@ function LeaveCenter() {
                 <div className="shrink-0 text-xs text-muted-foreground">{req.requestedAt}</div>
                 {tab === "Pending" && (
                   <div className="flex shrink-0 gap-1.5">
-                    <button onClick={() => void reviewLeave(req.id, "APPROVED")} disabled={leaveLoading} className="flex items-center gap-1 rounded-lg bg-emerald-500/10 px-2.5 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-500/20 transition-colors disabled:opacity-50">
+                    <Button variant="outline" size="sm" onClick={() => void reviewLeave(req.id, "APPROVED")} disabled={leaveLoading} className="h-7 text-xs text-emerald-600 dark:text-emerald-400 border-border gap-1">
                       <CheckCircle2 className="h-3 w-3" /> Approve
-                    </button>
-                    <button onClick={() => void reviewLeave(req.id, "REJECTED")} disabled={leaveLoading} className="flex items-center gap-1 rounded-lg bg-rose-500/10 px-2.5 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-500/20 transition-colors disabled:opacity-50">
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => void reviewLeave(req.id, "REJECTED")} disabled={leaveLoading} className="h-7 text-xs text-destructive border-destructive/30 gap-1">
                       <X className="h-3 w-3" /> Reject
-                    </button>
+                    </Button>
                   </div>
                 )}
                 {tab !== "Pending" && (
@@ -683,9 +654,9 @@ function LeaveCenter() {
 
 // ── 6. Performance Center ─────────────────────────────────────
 const PRIORITY_COLORS = {
-  high: "text-rose-500",
-  medium: "text-amber-500",
-  low: "text-blue-500",
+  high: "text-destructive",
+  medium: "text-muted-foreground",
+  low: "text-muted-foreground",
 };
 
 function PerformanceCenter() {
@@ -704,15 +675,15 @@ function PerformanceCenter() {
                 <AreaChart data={PERF_MONTHLY} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="perfGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.35} />
-                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                      <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.25} />
+                      <stop offset="95%" stopColor="var(--chart-1)" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid stroke="oklch(0.5 0.02 264 / 0.1)" vertical={false} />
                   <XAxis dataKey="month" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
                   <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} domain={[70, 100]} />
                   <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
-                  <Area type="monotone" dataKey="score" stroke="#8b5cf6" strokeWidth={2} fill="url(#perfGrad)" name="Score" />
+                  <Area type="monotone" dataKey="score" stroke="var(--chart-1)" strokeWidth={2} fill="url(#perfGrad)" name="Score" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -735,14 +706,14 @@ function PerformanceCenter() {
                     </div>
                     <div className="flex shrink-0 items-center gap-2 ml-2">
                       <span className="text-muted-foreground">{g.owner.split(" ")[0]}</span>
-                      <span className="font-semibold text-violet-500">{g.progress}%</span>
+                      <span className="font-semibold text-foreground">{g.progress}%</span>
                       <span className="text-muted-foreground">· {g.dueDate}</span>
                     </div>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-muted">
                     <div
                       className={`h-full rounded-full transition-all duration-700 ${
-                        g.progress >= 80 ? "bg-emerald-500" : g.progress >= 50 ? "bg-amber-500" : "bg-rose-500"
+                        "bg-primary"
                       }`}
                       style={{ width: `${g.progress}%` }}
                     />
@@ -762,7 +733,7 @@ function PerformanceCenter() {
             <div className="space-y-2">
               {TOP_PERFORMERS.map((p, i) => (
                 <div key={p.name} className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-2">
-                  <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-emerald-500/10 text-xs font-bold text-emerald-500">
+                  <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-bold text-primary">
                     {i + 1}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -770,8 +741,8 @@ function PerformanceCenter() {
                     <div className="text-xs text-muted-foreground">{p.role}</div>
                   </div>
                   <div className="text-right">
-                    <div className="font-semibold text-emerald-500">{p.score}</div>
-                    <div className="text-[10px] text-emerald-500">{p.trend}</div>
+                    <div className="font-semibold text-foreground">{p.score}</div>
+                    <div className="text-[10px] text-muted-foreground">{p.trend}</div>
                   </div>
                 </div>
               ))}
@@ -784,18 +755,18 @@ function PerformanceCenter() {
             </p>
             <div className="space-y-2">
               {LOW_PERFORMERS.map((p) => (
-                <div key={p.name} className="rounded-xl border border-amber-200 bg-amber-500/5 px-3 py-2">
+                <div key={p.name} className="rounded-xl border border-border bg-card px-3 py-2">
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-sm font-medium">{p.name}</div>
                       <div className="text-xs text-muted-foreground">{p.role}</div>
                     </div>
                     <div className="text-right">
-                      <div className="font-semibold text-amber-500">{p.score}</div>
-                      <div className="text-[10px] text-rose-500">{p.trend}</div>
+                      <div className="font-semibold text-foreground">{p.score}</div>
+                      <div className="text-[10px] text-muted-foreground">{p.trend}</div>
                     </div>
                   </div>
-                  <div className="mt-1.5 flex items-center gap-1.5 text-xs text-amber-700">
+                  <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Zap className="h-3 w-3" /> {p.action}
                   </div>
                 </div>
@@ -811,9 +782,9 @@ function PerformanceCenter() {
 // ── 7. Recruitment ────────────────────────────────────────────
 function RecruitmentSection() {
   const PRIORITY_BG: Record<string, string> = {
-    high: "bg-rose-500/10 text-rose-600",
-    medium: "bg-amber-500/10 text-amber-600",
-    low: "bg-blue-500/10 text-blue-600",
+    high: statusBadgeClass("critical"),
+    medium: statusBadgeClass("warning"),
+    low: statusBadgeClass("default"),
   };
 
   return (
@@ -858,7 +829,7 @@ function RecruitmentSection() {
                   <XAxis type="number" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
                   <YAxis type="category" dataKey="stage" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={64} />
                   <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
-                  <Bar dataKey="count" radius={[0, 6, 6, 0]} fill="#6366f1" />
+                  <Bar dataKey="count" radius={[0, 6, 6, 0]} fill="var(--chart-1)" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -872,8 +843,8 @@ function RecruitmentSection() {
             <div className="space-y-2">
               {MANAGER_INTERVIEWS.map((iv) => (
                 <div key={iv.candidate} className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-3">
-                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-indigo-500/10">
-                    <CalendarDays className="h-4 w-4 text-indigo-500" />
+                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
+                    <CalendarDays className="h-4 w-4" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-medium">{iv.candidate}</div>
@@ -911,10 +882,10 @@ function RecruitmentSection() {
 // ── 8. Assets Section ─────────────────────────────────────────
 function AssetsSection() {
   const STATUS_COLORS: Record<string, string> = {
-    assigned: "bg-blue-500/10 text-blue-600",
-    "pending-return": "bg-amber-500/10 text-amber-600",
-    damaged: "bg-rose-500/10 text-rose-600",
-    returned: "bg-emerald-500/10 text-emerald-600",
+    assigned: statusBadgeClass("default"),
+    "pending-return": statusBadgeClass("warning"),
+    damaged: statusBadgeClass("critical"),
+    returned: statusBadgeClass("approved"),
   };
 
   return (
@@ -925,8 +896,8 @@ function AssetsSection() {
         {/* Summary */}
         <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {TEAM_ASSET_SUMMARY.map((a) => (
-            <div key={a.label} className={`rounded-xl border border-border ${a.bg} p-3 text-center`}>
-              <div className={`font-display text-2xl font-bold ${a.color}`}>{a.count}</div>
+            <div key={a.label} className="rounded-xl border border-border bg-card p-3 text-center">
+              <div className="font-display text-2xl font-semibold text-foreground">{a.count}</div>
               <div className="mt-0.5 text-xs text-muted-foreground">{a.label}</div>
             </div>
           ))}
@@ -959,10 +930,10 @@ function AssetsSection() {
 
 // ── 9. AI Insights ────────────────────────────────────────────
 const LEVEL_BADGE: Record<string, string> = {
-  high: "border-emerald-200 text-emerald-600",
-  moderate: "border-amber-200 text-amber-600",
-  low: "border-rose-200 text-rose-600",
-  positive: "border-blue-200 text-blue-600",
+  high: statusBadgeClass("approved"),
+  moderate: statusBadgeClass("warning"),
+  low: statusBadgeClass("critical"),
+  positive: statusBadgeClass("approved"),
 };
 
 function AIInsights() {
@@ -975,25 +946,25 @@ function AIInsights() {
             <motion.div
               key={insight.category}
               {...stagger(i)}
-              className={`flex flex-col gap-3 rounded-xl bg-gradient-to-br ${insight.color} p-4`}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-white/80" />
-                  <span className="text-xs font-semibold text-white">{insight.category}</span>
+              className="flex flex-col gap-3 rounded-xl bg-card border border-border p-4 shadow-sm"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    <span className="text-xs font-semibold text-foreground">{insight.category}</span>
+                  </div>
+                  <Badge variant="outline" className={`text-[10px] capitalize border ${LEVEL_BADGE[insight.level]}`}>
+                    {insight.level}
+                  </Badge>
                 </div>
-                <Badge variant="outline" className={`text-[10px] capitalize border ${LEVEL_BADGE[insight.level]} bg-white/10`}>
-                  {insight.level}
-                </Badge>
-              </div>
-              <div className="text-xs text-white/80 leading-relaxed">{insight.detail}</div>
-              <div className="mt-auto rounded-lg bg-black/20 px-3 py-2 text-[11px] text-white/90">
-                💡 {insight.recommendation}
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-white/60">AI Score</span>
-                <span className="font-display text-lg font-bold text-white">{insight.score}</span>
-              </div>
+                <div className="text-xs text-muted-foreground leading-relaxed">{insight.detail}</div>
+                <div className="mt-auto rounded-lg bg-muted/40 border border-border px-3 py-2 text-[11px] text-foreground">
+                  <span className="font-semibold text-primary">Action: </span>{insight.action}
+                </div>
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-xs text-muted-foreground">AI Score</span>
+                  <span className="font-display text-lg font-semibold text-foreground">{insight.score}</span>
+                </div>
             </motion.div>
           ))}
         </div>
@@ -1022,12 +993,12 @@ function NotificationsSection() {
               <div
                 key={n.id}
                 className={`flex items-start gap-3 rounded-xl border border-border px-3 py-2.5 ${
-                  isUrgent ? "bg-rose-500/5 border-rose-200 dark:border-rose-900/50" : "bg-background/50"
+                  isUrgent ? "bg-destructive/5 border-destructive/20" : "bg-card border-border"
                 }`}
               >
                 <div
                   className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg ${
-                    isUrgent ? "bg-rose-500/10 text-rose-500" : "bg-primary/10 text-primary"
+                    isUrgent ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"
                   }`}
                 >
                   <AlertTriangle className="h-3.5 w-3.5" />
@@ -1064,7 +1035,7 @@ function NotificationsSection() {
           })}
           {items.length === 0 && (
             <div className="py-8 text-center text-sm text-muted-foreground">
-              <CheckCircle2 className="mx-auto mb-2 h-8 w-8 text-emerald-500" />
+              <CheckCircle2 className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
               All caught up! No pending notifications.
             </div>
           )}
@@ -1082,11 +1053,11 @@ function ReportsSection() {
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
           {MANAGER_REPORTS.map((r) => (
             <Link key={r.label} to={r.link as any}>
-              <div
-                className={`group flex flex-col items-center gap-2.5 rounded-xl bg-gradient-to-br ${r.color} p-4 text-center transition-all hover:shadow-md hover:-translate-y-0.5`}
-              >
-                <Download className="h-5 w-5 text-white/90" />
-                <span className="text-xs font-semibold text-white leading-tight">{r.label}</span>
+              <div className="group flex flex-col items-center gap-2.5 rounded-xl bg-card border border-border p-4 text-center transition-all hover:bg-muted/50 hover:shadow-sm">
+                <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary/10 text-primary">
+                  <Download className="h-5 w-5" />
+                </div>
+                <span className="text-xs font-semibold text-foreground leading-tight">{r.label}</span>
               </div>
             </Link>
           ))}

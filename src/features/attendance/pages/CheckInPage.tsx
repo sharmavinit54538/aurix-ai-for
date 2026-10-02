@@ -1,3 +1,4 @@
+import { statusBadgeClass } from "@/lib/status-styles";
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
   AlertCircle, Briefcase, CalendarDays, Camera, CheckCircle2,
@@ -10,6 +11,7 @@ import {
 import { toast as sonnerToast } from "sonner";
 import { useAurix } from "@/lib/aurix-store";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { GlassCard, StatCard } from "@/components/hrms/Shared";
 import {
@@ -87,11 +89,8 @@ function SectionHeader({
   return (
     <div className="mb-4 flex items-center gap-3">
       {Icon && (
-        <div
-          className="grid h-8 w-8 shrink-0 place-items-center rounded-lg"
-          style={{ background: "var(--gradient-brand)" }}
-        >
-          <Icon className="h-4 w-4 text-white" />
+        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+          <Icon className="h-4 w-4" />
         </div>
       )}
       <div>
@@ -137,10 +136,10 @@ function TimelineItem({ event, isLast }: { event: TimelineEventItem; isLast: boo
   const Icon = iconMap[event.type] || Clock;
   const color =
     event.type === "checkin"
-      ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-300"
+      ? "bg-primary/10 text-primary"
       : event.type === "checkout"
-      ? "bg-rose-500/20 text-rose-600 dark:text-rose-300"
-      : "bg-amber-500/20 text-amber-600 dark:text-amber-300";
+      ? "bg-destructive/10 text-destructive"
+      : "bg-muted text-muted-foreground";
 
   return (
     <div className="flex gap-3">
@@ -197,14 +196,14 @@ function MiniCalendar({ history }: { history: AttendanceHistoryItem[] }) {
   }
 
   const COLOR: Record<string, string> = {
-    present: "bg-emerald-500/20 text-emerald-600 dark:text-emerald-300",
-    absent: "bg-rose-500/20 text-rose-600",
-    late: "bg-amber-500/20 text-amber-700 dark:text-amber-300",
-    leave: "bg-violet-500/20 text-violet-600 dark:text-violet-300",
-    holiday: "bg-sky-500/20 text-sky-600 dark:text-sky-300",
+    present: "bg-primary/10 text-primary font-medium",
+    absent: "bg-destructive/10 text-destructive",
+    late: "bg-muted text-foreground font-medium",
+    leave: "bg-muted text-muted-foreground",
+    holiday: "bg-primary/15 text-primary",
     weekend: "text-muted-foreground/50",
-    halfday: "bg-blue-500/20 text-blue-600 dark:text-blue-300",
-    today: "ring-2 ring-violet-500 bg-violet-500/20 text-violet-700 dark:text-violet-300 font-bold",
+    halfday: "bg-muted text-foreground",
+    today: "ring-2 ring-primary bg-primary/15 text-primary font-bold",
     future: "text-muted-foreground/40",
   };
 
@@ -238,10 +237,10 @@ function MiniCalendar({ history }: { history: AttendanceHistoryItem[] }) {
       </div>
       <div className="mt-3 flex flex-wrap gap-2 justify-center">
         {[
-          { color: "bg-emerald-500/20 text-emerald-600", label: "Present" },
-          { color: "bg-amber-500/20 text-amber-700", label: "Late" },
-          { color: "bg-rose-500/20 text-rose-600", label: "Absent" },
-          { color: "bg-sky-500/20 text-sky-600", label: "Weekend / Off" },
+          { color: "bg-primary", label: "Present" },
+          { color: "bg-muted-foreground", label: "Late" },
+          { color: "bg-destructive", label: "Absent" },
+          { color: "bg-muted-foreground/50", label: "Weekend / Off" },
         ].map((item) => (
           <div key={item.label} className="flex items-center gap-1">
             <span className={`h-2 w-2 rounded-full ${item.color}`} />
@@ -270,10 +269,10 @@ function AttendBtn({
   loading?: boolean;
 }) {
   const cls = {
-    primary: "bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-700 hover:to-fuchsia-700 shadow-lg shadow-violet-500/25",
-    success: "bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 shadow-lg shadow-emerald-500/25",
-    warning: "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 shadow-lg shadow-amber-500/25",
-    danger: "bg-gradient-to-r from-rose-500 to-red-600 text-white hover:from-rose-600 hover:to-red-700 shadow-lg shadow-rose-500/25",
+    primary: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
+    success: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
+    warning: "bg-muted text-foreground hover:bg-muted/80 border border-border shadow-sm",
+    danger: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm",
   }[variant];
 
   return (
@@ -722,12 +721,12 @@ function CheckInPage() {
       {/* Toast */}
       {toast && (
         <div
-          className={`fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-xl px-5 py-3 text-sm font-semibold shadow-2xl transition-all ${
+          className={`fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-xl px-5 py-3 text-sm font-semibold shadow-lg transition-all ${
             toast.type === "success"
-              ? "bg-emerald-600 text-white"
+              ? "bg-primary text-primary-foreground"
               : toast.type === "error"
-              ? "bg-rose-600 text-white"
-              : "bg-amber-600 text-white"
+              ? "bg-destructive text-destructive-foreground"
+              : "bg-muted text-foreground border border-border"
           }`}
         >
           {toast.msg}
@@ -749,10 +748,10 @@ function CheckInPage() {
 
       {/* ── Mandatory Face Registration Alert Banner (Condition A) ── */}
       {isFaceEnrolled === false && (
-        <div className="relative overflow-hidden rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-rose-500/15 p-5 shadow-lg shadow-amber-500/5">
+        <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
-              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-amber-500/20 text-amber-500 border border-amber-500/30 shadow-inner">
+              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary border border-primary/20">
                 <ScanFace className="h-6 w-6 animate-pulse" />
               </div>
               <div>
@@ -760,9 +759,7 @@ function CheckInPage() {
                   <h3 className="font-display text-sm sm:text-base font-semibold text-foreground">
                     Face Registration Required
                   </h3>
-                  <span className="rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                    Mandatory
-                  </span>
+                  <Badge variant="outline" className={`text-[10px] font-bold ${statusBadgeClass("warning")}`}>Mandatory</Badge>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1 max-w-xl">
                   Your biometric face profile is not registered. In accordance with company policy, face enrollment is mandatory before you can check in for attendance.
@@ -774,7 +771,7 @@ function CheckInPage() {
                 setShowEnrollModal(true);
                 startModalCamera();
               }}
-              className="w-full sm:w-auto shrink-0 gap-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold shadow-md shadow-amber-500/25"
+              className="w-full sm:w-auto shrink-0 gap-2"
             >
               <ScanFace className="h-4 w-4" />
               Register Face Now
@@ -789,28 +786,17 @@ function CheckInPage() {
         <div className="space-y-6 xl:col-span-2">
           {/* ── Check In / Hero Card ── */}
           <GlassCard className="relative overflow-hidden">
-            <div
-              className="absolute -right-20 -top-20 h-64 w-64 rounded-full blur-3xl opacity-10"
-              style={{ background: "var(--gradient-brand)" }}
-            />
             <div className="relative">
               {/* Header: User avatar + info */}
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <div className="relative">
-                    <div
-                      className="grid h-16 w-16 place-items-center rounded-2xl text-2xl font-bold text-white shadow-lg"
-                      style={{ background: "var(--gradient-brand)" }}
-                    >
+                    <div className="grid h-16 w-16 place-items-center rounded-2xl text-2xl font-bold bg-primary/10 text-primary">
                       {initials}
                     </div>
                     <div
                       className={`absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background ${
-                        status === "checked-in"
-                          ? "bg-emerald-500"
-                          : status === "on-break"
-                          ? "bg-amber-500"
-                          : "bg-muted-foreground"
+  status === "checked-in" ? "bg-primary" : status === "on-break" ? "bg-muted-foreground" : "bg-muted-foreground"
                       }`}
                     />
                   </div>
@@ -859,7 +845,7 @@ function CheckInPage() {
                     loading={loading === "checkin"}
                   />
                   {isFaceEnrolled === false && (
-                    <span className="absolute -top-2 right-1 rounded-full bg-amber-500 px-1.5 py-0.5 text-[9px] font-extrabold text-black uppercase tracking-wide shadow">
+                    <span className="absolute -top-2 right-1 rounded-full bg-primary px-1.5 py-0.5 text-[9px] font-extrabold text-primary-foreground uppercase tracking-wide shadow-sm">
                       Enroll First
                     </span>
                   )}
@@ -901,11 +887,7 @@ function CheckInPage() {
                 <div className="flex items-center gap-2">
                   <span
                     className={`h-2 w-2 rounded-full ${
-                      status === "checked-in"
-                        ? "bg-emerald-500 animate-pulse"
-                        : status === "on-break"
-                        ? "bg-amber-500 animate-pulse"
-                        : "bg-muted-foreground"
+status === "checked-in" ? "bg-primary animate-pulse" : status === "on-break" ? "bg-muted-foreground animate-pulse" : "bg-muted-foreground"
                     }`}
                   />
                   <span className="font-medium">
@@ -923,11 +905,11 @@ function CheckInPage() {
                     Break: <strong className="text-foreground">{fmtHM(breakSec)}</strong>
                   </span>
                   <span>
-                    OT: <strong className={overtimeSec > 0 ? "text-violet-500" : "text-foreground"}>{fmtHM(overtimeSec)}</strong>
+                    OT: <strong className={overtimeSec > 0 ? "text-primary" : "text-foreground"}>{fmtHM(overtimeSec)}</strong>
                   </span>
                   {lateBy > 0 && (
                     <span>
-                      Late by: <strong className="text-amber-500">{fmtHM(lateBy)}</strong>
+                      Late by: <strong className="text-foreground">{fmtHM(lateBy)}</strong>
                     </span>
                   )}
                 </div>
@@ -942,14 +924,14 @@ function CheckInPage() {
               <DigitalTimer seconds={workSec} running={status === "checked-in"} />
               <div className="grid grid-cols-2 gap-3 w-full sm:grid-cols-4">
                 {[
-                  { label: "Total Work", value: fmtHM(workSec), color: "text-emerald-500" },
-                  { label: "Active Time", value: fmtHM(activeSec), color: "text-sky-500" },
-                  { label: "Break Time", value: fmtHM(breakSec), color: "text-amber-500" },
-                  { label: "Overtime", value: fmtHM(overtimeSec), color: "text-violet-500" },
+                  { label: "Total Work", value: fmtHM(workSec) },
+                  { label: "Active Time", value: fmtHM(activeSec) },
+                  { label: "Break Time", value: fmtHM(breakSec) },
+                  { label: "Overtime", value: fmtHM(overtimeSec) },
                 ].map((item) => (
-                  <div key={item.label} className="rounded-xl border border-border bg-card/40 p-3 text-center">
+                  <div key={item.label} className="rounded-xl border border-border bg-card p-3 text-center">
                     <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{item.label}</div>
-                    <div className={`font-mono text-lg font-bold tabular-nums ${item.color}`}>{item.value}</div>
+                    <div className="font-mono text-lg font-bold tabular-nums text-foreground">{item.value}</div>
                   </div>
                 ))}
               </div>
@@ -1080,13 +1062,9 @@ function CheckInPage() {
                 <SectionHeader title="Biometric Face Attendance" icon={ScanFace} />
                 {isFaceEnrolled !== null && (
                   <span
-                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
-                      isFaceEnrolled
-                        ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
-                        : "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
-                    }`}
+                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${statusBadgeClass(isFaceEnrolled ? "approved" : "warning")}`}
                   >
-                    <span className={`h-1.5 w-1.5 rounded-full ${isFaceEnrolled ? "bg-emerald-500" : "bg-amber-500 animate-pulse"}`} />
+                    <span className={`h-1.5 w-1.5 rounded-full ${isFaceEnrolled ? "bg-primary" : "bg-muted-foreground animate-pulse"}`} />
                     {isFaceEnrolled ? "Face Profile Active" : "Registration Required"}
                   </span>
                 )}
@@ -1110,11 +1088,11 @@ function CheckInPage() {
 
                   <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
                     <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
+                      <Sparkles className="h-3.5 w-3.5 text-primary" />
                       <span>Live Liveness Check</span>
                     </div>
                     <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <MapPin className="h-3.5 w-3.5 text-emerald-400" />
+                      <MapPin className="h-3.5 w-3.5 text-primary" />
                       <span>GPS Geofence Validation</span>
                     </div>
                   </div>
@@ -1128,21 +1106,21 @@ function CheckInPage() {
                         setShowEnrollModal(true);
                         startModalCamera();
                       }}
-                      className="w-full gap-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold shadow-md shadow-amber-500/20 text-xs"
+                      className="w-full gap-2 text-xs"
                     >
                       <ScanFace className="h-4 w-4" /> Register Face Profile
                     </Button>
                   ) : status === "not-checked-in" ? (
                     <Button
                       onClick={handleCheckIn}
-                      className="w-full gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold shadow-md shadow-emerald-500/25 text-xs"
+                      className="w-full gap-2 text-xs"
                     >
                       <LogIn className="h-4 w-4" /> Start Face Check-In
                     </Button>
                   ) : status === "checked-in" || status === "on-break" ? (
                     <Button
                       onClick={handleCheckOut}
-                      className="w-full gap-2 bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-semibold shadow-md shadow-rose-500/25 text-xs"
+                      variant="destructive" className="w-full gap-2 text-xs"
                     >
                       <LogOut className="h-4 w-4" /> Start Face Check-Out
                     </Button>
@@ -1151,7 +1129,7 @@ function CheckInPage() {
                       disabled
                       className="w-full gap-2 text-xs font-semibold bg-muted text-muted-foreground"
                     >
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Day Completed
+                      <CheckCircle2 className="h-4 w-4 text-muted-foreground" /> Day Completed
                     </Button>
                   )}
                 </div>
@@ -1259,17 +1237,12 @@ function CheckInPage() {
                           {r.workingHours ? fmtHM(r.workingHours * 3600) : "—"}
                         </td>
                         <td className="px-3 py-2.5">
-                          <span
-                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                              r.status === "Present"
-                                ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-                                : r.status === "Late"
-                                ? "bg-amber-500/15 text-amber-700 dark:text-amber-300"
-                                : "bg-rose-500/15 text-rose-600 dark:text-rose-300"
-                            }`}
+                          <Badge
+                            variant="outline"
+                            className={`inline-flex items-center text-[10px] font-medium ${statusBadgeClass(r.status)}`}
                           >
                             {r.status}
-                          </span>
+                          </Badge>
                         </td>
                         <td className="px-3 py-2.5 text-xs text-muted-foreground">{r.location || "Office"}</td>
                       </tr>
@@ -1289,13 +1262,7 @@ function CheckInPage() {
             <div className="space-y-2 text-xs">
               <div className="flex items-start gap-3 rounded-lg border border-border/40 p-2.5">
                 <div
-                  className={`grid h-7 w-7 shrink-0 place-items-center rounded-full ${
-                    status === "checked-in"
-                      ? "bg-emerald-500/15 text-emerald-600"
-                      : status === "on-break"
-                      ? "bg-amber-500/15 text-amber-600"
-                      : "bg-muted text-muted-foreground"
-                  }`}
+                  className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary/10 text-primary"
                 >
                   <Clock className="h-3.5 w-3.5" />
                 </div>
@@ -1318,10 +1285,10 @@ function CheckInPage() {
               </div>
 
               {lateBy > 0 && (
-                <div className="flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5">
-                  <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                <div className="flex items-start gap-3 rounded-lg border border-border bg-muted p-2.5">
+                  <AlertCircle className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                   <div>
-                    <div className="font-semibold text-amber-700 dark:text-amber-300">Late Punch Alert</div>
+                    <div className="font-semibold text-foreground">Late Punch Alert</div>
                     <div className="text-[11px] text-muted-foreground mt-0.5">
                       Shift arrival was recorded after the standard 15-minute grace window.
                     </div>
@@ -1412,7 +1379,7 @@ function CheckInPage() {
           }
         }}
       >
-        <DialogContent className="max-w-md p-6 sm:rounded-2xl border-border bg-card/95 backdrop-blur-xl">
+        <DialogContent className="max-w-md p-6 sm:rounded-2xl border-border bg-card">
           <DialogHeader>
             <div className="flex items-center gap-2 text-primary font-semibold text-xs tracking-wider uppercase">
               <Sparkles className="h-3.5 w-3.5" /> Biometric Registration
@@ -1447,7 +1414,7 @@ function CheckInPage() {
             {/* Centered Circular/Oval Face Guide Overlay */}
             {modalCameraActive && (
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center p-3">
-                <div className="relative w-44 h-56 sm:w-48 sm:h-60 rounded-[50%] border-2 border-cyan-400 shadow-[0_0_30px_rgba(34,211,238,0.5)]">
+                <div className="relative w-44 h-56 sm:w-48 sm:h-60 rounded-[50%] border-2 border-primary shadow-sm">
                   {/* Viewfinder reticle brackets */}
                   <div className="absolute -top-1.5 -left-1.5 w-4 h-4 border-t-2 border-l-2 border-white" />
                   <div className="absolute -top-1.5 -right-1.5 w-4 h-4 border-t-2 border-r-2 border-white" />
@@ -1456,7 +1423,7 @@ function CheckInPage() {
                 </div>
 
                 <div className="mt-3 rounded-full bg-black/75 backdrop-blur-md px-3 py-1 text-[10px] text-white border border-white/10 flex items-center gap-1.5">
-                  <ScanFace className="h-3 w-3 text-cyan-400" /> Keep face centered inside the frame
+                  <ScanFace className="h-3 w-3 text-primary" /> Keep face centered inside the frame
                 </div>
               </div>
             )}
@@ -1504,7 +1471,7 @@ function CheckInPage() {
               size="sm"
               onClick={handleCaptureAndRegisterFace}
               disabled={!modalCameraActive || isEnrolling}
-              className="gap-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white font-semibold shadow-md shadow-violet-500/25 text-xs"
+              className="gap-2 text-xs"
             >
               {isEnrolling ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <ScanFace className="h-3.5 w-3.5" />}
               {isEnrolling ? "Registering Face Profile..." : "Capture & Register Face"}

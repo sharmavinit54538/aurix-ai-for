@@ -54,3 +54,57 @@ export const EVENT_TYPE_DOT: Record<string, string> = {
 export const getEventTypeDot = (type?: string): string =>
   EVENT_TYPE_DOT[(type ?? "").toLowerCase().trim()] ?? "bg-muted-foreground";
 
+export const ASSET_TYPE_DOT: Record<string, string> = {
+  laptop: "bg-primary",
+  desktop: "bg-primary",
+  monitor: "bg-primary",
+  phone: "bg-primary",
+  accessory: "bg-muted-foreground",
+  vehicle: "bg-emerald-500",
+  other: "bg-muted-foreground",
+};
+
+export const getAssetTypeDot = (type?: string): string =>
+  ASSET_TYPE_DOT[(type ?? "").toLowerCase().trim()] ?? "bg-muted-foreground";
+
+export const EXIT_STAGE_DOT: Record<string, string> = {
+  requested: "bg-muted-foreground",
+  "under-review": "bg-amber-500",
+  approved: "bg-emerald-500",
+  notice: "bg-primary",
+  clearance: "bg-amber-500",
+  settlement: "bg-amber-500",
+  completed: "bg-emerald-500",
+  cancelled: "bg-destructive",
+  resignation: "bg-muted-foreground",
+  settled: "bg-emerald-500",
+};
+
+export const getExitStageDot = (stage?: string): string =>
+  EXIT_STAGE_DOT[(stage ?? "").toLowerCase().trim()] ?? "bg-muted-foreground";
+
+export const TIMESHEET_STATUS_DOT: Record<string, string> = {
+  approved: "bg-emerald-500",
+  pending: "bg-amber-500",
+  rejected: "bg-destructive",
+  draft: "bg-muted-foreground",
+};
+
+export const getTimesheetStatusDot = (status?: string): string =>
+  TIMESHEET_STATUS_DOT[(status ?? "").toLowerCase().trim()] ?? "bg-muted-foreground";
+
+export const SHIFT_TYPE_DOT: Record<string, string> = {
+  morning: "bg-primary",
+  evening: "bg-amber-500",
+  night: "bg-primary",
+  "off day": "bg-muted-foreground",
+  leave: "bg-destructive",
+  holiday: "bg-emerald-500",
+  training: "bg-primary",
+  wfh: "bg-emerald-500",
+  overtime: "bg-amber-500",
+};
+
+export const getShiftTypeDot = (shift?: string): string =>
+  SHIFT_TYPE_DOT[(shift ?? "").toLowerCase().trim()] ?? "bg-muted-foreground";
+

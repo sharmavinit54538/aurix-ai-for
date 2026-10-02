@@ -49,35 +49,35 @@ import {
 
 function getCategoryIcon(category?: NotificationCategory, priority?: NotificationPriority) {
   if (priority === "critical") {
-    return <AlertTriangle className="h-4 w-4 text-rose-500" />;
+    return <AlertTriangle className="h-4 w-4 text-destructive" />;
   }
 
   switch (category) {
     case "recruitment":
-      return <Briefcase className="h-4 w-4 text-blue-500" />;
+      return <Briefcase className="h-4 w-4 text-primary" />;
     case "payroll":
-      return <IndianRupee className="h-4 w-4 text-emerald-500" />;
+      return <IndianRupee className="h-4 w-4 text-primary" />;
     case "leave":
-      return <Calendar className="h-4 w-4 text-purple-500" />;
+      return <Calendar className="h-4 w-4 text-primary" />;
     case "attendance":
-      return <Clock className="h-4 w-4 text-sky-500" />;
+      return <Clock className="h-4 w-4 text-primary" />;
     case "documents":
-      return <FileText className="h-4 w-4 text-amber-500" />;
+      return <FileText className="h-4 w-4 text-primary" />;
     case "assets":
-      return <Laptop className="h-4 w-4 text-cyan-500" />;
+      return <Laptop className="h-4 w-4 text-primary" />;
     case "onboarding_exit":
-      return <UserCheck className="h-4 w-4 text-indigo-500" />;
+      return <UserCheck className="h-4 w-4 text-primary" />;
     case "approvals":
-      return <CheckCircle2 className="h-4 w-4 text-teal-500" />;
+      return <CheckCircle2 className="h-4 w-4 text-primary" />;
     case "security":
-      return <ShieldAlert className="h-4 w-4 text-rose-500" />;
+      return <ShieldAlert className="h-4 w-4 text-destructive" />;
     case "system":
-      return <ShieldCheck className="h-4 w-4 text-slate-500" />;
+      return <ShieldCheck className="h-4 w-4 text-muted-foreground" />;
     case "ai_insights":
-      return <Sparkles className="h-4 w-4 text-violet-500" />;
+      return <Sparkles className="h-4 w-4 text-primary" />;
     default:
       return priority === "high" ? (
-        <AlertTriangle className="h-4 w-4 text-amber-500" />
+        <AlertTriangle className="h-4 w-4 text-destructive" />
       ) : (
         <Bell className="h-4 w-4 text-muted-foreground" />
       );
@@ -85,37 +85,10 @@ function getCategoryIcon(category?: NotificationCategory, priority?: Notificatio
 }
 
 function getCategoryBg(category?: NotificationCategory, priority?: NotificationPriority) {
-  if (priority === "critical") {
-    return "bg-rose-500/10 border-rose-500/20";
+  if (priority === "critical" || category === "security" || priority === "high") {
+    return "bg-destructive/10 border-destructive/20";
   }
-  switch (category) {
-    case "recruitment":
-      return "bg-blue-500/10 border-blue-500/20";
-    case "payroll":
-      return "bg-emerald-500/10 border-emerald-500/20";
-    case "leave":
-      return "bg-purple-500/10 border-purple-500/20";
-    case "attendance":
-      return "bg-sky-500/10 border-sky-500/20";
-    case "documents":
-      return "bg-amber-500/10 border-amber-500/20";
-    case "assets":
-      return "bg-cyan-500/10 border-cyan-500/20";
-    case "onboarding_exit":
-      return "bg-indigo-500/10 border-indigo-500/20";
-    case "approvals":
-      return "bg-teal-500/10 border-teal-500/20";
-    case "security":
-      return "bg-rose-500/10 border-rose-500/20";
-    case "system":
-      return "bg-slate-500/10 border-slate-500/20";
-    case "ai_insights":
-      return "bg-violet-500/10 border-violet-500/20";
-    default:
-      return priority === "high"
-        ? "bg-amber-500/10 border-amber-500/20"
-        : "bg-muted border-border";
-  }
+  return "bg-primary/10 border-primary/20";
 }
 
 export function NotificationDropdown() {
@@ -180,7 +153,7 @@ export function NotificationDropdown() {
           {badgeText && (
             <span
               id="notification-badge"
-              className="absolute -top-1 -right-1 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white shadow-xs"
+              className="absolute -top-1 -right-1 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground shadow-xs"
             >
               {badgeText}
             </span>
@@ -217,7 +190,7 @@ export function NotificationDropdown() {
                 className="h-7 text-xs px-2 text-muted-foreground hover:text-foreground cursor-pointer"
                 title="Mark all notifications as read"
               >
-                <CheckCheck className="h-3.5 w-3.5 mr-1 text-emerald-500" />
+                <CheckCheck className="h-3.5 w-3.5 mr-1 text-primary" />
                 Read all
               </Button>
             )}
@@ -321,7 +294,7 @@ export function NotificationDropdown() {
                     onClick={() => handleItemClick(notif)}
                     onKeyDown={(e) => handleKeyDown(e, notif)}
                     className={`group relative flex items-start gap-3 p-3 transition-colors hover:bg-muted/40 cursor-pointer focus:outline-hidden focus-visible:bg-muted/40 ${
-                      isUnread ? "bg-primary/5" : ""
+                      isUnread ? "bg-muted/50" : ""
                     }`}
                   >
                     {/* Category Icon */}

@@ -1,3 +1,5 @@
+import { getShiftTypeDot } from "@/lib/color-maps";
+import { statusBadgeClass } from "@/lib/status-styles";
 import { useState, useMemo, useEffect } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { useAurix } from "@/lib/aurix-store";
@@ -493,7 +495,7 @@ export default function RostersPage() {
       <span>
         {parts.map((part, i) =>
           part.toLowerCase() === searchStr.toLowerCase() ? (
-            <mark key={i} className="bg-amber-500/35 text-amber-200 px-0.5 rounded">
+            <mark key={i} className="bg-primary/20 text-foreground px-0.5 rounded">
               {part}
             </mark>
           ) : (
@@ -506,15 +508,15 @@ export default function RostersPage() {
 
   const getShiftBadgeStyle = (shift: RosterEntry["shift"]) => {
     switch (shift) {
-      case "Morning": return "bg-blue-500/10 text-blue-400 border-blue-500/25";
-      case "Evening": return "bg-amber-500/10 text-amber-400 border-amber-500/25";
-      case "Night": return "bg-purple-500/10 text-purple-400 border-purple-500/25";
-      case "Off Day": return "bg-muted/30 text-muted-foreground border-border";
-      case "Leave": return "bg-rose-500/10 text-rose-400 border-rose-500/25";
-      case "Holiday": return "bg-indigo-500/10 text-indigo-400 border-indigo-500/25";
-      case "Training": return "bg-teal-500/10 text-teal-400 border-teal-500/25";
-      case "WFH": return "bg-emerald-500/10 text-emerald-400 border-emerald-500/25";
-      case "Overtime": return "bg-orange-500/10 text-orange-400 border-orange-500/25";
+      case "Morning": return "bg-primary/10 text-primary border-primary/20";
+      case "Evening": return "bg-muted text-foreground border-border";
+      case "Night": return "bg-primary/15 text-primary border-primary/30";
+      case "Off Day": return "bg-muted text-muted-foreground border-border";
+      case "Leave": return "bg-destructive/10 text-destructive border-destructive/20";
+      case "Holiday": return "bg-primary/10 text-primary border-primary/20";
+      case "Training": return "bg-muted text-foreground border-border";
+      case "WFH": return "bg-primary/10 text-primary border-primary/20";
+      case "Overtime": return "bg-muted text-foreground border-border";
       default: return "";
     }
   };
@@ -532,8 +534,8 @@ export default function RostersPage() {
         description="Plan employee shifts, weekly schedules, monthly rosters, and workforce allocation."
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] text-muted-foreground border border-border/80 bg-card/30 rounded-lg px-2.5 py-1.5">
-              <CheckCircle className="h-3 w-3 text-emerald-500" />
+            <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] text-muted-foreground border border-border bg-card rounded-lg px-2.5 py-1.5">
+              <CheckCircle className="h-3 w-3 text-primary" />
               {autoSaveStatus}
             </span>
             <Button
@@ -549,16 +551,16 @@ export default function RostersPage() {
                   }
                 );
               }}
-              className="h-9 border-border bg-card/40 text-xs hover:bg-accent/60 text-blue-400"
+              className="h-9 border-border text-xs"
             >
-              <Sparkles className="mr-2 h-3.5 w-3.5 text-blue-400" />
+              <Sparkles className="mr-2 h-3.5 w-3.5 text-primary" />
               Generate AI Roster
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => toast.info("Import schedule simulation active")}
-              className="h-9 border-border bg-card/40 text-xs hover:bg-accent/60"
+              className="h-9 border-border text-xs"
             >
               <Upload className="mr-2 h-3.5 w-3.5" />
               Import Schedule
@@ -567,7 +569,7 @@ export default function RostersPage() {
               variant="outline"
               size="sm"
               onClick={() => toast.success("Export started")}
-              className="h-9 border-border bg-card/40 text-xs hover:bg-accent/60"
+              className="h-9 border-border text-xs"
             >
               <Download className="mr-2 h-3.5 w-3.5" />
               Export
@@ -575,7 +577,7 @@ export default function RostersPage() {
             <Button
               size="sm"
               onClick={() => setIsCreateModalOpen(true)}
-              className="h-9 bg-primary text-xs text-primary-foreground shadow-glow hover:bg-primary/95"
+              className="h-9 text-xs"
             >
               <Plus className="mr-1.5 h-3.5 w-3.5" />
               Create Roster
@@ -587,19 +589,19 @@ export default function RostersPage() {
       {/* Dashboard Statistics Cards */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-8">
         {[
-          { label: "Active Rosters", value: stats.activeRosters, color: "text-blue-500 bg-blue-500/10", prog: stats.activeRosters > 0 ? 100 : 0, sub: stats.activeRosters > 0 ? "Active" : "None" },
-          { label: "Employees Assigned", value: stats.employeesAssigned, color: "text-emerald-500 bg-emerald-500/10", prog: stats.employeesAssigned > 0 ? 100 : 0, sub: `${stats.employeesAssigned} staff` },
-          { label: "Open Shifts", value: stats.openShifts, color: "text-amber-500 bg-amber-500/10", prog: 0, sub: `${stats.openShifts} open` },
-          { label: "Weekly Coverage", value: stats.coverage, color: "text-indigo-500 bg-indigo-500/10", prog: parseInt(stats.coverage) || 0, sub: "Coverage" },
-          { label: "Monthly Coverage", value: stats.coverage, color: "text-purple-500 bg-purple-500/10", prog: parseInt(stats.coverage) || 0, sub: "Coverage" },
-          { label: "Overtime Hours", value: `${stats.overtime}h`, color: "text-orange-500 bg-orange-500/10", prog: stats.overtime > 0 ? 50 : 0, sub: `${stats.overtime}h total` },
-          { label: "Pending Approvals", value: stats.pending, color: "text-teal-500 bg-teal-500/10", prog: stats.pending > 0 ? 80 : 0, sub: stats.pending > 0 ? "Requires action" : "Clean" },
-          { label: "Conflicts Detected", value: stats.conflicts, color: stats.conflicts > 0 ? "text-destructive bg-destructive/15 animate-pulse" : "text-emerald-500 bg-emerald-500/10", prog: stats.conflicts * 10, sub: stats.conflicts > 0 ? `${stats.conflicts} warnings` : "Clean" }
+          { label: "Active Rosters", value: stats.activeRosters, prog: stats.activeRosters > 0 ? 100 : 0, sub: stats.activeRosters > 0 ? "Active" : "None" },
+          { label: "Employees Assigned", value: stats.employeesAssigned, prog: stats.employeesAssigned > 0 ? 100 : 0, sub: `${stats.employeesAssigned} staff` },
+          { label: "Open Shifts", value: stats.openShifts, prog: 0, sub: `${stats.openShifts} open` },
+          { label: "Weekly Coverage", value: stats.coverage, prog: parseInt(stats.coverage) || 0, sub: "Coverage" },
+          { label: "Monthly Coverage", value: stats.coverage, prog: parseInt(stats.coverage) || 0, sub: "Coverage" },
+          { label: "Overtime Hours", value: `${stats.overtime}h`, prog: stats.overtime > 0 ? 50 : 0, sub: `${stats.overtime}h total` },
+          { label: "Pending Approvals", value: stats.pending, prog: stats.pending > 0 ? 80 : 0, sub: stats.pending > 0 ? "Requires action" : "Clean" },
+          { label: "Conflicts Detected", value: stats.conflicts, isDestructive: stats.conflicts > 0, prog: stats.conflicts * 10, sub: stats.conflicts > 0 ? `${stats.conflicts} warnings` : "Clean" }
         ].map((c, i) => {
           return (
             <div
               key={i}
-              className="group relative overflow-hidden rounded-xl border border-border bg-card/40 p-4 backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-border/80 hover:bg-card/75"
+              className="group relative overflow-hidden rounded-xl border border-border bg-card p-4 transition-all duration-300 hover:shadow-sm"
             >
               <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground block truncate">
                 {c.label}
@@ -613,7 +615,7 @@ export default function RostersPage() {
               <div className="mt-3 h-1 w-full bg-border rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-500 ${
-                    c.color.includes("text-destructive") ? "bg-destructive" : c.color.includes("text-emerald") ? "bg-emerald-500" : "bg-primary"
+                    c.isDestructive ? "bg-destructive" : "bg-primary"
                   }`}
                   style={{ width: `${c.prog}%` }}
                 />
@@ -624,7 +626,7 @@ export default function RostersPage() {
       </div>
 
       {/* Advanced Filters Panel */}
-      <div className="rounded-2xl border border-border bg-card/40 p-4 backdrop-blur-xl">
+      <div className="rounded-2xl border border-border bg-card p-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-2 flex-1">
             <div className="relative min-w-[200px] flex-1 md:max-w-xs">
@@ -637,7 +639,7 @@ export default function RostersPage() {
               />
             </div>
 
-            <div className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card/60 px-2.5 py-1.5 text-xs text-muted-foreground">
+            <div className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-xs text-muted-foreground">
               <Building2 className="h-3 w-3" />
               <span>Dept:</span>
               <select
@@ -653,7 +655,7 @@ export default function RostersPage() {
               </select>
             </div>
 
-            <div className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card/60 px-2.5 py-1.5 text-xs text-muted-foreground">
+            <div className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-xs text-muted-foreground">
               <Clock className="h-3 w-3" />
               <span>Shift Type:</span>
               <select
@@ -670,7 +672,7 @@ export default function RostersPage() {
               </select>
             </div>
 
-            <div className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card/60 px-2.5 py-1.5 text-xs text-muted-foreground">
+            <div className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-xs text-muted-foreground">
               <MapPin className="h-3 w-3" />
               <span>Location:</span>
               <select
@@ -685,7 +687,7 @@ export default function RostersPage() {
               </select>
             </div>
 
-            <div className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card/60 px-2.5 py-1.5 text-xs text-muted-foreground">
+            <div className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-xs text-muted-foreground">
               <User className="h-3 w-3" />
               <span>Manager:</span>
               <select
@@ -700,7 +702,7 @@ export default function RostersPage() {
               </select>
             </div>
 
-            <div className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card/60 px-2.5 py-1.5 text-xs text-muted-foreground">
+            <div className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-xs text-muted-foreground">
               <span>Status:</span>
               <select
                 value={statusFilter}
@@ -726,7 +728,7 @@ export default function RostersPage() {
           </div>
 
           {/* View switcher */}
-          <div className="flex border border-border rounded-lg bg-card/80 p-0.5 overflow-hidden">
+          <div className="flex border border-border rounded-lg bg-card p-0.5 overflow-hidden">
             <button
               onClick={() => setViewMode("calendar")}
               className={`inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
@@ -761,7 +763,7 @@ export default function RostersPage() {
         <div className="lg:col-span-3 space-y-6">
           {viewMode === "calendar" ? (
             /* Interactive Drag-and-Drop Scheduler Grid */
-            <div className="overflow-hidden rounded-2xl border border-border bg-card/60 backdrop-blur-xl shadow-elegant">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card">
               {/* Controls */}
               <div className="flex items-center justify-between border-b border-border px-5 py-4 bg-muted/20">
                 <div className="flex items-center gap-2">
@@ -774,7 +776,7 @@ export default function RostersPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="flex border border-border rounded-lg p-0.5 bg-card/85 text-[11px]">
+                  <div className="flex border border-border rounded-lg p-0.5 bg-card text-[11px]">
                     {["Day", "Week", "Month", "Timeline"].map((v) => (
                       <button
                         key={v}
@@ -819,11 +821,11 @@ export default function RostersPage() {
                         <div
                           key={d.dateStr}
                           className={`text-center flex flex-col items-center justify-center ${
-                            isToday ? "text-blue-400 font-bold" : ""
+                            isToday ? "text-primary font-bold" : ""
                           }`}
                         >
                           <span className="text-[10px] uppercase tracking-wider">{d.dayName}</span>
-                          <span className={`text-xs mt-0.5 rounded-full px-1.5 py-0.5 ${isToday ? "bg-blue-500/10 border border-blue-500/20" : ""}`}>{d.label}</span>
+                          <span className={`text-xs mt-0.5 rounded-full px-1.5 py-0.5 ${isToday ? "bg-primary/10 border border-primary/20 text-primary" : ""}`}>{d.label}</span>
                         </div>
                       );
                     })}
@@ -862,8 +864,8 @@ export default function RostersPage() {
                               key={day.dateStr}
                               onDragOver={(e) => e.preventDefault()}
                               onDrop={() => handleDropCell(emp.code, day.dateStr)}
-                              className={`p-1.5 min-h-[74px] h-auto flex flex-col justify-stretch gap-1 border-l border-border/60 relative group/cell ${
-                                isToday ? "bg-blue-500/5" : ""
+                              className={`p-1.5 min-h-[74px] h-auto flex flex-col justify-stretch gap-1 border-l border-border relative group/cell ${
+                                isToday ? "bg-primary/5" : ""
                               }`}
                             >
                               {cellEntries.length > 0 ? (
@@ -881,14 +883,14 @@ export default function RostersPage() {
                                         <span className="font-semibold truncate">{entry.shift}</span>
                                         {cellConflicts.length > 0 && (
                                           <span title={cellConflicts[0].type}>
-                                            <AlertTriangle className="h-3 w-3 text-rose-500 shrink-0 animate-bounce" />
+                                            <AlertTriangle className="h-3 w-3 text-destructive shrink-0 animate-bounce" />
                                           </span>
                                         )}
                                       </div>
                                       <div className="flex items-center justify-between text-[8px] opacity-75">
                                         <span>{entry.startTime === "—" ? "" : `${entry.startTime}-${entry.endTime}`}</span>
                                         {entry.status === "Pending" && (
-                                          <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-ping" />
+                                          <span className="h-1.5 w-1.5 rounded-full bg-primary animate-ping" />
                                         )}
                                       </div>
                                     </div>
@@ -922,7 +924,7 @@ export default function RostersPage() {
             </div>
           ) : (
             /* Employee Roster Table View */
-            <div className="overflow-hidden rounded-2xl border border-border bg-card/60 backdrop-blur-xl shadow-elegant">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead className="bg-muted/30 font-semibold uppercase tracking-wider text-muted-foreground border-b border-border text-[10px]">
@@ -982,14 +984,8 @@ export default function RostersPage() {
                           </td>
                           <td className="px-5 py-3">
                             <Badge
-                              variant={isPending ? "outline" : isRejected ? "destructive" : "secondary"}
-                              className={`text-[9px] py-0.5 px-1.5 font-medium ${
-                                isPending
-                                  ? "text-amber-400 bg-amber-500/10 border-amber-500/20"
-                                  : isRejected
-                                    ? "text-rose-400 bg-rose-500/10 border-rose-500/20"
-                                    : "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
-                              }`}
+                              variant="outline"
+                              className={`text-[9px] py-0.5 px-1.5 font-medium ${statusBadgeClass(entry.status)}`}
                             >
                               {entry.status}
                             </Badge>
@@ -1000,14 +996,14 @@ export default function RostersPage() {
                                 <>
                                   <button
                                     onClick={() => handleAction("Approve", entry)}
-                                    className="rounded p-1 border border-border text-emerald-500 bg-emerald-500/5 hover:bg-emerald-500/10"
+                                    className="rounded p-1 border border-border text-emerald-600 dark:text-emerald-400 hover:bg-muted/50"
                                     title="Approve Shift"
                                   >
                                     <CheckCircle2 className="h-3 w-3" />
                                   </button>
                                   <button
                                     onClick={() => handleAction("Reject", entry)}
-                                    className="rounded p-1 border border-border text-rose-500 bg-rose-500/5 hover:bg-rose-500/10"
+                                    className="rounded p-1 border border-destructive/30 text-destructive hover:bg-destructive/10"
                                     title="Reject Shift"
                                   >
                                     <X className="h-3 w-3" />
@@ -1047,9 +1043,9 @@ export default function RostersPage() {
           )}
 
           {/* Roster Planner Analytics Section */}
-          <div className="rounded-2xl border border-border bg-card/60 p-5 backdrop-blur-xl shadow-elegant space-y-6">
+          <div className="rounded-2xl border border-border bg-card p-5 space-y-6">
             <div className="flex items-center gap-2">
-              <Layers className="h-4 w-4 text-blue-500" />
+              <Layers className="h-4 w-4 text-primary" />
               <h3 className="font-display text-sm font-semibold tracking-tight text-foreground">
                 Roster Allocation Analytics
               </h3>
@@ -1064,10 +1060,10 @@ export default function RostersPage() {
                 {filteredRosters.length > 0 ? (
                   <div className="space-y-2.5">
                     {[
-                      { label: "Morning Shifts", value: filteredRosters.filter(r => r.shift === "Morning").length, color: "bg-blue-500" },
-                      { label: "Evening Shifts", value: filteredRosters.filter(r => r.shift === "Evening").length, color: "bg-amber-500" },
-                      { label: "Night Shifts", value: filteredRosters.filter(r => r.shift === "Night").length, color: "bg-purple-500" },
-                      { label: "WFH / Hybrid", value: filteredRosters.filter(r => r.shift === "WFH").length, color: "bg-emerald-500" },
+                      { label: "Morning Shifts", value: filteredRosters.filter(r => r.shift === "Morning").length, color: "bg-primary" },
+                      { label: "Evening Shifts", value: filteredRosters.filter(r => r.shift === "Evening").length, color: "bg-muted-foreground" },
+                      { label: "Night Shifts", value: filteredRosters.filter(r => r.shift === "Night").length, color: "bg-primary/80" },
+                      { label: "WFH / Hybrid", value: filteredRosters.filter(r => r.shift === "WFH").length, color: "bg-primary/50" },
                     ].map((bar, i) => {
                       const pctVal = filteredRosters.length > 0 ? Math.round((bar.value / filteredRosters.length) * 100) : 0;
                       return (
@@ -1105,7 +1101,7 @@ export default function RostersPage() {
                     {Array.from({ length: 28 }).map((_, idx) => (
                       <div
                         key={idx}
-                        className="h-4 rounded bg-blue-500/20 transition-all hover:scale-105"
+                        className="h-4 rounded bg-primary/20 transition-all hover:scale-105"
                       />
                     ))}
                   </div>
@@ -1122,10 +1118,10 @@ export default function RostersPage() {
         {/* Right sidebar area (1/4 width) */}
         <div className="space-y-6">
           {/* AI Smart Suggestions Panel */}
-          <div className="rounded-2xl border border-border bg-card/60 p-5 backdrop-blur-xl shadow-elegant space-y-4">
+          <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
-                <Sparkles className="h-4 w-4 text-blue-400" />
+                <Sparkles className="h-4 w-4 text-primary" />
                 <h3 className="font-display text-sm font-semibold tracking-tight text-foreground">
                   AI Roster Guard
                 </h3>
@@ -1144,7 +1140,7 @@ export default function RostersPage() {
                   className="rounded-xl border border-destructive/20 bg-destructive/10 p-3 space-y-2 text-xs"
                 >
                   <div className="flex items-start justify-between gap-1.5 font-semibold text-destructive-foreground">
-                    <span className="flex items-center gap-1 leading-none text-rose-400">
+                    <span className="flex items-center gap-1 leading-none text-destructive">
                       <AlertTriangle className="h-3.5 w-3.5" />
                       {item.type}
                     </span>
@@ -1159,13 +1155,13 @@ export default function RostersPage() {
               {conflictList.length > 0 ? (
                 <Button
                   onClick={handleQuickFixConflicts}
-                  className="w-full h-9 text-xs bg-blue-600/90 text-white hover:bg-blue-600 shadow-glow"
+                  className="w-full h-9 text-xs"
                 >
                   <Sparkles className="h-3 w-3 mr-1.5" /> Apply AI Quick Fix
                 </Button>
               ) : (
-                <div className="p-4 text-center rounded-xl bg-emerald-500/5 border border-emerald-500/10 text-emerald-400 flex flex-col items-center gap-1">
-                  <CheckCircle2 className="h-5 w-5" />
+                <div className="p-4 text-center rounded-xl bg-card border border-border text-foreground flex flex-col items-center gap-1">
+                  <CheckCircle2 className="h-5 w-5 text-primary" />
                   <span className="font-semibold text-xs mt-1">No Schedule Conflicts</span>
                   <p className="text-[9px] text-muted-foreground">
                     AI checked {rosters.length} active shift sequence. Overlap clearance is 100%.
@@ -1176,7 +1172,7 @@ export default function RostersPage() {
           </div>
 
           {/* Timeline of upcoming shifts */}
-          <div className="rounded-2xl border border-border bg-card/60 p-5 backdrop-blur-xl shadow-elegant">
+          <div className="rounded-2xl border border-border bg-card p-5">
             <h3 className="font-display text-sm font-semibold tracking-tight text-foreground mb-4">
               Today's Schedule & Timeline
             </h3>
@@ -1184,7 +1180,7 @@ export default function RostersPage() {
               <div className="space-y-3 text-xs">
                 {rosters.slice(0, 5).map((shift) => (
                   <div key={shift.id} className="flex items-start gap-2.5 pb-2.5 border-b border-border last:border-b-0 last:pb-0">
-                    <span className={`h-2 w-2 rounded-full mt-1.5 shrink-0 ${getShiftBadgeStyle(shift.shift)}`} />
+                    <span className={`h-2 w-2 rounded-full mt-1.5 shrink-0 ${getShiftTypeDot(shift.shift)}`} />
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-baseline font-semibold text-foreground">
                         <span className="truncate">{shift.employeeName}</span>
@@ -1201,7 +1197,7 @@ export default function RostersPage() {
           </div>
 
           {/* Weekly Summary overview */}
-          <div className="rounded-2xl border border-border bg-card/60 p-5 backdrop-blur-xl shadow-elegant space-y-3 text-xs">
+          <div className="rounded-2xl border border-border bg-card p-5 space-y-3 text-xs">
             <h3 className="font-display text-sm font-semibold tracking-tight text-foreground">
               Weekly Allocation Summary
             </h3>
@@ -1235,7 +1231,7 @@ export default function RostersPage() {
 
       {/* Assign / Edit Shift Modal */}
       <Dialog open={isAssignModalOpen} onOpenChange={setIsAssignModalOpen}>
-        <DialogContent className="max-w-md border border-border bg-card p-6 shadow-2xl backdrop-blur-xl sm:rounded-2xl">
+        <DialogContent className="max-w-md border border-border bg-card p-6 shadow-lg sm:rounded-2xl">
           <DialogHeader>
             <DialogTitle className="font-display text-base font-semibold tracking-tight text-foreground">
               Assign Workforce Shift
@@ -1384,7 +1380,7 @@ export default function RostersPage() {
 
       {/* Create Roster Template Modal */}
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-        <DialogContent className="max-w-md border border-border bg-card p-6 shadow-2xl backdrop-blur-xl sm:rounded-2xl">
+        <DialogContent className="max-w-md border border-border bg-card p-6 shadow-lg sm:rounded-2xl">
           <DialogHeader>
             <DialogTitle className="font-display text-base font-semibold tracking-tight text-foreground">
               Create New Roster Template
@@ -1481,7 +1477,7 @@ export default function RostersPage() {
 
       {/* Delete Confirmation Modal */}
       <Dialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
-        <DialogContent className="max-w-md border border-border bg-card p-6 shadow-2xl backdrop-blur-xl sm:rounded-2xl">
+        <DialogContent className="max-w-md border border-border bg-card p-6 shadow-lg sm:rounded-2xl">
           <DialogHeader className="flex flex-row items-start gap-4">
             <div className="rounded-full bg-destructive/10 p-2 text-destructive shrink-0 mt-1">
               <AlertTriangle className="h-5 w-5" />

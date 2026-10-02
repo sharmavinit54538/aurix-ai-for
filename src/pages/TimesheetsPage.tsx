@@ -1,3 +1,4 @@
+import { statusBadgeClass } from "@/lib/status-styles";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import {
@@ -430,8 +431,7 @@ export function TimesheetsPage() {
       <div className="flex justify-end gap-2">
         {userRole !== "super_admin" && userRole !== "hr_admin" && userRole !== "manager" && (
           <Button 
-            variant="outline"
-            className="gap-2 border-dashed border-indigo-500/50 hover:bg-indigo-500/10 text-indigo-400"
+            variant="outline" className="gap-2 border-dashed"
             onClick={() => {
               toast.info("Switched view to simulated Manager context.");
               setActiveTab(activeTab === "approvals" ? "my-timesheet" : "approvals");
@@ -445,9 +445,9 @@ export function TimesheetsPage() {
         <Button
           onClick={() => setAiAutofillOpen(true)}
           disabled={timesheetStatus === "pending" || timesheetStatus === "approved"}
-          className="gap-2 bg-gradient-to-r from-pink-600 to-violet-600 hover:from-pink-500 hover:to-violet-500 text-white shadow-lg shadow-pink-500/20"
+          variant="outline" className="gap-2"
         >
-          <Sparkles className="h-4 w-4 text-pink-200 animate-pulse" />
+          <Sparkles className="h-4 w-4 text-primary animate-pulse" />
           AI Copilot Autofill
         </Button>
       </div>
@@ -475,7 +475,7 @@ export function TimesheetsPage() {
           >
             Team Approvals
             {approvals.filter(a => a.status === "pending").length > 0 && (
-              <Badge className="ml-2 bg-amber-500/20 text-amber-500 border border-amber-500/30 hover:bg-amber-500/20">
+              <Badge variant="outline" className={`ml-2 ${statusBadgeClass("pending")}`}>
                 {approvals.filter(a => a.status === "pending").length}
               </Badge>
             )}
@@ -505,8 +505,8 @@ export function TimesheetsPage() {
           >
             {/* Stats Dashboard */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <Card className="relative overflow-hidden border border-border bg-card/40 backdrop-blur-xl transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/5">
-                <div className="absolute right-3 top-3 rounded-xl bg-indigo-500/10 p-2 text-indigo-500">
+              <Card className="relative overflow-hidden border border-border bg-card transition-all duration-300 hover:shadow-sm">
+                <div className="absolute right-3 top-3 rounded-xl bg-primary/10 p-2 text-primary">
                   <Clock className="h-5 w-5" />
                 </div>
                 <CardHeader className="pb-2">
@@ -520,8 +520,8 @@ export function TimesheetsPage() {
                 </CardContent>
               </Card>
 
-              <Card className="relative overflow-hidden border border-border bg-card/40 backdrop-blur-xl transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/5">
-                <div className="absolute right-3 top-3 rounded-xl bg-emerald-500/10 p-2 text-emerald-500">
+              <Card className="relative overflow-hidden border border-border bg-card transition-all duration-300 hover:shadow-sm">
+                <div className="absolute right-3 top-3 rounded-xl bg-primary/10 p-2 text-primary">
                   <BarChart2 className="h-5 w-5" />
                 </div>
                 <CardHeader className="pb-2">
@@ -535,8 +535,8 @@ export function TimesheetsPage() {
                 </CardContent>
               </Card>
 
-              <Card className="relative overflow-hidden border border-border bg-card/40 backdrop-blur-xl transition-all duration-300 hover:shadow-lg hover:shadow-violet-500/5">
-                <div className="absolute right-3 top-3 rounded-xl bg-violet-500/10 p-2 text-violet-500">
+              <Card className="relative overflow-hidden border border-border bg-card transition-all duration-300 hover:shadow-sm">
+                <div className="absolute right-3 top-3 rounded-xl bg-primary/10 p-2 text-primary">
                   <UserCheck className="h-5 w-5" />
                 </div>
                 <CardHeader className="pb-2">
@@ -547,31 +547,21 @@ export function TimesheetsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="mt-1 h-2 w-full rounded-full bg-muted overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full" style={{ width: `${utilizationRate}%` }} />
+                    <div className="h-full bg-primary rounded-full" style={{ width: `${utilizationRate}%` }} />
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="relative overflow-hidden border border-border bg-card/40 backdrop-blur-xl transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/5">
-                <div className="absolute right-3 top-3 rounded-xl bg-amber-500/10 p-2 text-amber-500">
+              <Card className="relative overflow-hidden border border-border bg-card transition-all duration-300 hover:shadow-sm">
+                <div className="absolute right-3 top-3 rounded-xl bg-primary/10 p-2 text-primary">
                   <FileText className="h-5 w-5" />
                 </div>
                 <CardHeader className="pb-2">
                   <CardDescription className="text-xs font-semibold tracking-wider uppercase text-muted-foreground">Status</CardDescription>
                   <CardTitle className="text-2xl font-display font-bold text-foreground mt-1 capitalize">
                     <Badge
-                      variant={
-                        timesheetStatus === "approved"
-                          ? "secondary"
-                          : timesheetStatus === "rejected"
-                          ? "destructive"
-                          : timesheetStatus === "pending"
-                          ? "outline"
-                          : "default"
-                      }
-                      className={`text-xs px-2 py-0.5 ${
-                        timesheetStatus === "pending" ? "bg-amber-500/15 text-amber-500 border border-amber-500/30" : ""
-                      }`}
+                      variant="outline"
+                      className={`text-xs px-2 py-0.5 ${statusBadgeClass(timesheetStatus)}`}
                     >
                       {timesheetStatus === "pending" ? "Pending Approval" : timesheetStatus}
                     </Badge>
@@ -589,11 +579,11 @@ export function TimesheetsPage() {
             </div>
 
             {/* Main Weekly Input Grid */}
-            <Card className="border border-border bg-card/50 backdrop-blur-md">
+            <Card className="border border-border bg-card">
               <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-border/80 gap-3">
                 <div>
                   <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                    <Calendar className="h-5 w-5 text-indigo-500" />
+                    <Calendar className="h-5 w-5 text-primary" />
                     Weekly Hours Allocation
                   </CardTitle>
                   <CardDescription>Select project and add log details for each day.</CardDescription>
@@ -626,7 +616,7 @@ export function TimesheetsPage() {
               <CardContent className="p-0 overflow-x-auto">
                 {loading ? (
                   <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                    <div className="h-8 w-8 rounded-full border-t-2 border-r-2 border-indigo-500 animate-spin" />
+                    <div className="h-8 w-8 rounded-full border-t-2 border-r-2 border-primary animate-spin" />
                     <p className="text-sm text-muted-foreground">Syncing timesheet with database...</p>
                   </div>
                 ) : (
@@ -678,7 +668,7 @@ export function TimesheetsPage() {
                                   step="0.5"
                                   min="0"
                                   max="24"
-                                  className="h-9 w-[64px] mx-auto text-center tabular-nums bg-background/50 border border-border focus:ring-1 focus:ring-indigo-500"
+                                  className="h-9 w-[64px] mx-auto text-center tabular-nums bg-background border border-border"
                                   value={hoursVal === 0 ? "" : hoursVal}
                                   placeholder="0"
                                   onChange={(e) => handleHoursChange(row.id, dayIdx, e.target.value)}
@@ -708,7 +698,7 @@ export function TimesheetsPage() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-muted-foreground hover:text-rose-500 transition-colors"
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors"
                                 onClick={() => deleteRow(row.id)}
                                 disabled={timesheetStatus === "pending" || timesheetStatus === "approved"}
                               >
@@ -724,17 +714,17 @@ export function TimesheetsPage() {
                         <TableCell className="pl-6 py-4 text-foreground font-bold">Daily Totals</TableCell>
                         {dailyTotals.map((tot, idx) => (
                           <TableCell key={idx} className="text-center py-4 tabular-nums">
-                            <span className={tot > 24 ? "text-rose-500 font-bold" : "text-foreground"}>
+                            <span className={tot > 24 ? "text-destructive font-bold" : "text-foreground"}>
                               {tot}h
                             </span>
                           </TableCell>
                         ))}
-                        <TableCell className="text-center font-bold tabular-nums text-indigo-500 py-4">
+                        <TableCell className="text-center font-bold tabular-nums text-foreground py-4">
                           {totalHours}h
                         </TableCell>
                         <TableCell className="pl-4 py-4 text-xs text-muted-foreground font-normal">
                           {isDailyOverlogged ? (
-                            <span className="text-rose-500 flex items-center gap-1">
+                            <span className="text-destructive flex items-center gap-1">
                               <AlertCircle className="h-4 w-4" /> Limit exceeded (Max 24h/day)
                             </span>
                           ) : (
@@ -767,7 +757,7 @@ export function TimesheetsPage() {
                       <Save className="h-4 w-4" /> Save Draft
                     </Button>
                     <Button
-                      className="flex-1 sm:flex-initial gap-2 bg-indigo-600 hover:bg-indigo-500 text-white"
+                      className="flex-1 sm:flex-initial gap-2"
                       onClick={handleSubmitTimesheet}
                       disabled={isDailyOverlogged || totalHours === 0}
                     >
@@ -795,19 +785,19 @@ export function TimesheetsPage() {
                 <h3 className="text-lg font-semibold text-foreground">Team Timesheets Review</h3>
                 <p className="text-sm text-muted-foreground">Approve or request revisions for employee timesheet filings.</p>
               </div>
-              <Badge className="bg-amber-500/20 text-amber-500 border border-amber-500/30">
+              <Badge variant="outline" className={statusBadgeClass("pending")}>
                 {approvals.filter(a => a.status === "pending").length} Pending
               </Badge>
             </div>
 
             <div className="grid gap-4">
               {approvals.map((req) => (
-                <Card key={req.id} className="border border-border bg-card/60 backdrop-blur-md overflow-hidden hover:shadow-md transition-shadow">
+                <Card key={req.id} className="border border-border bg-card overflow-hidden hover:shadow-sm transition-shadow">
                   <div className="p-6">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                       {/* Employee profile metadata */}
                       <div className="flex items-start gap-4">
-                        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-semibold">
+                        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 text-primary font-semibold">
                           {req.employeeName.charAt(0)}
                         </div>
                         <div>
@@ -830,8 +820,7 @@ export function TimesheetsPage() {
                         <div className="text-left md:text-right">
                           <div className="text-xs font-semibold capitalize">
                             <Badge
-                              variant={req.status === "approved" ? "secondary" : req.status === "rejected" ? "destructive" : "outline"}
-                              className={req.status === "pending" ? "bg-amber-500/15 text-amber-500 border border-amber-500/30" : ""}
+                              variant="outline" className={statusBadgeClass(req.status)}
                             >
                               {req.status}
                             </Badge>
@@ -855,7 +844,7 @@ export function TimesheetsPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/10 hover:text-emerald-400"
+                              className="text-emerald-600 dark:text-emerald-400 border-border hover:bg-muted/50"
                               onClick={() => handleApproveTimesheet(req.id)}
                             >
                               <CheckCircle2 className="h-4 w-4" /> Approve
@@ -863,7 +852,7 @@ export function TimesheetsPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="text-rose-500 border-rose-500/20 hover:bg-rose-500/10 hover:text-rose-400"
+                              className="text-destructive border-destructive/30 hover:bg-destructive/10"
                               onClick={() => {
                                 setSelectedApproval(req);
                                 setRejectReasonOpen(true);
@@ -880,7 +869,7 @@ export function TimesheetsPage() {
               ))}
 
               {approvals.length === 0 && (
-                <div className="rounded-2xl border border-dashed border-border bg-card/40 p-12 text-center">
+                <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
                   <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-xl bg-muted text-muted-foreground"><ShieldCheck className="h-5 w-5" /></div>
                   <p className="font-medium">All caught up!</p>
                   <p className="mt-1 text-sm text-muted-foreground">There are no pending timesheets for your approval right now.</p>
@@ -905,7 +894,7 @@ export function TimesheetsPage() {
               <p className="text-sm text-muted-foreground">Historical records of your timesheets submissions and payroll transitions.</p>
             </div>
 
-            <Card className="border border-border bg-card/50 backdrop-blur-md overflow-hidden">
+            <Card className="border border-border bg-card overflow-hidden">
               <Table>
                 <TableHeader className="bg-muted/20">
                   <TableRow>
@@ -926,17 +915,15 @@ export function TimesheetsPage() {
                       <TableCell className="py-4 text-muted-foreground">{rec.approvedBy || "—"}</TableCell>
                       <TableCell className="py-4">
                         <Badge
-                          variant={rec.status === "approved" ? "secondary" : rec.status === "rejected" ? "destructive" : "outline"}
-                          className={`text-xs ${
-                            rec.status === "pending" ? "bg-amber-500/15 text-amber-500 border border-amber-500/30" : ""
-                          }`}
+                          variant="outline"
+                          className={`text-xs ${statusBadgeClass(rec.status)}`}
                         >
                           {rec.status === "pending" ? "Pending Approval" : rec.status}
                         </Badge>
                       </TableCell>
                       <TableCell className="pr-6 py-4 text-right">
                         {rec.status === "rejected" && (
-                          <div className="text-xs text-rose-500 flex items-center gap-1.5 justify-end">
+                          <div className="text-xs text-destructive flex items-center gap-1.5 justify-end">
                             <AlertCircle className="h-3.5 w-3.5 shrink-0" /> Reason: {rec.rejectionReason}
                           </div>
                         )}
@@ -959,10 +946,10 @@ export function TimesheetsPage() {
 
       {/* AI Autofill Copilot Dialog */}
       <Dialog open={aiAutofillOpen} onOpenChange={setAiAutofillOpen}>
-        <DialogContent className="max-w-md border border-border bg-card/95 backdrop-blur-2xl text-foreground">
+        <DialogContent className="max-w-md border border-border bg-card text-foreground">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl font-bold">
-              <Sparkles className="h-5 w-5 text-pink-500 animate-pulse" />
+              <Sparkles className="h-5 w-5 text-primary animate-pulse" />
               AI Copilot Timesheet Autofill
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground mt-2">
@@ -973,8 +960,8 @@ export function TimesheetsPage() {
           {aiLoading ? (
             <div className="flex flex-col items-center justify-center py-8 space-y-4">
               <div className="relative flex items-center justify-center">
-                <div className="h-12 w-12 rounded-full border-t-2 border-r-2 border-pink-500 animate-spin" />
-                <Sparkles className="absolute h-5 w-5 text-pink-500 animate-ping" />
+                <div className="h-12 w-12 rounded-full border-t-2 border-r-2 border-primary animate-spin" />
+                <Sparkles className="absolute h-5 w-5 text-primary animate-ping" />
               </div>
               <div className="text-center">
                 <p className="text-sm font-semibold text-foreground">Analyzing developer footprint...</p>
@@ -996,8 +983,8 @@ export function TimesheetsPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="rounded-lg bg-pink-500/5 border border-pink-500/10 p-3 flex gap-2">
-                <AlertCircle className="h-5 w-5 text-pink-500 shrink-0" />
+              <div className="rounded-lg bg-muted border border-border p-3 flex gap-2">
+                <AlertCircle className="h-5 w-5 text-primary shrink-0" />
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   <strong>Privacy Note:</strong> Log analyses are processed locally on your client machine and never saved to training pipelines.
                 </p>
@@ -1017,7 +1004,7 @@ export function TimesheetsPage() {
             <Button
               onClick={triggerAiAutofill}
               disabled={aiLoading}
-              className="bg-gradient-to-r from-pink-600 to-violet-600 hover:from-pink-500 hover:to-violet-500 text-white"
+              className=""
             >
               Generate Timesheet
             </Button>
@@ -1028,7 +1015,7 @@ export function TimesheetsPage() {
       {/* Details View Modal for Manager Reviews */}
       {selectedApproval && (
         <Dialog open={!!selectedApproval} onOpenChange={(open) => !open && setSelectedApproval(null)}>
-          <DialogContent className="max-w-lg border border-border bg-card/95 backdrop-blur-2xl text-foreground">
+          <DialogContent className="max-w-lg border border-border bg-card text-foreground">
             <DialogHeader>
               <DialogTitle className="text-lg font-bold">
                 Timesheet Details: {selectedApproval.employeeName}
@@ -1046,7 +1033,7 @@ export function TimesheetsPage() {
                 </div>
                 <div>
                   <span className="text-xs text-muted-foreground block">Total Hours Claimed</span>
-                  <span className="font-semibold text-indigo-500">{selectedApproval.totalHours} hrs</span>
+                  <span className="font-semibold text-foreground">{selectedApproval.totalHours} hrs</span>
                 </div>
               </div>
 
@@ -1080,13 +1067,13 @@ export function TimesheetsPage() {
                 <>
                   <Button
                     variant="outline"
-                    className="text-rose-500 border-rose-500/20 hover:bg-rose-500/10 hover:text-rose-400"
+                    className="text-destructive border-destructive/30 hover:bg-destructive/10"
                     onClick={() => setRejectReasonOpen(true)}
                   >
                     Reject
                   </Button>
                   <Button
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white"
+                    variant="outline" className="text-emerald-600 dark:text-emerald-400 border-border hover:bg-muted/50"
                     onClick={() => handleApproveTimesheet(selectedApproval.id)}
                   >
                     Approve Timesheet
@@ -1100,10 +1087,10 @@ export function TimesheetsPage() {
 
       {/* Reject Reason input dialog */}
       <Dialog open={rejectReasonOpen} onOpenChange={setRejectReasonOpen}>
-        <DialogContent className="max-w-md border border-border bg-card/95 backdrop-blur-2xl text-foreground">
+        <DialogContent className="max-w-md border border-border bg-card text-foreground">
           <DialogHeader>
             <DialogTitle className="text-base font-bold flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-rose-500" />
+              <AlertCircle className="h-5 w-5 text-destructive" />
               Reason for Rejection
             </DialogTitle>
             <DialogDescription className="text-xs">
@@ -1117,7 +1104,7 @@ export function TimesheetsPage() {
               id="reason-textarea"
               value={rejectReason}
               placeholder="e.g. Please clarify project hours allocation for Acme Corp Web Portal..."
-              className="w-full min-h-[100px] bg-background/50 border border-border rounded-lg p-3 text-sm focus:ring-1 focus:ring-rose-500 focus:outline-none"
+              className="w-full min-h-[100px] bg-background border border-border rounded-lg p-3 text-sm focus:border-destructive focus:outline-none"
               onChange={(e) => setRejectReason(e.target.value)}
             />
           </div>
@@ -1131,7 +1118,7 @@ export function TimesheetsPage() {
               Cancel
             </Button>
             <Button
-              className="bg-rose-600 hover:bg-rose-500 text-white"
+              variant="destructive"
               onClick={handleRejectTimesheet}
             >
               Confirm Rejection

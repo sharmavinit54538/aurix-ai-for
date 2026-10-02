@@ -1,3 +1,4 @@
+import { statusBadgeClass } from "@/lib/status-styles";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Link, useParams, useNavigate } from "@tanstack/react-router";
 import {
@@ -92,23 +93,21 @@ function getFinalizationStatusTone(status: string | null | undefined, isFinalize
     return {
       tone: "muted",
       label: "Finalized",
-      badgeClass:
-        "border-violet-500/30 bg-violet-500/10 text-violet-600 dark:text-violet-400 font-semibold",
+      badgeClass: statusBadgeClass("completed"),
     };
   }
   if (isLocked || (status && String(status).toLowerCase().includes("lock"))) {
     return {
       tone: "muted",
       label: "Locked",
-      badgeClass:
-        "border-zinc-500/30 bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 font-semibold",
+      badgeClass: statusBadgeClass("default"),
     };
   }
   if (!status) {
     return {
       tone: "muted",
       label: "Unknown",
-      badgeClass: "border-border bg-muted/30 text-muted-foreground",
+      badgeClass: statusBadgeClass("default"),
     };
   }
   const s = status.toLowerCase().trim();
@@ -116,32 +115,28 @@ function getFinalizationStatusTone(status: string | null | undefined, isFinalize
     return {
       tone: "success",
       label: "Approved",
-      badgeClass:
-        "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+      badgeClass: statusBadgeClass("approved"),
     };
   }
   if (s === "rejected" || s.includes("reject")) {
     return {
       tone: "danger",
       label: "Rejected",
-      badgeClass:
-        "border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400",
+      badgeClass: statusBadgeClass("critical"),
     };
   }
   if (s.includes("review") || s.includes("approval")) {
     return {
       tone: "info",
       label: status,
-      badgeClass:
-        "border-sky-500/30 bg-sky-500/10 text-sky-600 dark:text-sky-400",
+      badgeClass: statusBadgeClass("info"),
     };
   }
   if (s.includes("provision")) {
     return {
       tone: "warning",
       label: status,
-      badgeClass:
-        "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+      badgeClass: statusBadgeClass("warning"),
     };
   }
   return {
@@ -434,7 +429,7 @@ export function PayrollFinalizationPage() {
             {!loadingData && isApproved ? (
               <Badge
                 variant="outline"
-                className="text-xs font-semibold border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                className={`text-xs font-semibold ${statusBadgeClass("approved")}`}
               >
                 Approval: Approved
               </Badge>
@@ -479,7 +474,7 @@ export function PayrollFinalizationPage() {
               onClick={() => setFinalizeModalOpen(true)}
               disabled={!canFinalizeNow || loadingData || isFinalizing}
               className="h-9 gap-1.5 text-xs shadow-sm"
-              style={{ background: canFinalizeNow ? "var(--gradient-brand)" : undefined }}
+              
               title={
                 !isApproved
                   ? "Payroll must be approved in Step 7 before finalization"
@@ -502,7 +497,7 @@ export function PayrollFinalizationPage() {
                   to: `/dashboard/payroll/runs/${runId}/payment` as any,
                 })
               }
-              className="h-9 gap-1.5 text-xs shadow-sm bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="h-9 gap-1.5 text-xs shadow-sm"
             >
               <Banknote className="h-3.5 w-3.5" />
               <span>Step 9: Payment & Disbursement</span>
@@ -512,13 +507,13 @@ export function PayrollFinalizationPage() {
       </div>
 
       {/* ── MANDATORY NOTICE: FINALIZATION & PAYMENT SAFETY ───────────── */}
-      <Alert className="border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200">
-        <ShieldAlert className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+      <Alert className="border-border bg-muted text-foreground">
+        <ShieldAlert className="h-4 w-4 text-primary mt-0.5 shrink-0" />
         <div className="ml-2">
-          <AlertTitle className="text-xs font-bold uppercase tracking-wider text-amber-900 dark:text-amber-200">
+          <AlertTitle className="text-xs font-bold uppercase tracking-wider text-foreground">
             PAYROLL FINALIZATION — CRITICAL GOVERNANCE ACTION
           </AlertTitle>
-          <AlertDescription className="mt-1 text-xs leading-relaxed text-amber-800 dark:text-amber-300">
+          <AlertDescription className="mt-1 text-xs leading-relaxed text-muted-foreground">
             Finalization transitions the payroll run to <strong>Final</strong> and freezes all
             computed salary figures. Once finalized, numbers are locked to prevent inadvertent
             tampering or modifications.
@@ -532,15 +527,15 @@ export function PayrollFinalizationPage() {
 
       {/* ── Approval Prerequisite Enforcement Banner ─────────────────── */}
       {!loadingData && !isUnavailable && !isFinalized && !isApproved ? (
-        <GlassCard className="border-amber-500/30 bg-amber-500/10 p-5">
+        <GlassCard className="border-border bg-card p-5">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
               <div>
-                <h3 className="font-display text-sm font-semibold text-amber-950 dark:text-amber-200">
+                <h3 className="font-display text-sm font-semibold text-foreground">
                   Approval Required Prior to Finalization
                 </h3>
-                <p className="text-xs text-amber-800/90 dark:text-amber-300/90 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   This payroll run has not yet received formal managerial approval. Corporate governance
                   and statutory compliance require that payroll must be formally approved in{" "}
                   <strong>Step 7: Review & Approval</strong> before it can be finalized and locked.
@@ -556,7 +551,7 @@ export function PayrollFinalizationPage() {
                 })
               }
               className="gap-1.5 text-xs shrink-0"
-              style={{ background: "var(--gradient-brand)" }}
+              
             >
               <UserCheck className="h-3.5 w-3.5" />
               <span>Go to Step 7 Approval</span>
@@ -568,7 +563,7 @@ export function PayrollFinalizationPage() {
       {/* ── Backend Unavailable / Error State ────────────────────────── */}
       {!loadingData && (isUnavailable || apiError) ? (
         <GlassCard className="border-border/80 p-8 text-center">
-          <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 ring-1 ring-amber-500/20">
+          <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20">
             <AlertTriangle className="h-6 w-6" />
           </div>
           <h2 className="font-display text-base font-semibold text-foreground">
@@ -614,7 +609,7 @@ export function PayrollFinalizationPage() {
             {Array.from({ length: 6 }).map((_, i) => (
               <div
                 key={i}
-                className="rounded-2xl border border-border bg-card/40 p-4"
+                className="rounded-2xl border border-border bg-card p-4"
               >
                 <Skeleton className="h-3 w-16" />
                 <Skeleton className="mt-3 h-7 w-24" />
@@ -633,19 +628,19 @@ export function PayrollFinalizationPage() {
         <div className="space-y-6">
           {/* ── Finalized & Locked Banner (If already finalized) ───────── */}
           {isFinalized || isLocked ? (
-            <GlassCard className="border-violet-500/30 bg-violet-500/10 p-5">
+            <GlassCard className="border-border bg-card p-5">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-start gap-3">
-                  <Lock className="h-5 w-5 text-violet-600 dark:text-violet-400 shrink-0 mt-0.5" />
+                  <Lock className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                   <div>
-                    <h3 className="font-display text-sm font-semibold text-violet-950 dark:text-violet-200">
+                    <h3 className="font-display text-sm font-semibold text-foreground">
                       Payroll Finalized & Locked
                     </h3>
-                    <p className="text-xs text-violet-800/90 dark:text-violet-300/90 mt-0.5">
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       This payroll run is authoritative and frozen. All individual employee salary lines,
                       attendance adjustments, and tax calculations are locked against further modification.
                     </p>
-                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-violet-900/80 dark:text-violet-300/80">
+                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
                       {finalizationData.finalization?.finalizedByName ||
                       finalizationData.finalization?.finalizedBy ? (
                         <span>
@@ -670,7 +665,7 @@ export function PayrollFinalizationPage() {
                       ) : null}
                     </div>
                     {finalizationData.finalization?.finalizationNotes ? (
-                      <p className="mt-1.5 text-xs text-violet-900/90 dark:text-violet-200/90 italic bg-violet-500/10 p-2 rounded-lg border border-violet-500/20">
+                      <p className="mt-1.5 text-xs text-foreground italic bg-muted p-2 rounded-lg border border-border">
                         &ldquo;{finalizationData.finalization.finalizationNotes}&rdquo;
                       </p>
                     ) : null}
@@ -679,7 +674,7 @@ export function PayrollFinalizationPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge
                     variant="outline"
-                    className="border-violet-500/40 bg-violet-500/20 text-violet-700 dark:text-violet-300 font-semibold uppercase text-[10px] px-2.5 py-1"
+                    className={`font-semibold uppercase text-[10px] px-2.5 py-1 ${statusBadgeClass("completed")}`}
                   >
                     <Lock className="mr-1 h-3 w-3 inline-block" />
                     Locked & Final
@@ -768,9 +763,9 @@ export function PayrollFinalizationPage() {
                   {/* Prerequisite 1: Processing complete */}
                   <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/20 p-3 text-xs">
                     {!isProcessing ? (
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
+                      <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                     ) : (
-                      <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                      <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                     )}
                     <div>
                       <div className="font-semibold text-foreground flex items-center gap-2">
@@ -792,9 +787,9 @@ export function PayrollFinalizationPage() {
                   {/* Prerequisite 2: Validation complete */}
                   <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/20 p-3 text-xs">
                     {!hasBlockingErrors ? (
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
+                      <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                     ) : (
-                      <XCircle className="h-4 w-4 text-rose-600 dark:text-rose-400 mt-0.5 shrink-0" />
+                      <XCircle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
                     )}
                     <div>
                       <div className="font-semibold text-foreground flex items-center gap-2">
@@ -817,9 +812,9 @@ export function PayrollFinalizationPage() {
                   {/* Prerequisite 3: Formally Approved */}
                   <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/20 p-3 text-xs">
                     {isApproved || isFinalized ? (
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
+                      <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                     ) : (
-                      <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                      <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                     )}
                     <div>
                       <div className="font-semibold text-foreground flex items-center gap-2">
@@ -917,10 +912,10 @@ export function PayrollFinalizationPage() {
                     <strong
                       className={
                         isFinalized
-                          ? "text-violet-600 dark:text-violet-400"
+                          ? "text-primary"
                           : canFinalizeNow
-                            ? "text-emerald-600 dark:text-emerald-400"
-                            : "text-amber-600 dark:text-amber-400"
+                            ? "text-primary"
+                            : "text-muted-foreground"
                       }
                     >
                       {isFinalized
@@ -948,9 +943,7 @@ export function PayrollFinalizationPage() {
                       onClick={() => setFinalizeModalOpen(true)}
                       disabled={!canFinalizeNow || isFinalizing}
                       className="w-full gap-2 text-xs font-semibold"
-                      style={{
-                        background: canFinalizeNow ? "var(--gradient-brand)" : undefined,
-                      }}
+
                     >
                       <Lock className="h-3.5 w-3.5" />
                       <span>Execute Finalization & Lock</span>
@@ -965,7 +958,7 @@ export function PayrollFinalizationPage() {
                             to: `/dashboard/payroll/runs/${runId}/approval` as any,
                           })
                         }
-                        className="w-full gap-2 text-xs text-primary hover:bg-primary/5"
+                        className="w-full gap-2 text-xs"
                       >
                         <UserCheck className="h-3.5 w-3.5" />
                         <span>Go to Step 7 Approval First</span>
@@ -974,12 +967,12 @@ export function PayrollFinalizationPage() {
                   </div>
                 ) : (
                   <div className="pt-2">
-                    <div className="rounded-xl border border-violet-500/30 bg-violet-500/10 p-3 text-center">
-                      <Lock className="h-5 w-5 text-violet-600 dark:text-violet-400 mx-auto mb-1" />
-                      <div className="text-xs font-semibold text-violet-950 dark:text-violet-200">
+                    <div className="rounded-xl border border-border bg-muted p-3 text-center">
+                      <Lock className="h-5 w-5 text-primary mx-auto mb-1" />
+                      <div className="text-xs font-semibold text-foreground">
                         Payroll is Final & Locked
                       </div>
-                      <p className="text-[11px] text-violet-800/80 dark:text-violet-300/80 mt-0.5">
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
                         Modification actions are disabled.
                       </p>
                     </div>
@@ -1021,14 +1014,14 @@ export function PayrollFinalizationPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Final Net Payroll:</span>
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                <span className="font-semibold text-foreground">
                   {formatINR(finalizationData?.summary?.netPayroll)}
                 </span>
               </div>
             </div>
 
-            <Alert className="border-rose-500/30 bg-rose-500/10 text-rose-950 dark:text-rose-200 py-2">
-              <Lock className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
+            <Alert className="border-destructive/20 bg-destructive/10 text-destructive py-2">
+              <Lock className="h-3.5 w-3.5 text-destructive shrink-0" />
               <AlertDescription className="text-[11px] leading-relaxed ml-1">
                 <strong>Irreversible Operation:</strong> After finalization, this payroll run will
                 be locked against recalculation or adjustments.
