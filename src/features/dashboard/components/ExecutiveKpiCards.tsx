@@ -19,6 +19,7 @@ import {
   Tooltip,
 } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
+import { statusBadgeClass } from "@/lib/status-styles";
 import type { ExecutiveKpiDetails } from "../hooks/useExecutiveDashboardData";
 
 interface ExecutiveKpiCardsProps {
@@ -33,16 +34,16 @@ const cardMotion = (index: number) => ({
   transition: { duration: 0.35, ease: "easeOut" as const, delay: index * 0.05 },
 });
 
-// ── Custom Dark Recharts Tooltip ─────────────────────────────
+// ── Custom Theme-Compliant Tooltip ───────────────────────────
 function CustomTooltip({ active, payload, label, unit = "" }: any) {
   if (active && payload && payload.length) {
     const pt = payload[0];
     const val = pt.value;
     const dispLabel = pt.payload?.label ?? label;
     return (
-      <div className="rounded-md border border-slate-700 bg-slate-900/95 px-2.5 py-1 text-xs text-slate-100 shadow-xl backdrop-blur-md">
-        {dispLabel ? <span className="font-medium text-slate-400 mr-1">{dispLabel}:</span> : null}
-        <span className="font-semibold text-white">
+      <div className="rounded-md border border-border bg-card px-2.5 py-1 text-xs text-foreground shadow-md">
+        {dispLabel ? <span className="font-medium text-muted-foreground mr-1">{dispLabel}:</span> : null}
+        <span className="font-semibold text-foreground">
           {typeof val === "number" ? val.toLocaleString("en-IN") : val}
           {unit}
         </span>
@@ -112,14 +113,14 @@ function buildSparklineData(
 
 interface KpiSparklineProps {
   data: Array<{ v: number; label?: string }>;
-  color: string;
+  color?: string;
   gradientId: string;
   unit?: string;
 }
 
 const KpiSparkline = memo(function KpiSparkline({
   data,
-  color,
+  color = "var(--primary)",
   gradientId,
   unit = "",
 }: KpiSparklineProps) {
@@ -129,7 +130,7 @@ const KpiSparkline = memo(function KpiSparkline({
         <AreaChart data={data} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={color} stopOpacity={0.4} />
+              <stop offset="0%" stopColor={color} stopOpacity={0.35} />
               <stop offset="100%" stopColor={color} stopOpacity={0.0} />
             </linearGradient>
           </defs>
@@ -158,17 +159,17 @@ export const ExecutiveKpiCards = memo(function ExecutiveKpiCards({
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
-            className="flex min-h-[195px] flex-col justify-between rounded-2xl border border-slate-800/60 bg-slate-900/40 p-4"
+            className="flex min-h-[195px] flex-col justify-between rounded-xl border border-border bg-card p-4 shadow-sm"
           >
             <div className="flex items-center justify-between">
-              <Skeleton className="h-8 w-8 rounded-lg bg-slate-800" />
-              <Skeleton className="h-4 w-12 rounded bg-slate-800" />
+              <Skeleton className="h-8 w-8 rounded-lg bg-muted" />
+              <Skeleton className="h-4 w-12 rounded bg-muted" />
             </div>
             <div className="my-2 space-y-1.5">
-              <Skeleton className="h-7 w-20 rounded bg-slate-800" />
-              <Skeleton className="h-3 w-28 rounded bg-slate-800" />
+              <Skeleton className="h-7 w-20 rounded bg-muted" />
+              <Skeleton className="h-3 w-28 rounded bg-muted" />
             </div>
-            <Skeleton className="h-14 w-full rounded-lg bg-slate-800/60" />
+            <Skeleton className="h-14 w-full rounded-lg bg-muted" />
           </div>
         ))}
       </div>
@@ -219,23 +220,21 @@ export const ExecutiveKpiCards = memo(function ExecutiveKpiCards({
       {/* ── CARD 1: TOTAL HEADCOUNT ─────────────────────────── */}
       <motion.div {...cardMotion(0)}>
         <Link to={headcount.link as any} className="block h-full outline-none">
-          <div className="group relative flex h-full min-h-[195px] flex-col justify-between overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/60 p-4.5 backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/5">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-emerald-500/0 via-emerald-500/60 to-emerald-500/0 opacity-60 transition-opacity group-hover:opacity-100" />
-
+          <div className="group relative flex h-full min-h-[195px] flex-col justify-between overflow-hidden rounded-xl border border-border bg-card p-4.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
             <div>
               <div className="flex items-center justify-between">
-                <div className="inline-flex rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-2 text-emerald-400">
+                <div className="inline-flex rounded-xl bg-primary/10 p-2 text-primary">
                   <Users className="h-4 w-4" />
                 </div>
                 {headcount.change ? (
                   <span
-                    className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                    className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-semibold border ${statusBadgeClass(
                       headcount.changeType === "up"
-                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                        ? "positive"
                         : headcount.changeType === "down"
-                        ? "bg-rose-500/10 text-rose-400 border border-rose-500/20"
-                        : "bg-slate-800 text-slate-400"
-                    }`}
+                        ? "critical"
+                        : "default"
+                    )}`}
                   >
                     {headcount.changeType === "up" ? (
                       <TrendingUp className="h-2.5 w-2.5" />
@@ -245,68 +244,85 @@ export const ExecutiveKpiCards = memo(function ExecutiveKpiCards({
                     {headcount.change}
                   </span>
                 ) : (
-                  <span className="text-slate-600 transition-colors group-hover:text-emerald-400">
+                  <span className="text-muted-foreground transition-colors group-hover:text-foreground">
                     <ArrowUpRight className="h-3.5 w-3.5" />
                   </span>
                 )}
               </div>
 
               <div className="mt-3">
-                <div className="text-xs font-medium uppercase tracking-wider text-slate-400">
+                <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Total Headcount
                 </div>
-                <div className="mt-0.5 font-mono text-2xl font-bold tracking-tight text-white lg:text-3xl">
+                <div className="mt-0.5 font-display text-2xl font-bold tracking-tight text-foreground lg:text-3xl">
                   {headcount.value.toLocaleString("en-IN")}
+                </div>
+                <div className="mt-0.5 truncate text-xs text-muted-foreground">
+                  Active across all depts
                 </div>
               </div>
             </div>
 
-            {/* Visualization: Smooth Area Sparkline Graph */}
-            <div className="mt-3">
+            <div className="mt-2">
               <KpiSparkline
                 data={headcountData}
-                color="#10b981"
-                gradientId="headcountGrad"
-                unit=" employees"
+                gradientId="kpi-headcount"
               />
             </div>
           </div>
         </Link>
       </motion.div>
 
-      {/* ── CARD 2: ACTIVE OPENINGS ─────────────────────────── */}
+      {/* ── CARD 2: OPEN POSITIONS ──────────────────────────── */}
       <motion.div {...cardMotion(1)}>
         <Link to={openings.link as any} className="block h-full outline-none">
-          <div className="group relative flex h-full min-h-[195px] flex-col justify-between overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/60 p-4.5 backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-500/40 hover:shadow-lg hover:shadow-blue-500/5">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-blue-500/0 via-blue-500/60 to-blue-500/0 opacity-60 transition-opacity group-hover:opacity-100" />
-
+          <div className="group relative flex h-full min-h-[195px] flex-col justify-between overflow-hidden rounded-xl border border-border bg-card p-4.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
             <div>
               <div className="flex items-center justify-between">
-                <div className="inline-flex rounded-xl border border-blue-500/20 bg-blue-500/10 p-2 text-blue-400">
+                <div className="inline-flex rounded-xl bg-primary/10 p-2 text-primary">
                   <Briefcase className="h-4 w-4" />
                 </div>
-                <span className="text-slate-600 transition-colors group-hover:text-blue-400">
-                  <ArrowUpRight className="h-3.5 w-3.5" />
-                </span>
+                {openings.change ? (
+                  <span
+                    className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-semibold border ${statusBadgeClass(
+                      openings.changeType === "up"
+                        ? "positive"
+                        : openings.changeType === "down"
+                        ? "critical"
+                        : "default"
+                    )}`}
+                  >
+                    {openings.changeType === "up" ? (
+                      <TrendingUp className="h-2.5 w-2.5" />
+                    ) : openings.changeType === "down" ? (
+                      <TrendingDown className="h-2.5 w-2.5" />
+                    ) : null}
+                    {openings.change}
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground transition-colors group-hover:text-foreground">
+                    <ArrowUpRight className="h-3.5 w-3.5" />
+                  </span>
+                )}
               </div>
 
               <div className="mt-3">
-                <div className="text-xs font-medium uppercase tracking-wider text-slate-400">
-                  Active Openings
+                <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Open Positions
                 </div>
-                <div className="mt-0.5 font-mono text-2xl font-bold tracking-tight text-white lg:text-3xl">
+                <div className="mt-0.5 font-display text-2xl font-bold tracking-tight text-foreground lg:text-3xl">
                   {openings.value.toLocaleString("en-IN")}
+                </div>
+                <div className="mt-0.5 truncate text-xs text-muted-foreground">
+                  Across active job posts
                 </div>
               </div>
             </div>
 
-            {/* Visualization: Smooth Area Sparkline Graph */}
-            <div className="mt-3">
+            <div className="mt-2">
               <KpiSparkline
                 data={openingsData}
-                color="#3b82f6"
-                gradientId="openingsGrad"
-                unit=" jobs"
+                gradientId="kpi-openings"
               />
             </div>
           </div>
@@ -316,74 +332,72 @@ export const ExecutiveKpiCards = memo(function ExecutiveKpiCards({
       {/* ── CARD 3: DEPARTMENTS ─────────────────────────────── */}
       <motion.div {...cardMotion(2)}>
         <Link to={departments.link as any} className="block h-full outline-none">
-          <div className="group relative flex h-full min-h-[195px] flex-col justify-between overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/60 p-4.5 backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-violet-500/40 hover:shadow-lg hover:shadow-violet-500/5">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-violet-500/0 via-violet-500/60 to-violet-500/0 opacity-60 transition-opacity group-hover:opacity-100" />
-
+          <div className="group relative flex h-full min-h-[195px] flex-col justify-between overflow-hidden rounded-xl border border-border bg-card p-4.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
             <div>
               <div className="flex items-center justify-between">
-                <div className="inline-flex rounded-xl border border-violet-500/20 bg-violet-500/10 p-2 text-violet-400">
+                <div className="inline-flex rounded-xl bg-primary/10 p-2 text-primary">
                   <Building2 className="h-4 w-4" />
                 </div>
-                <span className="text-slate-600 transition-colors group-hover:text-violet-400">
+                <span className="text-muted-foreground transition-colors group-hover:text-foreground">
                   <ArrowUpRight className="h-3.5 w-3.5" />
                 </span>
               </div>
 
               <div className="mt-3">
-                <div className="text-xs font-medium uppercase tracking-wider text-slate-400">
+                <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Departments
                 </div>
-                <div className="mt-0.5 font-mono text-2xl font-bold tracking-tight text-white lg:text-3xl">
+                <div className="mt-0.5 font-display text-2xl font-bold tracking-tight text-foreground lg:text-3xl">
                   {departments.value.toLocaleString("en-IN")}
+                </div>
+                <div className="mt-0.5 truncate text-xs text-muted-foreground">
+                  Operational business units
                 </div>
               </div>
             </div>
 
-            {/* Visualization: Smooth Area Sparkline Graph */}
-            <div className="mt-3">
+            <div className="mt-2">
               <KpiSparkline
                 data={departmentsData}
-                color="#8b5cf6"
-                gradientId="departmentsGrad"
-                unit=" depts"
+                gradientId="kpi-departments"
               />
             </div>
           </div>
         </Link>
       </motion.div>
 
-      {/* ── CARD 4: MONTHLY PAYROLL COST ────────────────────── */}
+      {/* ── CARD 4: MONTHLY PAYROLL ─────────────────────────── */}
       <motion.div {...cardMotion(3)}>
         <Link to={payroll.link as any} className="block h-full outline-none">
-          <div className="group relative flex h-full min-h-[195px] flex-col justify-between overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/60 p-4.5 backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-500/40 hover:shadow-lg hover:shadow-amber-500/5">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-amber-500/0 via-amber-500/60 to-amber-500/0 opacity-60 transition-opacity group-hover:opacity-100" />
-
+          <div className="group relative flex h-full min-h-[195px] flex-col justify-between overflow-hidden rounded-xl border border-border bg-card p-4.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
             <div>
               <div className="flex items-center justify-between">
-                <div className="inline-flex rounded-xl border border-amber-500/20 bg-amber-500/10 p-2 text-amber-400">
+                <div className="inline-flex rounded-xl bg-primary/10 p-2 text-primary">
                   <IndianRupee className="h-4 w-4" />
                 </div>
-                <span className="text-slate-600 transition-colors group-hover:text-amber-400">
+                <span className="text-muted-foreground transition-colors group-hover:text-foreground">
                   <ArrowUpRight className="h-3.5 w-3.5" />
                 </span>
               </div>
 
               <div className="mt-3">
-                <div className="text-xs font-medium uppercase tracking-wider text-slate-400">
+                <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Monthly Payroll Cost
                 </div>
-                <div className="mt-0.5 font-mono text-2xl font-bold tracking-tight text-white lg:text-3xl">
+                <div className="mt-0.5 font-display text-2xl font-bold tracking-tight text-foreground lg:text-3xl">
                   {payroll.valueFormatted}
+                </div>
+                <div className="mt-0.5 truncate text-xs text-muted-foreground">
+                  This billing cycle
                 </div>
               </div>
             </div>
 
-            {/* Visualization: Smooth Area Sparkline Graph */}
-            <div className="mt-3">
+            <div className="mt-2">
               <KpiSparkline
                 data={payrollData}
-                color="#f59e0b"
-                gradientId="payrollGrad"
+                gradientId="kpi-payroll"
+                unit="L"
               />
             </div>
           </div>
@@ -393,75 +407,71 @@ export const ExecutiveKpiCards = memo(function ExecutiveKpiCards({
       {/* ── CARD 5: ASSETS TRACKED ──────────────────────────── */}
       <motion.div {...cardMotion(4)}>
         <Link to={assets.link as any} className="block h-full outline-none">
-          <div className="group relative flex h-full min-h-[195px] flex-col justify-between overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/60 p-4.5 backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-cyan-500/40 hover:shadow-lg hover:shadow-cyan-500/5">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-cyan-500/0 via-cyan-500/60 to-cyan-500/0 opacity-60 transition-opacity group-hover:opacity-100" />
-
+          <div className="group relative flex h-full min-h-[195px] flex-col justify-between overflow-hidden rounded-xl border border-border bg-card p-4.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
             <div>
               <div className="flex items-center justify-between">
-                <div className="inline-flex rounded-xl border border-cyan-500/20 bg-cyan-500/10 p-2 text-cyan-400">
+                <div className="inline-flex rounded-xl bg-primary/10 p-2 text-primary">
                   <Package className="h-4 w-4" />
                 </div>
-                <span className="text-slate-600 transition-colors group-hover:text-cyan-400">
+                <span className="text-muted-foreground transition-colors group-hover:text-foreground">
                   <ArrowUpRight className="h-3.5 w-3.5" />
                 </span>
               </div>
 
               <div className="mt-3">
-                <div className="text-xs font-medium uppercase tracking-wider text-slate-400">
+                <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Assets Tracked
                 </div>
-                <div className="mt-0.5 font-mono text-2xl font-bold tracking-tight text-white lg:text-3xl">
+                <div className="mt-0.5 font-display text-2xl font-bold tracking-tight text-foreground lg:text-3xl">
                   {assets.value.toLocaleString("en-IN")}
+                </div>
+                <div className="mt-0.5 truncate text-xs text-muted-foreground">
+                  Laptops, devices & gear
                 </div>
               </div>
             </div>
 
-            {/* Visualization: Smooth Area Sparkline Graph */}
-            <div className="mt-3">
+            <div className="mt-2">
               <KpiSparkline
                 data={assetsData}
-                color="#06b6d4"
-                gradientId="assetsGrad"
-                unit=" assets"
+                gradientId="kpi-assets"
               />
             </div>
           </div>
         </Link>
       </motion.div>
 
-      {/* ── CARD 6: OFFBOARDING & EXITS ─────────────────────── */}
+      {/* ── CARD 6: RECENT EXITS ────────────────────────────── */}
       <motion.div {...cardMotion(5)}>
         <Link to={exits.link as any} className="block h-full outline-none">
-          <div className="group relative flex h-full min-h-[195px] flex-col justify-between overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/60 p-4.5 backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-rose-500/40 hover:shadow-lg hover:shadow-rose-500/5">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-rose-500/0 via-rose-500/60 to-rose-500/0 opacity-60 transition-opacity group-hover:opacity-100" />
-
+          <div className="group relative flex h-full min-h-[195px] flex-col justify-between overflow-hidden rounded-xl border border-border bg-card p-4.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
             <div>
               <div className="flex items-center justify-between">
-                <div className="inline-flex rounded-xl border border-rose-500/20 bg-rose-500/10 p-2 text-rose-400">
+                <div className="inline-flex rounded-xl bg-primary/10 p-2 text-primary">
                   <UserMinus className="h-4 w-4" />
                 </div>
-                <span className="text-slate-600 transition-colors group-hover:text-rose-400">
+                <span className="text-muted-foreground transition-colors group-hover:text-foreground">
                   <ArrowUpRight className="h-3.5 w-3.5" />
                 </span>
               </div>
 
               <div className="mt-3">
-                <div className="text-xs font-medium uppercase tracking-wider text-slate-400">
+                <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Offboarding & Exits
                 </div>
-                <div className="mt-0.5 font-mono text-2xl font-bold tracking-tight text-white lg:text-3xl">
+                <div className="mt-0.5 font-display text-2xl font-bold tracking-tight text-foreground lg:text-3xl">
                   {exits.value.toLocaleString("en-IN")}
+                </div>
+                <div className="mt-0.5 truncate text-xs text-muted-foreground">
+                  In pipeline / processed
                 </div>
               </div>
             </div>
 
-            {/* Visualization: Smooth Area Sparkline Graph */}
-            <div className="mt-3">
+            <div className="mt-2">
               <KpiSparkline
                 data={exitsData}
-                color="#f43f5e"
-                gradientId="exitsGrad"
-                unit=" exits"
+                gradientId="kpi-exits"
               />
             </div>
           </div>

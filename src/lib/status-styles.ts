@@ -7,6 +7,7 @@ export function statusBadgeClass(status?: string): string {
     case "active":
     case "positive":
     case "success":
+    case "healthy":
     case "completed":
     case "paid":
       return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20";
@@ -14,6 +15,7 @@ export function statusBadgeClass(status?: string): string {
     case "warning":
     case "warn":
     case "medium":
+    case "at_risk":
     case "in_progress":
     case "processing":
       return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20";
@@ -22,6 +24,7 @@ export function statusBadgeClass(status?: string): string {
     case "critical":
     case "crit":
     case "high":
+    case "negative":
     case "overdue":
       return "bg-destructive/10 text-destructive border-destructive/20";
     case "cancelled":

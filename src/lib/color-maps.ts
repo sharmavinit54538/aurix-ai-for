@@ -41,3 +41,16 @@ export const TONE_DOT: Record<string, string> = {
 
 export const getToneDot = (tone?: string): string =>
   TONE_DOT[(tone ?? "").toLowerCase().trim()] ?? "bg-muted-foreground";
+
+export const EVENT_TYPE_DOT: Record<string, string> = {
+  meeting: "bg-primary",
+  holiday: "bg-emerald-500",
+  birthday: "bg-amber-500",
+  interview: "bg-primary",
+  payroll: "bg-emerald-500",
+  event: "bg-muted-foreground",
+};
+
+export const getEventTypeDot = (type?: string): string =>
+  EVENT_TYPE_DOT[(type ?? "").toLowerCase().trim()] ?? "bg-muted-foreground";
+

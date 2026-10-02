@@ -39,8 +39,6 @@ import {
   LineChart,
   Pie,
   PieChart,
-  RadialBar,
-  RadialBarChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -55,6 +53,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { GeminiIcon } from "@/components/icons/GeminiIcon";
 import { useAurix, type HRDocument } from "@/lib/aurix-store";
+import { statusBadgeClass } from "@/lib/status-styles";
+import { getEventTypeDot } from "@/lib/color-maps";
 import type {
   ApprovalItem,
   CalendarEvent,
@@ -64,11 +64,11 @@ import type {
 
 // ── UI navigation config (not backend data) ───────────────────
 const AI_FEATURES = [
-  { title: "HR Copilot", desc: "AI-powered HR Q&A and policy guidance", link: "/ai/chat-assistant", color: "from-violet-600 to-purple-700" },
-  { title: "Resume Screening", desc: "Automated resume parsing & scoring", link: "/ai/recruiter", color: "from-blue-600 to-indigo-700" },
-  { title: "AI Analytics", desc: "Predictive workforce intelligence", link: "/ai/analytics-center", color: "from-emerald-600 to-teal-700" },
-  { title: "Policy Assistant", desc: "Instant policy answers & summaries", link: "/ai/policy-assistant", color: "from-amber-600 to-orange-700" },
-  { title: "AI Chat", desc: "Multi-modal HR assistant", link: "/ai/chat-assistant", color: "from-rose-600 to-pink-700" },
+  { title: "HR Copilot", desc: "AI-powered HR Q&A and policy guidance", link: "/ai/chat-assistant" },
+  { title: "Resume Screening", desc: "Automated resume parsing & scoring", link: "/ai/recruiter" },
+  { title: "AI Analytics", desc: "Predictive workforce intelligence", link: "/ai/analytics-center" },
+  { title: "Policy Assistant", desc: "Instant policy answers & summaries", link: "/ai/policy-assistant" },
+  { title: "AI Chat", desc: "Multi-modal HR assistant", link: "/ai/chat-assistant" },
 ];
 
 // ── Empty arrays — will be populated when backend endpoints are ready ──
@@ -90,7 +90,6 @@ const EXIT_STAGES: any[] = [];
 const GENDER_DIVERSITY: any[] = [];
 const HEADCOUNT_GROWTH: any[] = [];
 const INTERVIEWS_TODAY: any[] = [];
-const KPI_CARDS: any[] = [];
 const MONTHLY_PAYROLL: any[] = [];
 const ONBOARDING_STAGES: any[] = [];
 const PAYROLL_STATUS: any[] = [];
@@ -113,6 +112,15 @@ const stagger = (i: number) => ({
   transition: { duration: 0.4, ease: "easeOut" as const, delay: i * 0.06 },
 });
 
+// ── Shared chart tooltip style ────────────────────────────────
+const chartTooltipStyle = {
+  backgroundColor: "var(--card)",
+  border: "1px solid var(--border)",
+  borderRadius: 8,
+  fontSize: 12,
+  color: "var(--foreground)",
+};
+
 // ── Shared card wrapper ───────────────────────────────────────
 function Card({
   children,
@@ -125,7 +133,7 @@ function Card({
 }) {
   return (
     <div
-      className={`rounded-2xl border border-border bg-card/60 backdrop-blur-xl shadow-sm ${
+      className={`rounded-xl border border-border bg-card shadow-sm ${
         noPad ? "" : "p-5"
       } ${className}`}
     >
@@ -161,20 +169,22 @@ class WidgetErrorBoundary extends Component<WidgetErrorBoundaryProps, WidgetErro
   render() {
     if (this.state.hasError) {
       return (
-        <Card className="border-rose-500/30 bg-rose-500/5 p-4 text-center">
+        <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-center">
           <div className="flex flex-col items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-rose-500" />
-            <p className="text-xs font-medium text-rose-600 dark:text-rose-400">
+            <AlertTriangle className="h-5 w-5 text-destructive" />
+            <p className="text-xs font-medium text-destructive">
               Unable to load {this.props.name || "this section"}
             </p>
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => this.setState({ hasError: false })}
-              className="text-[11px] font-semibold text-primary underline underline-offset-2 hover:opacity-80 cursor-pointer"
+              className="h-7 border-destructive/30 text-xs text-destructive hover:bg-destructive/20 cursor-pointer"
             >
               Retry
-            </button>
+            </Button>
           </div>
-        </Card>
+        </div>
       );
     }
     return this.props.children;
@@ -197,7 +207,7 @@ function SectionHeader({
   return (
     <div className="mb-5 flex items-start justify-between gap-3">
       <div>
-        <h2 className="font-display text-lg font-semibold tracking-tight">{title}</h2>
+        <h2 className="font-display text-lg font-semibold tracking-tight text-foreground">{title}</h2>
         {subtitle && (
           <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>
         )}
@@ -223,14 +233,14 @@ const ICON_MAP: Record<string, React.ElementType> = {
 
 // ── 2. Quick Actions Strip ────────────────────────────────────
 const QUICK_ACTIONS = [
-  { label: "Add Employee", icon: UserPlus, link: "/dashboard/employees", color: "from-emerald-600 to-teal-600" },
-  { label: "Create Job", icon: Briefcase, link: "/dashboard/recruitment/jobs/new", color: "from-blue-600 to-indigo-600" },
-  { label: "Run Payroll", icon: CreditCard, link: "/dashboard/payroll", color: "from-green-600 to-emerald-600" },
-  { label: "Start Onboarding", icon: UserCheck, link: "/dashboard/onboarding-checklist", color: "from-violet-600 to-purple-600" },
-  { label: "Approve Leave", icon: FileText, link: "/dashboard/leaves", color: "from-amber-600 to-orange-600" },
-  { label: "Assign Asset", icon: Package, link: "/dashboard/assets", color: "from-slate-600 to-gray-700" },
-  { label: "Generate Report", icon: Download, link: "/dashboard/reports", color: "from-cyan-600 to-blue-600" },
-  { label: "AI Copilot", icon: GeminiIcon, link: "/ai/chat-assistant", color: "from-pink-600 to-rose-600" },
+  { label: "Add Employee", icon: UserPlus, link: "/dashboard/employees" },
+  { label: "Create Job", icon: Briefcase, link: "/dashboard/recruitment/jobs/new" },
+  { label: "Run Payroll", icon: CreditCard, link: "/dashboard/payroll" },
+  { label: "Start Onboarding", icon: UserCheck, link: "/dashboard/onboarding-checklist" },
+  { label: "Approve Leave", icon: FileText, link: "/dashboard/leaves" },
+  { label: "Assign Asset", icon: Package, link: "/dashboard/assets" },
+  { label: "Generate Report", icon: Download, link: "/dashboard/reports" },
+  { label: "AI Copilot", icon: GeminiIcon, link: "/ai/chat-assistant" },
 ];
 
 const QuickActions = memo(function QuickActions() {
@@ -243,12 +253,10 @@ const QuickActions = memo(function QuickActions() {
             <motion.div key={a.label} {...stagger(i)}>
               <Link
                 to={a.link as any}
-                className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-card/60 p-3 text-center transition-all hover:border-foreground/20 hover:shadow-md hover:-translate-y-0.5"
+                className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-3 text-center shadow-sm transition-all hover:bg-muted/50 hover:border-foreground/20 hover:-translate-y-0.5"
               >
-                <div
-                  className={`grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br ${a.color} shadow-sm`}
-                >
-                  <Icon className="h-4 w-4 text-white" />
+                <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary/10 text-primary">
+                  <Icon className="h-4 w-4" />
                 </div>
                 <span className="text-[11px] font-medium leading-tight text-muted-foreground group-hover:text-foreground">
                   {a.label}
@@ -264,7 +272,6 @@ const QuickActions = memo(function QuickActions() {
 
 // ── 3. KPI Cards ─────────────────────────────────────────────
 const KpiCards = ExecutiveKpiCards;
-
 
 // ── 4. HR Operations Center (Approvals) ──────────────────────
 const APPROVAL_TABS = ["Leave", "Attendance", "Recruitment", "Onboarding", "Exit", "Assets", "Documents", "Expenses"] as const;
@@ -283,22 +290,22 @@ function ApprovalCenter() {
           link="/dashboard/hr-ops"
         />
         {/* Tabs */}
-        <div className="mb-4 flex gap-1.5 overflow-x-auto pb-1">
+        <div className="mb-4 flex gap-1.5 overflow-x-auto rounded-lg bg-muted p-1 pb-1">
           {APPROVAL_TABS.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`shrink-0 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                 activeTab === tab
-                  ? "bg-foreground text-background"
-                  : "border border-border text-muted-foreground hover:text-foreground"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {tab}
               {APPROVAL_DATA[tab].length > 0 && (
                 <span
                   className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
-                    activeTab === tab ? "bg-background/20 text-background" : "bg-muted text-muted-foreground"
+                    activeTab === tab ? "bg-muted text-foreground" : "bg-card text-muted-foreground"
                   }`}
                 >
                   {APPROVAL_DATA[tab].length}
@@ -321,11 +328,11 @@ function ApprovalCenter() {
             {items.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-4 py-3"
+                className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-sm hover:bg-muted/40 transition-colors"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">{item.name}</span>
+                    <span className="text-sm font-medium text-foreground">{item.name}</span>
                     {item.urgent && (
                       <Badge variant="destructive" className="h-4 px-1.5 text-[10px]">
                         Urgent
@@ -342,12 +349,12 @@ function ApprovalCenter() {
                 </div>
                 <div className="text-xs text-muted-foreground shrink-0">{item.requestedAt}</div>
                 <div className="flex shrink-0 gap-1.5">
-                  <button className="flex items-center gap-1 rounded-lg bg-emerald-500/10 px-2.5 py-1.5 text-xs font-medium text-emerald-600 transition-colors hover:bg-emerald-500/20">
-                    <CheckCircle2 className="h-3 w-3" /> Approve
-                  </button>
-                  <button className="flex items-center gap-1 rounded-lg bg-rose-500/10 px-2.5 py-1.5 text-xs font-medium text-rose-600 transition-colors hover:bg-rose-500/20">
-                    <X className="h-3 w-3" /> Reject
-                  </button>
+                  <Button variant="outline" size="sm" className="h-7 text-xs text-emerald-600 dark:text-emerald-400">
+                    <CheckCircle2 className="mr-1 h-3 w-3" /> Approve
+                  </Button>
+                  <Button variant="outline" size="sm" className="h-7 text-xs text-destructive border-destructive/30">
+                    <X className="mr-1 h-3 w-3" /> Reject
+                  </Button>
                 </div>
               </div>
             ))}
@@ -375,17 +382,15 @@ function RecruitmentDashboard() {
             <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={PIPELINE_STAGES} layout="vertical" margin={{ left: 0, right: 16, top: 0, bottom: 0 }}>
-                  <CartesianGrid stroke="oklch(0.5 0.02 264 / 0.1)" horizontal={false} />
-                  <XAxis type="number" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                  <YAxis type="category" dataKey="stage" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={64} />
+                  <CartesianGrid stroke="var(--border)" horizontal={false} />
+                  <XAxis type="number" stroke="var(--muted-foreground)" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
+                  <YAxis type="category" dataKey="stage" stroke="var(--muted-foreground)" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} width={64} />
                   <Tooltip
-                    contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }}
+                    contentStyle={chartTooltipStyle}
+                    itemStyle={{ color: "var(--foreground)" }}
+                    labelStyle={{ color: "var(--foreground)" }}
                   />
-                  <Bar dataKey="count" radius={[0, 6, 6, 0]}>
-                    {PIPELINE_STAGES.map((s) => (
-                      <Cell key={s.stage} fill={s.color} />
-                    ))}
-                  </Bar>
+                  <Bar dataKey="count" radius={[0, 6, 6, 0]} fill="var(--primary)" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -399,14 +404,14 @@ function RecruitmentDashboard() {
                 {ACTIVE_JOBS.map((job) => (
                   <div
                     key={job.title}
-                    className="flex items-center justify-between rounded-lg border border-border bg-background/50 px-3 py-2"
+                    className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2 shadow-sm"
                   >
                     <div>
-                      <div className="text-sm font-medium">{job.title}</div>
+                      <div className="text-sm font-medium text-foreground">{job.title}</div>
                       <div className="text-xs text-muted-foreground">{job.dept} · {job.posted}</div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="text-xs">
+                      <Badge variant="outline" className={statusBadgeClass("active")}>
                         {job.applicants} applicants
                       </Badge>
                     </div>
@@ -421,13 +426,13 @@ function RecruitmentDashboard() {
                 {INTERVIEWS_TODAY.map((iv) => (
                   <div
                     key={iv.candidate}
-                    className="flex items-center gap-3 rounded-lg border border-border bg-background/50 px-3 py-2"
+                    className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2 shadow-sm"
                   >
-                    <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-indigo-500/10">
-                      <CalendarDays className="h-4 w-4 text-indigo-500" />
+                    <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                      <CalendarDays className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium">{iv.candidate}</div>
+                      <div className="text-sm font-medium text-foreground">{iv.candidate}</div>
                       <div className="text-xs text-muted-foreground">{iv.role} · {iv.type}</div>
                     </div>
                     <div className="shrink-0 text-xs font-medium text-muted-foreground">{iv.time}</div>
@@ -444,7 +449,6 @@ function RecruitmentDashboard() {
 
 // ── 6. Attendance Analytics ───────────────────────────────────
 const AttendanceAnalytics = memo(function AttendanceAnalytics() {
-  const COLORS = ["#6366f1", "#f59e0b", "#10b981", "#06b6d4", "#ec4899", "#f97316"];
   return (
     <motion.div {...fadeUp}>
       <Card>
@@ -461,16 +465,16 @@ const AttendanceAnalytics = memo(function AttendanceAnalytics() {
                 <AreaChart data={WEEKLY_ATTENDANCE} margin={{ top: 6, right: 8, left: -16, bottom: 0 }}>
                   <defs>
                     <linearGradient id="attGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.35} />
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                      <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.35} />
+                      <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid stroke="oklch(0.5 0.02 264 / 0.1)" vertical={false} />
-                  <XAxis dataKey="day" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
-                  <Area type="monotone" dataKey="present" stroke="#10b981" strokeWidth={2} fill="url(#attGrad)" name="Present" />
-                  <Area type="monotone" dataKey="late" stroke="#f59e0b" strokeWidth={1.5} fill="transparent" name="Late" />
+                  <CartesianGrid stroke="var(--border)" vertical={false} />
+                  <XAxis dataKey="day" stroke="var(--muted-foreground)" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
+                  <YAxis stroke="var(--muted-foreground)" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
+                  <Tooltip contentStyle={chartTooltipStyle} itemStyle={{ color: "var(--foreground)" }} labelStyle={{ color: "var(--foreground)" }} />
+                  <Area type="monotone" dataKey="present" stroke="var(--primary)" strokeWidth={2} fill="url(#attGrad)" name="Present" />
+                  <Area type="monotone" dataKey="late" stroke="var(--muted-foreground)" strokeWidth={1.5} fill="transparent" name="Late" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -481,15 +485,11 @@ const AttendanceAnalytics = memo(function AttendanceAnalytics() {
             <div className="h-52">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={DEPT_ATTENDANCE} margin={{ top: 6, right: 8, left: -16, bottom: 0 }}>
-                  <CartesianGrid stroke="oklch(0.5 0.02 264 / 0.1)" vertical={false} />
-                  <XAxis dataKey="name" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} domain={[80, 100]} />
-                  <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} formatter={(v) => [`${v}%`, "Attendance"]} />
-                  <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                    {DEPT_ATTENDANCE.map((_, idx) => (
-                      <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
-                    ))}
-                  </Bar>
+                  <CartesianGrid stroke="var(--border)" vertical={false} />
+                  <XAxis dataKey="name" stroke="var(--muted-foreground)" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
+                  <YAxis stroke="var(--muted-foreground)" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} domain={[80, 100]} />
+                  <Tooltip contentStyle={chartTooltipStyle} itemStyle={{ color: "var(--foreground)" }} labelStyle={{ color: "var(--foreground)" }} formatter={(v) => [`${v}%`, "Attendance"]} />
+                  <Bar dataKey="value" radius={[6, 6, 0, 0]} fill="var(--primary)" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -519,18 +519,18 @@ const PayrollOverview = memo(function PayrollOverview({ data }: { data?: ReturnT
             {statusItems.map((s) => (
               <div
                 key={s.label}
-                className="flex items-center justify-between rounded-xl border border-border bg-background/50 px-4 py-3"
+                className="flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3 shadow-sm"
               >
-                <div className={`flex items-center gap-2 text-sm font-medium ${s.color}`}>
-                  <span className={`h-2 w-2 rounded-full ${s.bg.replace("/10", "")}`} />
+                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                  <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
                   {s.label}
                 </div>
-                <span className="font-display text-xl font-semibold">{s.value}</span>
+                <span className="font-display text-xl font-semibold text-foreground">{s.value}</span>
               </div>
             ))}
-            <div className="rounded-xl border border-border bg-background/50 px-4 py-3">
+            <div className="rounded-xl border border-border bg-card px-4 py-3 shadow-sm">
               <div className="text-xs text-muted-foreground">Total Cost This Month</div>
-              <div className="mt-1 font-display text-2xl font-bold text-emerald-500">{totalCostText}</div>
+              <div className="mt-1 font-display text-2xl font-bold text-foreground">{totalCostText}</div>
             </div>
           </div>
 
@@ -540,20 +540,16 @@ const PayrollOverview = memo(function PayrollOverview({ data }: { data?: ReturnT
             <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} margin={{ top: 6, right: 8, left: -16, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="payGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#10b981" stopOpacity={0.9} />
-                      <stop offset="100%" stopColor="#10b981" stopOpacity={0.5} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid stroke="oklch(0.5 0.02 264 / 0.1)" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                  <CartesianGrid stroke="var(--border)" vertical={false} />
+                  <XAxis dataKey="month" stroke="var(--muted-foreground)" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
+                  <YAxis stroke="var(--muted-foreground)" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
                   <Tooltip
-                    contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }}
+                    contentStyle={chartTooltipStyle}
+                    itemStyle={{ color: "var(--foreground)" }}
+                    labelStyle={{ color: "var(--foreground)" }}
                     formatter={(v) => [`₹${v}L`, "Payroll"]}
                   />
-                  <Bar dataKey="cost" radius={[6, 6, 0, 0]} fill="url(#payGrad)" />
+                  <Bar dataKey="cost" radius={[6, 6, 0, 0]} fill="var(--primary)" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -576,12 +572,12 @@ function AssetOverview() {
             return (
               <div
                 key={a.label}
-                className={`flex flex-col items-center gap-2 rounded-xl border border-border ${a.bg} p-4 text-center`}
+                className="flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-4 text-center shadow-sm"
               >
-                <div className={`grid h-9 w-9 place-items-center rounded-full bg-background/60 ${a.color}`}>
+                <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary/10 text-primary">
                   <Icon className="h-4 w-4" />
                 </div>
-                <div className={`font-display text-2xl font-bold ${a.color}`}>{a.value}</div>
+                <div className="font-display text-2xl font-bold text-foreground">{a.value}</div>
                 <div className="text-[11px] font-medium leading-tight text-muted-foreground">{a.label}</div>
               </div>
             );
@@ -600,17 +596,15 @@ function OnboardingCenter() {
       <Card>
         <SectionHeader title="Onboarding Center" subtitle="New employee journey tracking" link="/dashboard/onboarding-checklist" />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-          {ONBOARDING_STAGES.map((s, i) => (
-            <div key={s.label} className="rounded-xl border border-border bg-background/50 p-4 text-center">
-              <div className={`font-display text-3xl font-bold ${s.textColor}`}>{s.count}</div>
+          {ONBOARDING_STAGES.map((s) => (
+            <div key={s.label} className="rounded-xl border border-border bg-card p-4 text-center shadow-sm">
+              <div className="font-display text-3xl font-bold text-foreground">{s.count}</div>
               <div className="mt-1 text-xs text-muted-foreground">{s.label}</div>
               <div className="mt-2">
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                  <div
-                    className={`h-full rounded-full ${s.color}`}
-                    style={{ width: `${(s.count / total) * 100}%` }}
-                  />
-                </div>
+                <Progress
+                  value={total > 0 ? (s.count / total) * 100 : 0}
+                  className="h-1.5 w-full"
+                />
               </div>
             </div>
           ))}
@@ -630,11 +624,11 @@ function ExitManagement() {
           {EXIT_STAGES.map((s) => {
             const Icon = ICON_MAP[s.icon] ?? Clock;
             return (
-              <div key={s.label} className={`rounded-xl border border-border ${s.bg} p-4 text-center`}>
-                <div className={`mx-auto mb-2 grid h-9 w-9 place-items-center rounded-full bg-background/60 ${s.color}`}>
+              <div key={s.label} className="rounded-xl border border-border bg-card p-4 text-center shadow-sm">
+                <div className="mx-auto mb-2 grid h-9 w-9 place-items-center rounded-lg bg-primary/10 text-primary">
                   <Icon className="h-4 w-4" />
                 </div>
-                <div className={`font-display text-2xl font-bold ${s.color}`}>{s.count}</div>
+                <div className="font-display text-2xl font-bold text-foreground">{s.count}</div>
                 <div className="mt-1 text-xs text-muted-foreground">{s.label}</div>
               </div>
             );
@@ -665,13 +659,13 @@ function DocumentsCenter() {
         <SectionHeader title="Documents Center" subtitle="Document status and verifications" link="/dashboard/documents" />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-4">
           {[
-            { label: "Missing/Rejected", value: missing.length, color: "text-rose-500", bg: "bg-rose-500/10" },
-            { label: "Pending Review", value: pending.length, color: "text-amber-500", bg: "bg-amber-500/10" },
-            { label: "Expiring Soon", value: expiring.length, color: "text-orange-500", bg: "bg-orange-500/10" },
-            { label: "Total Documents", value: docs.length, color: "text-blue-500", bg: "bg-blue-500/10" },
+            { label: "Missing/Rejected", value: missing.length },
+            { label: "Pending Review", value: pending.length },
+            { label: "Expiring Soon", value: expiring.length },
+            { label: "Total Documents", value: docs.length },
           ].map((s) => (
-            <div key={s.label} className={`rounded-xl border border-border ${s.bg} p-4 text-center`}>
-              <div className={`font-display text-2xl font-bold ${s.color}`}>{s.value}</div>
+            <div key={s.label} className="rounded-xl border border-border bg-card p-4 text-center shadow-sm">
+              <div className="font-display text-2xl font-bold text-foreground">{s.value}</div>
               <div className="mt-1 text-xs text-muted-foreground">{s.label}</div>
             </div>
           ))}
@@ -679,8 +673,8 @@ function DocumentsCenter() {
         <p className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Recent Uploads</p>
         <div className="space-y-2">
           {recent.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-6 text-center">
-              <FileText className="h-8 w-8 text-muted-foreground/40 mb-1" />
+            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card py-6 text-center shadow-sm">
+              <FileText className="h-8 w-8 text-muted-foreground mb-1" />
               <p className="text-xs text-muted-foreground">No recent documents uploaded</p>
               <Link to="/dashboard/documents" className="mt-2 text-xs font-medium text-primary hover:underline">
                 Upload or manage documents &rarr;
@@ -688,17 +682,15 @@ function DocumentsCenter() {
             </div>
           ) : (
             recent.map((d: HRDocument) => (
-              <div key={d.id} className="flex items-center gap-3 rounded-lg border border-border bg-background/50 px-3 py-2">
+              <div key={d.id} className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2 shadow-sm hover:bg-muted/40 transition-colors">
                 <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium">{d.name}</div>
+                  <div className="truncate text-sm font-medium text-foreground">{d.name}</div>
                   <div className="text-xs text-muted-foreground">{d.uploadDate || "Recent"}</div>
                 </div>
                 <Badge
-                  variant={
-                    d.status === "Verified" ? "default" : d.status === "Pending" ? "secondary" : "destructive"
-                  }
-                  className="shrink-0 text-[10px]"
+                  variant="outline"
+                  className={`shrink-0 text-[10px] ${statusBadgeClass(d.status)}`}
                 >
                   {d.status}
                 </Badge>
@@ -720,24 +712,24 @@ function AICommandCenter() {
         {/* Metrics row */}
         <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {AI_METRICS.map((m) => (
-            <div key={m.label} className="rounded-xl border border-border bg-background/50 p-3 text-center">
-              <div className={`font-display text-xl font-bold ${m.color}`}>{m.value}</div>
+            <div key={m.label} className="rounded-xl border border-border bg-card p-3 text-center shadow-sm">
+              <div className="font-display text-xl font-bold text-foreground">{m.value}</div>
               <div className="mt-0.5 text-[10px] text-muted-foreground">{m.label}</div>
-              <div className={`mt-1 text-[10px] font-medium ${m.color}`}>{m.change}</div>
+              <div className="mt-1 text-[10px] font-medium text-muted-foreground">{m.change}</div>
             </div>
           ))}
         </div>
 
         {/* Feature cards */}
-        <div className="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
           {AI_FEATURES.map((f) => (
             <Link key={f.title} to={f.link as any}>
-              <div
-                className={`group flex flex-col gap-2 rounded-xl bg-gradient-to-br ${f.color} p-3 transition-all hover:shadow-md hover:-translate-y-0.5`}
-              >
-                <GeminiIcon className="h-5 w-5 text-white/90 transition-transform group-hover:scale-110" />
-                <div className="text-xs font-semibold text-white">{f.title}</div>
-                <div className="text-[10px] text-white/70 leading-snug">{f.desc}</div>
+              <div className="group flex flex-col gap-2 rounded-xl border border-border bg-card p-3 shadow-sm transition-all hover:bg-muted/50 hover:border-foreground/20 hover:-translate-y-0.5">
+                <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10 text-primary">
+                  <GeminiIcon className="h-4 w-4" />
+                </div>
+                <div className="text-xs font-semibold text-foreground">{f.title}</div>
+                <div className="text-[10px] text-muted-foreground leading-snug">{f.desc}</div>
               </div>
             </Link>
           ))}
@@ -747,12 +739,12 @@ function AICommandCenter() {
         <p className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Recent AI Activity</p>
         <div className="space-y-2">
           {AI_RECENT.map((r, i) => (
-            <div key={i} className="flex items-center gap-3 rounded-lg border border-border bg-background/50 px-3 py-2">
-              <div className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-violet-500/10">
-                <Sparkles className="h-3.5 w-3.5 text-violet-500" />
+            <div key={i} className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2 shadow-sm">
+              <div className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                <Sparkles className="h-3.5 w-3.5" />
               </div>
               <div className="min-w-0 flex-1">
-                <span className="text-sm font-medium">{r.action}: </span>
+                <span className="text-sm font-medium text-foreground">{r.action}: </span>
                 <span className="text-sm text-muted-foreground">{r.detail}</span>
               </div>
               <div className="shrink-0 text-xs text-muted-foreground">{r.time}</div>
@@ -766,7 +758,6 @@ function AICommandCenter() {
 
 // ── 13. Executive Analytics ───────────────────────────────────
 function ExecutiveAnalytics() {
-  const COLORS = GENDER_DIVERSITY.map((d) => d.fill);
   return (
     <motion.div {...fadeUp}>
       <Card>
@@ -780,15 +771,15 @@ function ExecutiveAnalytics() {
                 <AreaChart data={HEADCOUNT_GROWTH} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
                   <defs>
                     <linearGradient id="hcGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.35} />
-                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                      <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.35} />
+                      <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid stroke="oklch(0.5 0.02 264 / 0.1)" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} domain={[230, 295]} />
-                  <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 11 }} />
-                  <Area type="monotone" dataKey="headcount" stroke="#6366f1" strokeWidth={2} fill="url(#hcGrad)" />
+                  <CartesianGrid stroke="var(--border)" vertical={false} />
+                  <XAxis dataKey="month" stroke="var(--muted-foreground)" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
+                  <YAxis stroke="var(--muted-foreground)" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} domain={[230, 295]} />
+                  <Tooltip contentStyle={chartTooltipStyle} itemStyle={{ color: "var(--foreground)" }} labelStyle={{ color: "var(--foreground)" }} />
+                  <Area type="monotone" dataKey="headcount" stroke="var(--primary)" strokeWidth={2} fill="url(#hcGrad)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -800,11 +791,11 @@ function ExecutiveAnalytics() {
             <div className="h-44">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={ATTRITION_RATE} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-                  <CartesianGrid stroke="oklch(0.5 0.02 264 / 0.1)" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} domain={[2, 5]} />
-                  <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 11 }} formatter={(v) => [`${v}%`, "Attrition"]} />
-                  <Line type="monotone" dataKey="rate" stroke="#f43f5e" strokeWidth={2} dot={false} />
+                  <CartesianGrid stroke="var(--border)" vertical={false} />
+                  <XAxis dataKey="month" stroke="var(--muted-foreground)" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
+                  <YAxis stroke="var(--muted-foreground)" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} domain={[2, 5]} />
+                  <Tooltip contentStyle={chartTooltipStyle} itemStyle={{ color: "var(--foreground)" }} labelStyle={{ color: "var(--foreground)" }} formatter={(v) => [`${v}%`, "Attrition"]} />
+                  <Line type="monotone" dataKey="rate" stroke="var(--destructive)" strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -825,12 +816,12 @@ function ExecutiveAnalytics() {
                     dataKey="value"
                     paddingAngle={3}
                   >
-                    {GENDER_DIVERSITY.map((d, i) => (
-                      <Cell key={i} fill={d.fill} />
+                    {GENDER_DIVERSITY.map((_, i) => (
+                      <Cell key={i} fill={i === 0 ? "var(--primary)" : i === 1 ? "var(--muted-foreground)" : "var(--chart-1)"} />
                     ))}
                   </Pie>
-                  <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 11 }} />
-                  <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
+                  <Tooltip contentStyle={chartTooltipStyle} itemStyle={{ color: "var(--foreground)" }} labelStyle={{ color: "var(--foreground)" }} />
+                  <Legend iconSize={10} wrapperStyle={{ fontSize: 11, color: "var(--muted-foreground)" }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -842,11 +833,11 @@ function ExecutiveAnalytics() {
             <div className="h-44">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={SALARY_DISTRIBUTION} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-                  <CartesianGrid stroke="oklch(0.5 0.02 264 / 0.1)" vertical={false} />
-                  <XAxis dataKey="band" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 11 }} />
-                  <Bar dataKey="employees" radius={[4, 4, 0, 0]} fill="#f59e0b" />
+                  <CartesianGrid stroke="var(--border)" vertical={false} />
+                  <XAxis dataKey="band" stroke="var(--muted-foreground)" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
+                  <YAxis stroke="var(--muted-foreground)" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
+                  <Tooltip contentStyle={chartTooltipStyle} itemStyle={{ color: "var(--foreground)" }} labelStyle={{ color: "var(--foreground)" }} />
+                  <Bar dataKey="employees" radius={[4, 4, 0, 0]} fill="var(--primary)" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -858,15 +849,11 @@ function ExecutiveAnalytics() {
             <div className="h-44">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={DEPT_DISTRIBUTION} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-                  <CartesianGrid stroke="oklch(0.5 0.02 264 / 0.1)" vertical={false} />
-                  <XAxis dataKey="dept" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 11 }} />
-                  <Bar dataKey="employees" radius={[4, 4, 0, 0]}>
-                    {DEPT_DISTRIBUTION.map((d, i) => (
-                      <Cell key={i} fill={d.fill} />
-                    ))}
-                  </Bar>
+                  <CartesianGrid stroke="var(--border)" vertical={false} />
+                  <XAxis dataKey="dept" stroke="var(--muted-foreground)" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
+                  <YAxis stroke="var(--muted-foreground)" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
+                  <Tooltip contentStyle={chartTooltipStyle} itemStyle={{ color: "var(--foreground)" }} labelStyle={{ color: "var(--foreground)" }} />
+                  <Bar dataKey="employees" radius={[4, 4, 0, 0]} fill="var(--primary)" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -878,15 +865,6 @@ function ExecutiveAnalytics() {
 }
 
 // ── 14. Company Calendar ──────────────────────────────────────
-const EVENT_COLOR: Record<string, string> = {
-  meeting: "bg-blue-500/15 text-blue-600 border-blue-200",
-  holiday: "bg-emerald-500/15 text-emerald-600 border-emerald-200",
-  birthday: "bg-pink-500/15 text-pink-600 border-pink-200",
-  interview: "bg-violet-500/15 text-violet-600 border-violet-200",
-  payroll: "bg-green-500/15 text-green-600 border-green-200",
-  event: "bg-amber-500/15 text-amber-600 border-amber-200",
-};
-
 function CompanyCalendar() {
   return (
     <motion.div {...fadeUp}>
@@ -896,17 +874,18 @@ function CompanyCalendar() {
           {CALENDAR_EVENTS.map((ev) => (
             <div
               key={ev.id}
-              className={`flex items-start gap-3 rounded-xl border px-3 py-2.5 ${EVENT_COLOR[ev.type]}`}
+              className="flex items-start gap-3 rounded-xl border border-border bg-card px-3 py-2.5 shadow-sm"
             >
-              <CalendarDays className="mt-0.5 h-4 w-4 shrink-0" />
-              <div className="min-w-0">
-                <div className="text-sm font-medium truncate">{ev.title}</div>
-                <div className="text-xs opacity-75">
+              <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${getEventTypeDot(ev.type)}`} />
+              <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-medium text-foreground truncate">{ev.title}</div>
+                <div className="text-xs text-muted-foreground">
                   {new Date(ev.date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
                   {ev.time ? ` · ${ev.time}` : ""}
                 </div>
               </div>
-              <Badge variant="outline" className="ml-auto shrink-0 capitalize text-[10px] border-current">
+              <Badge variant="outline" className={`ml-auto shrink-0 capitalize text-[10px] ${statusBadgeClass(ev.type)}`}>
                 {ev.type}
               </Badge>
             </div>
@@ -931,13 +910,13 @@ function ActivityFeed() {
                 key={a.id}
                 initial={{ opacity: 0, x: -12 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="flex items-start gap-3 rounded-xl border border-border bg-background/50 px-3 py-2.5"
+                className="flex items-start gap-3 rounded-xl border border-border bg-card px-3 py-2.5 shadow-sm"
               >
-                <div className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg ${a.color}`}>
+                <div className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
                   <Icon className="h-3.5 w-3.5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm">{a.text}</p>
+                  <p className="text-sm text-foreground">{a.text}</p>
                   <p className="text-xs text-muted-foreground">{a.user}</p>
                 </div>
                 <div className="shrink-0 text-xs text-muted-foreground">{a.time}</div>
@@ -951,17 +930,6 @@ function ActivityFeed() {
 }
 
 // ── 16. Smart Notification Center ────────────────────────────
-const NOTIF_COLORS = {
-  critical: "border-rose-500/30 bg-rose-500/5",
-  warn: "border-amber-500/30 bg-amber-500/5",
-  info: "border-blue-500/30 bg-blue-500/5",
-};
-const NOTIF_ICON_COLORS = {
-  critical: "text-rose-500",
-  warn: "text-amber-500",
-  info: "text-blue-500",
-};
-
 function NotificationCenter() {
   const { items } = useNotifications({ priority: "high,critical", limit: 5 });
   const archiveMutation = useArchive();
@@ -975,42 +943,39 @@ function NotificationCenter() {
           link="/dashboard/notifications"
         />
         <div className="space-y-2">
-          {items.map((n) => {
-            const sevKey = n.priority === "critical" ? "critical" : n.priority === "high" ? "warn" : "info";
-            return (
-              <div
-                key={n.id}
-                className={`flex items-start gap-3 rounded-xl border px-3 py-2.5 ${NOTIF_COLORS[sevKey]}`}
-              >
-                <AlertTriangle className={`mt-0.5 h-4 w-4 shrink-0 ${NOTIF_ICON_COLORS[sevKey]}`} />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">{n.title}</span>
-                    <Badge variant="outline" className="shrink-0 text-[10px] capitalize">
-                      {n.category.replace(/_/g, " ")}
-                    </Badge>
-                  </div>
-                  <div className="mt-0.5 text-xs text-muted-foreground">{n.body}</div>
+          {items.map((n) => (
+            <div
+              key={n.id}
+              className="flex items-start gap-3 rounded-xl border border-border bg-card px-3 py-2.5 shadow-sm"
+            >
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-foreground">{n.title}</span>
+                  <Badge variant="outline" className={`shrink-0 text-[10px] capitalize ${statusBadgeClass(n.priority)}`}>
+                    {n.category.replace(/_/g, " ")}
+                  </Badge>
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <span className="text-xs text-muted-foreground font-mono">
-                    {formatRelativeTime(n.createdAt)}
-                  </span>
-                  <button
-                    onClick={() => archiveMutation.mutate(n.id)}
-                    className="rounded-md p-1 text-muted-foreground hover:bg-background/60 hover:text-foreground cursor-pointer"
-                    aria-label="Dismiss notification"
-                    title="Dismiss"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
+                <div className="mt-0.5 text-xs text-muted-foreground">{n.body}</div>
               </div>
-            );
-          })}
+              <div className="flex shrink-0 items-center gap-2">
+                <span className="text-xs text-muted-foreground font-mono">
+                  {formatRelativeTime(n.createdAt)}
+                </span>
+                <button
+                  onClick={() => archiveMutation.mutate(n.id)}
+                  className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
+                  aria-label="Dismiss notification"
+                  title="Dismiss"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            </div>
+          ))}
           {items.length === 0 && (
             <div className="py-8 text-center text-sm text-muted-foreground">
-              <CheckCircle2 className="mx-auto mb-2 h-8 w-8 text-emerald-500" />
+              <CheckCircle2 className="mx-auto mb-2 h-8 w-8 text-primary" />
               All caught up! No active high-priority alerts.
             </div>
           )}
@@ -1031,28 +996,28 @@ function DepartmentPerformance() {
             <motion.div
               key={d.name}
               {...stagger(i)}
-              className={`rounded-xl border border-border ${d.bgColor} p-4`}
+              className="rounded-xl border border-border bg-card p-4 shadow-sm"
             >
               <div className="mb-3 flex items-center justify-between">
-                <span className={`text-sm font-semibold ${d.color}`}>{d.name}</span>
-                <Badge variant="outline" className={`text-[10px] border-current ${d.color}`}>
+                <span className="text-sm font-semibold text-foreground">{d.name}</span>
+                <Badge variant="outline" className="text-[10px]">
                   {d.headcount} employees
                 </Badge>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">Attendance</span>
-                  <span className="font-medium">{d.attendance}%</span>
+                  <span className="font-medium text-foreground">{d.attendance}%</span>
                 </div>
                 <Progress value={d.attendance} className="h-1.5" />
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">Productivity</span>
-                  <span className="font-medium">{d.productivity}%</span>
+                  <span className="font-medium text-foreground">{d.productivity}%</span>
                 </div>
                 <Progress value={d.productivity} className="h-1.5" />
                 <div className="mt-1 flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">Open Positions</span>
-                  <span className={`font-semibold ${d.color}`}>{d.openPositions} open</span>
+                  <span className="font-semibold text-foreground">{d.openPositions} open</span>
                 </div>
               </div>
             </motion.div>
@@ -1065,49 +1030,13 @@ function DepartmentPerformance() {
 
 // ── 18. Reports Center ────────────────────────────────────────
 const REPORT_CARD_ITEMS = [
-  {
-    label: "Attendance",
-    link: "/dashboard/attendance",
-    color: "from-teal-600 to-cyan-600 border-teal-500/20",
-    shadow: "hover:shadow-teal-500/20",
-  },
-  {
-    label: "Payroll",
-    link: "/dashboard/payroll/reports",
-    color: "from-emerald-600 to-green-600 border-emerald-500/20",
-    shadow: "hover:shadow-emerald-500/20",
-  },
-  {
-    label: "Recruitment",
-    link: "/dashboard/recruitment/reports",
-    color: "from-blue-600 to-indigo-600 border-blue-500/20",
-    shadow: "hover:shadow-blue-500/20",
-    isLong: true,
-  },
-  {
-    label: "Assets",
-    link: "/dashboard/assets",
-    color: "from-slate-600 to-gray-700 border-slate-500/20",
-    shadow: "hover:shadow-slate-500/20",
-  },
-  {
-    label: "Leave",
-    link: "/dashboard/leaves",
-    color: "from-amber-600 to-orange-600 border-orange-500/20",
-    shadow: "hover:shadow-orange-500/20",
-  },
-  {
-    label: "Exit",
-    link: "/dashboard/exit",
-    color: "from-rose-600 to-red-600 border-rose-500/20",
-    shadow: "hover:shadow-rose-500/20",
-  },
-  {
-    label: "Analytics",
-    link: "/dashboard/recruitment/analytics",
-    color: "from-purple-600 to-violet-600 border-purple-500/20",
-    shadow: "hover:shadow-purple-500/20",
-  },
+  { label: "Attendance", link: "/dashboard/attendance" },
+  { label: "Payroll", link: "/dashboard/payroll/reports" },
+  { label: "Recruitment", link: "/dashboard/recruitment/reports", isLong: true },
+  { label: "Assets", link: "/dashboard/assets" },
+  { label: "Leave", link: "/dashboard/leaves" },
+  { label: "Exit", link: "/dashboard/exit" },
+  { label: "Analytics", link: "/dashboard/recruitment/analytics" },
 ];
 
 function ReportsCenter() {
@@ -1141,11 +1070,13 @@ function ReportsCenter() {
                 className="group flex flex-col justify-center outline-hidden"
               >
                 <div
-                  className={`flex h-24 w-full flex-col items-center justify-center gap-3.5 rounded-xl border bg-gradient-to-br ${r.color} px-2 py-3 text-center transition-all duration-200 ease-out hover:-translate-y-1 hover:brightness-105 hover:shadow-md ${r.shadow} active:translate-y-0 cursor-pointer select-none`}
+                  className="flex h-24 w-full flex-col items-center justify-center gap-2 rounded-xl border border-border bg-card px-2 py-3 text-center shadow-sm transition-all duration-200 ease-out hover:-translate-y-1 hover:bg-muted/50 hover:border-foreground/20 active:translate-y-0 cursor-pointer select-none"
                 >
-                  <Download className="h-5 w-5 shrink-0 text-white/95 transition-transform duration-200 group-hover:scale-110" />
+                  <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10 text-primary">
+                    <Download className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                  </div>
                   <span
-                    className={`w-full max-w-full truncate px-1 text-center font-semibold text-white tracking-tight leading-none ${
+                    className={`w-full max-w-full truncate px-1 text-center font-medium text-foreground tracking-tight leading-none ${
                       r.isLong ? "text-[11px]" : "text-xs"
                     }`}
                     title={r.label}
@@ -1190,11 +1121,11 @@ function WorldClock() {
       <SectionHeader title="World Clock" />
       <div className="grid grid-cols-2 gap-2">
         {clocks.map((c) => (
-          <div key={c.city} className="flex items-center gap-2 rounded-lg border border-border bg-background/50 px-3 py-2">
+          <div key={c.city} className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 shadow-sm">
             <span className="text-lg">{c.flag}</span>
             <div>
               <div className="text-xs text-muted-foreground">{c.city}</div>
-              <div className="font-display text-base font-semibold tabular-nums">{c.time}</div>
+              <div className="font-display text-base font-semibold tabular-nums text-foreground">{c.time}</div>
             </div>
           </div>
         ))}
@@ -1211,17 +1142,15 @@ function ScoreWidgets() {
         {WIDGET_SCORES.map((w) => (
           <div key={w.label}>
             <div className="mb-1 flex items-center justify-between text-xs">
-              <span className="font-medium">{w.label}</span>
-              <span className="font-semibold" style={{ color: w.color }}>
+              <span className="font-medium text-foreground">{w.label}</span>
+              <span className="font-semibold text-foreground">
                 {w.value}/{w.max}
               </span>
             </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full rounded-full transition-all duration-700"
-                style={{ width: `${(w.value / w.max) * 100}%`, background: w.color }}
-              />
-            </div>
+            <Progress
+              value={w.max > 0 ? (w.value / w.max) * 100 : 0}
+              className="h-2 w-full"
+            />
             <p className="mt-0.5 text-[10px] text-muted-foreground">{w.description}</p>
           </div>
         ))}
@@ -1238,9 +1167,9 @@ export function ExecutiveDashboard() {
     <div className="space-y-6">
       {/* Live Error Banner if an API had issues */}
       {live.error && (
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-600 dark:text-amber-400">
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-xs text-destructive">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500" />
+            <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" />
             <span>Some live metrics could not be loaded ({live.error}). Showing cached metrics.</span>
           </div>
           <Button
@@ -1248,7 +1177,7 @@ export function ExecutiveDashboard() {
             size="sm"
             onClick={live.refetch}
             disabled={live.loading}
-            className="h-7 border-amber-500/30 bg-transparent text-xs hover:bg-amber-500/20"
+            className="h-7 border-destructive/30 text-destructive hover:bg-destructive/20 text-xs"
           >
             <RefreshCw className={`mr-1.5 h-3 w-3 ${live.loading ? "animate-spin" : ""}`} />
             Retry
@@ -1358,3 +1287,5 @@ export function ExecutiveDashboard() {
     </div>
   );
 }
+
+export default ExecutiveDashboard;
