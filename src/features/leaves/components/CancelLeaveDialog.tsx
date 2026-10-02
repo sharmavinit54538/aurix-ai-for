@@ -43,17 +43,17 @@ export function CancelLeaveDialog({
         </DialogHeader>
 
         <div className="py-3 space-y-2 text-sm">
-          <div className="flex justify-between border-b border-border/50 pb-2">
+          <div className="flex justify-between border-b border-border pb-2">
             <span className="text-muted-foreground text-xs">Leave Type:</span>
             <span className="font-semibold text-foreground">{targetLeave.leave_type}</span>
           </div>
-          <div className="flex justify-between border-b border-border/50 pb-2">
+          <div className="flex justify-between border-b border-border pb-2">
             <span className="text-muted-foreground text-xs">Dates:</span>
             <span className="font-semibold text-foreground">
               {formatDateStr(targetLeave.start_date)} to {formatDateStr(targetLeave.end_date)}
             </span>
           </div>
-          <div className="flex justify-between border-b border-border/50 pb-2">
+          <div className="flex justify-between border-b border-border pb-2">
             <span className="text-muted-foreground text-xs">Total Days:</span>
             <span className="font-semibold tabular-nums text-foreground">
               {targetLeave.total_days} {targetLeave.total_days === 1 ? "day" : "days"}

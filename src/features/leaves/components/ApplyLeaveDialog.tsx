@@ -22,7 +22,8 @@ import { Calendar, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/api";
 import { LEAVE_TYPES, type LeaveBalance } from "../types";
-import { calculateEstimatedDays, getTodayDateString } from "../mappers";
+import { calculateEstimatedDays, getTodayDateString, statusBadgeClass } from "../mappers";
+import { cn } from "@/lib/utils";
 
 interface ApplyLeaveDialogProps {
   open: boolean;
@@ -202,7 +203,7 @@ export function ApplyLeaveDialog({
 
           {/* Insufficient balance warning (warns, does not block) */}
           {isExceedingBalance && (
-            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-start gap-2.5 text-xs text-amber-600 dark:text-amber-400">
+            <div className={cn("p-3 rounded-lg flex items-start gap-2.5 text-xs border", statusBadgeClass("warning"))}>
               <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
               <p>
                 <strong>Balance Warning:</strong> Requested {calculatedDays} days exceed your remaining{" "}

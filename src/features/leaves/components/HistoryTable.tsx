@@ -29,7 +29,7 @@ export function HistoryTable({
 
   if (error) {
     return (
-      <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-6 text-center space-y-3">
+      <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-6 text-center space-y-3">
         <div className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-destructive/10 text-destructive">
           <AlertCircle className="h-5 w-5" />
         </div>
@@ -63,7 +63,7 @@ export function HistoryTable({
       </div>
       <Card className="border border-border bg-card overflow-hidden">
         <Table>
-          <TableHeader className="bg-muted/40">
+          <TableHeader className="bg-muted/50">
             <TableRow>
               <TableHead className="pl-6 py-4">Leave Type</TableHead>
               <TableHead className="py-4">Dates Range</TableHead>
@@ -81,7 +81,7 @@ export function HistoryTable({
               return (
                 <TableRow
                   key={rec.id}
-                  className="border-b border-border/80 hover:bg-muted/30 transition-all"
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
                 >
                   <TableCell className="pl-6 py-4 font-semibold text-foreground">
                     {rec.leave_type}

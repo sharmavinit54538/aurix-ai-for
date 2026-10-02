@@ -22,7 +22,7 @@ export function BalanceCards({
 }: BalanceCardsProps) {
   if (error) {
     return (
-      <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-6 text-center space-y-3">
+      <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-6 text-center space-y-3">
         <div className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-destructive/10 text-destructive">
           <AlertCircle className="h-5 w-5" />
         </div>

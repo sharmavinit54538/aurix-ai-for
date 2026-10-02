@@ -34,7 +34,7 @@ export function ApproveDialog({
       <DialogContent className="max-w-md border border-border bg-card text-foreground">
         <DialogHeader>
           <DialogTitle className="text-base font-bold flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+            <CheckCircle2 className="h-5 w-5 text-primary" />
             Confirm Leave Approval
           </DialogTitle>
           <DialogDescription className="text-xs">
@@ -43,19 +43,19 @@ export function ApproveDialog({
         </DialogHeader>
 
         <div className="py-3 space-y-2 text-sm">
-          <div className="flex justify-between border-b border-border/50 pb-2">
+          <div className="flex justify-between border-b border-border pb-2">
             <span className="text-muted-foreground text-xs">Employee:</span>
             <span className="font-semibold text-foreground">{targetLeave.employee_name}</span>
           </div>
-          <div className="flex justify-between border-b border-border/50 pb-2">
+          <div className="flex justify-between border-b border-border pb-2">
             <span className="text-muted-foreground text-xs">Department:</span>
             <span className="text-foreground">{targetLeave.department}</span>
           </div>
-          <div className="flex justify-between border-b border-border/50 pb-2">
+          <div className="flex justify-between border-b border-border pb-2">
             <span className="text-muted-foreground text-xs">Leave Type:</span>
             <span className="font-medium text-primary">{targetLeave.leave_type}</span>
           </div>
-          <div className="flex justify-between border-b border-border/50 pb-2">
+          <div className="flex justify-between border-b border-border pb-2">
             <span className="text-muted-foreground text-xs">Duration:</span>
             <span className="font-semibold text-foreground">
               {targetLeave.total_days} {targetLeave.total_days === 1 ? "day" : "days"} (
@@ -65,7 +65,7 @@ export function ApproveDialog({
           {targetLeave.reason && (
             <div className="pt-1">
               <span className="text-muted-foreground text-xs block mb-1">Reason:</span>
-              <p className="text-xs bg-muted/40 p-2.5 rounded-lg border border-border text-foreground">
+              <p className="text-xs bg-muted p-2.5 rounded-lg border border-border text-foreground">
                 {targetLeave.reason}
               </p>
             </div>

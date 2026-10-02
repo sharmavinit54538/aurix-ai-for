@@ -9,6 +9,7 @@ import { api } from "@/api";
 import { toast } from "sonner";
 import type { LeaveEmployee, LeaveBalance } from "../types";
 import { mapBalance } from "../mappers";
+import { cn } from "@/lib/utils";
 
 export function AllBalancesPanel() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -138,7 +139,7 @@ export function AllBalancesPanel() {
         {/* Left Column: List of Employees */}
         <Card className="border border-border bg-card md:col-span-2 overflow-hidden">
           <Table>
-            <TableHeader className="bg-muted/40">
+            <TableHeader className="bg-muted/50">
               <TableRow>
                 <TableHead className="pl-6 py-4">Employee ID</TableHead>
                 <TableHead className="py-4">Name</TableHead>
@@ -182,11 +183,10 @@ export function AllBalancesPanel() {
               {!employeesLoading && !employeesError && employees.map((emp) => (
                 <TableRow
                   key={emp.id}
-                  className={`border-b border-border/80 hover:bg-muted/30 transition-all cursor-pointer ${
-                    selectedEmp?.id === emp.id
-                      ? "bg-muted border-l-2 border-l-primary"
-                      : ""
-                  }`}
+                  className={cn(
+                    "border-b border-border hover:bg-muted/50 transition-colors cursor-pointer",
+                    selectedEmp?.id === emp.id && "bg-muted border-l-2 border-l-primary"
+                  )}
                   onClick={() => handleSelectEmployee(emp)}
                 >
                   <TableCell className="pl-6 py-4 font-mono text-xs">{emp.employee_code}</TableCell>
@@ -245,7 +245,7 @@ export function AllBalancesPanel() {
                   {empBalances.map((b) => (
                     <div
                       key={b.leave_type}
-                      className="border border-border/80 bg-muted/30 rounded-lg p-3 space-y-1"
+                      className="border border-border bg-muted/50 rounded-lg p-3 space-y-1"
                     >
                       <div className="flex justify-between items-center text-xs">
                         <span className="font-semibold text-foreground">{b.leave_type}</span>

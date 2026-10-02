@@ -106,7 +106,7 @@ export function ApprovalsList({
                       variant="outline"
                       size="sm"
                       disabled={isAnyRowLoading}
-                      className="text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400 gap-1.5"
+                      className="text-emerald-600 dark:text-emerald-400 gap-1.5"
                       onClick={() => onApproveClick(req)}
                     >
                       {isRowLoading ? (
@@ -120,7 +120,7 @@ export function ApprovalsList({
                       variant="outline"
                       size="sm"
                       disabled={isAnyRowLoading}
-                      className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive gap-1.5"
+                      className="text-destructive border-destructive/30 gap-1.5"
                       onClick={() => onRejectClick(req)}
                     >
                       {isRowLoading ? (
