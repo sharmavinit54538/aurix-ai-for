@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Users, Building2, Clock, Timer, Palmtree, Users2 } from "lucide-react";
+import { Users, Building2, Clock, Timer, Palmtree } from "lucide-react";
 import { ModuleHubView, type ModuleItem } from "@/components/aurix/ModuleHubView";
 
 export const Route = createFileRoute("/dashboard/workforce/")({
@@ -51,13 +51,6 @@ const WORKFORCE_MODULES: ModuleItem[] = [
 ];
 
 function WorkforceHubPage() {
-  return (
-    <ModuleHubView
-      eyebrow="Workforce Module Workspace"
-      title="Workforce Management"
-      description="Centralized portal for managing your company workforce, departments, daily shift attendance, timesheets, and leave balances."
-      headerIcon={Users2}
-      modules={WORKFORCE_MODULES}
-    />
-  );
+  return <ModuleHubView modules={WORKFORCE_MODULES} />;
 }
+
