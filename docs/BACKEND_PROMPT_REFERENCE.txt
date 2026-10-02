@@ -1,0 +1,228 @@
+<USER_REQUEST>
+# BACKEND MASTER PROMPT — `apiofc360` (FastAPI, async SQLAlchemy, Alembic, Redis, Docker)
+
+You are a senior backend engineer. Close EVERY pending item below in one run. Nothing may be silently skipped.
+Work package IDs are `B-00 … B-12`. Do them in order, commit after each package, and keep the tracker current.
+
+## Ground rules (read first)
+1. **Tracker is mandatory.** Create `docs/PENDING_TRACKER.md` with one row per item ID (B-01.1, B-01.2 …), columns:
+   `ID | Status (TODO/DONE/BLOCKED) | Files changed | Tests added | Notes`. You may finish ONLY when every row is DONE,
+   or BLOCKED with a concrete reason and the exact question I must answer. Never delete a row.
+2. **Verify, do not trust.** Statements in this prompt come from static analysis of the code and logs. Where I say "missing",
+   confirm against the real route table (`from app.main import app` → dump routes, or `/openapi.json`) before building.
+   If something already exists, mark the item DONE-EXISTING with the file/line and add a test instead.
+3. Follow existing code style. Alembic migration for every schema change (single head, upgrade+downgrade tested on an empty DB
+   and on a copy of existing data). No unrelated refactors. Keep old endpoints working unless a package says to remove them.
+4. Never print or commit secrets. Never invent data in responses: if a value has no real source, return `null` plus
+   `"available": false`.
+5. Response contract conventions used by the frontend (do not deviate):
+   - All AI scores, confidences and thresholds are **0–100 numbers**. Convert from 0–1 settings internally.
+   - List endpoints return `{ items, total, page, limit }` (default limit 50, max 200). Keep the old array shape reachable
+     behind the old route/param until the frontend is migrated.
+   - Errors: `{ success:false, message, code }` with correct HTTP status. 404 only means "not found for this tenant".
+   - All times are timezone-aware UTC ISO strings.
+6. Final deliverables: green `pytest`, regenerated `openapi.json` and `all_live_fastapi_routes.json` dumped from the real app,
+   updated `API_ENDPOINTS.md`, `docs/PENDING_TRACKER.md` fully resolved, and `docs/CONTRACT_DECISIONS.md` (see B-08).
+
+---
+## B-00 Audit and contract baseline
+- B-00.1 Dump the real route table and diff it against `API_GAPS.md` (attached; frontend calls with no matching route).
+  Produce `docs/CONTRACT_DECISIONS.md` with a row per gap: `BACKEND_ADD | FRONTEND_FIX | REMOVE_DEAD`, plus the exact
+  final path/method/payload. The frontend team will implement `FRONTEND_FIX` rows from this file, so be precise.
+- B-00.2 Run the existing test suite, record the baseline (pass/fail/skip). Fix or quarantine broken tests; do not hide failures.
+- B-00.3 Confirm tenant-scoping pattern used by payroll/attendance (base class, dependency, middleware). Reuse it everywhere below.
+- B-00.4 Find any background-task mechanism already in the repo (workers/Celery/arq/BackgroundTasks) and reuse it.
+
+## B-01 Authentication and sessions (current bug: every page reload logs the user out)
+Root cause: login returns the refresh token only in the JSON body; the SPA keeps it in memory and, after a reload, relies on an
+HttpOnly cookie that the backend never sets. Fix in `app/api/auth.py` (the mounted auth module), `token_service.py`, `config.py`.
+- B-01.1 Set the refresh token as an **HttpOnly, Secure (from settings), path=`/api/v1/auth`** cookie named `ofc360_refresh_token`
+  on login, verify-email-otp, google/github auth and refresh; clear it on logout and on revoke. Keep returning `refresh_token`
+  in the body for backward compatibility. Add settings: `COOKIE_NAME`, `COOKIE_DOMAIN` (default None), `COOKIE_SECURE`,
+  `COOKIE_SAMESITE` (default `lax`), `REFRESH_COOKIE_MAX_AGE`.
+- B-01.2 SameSite: `lax` works only if frontend and API share a registrable domain (e.g. app.ofc360.com / api.ofc360.com).
+  If they do not, STOP and ask me for both domains (mark BLOCKED with that question); do not default to `none`.
+- B-01.3 CORS: `allow_credentials=True`, explicit origin list from settings (no `*`), `max_age=86400`.
+  Add an Origin/Referer allow-list check on `/auth/refresh` and `/auth/logout` (cookie-based CSRF defence).
+- B-01.4 Refresh rotation grace window (setting `REFRESH_REUSE_GRACE_SECONDS`, default 15): if the immediately previous token of
+  a family is presented within the window (two tabs, retries), return a fresh valid pair instead of revoking the family.
+  Reuse outside the window still revokes the family. Store `rotated_at`/`replaced_by`.
+- B-01.5 `TokenService.generate_auth_tokens`: assign `family_id = family_id or uuid4()` BEFORE logging (log currently prints None).
+- B-01.6 `/refresh` and `/refresh-token` are two identical handlers: keep one canonical `/auth/refresh`, alias the other with
+  `include_in_schema=False`. Remove cookie fallbacks `eduflow_refresh_token`, `__Host-ofc_session`, `ofc_session`
+  (session-middleware cookies are not JWTs).
+- B-01.7 Rate limiting on `/auth/login`, `/auth/refresh`, OTP and password reset, keyed on the REAL client IP.
+- B-01.8 Tests: login → refresh with cookie only; body-only; rotation; reuse inside grace; reuse outside grace revokes family;
+  missing token = clean 401; logout clears cookie; cookie attributes asserted.
+- B-01.9 Delete or archive the unmounted School-ERP auth module `app/api/v1/auth.py` after grep proves nothing imports it.
+
+## B-02 Infrastructure, logging, performance (from production logs)
+- B-02.1 `app/db/database.py get_db_session`: today any `AppException/HTTPException` (e.g. a normal 401) is logged as
+  `ERROR "[DB Lifecycle] DBAPI/Query exception … Executing rollback"` with a traceback. Only log ERROR+traceback for
+  `SQLAlchemyError/DBAPIError`; do a quiet rollback for HTTP/App exceptions.
+- B-02.2 Request/exception logs show `User: None | Role: None` for authenticated calls. Resolve user id/role (from verified claims on
+  `request.state`, else decode the bearer token without logging its content).
+- B-02.3 Redis: "Connected to Redis" is logged 2–4× per request, i.e. a new connection per call. Create ONE shared async pool in the
+  app lifespan, inject via dependency, log once. Make it event-loop safe.
+- B-02.4 Exclude `/health` from access logs (hit every few seconds by two probes).
+- B-02.5 Uvicorn/Docker: add `--proxy-headers` and `--forwarded-allow-ips` set from env to the proxy IP/docker subnet
+  (logs show 172.18.0.1 = docker bridge; NOT `*`). Ensure port 8000 is not published publicly in `docker-compose.yml`
+  (bind to 127.0.0.1 or an internal network). Real client IP must reach rate limiter and logs.
+- B-02.6 Unknown paths (internet scanners, e.g. `/ecp/Current/exporttool/…`) return a plain 404 with minimal work, no DB/Redis.
+- B-02.7 Performance (observed: `/candidates` 300–417 ms, `/jobs` up to 707 ms, `/offers` up to 727 ms, `/interviews` 110–170 ms):
+  profile with SQL timing, remove N+1 (selectinload/joinedload on purpose), add pagination (see conventions), add composite
+  indexes `(tenant, created_at)`, FK columns used in filters, `(interviewer_id, scheduled_at)`. Alembic migration. Report before/after ms.
+
+## B-03 Tenant isolation (security, highest priority)
+- B-03.1 Audit EVERY table/query in: `ai_recruitment/*`, `screening`, `interviews`, `interview_bot/interview_agent`, `offers`,
+  `scorecards`, `talent_pool`, `candidates`, `applications`, new modules in B-09/B-10. List the ones lacking a tenant filter/column.
+- B-03.2 Add missing tenant columns via Alembic with backfill (derive from Job/Application/Employee), indexes, set on insert,
+  filter on every read/write. Cross-tenant access returns 404.
+- B-03.3 pytest proving cross-tenant 404 for each fixed resource (extend `test_multi_tenant_data_isolation`).
+
+## B-04 AI Resume Screening (frontend is already built against this contract)
+Files: `app/api/v2/screening.py`, `app/agents/screening_agent.py`, `app/models/ai_recruitment/*`,
+`app/services/ai_screening_pipeline_service.py`, settings `AI_SCREENING_THRESHOLD=0.65`, `AI_REJECTION_THRESHOLD=0.35`.
+- B-04.1 Tenant filter on every query (resume, job, match score, application, history) — lines ~72, 81, 182, 190.
+- B-04.2 Remove `application_id = doc.application_id or uuid.uuid4()` (~122): require an application (422) or make it nullable by migration; never a fake UUID.
+- B-04.3 Remove default `match_score = 0.5` (~97, ~214). If no `CandidateMatchScore` exists compute it with the matching service; on failure store `FAILED` with error.
+- B-04.4 Resume/JD truncation (4000/2500 chars, `screening_agent.py:100-101,164`) → settings (defaults 12000/6000), keep head+tail, log when truncated.
+- B-04.5 `/batch-screen` persists `AIScreeningResult` like `/screen`, honours `auto_apply_decisions`, per-item error handling.
+- B-04.6 LLM failure ⇒ status `FAILED`, never a fake REVIEW. Score-only fallback only if `AI_SCREENING_ALLOW_SCORE_FALLBACK=true` (default false) and then `model_used="score-fallback"`.
+- B-04.7 NEW `POST /api/v2/screening/jobs/{job_id}/run` body `{application_ids?, model?, force?=false}` → 202 `{run_id,status,total}`.
+  Default screens only applications without a completed result; max 100; 409 if a run is already RUNNING for the job. Create a
+  `ScreeningRun` row (id, tenant, job_id, status PENDING|RUNNING|COMPLETED|FAILED|PARTIAL, total, completed, failed, created_by, timestamps);
+  execute in background; PENDING→RUNNING immediately when work starts; update `completed` per item; stale-run timeout (RUNNING > 15 min no progress ⇒ FAILED).
+- B-04.8 NEW `GET /api/v2/screening/jobs/{job_id}/results` → `{ thresholds:{shortlist:65,reject:35}, run:{run_id,status,completed,total}|null,
+  results:[ one per APPLICATION of the job: { screening_id|null, application_id, candidate_id, candidate_name,
+  status PENDING|RUNNING|COMPLETED|FAILED, error, decision SHORTLIST|REVIEW|REJECT|null, confidence, match_score, strengths[], weaknesses[],
+  missing_skills[], red_flags[], green_flags[], hiring_recommendation, hr_notes, questions_to_ask[], model_used, screened_at,
+  human_decision SHORTLIST|REJECT|KEEP_REVIEW|null, human_decision_by, human_decision_reason, human_decided_at } ] }`.
+  404 ONLY if the job is not found for the tenant; no results yet ⇒ 200 with `results: []`.
+- B-04.9 NEW `POST /api/v2/screening/results/{screening_id}/decision` body `{action SHORTLIST|REJECT|KEEP_REVIEW, reason?}`;
+  `screening_id` must be an `AIScreeningResult` id of this tenant (never an application/candidate id); REJECT needs reason ≥ 10 chars;
+  409 unless result COMPLETED. Apply the stage change through the EXISTING application-stage service (one status vocabulary; state which
+  stage SHORTLIST maps to and why). Store human decision/by/reason/timestamp + audit log. Return the full updated result item under `data`.
+  No candidate email unless the existing stage flow already sends one.
+- B-04.10 Compliance: AI only recommends. Auto-apply/auto-reject only if `AI_AUTO_REJECT_ENABLED=true` (default false). Store model name,
+  prompt version, thresholds used, input hash per result. Strip name/gender/age/photo/nationality/"college pedigree" from resume text before the LLM call where feasible.
+- B-04.11 Tests: tenant isolation, run lifecycle incl. stale→FAILED, 409 concurrent run, empty results = 200, decision rejects non-screening ids,
+  reject needs reason, LLM failure ⇒ FAILED, batch partial failure.
+
+## B-05 Interviews (HR scheduling + candidate self-booking)
+Today: HR form data is never persisted; cancel/reschedule create NO_HIRE scorecards; feedback uses the wrong ID; the public booking endpoint is unauthenticated;
+double-booking check is global (date+time only); times are not timezone-aware. Files: `app/api/interviews.py`, `recruitment_service.py`,
+`recruitment_repository.py`, `models/recruitment.py`, `schemas/recruitment.py`, `templates/recruitment_interview.html`.
+- B-05.1 Tenant-scope every interview query/write (see B-03).
+- B-05.2 Replace the public `POST /interviews/{id}/schedule` with token booking: signed, expiring (default 7 days), single-use token per round (store hash+expiry+used_at).
+  `GET /interviews/book/{token}` → candidate first name, job title, round name, available slots, timezone. `POST /interviews/book/{token}` `{slot_start ISO}`.
+  Rate-limit; never leak internal ids or other candidates' data. Remove/deprecate the old route.
+- B-05.3 `InterviewSchedule` model (migration + backfill, assume Asia/Kolkata for old rows unless tenant timezone exists, state the assumption):
+  round_id, interviewer_id (employee FK), scheduled_at (tz-aware UTC), duration_minutes (default 45), timezone (IANA), mode ONLINE|OFFLINE, meeting_url,
+  office_address, status SCHEDULED|RESCHEDULED|CANCELLED|COMPLETED|NO_SHOW, cancelled_reason/by/at, rescheduled_from, created_by, tenant.
+  Partial unique index: ONE active SCHEDULED schedule per round.
+- B-05.4 Double booking = overlapping `[scheduled_at, +duration)` for the SAME interviewer in the same tenant, and overlapping interviews for the same candidate. Use a transaction
+  with row locking or an exclusion constraint. No `date.today()`; past times rejected; the "within 7 days" rule applies only to candidate self-booking (setting).
+  ONLINE requires meeting_url, OFFLINE requires office_address; never generate a placeholder meeting link.
+- B-05.5 HR endpoints (`require_admin_or_hr`, tenant-scoped):
+  `POST /interviews/{interview_id}/rounds/{round_id}/schedule {interviewer_id, scheduled_at, duration_minutes, mode, meeting_url?, office_address?, timezone?}`;
+  `PATCH /interviews/schedules/{id}/reschedule {scheduled_at, duration_minutes?, reason?}`;
+  `POST /interviews/schedules/{id}/cancel {reason}` (must NEVER create a scorecard/NO_HIRE nor move the application to rejected);
+  `POST /interviews/schedules/{id}/reminder` (real email to candidate+interviewer, max 1 manual reminder/hour);
+  `PATCH /interviews/schedules/{id}/no-show`;
+  `PATCH /interviews/rounds/{round_id}/pass|reject|hold` body `{feedback, score:number 1-5, interviewer_name?}` (number, not "4/5"; validate round belongs to tenant; mark schedule COMPLETED).
+  Send confirmation/invite emails through the existing email service (ICS attachment if the project already supports it).
+- B-05.6 `GET /interviews?status=&from=&to=&job_id=&candidate_id=&interviewer_id=&page=&limit=` → `{items,total,page,limit}` with FLAT items:
+  `{ interview_id, round_id, schedule_id|null, application_id, candidate:{id,name,email}, job:{id,title}, round_name, interviewer:{id,name}|null,
+  scheduled_at, duration_minutes, timezone, mode, meeting_url, office_address, status PENDING_SCHEDULE|SCHEDULED|COMPLETED|CANCELLED|NO_SHOW,
+  is_overdue, rating|null, recommendation PASS|REJECT|HOLD|null, feedback, cancelled_reason, created_at }`.
+  Also `GET /interviews/interviewers` → `[{id,name,email}]`.
+- B-05.7 Tests: tenant isolation; token booking (expired/reused/tampered); overlap incl. concurrency; reschedule/cancel side effects (no scorecard); timezone correctness;
+  pagination; feedback score validation. `POST /applications/{id}/send-interview` must email the booking link of B-05.2.
+
+## B-06 AI Interview (text-only, Phase 1) — endpoints partly EXIST, do not rebuild
+Existing: `app/api/v2/interview_bot.py` (`/interview-bot/sessions`, `/sessions/{id}/start`, `/answer`, `/proctor-alert`, `/finalize`) and
+`app/api/v2/interview_agent.py` (`/interview/generate-questions`, `/submit-answers`, `/evaluate-answer`, `/session/{id}`), plus model
+`AIRecruitmentInterviewSession`. A candidate-facing, tokenised flow and an HR review/decision flow are missing.
+- B-06.1 Audit what exists (tenant scoping, persistence, scoring, transcript storage). Report gaps, then fix.
+- B-06.2 Tokenised candidate flow (no login): `GET /api/v2/interview-bot/public/{token}` (first name, job title, company, duration, consent text, status),
+  `POST …/public/{token}/start {consent:true}`, `POST …/public/{token}/answer {question_id, answer_text}`, `POST …/public/{token}/finish`.
+  Token rules as in B-05.2. Store consent timestamp + IP hash.
+- B-06.3 HR side: `POST /api/v2/interview-bot/invite {application_id}` (emails the link), `GET /api/v2/interview-bot/results?job_id=`,
+  `POST /api/v2/interview-bot/results/{id}/decision {action SHORTLIST|REJECT|KEEP_REVIEW, reason?}` (same rules as B-04.9).
+  Scores 0–100, strengths/weaknesses/red flags, transcript, model/prompt version.
+- B-06.4 Compliance: AI recommends only; proctor/integrity signals are stored as informational flags and NEVER auto-reject; offer a "request a human interviewer" option; audit log.
+- B-06.5 Behind a feature flag `AI_INTERVIEW_ENABLED` (default false). Voice/video is OUT of scope.
+
+## B-07 Notifications
+- B-07.1 `GET /api/v1/notifications/unread-count` is 404 in production and polled constantly. Add it to the real notifications router (`app/routers/notifications.py`; mounted
+  as `core_notifications_router`; check `/notifications/{id}` cannot shadow it) returning `{ success:true, data:{ total:int, byCategory:{[category]:int} } }`, tenant+user scoped, indexed (user_id,is_read).
+- B-07.2 Also provide `POST /notifications/{id}/unread`, `POST /notifications/read` (mark all/bulk) if the frontend contract in API_GAPS.md needs them (verify; the list route currently has `/unread` listing instead).
+
+## B-08 Contract gaps (see attached `API_GAPS.md`, 174 rows + 5 method mismatches)
+For every row apply the decision from B-00.1. Groups (all must be resolved, none left blank):
+- Settings: branding GET/PATCH, subscription plans/upgrade/cancel, audit-logs list + export, email/sms test, security/integrations/billing (PATCH vs PUT mismatch), company logo upload,
+  settings sections (employees, attendance, leaves, payroll, documents, assets).
+- Profile: `/users/me`, avatar upload/delete, sessions list/revoke-all, preferences. (`/profile` exists; either add `/users/me*` aliases or mark FRONTEND_FIX — decide once.)
+- Attendance: today, today/me, face-status/face-enroll, check-in, break start/end, geofence verify, shifts CRUD, rosters, holidays (verify against `routers/attendance.py` + `api/v1/attendance.py`).
+- Departments/Managers: summary, bulk-delete, bulk-status, bulk-assign-manager, import, transfer-employees, employee promote, add employees to department.
+- Documents: generate, activity, request-reupload. Employees: `/employees/me`. Leaves: cancel, employee search. Timesheets: `ai-suggest`. Policy assistant search. Meeting KPI.
+- Reports/Analytics: `/api/v2/reports/analytics/{turnover,payroll-cost,compliance,export}`, analytics overview/summary/reports CRUD/generate/export/headcount/payroll-costs/turnover-rates/compliance-metrics.
+- AI Hub: root + per-agent endpoints that the frontend calls (`/ai-hub/...`); the repo has `api/v1/ai_hub/*` routers — check they are mounted, then add the rest or mark REMOVE_DEAD.
+- Payroll: legacy `/payroll/periods`, `/payroll/run`, my-payslips, employee payslips, pay-components, compensations, variable-inputs, full-and-final list/create, payment-batches list, accounting-export, my-provision-slips (many v2 routes exist — most are path mismatches).
+- Performance bulk-status (method), employee-onboarding admin list, interviews rounds decision (covered by B-05).
+Each BACKEND_ADD gets tenant scoping, RBAC, pagination, tests and OpenAPI docs.
+
+## B-09 Modules that exist ONLY in the browser (localStorage) — need real backend
+Frontend types are in `src/lib/hrms/types.ts`; keep field names compatible (camelCase in JSON via alias generators if that is the project convention).
+- B-09.1 **Expenses** (no model/API today): model Expense (tenant, employee_id, category travel|meals|lodging|supplies|training|client|other, amount, currency, date, description, receipt_file_id,
+  status pending|approved|rejected|paid|changes-requested, manager_note, paid_at, submitted_at). Endpoints under `/api/v2/expenses`: list (filters, pagination, mine/all by RBAC), create, get, patch (only pending/changes-requested),
+  `POST {id}/approve|reject|request-changes|mark-paid`, `GET /summary`, receipt upload via the existing upload service. Workflow permissions: employee creates, manager/HR approves, finance marks paid.
+- B-09.2 **Visitors** (no model/API): Visitor (tenant, name, company, email, phone, photo_url, host_employee_id, purpose, expected_duration_mins, check_in_at, check_out_at,
+  status pending|approved|checked-in|checked-out|rejected, pass_code unique per tenant). Endpoints `/api/v2/visitors`: list, create, approve/reject, check-in, check-out, summary, CSV export.
+- B-09.3 **Travel**: `/api/v2/travel` exists (`api/v2/travel_api.py`, model `travel.py`). Verify it supports the frontend shape (employee, type domestic|international, purpose, destination,
+  travelDate, returnDate, hotel, transportation, budget, currency, status draft|manager-review|hr-review|finance-review|approved|rejected, history[]) and add what is missing (stage transitions, history).
+- B-09.4 **Offboarding**: map the frontend OffboardingCase (employee, lastWorkingDay, status in-progress|completed, tasks[], documents[{name,ready}]) onto the existing Exit Management API (`/api/v1/exits`, 20 endpoints); add only what is missing (task checklist, document readiness, bundle download).
+- B-09.5 **Onboarding checklist** (`OnboardingCase`: employee, role, joinDate, manager, tasks[]): reuse `employee_onboarding_*` / `hr_admin_onboarding` if they fit; otherwise add a checklist API. State the decision in the tracker.
+- B-09.6 **Asset management** summary page: the main Assets API exists (`/api/v1/assets` incl. analytics); add any missing fields (brand, model, purchaseCost, nextMaintenance, notes, warrantyUntil) and maintenance/assignment history endpoints.
+- B-09.7 **HR-Ops command center / People hub**: one aggregate endpoint `GET /api/v2/hr-ops/overview` built only from real tables (pending approvals, onboarding/offboarding counts, leave requests, open expenses/travel, visitors today, asset requests).
+- B-09.8 Tests for each (tenant isolation, RBAC, state transitions). Migrations with indexes.
+
+## B-10 Executive dashboards (CEO/CFO/COO/CMO/CTO/CIO pages currently show "—" / "Live data pending")
+- B-10.1 `GET /api/v2/executive/overview?role=ceo|cfo|coo|cmo|cto|cio` returning ONLY metrics that have a real source: headcount, joiners/leavers, attrition, open positions + hiring funnel,
+  payroll cost (latest closed run), attendance rate, leave utilisation, assets count/value, helpdesk tickets, compliance items. Time-series for charts (12 months) from real tables.
+- B-10.2 Metrics with NO source (ARR, sales pipeline, infra/devops/cloud/security telemetry, digital transformation KPIs) must be omitted or `{available:false}`; never fabricated.
+  List them in `docs/EXEC_METRICS_AVAILABILITY.md` so product can decide. RBAC: only the matching executive role (and admin) may read each role slice.
+- B-10.3 Tests incl. empty-tenant response (all zeros/`available:false`, no 500).
+
+## B-11 Repository hygiene and security
+- B-11.1 Repo root is full of scratch scripts and dumps (`check_*.py`, `inspect_*.py`, `read_prod_*.py`, `reset_cto_pass.py`, `check_pwd.py`, `seed_*.py`, `test_*.py` in root, many `*.json` dumps). Move useful ones to `scripts/`, delete the rest, and add `.gitignore` rules.
+- B-11.2 **Secret scan**: grep history/working tree for passwords, tokens, API keys, `.env`, prod log dumps. Report file+line only (never the value). Anything real must be rotated by me — list them.
+- B-11.3 School-ERP leftovers: `app/api/v1/{admissions,fees,parent,students,teachers,cctv,recognition,…}.py` and `app/tests/test_{admissions,students}.py` are not mounted in `main.py`. Confirm with grep and remove (or move to `legacy/`), including unused models/migrations only if safe.
+- B-11.4 Remove duplicate routers/endpoints (`/refresh-token`, duplicate settings routers mounted twice at lines ~651 and ~779, `/v2` and `/api/v2` double mounting if unused).
+
+## B-12 Quality gates
+- B-12.1 `pytest` green (list any intentionally skipped tests with reasons). Add tests for every new endpoint and for each bug fixed above.
+- B-12.2 `alembic upgrade head` on an empty database AND `alembic downgrade -1` for each new migration; one head only.
+- B-12.3 Load smoke: `/candidates`, `/jobs`, `/offers`, `/interviews` p95 < 200 ms on seeded data (report numbers).
+- B-12.4 Regenerate `openapi.json`, `all_live_fastapi_routes.json`, `API_ENDPOINTS.md` from the running app.
+- B-12.5 Final report in `docs/BACKEND_FINAL_REPORT.md`: per ID what changed, assumptions, anything BLOCKED, deployment steps (env vars, migrations, order), and the list of user-visible behaviour changes
+  (note: after B-01 deploys, existing sessions have no cookie, so every user logs in once again).
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-10-02T16:40:39+05:30.
+
+The user's current state is as follows:
+Active Document: d:\hub\aurix-ai-for\src\lib\color-maps.ts (LANGUAGE_TYPESCRIPT)
+Cursor is on line: 21
+Other open documents:
+- d:\hub\aurix-ai-for\src\lib\color-maps.ts (LANGUAGE_TYPESCRIPT)
+- d:\hub\aurix-ai-for\README.md (LANGUAGE_MARKDOWN)
+- d:\hub\aurix-ai-for\src\features\cto\pages\CtoProjectsPage.tsx (LANGUAGE_TSX)
+No browser pages are currently open.
+Running terminal commands:
+- npm run dev (in d:\hub\aurix-ai-for, running for 7h32m21s)
+</ADDITIONAL_METADATA>
+<USER_SETTINGS_CHANGE>
+The user changed setting `Model Selection` from None to Gemini 3.8 Flash (High). No need to comment on this change if the user doesn't ask about it. If reporting what model you are, please use a human readable name instead of the exact string.
+</USER_SETTINGS_CHANGE>
