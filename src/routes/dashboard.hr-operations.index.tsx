@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Activity, History, UserCheck, ClipboardCheck, LogOut, FileCheck, Layers } from "lucide-react";
+import { Activity, History, UserCheck, ClipboardCheck, LogOut, FileCheck } from "lucide-react";
 import { ModuleHubView, type ModuleItem } from "@/components/aurix/ModuleHubView";
 
 export const Route = createFileRoute("/dashboard/hr-operations/")({
@@ -59,13 +59,6 @@ const HR_OPS_MODULES: ModuleItem[] = [
 ];
 
 function HrOperationsHubPage() {
-  return (
-    <ModuleHubView
-      eyebrow="Operations Management"
-      title="HR Operations Hub"
-      description="Manage day-to-day HR operations, onboarding checklists, visitor check-ins, employee career timelines, and exit clearance workflows."
-      headerIcon={Layers}
-      modules={HR_OPS_MODULES}
-    />
-  );
+  return <ModuleHubView modules={HR_OPS_MODULES} />;
 }
+

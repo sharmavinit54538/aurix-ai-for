@@ -54,11 +54,10 @@ describe("ReportsPage", () => {
     vi.mocked(reportsAnalyticsApi.getTenure).mockReturnValue(new Promise(() => {}));
 
     render(<ReportsPage />);
-
-    expect(screen.getByText("HR Reports Builder")).toBeInTheDocument();
     expect(screen.getByText("Headcount over time")).toBeInTheDocument();
     expect(screen.getByText("By department")).toBeInTheDocument();
     expect(screen.getByText("Tenure distribution")).toBeInTheDocument();
+
   });
 
   it("renders charts with real data when calls succeed", async () => {

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Folder, Laptop, Wrench, FolderOpen } from "lucide-react";
+import { Folder, Laptop, Wrench } from "lucide-react";
 import { ModuleHubView, type ModuleItem } from "@/components/aurix/ModuleHubView";
 
 export const Route = createFileRoute("/dashboard/resources/")({
@@ -35,13 +35,6 @@ const RESOURCES_MODULES: ModuleItem[] = [
 ];
 
 function ResourcesHubPage() {
-  return (
-    <ModuleHubView
-      eyebrow="Resources & Asset Workspace"
-      title="Resources & Assets"
-      description="Manage enterprise document repositories, IT equipment inventories, hardware assignments, and maintenance logs."
-      headerIcon={FolderOpen}
-      modules={RESOURCES_MODULES}
-    />
-  );
+  return <ModuleHubView modules={RESOURCES_MODULES} />;
 }
+

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Briefcase, Target, Sparkles } from "lucide-react";
+import { Briefcase, Target } from "lucide-react";
 import { ModuleHubView, type ModuleItem } from "@/components/aurix/ModuleHubView";
 
 export const Route = createFileRoute("/dashboard/talent/")({
@@ -27,13 +27,6 @@ const TALENT_MODULES: ModuleItem[] = [
 ];
 
 function TalentHubPage() {
-  return (
-    <ModuleHubView
-      eyebrow="Talent Workspace"
-      title="Talent Management"
-      description="Attract top candidates with automated recruitment workflows and foster employee growth with continuous performance reviews."
-      headerIcon={Sparkles}
-      modules={TALENT_MODULES}
-    />
-  );
+  return <ModuleHubView modules={TALENT_MODULES} />;
 }
+

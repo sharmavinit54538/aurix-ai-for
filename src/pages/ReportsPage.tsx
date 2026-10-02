@@ -132,10 +132,22 @@ export function ReportsPage() {
   useEffect(() => {
     if (startDate && endDate && startDate > endDate) return;
     const timer = setTimeout(() => {
-      setDebouncedFilters({
-        start_date: startDate || undefined,
-        end_date: endDate || undefined,
-        department: department.trim() || undefined,
+      setDebouncedFilters((prev) => {
+        const nextStart = startDate || undefined;
+        const nextEnd = endDate || undefined;
+        const nextDept = department.trim() || undefined;
+        if (
+          prev.start_date === nextStart &&
+          prev.end_date === nextEnd &&
+          prev.department === nextDept
+        ) {
+          return prev;
+        }
+        return {
+          start_date: nextStart,
+          end_date: nextEnd,
+          department: nextDept,
+        };
       });
     }, 350);
     return () => clearTimeout(timer);
@@ -295,6 +307,13 @@ export function ReportsPage() {
       });
   }, []);
 
+  const turnoverAvailableRef = useRef(turnoverState.available);
+  turnoverAvailableRef.current = turnoverState.available;
+  const payrollCostAvailableRef = useRef(payrollCostState.available);
+  payrollCostAvailableRef.current = payrollCostState.available;
+  const complianceAvailableRef = useRef(complianceState.available);
+  complianceAvailableRef.current = complianceState.available;
+
   // Fetch charts when debounced filters change
   useEffect(() => {
     if (isDateRangeInvalid) return;
@@ -304,24 +323,21 @@ export function ReportsPage() {
     fetchTenure(debouncedFilters);
 
     // If turnover has not been ruled out as 404, query it
-    if (turnoverState.available !== false) {
+    if (turnoverAvailableRef.current !== false) {
       fetchTurnover(debouncedFilters);
     }
     // If payroll cost has not been ruled out as 404 and role is allowed, query it
-    if (canViewPayrollCost && payrollCostState.available !== false) {
+    if (canViewPayrollCost && payrollCostAvailableRef.current !== false) {
       fetchPayrollCost(debouncedFilters);
     }
     // If compliance has not been ruled out as 404, query it
-    if (complianceState.available !== false) {
+    if (complianceAvailableRef.current !== false) {
       fetchCompliance(debouncedFilters);
     }
   }, [
     debouncedFilters,
     isDateRangeInvalid,
     canViewPayrollCost,
-    turnoverState.available,
-    payrollCostState.available,
-    complianceState.available,
     fetchHeadcount,
     fetchDepartment,
     fetchTenure,
@@ -329,16 +345,6 @@ export function ReportsPage() {
     fetchPayrollCost,
     fetchCompliance,
   ]);
-
-  const handleRefreshAll = () => {
-    if (isDateRangeInvalid) return;
-    fetchHeadcount(debouncedFilters);
-    fetchDepartment(debouncedFilters);
-    fetchTenure(debouncedFilters);
-    if (turnoverState.available !== false) fetchTurnover(debouncedFilters);
-    if (canViewPayrollCost && payrollCostState.available !== false) fetchPayrollCost(debouncedFilters);
-    if (complianceState.available !== false) fetchCompliance(debouncedFilters);
-  };
 
   const handleExportCsv = async () => {
     if (isDateRangeInvalid) return;
@@ -369,49 +375,22 @@ export function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Top Header & Actions Bar */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">
-            HR Reports Builder
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Custom reporting engine for headcount, payroll costs, turnover rates, and compliance metrics.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {lastUpdated ? (
-            <span className="text-xs text-muted-foreground">
-              Last updated: {lastUpdated}
-            </span>
-          ) : null}
+      {/* Top Actions Bar */}
+      {exportAvailable !== false ? (
+        <div className="flex items-center justify-end">
           <Button
-            variant="outline"
+            variant="default"
             size="sm"
-            onClick={handleRefreshAll}
+            onClick={handleExportCsv}
+            disabled={isExporting || isDateRangeInvalid}
             className="gap-1.5"
-            title="Refresh all reports"
           >
-            <RefreshCw className="h-3.5 w-3.5" />
-            Refresh
+            <Download className="h-3.5 w-3.5" />
+            {isExporting ? "Exporting..." : "Export CSV"}
           </Button>
-
-          {/* Show export button only if not ruled out as 404 */}
-          {exportAvailable !== false ? (
-            <Button
-              variant="default"
-              size="sm"
-              onClick={handleExportCsv}
-              disabled={isExporting || isDateRangeInvalid}
-              className="gap-1.5"
-            >
-              <Download className="h-3.5 w-3.5" />
-              {isExporting ? "Exporting..." : "Export CSV"}
-            </Button>
-          ) : null}
         </div>
-      </div>
+      ) : null}
+
 
       {exportError ? (
         <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-xs text-destructive flex items-center justify-between">
