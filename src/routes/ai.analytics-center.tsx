@@ -152,11 +152,6 @@ function Page() {
 
   return (
     <AIModulePage
-      icon={LineChartIcon}
-      eyebrow="AI Analytics Center"
-      title="The Executive Intelligence Dashboard"
-      description="Live PostgreSQL-driven executive, predictive, hiring, payroll and performance intelligence — unified."
-      lastAnalysis="Real-time DB Sync"
       kpis={kpis}
       charts={charts}
       features={features}

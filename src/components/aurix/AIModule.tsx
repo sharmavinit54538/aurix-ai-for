@@ -55,10 +55,12 @@ export function AIHero({
 }: {
   icon?: LucideIcon;
   eyebrow?: string;
-  title: string;
+  title?: string;
   description?: string;
   lastAnalysis?: string;
 }) {
+  if (!title && !eyebrow && !description && !Icon && !lastAnalysis) return null;
+
   return (
     <div className="mb-6 flex flex-col min-w-0 gap-2 text-left">
       {eyebrow ? (
@@ -239,19 +241,23 @@ export function AIModulePage({
   kpis, charts, features,
   children,
 }: {
-  icon: LucideIcon;
-  eyebrow: string;
-  title: string;
-  description: string;
+  icon?: LucideIcon;
+  eyebrow?: string;
+  title?: string;
+  description?: string;
   lastAnalysis?: string;
   kpis?: AIKpi[];
   charts?: AIChart[];
   features?: AIFeature[];
   children?: React.ReactNode;
 }) {
+  const hasHeader = Boolean(icon || eyebrow || title || description || lastAnalysis);
+
   return (
     <div>
-      <AIHero icon={icon} eyebrow={eyebrow} title={title} description={description} lastAnalysis={lastAnalysis} />
+      {hasHeader ? (
+        <AIHero icon={icon} eyebrow={eyebrow} title={title} description={description} lastAnalysis={lastAnalysis} />
+      ) : null}
       {kpis && kpis.length ? <KpiGrid items={kpis} /> : null}
       {charts && charts.length ? (
         <div className={`grid grid-cols-1 gap-4 ${charts.length > 1 ? "lg:grid-cols-2" : ""}`}>
