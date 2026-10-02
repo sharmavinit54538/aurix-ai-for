@@ -26,6 +26,8 @@ function isUuid(id: string) {
 
 import recruitmentApi from "@/services/recruitmentApi";
 
+let inFlightFetchRecruitmentPromise: Promise<RecruitmentDataPayload> | null = null;
+
 export const fetchRecruitmentData = createAsyncThunk<
   RecruitmentDataPayload,
   { force?: boolean } | void,
@@ -33,8 +35,19 @@ export const fetchRecruitmentData = createAsyncThunk<
 >(
   "recruitment/fetchData",
   async (_, thunkAPI) => {
+    if (inFlightFetchRecruitmentPromise) {
+      return inFlightFetchRecruitmentPromise;
+    }
+    inFlightFetchRecruitmentPromise = (async () => {
+      try {
+        return await recruitmentApi.fetchRecruitmentDashboardData();
+      } finally {
+        inFlightFetchRecruitmentPromise = null;
+      }
+    })();
+
     try {
-      return await recruitmentApi.fetchRecruitmentDashboardData();
+      return await inFlightFetchRecruitmentPromise;
     } catch (error) {
       return thunkAPI.rejectWithValue(parseApiError(error, "Failed to fetch recruitment data").message);
     }
@@ -43,7 +56,7 @@ export const fetchRecruitmentData = createAsyncThunk<
     condition: (arg, { getState }) => {
       if (arg?.force) return true;
       const { recruitment } = getState() as RootState;
-      if (recruitment.loading) {
+      if (recruitment.loading || inFlightFetchRecruitmentPromise) {
         return false;
       }
       if (recruitment.lastFetchedAt && Date.now() - recruitment.lastFetchedAt < 30_000) {

@@ -163,37 +163,30 @@ export const notificationsApi = {
    * Cursor-paginated notifications with optional filtering.
    */
   async getNotifications(params?: NotificationListParams): Promise<NotificationListData> {
-    try {
-      const res = await apiInstance.get("/notifications", { params });
-      const data = extractData<NotificationListData>(res, {
-        items: [],
-        nextCursor: null,
-        hasMore: false,
-        totalUnread: 0,
-      });
+    const res = await apiInstance.get("/notifications", { params });
+    const data = extractData<NotificationListData>(res, {
+      items: [],
+      nextCursor: null,
+      hasMore: false,
+      totalUnread: 0,
+    });
 
-      return {
-        items: Array.isArray(data?.items) ? data.items : [],
-        nextCursor: data?.nextCursor ?? null,
-        hasMore: Boolean(data?.hasMore),
-        totalUnread: typeof data?.totalUnread === "number" ? data.totalUnread : 0,
-      };
-    } catch (err: unknown) {
-      if (isNotFoundOrNetworkError(err)) {
-        return { items: [], nextCursor: null, hasMore: false, totalUnread: 0 };
-      }
-      throw err;
-    }
+    return {
+      items: Array.isArray(data?.items) ? data.items : [],
+      nextCursor: data?.nextCursor ?? null,
+      hasMore: Boolean(data?.hasMore),
+      totalUnread: typeof data?.totalUnread === "number" ? data.totalUnread : 0,
+    };
   },
 
   /**
    * GET /notifications/unread-count
    * Total unread count and category breakdown.
-   * If endpoint returns 404, trips session circuit breaker and throws 404.
+   * If endpoint returns 404 or 5xx, trips session circuit breaker and throws.
    */
   async getUnreadCount(): Promise<UnreadCountData> {
     if (unreadCount404Breaker) {
-      const err = new Error("Unread count endpoint unavailable (404)");
+      const err = new Error("Unread count endpoint unavailable (circuit broken)");
       (err as any).status = 404;
       throw err;
     }
@@ -206,19 +199,20 @@ export const notificationsApi = {
         byCategory: data?.byCategory || {},
       };
     } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.status === 404) {
-        unreadCount404Breaker = true;
-        if (!hasLogged404Once) {
-          hasLogged404Once = true;
-          if (import.meta.env.DEV) {
+      if (axios.isAxiosError(err)) {
+        const status = err.response?.status;
+        if (status === 404 || (status && status >= 500)) {
+          unreadCount404Breaker = true;
+          if (!hasLogged404Once) {
+            hasLogged404Once = true;
             console.warn(
-              "[Notifications] GET /notifications/unread-count returned 404. Circuit breaker tripped: polling disabled for this session. Deriving unread count from list.",
+              `[Notifications] GET /notifications/unread-count returned ${status}. Circuit breaker tripped: polling disabled for this session. Deriving unread count from list.`,
             );
           }
+          const breakerErr = new Error(`Unread count endpoint unavailable (${status})`);
+          (breakerErr as any).status = status;
+          throw breakerErr;
         }
-        const notFoundErr = new Error("Unread count endpoint unavailable (404)");
-        (notFoundErr as any).status = 404;
-        throw notFoundErr;
       }
       throw err;
     }
@@ -229,18 +223,11 @@ export const notificationsApi = {
    * Mark a single notification as read.
    */
   async markRead(id: string): Promise<{ id: string; readAt: string | null }> {
-    try {
-      const res = await apiInstance.post(`/notifications/${id}/read`);
-      return extractData<{ id: string; readAt: string | null }>(res, {
-        id,
-        readAt: new Date().toISOString(),
-      });
-    } catch (err: unknown) {
-      if (isNotFoundOrNetworkError(err)) {
-        return { id, readAt: new Date().toISOString() };
-      }
-      throw err;
-    }
+    const res = await apiInstance.post(`/notifications/${id}/read`);
+    return extractData<{ id: string; readAt: string | null }>(res, {
+      id,
+      readAt: new Date().toISOString(),
+    });
   },
 
   /**
@@ -248,15 +235,8 @@ export const notificationsApi = {
    * Mark a single notification as unread.
    */
   async markUnread(id: string): Promise<{ id: string; readAt: null }> {
-    try {
-      const res = await apiInstance.post(`/notifications/${id}/unread`);
-      return extractData<{ id: string; readAt: null }>(res, { id, readAt: null });
-    } catch (err: unknown) {
-      if (isNotFoundOrNetworkError(err)) {
-        return { id, readAt: null };
-      }
-      throw err;
-    }
+    const res = await apiInstance.post(`/notifications/${id}/unread`);
+    return extractData<{ id: string; readAt: null }>(res, { id, readAt: null });
   },
 
   /**
@@ -264,18 +244,11 @@ export const notificationsApi = {
    * Archive a single notification.
    */
   async archive(id: string): Promise<{ id: string; archivedAt: string | null }> {
-    try {
-      const res = await apiInstance.post(`/notifications/${id}/archive`);
-      return extractData<{ id: string; archivedAt: string | null }>(res, {
-        id,
-        archivedAt: new Date().toISOString(),
-      });
-    } catch (err: unknown) {
-      if (isNotFoundOrNetworkError(err)) {
-        return { id, archivedAt: new Date().toISOString() };
-      }
-      throw err;
-    }
+    const res = await apiInstance.post(`/notifications/${id}/archive`);
+    return extractData<{ id: string; archivedAt: string | null }>(res, {
+      id,
+      archivedAt: new Date().toISOString(),
+    });
   },
 
   /**
@@ -283,18 +256,11 @@ export const notificationsApi = {
    * Bulk mark multiple notifications as read.
    */
   async bulkMarkRead(ids: string[]): Promise<{ updatedCount: number; readAt: string | null }> {
-    try {
-      const res = await apiInstance.post("/notifications/read", { ids });
-      return extractData<{ updatedCount: number; readAt: string | null }>(res, {
-        updatedCount: ids.length,
-        readAt: new Date().toISOString(),
-      });
-    } catch (err: unknown) {
-      if (isNotFoundOrNetworkError(err)) {
-        return { updatedCount: ids.length, readAt: new Date().toISOString() };
-      }
-      throw err;
-    }
+    const res = await apiInstance.post("/notifications/read", { ids });
+    return extractData<{ updatedCount: number; readAt: string | null }>(res, {
+      updatedCount: ids.length,
+      readAt: new Date().toISOString(),
+    });
   },
 
   /**
@@ -302,20 +268,13 @@ export const notificationsApi = {
    * Mark all notifications (or all in a category) as read.
    */
   async markAllRead(category?: string): Promise<{ updatedCount: number; readAt: string | null }> {
-    try {
-      const res = await apiInstance.post(
-        "/notifications/read-all",
-        category ? { category } : {},
-      );
-      return extractData<{ updatedCount: number; readAt: string | null }>(res, {
-        updatedCount: 0,
-        readAt: new Date().toISOString(),
-      });
-    } catch (err: unknown) {
-      if (isNotFoundOrNetworkError(err)) {
-        return { updatedCount: 0, readAt: new Date().toISOString() };
-      }
-      throw err;
-    }
+    const res = await apiInstance.post(
+      "/notifications/read-all",
+      category ? { category } : {},
+    );
+    return extractData<{ updatedCount: number; readAt: string | null }>(res, {
+      updatedCount: 0,
+      readAt: new Date().toISOString(),
+    });
   },
 };

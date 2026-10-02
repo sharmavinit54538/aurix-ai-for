@@ -135,12 +135,15 @@ export function useUnreadCount() {
     queryKey: notificationKeys.unreadCount(userId),
     queryFn: () => notificationsApi.getUnreadCount(),
     enabled: !isCircuitBroken,
-    refetchInterval: isCircuitBroken ? false : 60_000,
+    refetchInterval: isCircuitBroken
+      ? false
+      : () => (typeof document !== "undefined" && document.visibilityState === "visible" ? 60_000 : false),
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: !isCircuitBroken,
     staleTime: 1000 * 30,
     retry: (failureCount, error: any) => {
-      if (error?.status === 404 || error?.response?.status === 404) return false;
+      const status = error?.status || error?.response?.status;
+      if (status === 404 || (status && status >= 500)) return false;
       return failureCount < 2;
     },
   });

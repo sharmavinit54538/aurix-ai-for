@@ -117,6 +117,60 @@ export function getRejectMessage(payload: unknown, fallback: string): string {
   return fallback;
 }
 
+export interface PaginatedList<T> {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+/**
+ * Normalizes list responses supporting both `{ items, total, page, limit }`
+ * and legacy raw array responses `[ ... ]`.
+ */
+export function parseListResponse<T>(
+  response: unknown,
+  defaultPage = 1,
+  defaultLimit = 50,
+): PaginatedList<T> {
+  if (!response) {
+    return { items: [], total: 0, page: defaultPage, limit: defaultLimit };
+  }
+
+  const raw = (response as any)?.data ?? response;
+
+  if (Array.isArray(raw)) {
+    return {
+      items: raw as T[],
+      total: raw.length,
+      page: defaultPage,
+      limit: defaultLimit,
+    };
+  }
+
+  if (typeof raw === "object") {
+    const items = Array.isArray(raw.items)
+      ? raw.items
+      : Array.isArray(raw.data)
+        ? raw.data
+        : Array.isArray(raw.results)
+          ? raw.results
+          : [];
+    const total = typeof raw.total === "number" ? raw.total : items.length;
+    const page = typeof raw.page === "number" ? raw.page : defaultPage;
+    const limit = typeof raw.limit === "number" ? raw.limit : defaultLimit;
+
+    return {
+      items: items as T[],
+      total,
+      page,
+      limit,
+    };
+  }
+
+  return { items: [], total: 0, page: defaultPage, limit: defaultLimit };
+}
+
 export async function tryApi<T>(call: () => Promise<T>, fallback: T): Promise<T> {
   try {
     return await call();
@@ -124,3 +178,4 @@ export async function tryApi<T>(call: () => Promise<T>, fallback: T): Promise<T>
     return fallback;
   }
 }
+

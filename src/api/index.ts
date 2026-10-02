@@ -28,7 +28,7 @@ export {
 } from "./tokens";
 export type { Tokens } from "./tokens";
 export { hasValidAccessToken, isAccessTokenExpired } from "./token-utils";
-export { getErrorMessage, tryApi, parseApiError } from "./utils";
+export { getErrorMessage, tryApi, parseApiError, parseListResponse, type PaginatedList } from "./utils";
 export type {
   ApiResponse,
   AuthMeResponse,

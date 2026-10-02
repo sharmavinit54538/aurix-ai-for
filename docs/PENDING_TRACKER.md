@@ -10,11 +10,11 @@
 | **F-01.3** | DONE | `src/api/apiInstance.ts` | `src/api/__tests__/authSession.test.ts` | Single-flight refresh in tab; navigator.locks with BroadcastChannel fallback across tabs; session expired toast & return redirect |
 | **F-01.4** | DONE | `src/api/tokens.ts` | `src/api/__tests__/authSession.test.ts` | In-memory token storage only; safeStorage refresh token persistence completely removed |
 | **F-01.5** | DONE | `src/api/__tests__/authSession.test.ts` | `src/api/__tests__/authSession.test.ts` | Complete Vitest test suite for cookie reload, no refresh without hint, single-flight refresh, failed refresh logout, hint clearing |
-| **F-02.1** | TODO | None | None | useRecruitmentBase condition/deduping & StrictMode prevention |
-| **F-02.2** | TODO | None | None | Notifications unread-count circuit breaker & interval backoff |
-| **F-02.3** | TODO | None | None | Self-scheduling polling with back-off & stop on unmount/hidden/errors |
-| **F-02.4** | TODO | None | None | Pagination shape support {items,total,page,limit} & old array |
-| **F-02.5** | TODO | None | None | Remove console.log noise and effect duplicate runs |
+| **F-02.1** | DONE | `src/features/admin/recruitment/recruitmentThunk.ts`, `src/features/admin/recruitment/hooks/useRecruitment.ts` | `src/features/admin/recruitment/__tests__/recruitmentDataLayer.test.tsx` | inFlightFetchRecruitmentPromise module deduplication, condition check on loading & 30s TTL, StrictMode protected |
+| **F-02.2** | DONE | `src/services/notificationsApi.ts`, `src/features/notifications/hooks.ts` | `src/features/admin/recruitment/__tests__/recruitmentDataLayer.test.tsx` | Notifications unread-count circuit breaker on 404/5xx, tab visibility check, derived unread count from list |
+| **F-02.3** | DONE | `src/hooks/usePoller.ts`, `src/features/leaves/pages/LeavesPage.tsx`, `src/pages/PayrollProcessingPage.tsx` | `src/features/admin/recruitment/__tests__/recruitmentDataLayer.test.tsx` | Reusable usePoller with exponential back-off, stop on hidden tab, stop on 3 consecutive non-2xx errors |
+| **F-02.4** | DONE | `src/api/utils.ts`, `src/api/index.ts`, `src/features/admin/recruitment/utils/apiMappers.ts` | `src/features/admin/recruitment/__tests__/recruitmentDataLayer.test.tsx` | Universal parseListResponse and extractItems supporting {items,total,page,limit} and raw arrays |
+| **F-02.5** | DONE | `src/api/apiInstance.ts`, `src/features/admin/recruitment/hooks/useRecruitment.ts` | None | All logging isolated to import.meta.env.DEV, duplicate effect dependencies removed |
 | **F-03.1** | TODO | None | None | AIScreeningPage remove fake default thresholds & silent 404 swallow |
 | **F-03.2** | TODO | None | None | Score display cleanups, round to integer, no double rescale |
 | **F-03.3** | TODO | None | None | Remove dead weight sliders; replace with read-only criteria card |

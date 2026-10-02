@@ -1,6 +1,7 @@
 import { statusBadgeClass } from "@/lib/status-styles";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useParams, useNavigate } from "@tanstack/react-router";
+import { usePoller } from "@/hooks/usePoller";
 import {
   AlertCircle,
   AlertTriangle,
@@ -271,46 +272,20 @@ export function PayrollProcessingPage() {
       setLoadingInitial(false);
       return;
     }
-
-    // Initial fetch
-    fetchStatus(false);
-
-    // Set up polling interval every 4000ms
-    const interval = window.setInterval(() => {
-      // Do not poll if the run has reached a terminal state or service is unavailable
-      setRunData((current) => {
-        if (current && isTerminalStatus(current.status)) {
-          if (pollingTimerRef.current) {
-            window.clearInterval(pollingTimerRef.current);
-            pollingTimerRef.current = null;
-          }
-          return current;
-        }
-        // Run poll
-        fetchStatus(true);
-        return current;
-      });
-    }, 4000);
-
-    pollingTimerRef.current = interval;
-
-    return () => {
-      if (pollingTimerRef.current) {
-        window.clearInterval(pollingTimerRef.current);
-        pollingTimerRef.current = null;
-      }
-    };
+    void fetchStatus(false);
   }, [runId, fetchStatus]);
 
-  // Clean up polling if run reaches terminal state
-  useEffect(() => {
-    if (runData && isTerminalStatus(runData.status)) {
-      if (pollingTimerRef.current) {
-        window.clearInterval(pollingTimerRef.current);
-        pollingTimerRef.current = null;
-      }
-    }
-  }, [runData]);
+  usePoller(
+    useCallback(async () => {
+      if (runData && isTerminalStatus(runData.status)) return;
+      await fetchStatus(true);
+    }, [runData, fetchStatus]),
+    {
+      intervalMs: 4000,
+      maxIntervalMs: 15000,
+      enabled: Boolean(runId && (!runData || !isTerminalStatus(runData.status))),
+    },
+  );
 
   // ── Cancel Run Handler ──────────────────────────────────────────────
   const handleConfirmCancel = async () => {

@@ -19,6 +19,7 @@ import { RejectDialog } from "../components/RejectDialog";
 import { ApproveDialog } from "../components/ApproveDialog";
 import { CancelLeaveDialog } from "../components/CancelLeaveDialog";
 import { cn } from "@/lib/utils";
+import { usePoller } from "@/hooks/usePoller";
 
 export function LeavesPage() {
   const ws = useAurix();
@@ -230,31 +231,16 @@ export function LeavesPage() {
     }
   }, [capabilities.canReview, loadPendingApprovals]);
 
-  // Review queue 30s polling + pause when document.hidden
-  useEffect(() => {
-    if (!capabilities.canReview || activeTab !== "approvals") return;
-
-    void loadPendingApprovals();
-
-    const interval = window.setInterval(() => {
-      if (!document.hidden) {
-        void loadPendingApprovals();
-      }
-    }, 30_000);
-
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        void loadPendingApprovals();
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      window.clearInterval(interval);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [capabilities.canReview, activeTab, loadPendingApprovals]);
+  // Review queue 30s self-scheduling polling with backoff & visibility pause
+  usePoller(
+    useCallback(async () => {
+      await loadPendingApprovals();
+    }, [loadPendingApprovals]),
+    {
+      intervalMs: 30_000,
+      enabled: Boolean(capabilities.canReview && activeTab === "approvals"),
+    },
+  );
 
   // Approve action confirmed
   const handleApproveConfirm = async (id: string) => {
