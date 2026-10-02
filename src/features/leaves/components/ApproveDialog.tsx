@@ -31,10 +31,10 @@ export function ApproveDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md border border-border bg-card/95 backdrop-blur-2xl text-foreground">
+      <DialogContent className="max-w-md border border-border bg-card text-foreground">
         <DialogHeader>
           <DialogTitle className="text-base font-bold flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+            <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             Confirm Leave Approval
           </DialogTitle>
           <DialogDescription className="text-xs">
@@ -53,7 +53,7 @@ export function ApproveDialog({
           </div>
           <div className="flex justify-between border-b border-border/50 pb-2">
             <span className="text-muted-foreground text-xs">Leave Type:</span>
-            <span className="font-medium text-indigo-400">{targetLeave.leave_type}</span>
+            <span className="font-medium text-primary">{targetLeave.leave_type}</span>
           </div>
           <div className="flex justify-between border-b border-border/50 pb-2">
             <span className="text-muted-foreground text-xs">Duration:</span>
@@ -65,7 +65,7 @@ export function ApproveDialog({
           {targetLeave.reason && (
             <div className="pt-1">
               <span className="text-muted-foreground text-xs block mb-1">Reason:</span>
-              <p className="text-xs bg-muted/20 p-2.5 rounded-lg border border-border/40 text-foreground">
+              <p className="text-xs bg-muted/40 p-2.5 rounded-lg border border-border text-foreground">
                 {targetLeave.reason}
               </p>
             </div>
@@ -77,13 +77,12 @@ export function ApproveDialog({
             variant="ghost"
             disabled={loading}
             onClick={() => onOpenChange(false)}
-            className="text-muted-foreground hover:text-foreground"
           >
             Cancel
           </Button>
           <Button
             disabled={loading}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white gap-2"
+            className="gap-2"
             onClick={() => onConfirm(targetLeave.id)}
           >
             {loading && <RefreshCw className="h-4 w-4 animate-spin" />}

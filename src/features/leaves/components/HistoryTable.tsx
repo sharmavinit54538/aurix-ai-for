@@ -4,8 +4,9 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Ban, RefreshCw } from "lucide-react";
-import type { LeaveRequest, LeaveStatus } from "../types";
-import { formatDateStr, isLeaveCancellable, getTodayDateString } from "../mappers";
+import type { LeaveRequest } from "../types";
+import { formatDateStr, isLeaveCancellable, getTodayDateString, statusBadgeClass } from "../mappers";
+import { cn } from "@/lib/utils";
 
 interface HistoryTableProps {
   history: LeaveRequest[];
@@ -26,53 +27,9 @@ export function HistoryTable({
 }: HistoryTableProps) {
   const todayStr = getTodayDateString();
 
-  const renderStatusBadge = (status: LeaveStatus) => {
-    switch (status) {
-      case "approved":
-        return (
-          <Badge
-            variant="secondary"
-            className="text-xs capitalize bg-emerald-500/15 text-emerald-500 border border-emerald-500/30"
-          >
-            approved
-          </Badge>
-        );
-      case "rejected":
-        return (
-          <Badge variant="destructive" className="text-xs capitalize">
-            rejected
-          </Badge>
-        );
-      case "pending":
-        return (
-          <Badge
-            variant="outline"
-            className="text-xs capitalize bg-amber-500/15 text-amber-500 border border-amber-500/30"
-          >
-            pending
-          </Badge>
-        );
-      case "cancelled":
-        return (
-          <Badge
-            variant="outline"
-            className="text-xs capitalize bg-muted text-muted-foreground border-border"
-          >
-            cancelled
-          </Badge>
-        );
-      default:
-        return (
-          <Badge variant="outline" className="text-xs capitalize">
-            {status}
-          </Badge>
-        );
-    }
-  };
-
   if (error) {
     return (
-      <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-center space-y-3">
+      <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-6 text-center space-y-3">
         <div className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-destructive/10 text-destructive">
           <AlertCircle className="h-5 w-5" />
         </div>
@@ -87,7 +44,7 @@ export function HistoryTable({
             size="sm"
             variant="outline"
             onClick={onRetry}
-            className="gap-2 border-destructive/20 hover:bg-destructive/10 text-destructive text-xs"
+            className="gap-2 text-xs"
           >
             <RefreshCw className="h-3.5 w-3.5" />
             Retry
@@ -104,9 +61,9 @@ export function HistoryTable({
           Leave Applications History
         </h3>
       </div>
-      <Card className="border border-border bg-card/50 backdrop-blur-md overflow-hidden">
+      <Card className="border border-border bg-card overflow-hidden">
         <Table>
-          <TableHeader className="bg-muted/20">
+          <TableHeader className="bg-muted/40">
             <TableRow>
               <TableHead className="pl-6 py-4">Leave Type</TableHead>
               <TableHead className="py-4">Dates Range</TableHead>
@@ -124,7 +81,7 @@ export function HistoryTable({
               return (
                 <TableRow
                   key={rec.id}
-                  className="border-b border-border/80 hover:bg-muted/5 transition-all"
+                  className="border-b border-border/80 hover:bg-muted/30 transition-all"
                 >
                   <TableCell className="pl-6 py-4 font-semibold text-foreground">
                     {rec.leave_type}
@@ -139,12 +96,17 @@ export function HistoryTable({
                     {rec.reason}
                   </TableCell>
                   <TableCell className="py-4">
-                    {renderStatusBadge(rec.status)}
+                    <Badge
+                      variant="outline"
+                      className={cn("text-xs capitalize border", statusBadgeClass(rec.status))}
+                    >
+                      {rec.status}
+                    </Badge>
                   </TableCell>
                   <TableCell className="pr-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                       {rec.status === "rejected" && rec.rejection_reason && (
-                        <div className="text-xs text-rose-500 flex items-center gap-1.5 justify-end">
+                        <div className="text-xs text-destructive flex items-center gap-1.5 justify-end">
                           <AlertCircle className="h-3.5 w-3.5 shrink-0" /> Reason: {rec.rejection_reason}
                         </div>
                       )}
@@ -155,7 +117,7 @@ export function HistoryTable({
                           size="sm"
                           disabled={isCancelling}
                           onClick={() => onCancelRequest(rec)}
-                          className="h-8 text-xs text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 gap-1"
+                          className="h-8 text-xs gap-1"
                         >
                           <Ban className="h-3.5 w-3.5" />
                           {isCancelling ? "Cancelling..." : "Cancel"}
@@ -179,7 +141,7 @@ export function HistoryTable({
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
                   <div className="flex items-center justify-center gap-2">
-                    <RefreshCw className="h-4 w-4 animate-spin text-indigo-500" />
+                    <RefreshCw className="h-4 w-4 animate-spin text-primary" />
                     <span>Loading leave history...</span>
                   </div>
                 </TableCell>

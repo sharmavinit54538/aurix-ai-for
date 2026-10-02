@@ -152,39 +152,42 @@ export function isLeaveCancellable(
   return false;
 }
 
-export interface LeaveTypeColorConfig {
-  cardClass: string;
-  progressClass: string;
+/**
+ * Rule 4: Distinguish leave types by an 8px dot via lookup map.
+ * Sick -> amber, Casual -> emerald, Vacation -> primary.
+ * Unknown type -> bg-muted-foreground.
+ */
+export const LEAVE_TYPE_DOT: Record<string, string> = {
+  "Sick Leave": "bg-amber-500",
+  "Casual Leave": "bg-emerald-500",
+  "Vacation Leave": "bg-primary",
+};
+
+export function getLeaveTypeDot(leaveType: string): string {
+  return LEAVE_TYPE_DOT[leaveType] || "bg-muted-foreground";
 }
 
 /**
- * Direct lookup map by exact leave type name (not string includes).
+ * Rule 5: Standard status badge classes across the entire leaves feature.
+ * approved  -> bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20
+ * pending   -> bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20
+ * rejected  -> bg-destructive/10 text-destructive border-destructive/20
+ * cancelled -> bg-muted text-muted-foreground border-border
  */
-export const LEAVE_TYPE_COLOR_MAP: Record<string, LeaveTypeColorConfig> = {
-  "Sick Leave": {
-    cardClass: "from-amber-500/10 to-orange-500/5 text-orange-500 border-orange-500/20",
-    progressClass: "bg-orange-500",
-  },
-  "Casual Leave": {
-    cardClass: "from-sky-500/10 to-blue-500/5 text-sky-500 border-sky-500/20",
-    progressClass: "bg-sky-500",
-  },
-  "Vacation Leave": {
-    cardClass: "from-emerald-500/10 to-teal-500/5 text-emerald-500 border-emerald-500/20",
-    progressClass: "bg-emerald-500",
-  },
-};
-
-export const DEFAULT_LEAVE_TYPE_COLOR: LeaveTypeColorConfig = {
-  cardClass: "from-slate-500/10 to-zinc-500/5 text-foreground border-border",
-  progressClass: "bg-muted-foreground",
-};
-
-/**
- * Returns color tokens for leave type; falls back to neutral styling for unknown types.
- */
-export function getLeaveTypeColor(leaveType: string): LeaveTypeColorConfig {
-  return LEAVE_TYPE_COLOR_MAP[leaveType] || DEFAULT_LEAVE_TYPE_COLOR;
+export function statusBadgeClass(status?: string | null): string {
+  const s = String(status || "").toLowerCase().trim();
+  switch (s) {
+    case "approved":
+      return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20";
+    case "pending":
+      return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20";
+    case "rejected":
+      return "bg-destructive/10 text-destructive border-destructive/20";
+    case "cancelled":
+      return "bg-muted text-muted-foreground border-border";
+    default:
+      return "bg-muted text-muted-foreground border-border";
+  }
 }
 
 /**

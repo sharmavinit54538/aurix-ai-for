@@ -129,16 +129,16 @@ export function AllBalancesPanel() {
             placeholder="Search employees..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 bg-background/50 border border-border"
+            className="pl-9"
           />
         </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
         {/* Left Column: List of Employees */}
-        <Card className="border border-border bg-card/50 backdrop-blur-md md:col-span-2 overflow-hidden">
+        <Card className="border border-border bg-card md:col-span-2 overflow-hidden">
           <Table>
-            <TableHeader className="bg-muted/20">
+            <TableHeader className="bg-muted/40">
               <TableRow>
                 <TableHead className="pl-6 py-4">Employee ID</TableHead>
                 <TableHead className="py-4">Name</TableHead>
@@ -152,7 +152,7 @@ export function AllBalancesPanel() {
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
                     <div className="flex items-center justify-center gap-2">
-                      <RefreshCw className="h-4 w-4 animate-spin text-indigo-500" />
+                      <RefreshCw className="h-4 w-4 animate-spin text-primary" />
                       <span>Loading employees...</span>
                     </div>
                   </TableCell>
@@ -171,7 +171,7 @@ export function AllBalancesPanel() {
                         onClick={() => fetchEmployees(debouncedQuery)}
                         className="text-xs gap-1"
                       >
-                        <RefreshCw className="h-3 w-3" />
+                        <RefreshCw className="h-3.5 w-3.5" />
                         Retry
                       </Button>
                     </div>
@@ -182,9 +182,9 @@ export function AllBalancesPanel() {
               {!employeesLoading && !employeesError && employees.map((emp) => (
                 <TableRow
                   key={emp.id}
-                  className={`border-b border-border/80 hover:bg-muted/5 transition-all cursor-pointer ${
+                  className={`border-b border-border/80 hover:bg-muted/30 transition-all cursor-pointer ${
                     selectedEmp?.id === emp.id
-                      ? "bg-indigo-500/5 hover:bg-indigo-500/5 border-l-2 border-l-indigo-500"
+                      ? "bg-muted border-l-2 border-l-primary"
                       : ""
                   }`}
                   onClick={() => handleSelectEmployee(emp)}
@@ -197,7 +197,7 @@ export function AllBalancesPanel() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-8 text-indigo-400"
+                      className="h-8 text-primary"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleSelectEmployee(emp);
@@ -221,10 +221,10 @@ export function AllBalancesPanel() {
         </Card>
 
         {/* Right Column: Selected Employee Balances */}
-        <Card className="border border-border bg-card/40 backdrop-blur-xl h-fit">
+        <Card className="border border-border bg-card h-fit">
           <CardHeader>
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <UserCheck className="h-4 w-4 text-indigo-500" />
+              <UserCheck className="h-4 w-4 text-primary" />
               Detailed Balances
             </CardTitle>
             <CardDescription>
@@ -237,7 +237,7 @@ export function AllBalancesPanel() {
             {selectedEmp ? (
               empBalancesLoading ? (
                 <div className="flex flex-col items-center justify-center py-10 space-y-2">
-                  <RefreshCw className="h-5 w-5 animate-spin text-indigo-500" />
+                  <RefreshCw className="h-5 w-5 animate-spin text-primary" />
                   <span className="text-xs text-muted-foreground">Fetching records...</span>
                 </div>
               ) : (
@@ -245,11 +245,14 @@ export function AllBalancesPanel() {
                   {empBalances.map((b) => (
                     <div
                       key={b.leave_type}
-                      className="border border-border/80 bg-background/50 rounded-lg p-3 space-y-1"
+                      className="border border-border/80 bg-muted/30 rounded-lg p-3 space-y-1"
                     >
                       <div className="flex justify-between items-center text-xs">
                         <span className="font-semibold text-foreground">{b.leave_type}</span>
-                        <Badge className="font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                        <Badge
+                          variant="outline"
+                          className="font-semibold bg-primary/10 text-primary border-primary/20"
+                        >
                           {b.remaining_days} remaining
                         </Badge>
                       </div>

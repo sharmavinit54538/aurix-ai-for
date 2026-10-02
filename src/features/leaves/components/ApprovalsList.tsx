@@ -4,7 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, CheckCircle2, XCircle, RefreshCw, ShieldCheck } from "lucide-react";
 import type { LeaveRequest } from "../types";
-import { formatDateStr, getSafeInitial } from "../mappers";
+import { formatDateStr, getSafeInitial, statusBadgeClass } from "../mappers";
+import { cn } from "@/lib/utils";
 
 interface ApprovalsListProps {
   approvals: LeaveRequest[];
@@ -33,7 +34,10 @@ export function ApprovalsList({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge className="bg-amber-500/20 text-amber-500 border border-amber-500/30">
+          <Badge
+            variant="outline"
+            className={cn("border", statusBadgeClass("pending"))}
+          >
             {approvals.length} Pending
           </Badge>
           <Button
@@ -58,12 +62,12 @@ export function ApprovalsList({
           return (
             <Card
               key={req.id}
-              className="border border-border bg-card/60 backdrop-blur-md overflow-hidden hover:shadow-md transition-shadow"
+              className="border border-border bg-card overflow-hidden hover:shadow-md transition-shadow"
             >
               <div className="p-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex items-start gap-4">
-                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-sky-500 text-white font-semibold">
+                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 text-primary font-semibold">
                       {initial}
                     </div>
                     <div>
@@ -73,8 +77,12 @@ export function ApprovalsList({
                           {req.department}
                         </Badge>
                       </div>
-                      <div className="text-xs text-muted-foreground font-semibold text-indigo-400 mt-1 flex items-center gap-1.5">
-                        <Clock className="h-3.5 w-3.5" /> {req.leave_type} ({req.total_days} days)
+                      <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
+                        <Clock className="h-3.5 w-3.5" />
+                        <span>{req.leave_type}</span>
+                        <span>
+                          (<span className="text-foreground font-medium">{req.total_days} days</span>)
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -98,7 +106,7 @@ export function ApprovalsList({
                       variant="outline"
                       size="sm"
                       disabled={isAnyRowLoading}
-                      className="text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/10 hover:text-emerald-400"
+                      className="text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400 gap-1.5"
                       onClick={() => onApproveClick(req)}
                     >
                       {isRowLoading ? (
@@ -112,7 +120,7 @@ export function ApprovalsList({
                       variant="outline"
                       size="sm"
                       disabled={isAnyRowLoading}
-                      className="text-rose-500 border-rose-500/20 hover:bg-rose-500/10 hover:text-rose-400"
+                      className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive gap-1.5"
                       onClick={() => onRejectClick(req)}
                     >
                       {isRowLoading ? (
@@ -130,11 +138,11 @@ export function ApprovalsList({
         })}
 
         {approvals.length === 0 && !loading && (
-          <div className="rounded-2xl border border-dashed border-border bg-card/40 p-12 text-center">
+          <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
             <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-xl bg-muted text-muted-foreground">
               <ShieldCheck className="h-5 w-5" />
             </div>
-            <p className="font-medium">All caught up!</p>
+            <p className="font-medium text-foreground">All caught up!</p>
             <p className="mt-1 text-sm text-muted-foreground">
               There are no pending leave requests for your review.
             </p>

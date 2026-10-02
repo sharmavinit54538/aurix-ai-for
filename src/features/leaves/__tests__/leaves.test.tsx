@@ -424,4 +424,33 @@ describe("Leaves Feature Test Suite", () => {
       expect(screen.getByText("10 remaining")).toBeInTheDocument();
     });
   });
+
+  // 8. Visual Consistency & Token Mapping (Rules 4, 5, 6)
+  describe("8. Theme token classes and visual consistency", () => {
+    it("returns correct statusBadgeClass for all states", async () => {
+      const { statusBadgeClass } = await import("../mappers");
+      expect(statusBadgeClass("approved")).toBe(
+        "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+      );
+      expect(statusBadgeClass("pending")).toBe(
+        "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+      );
+      expect(statusBadgeClass("rejected")).toBe(
+        "bg-destructive/10 text-destructive border-destructive/20"
+      );
+      expect(statusBadgeClass("cancelled")).toBe(
+        "bg-muted text-muted-foreground border-border"
+      );
+    });
+
+    it("maps 8px dot colors accurately per rule 4", async () => {
+      const { getLeaveTypeDot } = await import("../mappers");
+      expect(getLeaveTypeDot("Sick Leave")).toBe("bg-amber-500");
+      expect(getLeaveTypeDot("Casual Leave")).toBe("bg-emerald-500");
+      expect(getLeaveTypeDot("Vacation Leave")).toBe("bg-primary");
+      expect(getLeaveTypeDot("Special Leave")).toBe("bg-muted-foreground");
+    });
+  });
 });
+
+

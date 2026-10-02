@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
 import type { LeaveBalance, LeaveRequest, LeaveCapabilities } from "../types";
-import { mapLeave, mapBalance } from "../mappers";
+import { mapLeave, mapBalance, statusBadgeClass } from "../mappers";
 import { BalanceCards } from "../components/BalanceCards";
 import { HistoryTable } from "../components/HistoryTable";
 import { ApprovalsList } from "../components/ApprovalsList";
@@ -18,6 +18,7 @@ import { ApplyLeaveDialog } from "../components/ApplyLeaveDialog";
 import { RejectDialog } from "../components/RejectDialog";
 import { ApproveDialog } from "../components/ApproveDialog";
 import { CancelLeaveDialog } from "../components/CancelLeaveDialog";
+import { cn } from "@/lib/utils";
 
 export function LeavesPage() {
   const ws = useAurix();
@@ -289,7 +290,7 @@ export function LeavesPage() {
         rejection_reason: reason,
       });
       if (res?.success !== false) {
-        toast.success("Leave request rejected."); // Exact requested wording
+        toast.success("Leave request rejected.");
         // Optimistic removal from list only after success
         setApprovals((prev) => prev.filter((item) => item.id !== id));
         setRejectTarget(null);
@@ -329,10 +330,10 @@ export function LeavesPage() {
 
   return (
     <>
-      {/* Informational banner when employee profile is not found (Task 5) */}
+      {/* Informational banner when employee profile is not found (Rule 10) */}
       {noEmployeeProfile && (
-        <div className="mb-6 rounded-xl border border-sky-500/20 bg-sky-500/10 p-4 text-sky-400 flex items-start gap-3">
-          <Info className="h-5 w-5 shrink-0 mt-0.5" />
+        <div className="mb-6 rounded-xl border border-border bg-muted p-4 text-foreground flex items-start gap-3">
+          <Info className="h-5 w-5 shrink-0 mt-0.5 text-muted-foreground" />
           <div>
             <h4 className="font-semibold text-sm text-foreground">Employee Profile Not Found</h4>
             <p className="text-xs text-muted-foreground mt-0.5">
@@ -342,28 +343,29 @@ export function LeavesPage() {
         </div>
       )}
 
-      {/* Top action bar: Apply for Leave is hidden if user has no employee profile */}
+      {/* Top action bar: Apply for Leave uses default Button variant (Rule 1) */}
       {capabilities.canApply && (
         <div className="flex justify-end mb-4">
           <Button
             onClick={() => setApplyOpen(true)}
-            className="gap-2 bg-indigo-600 hover:bg-indigo-500 text-white"
+            className="gap-2"
           >
             <Plus className="h-4 w-4" /> Apply for Leave
           </Button>
         </div>
       )}
 
-      {/* Tab controls derived from unified capabilities object */}
+      {/* Tab controls derived from unified capabilities object (Rule 12) */}
       {(capabilities.canReview || capabilities.canViewAllBalances) && (
-        <div className="mb-6 flex border-b border-border bg-muted/20 p-1 rounded-xl max-w-md">
+        <div className="mb-6 flex border border-border bg-muted p-1 rounded-xl max-w-md">
           <button
             onClick={() => setActiveTab("my-leaves")}
-            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
+            className={cn(
+              "flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all",
               activeTab === "my-leaves"
                 ? "bg-background text-foreground shadow"
                 : "text-muted-foreground hover:text-foreground"
-            }`}
+            )}
           >
             My Leaves
           </button>
@@ -371,15 +373,19 @@ export function LeavesPage() {
           {capabilities.canReview && (
             <button
               onClick={() => setActiveTab("approvals")}
-              className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
+              className={cn(
+                "flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all",
                 activeTab === "approvals"
                   ? "bg-background text-foreground shadow"
                   : "text-muted-foreground hover:text-foreground"
-              }`}
+              )}
             >
               Review Requests
               {approvals.length > 0 && (
-                <Badge className="ml-2 bg-amber-500/20 text-amber-500 border border-amber-500/30">
+                <Badge
+                  variant="outline"
+                  className={cn("ml-2 border", statusBadgeClass("pending"))}
+                >
                   {approvals.length}
                 </Badge>
               )}
@@ -389,11 +395,12 @@ export function LeavesPage() {
           {capabilities.canViewAllBalances && (
             <button
               onClick={() => setActiveTab("employee-balances")}
-              className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
+              className={cn(
+                "flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all",
                 activeTab === "employee-balances"
                   ? "bg-background text-foreground shadow"
                   : "text-muted-foreground hover:text-foreground"
-              }`}
+              )}
             >
               All Balances
             </button>
@@ -478,7 +485,7 @@ export function LeavesPage() {
         }}
       />
 
-      {/* Approve Confirm Dialog (Task 6) */}
+      {/* Approve Confirm Dialog (Rule 1 & 2) */}
       <ApproveDialog
         open={Boolean(approveTarget)}
         onOpenChange={(open) => {
@@ -489,7 +496,7 @@ export function LeavesPage() {
         loading={Boolean(actionLoadingId)}
       />
 
-      {/* Reject Reason Dialog */}
+      {/* Reject Reason Dialog (Rule 6) */}
       <RejectDialog
         open={Boolean(rejectTarget)}
         onOpenChange={(open) => {
@@ -500,7 +507,7 @@ export function LeavesPage() {
         loading={Boolean(actionLoadingId)}
       />
 
-      {/* Cancel Leave Confirm Dialog (Task 9) */}
+      {/* Cancel Leave Confirm Dialog (Rule 6) */}
       <CancelLeaveDialog
         open={Boolean(cancelTarget)}
         onOpenChange={(open) => {

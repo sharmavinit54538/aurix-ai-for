@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import type { LeaveRequest } from "../types";
 
@@ -42,10 +43,10 @@ export function RejectDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md border border-border bg-card/95 backdrop-blur-2xl text-foreground">
+      <DialogContent className="max-w-md border border-border bg-card text-foreground">
         <DialogHeader>
           <DialogTitle className="text-base font-bold flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-rose-500" />
+            <AlertCircle className="h-5 w-5 text-destructive" />
             Reason for Rejection
           </DialogTitle>
           <DialogDescription className="text-xs">
@@ -61,12 +62,12 @@ export function RejectDialog({
           <Label htmlFor="reject-textarea" className="sr-only">
             Rejection Reason
           </Label>
-          <textarea
+          <Textarea
             id="reject-textarea"
             value={rejectionReason}
             disabled={loading}
             placeholder="e.g. Project deliverable schedules are tight during these dates..."
-            className="w-full min-h-[100px] bg-background/50 border border-border rounded-lg p-3 text-sm focus:ring-1 focus:ring-rose-500 focus:outline-none"
+            className="min-h-[100px]"
             onChange={(e) => setRejectionReason(e.target.value)}
           />
         </div>
@@ -76,13 +77,13 @@ export function RejectDialog({
             variant="ghost"
             disabled={loading}
             onClick={() => onOpenChange(false)}
-            className="text-muted-foreground hover:text-foreground"
           >
             Cancel
           </Button>
           <Button
+            variant="destructive"
             disabled={loading || !rejectionReason.trim()}
-            className="bg-rose-600 hover:bg-rose-500 text-white gap-2"
+            className="gap-2"
             onClick={handleConfirm}
           >
             {loading && <RefreshCw className="h-4 w-4 animate-spin" />}

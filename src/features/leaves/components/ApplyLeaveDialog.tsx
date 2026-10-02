@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -114,10 +115,10 @@ export function ApplyLeaveDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md border border-border bg-card/95 backdrop-blur-2xl text-foreground">
+      <DialogContent className="max-w-md border border-border bg-card text-foreground">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl font-bold">
-            <Calendar className="h-5 w-5 text-indigo-500" />
+            <Calendar className="h-5 w-5 text-primary" />
             Apply for Leave
           </DialogTitle>
           <DialogDescription className="text-xs">
@@ -140,7 +141,7 @@ export function ApplyLeaveDialog({
               </span>
             </div>
             <Select value={leaveType} onValueChange={setLeaveType}>
-              <SelectTrigger className="bg-background/50 border border-border">
+              <SelectTrigger>
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
@@ -169,7 +170,6 @@ export function ApplyLeaveDialog({
                 min={minStartDate}
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="bg-background/50 border border-border"
               />
             </div>
             <div className="space-y-2">
@@ -186,16 +186,15 @@ export function ApplyLeaveDialog({
                 min={minEndDate}
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="bg-background/50 border border-border"
               />
             </div>
           </div>
 
           {/* Estimated Days Preview */}
           {calculatedDays > 0 && (
-            <div className="p-3 bg-indigo-500/5 border border-indigo-500/10 rounded-lg flex items-center justify-between text-sm">
+            <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg flex items-center justify-between text-sm">
               <span className="text-muted-foreground text-xs">Estimated Duration:</span>
-              <span className="font-bold text-indigo-500 tabular-nums">
+              <span className="font-bold text-primary tabular-nums">
                 {calculatedDays} {calculatedDays === 1 ? "day" : "days"} (estimated)
               </span>
             </div>
@@ -203,7 +202,7 @@ export function ApplyLeaveDialog({
 
           {/* Insufficient balance warning (warns, does not block) */}
           {isExceedingBalance && (
-            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-start gap-2.5 text-xs text-amber-500">
+            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-start gap-2.5 text-xs text-amber-600 dark:text-amber-400">
               <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
               <p>
                 <strong>Balance Warning:</strong> Requested {calculatedDays} days exceed your remaining{" "}
@@ -220,13 +219,13 @@ export function ApplyLeaveDialog({
             >
               Reason for absence
             </Label>
-            <textarea
+            <Textarea
               id="apply-reason-input"
               required
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Describe why you need time off (min 5 characters)..."
-              className="w-full min-h-[90px] bg-background/50 border border-border rounded-lg p-3 text-sm focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+              className="min-h-[90px]"
             />
           </div>
 
@@ -235,14 +234,12 @@ export function ApplyLeaveDialog({
               type="button"
               variant="ghost"
               onClick={() => onOpenChange(false)}
-              className="text-muted-foreground hover:text-foreground"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={loading || calculatedDays <= 0 || reason.trim().length < 5}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white"
             >
               {loading ? "Submitting..." : "Submit Application"}
             </Button>

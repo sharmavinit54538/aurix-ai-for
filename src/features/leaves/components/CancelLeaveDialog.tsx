@@ -31,10 +31,10 @@ export function CancelLeaveDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md border border-border bg-card/95 backdrop-blur-2xl text-foreground">
+      <DialogContent className="max-w-md border border-border bg-card text-foreground">
         <DialogHeader>
           <DialogTitle className="text-base font-bold flex items-center gap-2">
-            <Ban className="h-5 w-5 text-rose-500" />
+            <Ban className="h-5 w-5 text-destructive" />
             Cancel Leave Application
           </DialogTitle>
           <DialogDescription className="text-xs">
@@ -66,13 +66,13 @@ export function CancelLeaveDialog({
             variant="ghost"
             disabled={loading}
             onClick={() => onOpenChange(false)}
-            className="text-muted-foreground hover:text-foreground"
           >
             Keep Leave
           </Button>
           <Button
+            variant="destructive"
             disabled={loading}
-            className="bg-rose-600 hover:bg-rose-500 text-white gap-2"
+            className="gap-2"
             onClick={() => onConfirm(targetLeave.id)}
           >
             {loading && <RefreshCw className="h-4 w-4 animate-spin" />}
