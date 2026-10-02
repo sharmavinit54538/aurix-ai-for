@@ -1,0 +1,1 @@
+import"./rolldown-runtime-CNC7AqOf.js";import{T as e}from"./charts-vendor-Dnfskr5S.js";import{r as t}from"./motion-vendor-DjtcNk_C.js";import{t as n}from"./ExecutiveRoleDashboardView-BN3_YLNb.js";e();var r=t();function i(){return(0,r.jsx)(n,{role:`cfo`})}var a=i;export{a as component};

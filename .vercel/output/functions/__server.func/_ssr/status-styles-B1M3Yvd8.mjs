@@ -1,0 +1,35 @@
+//#region node_modules/.nitro/vite/services/ssr/assets/status-styles-B1M3Yvd8.js
+/**
+* Single source of truth for semantic status badge classes across the application.
+*/
+function statusBadgeClass(status) {
+	switch ((status ?? "").toLowerCase().trim()) {
+		case "approved":
+		case "active":
+		case "positive":
+		case "success":
+		case "healthy":
+		case "completed":
+		case "paid": return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20";
+		case "pending":
+		case "warning":
+		case "warn":
+		case "medium":
+		case "at_risk":
+		case "in_progress":
+		case "processing": return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20";
+		case "rejected":
+		case "failed":
+		case "critical":
+		case "crit":
+		case "high":
+		case "negative":
+		case "overdue": return "bg-destructive/10 text-destructive border-destructive/20";
+		default: return "bg-muted text-muted-foreground border-border";
+	}
+}
+function trendTextClass(positive) {
+	return positive ? "text-emerald-600 dark:text-emerald-400" : "text-destructive";
+}
+//#endregion
+export { trendTextClass as n, statusBadgeClass as t };

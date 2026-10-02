@@ -1,0 +1,1 @@
+var e=[`applied`,`screening`,`assessment`,`interview`,`technical`,`hr`,`offer`,`hired`,`rejected`],t={applied:`Applied`,screening:`Screening`,assessment:`Assessment`,interview:`Interview`,technical:`Technical Round`,hr:`HR Round`,offer:`Offer`,hired:`Hired`,rejected:`Rejected`};export{t as n,e as t};

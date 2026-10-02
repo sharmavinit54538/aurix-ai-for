@@ -1,0 +1,2 @@
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/CtoPortalPage-11iaHeCS.js","assets/rolldown-runtime-CNC7AqOf.js","assets/charts-vendor-Dnfskr5S.js","assets/react-vendor-u58UYiPA.js","assets/motion-vendor-DjtcNk_C.js","assets/index-DznlvB3D.js","assets/input-Bgfv577D.js","assets/badge-pSOsxWcn.js"])))=>i.map(i=>d[i]);
+import{m as e}from"./index-DznlvB3D.js";import{t}from"./lazyFeaturePage-BwCV6sIl.js";var n=t(()=>e(()=>import(`./CtoPortalPage-11iaHeCS.js`),__vite__mapDeps([0,1,2,3,4,5,6,7])),`CtoPortalPage`);export{n as component};

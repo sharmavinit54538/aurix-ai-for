@@ -1,0 +1,1 @@
+import{r as e}from"./motion-vendor-DjtcNk_C.js";import{Wr as t,Zr as n}from"./index-DznlvB3D.js";import{t as r}from"./SuperAdminStates-BCaTEiDI.js";var i=e();function a(){return t()===`super_admin`?(0,i.jsx)(n,{}):(0,i.jsx)(r,{})}export{a as component};

@@ -1,0 +1,1 @@
+import{t as e}from"./VerifyResetOtpPage-Czru0mAV.js";var t=e;export{t as component};

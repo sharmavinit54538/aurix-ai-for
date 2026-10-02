@@ -1,0 +1,1 @@
+import{k as e}from"./react-vendor-u58UYiPA.js";import{r as t}from"./motion-vendor-DjtcNk_C.js";import{t as n}from"./DashboardShell-B5Wwm10N.js";var r=t();function i(){return(0,r.jsx)(n,{title:`AI Automation Workflows`,description:`Automate repetitive HR processes, leave approvals, document routing, and notifications using autonomous AI agents.`,icon:e})}export{i as component};

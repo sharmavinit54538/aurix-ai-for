@@ -1,0 +1,60 @@
+import { y as require_jsx_runtime } from "../_libs/@radix-ui/react-accordion+[...].mjs";
+import { Gn as FileCheck, Ut as LogOut, gr as ClipboardCheck, mi as Activity, mn as History, x as UserCheck } from "../_libs/lucide-react.mjs";
+import { t as ModuleHubView } from "./ModuleHubView-DR9XGfmj.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/dashboard.hr-operations.index-C5rAguGS.js
+var import_jsx_runtime = require_jsx_runtime();
+var HR_OPS_MODULES = [
+	{
+		id: "hr-ops-dashboard",
+		title: "HR Ops Command Center",
+		description: "Operational overview of active HR tasks, daily checklists, and SLA metrics.",
+		icon: Activity,
+		to: "/dashboard/hr-operations/command-center",
+		color: "from-blue-500/20 to-indigo-500/20 text-blue-400 border-blue-500/30"
+	},
+	{
+		id: "timeline",
+		title: "Employee Timeline",
+		description: "Track career history, promotions, department transfers, and milestone timelines.",
+		icon: History,
+		to: "/dashboard/hr-operations/timeline",
+		color: "from-violet-500/20 to-purple-500/20 text-violet-400 border-violet-500/30"
+	},
+	{
+		id: "visitor-management",
+		title: "Visitor Management",
+		description: "Visitor kiosk registration, host notifications, visitor passes, and security logs.",
+		icon: UserCheck,
+		to: "/dashboard/hr-operations/visitor-management",
+		color: "from-cyan-500/20 to-sky-500/20 text-cyan-400 border-cyan-500/30"
+	},
+	{
+		id: "onboarding",
+		title: "Onboarding Checklist",
+		description: "New hire orientation tasks, asset provisioning, document sign-offs, and welcome kits.",
+		icon: ClipboardCheck,
+		to: "/dashboard/hr-operations/onboarding",
+		color: "from-emerald-500/20 to-green-500/20 text-emerald-400 border-emerald-500/30"
+	},
+	{
+		id: "offboarding",
+		title: "Offboarding Workflow",
+		description: "Employee departure clearance, handover tasks, asset returns, and access revocation.",
+		icon: LogOut,
+		to: "/dashboard/hr-operations/offboarding",
+		color: "from-amber-500/20 to-orange-500/20 text-amber-400 border-amber-500/30"
+	},
+	{
+		id: "exit-management",
+		title: "Exit Management",
+		description: "Exit interview feedback, attrition analysis, final settlement approvals, and NOCs.",
+		icon: FileCheck,
+		to: "/dashboard/hr-operations/exit-management",
+		color: "from-rose-500/20 to-red-500/20 text-rose-400 border-rose-500/30"
+	}
+];
+function HrOperationsHubPage() {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ModuleHubView, { modules: HR_OPS_MODULES });
+}
+//#endregion
+export { HrOperationsHubPage as component };

@@ -1,0 +1,1 @@
+var e=[`January`,`February`,`March`,`April`,`May`,`June`,`July`,`August`,`September`,`October`,`November`,`December`];export{e as t};

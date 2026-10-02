@@ -1,0 +1,1 @@
+import{r as e}from"./motion-vendor-DjtcNk_C.js";import{ei as t}from"./index-DznlvB3D.js";var n=e();function r(){return(0,n.jsx)(t,{to:`/dashboard/settings/audit-logs`,replace:!0})}export{r as component};

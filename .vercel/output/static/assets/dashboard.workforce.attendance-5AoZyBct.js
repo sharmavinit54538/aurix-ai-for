@@ -1,0 +1,2 @@
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/AttendancePage-D9qbY-Pm.js","assets/rolldown-runtime-CNC7AqOf.js","assets/charts-vendor-Dnfskr5S.js","assets/react-vendor-u58UYiPA.js","assets/motion-vendor-DjtcNk_C.js","assets/index-DznlvB3D.js","assets/badge-pSOsxWcn.js","assets/attendanceApi-C-gksZ0q.js"])))=>i.map(i=>d[i]);
+import{m as e}from"./index-DznlvB3D.js";import{t}from"./lazyFeaturePage-BwCV6sIl.js";var n=t(()=>e(()=>import(`./AttendancePage-D9qbY-Pm.js`),__vite__mapDeps([0,1,2,3,4,5,6,7])));export{n as component};

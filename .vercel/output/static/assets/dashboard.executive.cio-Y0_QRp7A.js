@@ -1,0 +1,1 @@
+import{r as e}from"./motion-vendor-DjtcNk_C.js";import{Zr as t}from"./index-DznlvB3D.js";var n=e(),r=()=>(0,n.jsx)(t,{});export{r as component};

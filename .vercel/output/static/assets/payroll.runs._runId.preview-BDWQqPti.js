@@ -1,0 +1,1 @@
+import{r as e}from"./motion-vendor-DjtcNk_C.js";import{ei as t,ri as n}from"./index-DznlvB3D.js";var r=e();function i(){let{runId:e}=n({strict:!1});return(0,r.jsx)(t,{to:`/dashboard/payroll/runs/${e||``}/preview`,replace:!0})}export{i as component};

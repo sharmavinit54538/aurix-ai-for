@@ -1,0 +1,2 @@
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/CtoAnalyticsPage-6N0Orj3J.js","assets/rolldown-runtime-CNC7AqOf.js","assets/charts-vendor-Dnfskr5S.js","assets/motion-vendor-DjtcNk_C.js"])))=>i.map(i=>d[i]);
+import{m as e}from"./index-DznlvB3D.js";import{t}from"./lazyFeaturePage-BwCV6sIl.js";var n=t(()=>e(()=>import(`./CtoAnalyticsPage-6N0Orj3J.js`),__vite__mapDeps([0,1,2,3])),`CtoAnalyticsPage`);export{n as component};
