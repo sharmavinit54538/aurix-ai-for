@@ -152,43 +152,9 @@ export function isLeaveCancellable(
   return false;
 }
 
-/**
- * Rule 4: Distinguish leave types by an 8px dot via lookup map.
- * Sick -> amber, Casual -> emerald, Vacation -> primary.
- * Unknown type -> bg-muted-foreground.
- */
-export const LEAVE_TYPE_DOT: Record<string, string> = {
-  "Sick Leave": "bg-amber-500",
-  "Casual Leave": "bg-emerald-500",
-  "Vacation Leave": "bg-primary",
-};
+export { LEAVE_TYPE_DOT, getLeaveTypeDot } from "@/lib/color-maps";
+export { statusBadgeClass } from "@/lib/status-styles";
 
-export function getLeaveTypeDot(leaveType: string): string {
-  return LEAVE_TYPE_DOT[leaveType] || "bg-muted-foreground";
-}
-
-/**
- * Rule 5: Standard status badge classes across the entire leaves feature.
- * approved  -> bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20
- * pending   -> bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20
- * rejected  -> bg-destructive/10 text-destructive border-destructive/20
- * cancelled -> bg-muted text-muted-foreground border-border
- */
-export function statusBadgeClass(status?: string | null): string {
-  const s = String(status || "").toLowerCase().trim();
-  switch (s) {
-    case "approved":
-      return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20";
-    case "pending":
-      return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20";
-    case "rejected":
-      return "bg-destructive/10 text-destructive border-destructive/20";
-    case "cancelled":
-      return "bg-muted text-muted-foreground border-border";
-    default:
-      return "bg-muted text-muted-foreground border-border";
-  }
-}
 
 /**
  * Returns safe uppercase single letter avatar initial.
