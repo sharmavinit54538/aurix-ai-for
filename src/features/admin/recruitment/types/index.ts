@@ -102,6 +102,14 @@ export interface TimelineItem {
   actor?: string;
 }
 
+export interface CandidateApplication {
+  id: ID;
+  jobId: ID;
+  stage: Stage;
+  appliedPosition?: string;
+  appliedAt?: string;
+}
+
 export interface Candidate {
   id: ID;
   name: string;
@@ -136,6 +144,7 @@ export interface Candidate {
   documents: { name: string; type: string }[];
   timeline: TimelineItem[];
   appliedAt: string;
+  applications?: CandidateApplication[];
 }
 
 export type InterviewStatus = "scheduled" | "completed" | "cancelled" | "no-show";
@@ -191,6 +200,7 @@ export interface ScreeningResult {
   candidateId: ID;
   candidateName: string;
   status: ScreeningStatus;
+  error?: string | null;
   decision: ScreeningDecision | null;
   confidence: number;
   matchScore: number;
@@ -207,6 +217,7 @@ export interface ScreeningResult {
   humanDecision: HumanDecision | null;
   humanDecisionBy: string | null;
   humanDecisionReason: string | null;
+  humanDecidedAt?: string | null;
 }
 
 export interface ScreeningRun {
@@ -217,7 +228,7 @@ export interface ScreeningRun {
 }
 
 export interface ScreeningResultsData {
-  thresholds: ScreeningThresholds;
+  thresholds: ScreeningThresholds | null;
   run: ScreeningRun | null;
   results: ScreeningResult[];
 }

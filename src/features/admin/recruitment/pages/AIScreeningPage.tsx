@@ -1,8 +1,7 @@
 import { statusBadgeClass } from "@/lib/status-styles";
-import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import {
   Sparkles,
-  Sliders,
   GitCompare,
   Check,
   X,
@@ -15,12 +14,12 @@ import {
   TrendingUp,
   AlertOctagon,
   CheckCircle,
+  ShieldAlert,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
@@ -56,6 +55,7 @@ export interface CandidateScreeningView {
   stage?: string;
   isScreened: boolean;
   status: ScreeningStatus | "NOT_SCREENED";
+  error?: string | null;
   decision: "SHORTLIST" | "REVIEW" | "REJECT" | null;
   confidence: number;
   matchScore: number | null;
@@ -85,6 +85,7 @@ export function AIScreeningPage() {
     screeningResults,
     screeningLoading,
     screeningSubmitting,
+    clearScreeningState,
     runScreening,
     fetchScreeningResults,
     submitDecision,
@@ -93,22 +94,14 @@ export function AIScreeningPage() {
   const [selectedJobId, setSelectedJobId] = useState<string>(jobs[0]?.id || "");
   const [activeTab, setActiveTab] = useState<"all" | "shortlisted" | "review" | "rejected">("all");
 
-  // Normalized Screening Criteria Weights (sum always = 100%)
-  const [weights, setWeights] = useState({
-    skill: 40,
-    exp: 30,
-    edu: 20,
-    cert: 10,
-  });
-
-  // Candidate Comparison State (up to 3 candidates)
+  // Comparison State
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [showCompareModal, setShowCompareModal] = useState(false);
 
   // Detail Modal State
   const [inspectCandidate, setInspectCandidate] = useState<CandidateScreeningView | null>(null);
 
-  // Confirmation Decision Dialog State
+  // Decision Dialog State
   const [confirmDialog, setConfirmDialog] = useState<{
     type: "SHORTLIST" | "REJECT";
     candidate: CandidateScreeningView;
@@ -116,7 +109,14 @@ export function AIScreeningPage() {
   const [rejectReason, setRejectReason] = useState("");
   const [rejectReasonError, setRejectReasonError] = useState("");
 
-  // Fix render side effect: use useEffect instead of useMemo to sync selectedJobId
+  // Re-screen all confirmation dialog
+  const [showRescreenConfirm, setShowRescreenConfirm] = useState(false);
+
+  // Network / Polling Error & Timeout States
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [pollingTimedOut, setPollingTimedOut] = useState(false);
+
+  // Auto-sync selectedJobId if current selection is invalid
   useEffect(() => {
     if ((!selectedJobId || !jobs.some((j) => j.id === selectedJobId)) && jobs.length > 0) {
       setSelectedJobId(jobs[0].id);
@@ -128,83 +128,117 @@ export function AIScreeningPage() {
     [jobs, selectedJobId],
   );
 
-  // Fix candidate bug: NEVER fallback to all candidates when selected job has zero candidates
+  // Multi-application candidates: candidate may apply to multiple jobs
+  // Pick the application that matches selectedJobId
   const jobCandidates = useMemo(() => {
     if (!selectedJobId) return [];
-    return candidates.filter((c) => c.jobId === selectedJobId);
+    return candidates
+      .map((c) => {
+        const matchingApp = c.applications?.find((a) => a.jobId === selectedJobId);
+        if (matchingApp) {
+          return {
+            ...c,
+            jobId: matchingApp.jobId,
+            applicationId: matchingApp.id,
+            stage: matchingApp.stage,
+            appliedPosition: matchingApp.appliedPosition || c.appliedPosition || "Candidate",
+          };
+        }
+        if (c.jobId === selectedJobId) {
+          return c;
+        }
+        return null;
+      })
+      .filter((c): c is Candidate => c !== null);
   }, [candidates, selectedJobId]);
 
-  // Initial fetch of screening results for the selected job (guarded against double mount)
-  const lastFetchedJobIdRef = useRef<string | null>(null);
-  useEffect(() => {
-    if (!selectedJobId || lastFetchedJobIdRef.current === selectedJobId) return;
-    lastFetchedJobIdRef.current = selectedJobId;
-    fetchScreeningResults(selectedJobId).catch(() => {});
-  }, [selectedJobId, fetchScreeningResults]);
+  // Load screening results
+  const loadScreening = useCallback(
+    async (jobId: string) => {
+      if (!jobId) return;
+      setFetchError(null);
+      try {
+        await fetchScreeningResults(jobId);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Failed to load screening results";
+        setFetchError(msg);
+      }
+    },
+    [fetchScreeningResults],
+  );
 
-  // Polling: ONLY while run is RUNNING; stop on completed/failed/unmount/404
+  // Job switching: dispatch clearScreeningState immediately, reset timers, and fetch new job
+  useEffect(() => {
+    if (!selectedJobId) return;
+    clearScreeningState();
+    setPollingTimedOut(false);
+    setFetchError(null);
+    loadScreening(selectedJobId);
+  }, [selectedJobId, clearScreeningState, loadScreening]);
+
+  // Polling lifecycle: self-scheduling timeout (3s -> 10s back-off), stop after 10 min, stop on COMPLETED/FAILED/unmount/3 errors
   useEffect(() => {
     if (!selectedJobId || !screeningRun) return;
-    const isRunning = screeningRun.status?.toUpperCase() === "RUNNING";
+    const status = screeningRun.status?.toUpperCase();
+    const shouldPoll = status === "PENDING" || status === "RUNNING";
+    if (!shouldPoll) return;
 
-    if (!isRunning) return;
+    let delay = 3000;
+    let consecutiveErrors = 0;
+    let isMounted = true;
+    let timerId: NodeJS.Timeout | null = null;
+    const startTime = Date.now();
+    const MAX_DURATION = 10 * 60 * 1000; // 10 minutes
 
-    const timer = setInterval(() => {
-      fetchScreeningResults(selectedJobId).catch(() => {});
-    }, 3000);
+    const scheduleNext = () => {
+      if (!isMounted) return;
+      if (Date.now() - startTime >= MAX_DURATION) {
+        setPollingTimedOut(true);
+        toast.warning("Screening is taking longer than expected. Please refresh manually.");
+        return;
+      }
+      if (consecutiveErrors >= 3) {
+        setFetchError("Polling stopped after 3 consecutive errors. Please retry manually.");
+        return;
+      }
+
+      timerId = setTimeout(async () => {
+        if (!isMounted) return;
+        try {
+          await fetchScreeningResults(selectedJobId);
+          consecutiveErrors = 0;
+          delay = Math.min(10000, Math.round(delay * 1.5));
+          scheduleNext();
+        } catch (err) {
+          consecutiveErrors += 1;
+          const msg = err instanceof Error ? err.message : "Failed to refresh screening status";
+          if (consecutiveErrors >= 3) {
+            setFetchError(msg);
+          } else {
+            delay = Math.min(10000, delay * 2);
+            scheduleNext();
+          }
+        }
+      }, delay);
+    };
+
+    scheduleNext();
 
     return () => {
-      clearInterval(timer);
+      isMounted = false;
+      if (timerId) clearTimeout(timerId);
     };
   }, [selectedJobId, screeningRun?.status, fetchScreeningResults]);
 
-  // Auto-normalize weight sliders to ensure sum equals exactly 100%
-  const handleWeightChange = useCallback(
-    (key: "skill" | "exp" | "edu" | "cert", newVal: number) => {
-      const clampedVal = Math.max(5, Math.min(70, newVal));
-      const remainingTarget = 100 - clampedVal;
-      const otherKeys = (["skill", "exp", "edu", "cert"] as const).filter((k) => k !== key);
-      const currentOtherSum = otherKeys.reduce((acc, k) => acc + weights[k], 0);
-
-      const nextWeights = { ...weights, [key]: clampedVal };
-
-      if (currentOtherSum > 0) {
-        let distributedSum = 0;
-        otherKeys.forEach((k, idx) => {
-          if (idx === otherKeys.length - 1) {
-            nextWeights[k] = Math.max(5, remainingTarget - distributedSum);
-          } else {
-            const scaled = Math.max(
-              5,
-              Math.round((weights[k] / currentOtherSum) * remainingTarget),
-            );
-            nextWeights[k] = scaled;
-            distributedSum += scaled;
-          }
-        });
-      } else {
-        const share = Math.floor(remainingTarget / otherKeys.length);
-        otherKeys.forEach((k, idx) => {
-          nextWeights[k] =
-            idx === otherKeys.length - 1 ? remainingTarget - share * (otherKeys.length - 1) : share;
-        });
-      }
-
-      setWeights(nextWeights);
-    },
-    [weights],
-  );
-
-  const totalWeight = weights.skill + weights.exp + weights.edu + weights.cert;
-
   // Merge job candidates with backend AI screening results
+  // Match candidate ONLY by application_id (fallback candidate_id). NEVER by name!
+  // Do NOT invent candidates from screeningResults: show only applications of selected job!
   const mergedCandidates = useMemo<CandidateScreeningView[]>(() => {
-    const list: CandidateScreeningView[] = jobCandidates.map((c) => {
+    return jobCandidates.map((c) => {
       const res = screeningResults.find(
         (r) =>
-          r.candidateId === c.id ||
           (c.applicationId && r.applicationId === c.applicationId) ||
-          r.candidateName.toLowerCase() === c.name.toLowerCase(),
+          r.candidateId === c.id,
       );
 
       if (res) {
@@ -217,6 +251,8 @@ export function AIScreeningPage() {
                 ? "REVIEW"
                 : res.decision;
 
+        const isCompleted = res.status === "COMPLETED";
+
         return {
           id: c.id,
           candidateId: c.id,
@@ -228,28 +264,32 @@ export function AIScreeningPage() {
           education: c.education,
           noticeDays: c.noticeDays,
           expectedSalary: c.expectedSalary,
-          skills: c.skills?.length ? c.skills : res.missingSkills,
+          skills: c.skills || [], // Never fallback to res.missingSkills!
           summary: c.summary,
           stage: c.stage,
-          isScreened: true,
+          isScreened: isCompleted || res.status === "FAILED",
           status: res.status,
+          error: res.error,
           decision: res.decision,
-          confidence: res.confidence,
-          matchScore: res.matchScore,
-          strengths: res.strengths,
-          weaknesses: res.weaknesses,
-          missingSkills: res.missingSkills,
-          redFlags: res.redFlags,
-          greenFlags: res.greenFlags,
+          confidence: Math.round(res.confidence || 0),
+          matchScore:
+            res.matchScore !== null && res.matchScore !== undefined
+              ? Math.round(res.matchScore)
+              : null,
+          strengths: res.strengths || [],
+          weaknesses: res.weaknesses || [],
+          missingSkills: res.missingSkills || [],
+          redFlags: res.redFlags || [],
+          greenFlags: res.greenFlags || [],
           hiringRecommendation: res.hiringRecommendation,
           hrNotes: res.hrNotes,
-          questionsToAsk: res.questionsToAsk,
+          questionsToAsk: res.questionsToAsk || [],
           modelUsed: res.modelUsed,
           screenedAt: res.screenedAt,
           humanDecision: res.humanDecision,
           humanDecisionBy: res.humanDecisionBy,
           humanDecisionReason: res.humanDecisionReason,
-          screeningId: res.screeningId || res.id,
+          screeningId: res.screeningId, // strictly screeningId only!
           effectiveDecision: effDecision,
         };
       }
@@ -270,6 +310,7 @@ export function AIScreeningPage() {
         stage: c.stage,
         isScreened: false,
         status: "NOT_SCREENED",
+        error: null,
         decision: null,
         confidence: 0,
         matchScore: null,
@@ -290,58 +331,6 @@ export function AIScreeningPage() {
         effectiveDecision: null,
       };
     });
-
-    // Also include candidates returned in backend screeningResults if not present in client pipeline
-    screeningResults.forEach((res) => {
-      const alreadyIncluded = list.some(
-        (c) =>
-          c.candidateId === res.candidateId ||
-          (res.applicationId && c.applicationId === res.applicationId) ||
-          c.name.toLowerCase() === res.candidateName.toLowerCase(),
-      );
-
-      if (!alreadyIncluded) {
-        const effDecision =
-          res.humanDecision === "SHORTLIST"
-            ? "SHORTLIST"
-            : res.humanDecision === "REJECT"
-              ? "REJECT"
-              : res.humanDecision === "KEEP_REVIEW"
-                ? "REVIEW"
-                : res.decision;
-
-        list.push({
-          id: res.candidateId || res.id,
-          candidateId: res.candidateId || res.id,
-          applicationId: res.applicationId || res.id,
-          name: res.candidateName,
-          appliedPosition: selectedJob?.title || "Candidate",
-          skills: [],
-          isScreened: true,
-          status: res.status,
-          decision: res.decision,
-          confidence: res.confidence,
-          matchScore: res.matchScore,
-          strengths: res.strengths,
-          weaknesses: res.weaknesses,
-          missingSkills: res.missingSkills,
-          redFlags: res.redFlags,
-          greenFlags: res.greenFlags,
-          hiringRecommendation: res.hiringRecommendation,
-          hrNotes: res.hrNotes,
-          questionsToAsk: res.questionsToAsk,
-          modelUsed: res.modelUsed,
-          screenedAt: res.screenedAt,
-          humanDecision: res.humanDecision,
-          humanDecisionBy: res.humanDecisionBy,
-          humanDecisionReason: res.humanDecisionReason,
-          screeningId: res.screeningId || res.id,
-          effectiveDecision: effDecision,
-        });
-      }
-    });
-
-    return list;
   }, [jobCandidates, screeningResults, selectedJob]);
 
   // Tab Filtering: All / Shortlisted / Review / Rejected
@@ -377,22 +366,36 @@ export function AIScreeningPage() {
     [mergedCandidates, compareIds],
   );
 
-  // Trigger Run AI Screening for selected job
-  const handleRunScreening = async () => {
+  // Trigger Run AI Screening for selected job (default: unscreened only)
+  const handleRunScreening = async (force = false) => {
     if (!selectedJobId) {
       toast.error("Please select a job first.");
       return;
     }
     try {
-      await runScreening({ jobId: selectedJobId });
-      toast.success("AI Screening job started. Processing resumes...");
+      if (force) {
+        await runScreening({ jobId: selectedJobId, force: true });
+        toast.success("AI Re-screening started for all candidates. Processing resumes...");
+        setShowRescreenConfirm(false);
+      } else {
+        const unscreenedAppIds = mergedCandidates
+          .filter((c) => !c.isScreened || c.status === "FAILED")
+          .map((c) => c.applicationId)
+          .filter(Boolean);
+
+        await runScreening({
+          jobId: selectedJobId,
+          applicationIds: unscreenedAppIds.length > 0 ? unscreenedAppIds : undefined,
+        });
+        toast.success("AI Screening job started. Processing unscreened resumes...");
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to run AI screening";
       toast.error(msg);
     }
   };
 
-  // Retry individual candidate screening
+  // Retry individual candidate screening (sends application_ids: [candidate.applicationId])
   const handleRetryCandidate = async (candidate: CandidateScreeningView) => {
     if (!selectedJobId) return;
     try {
@@ -407,17 +410,21 @@ export function AIScreeningPage() {
     }
   };
 
-  // Open confirmation dialog for shortlist or reject
+  // Open confirmation dialog for shortlist or reject (guarded strictly by screeningId and COMPLETED status)
   const openConfirmDialog = (
     candidate: CandidateScreeningView,
     type: "SHORTLIST" | "REJECT",
   ) => {
+    if (!candidate.screeningId || candidate.status !== "COMPLETED") {
+      toast.error("Candidate must complete AI screening before a human decision can be recorded.");
+      return;
+    }
     setConfirmDialog({ type, candidate });
     setRejectReason("");
     setRejectReasonError("");
   };
 
-  // Submit human decision with validation
+  // Submit human decision with validation (Reject reason >= 10 chars, uses ONLY screeningId)
   const handleConfirmDecision = async () => {
     if (!confirmDialog) return;
     const { type, candidate } = confirmDialog;
@@ -430,9 +437,9 @@ export function AIScreeningPage() {
       }
     }
 
-    const screeningId = candidate.screeningId || candidate.applicationId || candidate.id;
+    const screeningId = candidate.screeningId;
     if (!screeningId) {
-      toast.error("No valid screening ID found for this candidate.");
+      toast.error("Candidate has not been screened yet.");
       return;
     }
 
@@ -467,21 +474,17 @@ export function AIScreeningPage() {
 
   return (
     <div className="space-y-6">
-
       {/* Comparison Drawer Trigger */}
       {compareIds.length >= 2 && (
         <div className="flex justify-end">
-          <Button
-            onClick={() => setShowCompareModal(true)}
-            className="gap-1.5"
-          >
+          <Button onClick={() => setShowCompareModal(true)} className="gap-1.5">
             <GitCompare className="h-4 w-4" />
             Compare ({compareIds.length}) Candidates
           </Button>
         </div>
       )}
 
-      {/* Target Job Selector & Screening Weights Configuration */}
+      {/* Target Job Selector & Criteria Card */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Requisition Card */}
         <div className="rounded-2xl border border-border bg-card p-4 lg:col-span-1 space-y-3">
@@ -523,7 +526,7 @@ export function AIScreeningPage() {
                   <span className="font-medium text-foreground">{selectedJob.experience}</span>
                 </div>
               )}
-              {selectedJob.skills.length > 0 && (
+              {selectedJob.skills?.length > 0 && (
                 <>
                   <div className="text-muted-foreground">Key Required Skills:</div>
                   <div className="flex flex-wrap gap-1">
@@ -538,11 +541,11 @@ export function AIScreeningPage() {
             </div>
           )}
 
-          {/* Run AI Screening Button & Progress */}
+          {/* Run AI Screening Actions */}
           <div className="pt-2 border-t border-border space-y-2">
             <Button
               className="w-full text-xs h-9 gap-1.5"
-              onClick={handleRunScreening}
+              onClick={() => handleRunScreening(false)}
               disabled={isRunning || !selectedJobId || screeningSubmitting}
             >
               {isRunning ? (
@@ -558,13 +561,25 @@ export function AIScreeningPage() {
               )}
             </Button>
 
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full text-[11px] h-7 gap-1 text-muted-foreground hover:text-foreground"
+              onClick={() => setShowRescreenConfirm(true)}
+              disabled={
+                isRunning ||
+                !selectedJobId ||
+                screeningSubmitting ||
+                mergedCandidates.length === 0
+              }
+            >
+              <RotateCw className="h-3 w-3" />
+              Re-screen all (uses more AI credits)
+            </Button>
+
             {/* Run Progress Display with aria-live */}
             {screeningRun && (
-              <div
-                className="space-y-1.5 pt-1 text-xs"
-                role="status"
-                aria-live="polite"
-              >
+              <div className="space-y-1.5 pt-1 text-xs" role="status" aria-live="polite">
                 <div className="flex items-center justify-between text-[11px] text-muted-foreground">
                   <span>
                     Progress: {screeningRun.completed} / {screeningRun.total} screened
@@ -586,121 +601,100 @@ export function AIScreeningPage() {
           </div>
         </div>
 
-        {/* 8. Weight Sliders: Auto-Normalized & Renamed Education */}
-        <div className="rounded-2xl border border-border bg-card p-4 lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
+        {/* Read-Only Criteria & Philosophy Card (Replaced dead weight sliders) */}
+        <div className="rounded-2xl border border-border bg-card p-4 lg:col-span-2 space-y-4 flex flex-col justify-between">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
               <h3 className="font-semibold text-sm flex items-center gap-1.5">
-                <Sliders className="h-4 w-4 text-primary" />
-                Screening Criteria Weightings
+                <TrendingUp className="h-4 w-4 text-primary" />
+                Screening Thresholds &amp; Criteria
               </h3>
-              <p className="text-xs text-muted-foreground">
-                Weights dynamically auto-balance to enforce a strict total of 100%.
+              <Badge variant="outline" className="text-[10px] bg-muted/40">
+                Automated Evaluation
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Candidate resumes are objectively scored against job requirements, tech stack
+              relevance, and professional experience.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="p-3 rounded-xl border border-border bg-muted/20 space-y-1">
+              <span className="text-[11px] text-muted-foreground font-medium">Shortlist Threshold</span>
+              <div className="text-lg font-bold text-foreground">
+                {screeningThresholds ? `≥ ${screeningThresholds.shortlist}%` : "—"}
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Recommended for expedited interview rounds.
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge
-                variant="outline"
-                className={`text-xs font-semibold ${
-                  totalWeight === 100 ? statusBadgeClass("approved") : statusBadgeClass("warning")
-                }`}
-              >
-                Total: {totalWeight}%
-              </Badge>
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs h-7"
-                onClick={() => {
-                  setWeights({ skill: 40, exp: 30, edu: 20, cert: 10 });
-                  toast.info("Reset weights to balanced defaults");
-                }}
-              >
-                Reset Default
-              </Button>
+            <div className="p-3 rounded-xl border border-border bg-muted/20 space-y-1">
+              <span className="text-[11px] text-muted-foreground font-medium">Reject Threshold</span>
+              <div className="text-lg font-bold text-destructive">
+                {screeningThresholds ? `< ${screeningThresholds.reject}%` : "—"}
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Flagged for missing critical mandatory requirements.
+              </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-            <div className="space-y-1.5">
-              <div className="flex justify-between font-medium">
-                <span>Skills & Tech Stack ({weights.skill}%)</span>
-                <span className="text-muted-foreground">{weights.skill}%</span>
-              </div>
-              <Slider
-                value={[weights.skill]}
-                min={5}
-                max={70}
-                step={5}
-                onValueChange={(v) => handleWeightChange("skill", v[0])}
-                aria-label="Skills & Tech Stack Weight"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <div className="flex justify-between font-medium">
-                <span>Years of Experience ({weights.exp}%)</span>
-                <span className="text-muted-foreground">{weights.exp}%</span>
-              </div>
-              <Slider
-                value={[weights.exp]}
-                min={5}
-                max={70}
-                step={5}
-                onValueChange={(v) => handleWeightChange("exp", v[0])}
-                aria-label="Years of Experience Weight"
-              />
-            </div>
-
-            {/* Renamed "Education & Pedigree" to "Education" */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between font-medium">
-                <span>Education ({weights.edu}%)</span>
-                <span className="text-muted-foreground">{weights.edu}%</span>
-              </div>
-              <Slider
-                value={[weights.edu]}
-                min={5}
-                max={70}
-                step={5}
-                onValueChange={(v) => handleWeightChange("edu", v[0])}
-                aria-label="Education Weight"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <div className="flex justify-between font-medium">
-                <span>Certifications & Projects ({weights.cert}%)</span>
-                <span className="text-muted-foreground">{weights.cert}%</span>
-              </div>
-              <Slider
-                value={[weights.cert]}
-                min={5}
-                max={70}
-                step={5}
-                onValueChange={(v) => handleWeightChange("cert", v[0])}
-                aria-label="Certifications & Projects Weight"
-              />
-            </div>
-          </div>
-
-          {/* Backend Thresholds Display */}
-          <div className="pt-2 border-t border-border flex flex-wrap items-center justify-between text-[11px] text-muted-foreground">
-            <div className="flex items-center gap-1.5">
-              <TrendingUp className="h-3.5 w-3.5 text-primary" />
-              <span>Backend AI Thresholds:</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-foreground font-medium">
-                Shortlist: ≥ {screeningThresholds.shortlist}%
-              </span>
-              <span className="text-destructive font-medium">
-                Reject: &lt; {screeningThresholds.reject}%
-              </span>
-            </div>
+          <div className="pt-2 border-t border-border flex items-center gap-2 text-xs text-muted-foreground">
+            <ShieldAlert className="h-4 w-4 text-primary shrink-0" />
+            <span className="font-medium text-foreground">
+              AI recommends, a human decides.
+            </span>
+            <span className="text-muted-foreground">
+              All shortlist and reject actions require explicit reviewer sign-off.
+            </span>
           </div>
         </div>
       </div>
+
+      {/* Network / Polling Error Banner with Retry */}
+      {fetchError && (
+        <div
+          role="alert"
+          className="p-3 rounded-2xl border border-destructive/30 bg-destructive/10 text-xs text-destructive flex items-center justify-between"
+        >
+          <div className="flex items-center gap-2">
+            <AlertOctagon className="h-4 w-4 shrink-0" />
+            <span>{fetchError}</span>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-xs border-destructive/40 text-destructive hover:bg-destructive/20"
+            onClick={() => loadScreening(selectedJobId)}
+          >
+            <RotateCw className="h-3 w-3 mr-1" />
+            Retry
+          </Button>
+        </div>
+      )}
+
+      {/* Polling Timeout Banner */}
+      {pollingTimedOut && (
+        <div className="p-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 text-xs text-amber-900 dark:text-amber-200 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            <span>Screening is processing in background. Refresh to check latest results.</span>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-xs border-amber-500/40 hover:bg-amber-500/20"
+            onClick={() => {
+              setPollingTimedOut(false);
+              loadScreening(selectedJobId);
+            }}
+          >
+            <RotateCw className="h-3 w-3 mr-1" />
+            Refresh
+          </Button>
+        </div>
+      )}
 
       {/* Decision Tabs */}
       <div className="flex items-center justify-between border-b border-border pb-2">
@@ -743,7 +737,6 @@ export function AIScreeningPage() {
           <p className="text-sm font-medium text-foreground">Loading screening results...</p>
         </div>
       ) : jobCandidates.length === 0 && mergedCandidates.length === 0 ? (
-        // 5. Zero Candidates Empty State for Selected Job (NEVER fall back to other jobs)
         <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border border-dashed border-border bg-card">
           <Sparkles className="h-8 w-8 text-muted-foreground/30 mb-2" />
           <p className="text-sm font-medium text-muted-foreground">
@@ -763,234 +756,261 @@ export function AIScreeningPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredCandidates.map((cand) => (
-            <div
-              key={cand.id}
-              className={`rounded-2xl border bg-card p-4 transition-all duration-200 flex flex-col justify-between ${
-                compareIds.includes(cand.id)
-                  ? "border-primary ring-1 ring-primary/30"
-                  : "border-border"
-              }`}
-            >
-              <div>
-                {/* Header: Name, Position, Status Chip & Match Score */}
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h4 className="font-semibold text-sm text-foreground">{cand.name}</h4>
-                    <div className="text-xs text-muted-foreground">{cand.appliedPosition}</div>
-                  </div>
+          {filteredCandidates.map((cand) => {
+            const isDecisionAllowed =
+              cand.status === "COMPLETED" &&
+              Boolean(cand.screeningId) &&
+              !cand.humanDecision;
 
-                  <div className="text-right flex flex-col items-end gap-1">
-                    {/* 9. Not Screened Yet vs Backend Score */}
-                    {cand.isScreened && cand.matchScore !== null ? (
-                      <>
-                        <div className="font-display text-lg font-bold text-foreground">
-                          {cand.matchScore}%
-                        </div>
+            const decisionTooltip = cand.humanDecision
+              ? "Decision already recorded"
+              : cand.status !== "COMPLETED" || !cand.screeningId
+                ? "Run AI screening first"
+                : undefined;
+
+            return (
+              <div
+                key={cand.id}
+                className={`rounded-2xl border bg-card p-4 transition-all duration-200 flex flex-col justify-between ${
+                  compareIds.includes(cand.id)
+                    ? "border-primary ring-1 ring-primary/30"
+                    : "border-border"
+                }`}
+              >
+                <div>
+                  {/* Header: Name, Position & Match Score */}
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h4 className="font-semibold text-sm text-foreground">{cand.name}</h4>
+                      <div className="text-xs text-muted-foreground">{cand.appliedPosition}</div>
+                    </div>
+
+                    <div className="text-right flex flex-col items-end gap-1">
+                      {cand.isScreened && cand.matchScore !== null ? (
+                        <>
+                          <div className="font-display text-lg font-bold text-foreground">
+                            {cand.matchScore}%
+                          </div>
+                          <Badge
+                            variant="outline"
+                            className={`text-[9px] uppercase tracking-wider font-bold ${
+                              cand.effectiveDecision === "SHORTLIST"
+                                ? statusBadgeClass("approved")
+                                : cand.effectiveDecision === "REJECT"
+                                  ? statusBadgeClass("critical")
+                                  : statusBadgeClass("warning")
+                            }`}
+                          >
+                            {cand.effectiveDecision || "Review"}
+                          </Badge>
+                        </>
+                      ) : (
                         <Badge
                           variant="outline"
-                          className={`text-[9px] uppercase tracking-wider font-bold ${
-                            cand.effectiveDecision === "SHORTLIST"
-                              ? statusBadgeClass("approved")
-                              : cand.effectiveDecision === "REJECT"
-                                ? statusBadgeClass("critical")
-                                : statusBadgeClass("warning")
-                          }`}
+                          className={`text-[9px] uppercase tracking-wider font-bold ${statusBadgeClass("pending")}`}
                         >
-                          {cand.effectiveDecision || "Review"}
+                          Not screened yet
                         </Badge>
-                      </>
-                    ) : (
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Status Chips: Pending / Running / Failed with Error & Retry */}
+                  <div className="mt-2 flex items-center justify-between text-[11px]">
+                    {cand.status === "RUNNING" ? (
                       <Badge
                         variant="outline"
-                        className={`text-[9px] uppercase tracking-wider font-bold ${statusBadgeClass("pending")}`}
+                        className={`text-[10px] flex items-center gap-1 ${statusBadgeClass("info")}`}
                       >
-                        Not screened yet
+                        <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                        Running
                       </Badge>
+                    ) : cand.status === "PENDING" ? (
+                      <Badge
+                        variant="outline"
+                        className="border-border text-muted-foreground text-[10px]"
+                      >
+                        Pending
+                      </Badge>
+                    ) : cand.status === "FAILED" ? (
+                      <div className="flex items-center gap-1.5">
+                        <Badge
+                          variant="outline"
+                          className={`text-[10px] ${statusBadgeClass("critical")}`}
+                        >
+                          Failed
+                        </Badge>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-5 px-1.5 text-[10px] text-primary hover:text-primary/80"
+                          onClick={() => handleRetryCandidate(cand)}
+                        >
+                          <RotateCw className="h-2.5 w-2.5 mr-1" />
+                          Retry
+                        </Button>
+                      </div>
+                    ) : cand.confidence > 0 ? (
+                      <span className="text-[10px] text-muted-foreground">
+                        Confidence: {cand.confidence}%
+                      </span>
+                    ) : null}
+
+                    {cand.modelUsed && (
+                      <span className="text-[10px] text-muted-foreground/60">
+                        {cand.modelUsed}
+                      </span>
                     )}
                   </div>
-                </div>
 
-                {/* Status Chips: Pending / Running / Failed with Retry */}
-                <div className="mt-2 flex items-center justify-between text-[11px]">
-                  {cand.status === "RUNNING" ? (
-                    <Badge
-                      variant="outline"
-                      className={`text-[10px] flex items-center gap-1 ${statusBadgeClass("info")}`}
-                    >
-                      <Loader2 className="h-2.5 w-2.5 animate-spin" />
-                      Running
-                    </Badge>
-                  ) : cand.status === "PENDING" ? (
-                    <Badge variant="outline" className="border-border text-muted-foreground text-[10px]">
-                      Pending
-                    </Badge>
-                  ) : cand.status === "FAILED" ? (
-                    <div className="flex items-center gap-1.5">
-                      <Badge
-                        variant="outline"
-                        className={`text-[10px] ${statusBadgeClass("critical")}`}
-                      >
-                        Failed
-                      </Badge>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-5 px-1.5 text-[10px] text-primary hover:text-primary/80"
-                        onClick={() => handleRetryCandidate(cand)}
-                      >
-                        <RotateCw className="h-2.5 w-2.5 mr-1" />
-                        Retry
-                      </Button>
+                  {/* Error Message if Failed */}
+                  {cand.status === "FAILED" && cand.error && (
+                    <p className="mt-2 text-[11px] text-destructive italic bg-destructive/10 p-2 rounded-lg border border-destructive/20">
+                      {cand.error}
+                    </p>
+                  )}
+
+                  {/* AI Rationale & Hiring Recommendation */}
+                  {cand.isScreened && (cand.hiringRecommendation || cand.hrNotes) ? (
+                    <div className="mt-3 rounded-xl bg-muted/40 p-2.5 text-[11px] text-muted-foreground leading-relaxed border border-border/60">
+                      <span className="font-semibold text-foreground flex items-center gap-1 mb-1">
+                        <Sparkles className="h-3 w-3 text-primary" />
+                        AI Rationale:
+                      </span>
+                      <p className="line-clamp-2">
+                        {cand.hiringRecommendation || cand.hrNotes || "Assessment complete."}
+                      </p>
                     </div>
-                  ) : cand.confidence > 0 ? (
-                    <span className="text-[10px] text-muted-foreground">
-                      Confidence: {Math.round(cand.confidence * (cand.confidence <= 1 ? 100 : 1))}%
-                    </span>
-                  ) : null}
+                  ) : (
+                    <div className="mt-3 rounded-xl bg-muted/20 p-2.5 text-[11px] text-muted-foreground/70 border border-border/40">
+                      Candidate has not been analyzed yet. Run AI screening to generate evaluation.
+                    </div>
+                  )}
 
-                  {cand.modelUsed && (
-                    <span className="text-[10px] text-muted-foreground/60">{cand.modelUsed}</span>
+                  {/* Strengths & Missing Skills */}
+                  {cand.strengths.length > 0 && (
+                    <div className="mt-2.5 space-y-1">
+                      <div className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
+                        <CheckCircle className="h-3 w-3 text-primary" />
+                        Top Strengths:
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {cand.strengths.slice(0, 2).map((s) => (
+                          <Badge
+                            key={s}
+                            variant="secondary"
+                            className="text-[9px] bg-primary/10 text-primary border border-primary/20"
+                          >
+                            {s}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {cand.missingSkills.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      <div className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
+                        <AlertTriangle className="h-3 w-3 text-muted-foreground" />
+                        Missing Skills:
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {cand.missingSkills.slice(0, 2).map((s) => (
+                          <Badge
+                            key={s}
+                            variant="secondary"
+                            className="text-[9px] bg-muted text-muted-foreground border border-border"
+                          >
+                            {s}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Human Decision Info if exists */}
+                  {cand.humanDecision && (
+                    <div className="mt-3 rounded-lg border border-border/80 bg-accent/30 p-2 text-xs">
+                      <div className="flex items-center justify-between font-semibold">
+                        <span className="flex items-center gap-1 text-[11px] text-foreground">
+                          <UserCheck className="h-3.5 w-3.5 text-primary" />
+                          Human: {cand.humanDecision}
+                        </span>
+                        {cand.humanDecisionBy && (
+                          <span className="text-[10px] text-muted-foreground">
+                            by {cand.humanDecisionBy}
+                          </span>
+                        )}
+                      </div>
+                      {cand.humanDecisionReason && (
+                        <p className="mt-1 text-[10px] text-muted-foreground italic line-clamp-1">
+                          &quot;{cand.humanDecisionReason}&quot;
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
 
-                {/* 4. AI Rationale & Hiring Recommendation */}
-                {cand.isScreened && (cand.hiringRecommendation || cand.hrNotes) ? (
-                  <div className="mt-3 rounded-xl bg-muted/40 p-2.5 text-[11px] text-muted-foreground leading-relaxed border border-border/60">
-                    <span className="font-semibold text-foreground flex items-center gap-1 mb-1">
-                      <Sparkles className="h-3 w-3 text-primary" />
-                      AI Rationale:
+                {/* Actions: Compare Checkbox, Inspect, Shortlist, Reject */}
+                <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs">
+                  <label className="flex items-center gap-1.5 cursor-pointer text-muted-foreground hover:text-foreground">
+                    <input
+                      type="checkbox"
+                      checked={compareIds.includes(cand.id)}
+                      onChange={() => handleToggleCompare(cand.id)}
+                      className="rounded border-border text-primary"
+                      aria-label={`Compare ${cand.name}`}
+                    />
+                    Compare
+                  </label>
+
+                  <div className="flex items-center gap-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-xs px-2"
+                      onClick={() => setInspectCandidate(cand)}
+                    >
+                      <Eye className="h-3 w-3 mr-1" />
+                      Inspect
+                    </Button>
+
+                    {/* Shortlist Button (enabled ONLY when COMPLETED && screeningId && !humanDecision) */}
+                    <span title={decisionTooltip}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs px-2 text-emerald-600 dark:text-emerald-400 border-border hover:bg-muted/50 disabled:opacity-40"
+                        disabled={!isDecisionAllowed}
+                        onClick={() => openConfirmDialog(cand, "SHORTLIST")}
+                        aria-label={`Shortlist ${cand.name}`}
+                      >
+                        <Check className="h-3 w-3" />
+                      </Button>
                     </span>
-                    <p className="line-clamp-2">
-                      {cand.hiringRecommendation || cand.hrNotes || "Assessment complete."}
-                    </p>
+
+                    {/* Reject Button (enabled ONLY when COMPLETED && screeningId && !humanDecision) */}
+                    <span title={decisionTooltip}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs px-2 text-destructive border-destructive/30 hover:bg-destructive/10 disabled:opacity-40"
+                        disabled={!isDecisionAllowed}
+                        onClick={() => openConfirmDialog(cand, "REJECT")}
+                        aria-label={`Reject ${cand.name}`}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </span>
                   </div>
-                ) : (
-                  <div className="mt-3 rounded-xl bg-muted/20 p-2.5 text-[11px] text-muted-foreground/70 border border-border/40">
-                    Candidate has not been analyzed yet. Run AI screening to generate evaluation.
-                  </div>
-                )}
-
-                {/* Strengths & Missing Skills Chips */}
-                {cand.strengths.length > 0 && (
-                  <div className="mt-2.5 space-y-1">
-                    <div className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
-                      <CheckCircle className="h-3 w-3 text-primary" />
-                      Top Strengths:
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {cand.strengths.slice(0, 2).map((s) => (
-                        <Badge
-                          key={s}
-                          variant="secondary"
-                          className="text-[9px] bg-primary/10 text-primary border border-primary/20"
-                        >
-                          {s}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {cand.missingSkills.length > 0 && (
-                  <div className="mt-2 space-y-1">
-                    <div className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
-                      <AlertTriangle className="h-3 w-3 text-muted-foreground" />
-                      Missing Skills:
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {cand.missingSkills.slice(0, 2).map((s) => (
-                        <Badge
-                          key={s}
-                          variant="secondary"
-                          className="text-[9px] bg-muted text-muted-foreground border border-border"
-                        >
-                          {s}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* 7. Show Human Decision Info if exists */}
-                {cand.humanDecision && (
-                  <div className="mt-3 rounded-lg border border-border/80 bg-accent/30 p-2 text-xs">
-                    <div className="flex items-center justify-between font-semibold">
-                      <span className="flex items-center gap-1 text-[11px] text-foreground">
-                        <UserCheck className="h-3.5 w-3.5 text-primary" />
-                        Human: {cand.humanDecision}
-                      </span>
-                      {cand.humanDecisionBy && (
-                        <span className="text-[10px] text-muted-foreground">
-                          by {cand.humanDecisionBy}
-                        </span>
-                      )}
-                    </div>
-                    {cand.humanDecisionReason && (
-                      <p className="mt-1 text-[10px] text-muted-foreground italic line-clamp-1">
-                        &quot;{cand.humanDecisionReason}&quot;
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Actions: Compare Checkbox, Inspect, Shortlist, Reject */}
-              <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs">
-                <label className="flex items-center gap-1.5 cursor-pointer text-muted-foreground hover:text-foreground">
-                  <input
-                    type="checkbox"
-                    checked={compareIds.includes(cand.id)}
-                    onChange={() => handleToggleCompare(cand.id)}
-                    className="rounded border-border text-primary"
-                    aria-label={`Compare ${cand.name}`}
-                  />
-                  Compare
-                </label>
-
-                <div className="flex items-center gap-1">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 text-xs px-2"
-                    onClick={() => setInspectCandidate(cand)}
-                  >
-                    <Eye className="h-3 w-3 mr-1" />
-                    Inspect
-                  </Button>
-
-                  {/* 7. Shortlist Button (disabled if already decided) */}
-                  <Button
-                    size="sm"
-                    variant="outline" className="h-7 text-xs px-2 text-emerald-600 dark:text-emerald-400 border-border hover:bg-muted/50 disabled:opacity-40"
-                    disabled={Boolean(cand.humanDecision)}
-                    onClick={() => openConfirmDialog(cand, "SHORTLIST")}
-                    title={cand.humanDecision ? "Decision already recorded" : "Shortlist Candidate"}
-                    aria-label={`Shortlist ${cand.name}`}
-                  >
-                    <Check className="h-3 w-3" />
-                  </Button>
-
-                  {/* 7. Reject Button (disabled if already decided) */}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-7 text-xs px-2 text-destructive border-destructive/30 hover:bg-destructive/10 disabled:opacity-40"
-                    disabled={Boolean(cand.humanDecision)}
-                    onClick={() => openConfirmDialog(cand, "REJECT")}
-                    title={cand.humanDecision ? "Decision already recorded" : "Reject Candidate"}
-                    aria-label={`Reject ${cand.name}`}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      {/* 4. Candidate Inspect Dialog */}
+      {/* Candidate Inspect Dialog */}
       {inspectCandidate && (
         <Dialog open={Boolean(inspectCandidate)} onOpenChange={() => setInspectCandidate(null)}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -1018,7 +1038,9 @@ export function AIScreeningPage() {
                   inspectCandidate.yearsExperience
                     ? `${inspectCandidate.yearsExperience} yrs experience`
                     : "",
-                  inspectCandidate.currentCompany ? `at ${inspectCandidate.currentCompany}` : "",
+                  inspectCandidate.currentCompany
+                    ? `at ${inspectCandidate.currentCompany}`
+                    : "",
                 ]
                   .filter(Boolean)
                   .join(" • ")}
@@ -1041,7 +1063,9 @@ export function AIScreeningPage() {
 
               {inspectCandidate.hrNotes && (
                 <div>
-                  <Label className="font-semibold text-muted-foreground">HR Notes & Observations</Label>
+                  <Label className="font-semibold text-muted-foreground">
+                    HR Notes &amp; Observations
+                  </Label>
                   <p className="mt-1 p-3 rounded-xl border border-border bg-muted/30 text-foreground">
                     {inspectCandidate.hrNotes}
                   </p>
@@ -1066,7 +1090,9 @@ export function AIScreeningPage() {
                         </div>
                       ))
                     ) : (
-                      <p className="text-muted-foreground italic text-[11px]">No specific strengths identified</p>
+                      <p className="text-muted-foreground italic text-[11px]">
+                        No specific strengths identified
+                      </p>
                     )}
                   </div>
                 </div>
@@ -1087,7 +1113,9 @@ export function AIScreeningPage() {
                         </div>
                       ))
                     ) : (
-                      <p className="text-muted-foreground italic text-[11px]">No weaknesses noted</p>
+                      <p className="text-muted-foreground italic text-[11px]">
+                        No weaknesses noted
+                      </p>
                     )}
                   </div>
                 </div>
@@ -1096,10 +1124,16 @@ export function AIScreeningPage() {
               {/* Missing Skills */}
               {inspectCandidate.missingSkills.length > 0 && (
                 <div>
-                  <Label className="font-semibold text-muted-foreground">Missing Required Skills</Label>
+                  <Label className="font-semibold text-muted-foreground">
+                    Missing Required Skills
+                  </Label>
                   <div className="mt-1.5 flex flex-wrap gap-1">
                     {inspectCandidate.missingSkills.map((ms) => (
-                      <Badge key={ms} variant="outline" className="border-border text-muted-foreground text-[10px]">
+                      <Badge
+                        key={ms}
+                        variant="outline"
+                        className="border-border text-muted-foreground text-[10px]"
+                      >
                         {ms}
                       </Badge>
                     ))}
@@ -1185,7 +1219,11 @@ export function AIScreeningPage() {
                   <Button
                     variant="outline"
                     className="text-destructive border-destructive/30 hover:bg-destructive/10 disabled:opacity-40"
-                    disabled={Boolean(inspectCandidate.humanDecision)}
+                    disabled={
+                      inspectCandidate.status !== "COMPLETED" ||
+                      !inspectCandidate.screeningId ||
+                      Boolean(inspectCandidate.humanDecision)
+                    }
                     onClick={() => openConfirmDialog(inspectCandidate, "REJECT")}
                   >
                     <X className="h-3 w-3 mr-1" />
@@ -1193,7 +1231,11 @@ export function AIScreeningPage() {
                   </Button>
                   <Button
                     className="disabled:opacity-40"
-                    disabled={Boolean(inspectCandidate.humanDecision)}
+                    disabled={
+                      inspectCandidate.status !== "COMPLETED" ||
+                      !inspectCandidate.screeningId ||
+                      Boolean(inspectCandidate.humanDecision)
+                    }
                     onClick={() => openConfirmDialog(inspectCandidate, "SHORTLIST")}
                   >
                     <Check className="h-3 w-3 mr-1" />
@@ -1206,7 +1248,7 @@ export function AIScreeningPage() {
         </Dialog>
       )}
 
-      {/* 4. Candidate Side-by-Side Comparison Modal */}
+      {/* Candidate Side-by-Side Comparison Modal */}
       <Dialog open={showCompareModal} onOpenChange={setShowCompareModal}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -1224,12 +1266,16 @@ export function AIScreeningPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="p-2.5 w-1/4 font-semibold text-muted-foreground">Evaluation Vector</th>
+                  <th className="p-2.5 w-1/4 font-semibold text-muted-foreground">
+                    Evaluation Vector
+                  </th>
                   {compareList.map((c) => (
                     <th key={c.id} className="p-2.5 w-1/4">
                       <div className="font-bold text-sm text-foreground">{c.name}</div>
                       {c.currentCompany && (
-                        <div className="text-[11px] text-muted-foreground">{c.currentCompany}</div>
+                        <div className="text-[11px] text-muted-foreground">
+                          {c.currentCompany}
+                        </div>
                       )}
                     </th>
                   ))}
@@ -1248,7 +1294,10 @@ export function AIScreeningPage() {
                 <tr>
                   <td className="p-2.5 font-medium text-muted-foreground">AI Recommendation</td>
                   {compareList.map((c) => (
-                    <td key={c.id} className="p-2.5 text-[11px] text-muted-foreground leading-normal">
+                    <td
+                      key={c.id}
+                      className="p-2.5 text-[11px] text-muted-foreground leading-normal"
+                    >
                       {c.hiringRecommendation || "No recommendation generated"}
                     </td>
                   ))}
@@ -1298,7 +1347,9 @@ export function AIScreeningPage() {
                   ))}
                 </tr>
                 <tr>
-                  <td className="p-2.5 font-medium text-muted-foreground">Green &amp; Red Flags</td>
+                  <td className="p-2.5 font-medium text-muted-foreground">
+                    Green &amp; Red Flags
+                  </td>
                   {compareList.map((c) => (
                     <td key={c.id} className="p-2.5 text-[11px] space-y-1">
                       {c.greenFlags.map((gf) => (
@@ -1353,6 +1404,11 @@ export function AIScreeningPage() {
                         <Button
                           size="sm"
                           className="w-full h-8 text-xs"
+                          disabled={
+                            c.status !== "COMPLETED" ||
+                            !c.screeningId ||
+                            Boolean(c.humanDecision)
+                          }
                           onClick={() => {
                             setShowCompareModal(false);
                             openConfirmDialog(c, "SHORTLIST");
@@ -1370,7 +1426,46 @@ export function AIScreeningPage() {
         </DialogContent>
       </Dialog>
 
-      {/* 7. Shortlist / Reject Confirmation Dialog (Reject requires >= 10 chars) */}
+      {/* Re-screen All Confirmation Dialog */}
+      {showRescreenConfirm && (
+        <Dialog open={showRescreenConfirm} onOpenChange={setShowRescreenConfirm}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-amber-500" />
+                Confirm Complete Re-Screening
+              </DialogTitle>
+              <DialogDescription>
+                Are you sure you want to re-screen all {mergedCandidates.length} candidate(s) for{" "}
+                {selectedJob?.title || "this job"}? This will overwrite previous analysis and
+                consume additional AI credits.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-border">
+              <Button variant="outline" onClick={() => setShowRescreenConfirm(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="default"
+                disabled={screeningSubmitting}
+                onClick={() => handleRunScreening(true)}
+              >
+                {screeningSubmitting ? (
+                  <>
+                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                    Starting...
+                  </>
+                ) : (
+                  "Confirm Re-Screen All"
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Shortlist / Reject Confirmation Dialog (Reject requires >= 10 chars) */}
       {confirmDialog && (
         <Dialog open={Boolean(confirmDialog)} onOpenChange={() => setConfirmDialog(null)}>
           <DialogContent className="max-w-md">
@@ -1419,9 +1514,7 @@ export function AIScreeningPage() {
                     id="reject-reason-help"
                     className="flex justify-between items-center text-[11px] text-muted-foreground pt-1"
                   >
-                    <span>
-                      {rejectReason.trim().length} / 10 minimum characters
-                    </span>
+                    <span>{rejectReason.trim().length} / 10 minimum characters</span>
                     {rejectReason.trim().length >= 10 && (
                       <span className="text-foreground font-medium">Valid</span>
                     )}

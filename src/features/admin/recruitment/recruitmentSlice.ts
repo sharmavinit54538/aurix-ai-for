@@ -24,7 +24,8 @@ const initialState: RecruitmentState = {
   lastFetchedAt: null,
   submitting: false,
   error: null,
-  screeningThresholds: { shortlist: 85, reject: 60 },
+  screeningThresholds: null,
+  screeningJobId: null,
   screeningRun: null,
   screeningResults: [],
   screeningLoading: false,
@@ -71,14 +72,15 @@ const recruitmentSlice = createSlice({
       else state.interviews.push(action.payload);
     },
     clearScreeningState(state) {
-      state.screeningThresholds = { shortlist: 85, reject: 60 };
+      state.screeningThresholds = null;
+      state.screeningJobId = null;
       state.screeningRun = null;
       state.screeningResults = [];
       state.screeningLoading = false;
       state.screeningSubmitting = false;
       state.screeningError = null;
     },
-    setScreeningThresholds(state, action: { payload: { shortlist: number; reject: number } }) {
+    setScreeningThresholds(state, action: { payload: { shortlist: number; reject: number } | null }) {
       state.screeningThresholds = action.payload;
     },
   },
@@ -113,17 +115,24 @@ const recruitmentSlice = createSlice({
         state.screeningError =
           (action.payload as string) || action.error.message || "Failed to run AI screening";
       })
-      .addCase(fetchScreeningResults.pending, (state) => {
+      .addCase(fetchScreeningResults.pending, (state, action) => {
         state.screeningLoading = true;
         state.screeningError = null;
+        state.screeningJobId = action.meta.arg;
       })
       .addCase(fetchScreeningResults.fulfilled, (state, action) => {
+        if (state.screeningJobId && action.meta.arg !== state.screeningJobId) {
+          return;
+        }
         state.screeningLoading = false;
         state.screeningThresholds = action.payload.thresholds;
         state.screeningRun = action.payload.run;
         state.screeningResults = action.payload.results;
       })
       .addCase(fetchScreeningResults.rejected, (state, action) => {
+        if (state.screeningJobId && action.meta.arg !== state.screeningJobId) {
+          return;
+        }
         state.screeningLoading = false;
         state.screeningError =
           (action.payload as string) || action.error.message || "Failed to fetch screening results";
@@ -137,20 +146,18 @@ const recruitmentSlice = createSlice({
         const updated = action.payload;
         const idx = state.screeningResults.findIndex(
           (r) =>
-            r.id === updated.id ||
             (updated.screeningId && r.screeningId === updated.screeningId) ||
+            r.id === updated.id ||
             (updated.applicationId && r.applicationId === updated.applicationId),
         );
         if (idx >= 0) {
           state.screeningResults[idx] = {
             ...state.screeningResults[idx],
-            ...updated,
             humanDecision: updated.humanDecision,
             humanDecisionBy: updated.humanDecisionBy,
             humanDecisionReason: updated.humanDecisionReason,
+            humanDecidedAt: updated.humanDecidedAt ?? state.screeningResults[idx].humanDecidedAt ?? new Date().toISOString(),
           };
-        } else {
-          state.screeningResults.push(updated);
         }
       })
       .addCase(submitDecision.rejected, (state, action) => {

@@ -22,7 +22,8 @@ export interface RecruitmentState extends RecruitmentResources {
   submitting: boolean;
   error: string | null;
   // AI Screening State
-  screeningThresholds: ScreeningThresholds;
+  screeningThresholds: ScreeningThresholds | null;
+  screeningJobId: string | null;
   screeningRun: ScreeningRun | null;
   screeningResults: ScreeningResult[];
   screeningLoading: boolean;

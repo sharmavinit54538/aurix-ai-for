@@ -299,13 +299,14 @@ export const upsertOffer = createAsyncThunk<Offer, Offer, { rejectValue: string 
 
 export const runScreening = createAsyncThunk<
   ScreeningRun,
-  { jobId: string; applicationIds?: string[]; model?: string },
+  { jobId: string; applicationIds?: string[]; model?: string; force?: boolean },
   { rejectValue: string }
->("recruitment/runScreening", async ({ jobId, applicationIds, model }, thunkAPI) => {
+>("recruitment/runScreening", async ({ jobId, applicationIds, model, force }, thunkAPI) => {
   try {
     const res = await screeningApi.runScreening(jobId, {
       application_ids: applicationIds,
       model,
+      force,
     });
     return {
       runId: res.run_id,
@@ -319,13 +320,17 @@ export const runScreening = createAsyncThunk<
 });
 
 export const fetchScreeningResults = createAsyncThunk<
-  ScreeningResultsData,
+  ScreeningResultsData & { jobId: string },
   string,
   { rejectValue: string }
 >("recruitment/fetchScreeningResults", async (jobId, thunkAPI) => {
   try {
     const raw = await screeningApi.getScreeningResults(jobId);
-    return mapScreeningResultsToFrontend(raw);
+    const mapped = mapScreeningResultsToFrontend(raw);
+    return {
+      ...mapped,
+      jobId,
+    };
   } catch (error) {
     return thunkAPI.rejectWithValue(
       parseApiError(error, "Failed to fetch screening results").message,
@@ -351,12 +356,16 @@ export const submitDecision = createAsyncThunk<
         reason,
       });
 
-      if (jobId) {
-        await thunkAPI.dispatch(fetchScreeningResults(jobId));
+      if (res?.data) {
+        const mapped = mapScreeningResultItemToFrontend(res.data as unknown as Record<string, unknown>);
+        if (jobId) {
+          thunkAPI.dispatch(fetchScreeningResults(jobId)).catch(() => {});
+        }
+        return mapped;
       }
 
-      if (res?.data) {
-        return mapScreeningResultItemToFrontend(res.data as unknown as Record<string, unknown>);
+      if (jobId) {
+        await thunkAPI.dispatch(fetchScreeningResults(jobId));
       }
 
       return {
@@ -366,8 +375,9 @@ export const submitDecision = createAsyncThunk<
         candidateId: "",
         candidateName: "",
         status: "COMPLETED",
+        error: null,
         decision: action === "SHORTLIST" ? "SHORTLIST" : action === "REJECT" ? "REJECT" : "REVIEW",
-        confidence: 1,
+        confidence: 0,
         matchScore: 0,
         strengths: [],
         weaknesses: [],
@@ -377,11 +387,12 @@ export const submitDecision = createAsyncThunk<
         hiringRecommendation: "",
         hrNotes: "",
         questionsToAsk: [],
-        modelUsed: "AI",
-        screenedAt: new Date().toISOString(),
+        modelUsed: "",
+        screenedAt: null,
         humanDecision: action,
-        humanDecisionBy: "You",
+        humanDecisionBy: null,
         humanDecisionReason: reason || null,
+        humanDecidedAt: new Date().toISOString(),
       };
     } catch (error) {
       return thunkAPI.rejectWithValue(

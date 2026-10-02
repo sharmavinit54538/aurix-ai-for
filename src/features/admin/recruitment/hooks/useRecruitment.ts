@@ -1,6 +1,10 @@
 import { useCallback, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { optimisticMoveStage, optimisticUpsertInterview } from "../recruitmentSlice";
+import {
+  clearScreeningState,
+  optimisticMoveStage,
+  optimisticUpsertInterview,
+} from "../recruitmentSlice";
 import {
   addNote,
   archiveJob,
@@ -49,16 +53,18 @@ export interface UseRecruitmentReturn extends RecruitmentResources {
   upsertInterview: (interview: Interview) => Promise<void>;
   upsertOffer: (offer: Offer) => Promise<void>;
   // Screening state and actions
-  screeningThresholds: ScreeningThresholds;
+  screeningThresholds: ScreeningThresholds | null;
   screeningRun: ScreeningRun | null;
   screeningResults: ScreeningResult[];
   screeningLoading: boolean;
   screeningSubmitting: boolean;
   screeningError: string | null;
+  clearScreeningState: () => void;
   runScreening: (params: {
     jobId: string;
     applicationIds?: string[];
     model?: string;
+    force?: boolean;
   }) => Promise<ScreeningRun>;
   fetchScreeningResults: (jobId: string) => Promise<ScreeningResultsData>;
   submitDecision: (params: {
@@ -187,7 +193,7 @@ function useRecruitmentBase() {
   );
 
   const runScreeningAction = useCallback(
-    async (params: { jobId: string; applicationIds?: string[]; model?: string }) => {
+    async (params: { jobId: string; applicationIds?: string[]; model?: string; force?: boolean }) => {
       const result = await dispatch(runScreening(params));
       if (runScreening.rejected.match(result)) {
         throw new Error(result.payload ?? "Failed to run screening");
@@ -196,6 +202,10 @@ function useRecruitmentBase() {
     },
     [dispatch],
   );
+
+  const clearScreeningStateAction = useCallback(() => {
+    dispatch(clearScreeningState());
+  }, [dispatch]);
 
   const fetchScreeningResultsAction = useCallback(
     async (jobId: string) => {
@@ -250,6 +260,7 @@ function useRecruitmentBase() {
     screeningLoading,
     screeningSubmitting,
     screeningError,
+    clearScreeningState: clearScreeningStateAction,
     runScreening: runScreeningAction,
     fetchScreeningResults: fetchScreeningResultsAction,
     submitDecision: submitDecisionAction,

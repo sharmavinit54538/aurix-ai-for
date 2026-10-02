@@ -71,6 +71,17 @@ export function mapJobToFrontend(j: Record<string, unknown>): Job {
 
 export function mapCandidateToFrontend(c: Record<string, unknown>): Candidate {
   const applications = c.applications as Array<Record<string, unknown>> | undefined;
+  const mappedApplications = Array.isArray(applications)
+    ? applications.map((app) => ({
+        id: String(app.id ?? ""),
+        jobId: String(app.job_id ?? app.jobId ?? ""),
+        stage: (String(app.status ?? app.stage ?? "").toLowerCase() || "applied") as Stage,
+        appliedPosition: String(
+          (app.job as Record<string, unknown> | undefined)?.title ?? app.applied_position ?? app.appliedPosition ?? "",
+        ),
+        appliedAt: String(app.created_at ?? app.applied_at ?? app.appliedAt ?? ""),
+      }))
+    : [];
   const latestApp = applications?.[0];
   const notesRaw = c.notes as Array<Record<string, unknown>> | undefined;
   const notes =
@@ -141,6 +152,7 @@ export function mapCandidateToFrontend(c: Record<string, unknown>): Candidate {
     timeline,
     appliedAt: String(latestApp?.created_at ?? c.created_at ?? new Date().toISOString()),
     vendorId: String(c.vendor_id || ""),
+    applications: mappedApplications,
   };
 }
 
@@ -317,13 +329,13 @@ export function mapScreeningResultItemToFrontend(raw: Record<string, unknown>): 
     humanDecision = humanDecRaw;
   }
 
-  const confidenceRaw = Number(raw.confidence ?? 0);
-  const matchScoreRaw = Number(raw.match_score ?? raw.matchScore ?? 0);
+  const confidenceRaw = Math.round(Number(raw.confidence ?? 0));
+  const matchScoreRaw = Math.round(Number(raw.match_score ?? raw.matchScore ?? 0));
 
   const id = String(raw.id ?? raw.screening_id ?? raw.screeningId ?? raw.application_id ?? "");
   const screeningId =
-    raw.screening_id || raw.screeningId || raw.id
-      ? String(raw.screening_id || raw.screeningId || raw.id)
+    raw.screening_id || raw.screeningId
+      ? String(raw.screening_id || raw.screeningId)
       : undefined;
 
   return {
@@ -333,6 +345,7 @@ export function mapScreeningResultItemToFrontend(raw: Record<string, unknown>): 
     candidateId: String(raw.candidate_id ?? raw.candidateId ?? ""),
     candidateName: String(raw.candidate_name ?? raw.candidateName ?? "Candidate"),
     status: validStatus,
+    error: raw.error ? String(raw.error) : null,
     decision,
     confidence: confidenceRaw,
     matchScore: matchScoreRaw,
@@ -364,13 +377,17 @@ export function mapScreeningResultItemToFrontend(raw: Record<string, unknown>): 
       raw.human_decision_reason || raw.humanDecisionReason
         ? String(raw.human_decision_reason || raw.humanDecisionReason)
         : null,
+    humanDecidedAt:
+      raw.human_decided_at || raw.humanDecidedAt
+        ? String(raw.human_decided_at || raw.humanDecidedAt)
+        : null,
   };
 }
 
 export function mapScreeningResultsToFrontend(raw: unknown): ScreeningResultsData {
   if (!raw || typeof raw !== "object") {
     return {
-      thresholds: { shortlist: 85, reject: 60 },
+      thresholds: null,
       run: null,
       results: [],
     };
@@ -383,10 +400,15 @@ export function mapScreeningResultsToFrontend(raw: unknown): ScreeningResultsDat
   >;
 
   const thresholdsRaw = data.thresholds as Record<string, unknown> | undefined;
-  const thresholds = {
-    shortlist: Number(thresholdsRaw?.shortlist ?? 85),
-    reject: Number(thresholdsRaw?.reject ?? 60),
-  };
+  const thresholds =
+    thresholdsRaw &&
+    typeof thresholdsRaw.shortlist === "number" &&
+    typeof thresholdsRaw.reject === "number"
+      ? {
+          shortlist: Number(thresholdsRaw.shortlist),
+          reject: Number(thresholdsRaw.reject),
+        }
+      : null;
 
   let run: ScreeningRun | null = null;
   const runRaw = data.run as Record<string, unknown> | undefined;
