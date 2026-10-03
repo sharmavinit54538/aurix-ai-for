@@ -77,7 +77,7 @@ export function createHrTools({ token, role = "employee" }: CreateHrToolsOptions
 
   tools.proposeAction = tool({
     description:
-      "Stage an action that requires human approval before execution (e.g. apply leave, send email, generate offer letter, approve reimbursement). Returns a structured proposal — DOES NOT execute the action.",
+      "Stage a draft suggestion for an action that requires human review/approval (e.g. apply leave, send email, generate offer letter, approve reimbursement). Returns a structured proposal labeled 'Draft suggestion (not submitted)' — DOES NOT execute or submit the action.",
     inputSchema: z.object({
       kind: z.enum([
         "apply_leave",
@@ -98,9 +98,12 @@ export function createHrTools({ token, role = "employee" }: CreateHrToolsOptions
         .describe("Role that must approve, e.g. 'manager', 'hr_admin', 'finance'"),
     }),
     execute: async (input) => ({
-      status: "pending_approval" as const,
-      proposalId: `prop_${Math.random().toString(36).slice(2, 10)}`,
+      status: "draft_suggestion" as const,
+      label: "Draft suggestion (not submitted)",
+      isSubmitted: false,
+      proposalId: `draft_${Math.random().toString(36).slice(2, 10)}`,
       proposedAt: new Date().toISOString(),
+      notice: "This is a draft suggestion and has not been submitted or executed. Backend approval workflow is currently not connected.",
       ...input,
     }),
   });

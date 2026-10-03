@@ -50,23 +50,14 @@ export interface WorkforceRequirement {
   createdAt: string;
 }
 
-const DEFAULT_DEPARTMENTS = [
-  "Engineering",
-  "Data & AI Analytics",
-  "Product Management",
-  "Design & Creative",
-  "Sales & Business Dev",
-  "Human Resources",
-  "Finance & Accounting",
-  "Operations",
-];
+
 
 export function WorkforcePlanningPage() {
   const navigate = useNavigate();
   const { upsertJob } = useRecruitment();
-  const [departments, setDepartments] = useState<string[]>(DEFAULT_DEPARTMENTS);
+  const [departments, setDepartments] = useState<string[]>([]);
 
-  // Load real departments from backend API
+  // Load real departments from backend API (/api/v1/departments)
   useEffect(() => {
     let mounted = true;
     async function loadDepts() {
@@ -83,11 +74,16 @@ export function WorkforcePlanningPage() {
         if (mounted && list.length > 0) {
           const names = list.map((d: any) => d.name || d.title || d.department_name).filter(Boolean);
           if (names.length > 0) {
-            setDepartments(Array.from(new Set([...names, ...DEFAULT_DEPARTMENTS])));
+            const unique = Array.from(new Set<string>(names));
+            setDepartments(unique);
+            setForm((prev) => ({
+              ...prev,
+              department: prev.department || unique[0] || "",
+            }));
           }
         }
       } catch {
-        // fallback to DEFAULT_DEPARTMENTS
+        // keep empty list if backend error
       }
     }
     loadDepts();
@@ -141,7 +137,7 @@ export function WorkforcePlanningPage() {
 
   // New Requirement Form State (Zero mock defaults)
   const [form, setForm] = useState({
-    department: "Engineering",
+    department: "",
     roleTitle: "",
     headcountNeeded: 1,
     currentHeadcount: 0,
@@ -200,7 +196,7 @@ export function WorkforcePlanningPage() {
       toast.success(`Workforce requirement ${newReq.id} created successfully!`);
       setShowCreateModal(false);
       setForm({
-        department: departments[0] || "Engineering",
+        department: departments[0] || "",
         roleTitle: "",
         headcountNeeded: 1,
         currentHeadcount: 0,
@@ -638,12 +634,16 @@ export function WorkforcePlanningPage() {
                     onValueChange={(v) => setForm({ ...form, department: v })}
                   >
                     <SelectTrigger className="mt-1 h-9 text-xs">
-                      <SelectValue />
+                      <SelectValue placeholder="Select department" />
                     </SelectTrigger>
                     <SelectContent>
-                      {departments.map((d) => (
-                        <SelectItem key={d} value={d}>{d}</SelectItem>
-                      ))}
+                      {departments.length === 0 ? (
+                        <SelectItem value="General">General</SelectItem>
+                      ) : (
+                        departments.map((d) => (
+                          <SelectItem key={d} value={d}>{d}</SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>

@@ -120,6 +120,7 @@ export function CandidateSourcingPage() {
   const [importSource, setImportSource] = useState<SourcedCandidate["source"]>("LinkedIn");
   const [importTargetRole, setImportTargetRole] = useState(jobs[0]?.title || "");
   const [importRawNames, setImportRawNames] = useState("");
+  const [importErrors, setImportErrors] = useState<string[]>([]);
 
   const saveSourced = (data: SourcedCandidate[]) => {
     setSourcedList(data);
@@ -142,32 +143,60 @@ export function CandidateSourcingPage() {
 
   const handleBulkImport = (e: React.FormEvent) => {
     e.preventDefault();
-    const lines = importRawNames.split("\n").filter((l) => l.trim());
+    const lines = importRawNames.split("\n").map((l) => l.trim()).filter(Boolean);
     if (lines.length === 0) {
       toast.error("Please enter at least one candidate entry.");
       return;
     }
 
-    const newItems: SourcedCandidate[] = lines.map((line, idx) => {
+    const errors: string[] = [];
+    const newItems: SourcedCandidate[] = [];
+
+    lines.forEach((line, idx) => {
       const parts = line.split(",").map((p) => p.trim());
-      return {
+      const name = parts[0];
+      const email = parts[1];
+      const phone = parts[2] || "";
+
+      if (!name) {
+        errors.push(`Line ${idx + 1}: Name is required.`);
+        return;
+      }
+
+      if (!email || !email.includes("@") || !email.includes(".")) {
+        errors.push(`Line ${idx + 1} (${name}): Missing or invalid email address. Sourced candidates must have a verified email.`);
+        return;
+      }
+
+      newItems.push({
         id: `src-${Date.now()}-${idx}`,
-        name: parts[0] || "Candidate",
-        email: parts[1] || `sourced.${Date.now()}.${idx}@example.com`,
-        phone: parts[2] || "",
+        name,
+        email,
+        phone,
         source: importSource,
         targetRole: importTargetRole || "Role Not Specified",
         status: "Sourced",
         lastContacted: new Date().toISOString().split("T")[0],
         channel: "Email",
         notes: `Imported via sourcing wizard from ${importSource}`,
-      };
+      });
     });
 
-    saveSourced([...newItems, ...sourcedList]);
-    toast.success(`Imported ${newItems.length} candidate${newItems.length === 1 ? "" : "s"} into sourcing pipeline!`);
-    setImportRawNames("");
-    setShowUploadModal(false);
+    if (errors.length > 0) {
+      setImportErrors(errors);
+      toast.error(`${errors.length} candidate entry(ies) rejected due to missing or invalid email.`);
+    } else {
+      setImportErrors([]);
+    }
+
+    if (newItems.length > 0) {
+      saveSourced([...newItems, ...sourcedList]);
+      toast.success(`Imported ${newItems.length} candidate${newItems.length === 1 ? "" : "s"} into sourcing pipeline!`);
+      if (errors.length === 0) {
+        setImportRawNames("");
+        setShowUploadModal(false);
+      }
+    }
   };
 
   const handleConvertToApplicant = (cand: SourcedCandidate) => {
@@ -222,7 +251,13 @@ export function CandidateSourcingPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-end">
-        <Button onClick={() => setShowUploadModal(true)} className="gap-1.5 shadow-sm">
+        <Button
+          onClick={() => {
+            setImportErrors([]);
+            setShowUploadModal(true);
+          }}
+          className="gap-1.5 shadow-sm"
+        >
           <Upload className="h-4 w-4" />
           Import Resumes / Candidates
         </Button>
@@ -554,15 +589,35 @@ export function CandidateSourcingPage() {
               </div>
 
               <div>
-                <Label className="text-xs">Candidate Entries (Name, Email, Phone — one per line)</Label>
+                <Label className="text-xs">Candidate Entries (Name, Email, Phone — one per line) *</Label>
                 <Textarea
                   className="mt-1 font-mono text-xs"
                   rows={5}
                   placeholder={`e.g.\nRahul Sharma, rahul.sharma@example.com, +91 98765 43210\nAnanya Iyer, ananya.iyer@example.com, +91 98112 33445`}
                   value={importRawNames}
-                  onChange={(e) => setImportRawNames(e.target.value)}
+                  onChange={(e) => {
+                    setImportRawNames(e.target.value);
+                    if (importErrors.length > 0) setImportErrors([]);
+                  }}
                 />
+                <span className="text-[10px] text-muted-foreground mt-1 block">
+                  Each line must contain at least Name and Email separated by commas.
+                </span>
               </div>
+
+              {importErrors.length > 0 && (
+                <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive space-y-1">
+                  <div className="font-semibold flex items-center gap-1.5">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    Rejected Entries ({importErrors.length}):
+                  </div>
+                  <ul className="list-disc list-inside space-y-0.5 text-[11px] text-destructive/90 max-h-28 overflow-y-auto">
+                    {importErrors.map((err, i) => (
+                      <li key={i}>{err}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
 
             <DialogFooter>
