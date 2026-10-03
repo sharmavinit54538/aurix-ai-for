@@ -420,17 +420,25 @@ export default function ChatAssistantPage() {
           return;
         }
 
+        const ivId = String(interviewData.id || newId());
         await upsertInterview({
-          id: String(interviewData.id || newId()),
+          id: ivId,
+          interviewId: ivId,
+          roundId: String(interviewData.roundId || ivId),
+          scheduleId: String(interviewData.scheduleId || ivId),
+          applicationId: String(interviewData.applicationId || ""),
+          jobId: String(interviewData.jobId || ""),
           candidateId,
           candidateName,
           jobTitle: String(interviewData.jobTitle || "Open Role"),
+          interviewerId: null,
           interviewer,
           round,
           date: new Date(time).toISOString(),
           durationMins: Number(interviewData.durationMins || 45),
+          mode: "ONLINE",
           meetingLink: String(interviewData.meetingLink || ""),
-          status: "scheduled",
+          status: "SCHEDULED",
         });
         toast.success(`Action Executed: Interview scheduled for ${candidateName}.`);
       } else if (actionNameLower.includes("offer")) {

@@ -36,22 +36,30 @@ export function RecruitmentCalendarPage() {
 
   const byDay = useMemo(() => {
     const m: Record<string, Interview[]> = {};
-    interviews.forEach((iv) => { const key = new Date(iv.date).toDateString(); (m[key] ||= []).push(iv); });
+    interviews.forEach((iv) => {
+      if (!iv.date) return;
+      const key = new Date(iv.date).toDateString();
+      (m[key] ||= []).push(iv);
+    });
     return m;
   }, [interviews]);
 
   async function onDrop(e: React.DragEvent, day: Date) {
     e.preventDefault();
     const id = e.dataTransfer.getData("text/iv");
-    const iv = interviews.find((x) => x.id === id); if (!iv) return;
-    const next = new Date(iv.date); next.setFullYear(day.getFullYear(), day.getMonth(), day.getDate());
-    
+    const iv = interviews.find((x) => x.id === id);
+    if (!iv || !iv.date) return;
+    const next = new Date(iv.date);
+    next.setFullYear(day.getFullYear(), day.getMonth(), day.getDate());
+
     const updatedIv = { ...iv, date: next.toISOString() };
-    
+
     try {
       await upsertInterview(updatedIv);
-      toast.success(`Rescheduled ${iv.candidateName}'s interview to ${day.toLocaleDateString([], { month: "short", day: "numeric" })}`);
-    } catch (err) {
+      toast.success(
+        `Rescheduled ${iv.candidateName}'s interview to ${day.toLocaleDateString([], { month: "short", day: "numeric" })}`,
+      );
+    } catch {
       toast.error("Failed to reschedule interview.");
     }
   }
@@ -67,32 +75,40 @@ export function RecruitmentCalendarPage() {
     if (!cand) return;
 
     const newIvId = newId("iv");
+    const isoDate = new Date(`${scheduleForm.date}T${scheduleForm.time}`).toISOString();
     const newIv: Interview = {
       id: newIvId,
+      interviewId: newIvId,
+      roundId: newIvId,
+      scheduleId: newIvId,
+      applicationId: cand.applicationId || "",
       candidateId: cand.id,
       candidateName: cand.name,
+      jobId: cand.jobId || "",
       jobTitle: cand.appliedPosition || "Position",
+      interviewerId: null,
       interviewer: scheduleForm.interviewer,
       round: scheduleForm.round,
-      date: `${scheduleForm.date}T${scheduleForm.time}:00Z`,
+      date: isoDate,
       durationMins: Number(scheduleForm.duration),
+      mode: "ONLINE",
       meetingLink: scheduleForm.meetingLink,
-      status: "scheduled",
+      status: "SCHEDULED",
     };
 
     try {
       if (cand.applicationId) {
-        await apiInstance.post(`/applications/${cand.applicationId}/send-interview?round_names=${encodeURIComponent(scheduleForm.round)}`);
+        await apiInstance.post(
+          `/applications/${cand.applicationId}/send-interview?round_names=${encodeURIComponent(scheduleForm.round)}`,
+        );
         moveStage(cand.applicationId, "interview");
       }
       await upsertInterview(newIv);
       toast.success("Interview scheduled successfully!");
       setShowScheduleModal(false);
       await refreshAll();
-    } catch (err) {
-      await upsertInterview(newIv);
-      toast.success("Interview scheduled successfully (saved locally)!");
-      setShowScheduleModal(false);
+    } catch {
+      toast.error("Failed to schedule interview.");
     }
   };
 
@@ -127,10 +143,28 @@ export function RecruitmentCalendarPage() {
                 <div className={`text-base font-semibold ${today ? "text-primary font-bold" : ""}`}>{d.getDate()}</div>
               </div>
               <div className="space-y-1.5">
-                {list.sort((a, b) => +new Date(a.date) - +new Date(b.date)).map((iv) => (
-                  <div key={iv.id} draggable onDragStart={(e) => e.dataTransfer.setData("text/iv", iv.id)}
-                    className="cursor-grab rounded-md border border-border bg-background/60 p-1.5 text-[11px] shadow-sm transition-all hover:bg-accent/20 active:cursor-grabbing">
-                    <div className="font-medium leading-tight text-primary">{new Date(iv.date).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</div>
+                {list
+                  .slice()
+                  .sort(
+                    (a, b) =>
+                      (a.date ? new Date(a.date).getTime() : 0) -
+                      (b.date ? new Date(b.date).getTime() : 0),
+                  )
+                  .map((iv) => (
+                    <div
+                      key={iv.id}
+                      draggable
+                      onDragStart={(e) => e.dataTransfer.setData("text/iv", iv.id)}
+                      className="cursor-grab rounded-md border border-border bg-background/60 p-1.5 text-[11px] shadow-sm transition-all hover:bg-accent/20 active:cursor-grabbing"
+                    >
+                      <div className="font-medium leading-tight text-primary">
+                        {iv.date
+                          ? new Date(iv.date).toLocaleTimeString([], {
+                              hour: "numeric",
+                              minute: "2-digit",
+                            })
+                          : "Not scheduled"}
+                      </div>
                     <Link to="/dashboard/recruitment/candidates/$candidateId" params={{ candidateId: iv.candidateId }}
                       className="truncate font-semibold hover:underline block cursor-pointer text-foreground">
                       {iv.candidateName}

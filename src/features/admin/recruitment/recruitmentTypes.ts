@@ -1,6 +1,7 @@
 import type {
   Candidate,
   Interview,
+  Interviewer,
   Job,
   Offer,
   ScreeningResult,
@@ -29,8 +30,14 @@ export interface RecruitmentState extends RecruitmentResources {
   screeningLoading: boolean;
   screeningSubmitting: boolean;
   screeningError: string | null;
+  // Interviews State
+  interviewPagination: { total: number; page: number; limit: number } | null;
+  interviewers: Interviewer[];
+  interviewLoading: boolean;
+  interviewSubmitting: boolean;
+  interviewError: string | null;
 }
 
 export type RecruitmentDataPayload = RecruitmentResources;
-export type { ScreeningThresholds, ScreeningRun, ScreeningResult, ScreeningResultsData };
+export type { ScreeningThresholds, ScreeningRun, ScreeningResult, ScreeningResultsData, Interviewer };
 

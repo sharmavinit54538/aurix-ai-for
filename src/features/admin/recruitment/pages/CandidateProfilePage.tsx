@@ -133,17 +133,26 @@ export function CandidateProfilePage() {
     setScheduling(true);
     try {
       // Create scheduled interview
+      const ivId = newId("iv");
+      const isoDate = new Date(`${scheduleDate}T${scheduleTime}`).toISOString();
       await upsertInterview({
-        id: newId("iv"),
+        id: ivId,
+        interviewId: ivId,
+        roundId: ivId,
+        scheduleId: ivId,
+        applicationId: candidate.applicationId || "",
         candidateId: candidate.id,
         candidateName: candidate.name,
-        jobTitle: candidate.appliedPosition,
+        jobId: candidate.jobId || "",
+        jobTitle: candidate.appliedPosition || "Position",
+        interviewerId: null,
         interviewer: scheduleInterviewer,
         round: scheduleRound,
-        date: `${scheduleDate}T${scheduleTime}:00Z`,
+        date: isoDate,
         durationMins: 45,
-        meetingLink: scheduleLink,
-        status: "scheduled",
+        mode: "ONLINE",
+        meetingLink: scheduleLink || null,
+        status: "SCHEDULED",
       });
       // Move application to appropriate interview stage automatically
       if (candidate.applicationId) {

@@ -82,7 +82,7 @@ export function RecruitmentSearchPage() {
             {is.map((i) => (
               <div key={i.id} className="rounded-md p-2 text-sm hover:bg-accent/50">
                 <div className="font-medium">{i.candidateName} — {i.round}</div>
-                <div className="text-[11px] text-muted-foreground">{new Date(i.date).toLocaleString()} · {i.interviewer}</div>
+                <div className="text-[11px] text-muted-foreground">{i.date ? new Date(i.date).toLocaleString() : "Not scheduled"} · {i.interviewer}</div>
               </div>
             ))}
             {is.length === 0 ? <div className="p-3 text-xs text-muted-foreground">No matches.</div> : null}

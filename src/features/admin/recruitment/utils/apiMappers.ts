@@ -158,32 +158,87 @@ export function mapCandidateToFrontend(c: Record<string, unknown>): Candidate {
 
 export function mapInterviewToFrontend(iv: Record<string, unknown>): Interview {
   const application = iv.application as Record<string, unknown> | undefined;
-  const candidate = application?.candidate as Record<string, unknown> | undefined;
-  const job = application?.job as Record<string, unknown> | undefined;
+  const candidate = (iv.candidate || application?.candidate) as Record<string, unknown> | undefined;
+  const job = (iv.job || application?.job) as Record<string, unknown> | undefined;
   const schedules = iv.schedules as Array<Record<string, unknown>> | undefined;
   const schedule = schedules?.[0];
-  const interviewer = schedule?.interviewer as Record<string, unknown> | undefined;
+  const interviewer = (iv.interviewer || schedule?.interviewer) as Record<string, unknown> | undefined;
+
+  const interviewId = String(iv.interview_id ?? iv.id ?? "");
+  const roundId = String(iv.round_id ?? iv.id ?? "");
+  const scheduleId = iv.schedule_id ? String(iv.schedule_id) : schedule?.id ? String(schedule.id) : null;
+  const applicationId = String(iv.application_id ?? application?.id ?? iv.applicationId ?? "");
+  const candidateId = String(iv.candidate_id ?? candidate?.id ?? application?.candidate_id ?? "");
+
+  let candidateName = "Candidate";
+  if (typeof candidate?.name === "string" && candidate.name.trim()) {
+    candidateName = candidate.name.trim();
+  } else if (candidate?.first_name || candidate?.last_name) {
+    candidateName = `${candidate.first_name ?? ""} ${candidate.last_name ?? ""}`.trim() || "Candidate";
+  }
+
+  let interviewerName = "Unassigned";
+  if (typeof interviewer?.name === "string" && interviewer.name.trim()) {
+    interviewerName = interviewer.name.trim();
+  } else if (interviewer?.first_name || interviewer?.last_name) {
+    interviewerName = `${interviewer.first_name ?? ""} ${interviewer.last_name ?? ""}`.trim() || "Unassigned";
+  } else if (typeof iv.interviewer_name === "string" && iv.interviewer_name.trim()) {
+    interviewerName = iv.interviewer_name.trim();
+  }
+
+  const rawScheduledAt = iv.scheduled_at ?? schedule?.scheduled_at;
+  const date = rawScheduledAt ? String(rawScheduledAt) : null;
+
+  const durationMins = Number(iv.duration_minutes ?? schedule?.duration_minutes ?? 0);
+  const meetingLink = (iv.meeting_url || schedule?.meeting_link || schedule?.meeting_url)
+    ? String(iv.meeting_url || schedule?.meeting_link || schedule?.meeting_url)
+    : null;
+  const officeAddress = (iv.office_address || schedule?.office_address)
+    ? String(iv.office_address || schedule?.office_address)
+    : null;
+
+  const statusRaw = String(iv.status ?? "PENDING_SCHEDULE").toUpperCase();
+  let status: Interview["status"] = "PENDING_SCHEDULE";
+  if (statusRaw === "SCHEDULED" || statusRaw === "SCHEDULE") status = "SCHEDULED";
+  else if (statusRaw === "COMPLETED") status = "COMPLETED";
+  else if (statusRaw === "CANCELLED") status = "CANCELLED";
+  else if (statusRaw === "NO_SHOW" || statusRaw === "NO-SHOW") status = "NO_SHOW";
+  else if (statusRaw === "PENDING_SCHEDULE" || statusRaw === "PENDING") status = "PENDING_SCHEDULE";
+  else if (statusRaw.toLowerCase() === "scheduled") status = "SCHEDULED";
+  else if (statusRaw.toLowerCase() === "completed") status = "COMPLETED";
+  else if (statusRaw.toLowerCase() === "cancelled") status = "CANCELLED";
+  else if (statusRaw.toLowerCase() === "no-show") status = "NO_SHOW";
+
+  const mode = (String(iv.mode ?? schedule?.mode ?? "ONLINE").toUpperCase() === "OFFLINE" ? "OFFLINE" : "ONLINE") as Interview["mode"];
 
   return {
-    id: String(iv.id ?? ""),
-    candidateId: String(application?.candidate_id ?? ""),
-    candidateName: candidate
-      ? `${candidate.first_name ?? ""} ${candidate.last_name ?? ""}`.trim() || "Candidate"
-      : "Candidate",
-    jobTitle: String(job?.title ?? "Job Position"),
-    interviewer: interviewer?.first_name
-      ? `${interviewer.first_name} ${interviewer.last_name ?? ""}`.trim()
-      : "Interviewer",
-    round: String(iv.round_name || "Technical Round"),
-    date: String(schedule?.scheduled_at ?? iv.created_at ?? new Date().toISOString()),
-    durationMins: Number(schedule?.duration_minutes || 45),
-    meetingLink: String(schedule?.meeting_link || "https://meet.google.com/abc-xyz-123"),
-    status: (String(iv.status ?? "").toLowerCase() === "scheduled"
-      ? "scheduled"
-      : String(iv.status ?? "scheduled").toLowerCase()) as Interview["status"],
-    rating: iv.rating as number | undefined,
-    feedback: iv.feedback_notes as string | undefined,
-    notes: iv.notes as string | undefined,
+    id: interviewId || roundId || String(iv.id ?? ""),
+    interviewId,
+    roundId,
+    scheduleId,
+    applicationId,
+    candidateId,
+    candidateName,
+    candidateEmail: candidate?.email ? String(candidate.email) : undefined,
+    jobId: String(iv.job_id ?? job?.id ?? application?.job_id ?? ""),
+    jobTitle: String(job?.title ?? job?.name ?? "Job Position"),
+    round: String(iv.round_name || iv.round || "Technical Round"),
+    interviewerId: interviewer?.id ? String(interviewer.id) : null,
+    interviewer: interviewerName,
+    date,
+    durationMins,
+    timezone: (iv.timezone || schedule?.timezone) ? String(iv.timezone || schedule?.timezone) : undefined,
+    mode,
+    meetingLink,
+    officeAddress,
+    status,
+    isOverdue: Boolean(iv.is_overdue),
+    rating: typeof iv.rating === "number" ? iv.rating : (iv.rating ? Number(iv.rating) : null),
+    recommendation: (iv.recommendation as Interview["recommendation"]) || null,
+    feedback: (iv.feedback || iv.feedback_notes) ? String(iv.feedback || iv.feedback_notes) : null,
+    cancelledReason: iv.cancelled_reason ? String(iv.cancelled_reason) : null,
+    createdAt: iv.created_at ? String(iv.created_at) : undefined,
+    notes: iv.notes ? String(iv.notes) : undefined,
   };
 }
 
@@ -213,11 +268,21 @@ export function mapOfferToFrontend(o: Record<string, unknown>): Offer {
 }
 
 export function extractItems(
-  result: PromiseSettledResult<unknown>,
+  result: PromiseSettledResult<unknown> | unknown,
 ): Record<string, unknown>[] {
-  if (result.status !== "fulfilled" || !result.value) return [];
+  if (!result) return [];
+  const isSettled =
+    typeof result === "object" && result !== null && "status" in result && ("value" in result || "reason" in result);
 
-  const raw = result.value as any;
+  let raw: any;
+  if (isSettled) {
+    const settled = result as PromiseSettledResult<unknown>;
+    if (settled.status !== "fulfilled" || !settled.value) return [];
+    raw = settled.value;
+  } else {
+    raw = result;
+  }
+
   const payload = raw && typeof raw === "object" && "data" in raw && raw.data !== undefined
     ? raw.data
     : raw;

@@ -52,7 +52,7 @@ export function HiringManagerRecruitmentPage() {
     return interviews.filter((i) => i.status === "scheduled");
   }, [interviews]);
 
-  const formatInterviewDate = (dateStr?: string) => {
+  const formatInterviewDate = (dateStr?: string | null) => {
     if (!dateStr) return "Date TBD";
     const date = new Date(dateStr);
     if (isNaN(date.getTime())) return dateStr;

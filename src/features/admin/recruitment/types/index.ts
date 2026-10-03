@@ -147,21 +147,54 @@ export interface Candidate {
   applications?: CandidateApplication[];
 }
 
-export type InterviewStatus = "scheduled" | "completed" | "cancelled" | "no-show";
+export type InterviewStatus =
+  | "PENDING_SCHEDULE"
+  | "SCHEDULED"
+  | "COMPLETED"
+  | "CANCELLED"
+  | "NO_SHOW"
+  | "scheduled"
+  | "completed"
+  | "cancelled"
+  | "no-show";
+
+export type InterviewRecommendation = "PASS" | "REJECT" | "HOLD";
+export type InterviewMode = "ONLINE" | "OFFLINE";
+
+export interface Interviewer {
+  id: ID;
+  name: string;
+  email?: string;
+  role?: string;
+}
 
 export interface Interview {
   id: ID;
+  interviewId: ID;
+  roundId: ID;
+  scheduleId: ID | null;
+  applicationId: ID;
   candidateId: ID;
   candidateName: string;
+  candidateEmail?: string;
+  jobId: ID;
   jobTitle: string;
-  interviewer: string;
   round: string;
-  date: string; // ISO datetime
+  interviewerId: ID | null;
+  interviewer: string;
+  date: string | null; // ISO datetime or null if not scheduled
   durationMins: number;
-  meetingLink: string;
+  timezone?: string;
+  mode: InterviewMode;
+  meetingLink: string | null;
+  officeAddress?: string | null;
   status: InterviewStatus;
-  rating?: number;
-  feedback?: string;
+  isOverdue?: boolean;
+  rating?: number | null;
+  recommendation?: InterviewRecommendation | null;
+  feedback?: string | null;
+  cancelledReason?: string | null;
+  createdAt?: string;
   notes?: string;
 }
 

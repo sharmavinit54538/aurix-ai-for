@@ -6,6 +6,8 @@ import type { RecruitmentDataPayload } from "./recruitmentTypes";
 import type {
   Candidate,
   Interview,
+  Interviewer,
+  InterviewRecommendation,
   Job,
   Offer,
   ScreeningResult,
@@ -14,11 +16,20 @@ import type {
   Stage,
 } from "./types";
 import {
+  extractItems,
+  mapInterviewToFrontend,
   mapJobToFrontend,
   mapScreeningResultItemToFrontend,
   mapScreeningResultsToFrontend,
 } from "./utils/apiMappers";
 import screeningApi from "@/services/screeningApi";
+import interviewApi, {
+  type CancelInterviewPayload,
+  type InterviewListParams,
+  type RescheduleInterviewPayload,
+  type RoundFeedbackPayload,
+  type ScheduleInterviewPayload,
+} from "@/services/interviewApi";
 
 function isUuid(id: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
@@ -255,16 +266,6 @@ export const upsertInterview = createAsyncThunk<Interview, Interview, { rejectVa
   "recruitment/upsertInterview",
   async (interview, thunkAPI) => {
     try {
-      if (isUuid(interview.id)) {
-        const payload = {
-          interview_round_id: interview.id,
-          scores: {},
-          overall_recommendation: interview.rating && interview.rating >= 3 ? "HIRE" : "NO_HIRE",
-          feedback_notes: interview.feedback || "",
-        };
-        await apiInstance.post("/scorecards/submissions", payload);
-      }
-
       await thunkAPI.dispatch(fetchRecruitmentData({ force: true }));
       return interview;
     } catch (error) {
@@ -401,4 +402,173 @@ export const submitDecision = createAsyncThunk<
     }
   },
 );
+
+export const fetchInterviews = createAsyncThunk<
+  { items: Interview[]; total: number; page: number; limit: number },
+  InterviewListParams | void,
+  { rejectValue: string }
+>(
+  "recruitment/fetchInterviews",
+  async (params, thunkAPI) => {
+    try {
+      const res = await interviewApi.getInterviews(params || {});
+      const itemsRaw = extractItems(res);
+      const items = itemsRaw.map(mapInterviewToFrontend);
+      const total =
+        res && typeof res === "object" && "total" in res && typeof res.total === "number"
+          ? res.total
+          : items.length;
+      const page =
+        res && typeof res === "object" && "page" in res && typeof res.page === "number"
+          ? res.page
+          : params?.page || 1;
+      const limit =
+        res && typeof res === "object" && "limit" in res && typeof res.limit === "number"
+          ? res.limit
+          : params?.limit || 50;
+
+      return { items, total, page, limit };
+    } catch (error) {
+      return thunkAPI.rejectWithValue(parseApiError(error, "Failed to fetch interviews").message);
+    }
+  },
+);
+
+export const fetchInterviewers = createAsyncThunk<
+  Interviewer[],
+  void,
+  { rejectValue: string }
+>(
+  "recruitment/fetchInterviewers",
+  async (_, thunkAPI) => {
+    try {
+      return await interviewApi.getInterviewers();
+    } catch (error) {
+      return thunkAPI.rejectWithValue(parseApiError(error, "Failed to fetch interviewers").message);
+    }
+  },
+);
+
+export const scheduleInterviewRound = createAsyncThunk<
+  unknown,
+  { interviewId: string; roundId: string; payload: ScheduleInterviewPayload },
+  { rejectValue: string }
+>(
+  "recruitment/scheduleInterviewRound",
+  async ({ interviewId, roundId, payload }, thunkAPI) => {
+    try {
+      const res = await interviewApi.scheduleRound(interviewId, roundId, payload);
+      await thunkAPI.dispatch(fetchRecruitmentData({ force: true }));
+      return res;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(parseApiError(error, "Failed to schedule interview").message);
+    }
+  },
+);
+
+export const rescheduleInterviewSchedule = createAsyncThunk<
+  unknown,
+  { scheduleId: string; payload: RescheduleInterviewPayload },
+  { rejectValue: string }
+>(
+  "recruitment/rescheduleInterviewSchedule",
+  async ({ scheduleId, payload }, thunkAPI) => {
+    try {
+      const res = await interviewApi.rescheduleSchedule(scheduleId, payload);
+      await thunkAPI.dispatch(fetchRecruitmentData({ force: true }));
+      return res;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(parseApiError(error, "Failed to reschedule interview").message);
+    }
+  },
+);
+
+export const cancelInterviewSchedule = createAsyncThunk<
+  unknown,
+  { scheduleId: string; payload: CancelInterviewPayload },
+  { rejectValue: string }
+>(
+  "recruitment/cancelInterviewSchedule",
+  async ({ scheduleId, payload }, thunkAPI) => {
+    try {
+      const res = await interviewApi.cancelSchedule(scheduleId, payload);
+      await thunkAPI.dispatch(fetchRecruitmentData({ force: true }));
+      return res;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(parseApiError(error, "Failed to cancel interview").message);
+    }
+  },
+);
+
+export const sendInterviewReminder = createAsyncThunk<
+  unknown,
+  string,
+  { rejectValue: string }
+>(
+  "recruitment/sendInterviewReminder",
+  async (scheduleId, thunkAPI) => {
+    try {
+      const res = await interviewApi.sendReminder(scheduleId);
+      return res;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(parseApiError(error, "Failed to send interview reminder").message);
+    }
+  },
+);
+
+export const markInterviewNoShow = createAsyncThunk<
+  unknown,
+  string,
+  { rejectValue: string }
+>(
+  "recruitment/markInterviewNoShow",
+  async (scheduleId, thunkAPI) => {
+    try {
+      const res = await interviewApi.markNoShow(scheduleId);
+      await thunkAPI.dispatch(fetchRecruitmentData({ force: true }));
+      return res;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(parseApiError(error, "Failed to mark interview as no-show").message);
+    }
+  },
+);
+
+export const submitRoundFeedback = createAsyncThunk<
+  unknown,
+  {
+    roundId: string;
+    action: "pass" | "reject" | "hold" | InterviewRecommendation;
+    payload: RoundFeedbackPayload;
+  },
+  { rejectValue: string }
+>(
+  "recruitment/submitRoundFeedback",
+  async ({ roundId, action, payload }, thunkAPI) => {
+    try {
+      const res = await interviewApi.submitRoundFeedback(roundId, action, payload);
+      await thunkAPI.dispatch(fetchRecruitmentData({ force: true }));
+      return res;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(parseApiError(error, "Failed to submit interview feedback").message);
+    }
+  },
+);
+
+export const sendInterviewInvite = createAsyncThunk<
+  unknown,
+  { applicationId: string; roundNames?: string },
+  { rejectValue: string }
+>(
+  "recruitment/sendInterviewInvite",
+  async ({ applicationId, roundNames }, thunkAPI) => {
+    try {
+      const res = await interviewApi.sendInterviewInvite(applicationId, roundNames);
+      await thunkAPI.dispatch(fetchRecruitmentData({ force: true }));
+      return res;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(parseApiError(error, "Failed to send interview invite").message);
+    }
+  },
+);
+
 

@@ -2,19 +2,29 @@ import { createSlice } from "@reduxjs/toolkit";
 import {
   addNote,
   archiveJob,
+  cancelInterviewSchedule,
   deleteJob,
   duplicateJob,
+  fetchInterviewers,
+  fetchInterviews,
   fetchRecruitmentData,
   fetchScreeningResults,
+  markInterviewNoShow,
   moveStage,
+  rescheduleInterviewSchedule,
   runScreening,
+  scheduleInterviewRound,
+  sendInterviewInvite,
+  sendInterviewReminder,
   submitDecision,
+  submitRoundFeedback,
   upsertCandidate,
   upsertInterview,
   upsertJob,
   upsertOffer,
 } from "./recruitmentThunk";
 import type { RecruitmentState } from "./recruitmentTypes";
+
 const initialState: RecruitmentState = {
   jobs: [],
   candidates: [],
@@ -31,6 +41,11 @@ const initialState: RecruitmentState = {
   screeningLoading: false,
   screeningSubmitting: false,
   screeningError: null,
+  interviewPagination: null,
+  interviewers: [],
+  interviewLoading: false,
+  interviewSubmitting: false,
+  interviewError: null,
 };
 
 const mutationThunks = [
@@ -43,6 +58,13 @@ const mutationThunks = [
   addNote,
   upsertInterview,
   upsertOffer,
+  scheduleInterviewRound,
+  rescheduleInterviewSchedule,
+  cancelInterviewSchedule,
+  sendInterviewReminder,
+  markInterviewNoShow,
+  submitRoundFeedback,
+  sendInterviewInvite,
 ];
 
 const recruitmentSlice = createSlice({
@@ -164,6 +186,27 @@ const recruitmentSlice = createSlice({
         state.screeningSubmitting = false;
         state.screeningError =
           (action.payload as string) || action.error.message || "Failed to submit decision";
+      })
+      .addCase(fetchInterviews.pending, (state) => {
+        state.interviewLoading = true;
+        state.interviewError = null;
+      })
+      .addCase(fetchInterviews.fulfilled, (state, action) => {
+        state.interviewLoading = false;
+        state.interviews = action.payload.items;
+        state.interviewPagination = {
+          total: action.payload.total,
+          page: action.payload.page,
+          limit: action.payload.limit,
+        };
+      })
+      .addCase(fetchInterviews.rejected, (state, action) => {
+        state.interviewLoading = false;
+        state.interviewError =
+          (action.payload as string) || action.error.message || "Failed to fetch interviews";
+      })
+      .addCase(fetchInterviewers.fulfilled, (state, action) => {
+        state.interviewers = action.payload;
       });
 
     mutationThunks.forEach((thunk) => {

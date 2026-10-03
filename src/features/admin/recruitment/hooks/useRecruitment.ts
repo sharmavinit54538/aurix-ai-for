@@ -8,14 +8,23 @@ import {
 import {
   addNote,
   archiveJob,
+  cancelInterviewSchedule,
   deleteJob,
   duplicateJob,
+  fetchInterviewers,
+  fetchInterviews,
   fetchJobById,
   fetchRecruitmentData,
   fetchScreeningResults,
+  markInterviewNoShow,
   moveStage,
+  rescheduleInterviewSchedule,
   runScreening,
+  scheduleInterviewRound,
+  sendInterviewInvite,
+  sendInterviewReminder,
   submitDecision,
+  submitRoundFeedback,
   upsertCandidate,
   upsertInterview,
   upsertJob,
@@ -25,6 +34,8 @@ import type { RecruitmentResources } from "../recruitmentTypes";
 import type {
   Candidate,
   Interview,
+  Interviewer,
+  InterviewRecommendation,
   Job,
   Offer,
   ScreeningResult,
@@ -33,6 +44,13 @@ import type {
   ScreeningThresholds,
   Stage,
 } from "../types";
+import type {
+  CancelInterviewPayload,
+  InterviewListParams,
+  RescheduleInterviewPayload,
+  RoundFeedbackPayload,
+  ScheduleInterviewPayload,
+} from "@/services/interviewApi";
 import { newId } from "../utils/newId";
 
 export { newId };
@@ -73,6 +91,25 @@ export interface UseRecruitmentReturn extends RecruitmentResources {
     reason?: string;
     jobId?: string;
   }) => Promise<ScreeningResult>;
+  // Interviews state and actions
+  interviewPagination: { total: number; page: number; limit: number } | null;
+  interviewers: Interviewer[];
+  interviewLoading: boolean;
+  interviewSubmitting: boolean;
+  interviewError: string | null;
+  fetchInterviews: (params?: InterviewListParams) => Promise<{ items: Interview[]; total: number; page: number; limit: number }>;
+  fetchInterviewers: () => Promise<Interviewer[]>;
+  scheduleInterview: (params: { interviewId: string; roundId: string; payload: ScheduleInterviewPayload }) => Promise<unknown>;
+  rescheduleInterview: (params: { scheduleId: string; payload: RescheduleInterviewPayload }) => Promise<unknown>;
+  cancelInterview: (params: { scheduleId: string; payload: CancelInterviewPayload }) => Promise<unknown>;
+  sendInterviewReminder: (scheduleId: string) => Promise<unknown>;
+  markInterviewNoShow: (scheduleId: string) => Promise<unknown>;
+  submitRoundFeedback: (params: {
+    roundId: string;
+    action: "pass" | "reject" | "hold" | InterviewRecommendation;
+    payload: RoundFeedbackPayload;
+  }) => Promise<unknown>;
+  sendInterviewInvite: (params: { applicationId: string; roundNames?: string }) => Promise<unknown>;
 }
 
 
@@ -93,6 +130,11 @@ function useRecruitmentBase() {
     screeningLoading,
     screeningSubmitting,
     screeningError,
+    interviewPagination,
+    interviewers,
+    interviewLoading,
+    interviewSubmitting,
+    interviewError,
   } = useAppSelector((state) => state.recruitment);
 
   const shouldFetch =
@@ -234,6 +276,106 @@ function useRecruitmentBase() {
     [dispatch],
   );
 
+  const fetchInterviewsAction = useCallback(
+    async (params?: InterviewListParams) => {
+      const result = await dispatch(fetchInterviews(params));
+      if (fetchInterviews.rejected.match(result)) {
+        throw new Error(result.payload ?? "Failed to fetch interviews");
+      }
+      return result.payload;
+    },
+    [dispatch],
+  );
+
+  const fetchInterviewersAction = useCallback(async () => {
+    const result = await dispatch(fetchInterviewers());
+    if (fetchInterviewers.rejected.match(result)) {
+      throw new Error(result.payload ?? "Failed to fetch interviewers");
+    }
+    return result.payload;
+  }, [dispatch]);
+
+  const scheduleInterviewAction = useCallback(
+    async (params: { interviewId: string; roundId: string; payload: ScheduleInterviewPayload }) => {
+      const result = await dispatch(scheduleInterviewRound(params));
+      if (scheduleInterviewRound.rejected.match(result)) {
+        throw new Error(result.payload ?? "Failed to schedule interview");
+      }
+      return result.payload;
+    },
+    [dispatch],
+  );
+
+  const rescheduleInterviewAction = useCallback(
+    async (params: { scheduleId: string; payload: RescheduleInterviewPayload }) => {
+      const result = await dispatch(rescheduleInterviewSchedule(params));
+      if (rescheduleInterviewSchedule.rejected.match(result)) {
+        throw new Error(result.payload ?? "Failed to reschedule interview");
+      }
+      return result.payload;
+    },
+    [dispatch],
+  );
+
+  const cancelInterviewAction = useCallback(
+    async (params: { scheduleId: string; payload: CancelInterviewPayload }) => {
+      const result = await dispatch(cancelInterviewSchedule(params));
+      if (cancelInterviewSchedule.rejected.match(result)) {
+        throw new Error(result.payload ?? "Failed to cancel interview");
+      }
+      return result.payload;
+    },
+    [dispatch],
+  );
+
+  const sendInterviewReminderAction = useCallback(
+    async (scheduleId: string) => {
+      const result = await dispatch(sendInterviewReminder(scheduleId));
+      if (sendInterviewReminder.rejected.match(result)) {
+        throw new Error(result.payload ?? "Failed to send interview reminder");
+      }
+      return result.payload;
+    },
+    [dispatch],
+  );
+
+  const markInterviewNoShowAction = useCallback(
+    async (scheduleId: string) => {
+      const result = await dispatch(markInterviewNoShow(scheduleId));
+      if (markInterviewNoShow.rejected.match(result)) {
+        throw new Error(result.payload ?? "Failed to mark interview as no show");
+      }
+      return result.payload;
+    },
+    [dispatch],
+  );
+
+  const submitRoundFeedbackAction = useCallback(
+    async (params: {
+      roundId: string;
+      action: "pass" | "reject" | "hold" | InterviewRecommendation;
+      payload: RoundFeedbackPayload;
+    }) => {
+      const result = await dispatch(submitRoundFeedback(params));
+      if (submitRoundFeedback.rejected.match(result)) {
+        throw new Error(result.payload ?? "Failed to submit round feedback");
+      }
+      return result.payload;
+    },
+    [dispatch],
+  );
+
+  const sendInterviewInviteAction = useCallback(
+    async (params: { applicationId: string; roundNames?: string }) => {
+      const result = await dispatch(sendInterviewInvite(params));
+      if (sendInterviewInvite.rejected.match(result)) {
+        throw new Error(result.payload ?? "Failed to send interview invite");
+      }
+      return result.payload;
+    },
+    [dispatch],
+  );
+
   return {
     jobs,
     candidates,
@@ -264,6 +406,21 @@ function useRecruitmentBase() {
     runScreening: runScreeningAction,
     fetchScreeningResults: fetchScreeningResultsAction,
     submitDecision: submitDecisionAction,
+    // Interviews
+    interviewPagination,
+    interviewers,
+    interviewLoading,
+    interviewSubmitting,
+    interviewError,
+    fetchInterviews: fetchInterviewsAction,
+    fetchInterviewers: fetchInterviewersAction,
+    scheduleInterview: scheduleInterviewAction,
+    rescheduleInterview: rescheduleInterviewAction,
+    cancelInterview: cancelInterviewAction,
+    sendInterviewReminder: sendInterviewReminderAction,
+    markInterviewNoShow: markInterviewNoShowAction,
+    submitRoundFeedback: submitRoundFeedbackAction,
+    sendInterviewInvite: sendInterviewInviteAction,
   };
 }
 
