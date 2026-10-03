@@ -227,7 +227,7 @@ export interface RosterCreatePayload {
   shift: string;
   startTime: string;
   endTime: string;
-  workingHours: number;
+  workingHours?: number | null;
   breakTime: string;
   location: string;
   manager: string;
@@ -341,7 +341,7 @@ export interface RosterDayItem {
   shiftName: string; // e.g. "Morning Shift" or "—"
   startTime: string; // e.g. "09:00 AM"
   endTime: string;   // e.g. "06:00 PM"
-  workingHours: number;
+  workingHours: number | null;
   status: "Working" | "Weekly Off" | "Holiday" | "Leave" | "Rest Day";
   notes?: string;
 }

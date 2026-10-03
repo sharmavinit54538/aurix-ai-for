@@ -290,7 +290,7 @@ export default function RostersPage() {
           message: `${r.employeeName} is on leave on ${r.date} but has a schedule.`
         });
       }
-      if (r.shift === "Holiday" && r.workingHours > 0) {
+      if (r.shift === "Holiday" && (r.workingHours || 0) > 0) {
         list.push({
           id: `h-${r.id}`,
           employeeName: r.employeeName,
