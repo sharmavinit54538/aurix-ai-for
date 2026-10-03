@@ -1,6 +1,6 @@
 export interface PerformanceCoachKpiItem {
   label: string;
-  score: number | string;
+  score: number | string | null;
   trend?: number;
   hint?: string;
   icon?: string;
@@ -19,11 +19,11 @@ export interface KpiAttainmentItem {
 }
 
 export interface PerformanceCoachSummary {
-  avgPerformance: number;
-  topPerformers: number;
-  skillGaps: number;
-  promotionPicks: number;
-  lastAnalysis?: string;
+  avgPerformance: number | null;
+  topPerformers: number | null;
+  skillGaps: number | null;
+  promotionPicks: number | null;
+  lastAnalysis?: string | null;
 }
 
 export interface PerformanceCoachCharts {

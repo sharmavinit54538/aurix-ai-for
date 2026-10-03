@@ -1,6 +1,6 @@
 export interface LeaveAssistantKpiItem {
   label: string;
-  score: number | string;
+  score: number | string | null;
   trend?: number;
   hint?: string;
   icon?: string;
@@ -22,11 +22,11 @@ export interface LeaveTypeDistributionItem {
 }
 
 export interface LeaveAssistantSummary {
-  pendingRequests: number;
-  approvalSuggestions: number;
-  conflictsDetected: number;
-  teamAvailability: string | number;
-  lastAnalysis?: string;
+  pendingRequests: number | null;
+  approvalSuggestions: number | null;
+  conflictsDetected: number | null;
+  teamAvailability: string | number | null;
+  lastAnalysis?: string | null;
 }
 
 export interface LeaveAssistantCharts {

@@ -1,6 +1,6 @@
 export interface RecruiterKpiItem {
   label: string;
-  score: number | string;
+  score: number | string | null;
   trend?: number;
   hint?: string;
   icon?: string;
@@ -20,12 +20,12 @@ export interface JdMatchDistributionItem {
 }
 
 export interface RecruiterSummary {
-  openRoles: number;
-  candidatesScreened: number | string;
-  topMatches: number;
-  timeToHire: string | number;
-  jdMatchAvg?: string;
-  lastAnalysis?: string;
+  openRoles: number | null;
+  candidatesScreened: number | string | null;
+  topMatches: number | null;
+  timeToHire: string | number | null;
+  jdMatchAvg?: string | null;
+  lastAnalysis?: string | null;
 }
 
 export interface RecruiterCharts {

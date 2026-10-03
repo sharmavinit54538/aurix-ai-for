@@ -1,6 +1,6 @@
 export interface EmployeeHealthKpiItem {
   label: string;
-  score: number | string;
+  score: number | string | null;
   trend?: number;
   hint?: string;
   icon?: string;
@@ -18,11 +18,11 @@ export interface OvertimeByTeamItem {
 }
 
 export interface EmployeeHealthSummary {
-  wellbeingScore: number;
-  burnoutRisk: number;
-  avgWorkload: string | number;
-  otHours: number;
-  lastAnalysis?: string;
+  wellbeingScore: number | null;
+  burnoutRisk: number | null;
+  avgWorkload: string | number | null;
+  otHours: number | null;
+  lastAnalysis?: string | null;
 }
 
 export interface EmployeeHealthCharts {

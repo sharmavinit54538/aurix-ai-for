@@ -1,6 +1,6 @@
 export interface MeetingIntelligenceKpiItem {
   label: string;
-  score: number | string;
+  score: number | string | null;
   trend?: number;
   hint?: string;
   icon?: string;
@@ -28,11 +28,11 @@ export interface MeetingActionItemSummary {
 }
 
 export interface MeetingIntelligenceSummary {
-  meetingsAnalyzed: number;
-  actionItems: number;
-  followUps: number;
-  avgDuration: string | number;
-  lastAnalysis?: string;
+  meetingsAnalyzed: number | null;
+  actionItems: number | null;
+  followUps: number | null;
+  avgDuration: string | number | null;
+  lastAnalysis?: string | null;
 }
 
 export interface MeetingIntelligenceCharts {

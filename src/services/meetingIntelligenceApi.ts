@@ -57,11 +57,11 @@ export function normalizeMeetingDashboardData(
     avgDuration !== undefined
   ) {
     summary = {
-      meetingsAnalyzed: Number(meetingsAnalyzed ?? 24),
-      actionItems: Number(actionItems ?? 18),
-      followUps: Number(followUps ?? 7),
-      avgDuration: avgDuration != null ? (typeof avgDuration === "number" ? `${avgDuration}m` : String(avgDuration)) : "45m",
-      lastAnalysis: raw.last_analysis ?? raw.lastAnalysis ?? "Live DB Sync",
+      meetingsAnalyzed: meetingsAnalyzed != null ? Number(meetingsAnalyzed) : null,
+      actionItems: actionItems != null ? Number(actionItems) : null,
+      followUps: followUps != null ? Number(followUps) : null,
+      avgDuration: avgDuration != null ? (typeof avgDuration === "number" ? `${avgDuration}m` : String(avgDuration)) : null,
+      lastAnalysis: raw.last_analysis ?? raw.lastAnalysis ?? null,
     };
   }
 

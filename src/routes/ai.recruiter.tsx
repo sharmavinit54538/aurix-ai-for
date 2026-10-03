@@ -61,7 +61,7 @@ function Page() {
     if (backendKpis && backendKpis.length > 0) {
       return backendKpis.map((k: any) => ({
         label: k.label,
-        value: `${k.score}`,
+        value: k.score != null ? `${k.score}` : "—",
         trend: k.trend,
         hint: k.hint,
         icon: k.icon && ICON_MAP[k.icon] ? ICON_MAP[k.icon] : Briefcase,
@@ -226,7 +226,7 @@ function Page() {
       title="Hire smarter, faster, with AI ranking & matching"
       description="Auto-screen resumes, rank candidates, match to JDs and generate tailored interview questions."
       lastAnalysis={
-        summary?.lastAnalysis ?? (lastUpdated ? "Live DB Sync" : "Live DB Sync")
+        summary?.lastAnalysis || "Not available"
       }
       kpis={kpis}
       charts={charts}

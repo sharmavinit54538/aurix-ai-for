@@ -57,7 +57,7 @@ function Page() {
     if (backendKpis && backendKpis.length > 0) {
       return backendKpis.map((k) => ({
         label: k.label,
-        value: `${k.score}`,
+        value: k.score != null ? `${k.score}` : "—",
         trend: k.trend,
         hint: k.hint,
         icon: k.icon && ICON_MAP[k.icon] ? ICON_MAP[k.icon] : HeartPulse,
@@ -91,7 +91,7 @@ function Page() {
         },
         {
           label: "OT Hours",
-          value: summary.otHours != null ? `${summary.otHours}` : "—",
+          value: summary.otHours != null ? `${summary.otHours}h` : "—",
           icon: Timer,
           invert: true,
         },
@@ -196,7 +196,7 @@ function Page() {
       title="Spot burnout before it spreads"
       description="Detect burnout, analyze workload, monitor overtime and surface wellbeing risks."
       lastAnalysis={
-        summary?.lastAnalysis ?? (lastUpdated ? "Live DB Sync" : "Live DB Sync")
+        summary?.lastAnalysis || "Not available"
       }
       kpis={kpis}
       charts={charts}

@@ -1,6 +1,6 @@
 export interface WorkforceInsightsKpiItem {
   label: string;
-  score: number | string;
+  score: number | string | null;
   trend?: number;
   hint?: string;
   icon?: string;
@@ -19,12 +19,12 @@ export interface DepartmentComparisonItem {
 }
 
 export interface WorkforceInsightsSummary {
-  workforceHealth: number;
-  attritionRisk: string | number;
-  productivityScore: number;
-  headcount: number;
-  riskSignalsCount?: number;
-  lastAnalysis?: string;
+  workforceHealth: number | null;
+  attritionRisk: string | number | null;
+  productivityScore: number | null;
+  headcount: number | null;
+  riskSignalsCount?: number | null;
+  lastAnalysis?: string | null;
 }
 
 export interface WorkforceInsightsCharts {

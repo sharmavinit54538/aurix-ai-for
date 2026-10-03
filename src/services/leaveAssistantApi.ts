@@ -51,11 +51,11 @@ export function normalizeLeaveAssistantData(
     teamAvail !== undefined
   ) {
     summary = {
-      pendingRequests: Number(pendingRequests ?? 0),
-      approvalSuggestions: Number(approvalSuggestions ?? 0),
-      conflictsDetected: Number(conflictsDetected ?? 0),
-      teamAvailability: teamAvail != null ? (typeof teamAvail === "number" ? `${Math.round(teamAvail)}%` : String(teamAvail)) : "100%",
-      lastAnalysis: raw.last_analysis ?? raw.lastAnalysis ?? "Live DB Sync",
+      pendingRequests: pendingRequests != null ? Number(pendingRequests) : null,
+      approvalSuggestions: approvalSuggestions != null ? Number(approvalSuggestions) : null,
+      conflictsDetected: conflictsDetected != null ? Number(conflictsDetected) : null,
+      teamAvailability: teamAvail != null ? (typeof teamAvail === "number" ? `${Math.round(teamAvail)}%` : String(teamAvail)) : null,
+      lastAnalysis: raw.last_analysis ?? raw.lastAnalysis ?? null,
     };
   }
 

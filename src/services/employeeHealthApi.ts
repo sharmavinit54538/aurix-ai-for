@@ -56,11 +56,11 @@ export function normalizeEmployeeHealthData(
     otHours !== undefined
   ) {
     summary = {
-      wellbeingScore: Number(wellbeingScore ?? 84),
-      burnoutRisk: Number(burnoutRisk ?? 12),
-      avgWorkload: avgWorkload != null ? (typeof avgWorkload === "number" ? `${avgWorkload}h` : String(avgWorkload)) : "38.5h",
-      otHours: Number(otHours ?? 14),
-      lastAnalysis: raw.last_analysis ?? raw.lastAnalysis ?? "Live DB Sync",
+      wellbeingScore: wellbeingScore != null ? Number(wellbeingScore) : null,
+      burnoutRisk: burnoutRisk != null ? Number(burnoutRisk) : null,
+      avgWorkload: avgWorkload != null ? (typeof avgWorkload === "number" ? `${avgWorkload}h` : String(avgWorkload)) : null,
+      otHours: otHours != null ? Number(otHours) : null,
+      lastAnalysis: raw.last_analysis ?? raw.lastAnalysis ?? null,
     };
   }
 
@@ -74,7 +74,7 @@ export function normalizeEmployeeHealthData(
         },
         {
           label: "Burnout Risk",
-          score: `${summary.burnoutRisk}%`,
+          score: summary.burnoutRisk != null ? `${summary.burnoutRisk}%` : null,
           hint: "Employees showing risk indicators",
           icon: "Flame",
           invert: true,
@@ -87,7 +87,7 @@ export function normalizeEmployeeHealthData(
         },
         {
           label: "Overtime Hours",
-          score: `${summary.otHours}h`,
+          score: summary.otHours != null ? `${summary.otHours}h` : null,
           hint: "Total monthly overtime logged",
           icon: "ShieldAlert",
           invert: true,

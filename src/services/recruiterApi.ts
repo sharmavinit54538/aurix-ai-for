@@ -97,22 +97,22 @@ export function normalizeRecruiterData(
     timeToHire !== undefined
   ) {
     summary = {
-      openRoles: Number(openRoles ?? 0),
+      openRoles: openRoles != null ? Number(openRoles) : null,
       candidatesScreened:
         typeof candidatesScreened === "number"
           ? candidatesScreened
           : candidatesScreened != null
           ? Number(candidatesScreened) || candidatesScreened
-          : 0,
-      topMatches: Number(topMatches ?? 0),
+          : null,
+      topMatches: topMatches != null ? Number(topMatches) : null,
       timeToHire:
         timeToHire != null
           ? typeof timeToHire === "number"
             ? Math.round(timeToHire * 10) / 10
             : timeToHire
-          : "—",
-      jdMatchAvg: rawSummary.jd_match_avg ?? rawSummary.jdMatchAvg,
-      lastAnalysis: rawSummary.last_analysis ?? rawSummary.lastAnalysis ?? "Live DB Sync",
+          : null,
+      jdMatchAvg: rawSummary.jd_match_avg ?? rawSummary.jdMatchAvg ?? null,
+      lastAnalysis: rawSummary.last_analysis ?? rawSummary.lastAnalysis ?? null,
     };
   }
 

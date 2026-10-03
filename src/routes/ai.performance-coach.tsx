@@ -57,7 +57,7 @@ function Page() {
     if (backendKpis && backendKpis.length > 0) {
       return backendKpis.map((k) => ({
         label: k.label,
-        value: `${k.score}`,
+        value: k.score != null ? `${k.score}` : "—",
         trend: k.trend,
         hint: k.hint,
         icon: k.icon && ICON_MAP[k.icon] ? ICON_MAP[k.icon] : Gauge,
@@ -199,7 +199,7 @@ function Page() {
       title="Personal coaching at organizational scale"
       description="Track KPIs, spot skill gaps, recommend promotions and generate coaching nudges."
       lastAnalysis={
-        summary?.lastAnalysis ?? (lastUpdated ? "Live DB Sync" : "Live DB Sync")
+        summary?.lastAnalysis || "Not available"
       }
       kpis={kpis}
       charts={charts}

@@ -54,11 +54,11 @@ export function normalizePerformanceCoachData(
     promotionPicks !== undefined
   ) {
     summary = {
-      avgPerformance: Number(avgPerformance ?? 3.8),
-      topPerformers: Number(topPerformers ?? 0),
-      skillGaps: Number(skillGaps ?? 0),
-      promotionPicks: Number(promotionPicks ?? 0),
-      lastAnalysis: raw.last_analysis ?? raw.lastAnalysis ?? "Live DB Sync",
+      avgPerformance: avgPerformance != null ? Number(avgPerformance) : null,
+      topPerformers: topPerformers != null ? Number(topPerformers) : null,
+      skillGaps: skillGaps != null ? Number(skillGaps) : null,
+      promotionPicks: promotionPicks != null ? Number(promotionPicks) : null,
+      lastAnalysis: raw.last_analysis ?? raw.lastAnalysis ?? null,
     };
   }
 

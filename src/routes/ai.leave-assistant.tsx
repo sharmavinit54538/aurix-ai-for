@@ -57,7 +57,7 @@ function Page() {
     if (backendKpis && backendKpis.length > 0) {
       return backendKpis.map((k) => ({
         label: k.label,
-        value: `${k.score}`,
+        value: k.score != null ? `${k.score}` : "—",
         trend: k.trend,
         hint: k.hint,
         icon: k.icon && ICON_MAP[k.icon] ? ICON_MAP[k.icon] : FileText,
@@ -193,7 +193,7 @@ function Page() {
       title="Approve smarter, forecast availability"
       description="Suggest approvals, flag conflicts and forecast team availability before crunch time."
       lastAnalysis={
-        summary?.lastAnalysis ?? (lastUpdated ? "Live DB Sync" : "Live DB Sync")
+        summary?.lastAnalysis || "Not available"
       }
       kpis={kpis}
       charts={charts}

@@ -54,12 +54,12 @@ export function normalizeWorkforceInsightsData(
     headcount !== undefined
   ) {
     summary = {
-      workforceHealth: Number(workforceHealth ?? 88),
-      attritionRisk: attritionRisk != null ? (typeof attritionRisk === "number" ? `${attritionRisk}%` : String(attritionRisk)) : "4.2%",
-      productivityScore: Number(productivityScore ?? 91),
-      headcount: Number(headcount ?? 0),
-      riskSignalsCount: raw.risk_signals_count ?? raw.riskSignalsCount ?? 3,
-      lastAnalysis: raw.last_analysis ?? raw.lastAnalysis ?? "Live DB Sync",
+      workforceHealth: workforceHealth != null ? Number(workforceHealth) : null,
+      attritionRisk: attritionRisk != null ? (typeof attritionRisk === "number" ? `${attritionRisk}%` : String(attritionRisk)) : null,
+      productivityScore: productivityScore != null ? Number(productivityScore) : null,
+      headcount: headcount != null ? Number(headcount) : null,
+      riskSignalsCount: raw.risk_signals_count ?? raw.riskSignalsCount ?? null,
+      lastAnalysis: raw.last_analysis ?? raw.lastAnalysis ?? null,
     };
   }
 
@@ -103,15 +103,6 @@ export function normalizeWorkforceInsightsData(
         m: t.m ?? t.month ?? t.period ?? `M${idx + 1}`,
         hc: Number(t.hc ?? t.headcount ?? t.count ?? 0),
       }))
-    : summary
-    ? [
-        { m: "Jan", hc: Math.max(10, summary.headcount - 15) },
-        { m: "Feb", hc: Math.max(10, summary.headcount - 12) },
-        { m: "Mar", hc: Math.max(10, summary.headcount - 8) },
-        { m: "Apr", hc: Math.max(10, summary.headcount - 5) },
-        { m: "May", hc: Math.max(10, summary.headcount - 2) },
-        { m: "Jun", hc: summary.headcount },
-      ]
     : [];
 
   const rawDepts =
@@ -122,16 +113,10 @@ export function normalizeWorkforceInsightsData(
   const departmentComparison: DepartmentComparisonItem[] = Array.isArray(rawDepts) && rawDepts.length > 0
     ? rawDepts.map((d: any) => ({
         d: d.d ?? d.department ?? d.name ?? "Team",
-        prod: Number(d.prod ?? d.productivity ?? 90),
-        risk: Number(d.risk ?? d.attrition_risk ?? 5),
+        prod: d.prod != null ? Number(d.prod) : d.productivity != null ? Number(d.productivity) : 0,
+        risk: d.risk != null ? Number(d.risk) : d.attrition_risk != null ? Number(d.attrition_risk) : 0,
       }))
-    : [
-        { d: "Engineering", prod: 92, risk: 4 },
-        { d: "Product", prod: 88, risk: 6 },
-        { d: "Sales", prod: 95, risk: 8 },
-        { d: "Marketing", prod: 84, risk: 5 },
-        { d: "Operations", prod: 89, risk: 3 },
-      ];
+    : [];
 
   const charts: WorkforceInsightsCharts = {
     headcountTrends,
