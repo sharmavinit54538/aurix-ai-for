@@ -111,7 +111,7 @@ export function RecruitmentCRMPage() {
       .finally(() => setLoading(false));
   }, [activeId, apiNotes]);
 
-  // Combine real notes from API, localStorage, and candidate touchpoints/timeline
+  // Combine real notes from API and candidate touchpoints/timeline
   const notes = useMemo(() => {
     const combined: Record<string, CrmNote[]> = {};
 
@@ -123,16 +123,7 @@ export function RecruitmentCRMPage() {
         list.push(...apiNotes[cand.id]);
       }
 
-      // 2. Client-persisted CRM notes
-      if (localNotes[cand.id]) {
-        localNotes[cand.id].forEach((ln) => {
-          if (!list.some((existing) => existing.id === ln.id)) {
-            list.push(ln);
-          }
-        });
-      }
-
-      // 3. Notes directly recorded on the candidate model
+      // 2. Notes directly recorded on the candidate model
       if (Array.isArray(cand.notes)) {
         cand.notes.forEach((n) => {
           const noteId = n.id || `cand-note-${n.at}`;

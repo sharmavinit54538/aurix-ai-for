@@ -49,18 +49,10 @@ export function AIInterviewSimulatorPage() {
   const [humanReviewerNotes, setHumanReviewerNotes] = useState("");
   const [humanOverrideRating, setHumanOverrideRating] = useState("");
 
-  // User-managed question banks (stored in localStorage)
-  const [questionBanks, setQuestionBanks] = useState<Record<string, InterviewQuestion[]>>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem("aurix:ai_interview_questions");
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (parsed && typeof parsed === "object") return parsed;
-        }
-      } catch { /* ignore */ }
-    }
-    return { Technical: [], Behavioral: [] };
+  // User-managed question banks (in-memory simulator)
+  const [questionBanks, setQuestionBanks] = useState<Record<string, InterviewQuestion[]>>({
+    Technical: [],
+    Behavioral: [],
   });
 
   // New question form
@@ -96,9 +88,6 @@ export function AIInterviewSimulatorPage() {
 
   const saveQuestionBanks = (updated: Record<string, InterviewQuestion[]>) => {
     setQuestionBanks(updated);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("aurix:ai_interview_questions", JSON.stringify(updated));
-    }
   };
 
   const handleAddQuestion = () => {

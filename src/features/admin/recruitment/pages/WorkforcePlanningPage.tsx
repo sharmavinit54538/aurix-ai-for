@@ -269,7 +269,7 @@ export function WorkforcePlanningPage() {
     const updated = requirements.map((r) =>
       r.id === req.id ? { ...r, status: "Converted to Job" as const, convertedJobId: newJobId } : r
     );
-    saveRequirements(updated);
+    setRequirements(updated);
     toast.success(`Requirement ${req.id} converted into Active Job ${newJobId}!`);
     navigate({ to: "/dashboard/recruitment/jobs" as any });
   };

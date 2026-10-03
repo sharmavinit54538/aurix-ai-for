@@ -85,7 +85,7 @@ const EXECUTIVE_CARDS: {
 export function ExecutiveHubPage() {
   const navigate = useNavigate();
   const ws = useAurix();
-  const rawRole = (ws.user?.role || localStorage.getItem("user_role") || "").toLowerCase();
+  const rawRole = (ws.user?.role || "").toLowerCase();
 
   // Auto-route specific executive roles to their designated dashboard
   useEffect(() => {

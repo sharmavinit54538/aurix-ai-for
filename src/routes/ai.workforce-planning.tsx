@@ -163,7 +163,7 @@ function Page() {
   };
 
   // Real calculations (zero mock numbers)
-  const localHeadcountNeeded = localReqs.reduce((acc, r) => acc + (Number(r.headcountNeeded) || 0), 0);
+  const localHeadcountNeeded = serverReqs.reduce((acc: number, r: LocalRequirement) => acc + (Number(r.headcountNeeded) || 0), 0);
   const plannedHires = totalVacancies || localHeadcountNeeded || insightsData?.recruitment?.openPositions || workforceData?.hiringPlan?.length || 0;
   const currentHeadcount = employeeCount || workforceData?.currentHeadcount || 0;
   const totalDepartments = departmentCount || departmentsList.length || 0;
@@ -278,7 +278,7 @@ function Page() {
     }
 
     return list;
-  }, [insightsData, workforceData, localReqs]);
+  }, [insightsData, workforceData, serverReqs]);
 
   // Features (Real metrics based on live state, no hardcoded values)
   const features: AIFeature[] = [
@@ -315,7 +315,7 @@ function Page() {
       title: "Workforce Optimization",
       description: "AI suggests internal mobility, redeployments, and department allocations.",
       icon: Sparkles,
-      metric: `${localReqs.length} Requisitions`,
+      metric: `${serverReqs.length} Requisitions`,
       tone: "info",
     },
   ];

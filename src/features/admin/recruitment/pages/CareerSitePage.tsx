@@ -28,13 +28,8 @@ export function CareerSitePage() {
     async function loadSettings() {
       try {
         const data = await settingsApi.getCompanySettings();
-        if (data) {
-          if (data.company_name || data.name) setBrand(data.company_name || data.name);
-          if (data.tagline) setTagline(data.tagline);
-          if (data.accent_color) setAccent(data.accent_color);
-          if (data.show_salary !== undefined) setShowSalary(Boolean(data.show_salary));
-          if (data.allow_referrals !== undefined) setAllowReferrals(Boolean(data.allow_referrals));
-          if (data.eeo_statement) setEeoStatement(data.eeo_statement);
+        if (data && data.name) {
+          setBrand(data.name);
         }
       } catch {
         // use default state if settings not initialized
@@ -48,12 +43,6 @@ export function CareerSitePage() {
     try {
       await settingsApi.updateCompanySettings({
         name: brand,
-        company_name: brand,
-        tagline,
-        accent_color: accent,
-        show_salary: showSalary,
-        allow_referrals: allowReferrals,
-        eeo_statement: eeoStatement,
       });
       toast.success("Career site configuration saved successfully!");
     } catch (err: unknown) {
