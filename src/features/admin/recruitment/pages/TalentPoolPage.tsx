@@ -319,9 +319,12 @@ export function TalentPoolPage() {
           {/* Saved Searches (Zero mock data, user-defined) */}
           <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl">
             <div className="mb-2.5 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm font-semibold">
-                <Bookmark className="h-4 w-4 text-primary" />
-                Saved Searches
+              <div>
+                <div className="flex items-center gap-2 text-sm font-semibold">
+                  <Bookmark className="h-4 w-4 text-primary" />
+                  Saved Searches
+                </div>
+                <span className="text-[10px] text-muted-foreground block">Session filters (Not saved to server)</span>
               </div>
               {q.trim() && (
                 <Button

@@ -95,8 +95,8 @@ export default function RostersPage() {
   const [managerFilter, setManagerFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  // Auto-Save simulation status
-  const [autoSaveStatus, setAutoSaveStatus] = useState("All changes auto-saved");
+  // Real Auto-Save status
+  const [autoSaveStatus, setAutoSaveStatus] = useState("Synced with server");
 
   // Selection & Details Drawers
   const [selectedEntry, setSelectedEntry] = useState<RosterEntry | null>(null);
@@ -308,14 +308,6 @@ export default function RostersPage() {
     return <EmployeeRostersView employeeId={employeeIdParam || undefined} />;
   }
 
-  // Auto-Save Trigger
-  const triggerAutoSave = () => {
-    setAutoSaveStatus("Saving changes...");
-    setTimeout(() => {
-      setAutoSaveStatus("Saved a few seconds ago");
-    }, 800);
-  };
-
   const handleResetFilters = () => {
     setSearch("");
     setDeptFilter("all");
@@ -335,6 +327,7 @@ export default function RostersPage() {
       return;
     }
 
+    setAutoSaveStatus("Saving changes...");
     try {
       const created = await attendanceApi.createRoster({
         employeeId: emp.code,
@@ -355,8 +348,9 @@ export default function RostersPage() {
       setRosters((prev) => [created, ...prev]);
       setIsAssignModalOpen(false);
       toast.success(`Assigned shift "${formShift}" to ${emp.name} on ${formDate}`);
-      triggerAutoSave();
+      setAutoSaveStatus("Synced with server");
     } catch (err: any) {
+      setAutoSaveStatus("Sync error — changes unsaved");
       toast.error(err?.message || "Failed to save roster entry to backend");
     }
   };
@@ -407,6 +401,7 @@ export default function RostersPage() {
       setIsDeleteConfirmOpen(true);
     } else if (action === "Duplicate") {
       (async () => {
+        setAutoSaveStatus("Saving changes...");
         try {
           const created = await attendanceApi.createRoster({
             employeeId: entry.employeeId,
@@ -425,8 +420,9 @@ export default function RostersPage() {
           });
           setRosters((prev) => [created, ...prev]);
           toast.success(`Duplicated schedule row for ${entry.employeeName}`);
-          triggerAutoSave();
+          setAutoSaveStatus("Synced with server");
         } catch (err: any) {
+          setAutoSaveStatus("Sync error — changes unsaved");
           toast.error(err?.message || "Failed to duplicate roster entry");
         }
       })();
@@ -445,13 +441,15 @@ export default function RostersPage() {
 
   const confirmDeleteEntry = async () => {
     if (!entryToDelete) return;
+    setAutoSaveStatus("Saving changes...");
     try {
       await attendanceApi.deleteRoster(entryToDelete.id);
       setRosters((prev) => prev.filter((r) => r.id !== entryToDelete.id));
       setIsDeleteConfirmOpen(false);
       toast.success(`Deleted schedule for ${entryToDelete.employeeName}`);
-      triggerAutoSave();
+      setAutoSaveStatus("Synced with server");
     } catch (err: any) {
+      setAutoSaveStatus("Sync error — changes unsaved");
       toast.error(err?.message || "Failed to delete schedule on backend");
     }
   };
@@ -468,6 +466,7 @@ export default function RostersPage() {
     const targetEmployee = employees.find((item) => item.code === employeeId);
     if (!targetEmployee) return;
 
+    setAutoSaveStatus("Saving changes...");
     try {
       const updated = await attendanceApi.updateRoster(entryToMove.id, {
         employeeId: targetEmployee.code,
@@ -483,8 +482,9 @@ export default function RostersPage() {
       );
 
       toast.success(`Moved ${entryToMove.employeeName}'s shift to ${targetEmployee.name} on ${dateStr}`);
-      triggerAutoSave();
+      setAutoSaveStatus("Synced with server");
     } catch (err: any) {
+      setAutoSaveStatus("Sync error — changes unsaved");
       toast.error(err?.message || "Failed to update roster on backend");
     } finally {
       setDraggingEntryId(null);

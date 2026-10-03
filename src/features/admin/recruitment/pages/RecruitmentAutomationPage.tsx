@@ -69,16 +69,16 @@ export function RecruitmentAutomationPage() {
     try {
       const data = await automationApi.getAutomationRules();
       if (Array.isArray(data)) {
-        const mapped: WorkflowRule[] = data.map((r: any, idx: number) => ({
+        const mapped: WorkflowRule[] = data.map((r, idx: number) => ({
           id: String(r.id || `wf-${idx}`),
           name: r.name || `Rule #${idx + 1}`,
           description: r.description || "Automation rule",
           enabled: Boolean(r.enabled ?? r.is_active ?? true),
           totalRuns: Number(r.total_runs || r.runs_count || 0),
-          lastTriggered: r.last_triggered || "Never",
-          triggerEvent: r.trigger_event || "System Event",
-          steps: Array.isArray(r.steps) ? r.steps : [
-            { id: `st-${idx}-1`, type: "trigger", title: `Trigger: ${r.trigger_event || "Event"}`, detail: "Triggered on event", category: "System" },
+          lastTriggered: typeof r.last_triggered === "string" ? r.last_triggered : "Never",
+          triggerEvent: typeof r.trigger_event === "string" ? r.trigger_event : "System Event",
+          steps: Array.isArray(r.steps) ? (r.steps as WorkflowStep[]) : [
+            { id: `st-${idx}-1`, type: "trigger", title: `Trigger: ${String(r.trigger_event || "Event")}`, detail: "Triggered on event", category: "System" },
             { id: `st-${idx}-2`, type: "action", title: `Action: Automated Pipeline Step`, detail: "Dispatched automatically", category: "Notification" },
           ],
         }));
@@ -222,13 +222,15 @@ export function RecruitmentAutomationPage() {
 
         <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>Recruiter Hours Saved</span>
+            <span>Estimated Hours Saved</span>
             <Clock className="h-4 w-4 text-emerald-500" />
           </div>
           <div className="mt-2 font-display text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-            {hoursSaved} Hours
+            {totalRunsAll > 0 ? `~${hoursSaved} hrs` : "—"}
           </div>
-          <div className="mt-1 text-[11px] text-muted-foreground">Automated repetitive tasks</div>
+          <div className="mt-1 text-[11px] text-muted-foreground">
+            {totalRunsAll > 0 ? "Est. ~15m saved per automated run" : "No runs recorded"}
+          </div>
         </div>
 
         <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl">
@@ -236,12 +238,23 @@ export function RecruitmentAutomationPage() {
             <span>Execution Success Rate</span>
             <CheckCircle2 className="h-4 w-4 text-purple-500" />
           </div>
-          <div className="mt-2 font-display text-2xl font-bold">
-            {totalRunsAll > 0 ? "100%" : "—"}
-          </div>
-          <div className="mt-1 text-[11px] text-muted-foreground">
-            {totalRunsAll > 0 ? "0 failures detected" : "Awaiting first run"}
-          </div>
+          {(() => {
+            const successRuns = logs.filter((l) => l.status === "Success" || l.status === "Delivered").length;
+            const failedRuns = logs.filter((l) => l.status === "Failed").length;
+            const totalLogged = successRuns + failedRuns;
+            const rate = totalLogged > 0 ? `${Math.round((successRuns / totalLogged) * 100)}%` : (totalRunsAll > 0 ? "100%" : "—");
+            const sub = totalLogged > 0 ? `${failedRuns} failures detected` : (totalRunsAll > 0 ? `${totalRunsAll} total runs` : "Awaiting first run");
+            return (
+              <>
+                <div className="mt-2 font-display text-2xl font-bold">
+                  {rate}
+                </div>
+                <div className="mt-1 text-[11px] text-muted-foreground">
+                  {sub}
+                </div>
+              </>
+            );
+          })()}
         </div>
       </div>
 

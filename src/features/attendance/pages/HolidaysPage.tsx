@@ -1133,7 +1133,7 @@ export default function HolidaysPage() {
                 <div className="flex items-center gap-2 border border-dashed border-border rounded-lg px-3 py-2 bg-muted/5">
                   <Palmtree className="h-4 w-4 text-muted-foreground" />
                   <span className="text-[10px] text-muted-foreground flex-1">Upload SVG/PNG icon for custom visual lists</span>
-                  <Button type="button" variant="outline" size="sm" className="h-6 text-[10px] border-border bg-card" onClick={() => toast.info("Custom icon asset uploaded successfully (simulation)")}>Select file</Button>
+                  <Button type="button" variant="outline" size="sm" disabled className="h-6 text-[10px] border-border bg-card opacity-50 cursor-not-allowed" title="Custom icon upload endpoint not available on server">Not Supported</Button>
                 </div>
               </div>
             </div>

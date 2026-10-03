@@ -17,8 +17,21 @@ const STATUS_TONE: Record<string, string> = {
   terminated: "bg-rose-500/15 text-rose-600 ring-rose-500/20 dark:text-rose-300",
 };
 
+interface VendorRecord {
+  id: string;
+  name: string;
+  contact_name?: string;
+  email?: string;
+  phone?: string;
+  commission_rate?: number | string;
+  status: string;
+  rating?: number | null;
+  specialties?: string[];
+  [key: string]: unknown;
+}
+
 export function RecruitmentVendorsPage() {
-  const [vendorsList, setVendorsList] = useState<any[]>([]);
+  const [vendorsList, setVendorsList] = useState<VendorRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
   const { candidates } = useRecruitment();
@@ -26,7 +39,7 @@ export function RecruitmentVendorsPage() {
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedVendor, setSelectedVendor] = useState<any>(null);
+  const [selectedVendor, setSelectedVendor] = useState<VendorRecord | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const [form, setForm] = useState({
@@ -43,7 +56,7 @@ export function RecruitmentVendorsPage() {
       setLoading(true);
       const res = await apiInstance.get("/vendors?limit=100");
       setVendorsList(res.data?.data?.items || []);
-    } catch (err) {
+    } catch {
       toast.error("Failed to load recruitment vendors.");
     } finally {
       setLoading(false);
@@ -74,8 +87,8 @@ export function RecruitmentVendorsPage() {
           return sum + (salary * commission);
         }, 0);
 
-      const rating = (v as any).rating ?? null;
-      const specialties: string[] = (v as any).specialties || [];
+      const rating = v.rating ?? null;
+      const specialties = Array.isArray(v.specialties) ? v.specialties : [];
 
       return {
         ...v,

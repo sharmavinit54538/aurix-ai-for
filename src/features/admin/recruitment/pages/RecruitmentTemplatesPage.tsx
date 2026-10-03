@@ -474,10 +474,10 @@ export function RecruitmentTemplatesPage() {
                 {/* Quick Preview Panel */}
                 <div className="space-y-4 rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-xl shadow-xs lg:col-span-1">
                   <div className="flex items-center gap-2 text-foreground font-semibold text-sm">
-                    <Eye className="h-4 w-4 text-primary" /> Candidate Preview
+                    <Eye className="h-4 w-4 text-primary" /> Candidate Preview (Sample)
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    This is how the email appears with sample candidate placeholders resolved.
+                    Sample preview showing how email appears with template placeholders filled in.
                   </p>
 
                   <div className="rounded-xl border border-border/80 bg-background/60 p-4 text-xs space-y-3">
@@ -486,7 +486,7 @@ export function RecruitmentTemplatesPage() {
                         <span className="font-semibold text-foreground">From:</span> OFC360 Talent &lt;recruiting@ofc360.com&gt;
                       </div>
                       <div className="text-[11px] text-muted-foreground">
-                        <span className="font-semibold text-foreground">To:</span> Candidate Name &lt;candidate@example.com&gt;
+                        <span className="font-semibold text-foreground">To:</span> [Sample Candidate] &lt;sample-candidate@example.com&gt;
                       </div>
                       <div className="text-[11px] font-medium text-foreground">
                         <span className="font-semibold text-muted-foreground">Subject:</span>{" "}
@@ -523,9 +523,9 @@ export function RecruitmentTemplatesPage() {
                 <div className="border-b border-border pb-4 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold text-muted-foreground">
-                      Simulated Candidate Inbox
+                      Sample Preview — Candidate Inbox
                     </span>
-                    <span className="text-xs text-muted-foreground">Today at 09:41 AM</span>
+                    <span className="text-xs text-muted-foreground font-mono">Sample Preview</span>
                   </div>
                   <h3 className="text-xl font-bold text-foreground">
                     {resolvePreviewContent(currentTemplate).subject}

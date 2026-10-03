@@ -100,14 +100,15 @@ export function RecruitmentCompliancePage() {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         {[
-          { k: "GDPR Consents", v: `${candidates.length}/${candidates.length}`, icon: ShieldCheck, color: "text-emerald-500" },
-          { k: "EEO Self-ID Rate", v: `${diversityStats.selfIdRate}%`, icon: FileLock2, color: "text-sky-500" },
-          { k: "Data Retention", v: "365d", icon: FileLock2, color: "text-violet-500" },
-          { k: "Right-to-erasure", v: candidates.length > 5 ? 2 : 0, icon: UserX, color: "text-amber-500" },
+          { k: "GDPR Consents", v: "—", sub: "Backend data pending", icon: ShieldCheck, color: "text-emerald-500" },
+          { k: "EEO Self-ID Rate", v: candidates.length > 0 ? `${diversityStats.selfIdRate}%` : "—", sub: candidates.length > 0 ? `${candidates.length} candidates` : "No candidates", icon: FileLock2, color: "text-sky-500" },
+          { k: "Data Retention", v: "365d", sub: "Policy configured", icon: FileLock2, color: "text-violet-500" },
+          { k: "Right-to-erasure", v: "—", sub: "Backend data pending", icon: UserX, color: "text-amber-500" },
         ].map((s) => { const I = s.icon; return (
           <div key={s.k} className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl">
             <div className="flex items-center justify-between text-xs text-muted-foreground"><span>{s.k}</span><I className={`h-4 w-4 ${s.color}`} /></div>
             <div className="mt-2 font-display text-2xl font-semibold text-foreground">{s.v}</div>
+            <div className="mt-1 text-[11px] text-muted-foreground">{s.sub}</div>
           </div>
         );})}
       </div>

@@ -429,7 +429,7 @@ export function TimesheetsPage() {
   return (
     <>
       <div className="flex justify-end gap-2">
-        {userRole !== "super_admin" && userRole !== "hr_admin" && userRole !== "manager" && (
+        {import.meta.env.DEV && userRole !== "super_admin" && userRole !== "hr_admin" && userRole !== "manager" && (
           <Button 
             variant="outline" className="gap-2 border-dashed"
             onClick={() => {
