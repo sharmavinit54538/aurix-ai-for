@@ -71,6 +71,7 @@ import { Route as DashboardAuditLogsRouteImport } from './routes/dashboard.audit
 import { Route as DashboardAttendanceRouteImport } from './routes/dashboard.attendance'
 import { Route as DashboardAssetsRouteImport } from './routes/dashboard.assets'
 import { Route as DashboardAssetManagementRouteImport } from './routes/dashboard.asset-management'
+import { Route as DashboardAnnouncementsRouteImport } from './routes/dashboard.announcements'
 import { Route as DashboardAnalyticsRouteImport } from './routes/dashboard.analytics'
 import { Route as DashboardAiInsightsRouteImport } from './routes/dashboard.ai-insights'
 import { Route as DashboardAiHubRouteImport } from './routes/dashboard.ai-hub'
@@ -198,6 +199,7 @@ import { Route as DashboardAttendanceShiftsRouteImport } from './routes/dashboar
 import { Route as DashboardAttendanceRostersRouteImport } from './routes/dashboard.attendance.rosters'
 import { Route as DashboardAttendanceHolidaysRouteImport } from './routes/dashboard.attendance.holidays'
 import { Route as DashboardAttendanceCheckinRouteImport } from './routes/dashboard.attendance.checkin'
+import { Route as DashboardAnnouncementsIdRouteImport } from './routes/dashboard.announcements.$id'
 import { Route as DashboardAnalyticsReportsRouteImport } from './routes/dashboard.analytics.reports'
 import { Route as DashboardAnalyticsAiInsightsRouteImport } from './routes/dashboard.analytics.ai-insights'
 import { Route as DashboardAiHubDocumentGeneratorRouteImport } from './routes/dashboard.ai-hub.document-generator'
@@ -562,6 +564,11 @@ const DashboardAssetManagementRoute =
     path: '/asset-management',
     getParentRoute: () => DashboardRoute,
   } as any)
+const DashboardAnnouncementsRoute = DashboardAnnouncementsRouteImport.update({
+  id: '/announcements',
+  path: '/announcements',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardAnalyticsRoute = DashboardAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
@@ -1277,6 +1284,12 @@ const DashboardAttendanceCheckinRoute =
     path: '/checkin',
     getParentRoute: () => DashboardAttendanceRoute,
   } as any)
+const DashboardAnnouncementsIdRoute =
+  DashboardAnnouncementsIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => DashboardAnnouncementsRoute,
+  } as any)
 const DashboardAnalyticsReportsRoute =
   DashboardAnalyticsReportsRouteImport.update({
     id: '/reports',
@@ -1629,6 +1642,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/ai-hub': typeof DashboardAiHubRouteWithChildren
   '/dashboard/ai-insights': typeof DashboardAiInsightsRoute
   '/dashboard/analytics': typeof DashboardAnalyticsRouteWithChildren
+  '/dashboard/announcements': typeof DashboardAnnouncementsRouteWithChildren
   '/dashboard/asset-management': typeof DashboardAssetManagementRoute
   '/dashboard/assets': typeof DashboardAssetsRoute
   '/dashboard/attendance': typeof DashboardAttendanceRouteWithChildren
@@ -1676,6 +1690,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/ai-hub/document-generator': typeof DashboardAiHubDocumentGeneratorRoute
   '/dashboard/analytics/ai-insights': typeof DashboardAnalyticsAiInsightsRoute
   '/dashboard/analytics/reports': typeof DashboardAnalyticsReportsRoute
+  '/dashboard/announcements/$id': typeof DashboardAnnouncementsIdRoute
   '/dashboard/attendance/checkin': typeof DashboardAttendanceCheckinRoute
   '/dashboard/attendance/holidays': typeof DashboardAttendanceHolidaysRoute
   '/dashboard/attendance/rosters': typeof DashboardAttendanceRostersRoute
@@ -1866,6 +1881,7 @@ export interface FileRoutesByTo {
   '/auth/verify-reset-otp': typeof AuthVerifyResetOtpRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/dashboard/ai-insights': typeof DashboardAiInsightsRoute
+  '/dashboard/announcements': typeof DashboardAnnouncementsRouteWithChildren
   '/dashboard/asset-management': typeof DashboardAssetManagementRoute
   '/dashboard/assets': typeof DashboardAssetsRoute
   '/dashboard/audit-logs': typeof DashboardAuditLogsRoute
@@ -1904,6 +1920,7 @@ export interface FileRoutesByTo {
   '/dashboard/ai-hub/document-generator': typeof DashboardAiHubDocumentGeneratorRoute
   '/dashboard/analytics/ai-insights': typeof DashboardAnalyticsAiInsightsRoute
   '/dashboard/analytics/reports': typeof DashboardAnalyticsReportsRoute
+  '/dashboard/announcements/$id': typeof DashboardAnnouncementsIdRoute
   '/dashboard/attendance/checkin': typeof DashboardAttendanceCheckinRoute
   '/dashboard/attendance/holidays': typeof DashboardAttendanceHolidaysRoute
   '/dashboard/attendance/rosters': typeof DashboardAttendanceRostersRoute
@@ -2096,6 +2113,7 @@ export interface FileRoutesById {
   '/dashboard/ai-hub': typeof DashboardAiHubRouteWithChildren
   '/dashboard/ai-insights': typeof DashboardAiInsightsRoute
   '/dashboard/analytics': typeof DashboardAnalyticsRouteWithChildren
+  '/dashboard/announcements': typeof DashboardAnnouncementsRouteWithChildren
   '/dashboard/asset-management': typeof DashboardAssetManagementRoute
   '/dashboard/assets': typeof DashboardAssetsRoute
   '/dashboard/attendance': typeof DashboardAttendanceRouteWithChildren
@@ -2143,6 +2161,7 @@ export interface FileRoutesById {
   '/dashboard/ai-hub/document-generator': typeof DashboardAiHubDocumentGeneratorRoute
   '/dashboard/analytics/ai-insights': typeof DashboardAnalyticsAiInsightsRoute
   '/dashboard/analytics/reports': typeof DashboardAnalyticsReportsRoute
+  '/dashboard/announcements/$id': typeof DashboardAnnouncementsIdRoute
   '/dashboard/attendance/checkin': typeof DashboardAttendanceCheckinRoute
   '/dashboard/attendance/holidays': typeof DashboardAttendanceHolidaysRoute
   '/dashboard/attendance/rosters': typeof DashboardAttendanceRostersRoute
@@ -2340,6 +2359,7 @@ export interface FileRouteTypes {
     | '/dashboard/ai-hub'
     | '/dashboard/ai-insights'
     | '/dashboard/analytics'
+    | '/dashboard/announcements'
     | '/dashboard/asset-management'
     | '/dashboard/assets'
     | '/dashboard/attendance'
@@ -2387,6 +2407,7 @@ export interface FileRouteTypes {
     | '/dashboard/ai-hub/document-generator'
     | '/dashboard/analytics/ai-insights'
     | '/dashboard/analytics/reports'
+    | '/dashboard/announcements/$id'
     | '/dashboard/attendance/checkin'
     | '/dashboard/attendance/holidays'
     | '/dashboard/attendance/rosters'
@@ -2577,6 +2598,7 @@ export interface FileRouteTypes {
     | '/auth/verify-reset-otp'
     | '/blog/$slug'
     | '/dashboard/ai-insights'
+    | '/dashboard/announcements'
     | '/dashboard/asset-management'
     | '/dashboard/assets'
     | '/dashboard/audit-logs'
@@ -2615,6 +2637,7 @@ export interface FileRouteTypes {
     | '/dashboard/ai-hub/document-generator'
     | '/dashboard/analytics/ai-insights'
     | '/dashboard/analytics/reports'
+    | '/dashboard/announcements/$id'
     | '/dashboard/attendance/checkin'
     | '/dashboard/attendance/holidays'
     | '/dashboard/attendance/rosters'
@@ -2806,6 +2829,7 @@ export interface FileRouteTypes {
     | '/dashboard/ai-hub'
     | '/dashboard/ai-insights'
     | '/dashboard/analytics'
+    | '/dashboard/announcements'
     | '/dashboard/asset-management'
     | '/dashboard/assets'
     | '/dashboard/attendance'
@@ -2853,6 +2877,7 @@ export interface FileRouteTypes {
     | '/dashboard/ai-hub/document-generator'
     | '/dashboard/analytics/ai-insights'
     | '/dashboard/analytics/reports'
+    | '/dashboard/announcements/$id'
     | '/dashboard/attendance/checkin'
     | '/dashboard/attendance/holidays'
     | '/dashboard/attendance/rosters'
@@ -3469,6 +3494,13 @@ declare module '@tanstack/react-router' {
       path: '/asset-management'
       fullPath: '/dashboard/asset-management'
       preLoaderRoute: typeof DashboardAssetManagementRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/announcements': {
+      id: '/dashboard/announcements'
+      path: '/announcements'
+      fullPath: '/dashboard/announcements'
+      preLoaderRoute: typeof DashboardAnnouncementsRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/analytics': {
@@ -4360,6 +4392,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAttendanceCheckinRouteImport
       parentRoute: typeof DashboardAttendanceRoute
     }
+    '/dashboard/announcements/$id': {
+      id: '/dashboard/announcements/$id'
+      path: '/$id'
+      fullPath: '/dashboard/announcements/$id'
+      preLoaderRoute: typeof DashboardAnnouncementsIdRouteImport
+      parentRoute: typeof DashboardAnnouncementsRoute
+    }
     '/dashboard/analytics/reports': {
       id: '/dashboard/analytics/reports'
       path: '/reports'
@@ -4802,6 +4841,20 @@ const DashboardAnalyticsRouteChildren: DashboardAnalyticsRouteChildren = {
 
 const DashboardAnalyticsRouteWithChildren =
   DashboardAnalyticsRoute._addFileChildren(DashboardAnalyticsRouteChildren)
+
+interface DashboardAnnouncementsRouteChildren {
+  DashboardAnnouncementsIdRoute: typeof DashboardAnnouncementsIdRoute
+}
+
+const DashboardAnnouncementsRouteChildren: DashboardAnnouncementsRouteChildren =
+  {
+    DashboardAnnouncementsIdRoute: DashboardAnnouncementsIdRoute,
+  }
+
+const DashboardAnnouncementsRouteWithChildren =
+  DashboardAnnouncementsRoute._addFileChildren(
+    DashboardAnnouncementsRouteChildren,
+  )
 
 interface DashboardAttendanceRouteChildren {
   DashboardAttendanceCheckinRoute: typeof DashboardAttendanceCheckinRoute
@@ -5282,6 +5335,7 @@ interface DashboardRouteChildren {
   DashboardAiHubRoute: typeof DashboardAiHubRouteWithChildren
   DashboardAiInsightsRoute: typeof DashboardAiInsightsRoute
   DashboardAnalyticsRoute: typeof DashboardAnalyticsRouteWithChildren
+  DashboardAnnouncementsRoute: typeof DashboardAnnouncementsRouteWithChildren
   DashboardAssetManagementRoute: typeof DashboardAssetManagementRoute
   DashboardAssetsRoute: typeof DashboardAssetsRoute
   DashboardAttendanceRoute: typeof DashboardAttendanceRouteWithChildren
@@ -5336,6 +5390,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAiHubRoute: DashboardAiHubRouteWithChildren,
   DashboardAiInsightsRoute: DashboardAiInsightsRoute,
   DashboardAnalyticsRoute: DashboardAnalyticsRouteWithChildren,
+  DashboardAnnouncementsRoute: DashboardAnnouncementsRouteWithChildren,
   DashboardAssetManagementRoute: DashboardAssetManagementRoute,
   DashboardAssetsRoute: DashboardAssetsRoute,
   DashboardAttendanceRoute: DashboardAttendanceRouteWithChildren,
