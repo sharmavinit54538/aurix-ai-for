@@ -1,1 +1,0 @@
-import{t as e}from"./RegisterPage-CPd23n9C.js";var t=e;export{t as component};
