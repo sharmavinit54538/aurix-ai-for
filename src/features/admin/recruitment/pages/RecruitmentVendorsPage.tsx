@@ -69,16 +69,13 @@ export function RecruitmentVendorsPage() {
       const spend = vendorCandidates
         .filter((c) => c.stage === "hired")
         .reduce((sum, c) => {
-          const salary = c.expectedSalary || 1000000; // fallback to 1M INR base salary
-          const commission = Number(v.commission_rate || 20) / 100;
+          const salary = c.expectedSalary || 0;
+          const commission = (Number(v.commission_rate) || 0) / 100;
           return sum + (salary * commission);
         }, 0);
 
-      // Map ratings and specialty tags dynamically or default them
-      const rating = v.name.length % 2 === 0 ? 4.7 : 4.4;
-      const specialties = v.name.includes("Talent") || v.name.includes("Executive")
-        ? ["Engineering", "AI/ML"]
-        : ["Sales", "Product"];
+      const rating = (v as any).rating ?? null;
+      const specialties: string[] = (v as any).specialties || [];
 
       return {
         ...v,
@@ -88,7 +85,7 @@ export function RecruitmentVendorsPage() {
         spend,
         rating,
         specialties,
-        feeModel: `${v.commission_rate}% of base`,
+        feeModel: v.commission_rate ? `${v.commission_rate}% of base` : "Standard rate",
       };
     });
   }, [vendorsList, candidates]);
@@ -234,9 +231,11 @@ export function RecruitmentVendorsPage() {
                   <div className="flex items-center gap-2"><Phone className="h-3 w-3" />{v.phone}</div>
                 </div>
 
-                <div className="mt-3 flex flex-wrap gap-1">
-                  {v.specialties.map((s: string) => <Badge key={s} variant="secondary" className="text-[10px]">{s}</Badge>)}
-                </div>
+                {v.specialties && v.specialties.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-1">
+                    {v.specialties.map((s: string) => <Badge key={s} variant="secondary" className="text-[10px]">{s}</Badge>)}
+                  </div>
+                )}
 
                 <div className="mt-4 grid grid-cols-3 gap-2 border-t border-border pt-3 text-center text-xs">
                   <div><div className="font-semibold text-foreground text-sm">{v.activeReqs}</div><div className="text-[10px] text-muted-foreground">Open</div></div>
@@ -247,9 +246,15 @@ export function RecruitmentVendorsPage() {
 
               <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
                 <div className="flex items-center gap-1 text-xs text-foreground">
-                  <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
-                  <span className="font-semibold">{v.rating}</span>
-                  <span className="text-muted-foreground">· {v.feeModel}</span>
+                  {v.rating != null ? (
+                    <>
+                      <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
+                      <span className="font-semibold">{v.rating}</span>
+                      <span className="text-muted-foreground">· {v.feeModel}</span>
+                    </>
+                  ) : (
+                    <span className="text-muted-foreground">{v.feeModel}</span>
+                  )}
                 </div>
                 <div className="flex gap-1">
                   <Button size="sm" variant="outline" onClick={() => handleEditClick(v)}><Edit className="h-3 w-3" /></Button>

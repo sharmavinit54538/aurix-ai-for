@@ -197,13 +197,19 @@ export default function PaymentBatchListPage() {
           icon={Banknote}
           accent="brand"
         />
-        <StatCard
-          label="Reconciled"
-          value={formatCount(batches.filter((b) => b.status === "reconciled" || b.status === "closed").length)}
-          hint="100% matched"
-          icon={CheckCircle2}
-          accent="success"
-        />
+        {(() => {
+          const reconciledCount = batches.filter((b) => b.status === "reconciled" || b.status === "closed").length;
+          const pct = batches.length > 0 ? Math.round((reconciledCount / batches.length) * 100) : 0;
+          return (
+            <StatCard
+              label="Reconciled"
+              value={formatCount(reconciledCount)}
+              hint={batches.length > 0 ? `${pct}% reconciled` : "No batches"}
+              icon={CheckCircle2}
+              accent="success"
+            />
+          );
+        })()}
       </div>
 
       {/* ── Search and Filter Controls ──────────────────────────────── */}

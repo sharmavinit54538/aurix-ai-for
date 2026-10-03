@@ -610,7 +610,7 @@ export function EmployeeRostersView({ employeeId }: EmployeeRostersViewProps) {
                                 <Clock className="h-3 w-3" /> {item.startTime} – {item.endTime}
                               </span>
                               <span>•</span>
-                              <span>Working Hours: {item.workingHours}h</span>
+                              <span>Working Hours: {item.workingHours != null ? `${item.workingHours}h` : "—"}</span>
                             </>
                           ) : item.status === "Holiday" ? (
                             <span className="text-amber-400 flex items-center gap-1">
@@ -685,7 +685,7 @@ export function EmployeeRostersView({ employeeId }: EmployeeRostersViewProps) {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Productive Hours:</span>
-                  <span className="font-medium text-foreground">{selectedEntry.workingHours} Hours</span>
+                  <span className="font-medium text-foreground">{selectedEntry.workingHours != null ? `${selectedEntry.workingHours} Hours` : "—"}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Schedule Status:</span>

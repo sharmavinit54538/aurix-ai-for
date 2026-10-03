@@ -15,6 +15,18 @@ interface CtoSystemHealthProps {
 }
 
 export function CtoSystemHealth({ services }: CtoSystemHealthProps) {
+  const upCount = services
+    ? services.filter((s) => {
+        const st = s.status?.toLowerCase();
+        return st === "healthy" || st === "up" || st === "operational" || st === "active" || st === "optimal";
+      }).length
+    : 0;
+  const totalCount = services?.length || 0;
+  const slaText =
+    totalCount > 0
+      ? `${Math.round((upCount / totalCount) * 100)}% Operational SLA (${upCount}/${totalCount} up)`
+      : "No telemetry";
+
   return (
     <div className="rounded-2xl border border-border/80 bg-card/60 p-5 backdrop-blur-xl space-y-4 text-left shadow-sm">
       <div className="flex items-center justify-between border-b border-border/50 pb-3">
@@ -24,8 +36,16 @@ export function CtoSystemHealth({ services }: CtoSystemHealthProps) {
             Live System & Service Operational Health
           </h3>
         </div>
-        <Badge className={services && services.length > 0 ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] uppercase font-bold" : "bg-muted text-muted-foreground border-border text-[10px] uppercase font-bold"}>
-          {services && services.length > 0 ? "100% Operational SLA" : "No telemetry"}
+        <Badge
+          className={
+            totalCount > 0
+              ? upCount === totalCount
+                ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] uppercase font-bold"
+                : "bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] uppercase font-bold"
+              : "bg-muted text-muted-foreground border-border text-[10px] uppercase font-bold"
+          }
+        >
+          {slaText}
         </Badge>
       </div>
 

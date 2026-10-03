@@ -145,11 +145,11 @@ export function ImportDialog({
           const key = fieldMap[h];
           if (key) {
             if (key === "overallRating") {
-              draft.overallRating = val ? parseInt(val) : 3;
+              draft.overallRating = val !== "" && !isNaN(Number(val)) ? parseInt(val, 10) : undefined;
             } else if (key === "kpiScore") {
-              draft.kpiScore = val ? parseInt(val) : 80;
+              draft.kpiScore = val !== "" && !isNaN(Number(val)) ? parseInt(val, 10) : undefined;
             } else if (key === "goalProgress") {
-              draft.goalProgress = val ? parseInt(val) : 50;
+              draft.goalProgress = val !== "" && !isNaN(Number(val)) ? parseInt(val, 10) : undefined;
             } else {
               (draft as any)[key] = val;
             }
@@ -166,8 +166,18 @@ export function ImportDialog({
         if (!draft.managerName) rowErrors.push("Manager name is required");
 
         // Rating range checks (1-5)
-        if (draft.overallRating !== undefined && (draft.overallRating < 1 || draft.overallRating > 5)) {
-          rowErrors.push("Rating must be between 1 and 5");
+        if (draft.overallRating === undefined || isNaN(draft.overallRating) || draft.overallRating < 1 || draft.overallRating > 5) {
+          rowErrors.push("Overall Rating is required and must be between 1 and 5");
+        }
+
+        // KPI Score check
+        if (draft.kpiScore === undefined || isNaN(draft.kpiScore) || draft.kpiScore < 0 || draft.kpiScore > 100) {
+          rowErrors.push("KPI Score is required and must be between 0 and 100");
+        }
+
+        // Goal progress check if present
+        if (draft.goalProgress !== undefined && (isNaN(draft.goalProgress) || draft.goalProgress < 0 || draft.goalProgress > 100)) {
+          rowErrors.push("Goal Progress must be between 0 and 100");
         }
 
         // Date Checks
@@ -247,18 +257,18 @@ export function ImportDialog({
         department,
         designation,
         managerName: d.managerName || "",
-        overallRating: d.overallRating || 3,
-        kpiScore: d.kpiScore || 80,
-        productivity: d.overallRating || 3,
-        attendance: 4,
-        communication: 3,
-        leadership: 3,
-        teamwork: 4,
-        innovation: 3,
-        problemSolving: 3,
-        technicalSkills: 4,
-        discipline: 4,
-        goalProgress: d.goalProgress || 50,
+        overallRating: d.overallRating!,
+        kpiScore: d.kpiScore!,
+        productivity: d.overallRating ?? 1,
+        attendance: 1,
+        communication: 1,
+        leadership: 1,
+        teamwork: 1,
+        innovation: 1,
+        problemSolving: 1,
+        technicalSkills: 1,
+        discipline: 1,
+        goalProgress: d.goalProgress ?? 0,
         achievements: "Imported from batch CSV upload",
         challenges: "",
         feedback: "Continuous feedback imports",
@@ -422,9 +432,11 @@ export function ImportDialog({
                               {row.data.managerName || <span className="text-rose-500 italic">Missing</span>}
                             </TableCell>
                             <TableCell className="text-xs font-semibold">
-                              {row.data.overallRating ? `${row.data.overallRating} ★` : "3 ★"}
+                              {row.data.overallRating != null ? `${row.data.overallRating} ★` : <span className="text-rose-500 italic">Missing</span>}
                             </TableCell>
-                            <TableCell className="text-xs font-mono">{row.data.kpiScore || 80}%</TableCell>
+                            <TableCell className="text-xs font-mono">
+                              {row.data.kpiScore != null ? `${row.data.kpiScore}%` : <span className="text-rose-500 italic">Missing</span>}
+                            </TableCell>
                             <TableCell>
                               {row.errors.length > 0 ? (
                                 <Badge variant="outline" className="bg-rose-500/10 text-rose-500 border-rose-500/20 text-[9px] px-1 py-0">

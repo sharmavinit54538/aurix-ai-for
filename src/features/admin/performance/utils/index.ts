@@ -16,16 +16,16 @@ export function validatePerformanceReviewForm(
   if (!draft.employeeId) errors.employeeId = "Employee selection is required";
   if (!draft.managerName?.trim()) errors.managerName = "Manager name is required";
   
-  if (draft.overallRating === undefined || draft.overallRating < 1 || draft.overallRating > 5) {
-    errors.overallRating = "Overall rating must be between 1 and 5";
+  if (draft.overallRating === undefined || isNaN(draft.overallRating) || draft.overallRating < 1 || draft.overallRating > 5) {
+    errors.overallRating = "Overall rating is required and must be between 1 and 5";
   }
 
-  if (draft.kpiScore === undefined || draft.kpiScore < 0 || draft.kpiScore > 100) {
-    errors.kpiScore = "KPI score must be between 0 and 100";
+  if (draft.kpiScore === undefined || isNaN(draft.kpiScore) || draft.kpiScore < 0 || draft.kpiScore > 100) {
+    errors.kpiScore = "KPI score is required and must be between 0 and 100";
   }
 
-  if (draft.goalProgress === undefined || draft.goalProgress < 0 || draft.goalProgress > 100) {
-    errors.goalProgress = "Goal progress percentage must be between 0 and 100";
+  if (draft.goalProgress === undefined || isNaN(draft.goalProgress) || draft.goalProgress < 0 || draft.goalProgress > 100) {
+    errors.goalProgress = "Goal progress percentage is required and must be between 0 and 100";
   }
 
   if (!draft.reviewDate) {

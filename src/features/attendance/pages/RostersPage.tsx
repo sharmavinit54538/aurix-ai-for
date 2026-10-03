@@ -224,7 +224,7 @@ export default function RostersPage() {
   const stats = useMemo(() => {
     const assignedCount = new Set(filteredRosters.map((r) => r.employeeId)).size;
     const openShifts = filteredRosters.filter((r) => r.shift === "Off Day").length;
-    const overtimeHours = filteredRosters.filter((r) => r.shift === "Overtime").reduce((sum, r) => sum + r.workingHours, 0);
+    const overtimeHours = filteredRosters.filter((r) => r.shift === "Overtime").reduce((sum, r) => sum + (r.workingHours || 0), 0);
     const pendingCount = filteredRosters.filter((r) => r.status === "Pending").length;
 
     let conflicts = 0;
@@ -237,19 +237,22 @@ export default function RostersPage() {
         doubleShiftTracker.add(key);
       }
       if (r.shift === "Overtime") conflicts++;
-      if (r.shift === "Leave" && r.workingHours > 0) conflicts++;
+      if (r.shift === "Leave" && (r.workingHours || 0) > 0) conflicts++;
     });
+
+    const totalEmployees = employees.length;
+    const coverage = totalEmployees > 0 ? `${Math.round((assignedCount / totalEmployees) * 100)}%` : "—";
 
     return {
       activeRosters: filteredRosters.length > 0 ? 1 : 0,
       employeesAssigned: assignedCount,
       openShifts: openShifts,
-      coverage: assignedCount > 0 ? "100%" : "0%",
+      coverage,
       overtime: overtimeHours,
       pending: pendingCount,
       conflicts,
     };
-  }, [filteredRosters]);
+  }, [filteredRosters, employees]);
 
   // Conflict Warnings & Smart Suggestions
   const conflictList = useMemo(() => {
@@ -542,14 +545,7 @@ export default function RostersPage() {
               variant="outline"
               size="sm"
               onClick={() => {
-                toast.promise(
-                  new Promise((resolve) => setTimeout(resolve, 1500)),
-                  {
-                    loading: "AI generating optimal shift coverage...",
-                    success: "Optimal shift schedule generated with 0 conflicts!",
-                    error: "AI generation failed.",
-                  }
-                );
+                toast.info("AI roster generation endpoint is not available.");
               }}
               className="h-9 border-border text-xs"
             >
@@ -559,7 +555,7 @@ export default function RostersPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => toast.info("Import schedule simulation active")}
+              onClick={() => toast.info("Please select a file to import schedule data.")}
               className="h-9 border-border text-xs"
             >
               <Upload className="mr-2 h-3.5 w-3.5" />
@@ -971,7 +967,7 @@ export default function RostersPage() {
                             </Badge>
                           </td>
                           <td className="px-5 py-3 text-muted-foreground">
-                            {entry.workingHours > 0 ? `${entry.workingHours} hrs` : "—"}
+                            {entry.workingHours != null && entry.workingHours > 0 ? `${entry.workingHours} hrs` : "—"}
                           </td>
                           <td className="px-5 py-3 text-muted-foreground">
                             {entry.breakTime}
@@ -1209,7 +1205,7 @@ export default function RostersPage() {
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Average Shift Length</span>
                 <span className="font-semibold text-foreground">
-                  {rosters.length > 0 ? (rosters.reduce((s, r) => s + r.workingHours, 0) / rosters.length).toFixed(1) : "0.0"} hours
+                  {rosters.length > 0 ? (rosters.reduce((s, r) => s + (r.workingHours || 0), 0) / rosters.length).toFixed(1) : "0.0"} hours
                 </span>
               </div>
               <div className="flex justify-between">
@@ -1222,7 +1218,7 @@ export default function RostersPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Estimated Overtime</span>
-                <span className="font-semibold text-foreground">{rosters.filter(r => r.shift === "Overtime").reduce((s, r) => s + r.workingHours, 0).toFixed(1)} hours</span>
+                <span className="font-semibold text-foreground">{rosters.filter(r => r.shift === "Overtime").reduce((s, r) => s + (r.workingHours || 0), 0).toFixed(1)} hours</span>
               </div>
             </div>
           </div>

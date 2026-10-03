@@ -30,7 +30,7 @@ export function mapVisitorFromBackend(raw: BackendVisitor | any): Visitor {
     photoUrl: raw.photo_url || raw.photoUrl || undefined,
     hostEmployee: raw.host_employee || raw.host_employee_id || raw.hostEmployee || "Unassigned",
     purpose: raw.purpose || "",
-    expectedDurationMins: Number(raw.expected_duration_mins ?? raw.expectedDurationMins ?? 30),
+    expectedDurationMins: raw.expected_duration_mins != null ? Number(raw.expected_duration_mins) : (raw.expectedDurationMins != null ? Number(raw.expectedDurationMins) : 0),
     checkInAt: raw.check_in_at || raw.checkInAt || undefined,
     checkOutAt: raw.check_out_at || raw.checkOutAt || undefined,
     status: (raw.status || "pending").toLowerCase() as VisitorStatus,

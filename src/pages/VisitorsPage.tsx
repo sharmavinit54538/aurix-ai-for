@@ -278,7 +278,7 @@ export function VisitorsPage() {
                   </div>
                   <div className="mt-2 text-sm">{v.purpose}</div>
                   <div className="mt-1 text-xs text-muted-foreground">
-                    Duration: {v.expectedDurationMins} min
+                    Duration: {v.expectedDurationMins ? `${v.expectedDurationMins} min` : "—"}
                     {v.checkInAt ? ` · In ${new Date(v.checkInAt).toLocaleTimeString()}` : ""}
                     {v.checkOutAt ? ` · Out ${new Date(v.checkOutAt).toLocaleTimeString()}` : ""}
                   </div>
