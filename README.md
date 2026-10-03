@@ -500,7 +500,7 @@ The frontend inspects environment variables through `import.meta.env` (Vite) and
 
 ## 10. Installation
 
-Ensure you have **Node.js 20.x or later** and **npm** installed.
+Ensure you have **Node.js 22.12+** and **npm** installed.
 
 ```bash
 # 1. Clone the repository
