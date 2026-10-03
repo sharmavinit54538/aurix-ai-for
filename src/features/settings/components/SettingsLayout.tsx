@@ -31,15 +31,34 @@ import {
   type RbacRole,
 } from "../types";
 import { AccessDeniedView } from "./AccessDeniedView";
-import { CompanySection } from "./sections/CompanySection";
-import { MyProfileSection } from "./sections/MyProfileSection";
-import { EmployeesSection } from "./sections/EmployeesSection";
-import { AttendanceSection } from "./sections/AttendanceSection";
-import { LeaveSection } from "./sections/LeaveSection";
-import { PayrollSection } from "./sections/PayrollSection";
-import { DocumentsSection } from "./sections/DocumentsSection";
-import { AssetsSection } from "./sections/AssetsSection";
-import { NotificationsSection } from "./sections/NotificationsSection";
+
+const CompanySection = React.lazy(() =>
+  import("./sections/CompanySection").then((m) => ({ default: m.CompanySection }))
+);
+const MyProfileSection = React.lazy(() =>
+  import("./sections/MyProfileSection").then((m) => ({ default: m.MyProfileSection }))
+);
+const EmployeesSection = React.lazy(() =>
+  import("./sections/EmployeesSection").then((m) => ({ default: m.EmployeesSection }))
+);
+const AttendanceSection = React.lazy(() =>
+  import("./sections/AttendanceSection").then((m) => ({ default: m.AttendanceSection }))
+);
+const LeaveSection = React.lazy(() =>
+  import("./sections/LeaveSection").then((m) => ({ default: m.LeaveSection }))
+);
+const PayrollSection = React.lazy(() =>
+  import("./sections/PayrollSection").then((m) => ({ default: m.PayrollSection }))
+);
+const DocumentsSection = React.lazy(() =>
+  import("./sections/DocumentsSection").then((m) => ({ default: m.DocumentsSection }))
+);
+const AssetsSection = React.lazy(() =>
+  import("./sections/AssetsSection").then((m) => ({ default: m.AssetsSection }))
+);
+const NotificationsSection = React.lazy(() =>
+  import("./sections/NotificationsSection").then((m) => ({ default: m.NotificationsSection }))
+);
 
 interface SettingsCardMeta {
   id: SettingsSectionKey;
@@ -255,7 +274,18 @@ export function SettingsLayout({ initialSection, onSectionChange }: SettingsLayo
               currentRole={getRbacRoleLabel(userRole)}
             />
           ) : (
-            <div>
+            <React.Suspense
+              fallback={
+                <div className="space-y-4 p-6 border rounded-xl bg-card animate-pulse">
+                  <div className="h-6 w-48 bg-muted rounded" />
+                  <div className="h-4 w-96 bg-muted/60 rounded" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                    <div className="h-24 bg-muted/40 rounded-lg" />
+                    <div className="h-24 bg-muted/40 rounded-lg" />
+                  </div>
+                </div>
+              }
+            >
               {activeSection === "company" && (
                 <CompanySection canEdit={canEdit} onDirtyChange={setIsCurrentFormDirty} />
               )}
@@ -283,7 +313,7 @@ export function SettingsLayout({ initialSection, onSectionChange }: SettingsLayo
               {activeSection === "notifications" && (
                 <NotificationsSection canEdit={canEdit} onDirtyChange={setIsCurrentFormDirty} />
               )}
-            </div>
+            </React.Suspense>
           )}
         </div>
       )}

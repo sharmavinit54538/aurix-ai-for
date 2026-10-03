@@ -105,7 +105,7 @@ export const AI_MODULES_LIST: AIModuleDef[] = [
     title: "Document Generator",
     description: "Generate NDAs, offer letters, and contracts using smart placeholders.",
     icon: FilePlus2,
-    to: "/ai/document-generator",
+    to: "/dashboard/ai-hub/document-generator",
     color: "from-sky-500/20 to-blue-500/20 text-sky-400 border-sky-500/30",
   },
   {
@@ -129,7 +129,7 @@ export const AI_MODULES_LIST: AIModuleDef[] = [
     title: "Chat Assistant",
     description: "Conversational assistant for company policy and employee handbook Q&A.",
     icon: MessageSquare,
-    to: "/ai/chat-assistant",
+    to: "/dashboard/ai-hub/assistant",
     color: "from-indigo-500/20 to-cyan-500/20 text-indigo-400 border-indigo-500/30",
   },
   {

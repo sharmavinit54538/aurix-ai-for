@@ -1,9 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
-
-const AssetManagementPage = lazyFeaturePage(() => import("@/pages/AssetManagementPage"));
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/resources/asset-management")({
-  head: () => ({ meta: [{ title: "Asset Management — OFC360" }] }),
-  component: AssetManagementPage,
+  beforeLoad: () => {
+    throw redirect({ to: "/dashboard/asset-management" });
+  },
+  component: () => null,
 });

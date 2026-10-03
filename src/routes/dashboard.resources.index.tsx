@@ -21,7 +21,7 @@ const RESOURCES_MODULES: ModuleItem[] = [
     title: "Asset Inventory",
     description: "IT hardware inventory, laptops, monitors, mobile devices, and warranty tracking.",
     icon: Laptop,
-    to: "/dashboard/resources/assets",
+    to: "/dashboard/assets",
     color: "from-purple-500/20 to-violet-500/20 text-purple-400 border-purple-500/30",
   },
   {
@@ -29,7 +29,7 @@ const RESOURCES_MODULES: ModuleItem[] = [
     title: "Asset Management & QR",
     description: "Manage asset allocations, check-ins, return handovers, maintenance, and QR sticker generation.",
     icon: Wrench,
-    to: "/dashboard/resources/asset-management",
+    to: "/dashboard/asset-management",
     color: "from-emerald-500/20 to-teal-500/20 text-emerald-400 border-emerald-500/30",
   },
 ];

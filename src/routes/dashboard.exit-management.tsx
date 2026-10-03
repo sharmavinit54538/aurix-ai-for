@@ -1,9 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
-
-const ExitManagementPage = lazyFeaturePage(() => import("@/pages/ExitManagementPage"));
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/exit-management")({
-  head: () => ({ meta: [{ title: "Exit Management — OFC360" }] }),
-  component: ExitManagementPage,
+  beforeLoad: () => {
+    throw redirect({ to: "/dashboard/hr-operations/exit-management" });
+  },
+  component: () => null,
 });

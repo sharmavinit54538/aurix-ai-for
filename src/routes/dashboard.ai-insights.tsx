@@ -1,9 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
-
-const AIInsightsPage = lazyFeaturePage(() => import("@/pages/AIInsightsPage"));
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/ai-insights")({
-  head: () => ({ meta: [{ title: "AI Insights — OFC360" }] }),
-  component: AIInsightsPage,
+  beforeLoad: () => {
+    throw redirect({ to: "/dashboard/analytics/ai-insights" });
+  },
+  component: () => null,
 });

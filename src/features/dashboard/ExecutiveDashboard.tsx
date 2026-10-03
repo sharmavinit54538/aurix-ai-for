@@ -901,7 +901,7 @@ function ActivityFeed() {
   return (
     <motion.div {...fadeUp}>
       <Card>
-        <SectionHeader title="Live Activity Feed" subtitle="Real-time HR system activity" link="/dashboard/timeline" />
+        <SectionHeader title="Live Activity Feed" subtitle="Real-time HR system activity" link="/dashboard/hr-operations/timeline" />
         <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
           {ACTIVITY_FEED.map((a) => {
             const Icon = ICON_MAP[a.icon] ?? Zap;

@@ -1,9 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
-
-const TimelinePage = lazyFeaturePage(() => import("@/pages/TimelinePage"));
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/timeline")({
-  head: () => ({ meta: [{ title: "Employee Timeline — OFC360" }] }),
-  component: TimelinePage,
+  beforeLoad: () => {
+    throw redirect({ to: "/dashboard/hr-operations/timeline" });
+  },
+  component: () => null,
 });

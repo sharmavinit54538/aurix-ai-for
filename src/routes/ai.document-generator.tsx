@@ -1,9 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
-
-const DocumentGeneratorPage = lazyFeaturePage(() => import("@/pages/DocumentGeneratorPage"));
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/ai/document-generator")({
-  head: () => ({ meta: [{ title: "AI Document Generator — OFC360" }] }),
-  component: DocumentGeneratorPage,
+  beforeLoad: () => {
+    throw redirect({ to: "/dashboard/ai-hub/document-generator" });
+  },
+  component: () => null,
 });

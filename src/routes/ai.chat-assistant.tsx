@@ -1,9 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
-
-const ChatAssistantPage = lazyFeaturePage(() => import("@/pages/ChatAssistantPage"));
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/ai/chat-assistant")({
-  head: () => ({ meta: [{ title: "AI Chat Assistant — OFC360" }] }),
-  component: ChatAssistantPage,
+  beforeLoad: () => {
+    throw redirect({ to: "/dashboard/ai-hub/assistant" });
+  },
+  component: () => null,
 });

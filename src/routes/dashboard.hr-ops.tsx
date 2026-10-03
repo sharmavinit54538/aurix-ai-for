@@ -1,9 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
-
-const HrOpsPage = lazyFeaturePage(() => import("@/pages/HrOpsPage"));
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/hr-ops")({
-  head: () => ({ meta: [{ title: "HR Operations — OFC360" }] }),
-  component: HrOpsPage,
+  beforeLoad: () => {
+    throw redirect({ to: "/dashboard/hr-operations/command-center" });
+  },
+  component: () => null,
 });
