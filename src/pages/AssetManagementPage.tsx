@@ -1,9 +1,7 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { Package, CheckCircle2, AlertTriangle, XCircle, Wrench, Plus, Trash2, Pencil, QrCode } from "lucide-react";
-import { PageHeader } from "@/components/aurix/DashboardShell";
-import { CsvButton, GlassCard, QrTile, SearchBox, StatCard, StatusBadge } from "@/components/hrms/Shared";
-import { hrms, newId, useHrms } from "@/lib/hrms/store";
+import { useMemo, useState, useEffect, useCallback } from "react";
+import { Package, CheckCircle2, AlertTriangle, XCircle, Wrench, Plus, Trash2, Pencil, QrCode, RefreshCw, AlertCircle } from "lucide-react";
+import { CsvButton, GlassCard, SearchBox, StatCard, StatusBadge } from "@/components/hrms/Shared";
+import { assetsApi } from "@/services/assetsApi";
 import type { Asset, AssetCategory, AssetStatus } from "@/lib/hrms/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import {
   Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
+import { toast } from "sonner";
 
 const CATEGORIES: AssetCategory[] = ["laptop", "desktop", "monitor", "phone", "accessory", "vehicle", "other"];
 const STATUSES: AssetStatus[] = ["available", "assigned", "under-repair", "lost", "expired"];
@@ -29,7 +28,7 @@ const PIE_COLORS = ["#10b981", "#6366f1", "#f59e0b", "#ef4444", "#6b7280"];
 
 function emptyAsset(): Asset {
   return {
-    id: newId("a"),
+    id: "",
     tag: `LAP-${Math.floor(Math.random() * 9000 + 1000)}`,
     name: "",
     category: "laptop",
@@ -42,12 +41,40 @@ function emptyAsset(): Asset {
 }
 
 export function AssetManagementPage() {
-  const assets = useHrms((s) => s.assets);
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<AssetStatus | "all">("all");
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Asset>(emptyAsset());
   const [qrFor, setQrFor] = useState<Asset | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Dialog for assigning an asset
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [assignAssetId, setAssignAssetId] = useState<string | null>(null);
+  const [assignedEmployeeName, setAssignedEmployeeName] = useState("");
+
+  const loadAssets = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await assetsApi.getAssets();
+      setAssets(res.items);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || "Failed to load assets";
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAssets();
+  }, [loadAssets]);
 
   const stats = useMemo(() => {
     const by = (s: AssetStatus) => assets.filter((a) => a.status === s).length;
@@ -82,11 +109,80 @@ export function AssetManagementPage() {
     [assets],
   );
 
-  function save() {
-    if (!draft.name) return;
-    hrms.upsertAsset(draft);
-    setOpen(false);
-    setDraft(emptyAsset());
+  async function save() {
+    if (!draft.name) {
+      toast.error("Please enter asset name");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      if (draft.id) {
+        const updated = await assetsApi.updateAsset(draft.id, draft);
+        setAssets((prev) => prev.map((a) => (a.id === draft.id ? updated : a)));
+        toast.success("Asset updated successfully");
+      } else {
+        const created = await assetsApi.createAsset(draft);
+        setAssets((prev) => [created, ...prev]);
+        toast.success("Asset added successfully");
+      }
+      setOpen(false);
+      setDraft(emptyAsset());
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to save asset");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("Are you sure you want to delete this asset?")) return;
+    try {
+      await assetsApi.deleteAsset(id);
+      setAssets((prev) => prev.filter((a) => a.id !== id));
+      toast.success("Asset deleted");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to delete asset");
+    }
+  }
+
+  async function handleReturn(id: string) {
+    try {
+      const updated = await assetsApi.returnAsset(id);
+      setAssets((prev) => prev.map((a) => (a.id === id ? updated : a)));
+      toast.success("Asset returned to inventory");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to return asset");
+    }
+  }
+
+  async function submitAssignment() {
+    if (!assignAssetId || !assignedEmployeeName.trim()) {
+      toast.error("Please enter employee name");
+      return;
+    }
+    try {
+      const updated = await assetsApi.assignAsset(assignAssetId, assignedEmployeeName.trim());
+      setAssets((prev) => prev.map((a) => (a.id === assignAssetId ? updated : a)));
+      setAssignOpen(false);
+      setAssignAssetId(null);
+      setAssignedEmployeeName("");
+      toast.success("Asset assigned successfully");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to assign asset");
+    }
+  }
+
+  if (error && assets.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 text-center">
+        <AlertCircle className="h-10 w-10 text-rose-500 mb-3" />
+        <h3 className="text-lg font-semibold mb-1">Failed to load assets</h3>
+        <p className="text-sm text-muted-foreground mb-4">{error}</p>
+        <Button onClick={loadAssets} variant="outline" className="gap-2">
+          <RefreshCw className="h-4 w-4" /> Retry
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -140,7 +236,11 @@ export function AssetManagementPage() {
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <SearchBox value={query} onChange={setQuery} placeholder="Search by tag, name, serial, employee…" />
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)} className="h-9 rounded-md border border-border bg-background px-3 text-sm">
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as any)}
+          className="h-9 rounded-md border border-border bg-background px-3 text-sm"
+        >
           <option value="all">All statuses</option>
           {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
@@ -161,60 +261,92 @@ export function AssetManagementPage() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((a) => {
-              const warrantyDate = new Date(a.warrantyUntil);
-              const warningWarranty = warrantyDate.getTime() - Date.now() < 1000 * 60 * 60 * 24 * 60;
-              return (
-                <tr key={a.id} className="border-b border-border/60 last:border-0">
-                  <td className="px-4 py-3 font-mono text-xs">{a.tag}</td>
-                  <td className="px-4 py-3 font-medium">{a.name}</td>
-                  <td className="px-4 py-3 capitalize">{a.category}</td>
-                  <td className="px-4 py-3">{a.vendor}</td>
-                  <td className="px-4 py-3">
-                    <span className={warningWarranty ? "text-amber-600" : ""}>{warrantyDate.toLocaleDateString()}</span>
-                  </td>
-                  <td className="px-4 py-3"><StatusBadge status={a.status} tone={STATUS_TONE[a.status]} /></td>
-                  <td className="px-4 py-3">
-                    {a.assignedTo ?? <span className="text-muted-foreground">—</span>}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => setQrFor(a)} aria-label="QR"><QrCode className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => { setDraft(a); setOpen(true); }} aria-label="Edit"><Pencil className="h-4 w-4" /></Button>
-                      {a.assignedTo ? (
-                        <Button variant="outline" size="sm" onClick={() => hrms.returnAsset(a.id)}>Return</Button>
-                      ) : (
-                        <Button variant="outline" size="sm" onClick={() => {
-                          const name = window.prompt("Assign to employee:");
-                          if (name) hrms.assignAsset(a.id, name);
-                        }}>Assign</Button>
-                      )}
-                      <Button variant="ghost" size="icon" onClick={() => hrms.deleteAsset(a.id)} aria-label="Delete"><Trash2 className="h-4 w-4 text-rose-500" /></Button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+            {loading ? (
+              <tr>
+                <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
+                  <div className="flex items-center justify-center gap-2">
+                    <RefreshCw className="h-4 w-4 animate-spin" /> Loading assets...
+                  </div>
+                </td>
+              </tr>
+            ) : filtered.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
+                  No assets found.
+                </td>
+              </tr>
+            ) : (
+              filtered.map((a) => {
+                const warrantyDate = new Date(a.warrantyUntil);
+                const warningWarranty = warrantyDate.getTime() - Date.now() < 1000 * 60 * 60 * 24 * 60;
+                return (
+                  <tr key={a.id} className="border-b border-border/60 last:border-0">
+                    <td className="px-4 py-3 font-mono text-xs">{a.tag}</td>
+                    <td className="px-4 py-3 font-medium">{a.name}</td>
+                    <td className="px-4 py-3 capitalize">{a.category}</td>
+                    <td className="px-4 py-3">{a.vendor}</td>
+                    <td className="px-4 py-3">
+                      <span className={warningWarranty ? "text-amber-600 font-medium" : ""}>{warrantyDate.toLocaleDateString()}</span>
+                    </td>
+                    <td className="px-4 py-3"><StatusBadge status={a.status} tone={STATUS_TONE[a.status]} /></td>
+                    <td className="px-4 py-3">
+                      {a.assignedTo ?? <span className="text-muted-foreground">—</span>}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex justify-end gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => setQrFor(a)} aria-label="QR"><QrCode className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => { setDraft(a); setOpen(true); }} aria-label="Edit"><Pencil className="h-4 w-4" /></Button>
+                        {a.assignedTo ? (
+                          <Button variant="outline" size="sm" onClick={() => handleReturn(a.id)}>Return</Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setAssignAssetId(a.id);
+                              setAssignedEmployeeName("");
+                              setAssignOpen(true);
+                            }}
+                          >
+                            Assign
+                          </Button>
+                        )}
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(a.id)} aria-label="Delete"><Trash2 className="h-4 w-4 text-rose-500" /></Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </GlassCard>
 
+      {/* Add / Edit Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>{draft.id.startsWith("a-") ? "Add" : "Edit"} asset</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{draft.id ? "Edit" : "Add"} asset</DialogTitle></DialogHeader>
           <div className="grid grid-cols-2 gap-3">
             <div><Label>Tag</Label><Input value={draft.tag} onChange={(e) => setDraft({ ...draft, tag: e.target.value })} /></div>
             <div><Label>Name</Label><Input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} /></div>
             <div>
               <Label>Category</Label>
-              <select value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value as AssetCategory })} className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm">
-                {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+              <select
+                value={draft.category}
+                onChange={(e) => setDraft({ ...draft, category: e.target.value as AssetCategory })}
+                className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm"
+              >
+                {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
             <div>
               <Label>Status</Label>
-              <select value={draft.status} onChange={(e) => setDraft({ ...draft, status: e.target.value as AssetStatus })} className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm">
-                {STATUSES.map((s) => <option key={s}>{s}</option>)}
+              <select
+                value={draft.status}
+                onChange={(e) => setDraft({ ...draft, status: e.target.value as AssetStatus })}
+                className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm"
+              >
+                {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
             <div><Label>Serial</Label><Input value={draft.serial} onChange={(e) => setDraft({ ...draft, serial: e.target.value })} /></div>
@@ -225,23 +357,43 @@ export function AssetManagementPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button onClick={save}>Save</Button>
+            <Button onClick={save} disabled={submitting}>
+              {submitting ? "Saving..." : "Save"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* Assign Asset Dialog (Replaces window.prompt) */}
+      <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign Asset</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Label>Employee Name</Label>
+            <Input
+              placeholder="Enter employee name or ID"
+              value={assignedEmployeeName}
+              onChange={(e) => setAssignedEmployeeName(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssignOpen(false)}>Cancel</Button>
+            <Button onClick={submitAssignment}>Assign</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* QR Code Dialog */}
       <Dialog open={!!qrFor} onOpenChange={(o) => !o && setQrFor(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle>Asset QR / Barcode</DialogTitle></DialogHeader>
           {qrFor ? (
             <div className="flex flex-col items-center gap-3">
-              {(qrFor as any).qrCodeData ? (
-                <img src={(qrFor as any).qrCodeData} width={160} height={160} className="w-[160px] h-[160px]" alt="Asset QR Code" />
-              ) : (
-                <div className="w-[160px] h-[160px] flex items-center justify-center bg-slate-50 text-[10px] text-slate-400">Generating QR...</div>
-              )}
-              <div className="font-mono text-xs">{qrFor.tag}</div>
-              <div className="text-xs text-muted-foreground">Scan to view asset details.</div>
+              <div className="font-mono text-base font-semibold">{qrFor.tag}</div>
+              <div className="text-xs text-muted-foreground">{qrFor.name} · {qrFor.category}</div>
+              <div className="text-xs text-muted-foreground">Scan tag at asset check-in desk.</div>
             </div>
           ) : null}
         </DialogContent>

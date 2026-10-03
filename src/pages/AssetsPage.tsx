@@ -20,8 +20,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { hrms, newId, useHrms } from "@/lib/hrms/store";
 import { useAurix } from "@/lib/aurix-store";
+import { newId } from "@/lib/hrms/types";
 import type { Asset, AssetCategory, AssetStatus, AssetAssignmentHistory, AssetMaintenanceRecord, AssetTimelineEvent } from "@/lib/hrms/types";
 
 declare module "@/lib/hrms/types" {

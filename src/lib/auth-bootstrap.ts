@@ -73,6 +73,13 @@ export function getPostLoginRoute(user: AuthUserPayload): string {
 
 export async function bootstrapAuth(): Promise<void> {
   if (typeof window === "undefined") return;
+  // F-07.3: Clean up stale browser-only HRMS localStorage store
+  try {
+    window.localStorage.removeItem("aurix.hrms.v1");
+  } catch {
+    /* ignore */
+  }
+
   if (bootstrapPromise) return bootstrapPromise;
 
   bootstrapPromise = (async () => {

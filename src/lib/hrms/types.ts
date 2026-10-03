@@ -1,5 +1,9 @@
 export type ID = string;
 
+export function newId(prefix = "id"): string {
+  return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
 export type TimelineEventKind =
   | "joining"
   | "promotion"

@@ -1,6 +1,6 @@
 import { statusBadgeClass } from "@/lib/status-styles";
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import apiInstance from "@/api/apiInstance";
 import {
   LogOut,
@@ -68,7 +68,8 @@ import {
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { hrms, newId, useHrms } from "@/lib/hrms/store";
+import { newId } from "@/lib/hrms/types";
+import { exitsApi } from "@/services/exitsApi";
 import { useAurix } from "@/lib/aurix-store";
 import type {
   ExitCase,
@@ -170,7 +171,49 @@ const COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--cha
 // MAIN MODULE COMPONENT
 // ----------------------------------------------------
 export function ExitManagementPage() {
-  const exits = useHrms((s) => s.exits);
+  const [exits, setExits] = useState<ExitCase[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadExits = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await exitsApi.getExits();
+      setExits(res.items);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || "Failed to load exit records";
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadExits();
+  }, [loadExits]);
+
+  const saveExit = async (caseData: ExitCase) => {
+    setExits((prev) => {
+      const idx = prev.findIndex((x) => x.id === caseData.id);
+      if (idx >= 0) {
+        const copy = [...prev];
+        copy[idx] = caseData;
+        return copy;
+      }
+      return [caseData, ...prev];
+    });
+    try {
+      if (caseData.id && !caseData.id.startsWith("ex-")) {
+        await exitsApi.updateExit(caseData.id, caseData);
+      } else {
+        await exitsApi.createExit(caseData);
+      }
+    } catch (err: any) {
+      // Optimistic state is preserved
+    }
+  };
   const authWs = useAurix(); // Fetch active employees and HR profiles
 
   const [allAssets, setAllAssets] = useState<any[]>([]);
@@ -182,7 +225,8 @@ export function ExitManagementPage() {
         const items = res.data?.data?.items || res.data?.items || [];
         setAllAssets(items);
       })
-      .catch(() => {
+      .catch((err) => {
+        toast.error("Failed to load inventory assets for exit clearance");
         setAllAssets([]);
       });
   }, []);
@@ -327,7 +371,7 @@ export function ExitManagementPage() {
       ],
     };
 
-    hrms.upsertExit(newCase);
+    saveExit(newCase);
     toast.success("Exit Request created successfully. Sent to Manager for approval.");
     setCreateOpen(false);
     setResignReason("");
@@ -390,7 +434,7 @@ export function ExitManagementPage() {
       return c;
     });
 
-    hrms.upsertExit(updated);
+    saveExit(updated);
     toast.success(`Approved exit request for: ${exit.employee}`);
     if (detailCase?.id === exit.id) setDetailCase(updated);
   };
@@ -428,7 +472,7 @@ export function ExitManagementPage() {
       ],
     };
 
-    hrms.upsertExit(updated);
+    saveExit(updated);
     toast.error(`Resignation request rejected for ${targetCase.employee}`);
     setRejectOpen(false);
     setTargetCase(null);
@@ -451,7 +495,7 @@ export function ExitManagementPage() {
         },
       ],
     };
-    hrms.upsertExit(updated);
+    saveExit(updated);
     toast.info("Clearance process started.");
     if (detailCase?.id === exit.id) setDetailCase(updated);
   };
@@ -532,7 +576,7 @@ export function ExitManagementPage() {
       timeline: updatedTimeline,
     };
 
-    hrms.upsertExit(updated);
+    saveExit(updated);
     toast.success(`Asset status updated: ${status}`);
     if (detailCase?.id === exit.id) setDetailCase(updated);
   };
@@ -597,7 +641,7 @@ export function ExitManagementPage() {
       timeline: updatedTimeline,
     };
 
-    hrms.upsertExit(updated);
+    saveExit(updated);
     toast.success(`${dept} Clearance status set to: ${status}`);
     if (detailCase?.id === exit.id) setDetailCase(updated);
   };
@@ -645,7 +689,7 @@ export function ExitManagementPage() {
       ],
     };
 
-    hrms.upsertExit(updated);
+    saveExit(updated);
     toast.success("Final settlement calculations saved.");
     if (detailCase?.id === exit.id) setDetailCase(updated);
   };
@@ -674,7 +718,7 @@ export function ExitManagementPage() {
       ],
     };
 
-    hrms.upsertExit(updated);
+    saveExit(updated);
     toast.success("Final settlement paid out to employee's bank account.");
     if (detailCase?.id === exit.id) setDetailCase(updated);
   };
@@ -701,7 +745,7 @@ export function ExitManagementPage() {
       ],
     };
 
-    hrms.upsertExit(updated);
+    saveExit(updated);
     toast.success(`Generated official document: ${docName}`);
     if (detailCase?.id === exit.id) setDetailCase(updated);
   };
@@ -765,7 +809,7 @@ Finance Operations Partner`;
       ],
     };
 
-    hrms.upsertExit(updated);
+    saveExit(updated);
     toast.success("Employee de-activated. Login credentials revoked and profile archived.");
     setDeactivateOpen(false);
     setTargetCase(null);
@@ -797,7 +841,7 @@ Finance Operations Partner`;
       ],
     };
 
-    hrms.upsertExit(updated);
+    saveExit(updated);
     toast.success("Exit interview answers saved.");
     if (detailCase?.id === exit.id) setDetailCase(updated);
   };

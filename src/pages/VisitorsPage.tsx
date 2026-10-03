@@ -1,9 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { UserPlus, LogIn, LogOut as LogOutIcon, CheckCircle2, XCircle, QrCode } from "lucide-react";
+import { useMemo, useState, useEffect, useCallback } from "react";
+import { UserPlus, LogIn, LogOut as LogOutIcon, CheckCircle2, XCircle, QrCode, RefreshCw, AlertCircle } from "lucide-react";
 import { GlassCard, QrTile, SearchBox, StatCard, StatusBadge } from "@/components/hrms/Shared";
-import { hrms, newId, useHrms } from "@/lib/hrms/store";
+import { visitorsApi } from "@/services/visitorsApi";
 import type { Visitor, VisitorStatus } from "@/lib/hrms/types";
+import { useCurrentRole, isHrAdmin, isManager, isSuperAdmin } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +23,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { toast } from "sonner";
 
 const STATUS_TONE: Record<VisitorStatus, "info" | "success" | "warning" | "danger" | "muted"> = {
   pending: "warning",
@@ -34,7 +35,7 @@ const STATUS_TONE: Record<VisitorStatus, "info" | "success" | "warning" | "dange
 
 function emptyVisitor(): Visitor {
   return {
-    id: newId("v"),
+    id: "",
     name: "",
     company: "",
     hostEmployee: "",
@@ -47,12 +48,38 @@ function emptyVisitor(): Visitor {
 }
 
 export function VisitorsPage() {
-  const visitors = useHrms((s) => s.visitors);
+  const currentRole = useCurrentRole();
+  const canManageVisitors = isHrAdmin(currentRole) || isManager(currentRole) || isSuperAdmin(currentRole);
+
+  const [visitors, setVisitors] = useState<Visitor[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<VisitorStatus | "all">("all");
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Visitor>(emptyVisitor());
   const [pass, setPass] = useState<Visitor | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const loadVisitors = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await visitorsApi.getVisitors();
+      setVisitors(res.items);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || "Failed to load visitors";
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadVisitors();
+  }, [loadVisitors]);
 
   const stats = useMemo(
     () => ({
@@ -91,12 +118,77 @@ export function VisitorsPage() {
     return buckets;
   }, [visitors]);
 
-  function save() {
-    if (!draft.name || !draft.hostEmployee) return;
-    hrms.upsertVisitor(draft);
-    setOpen(false);
-    setPass(draft);
-    setDraft(emptyVisitor());
+  async function save() {
+    if (!draft.name || !draft.hostEmployee) {
+      toast.error("Please enter visitor name and host employee");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const created = await visitorsApi.createVisitor(draft);
+      setVisitors((prev) => [created, ...prev]);
+      setOpen(false);
+      setPass(created);
+      setDraft(emptyVisitor());
+      toast.success("Visitor registered successfully");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to register visitor");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleApprove(id: string) {
+    try {
+      const updated = await visitorsApi.approveVisitor(id);
+      setVisitors((prev) => prev.map((v) => (v.id === id ? updated : v)));
+      toast.success("Visitor approved");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to approve visitor");
+    }
+  }
+
+  async function handleReject(id: string) {
+    try {
+      const updated = await visitorsApi.rejectVisitor(id);
+      setVisitors((prev) => prev.map((v) => (v.id === id ? updated : v)));
+      toast.success("Visitor rejected");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to reject visitor");
+    }
+  }
+
+  async function handleCheckIn(id: string) {
+    try {
+      const updated = await visitorsApi.checkInVisitor(id);
+      setVisitors((prev) => prev.map((v) => (v.id === id ? updated : v)));
+      toast.success("Visitor checked in");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to check in visitor");
+    }
+  }
+
+  async function handleCheckOut(id: string) {
+    try {
+      const updated = await visitorsApi.checkOutVisitor(id);
+      setVisitors((prev) => prev.map((v) => (v.id === id ? updated : v)));
+      toast.success("Visitor checked out");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to check out visitor");
+    }
+  }
+
+  if (error && visitors.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 text-center">
+        <AlertCircle className="h-10 w-10 text-rose-500 mb-3" />
+        <h3 className="text-lg font-semibold mb-1">Failed to load visitors</h3>
+        <p className="text-sm text-muted-foreground mb-4">{error}</p>
+        <Button onClick={loadVisitors} variant="outline" className="gap-2">
+          <RefreshCw className="h-4 w-4" /> Retry
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -158,80 +250,91 @@ export function VisitorsPage() {
           {(
             ["pending", "approved", "checked-in", "checked-out", "rejected"] as VisitorStatus[]
           ).map((s) => (
-            <option key={s}>{s}</option>
+            <option key={s} value={s}>{s}</option>
           ))}
         </select>
       </div>
 
-      <div className="grid gap-3 lg:grid-cols-2">
-        {filtered.map((v) => (
-          <GlassCard key={v.id}>
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="font-medium">{v.name}</h3>
-                  <StatusBadge status={v.status} tone={STATUS_TONE[v.status]} />
-                </div>
-                <div className="mt-1 text-xs text-muted-foreground">
-                  {v.company ? `${v.company} · ` : ""}Host: {v.hostEmployee}
-                </div>
-                <div className="mt-2 text-sm">{v.purpose}</div>
-                <div className="mt-1 text-xs text-muted-foreground">
-                  Duration: {v.expectedDurationMins} min
-                  {v.checkInAt ? ` · In ${new Date(v.checkInAt).toLocaleTimeString()}` : ""}
-                  {v.checkOutAt ? ` · Out ${new Date(v.checkOutAt).toLocaleTimeString()}` : ""}
-                </div>
-              </div>
-              <div className="flex flex-col items-end gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setPass(v)}
-                  aria-label="Show pass"
-                >
-                  <QrCode className="h-4 w-4" />
-                </Button>
-                {v.status === "pending" ? (
-                  <div className="flex gap-1">
-                    <Button size="sm" onClick={() => hrms.setVisitorStatus(v.id, "approved")}>
-                      Approve
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => hrms.setVisitorStatus(v.id, "rejected")}
-                    >
-                      Reject
-                    </Button>
+      {loading ? (
+        <div className="p-8 text-center text-muted-foreground flex items-center justify-center gap-2">
+          <RefreshCw className="h-4 w-4 animate-spin" /> Loading visitors...
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="p-8 text-center text-muted-foreground">
+          No visitors found.
+        </div>
+      ) : (
+        <div className="grid gap-3 lg:grid-cols-2">
+          {filtered.map((v) => (
+            <GlassCard key={v.id}>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium">{v.name}</h3>
+                    <StatusBadge status={v.status} tone={STATUS_TONE[v.status]} />
                   </div>
-                ) : v.status === "approved" ? (
-                  <Button size="sm" onClick={() => hrms.checkInVisitor(v.id)} className="gap-1">
-                    <LogIn className="h-3.5 w-3.5" /> Check in
-                  </Button>
-                ) : v.status === "checked-in" ? (
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    {v.company ? `${v.company} · ` : ""}Host: {v.hostEmployee}
+                  </div>
+                  <div className="mt-2 text-sm">{v.purpose}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    Duration: {v.expectedDurationMins} min
+                    {v.checkInAt ? ` · In ${new Date(v.checkInAt).toLocaleTimeString()}` : ""}
+                    {v.checkOutAt ? ` · Out ${new Date(v.checkOutAt).toLocaleTimeString()}` : ""}
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-2">
                   <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => hrms.checkOutVisitor(v.id)}
-                    className="gap-1"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setPass(v)}
+                    aria-label="Show pass"
                   >
-                    <LogOutIcon className="h-3.5 w-3.5" /> Check out
+                    <QrCode className="h-4 w-4" />
                   </Button>
-                ) : (
-                  <span className="text-xs text-muted-foreground">
-                    {v.status === "rejected" ? (
-                      <XCircle className="h-4 w-4 text-rose-500" />
-                    ) : (
-                      "Done"
-                    )}
-                  </span>
-                )}
+                  {v.status === "pending" && canManageVisitors ? (
+                    <div className="flex gap-1">
+                      <Button size="sm" onClick={() => handleApprove(v.id)}>
+                        Approve
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleReject(v.id)}
+                      >
+                        Reject
+                      </Button>
+                    </div>
+                  ) : v.status === "approved" ? (
+                    <Button size="sm" onClick={() => handleCheckIn(v.id)} className="gap-1">
+                      <LogIn className="h-3.5 w-3.5" /> Check in
+                    </Button>
+                  ) : v.status === "checked-in" ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleCheckOut(v.id)}
+                      className="gap-1"
+                    >
+                      <LogOutIcon className="h-3.5 w-3.5" /> Check out
+                    </Button>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">
+                      {v.status === "rejected" ? (
+                        <XCircle className="h-4 w-4 text-rose-500" />
+                      ) : (
+                        "Done"
+                      )}
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
-          </GlassCard>
-        ))}
-      </div>
+            </GlassCard>
+          ))}
+        </div>
+      )}
 
+      {/* New Visitor Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
@@ -248,7 +351,7 @@ export function VisitorsPage() {
             <div>
               <Label>Company</Label>
               <Input
-                value={draft.company}
+                value={draft.company ?? ""}
                 onChange={(e) => setDraft({ ...draft, company: e.target.value })}
               />
             </div>
@@ -302,11 +405,14 @@ export function VisitorsPage() {
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={save}>Create pass</Button>
+            <Button onClick={save} disabled={submitting}>
+              {submitting ? "Registering..." : "Create pass"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* Visitor Pass Dialog */}
       <Dialog open={!!pass} onOpenChange={(o) => !o && setPass(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader>

@@ -50,12 +50,12 @@
 | **F-06.7** | DONE | `src/services/reportsAnalyticsApi.ts`, `src/services/payrollApi.ts`, `src/features/payroll/api/compensationApi.ts`, `src/features/payroll/api/variableInputsApi.ts` | `npm run check:contract` | Reports and Payroll APIs reconciled across cycles, runs, payslips, variable inputs, and FNF |
 | **F-06.8** | DONE | `src/features/settings/api.ts`, `src/features/documents/api/documentsApi.ts` | `npm run check:contract` | Graceful disabled/unavailable state enforcement with clear user guidance for pending BACKEND_ADD endpoints |
 | **F-06.9** | DONE | `scripts/check-api-contract.ts`, `scripts/backend-add-allowlist.json`, `package.json`, `openapi.json` | `npm run check:contract` | Automated CI-friendly contract verification script comparing all 393 production apiInstance calls to openapi.json and allow-list; fails build on unknown routes |
-| **F-07.1** | TODO | None | None | Typed API modules & mappers for browser-only features |
-| **F-07.2** | TODO | None | None | Replace useHrms in Expenses, Travel, Visitors, Offboarding, Assets, HrOps |
-| **F-07.3** | TODO | None | None | Deprecate and remove src/lib/hrms/store.ts and stale localStorage |
-| **F-07.4** | TODO | None | None | DocumentGeneratorPage wire to real endpoint or remove placeholder |
-| **F-07.5** | TODO | None | None | OnboardingPage replace hardcoded allInvites with real API |
-| **F-07.6** | TODO | None | None | Tests for migrated modules |
+| **F-07.1** | DONE | `src/services/expensesApi.ts`, `src/services/visitorsApi.ts`, `src/services/travelApi.ts`, `src/services/onboardingChecklistApi.ts`, `src/services/offboardingApi.ts`, `src/services/hrOpsApi.ts`, `src/services/assetsApi.ts`, `src/services/exitsApi.ts` | `src/features/hrms/__tests__/RealHrmsApisAndPages.test.tsx` | Created typed API modules with snake_case-to-camelCase mappers and canonical status vocabularies |
+| **F-07.2** | DONE | `src/pages/ExpensesPage.tsx`, `src/pages/VisitorsPage.tsx`, `src/pages/TravelPage.tsx`, `src/pages/OnboardingChecklistPage.tsx`, `src/pages/OffboardingPage.tsx`, `src/pages/AssetManagementPage.tsx`, `src/pages/AssetsPage.tsx`, `src/pages/HrOpsPage.tsx`, `src/pages/TimelinePage.tsx`, `src/pages/ExitManagementPage.tsx`, `src/routes/dashboard.exit.tsx` | `src/features/hrms/__tests__/RealHrmsApisAndPages.test.tsx` | Replaced useHrms across all modules with real API mutations, loading skeletons, retry error states, RBAC action buttons, and Dialogs replacing window.prompt |
+| **F-07.3** | DONE | `src/lib/hrms/store.ts` (deleted), `src/lib/auth-bootstrap.ts`, `src/lib/hrms/types.ts` | `npm run check:contract`, `npm run typecheck` | Deleted browser-only store.ts (0 remaining imports in repo) and added cleanup of stale aurix.hrms.v1 localStorage key on app bootstrap |
+| **F-07.4** | DONE | `src/pages/DocumentGeneratorPage.tsx` | `RealHrmsApisAndPages.test.tsx` | Replaced hardcoded "Aanya Sharma" / "Senior Engineer" defaults with active employee selector and real POST /api/v1/documents/generate integration |
+| **F-07.5** | DONE | `src/pages/OnboardingPage.tsx` | `npm run check:contract` | Replaced 34-line synthetic fallback array with real data from onboarding API and actual personnel records |
+| **F-07.6** | DONE | `src/features/hrms/__tests__/RealHrmsApisAndPages.test.tsx` | 11 unit/integration tests passing | Comprehensive tests covering mappers, API calls, role gating, UI renders, and mutation handlers |
 | **F-08.1** | TODO | None | None | Executive dashboards wired to GET /api/v2/executive/overview |
 | **F-08.2** | TODO | None | None | Remove unsourced tiles, clean up sidebar, docs/EXEC_PAGES_STATUS.md |
 | **F-08.3** | TODO | None | None | Remove any[] placeholders and empty settings stubs |

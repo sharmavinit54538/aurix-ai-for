@@ -47,7 +47,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useHrms } from "@/lib/hrms/store";
 
 export type TimelineKind =
   | "joining"
@@ -183,8 +182,6 @@ const KIND_META: Record<
 const ALL_KINDS = Object.keys(KIND_META) as TimelineKind[];
 
 export function TimelinePage() {
-  const storeTimeline = useHrms((s) => s.timeline);
-
   const [loading, setLoading] = useState(false);
   const [events, setEvents] = useState<TimelineEventItem[]>([]);
   const [query, setQuery] = useState("");
