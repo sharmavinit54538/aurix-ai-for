@@ -235,7 +235,7 @@ function normalizeChatConversation(raw: unknown, defaultId?: string): ChatConver
 export const aiHubApi = {
   // ── 1. AI Hub Overview & Agents ──────────────────────────────────
   async getOverview(): Promise<AIHubOverview> {
-    const res = await apiInstance.get("/ai-hub");
+    const res = await apiInstance.get("/api/v1/ai-hub");
     const raw = extractData<Record<string, unknown>>(res, {});
     return {
       totalAgents: Number(raw?.totalAgents ?? raw?.total_agents ?? 0),
@@ -253,27 +253,27 @@ export const aiHubApi = {
   },
 
   async getAgents(): Promise<AIAgent[]> {
-    const res = await apiInstance.get("/ai-hub/agents");
+    const res = await apiInstance.get("/api/v1/ai-hub/agents");
     const raw = extractData<unknown>(res, []);
     return Array.isArray(raw) ? (raw as AIAgent[]) : [];
   },
 
   async getAgentDetails(agentId: string): Promise<AIAgent> {
-    const res = await apiInstance.get(`/ai-hub/agents/${encodeURIComponent(agentId)}`);
+    const res = await apiInstance.get(`/api/v1/ai-hub/agents/${encodeURIComponent(agentId)}`);
     return extractData<AIAgent>(res);
   },
 
   // ── 2. Common AI Agent Operations ────────────────────────────────
   async runAgent(agentId: string, payload?: AgentRunRequest): Promise<AgentRunResponse> {
     const res = await apiInstance.post(
-      `/ai-hub/agents/${encodeURIComponent(agentId)}/run`,
+      `/api/v1/ai-hub/agents/${encodeURIComponent(agentId)}/run`,
       payload ?? {},
     );
     return extractData<AgentRunResponse>(res);
   },
 
   async getAgentHistory(agentId: string, params?: PaginationParams): Promise<AIAgentHistory[]> {
-    const res = await apiInstance.get(`/ai-hub/agents/${encodeURIComponent(agentId)}/history`, {
+    const res = await apiInstance.get(`/api/v1/ai-hub/agents/${encodeURIComponent(agentId)}/history`, {
       params,
     });
     const raw = extractData<unknown>(res, []);
@@ -290,7 +290,7 @@ export const aiHubApi = {
   },
 
   async getAgentStatus(agentId: string): Promise<AIAgentStatus> {
-    const res = await apiInstance.get(`/ai-hub/agents/${encodeURIComponent(agentId)}/status`);
+    const res = await apiInstance.get(`/api/v1/ai-hub/agents/${encodeURIComponent(agentId)}/status`);
     return extractData<AIAgentStatus>(res, {
       agentId,
       status: "idle",
@@ -302,7 +302,7 @@ export const aiHubApi = {
     payload: AgentFeedbackPayload,
   ): Promise<{ success: boolean; message?: string }> {
     const res = await apiInstance.post(
-      `/ai-hub/agents/${encodeURIComponent(agentId)}/feedback`,
+      `/api/v1/ai-hub/agents/${encodeURIComponent(agentId)}/feedback`,
       payload,
     );
     return extractData<{ success: boolean; message?: string }>(res, { success: true });
@@ -310,33 +310,33 @@ export const aiHubApi = {
 
   // ── 3. Workforce Insights ────────────────────────────────────────
   async getWorkforceInsights(): Promise<WorkforceInsight[]> {
-    const res = await apiInstance.get("/ai-brain/workforce-insights");
+    const res = await apiInstance.get("/api/v1/ai-hub/workforce-insights");
     const raw = extractData<unknown>(res, []);
     return Array.isArray(raw) ? (raw as WorkforceInsight[]) : [];
   },
 
   async analyzeWorkforceInsights(payload?: AnalyzeWorkforcePayload): Promise<WorkforceInsight[]> {
     // TODO: verify against backend — no confirmed route
-    const res = await apiInstance.post("/ai-hub/workforce-insights/analyze", payload ?? {});
+    const res = await apiInstance.post("/api/v1/ai-hub/workforce-insights/analyze", payload ?? {});
     const raw = extractData<unknown>(res, []);
     return Array.isArray(raw) ? (raw as WorkforceInsight[]) : [];
   },
 
   // ── 4. Recruiter ─────────────────────────────────────────────────
   async getRecruiterInsights(): Promise<RecruiterResult[]> {
-    const res = await apiInstance.get("/ai-hub/recruiter");
+    const res = await apiInstance.get("/api/v1/ai-hub/recruiter");
     const raw = extractData<unknown>(res, []);
     return Array.isArray(raw) ? (raw as RecruiterResult[]) : [];
   },
 
   async screenResumes(payload: ScreenResumesPayload): Promise<RecruiterResult[]> {
-    const res = await apiInstance.post("/ai-hub/recruiter/screen-resumes", payload);
+    const res = await apiInstance.post("/api/v1/ai-hub/recruiter/screen-resumes", payload);
     const raw = extractData<unknown>(res, []);
     return Array.isArray(raw) ? (raw as RecruiterResult[]) : [];
   },
 
   async matchCandidates(payload: MatchCandidatesPayload): Promise<RecruiterResult[]> {
-    const res = await apiInstance.post("/ai-hub/recruiter/match-candidates", payload);
+    const res = await apiInstance.post("/api/v1/ai-hub/recruiter/match-candidates", payload);
     const raw = extractData<unknown>(res, []);
     return Array.isArray(raw) ? (raw as RecruiterResult[]) : [];
   },
@@ -344,7 +344,7 @@ export const aiHubApi = {
   async generateInterviewQuestions(
     payload: GenerateQuestionsPayload,
   ): Promise<{ questions: string[]; jobTitle: string }> {
-    const res = await apiInstance.post("/ai-hub/recruiter/generate-questions", payload);
+    const res = await apiInstance.post("/api/v1/ai-hub/recruiter/generate-questions", payload);
     return extractData<{ questions: string[]; jobTitle: string }>(res, {
       questions: [],
       jobTitle: payload.jobTitle,
@@ -353,7 +353,7 @@ export const aiHubApi = {
 
   // ── 5. Attendance Monitor ────────────────────────────────────────
   async getAttendanceMonitor(): Promise<AttendanceMonitorData> {
-    const res = await apiInstance.get("/ai-hub/attendance-monitor");
+    const res = await apiInstance.get("/api/v1/ai-hub/attendance-monitor");
     return extractData<AttendanceMonitorData>(res, {
       anomaliesCount: 0,
       onTimeRate: 0,
@@ -363,7 +363,7 @@ export const aiHubApi = {
   },
 
   async analyzeAttendance(payload?: AnalyzeAttendancePayload): Promise<AttendanceMonitorData> {
-    const res = await apiInstance.post("/ai-hub/attendance-monitor/analyze", payload ?? {});
+    const res = await apiInstance.post("/api/v1/ai-hub/attendance-monitor/analyze", payload ?? {});
     return extractData<AttendanceMonitorData>(res, {
       anomaliesCount: 0,
       onTimeRate: 0,
@@ -373,7 +373,7 @@ export const aiHubApi = {
   },
 
   async getAttendanceAnomalies(params?: PaginationParams): Promise<AttendanceAnomaly[]> {
-    const res = await apiInstance.get("/ai-hub/attendance-monitor/anomalies", { params });
+    const res = await apiInstance.get("/api/v1/ai-hub/attendance-monitor/anomalies", { params });
     const raw = extractData<unknown>(res, []);
     if (Array.isArray(raw)) return raw as AttendanceAnomaly[];
     if (
@@ -389,14 +389,14 @@ export const aiHubApi = {
 
   // ── 6. Leave Assistant ───────────────────────────────────────────
   async getLeaveAssistant(): Promise<LeaveAssistantData> {
-    const res = await apiInstance.get("/ai-hub/leave-assistant");
+    const res = await apiInstance.get("/api/v1/ai-hub/leave-assistant");
     return extractData<LeaveAssistantData>(res, {
       pendingApprovals: 0,
     });
   },
 
   async forecastLeaves(payload?: ForecastLeavesPayload): Promise<LeaveForecast> {
-    const res = await apiInstance.post("/ai-hub/leave-assistant/forecast", payload ?? {});
+    const res = await apiInstance.post("/api/v1/ai-hub/leave-assistant/forecast", payload ?? {});
     return extractData<LeaveForecast>(res, {
       period: "Next 30 Days",
       projectedAbsenceRate: 0,
@@ -405,7 +405,7 @@ export const aiHubApi = {
   },
 
   async analyzeLeavePatterns(payload?: AnalyzeLeavePatternsPayload): Promise<LeaveAssistantData> {
-    const res = await apiInstance.post("/ai-hub/leave-assistant/analyze", payload ?? {});
+    const res = await apiInstance.post("/api/v1/ai-hub/leave-assistant/analyze", payload ?? {});
     return extractData<LeaveAssistantData>(res, {
       pendingApprovals: 0,
     });
@@ -413,7 +413,7 @@ export const aiHubApi = {
 
   // ── 7. Performance Coach ─────────────────────────────────────────
   async getPerformanceCoach(): Promise<PerformanceCoachData> {
-    const res = await apiInstance.get("/ai-hub/performance-coach");
+    const res = await apiInstance.get("/api/v1/ai-hub/performance-coach");
     return extractData<PerformanceCoachData>(res, {
       coachingSessionsCount: 0,
       goalsGeneratedCount: 0,
@@ -424,7 +424,7 @@ export const aiHubApi = {
   },
 
   async generatePerformanceGoals(payload: GenerateGoalsPayload): Promise<PerformanceGoal[]> {
-    const res = await apiInstance.post("/ai-hub/performance-coach/goals", payload);
+    const res = await apiInstance.post("/api/v1/ai-hub/performance-coach/goals", payload);
     const raw = extractData<unknown>(res, []);
     return Array.isArray(raw) ? (raw as PerformanceGoal[]) : [];
   },
@@ -433,7 +433,7 @@ export const aiHubApi = {
     payload: GenerateTrainingPayload,
   ): Promise<PerformanceCoachData["trainingRecommendations"]> {
     const res = await apiInstance.post(
-      "/ai-hub/performance-coach/training-recommendations",
+      "/api/v1/ai-hub/performance-coach/training-recommendations",
       payload,
     );
     const raw = extractData<unknown>(res, []);
@@ -442,7 +442,7 @@ export const aiHubApi = {
 
   // ── 8. Payroll Insights ──────────────────────────────────────────
   async getPayrollInsights(): Promise<PayrollInsight> {
-    const res = await apiInstance.get("/ai-hub/payroll-insights");
+    const res = await apiInstance.get("/api/v1/ai-hub/payroll-insights");
     return extractData<PayrollInsight>(res, {
       cycle: "Current",
       totalVariance: 0,
@@ -454,7 +454,7 @@ export const aiHubApi = {
   },
 
   async analyzePayroll(payload?: AnalyzePayrollPayload): Promise<PayrollInsight> {
-    const res = await apiInstance.post("/ai-hub/payroll-insights/analyze", payload ?? {});
+    const res = await apiInstance.post("/api/v1/ai-hub/payroll-insights/analyze", payload ?? {});
     return extractData<PayrollInsight>(res, {
       cycle: "Current",
       totalVariance: 0,
@@ -466,7 +466,7 @@ export const aiHubApi = {
   },
 
   async getPayrollAnomalies(params?: PaginationParams): Promise<PayrollAnomaly[]> {
-    const res = await apiInstance.get("/ai-hub/payroll-insights/anomalies", { params });
+    const res = await apiInstance.get("/api/v1/ai-hub/payroll-insights/anomalies", { params });
     const raw = extractData<unknown>(res, []);
     if (Array.isArray(raw)) return raw as PayrollAnomaly[];
     if (
@@ -483,7 +483,7 @@ export const aiHubApi = {
   async runTaxAudit(
     payload?: TaxAuditPayload,
   ): Promise<{ passed: boolean; flagsCount: number; summary: string }> {
-    const res = await apiInstance.post("/ai-hub/payroll-insights/tax-audit", payload ?? {});
+    const res = await apiInstance.post("/api/v1/ai-hub/payroll-insights/tax-audit", payload ?? {});
     return extractData<{ passed: boolean; flagsCount: number; summary: string }>(res, {
       passed: true,
       flagsCount: 0,
@@ -493,7 +493,7 @@ export const aiHubApi = {
 
   // ── 9. Workforce Planning ────────────────────────────────────────
   async getWorkforcePlanning(): Promise<WorkforcePlanningData> {
-    const res = await apiInstance.get("/ai/workforce/dashboard");
+    const res = await apiInstance.get("/api/v1/ai/workforce/dashboard");
     return extractData<WorkforcePlanningData>(res, {
       currentHeadcount: 0,
       forecast: {
@@ -505,7 +505,7 @@ export const aiHubApi = {
   },
 
   async forecastWorkforce(payload?: ForecastWorkforcePayload): Promise<WorkforceForecast> {
-    const res = await apiInstance.post("/ai/workforce/forecast", payload ?? {});
+    const res = await apiInstance.post("/api/v1/ai/workforce/forecast", payload ?? {});
     return extractData<WorkforceForecast>(res, {
       horizonMonths: payload?.horizonMonths ?? 12,
       projectedHeadcount: 0,
@@ -517,7 +517,7 @@ export const aiHubApi = {
     payload?: ForecastHeadcountPayload,
   ): Promise<{ recommendedHeadcount: number; budgetEstimated: number; summary?: string }> {
     // TODO: verify against backend — no confirmed route
-    const res = await apiInstance.post("/ai-hub/workforce-planning/headcount", payload ?? {});
+    const res = await apiInstance.post("/api/v1/ai-hub/workforce-planning/headcount", payload ?? {});
     return extractData<{ recommendedHeadcount: number; budgetEstimated: number; summary?: string }>(
       res,
       {
@@ -529,7 +529,7 @@ export const aiHubApi = {
 
   // ── 10. Employee Health ──────────────────────────────────────────
   async getEmployeeHealth(): Promise<EmployeeHealthInsight> {
-    const res = await apiInstance.get("/ai-hub/employee-health");
+    const res = await apiInstance.get("/api/v1/ai-hub/employee-health");
     return extractData<EmployeeHealthInsight>(res, {
       burnoutRiskIndex: 0,
       wellnessScore: 0,
@@ -539,7 +539,7 @@ export const aiHubApi = {
   },
 
   async analyzeEmployeeHealth(payload?: AnalyzeHealthPayload): Promise<EmployeeHealthInsight> {
-    const res = await apiInstance.post("/ai-hub/employee-health/analyze", payload ?? {});
+    const res = await apiInstance.post("/api/v1/ai-hub/employee-health/analyze", payload ?? {});
     return extractData<EmployeeHealthInsight>(res, {
       burnoutRiskIndex: 0,
       wellnessScore: 0,
@@ -549,7 +549,7 @@ export const aiHubApi = {
   },
 
   async getWellnessInsights(): Promise<{ wellnessScore: number; recommendations: string[] }> {
-    const res = await apiInstance.get("/ai-hub/employee-health/wellness");
+    const res = await apiInstance.get("/api/v1/ai-hub/employee-health/wellness");
     return extractData<{ wellnessScore: number; recommendations: string[] }>(res, {
       wellnessScore: 0,
       recommendations: [],
@@ -558,7 +558,7 @@ export const aiHubApi = {
 
   // ── 11. Policy Assistant ─────────────────────────────────────────
   async getPolicyAssistant(): Promise<PolicyAssistantData> {
-    const res = await apiInstance.get("/ai-hub/policy-assistant");
+    const res = await apiInstance.get("/api/v1/ai-hub/policy-assistant");
     return extractData<PolicyAssistantData>(res, {
       queriesCount: 0,
       complianceRate: 100,
@@ -567,7 +567,7 @@ export const aiHubApi = {
   },
 
   async askPolicyAssistant(payload: AskPolicyPayload): Promise<PolicyAnswer> {
-    const res = await apiInstance.post("/ai-hub/policy-assistant/ask", payload);
+    const res = await apiInstance.post("/api/v1/ai-hub/policy-assistant/ask", payload);
     return extractData<PolicyAnswer>(res, {
       question: payload.question,
       answer: "",
@@ -578,7 +578,7 @@ export const aiHubApi = {
   async checkPolicyCompliance(
     payload: CheckCompliancePayload,
   ): Promise<{ compliant: boolean; score: number; issues?: string[] }> {
-    const res = await apiInstance.post("/ai-hub/policy-assistant/check-compliance", payload);
+    const res = await apiInstance.post("/api/v1/ai-hub/policy-assistant/check-compliance", payload);
     return extractData<{ compliant: boolean; score: number; issues?: string[] }>(res, {
       compliant: true,
       score: 100,
@@ -588,7 +588,7 @@ export const aiHubApi = {
 
   // ── 12. Document Generator ───────────────────────────────────────
   async getDocumentGenerator(): Promise<DocumentGeneratorData> {
-    const res = await apiInstance.get("/ai-hub/document-generator");
+    const res = await apiInstance.get("/api/v1/ai-hub/document-generator");
     return extractData<DocumentGeneratorData>(res, {
       templatesCount: 0,
       documentsGeneratedCount: 0,
@@ -598,20 +598,20 @@ export const aiHubApi = {
   },
 
   async getDocumentTemplates(): Promise<DocumentTemplate[]> {
-    const res = await apiInstance.get("/ai-hub/document-generator/templates");
+    const res = await apiInstance.get("/api/v1/ai-hub/document-generator/templates");
     const raw = extractData<unknown>(res, []);
     return Array.isArray(raw) ? (raw as DocumentTemplate[]) : [];
   },
 
   async generateDocument(payload: GenerateDocPayload): Promise<GeneratedDocument> {
-    const res = await apiInstance.post("/ai-hub/document-generator/generate", payload);
+    const res = await apiInstance.post("/api/v1/ai-hub/document-generator/generate", payload);
     return extractData<GeneratedDocument>(res);
   },
 
   async previewDocument(
     payload: PreviewDocPayload,
   ): Promise<{ previewContent: string; templateId: string }> {
-    const res = await apiInstance.post("/ai-hub/document-generator/preview", payload);
+    const res = await apiInstance.post("/api/v1/ai-hub/document-generator/preview", payload);
     return extractData<{ previewContent: string; templateId: string }>(res, {
       previewContent: "",
       templateId: payload.templateId,
@@ -620,7 +620,7 @@ export const aiHubApi = {
 
   // ── 13. Meeting Intelligence ─────────────────────────────────────
   async getMeetingIntelligence(): Promise<MeetingIntelligenceData> {
-    const res = await apiInstance.get("/ai-hub/meeting-intelligence");
+    const res = await apiInstance.get("/api/v1/ai-hub/meeting-intelligence");
     return extractData<MeetingIntelligenceData>(res, {
       analyzedMeetingsCount: 0,
       actionItemsPendingCount: 0,
@@ -630,14 +630,14 @@ export const aiHubApi = {
   },
 
   async analyzeMeeting(payload: AnalyzeMeetingPayload): Promise<MeetingSummary> {
-    const res = await apiInstance.post("/ai-hub/meeting-intelligence/analyze", payload);
+    const res = await apiInstance.post("/api/v1/ai-hub/meeting-intelligence/analyze", payload);
     return extractData<MeetingSummary>(res);
   },
 
   async summarizeMeeting(
     payload: SummarizeMeetingPayload,
   ): Promise<{ summary: string; keyPoints: string[] }> {
-    const res = await apiInstance.post("/ai-hub/meeting-intelligence/summarize", payload);
+    const res = await apiInstance.post("/api/v1/ai-hub/meeting-intelligence/summarize", payload);
     return extractData<{ summary: string; keyPoints: string[] }>(res, {
       summary: "",
       keyPoints: [],
@@ -645,7 +645,7 @@ export const aiHubApi = {
   },
 
   async getMeetingActionItems(params?: PaginationParams): Promise<MeetingActionItem[]> {
-    const res = await apiInstance.get("/ai-hub/meeting-intelligence/action-items", { params });
+    const res = await apiInstance.get("/api/v1/ai-hub/meeting-intelligence/action-items", { params });
     const raw = extractData<unknown>(res, []);
     if (Array.isArray(raw)) return raw as MeetingActionItem[];
     if (
@@ -661,7 +661,7 @@ export const aiHubApi = {
 
   // ── 14. Compliance Monitor ───────────────────────────────────────
   async getComplianceMonitor(): Promise<ComplianceMonitorData> {
-    const res = await apiInstance.get("/ai-hub/compliance-monitor");
+    const res = await apiInstance.get("/api/v1/ai-hub/compliance-monitor");
     return extractData<ComplianceMonitorData>(res, {
       score: 100,
       status: "compliant",
@@ -670,7 +670,7 @@ export const aiHubApi = {
   },
 
   async scanCompliance(payload?: ScanCompliancePayload): Promise<ComplianceResult> {
-    const res = await apiInstance.post("/ai-hub/compliance-monitor/scan", payload ?? {});
+    const res = await apiInstance.post("/api/v1/ai-hub/compliance-monitor/scan", payload ?? {});
     return extractData<ComplianceResult>(res, {
       framework: payload?.framework ?? "General Statutory",
       overallScore: 100,
@@ -680,13 +680,13 @@ export const aiHubApi = {
   },
 
   async getComplianceChecklist(): Promise<ComplianceChecklistItem[]> {
-    const res = await apiInstance.get("/ai-hub/compliance-monitor/checklist");
+    const res = await apiInstance.get("/api/v1/ai-hub/compliance-monitor/checklist");
     const raw = extractData<unknown>(res, []);
     return Array.isArray(raw) ? (raw as ComplianceChecklistItem[]) : [];
   },
 
   async getComplianceScore(): Promise<{ score: number; status: string; lastScan: string }> {
-    const res = await apiInstance.get("/ai-hub/compliance-monitor/score");
+    const res = await apiInstance.get("/api/v1/ai-hub/compliance-monitor/score");
     return extractData<{ score: number; status: string; lastScan: string }>(res, {
       score: 100,
       status: "compliant",
@@ -697,7 +697,7 @@ export const aiHubApi = {
   // ── 15. Chat Assistant ───────────────────────────────────────────
   async getChatConversations(params?: PaginationParams): Promise<ChatConversation[]> {
     try {
-      const res = await apiInstance.get("/ai-hub/chat-assistant/conversations", { params });
+      const res = await apiInstance.get("/api/v1/ai-hub/chat-assistant/conversations", { params });
       const raw = extractData<unknown>(res, []);
       let items: unknown[] = [];
       if (Array.isArray(raw)) {
@@ -712,7 +712,7 @@ export const aiHubApi = {
     } catch {
       // Resilient fallback to /ai/chat/history
       try {
-        const res = await apiInstance.get("/ai/chat/history");
+        const res = await apiInstance.get("/api/v1/ai/chat/history");
         const raw = extractData<{ history?: Array<Record<string, unknown>> }>(res, {});
         const list = Array.isArray(raw?.history) ? raw.history : [];
         return list.map((item) => ({
@@ -734,12 +734,12 @@ export const aiHubApi = {
 
   async createChatConversation(payload?: CreateConversationPayload): Promise<ChatConversation> {
     try {
-      const res = await apiInstance.post("/ai-hub/chat-assistant/conversations", payload ?? {});
+      const res = await apiInstance.post("/api/v1/ai-hub/chat-assistant/conversations", payload ?? {});
       const raw = extractData<Record<string, unknown>>(res);
       return normalizeChatConversation(raw);
     } catch (primaryErr) {
       try {
-        const res = await apiInstance.post("/ai/chat/conversation", payload ?? {});
+        const res = await apiInstance.post("/api/v1/ai-hub/chat-assistant/conversations", payload ?? {});
         const raw = extractData<Record<string, unknown>>(res);
         return normalizeChatConversation(raw);
       } catch {
@@ -751,13 +751,13 @@ export const aiHubApi = {
   async getChatConversation(conversationId: string): Promise<ChatConversation> {
     try {
       const res = await apiInstance.get(
-        `/ai-hub/chat-assistant/conversations/${encodeURIComponent(conversationId)}`,
+        `/api/v1/ai-hub/chat-assistant/conversations/${encodeURIComponent(conversationId)}`,
       );
       const raw = extractData<Record<string, unknown>>(res);
       return normalizeChatConversation(raw, conversationId);
     } catch (primaryErr) {
       try {
-        const res = await apiInstance.get(`/ai/chat/history/${encodeURIComponent(conversationId)}`);
+        const res = await apiInstance.get(`/api/v1/ai/chat/history/${encodeURIComponent(conversationId)}`);
         const raw = extractData<Record<string, unknown>>(res);
         return normalizeChatConversation(raw, conversationId);
       } catch {
@@ -768,13 +768,13 @@ export const aiHubApi = {
 
   async sendChatMessage(payload: SendChatMessagePayload): Promise<ChatMessage> {
     try {
-      const res = await apiInstance.post("/ai-hub/chat-assistant/message", payload);
+      const res = await apiInstance.post("/api/v1/ai-hub/chat-assistant/message", payload);
       const raw = extractData<Record<string, unknown>>(res);
       return mapToChatMessage(raw, payload.conversationId);
     } catch (err: unknown) {
       // Resilient fallback to /ai/chat
       try {
-        const res = await apiInstance.post("/ai/chat", {
+        const res = await apiInstance.post("/api/v1/ai/chat", {
           conversation_id: payload.conversationId,
           message: payload.content,
           query: payload.content,
@@ -789,7 +789,7 @@ export const aiHubApi = {
 
   async getChatSuggestions(): Promise<Array<{ label: string; cmd: string }>> {
     try {
-      const res = await apiInstance.get("/ai/chat/suggestions");
+      const res = await apiInstance.get("/api/v1/ai/chat/suggestions");
       const raw = extractData<unknown>(res, []);
       if (Array.isArray(raw)) {
         return raw
@@ -839,7 +839,7 @@ export const aiHubApi = {
     feedback?: string;
   }): Promise<{ success: boolean }> {
     try {
-      const res = await apiInstance.post("/ai/chat/feedback", {
+      const res = await apiInstance.post("/api/v1/ai/chat/feedback", {
         message_id: payload.messageId,
         messageId: payload.messageId,
         conversation_id: payload.conversationId,
@@ -856,7 +856,7 @@ export const aiHubApi = {
   async deleteChatConversation(conversationId: string): Promise<{ success: boolean; id: string }> {
     try {
       const res = await apiInstance.delete(
-        `/ai-hub/chat-assistant/conversations/${encodeURIComponent(conversationId)}`,
+        `/api/v1/ai-hub/chat-assistant/conversations/${encodeURIComponent(conversationId)}`,
       );
       return extractData<{ success: boolean; id: string }>(res, {
         success: true,
@@ -865,7 +865,7 @@ export const aiHubApi = {
     } catch {
       // Resilient fallback: try /ai/chat/history/{conversation_id}
       try {
-        await apiInstance.delete(`/ai/chat/history/${encodeURIComponent(conversationId)}`);
+        await apiInstance.delete(`/api/v1/ai/chat/history/${encodeURIComponent(conversationId)}`);
       } catch {
         // silent
       }
@@ -875,12 +875,12 @@ export const aiHubApi = {
 
   // ── 16. Analytics Center ─────────────────────────────────────────
   async getAnalyticsCenter(): Promise<AnalyticsCenterData> {
-    const res = await apiInstance.get("/ai-hub/analytics-center");
+    const res = await apiInstance.get("/api/v1/ai-hub/analytics-center");
     return extractData<AnalyticsCenterData>(res, {});
   },
 
   async analyzeAnalytics(payload?: AnalyzeAnalyticsPayload): Promise<AnalyticsResult> {
-    const res = await apiInstance.post("/ai-hub/analytics-center/analyze", payload ?? {});
+    const res = await apiInstance.post("/api/v1/ai-hub/analytics-center/analyze", payload ?? {});
     return extractData<AnalyticsResult>(res, {
       category: payload?.category ?? "General",
       timestamp: new Date().toISOString(),
@@ -888,17 +888,17 @@ export const aiHubApi = {
   },
 
   async getAttritionAnalytics(): Promise<Record<string, unknown>> {
-    const res = await apiInstance.get("/ai-hub/analytics-center/attrition");
+    const res = await apiInstance.get("/api/v1/ai-hub/analytics-center/attrition");
     return extractData<Record<string, unknown>>(res, {});
   },
 
   async getDiversityAnalytics(): Promise<Record<string, unknown>> {
-    const res = await apiInstance.get("/ai-hub/analytics-center/diversity");
+    const res = await apiInstance.get("/api/v1/ai-hub/analytics-center/diversity");
     return extractData<Record<string, unknown>>(res, {});
   },
 
   async getExecutiveSummary(): Promise<{ executiveSummary: string; timestamp: string }> {
-    const res = await apiInstance.get("/ai-hub/analytics-center/executive-summary");
+    const res = await apiInstance.get("/api/v1/ai-hub/analytics-center/executive-summary");
     return extractData<{ executiveSummary: string; timestamp: string }>(res, {
       executiveSummary: "",
       timestamp: new Date().toISOString(),

@@ -41,15 +41,15 @@
 | **F-05.3** | DONE | `src/features/admin/recruitment/pages/AIInterviewResultsTab.tsx`, `src/features/admin/recruitment/pages/RecruitmentAIInterviewPage.tsx` | `src/features/admin/recruitment/__tests__/CandidateBookingAndBot.test.tsx` | HR AI Interview tab with candidate invite modal, results table with 0-100 rounded match scores, strengths/weaknesses/red flags badges, transcript viewer, and F-03.4 decision flow (Shortlist/Reject with >=10 char reason) |
 | **F-05.4** | DONE | `src/routes/interview.book.$token.tsx`, `src/routes/ai-interview.$token.tsx`, `src/pages/CandidateInterviewBookingPage.tsx`, `src/pages/CandidateAIInterviewPage.tsx` | `src/features/admin/recruitment/__tests__/CandidateBookingAndBot.test.tsx` | Public routes outside dashboard shell and auth guards; noindex, nofollow robots meta tags; no PII tracking |
 | **F-05.5** | DONE | `src/features/admin/recruitment/pages/AIInterviewSimulatorPage.tsx`, `src/features/admin/recruitment/pages/RecruitmentAIInterviewPage.tsx`, `src/routes/dashboard/recruitment/ai-interview.tsx` | `src/features/admin/recruitment/__tests__/CandidateBookingAndBot.test.tsx` | Prominently relabeled AIInterviewSimulatorPage with practice simulator disclaimer banner; wrapped inside RecruitmentAIInterviewPage alongside real results tab |
-| **F-06.1** | TODO | None | None | AI Hub & Analytics API reconciliation and unused code cleanup |
-| **F-06.2** | TODO | None | None | Attendance API end-to-end reconciliation |
-| **F-06.3** | TODO | None | None | Settings API & method reconciliation (PUT/PATCH, branding, audit logs) |
-| **F-06.4** | TODO | None | None | Profile API reconciliation (/users/me vs /profile) |
-| **F-06.5** | TODO | None | None | Departments & Managers thunks reconciliation |
-| **F-06.6** | TODO | None | None | Documents, Leaves, Timesheets, Policies reconciliation |
-| **F-06.7** | TODO | None | None | Reports, Analytics & Payroll APIs reconciliation |
-| **F-06.8** | TODO | None | None | Unavailable BACKEND_ADD features graceful disabled UI |
-| **F-06.9** | TODO | None | None | scripts/check-api-contract.ts contract validation script |
+| **F-06.1** | DONE | `src/services/aiHub.api.ts`, `src/services/aiHubApi.ts`, `src/services/analytics.api.ts` | `npm run check:contract` | AI Hub explicit /api/v1 prefix reconciliation matching 100% (64/64) backend routes; dead endpoints eliminated |
+| **F-06.2** | DONE | `src/services/attendanceApi.ts`, `src/features/attendance/pages/*` | `npm run check:contract` | Attendance endpoints reconciled (today, face status/enroll, check-in, break, geofence, shifts CRUD) |
+| **F-06.3** | DONE | `src/services/settingsApi.ts`, `src/features/settings/api.ts` | `npm run check:contract` | Settings method mismatches reconciled (PUT for security, integrations, billing); audit-logs URL query serialization fixed |
+| **F-06.4** | DONE | `src/services/profileApi.ts`, `src/features/documents/hooks/useCurrentEmployeeProfile.ts` | `npm run check:contract` | Profile endpoints reconciled to /api/v1/profile, /api/v1/users/me, and /api/v1/settings/profile |
+| **F-06.5** | DONE | `src/features/admin/departments/departmentsThunk.ts`, `src/features/admin/managers/managersThunk.ts` | `npm run check:contract` | Departments and Managers thunks mapped with known BACKEND_ADD allow-list tracking |
+| **F-06.6** | DONE | `src/features/documents/api/documentsApi.ts`, `src/features/documents/hooks/useCurrentEmployeeProfile.ts`, `src/features/admin/performance/performanceThunk.ts` | `npm run check:contract` | Documents, Leaves, Timesheets, Policies verified against backend; performance reviews bulk-status method fixed from PATCH to POST |
+| **F-06.7** | DONE | `src/services/reportsAnalyticsApi.ts`, `src/services/payrollApi.ts`, `src/features/payroll/api/compensationApi.ts`, `src/features/payroll/api/variableInputsApi.ts` | `npm run check:contract` | Reports and Payroll APIs reconciled across cycles, runs, payslips, variable inputs, and FNF |
+| **F-06.8** | DONE | `src/features/settings/api.ts`, `src/features/documents/api/documentsApi.ts` | `npm run check:contract` | Graceful disabled/unavailable state enforcement with clear user guidance for pending BACKEND_ADD endpoints |
+| **F-06.9** | DONE | `scripts/check-api-contract.ts`, `scripts/backend-add-allowlist.json`, `package.json`, `openapi.json` | `npm run check:contract` | Automated CI-friendly contract verification script comparing all 393 production apiInstance calls to openapi.json and allow-list; fails build on unknown routes |
 | **F-07.1** | TODO | None | None | Typed API modules & mappers for browser-only features |
 | **F-07.2** | TODO | None | None | Replace useHrms in Expenses, Travel, Visitors, Offboarding, Assets, HrOps |
 | **F-07.3** | TODO | None | None | Deprecate and remove src/lib/hrms/store.ts and stale localStorage |

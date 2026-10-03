@@ -97,7 +97,7 @@ export const bulkSetReviewStatus = createAsyncThunk<
   { rejectValue: string }
 >("performance/bulkSetReviewStatus", async (payload, thunkAPI) => {
   try {
-    await apiInstance.patch("/api/v2/performance/reviews/bulk-status", payload);
+    await apiInstance.post("/api/v2/performance/reviews/bulk-status", payload);
     return payload;
   } catch (err) {
     return thunkAPI.rejectWithValue(getErrorMessage(err, "Failed to update review status"));

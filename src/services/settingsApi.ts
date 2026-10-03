@@ -46,7 +46,7 @@ export const settingsApi = {
   },
 
   async updateSecuritySettings(payload: Partial<SecuritySettings>): Promise<SecuritySettings> {
-    const res = await apiInstance.patch("/settings/security", payload);
+    const res = await apiInstance.put("/settings/security", payload);
     return extractData<SecuritySettings>(res);
   },
 
@@ -93,7 +93,7 @@ export const settingsApi = {
       | { id?: string; connected?: boolean; integrations?: IntegrationItem[] }
       | Partial<IntegrationItem>,
   ): Promise<IntegrationItem[]> {
-    const res = await apiInstance.patch("/settings/integrations", payload);
+    const res = await apiInstance.put("/settings/integrations", payload);
     const data = extractData<
       IntegrationItem[] | { items?: IntegrationItem[]; integrations?: IntegrationItem[] }
     >(res, []);
@@ -114,7 +114,7 @@ export const settingsApi = {
   async updateBillingSettings(
     payload: Partial<BillingData> | Record<string, unknown>,
   ): Promise<BillingData> {
-    const res = await apiInstance.patch("/settings/billing", payload);
+    const res = await apiInstance.put("/settings/billing", payload);
     return extractData<BillingData>(res);
   },
 
@@ -152,8 +152,9 @@ export const settingsApi = {
     if (params?.startDate) searchParams.set("startDate", params.startDate);
     if (params?.endDate) searchParams.set("endDate", params.endDate);
 
-    const query = searchParams.toString();
-    const res = await apiInstance.get(`/settings/audit-logs${query ? `?${query}` : ""}`);
+    const res = await apiInstance.get("/settings/audit-logs", {
+      params: searchParams,
+    });
     const data = extractData<AuditLogResponse | AuditLog[]>(res);
     if (data && "items" in data && Array.isArray(data.items)) {
       return {
@@ -190,13 +191,10 @@ export const settingsApi = {
     if (params?.startDate) searchParams.set("startDate", params.startDate);
     if (params?.endDate) searchParams.set("endDate", params.endDate);
 
-    const query = searchParams.toString();
-    const res = await apiInstance.get<Blob>(
-      `/settings/audit-logs/export${query ? `?${query}` : ""}`,
-      {
-        responseType: "blob",
-      },
-    );
+    const res = await apiInstance.get<Blob>("/settings/audit-logs/export", {
+      params: searchParams,
+      responseType: "blob",
+    });
     return res.data;
   },
 
