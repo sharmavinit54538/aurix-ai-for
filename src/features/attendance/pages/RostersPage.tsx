@@ -363,7 +363,6 @@ export default function RostersPage() {
     }
     setIsCreateModalOpen(false);
     toast.success(`Roster planner "${createRosterName}" generated for department "${createRosterDept}"`);
-    triggerAutoSave();
   };
 
   const handleQuickFixConflicts = () => {
@@ -380,7 +379,6 @@ export default function RostersPage() {
       });
     });
     toast.success("AI resolved all schedule conflicts by re-assigning off days!");
-    triggerAutoSave();
   };
 
   const handleAction = (action: string, entry: RosterEntry) => {
@@ -389,13 +387,11 @@ export default function RostersPage() {
         prev.map((r) => (r.id === entry.id ? { ...r, status: "Approved" } : r))
       );
       toast.success(`Roster entry approved for ${entry.employeeName}`);
-      triggerAutoSave();
     } else if (action === "Reject") {
       setRosters((prev) =>
         prev.map((r) => (r.id === entry.id ? { ...r, status: "Rejected" } : r))
       );
       toast.success(`Roster entry rejected for ${entry.employeeName}`);
-      triggerAutoSave();
     } else if (action === "Delete") {
       setEntryToDelete(entry);
       setIsDeleteConfirmOpen(true);
