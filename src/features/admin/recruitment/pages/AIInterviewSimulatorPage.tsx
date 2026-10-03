@@ -180,8 +180,20 @@ export function AIInterviewSimulatorPage() {
 
   return (
     <div className="space-y-6">
+      {/* Practice Simulator Relabeling Banner (F-05.5) */}
+      <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 flex items-start gap-3">
+        <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+        <div className="text-xs">
+          <h4 className="font-semibold text-foreground text-sm">
+            Practice simulator (no data is saved)
+          </h4>
+          <p className="text-muted-foreground mt-0.5">
+            This interactive sandbox lets recruiters test sample questions and preview the AI assessment flow.
+            Official candidate invitations, automated bot sessions, and recorded evaluations are managed in the <strong>AI Interview Runs &amp; Results</strong> tab.
+          </p>
+        </div>
+      </div>
 
-      {/* VIEW 1: INTERVIEW SETUP */}
       {sessionState === "setup" && (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-xl space-y-4">

@@ -96,6 +96,7 @@ import { Route as AiChatAssistantRouteImport } from './routes/ai.chat-assistant'
 import { Route as AiBrainRouteImport } from './routes/ai.brain'
 import { Route as AiAttendanceMonitorRouteImport } from './routes/ai.attendance-monitor'
 import { Route as AiAnalyticsCenterRouteImport } from './routes/ai.analytics-center'
+import { Route as AiInterviewTokenRouteImport } from './routes/ai-interview.$token'
 import { Route as DashboardWorkforceIndexRouteImport } from './routes/dashboard.workforce.index'
 import { Route as DashboardTalentIndexRouteImport } from './routes/dashboard.talent.index'
 import { Route as DashboardSuperAdminIndexRouteImport } from './routes/dashboard.super-admin.index'
@@ -110,6 +111,7 @@ import { Route as DashboardAttendanceIndexRouteImport } from './routes/dashboard
 import { Route as DashboardAnalyticsIndexRouteImport } from './routes/dashboard.analytics.index'
 import { Route as DashboardAiHubIndexRouteImport } from './routes/dashboard.ai-hub.index'
 import { Route as JobsApplyUkeyRouteImport } from './routes/jobs.apply.$ukey'
+import { Route as InterviewBookTokenRouteImport } from './routes/interview.book.$token'
 import { Route as DashboardWorkforceTimesheetsRouteImport } from './routes/dashboard.workforce.timesheets'
 import { Route as DashboardWorkforcePeopleRouteImport } from './routes/dashboard.workforce.people'
 import { Route as DashboardWorkforceLeavesRouteImport } from './routes/dashboard.workforce.leaves'
@@ -693,6 +695,11 @@ const AiAnalyticsCenterRoute = AiAnalyticsCenterRouteImport.update({
   path: '/analytics-center',
   getParentRoute: () => AiRoute,
 } as any)
+const AiInterviewTokenRoute = AiInterviewTokenRouteImport.update({
+  id: '/ai-interview/$token',
+  path: '/ai-interview/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardWorkforceIndexRoute = DashboardWorkforceIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -765,6 +772,11 @@ const DashboardAiHubIndexRoute = DashboardAiHubIndexRouteImport.update({
 const JobsApplyUkeyRoute = JobsApplyUkeyRouteImport.update({
   id: '/jobs/apply/$ukey',
   path: '/jobs/apply/$ukey',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InterviewBookTokenRoute = InterviewBookTokenRouteImport.update({
+  id: '/interview/book/$token',
+  path: '/interview/book/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardWorkforceTimesheetsRoute =
@@ -1645,6 +1657,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/verify-reset-otp': typeof VerifyResetOtpRoute
+  '/ai-interview/$token': typeof AiInterviewTokenRoute
   '/ai/analytics-center': typeof AiAnalyticsCenterRoute
   '/ai/attendance-monitor': typeof AiAttendanceMonitorRoute
   '/ai/brain': typeof AiBrainRoute
@@ -1803,6 +1816,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/workforce/leaves': typeof DashboardWorkforceLeavesRoute
   '/dashboard/workforce/people': typeof DashboardWorkforcePeopleRoute
   '/dashboard/workforce/timesheets': typeof DashboardWorkforceTimesheetsRoute
+  '/interview/book/$token': typeof InterviewBookTokenRoute
   '/jobs/apply/$ukey': typeof JobsApplyUkeyRoute
   '/dashboard/ai-hub/': typeof DashboardAiHubIndexRoute
   '/dashboard/analytics/': typeof DashboardAnalyticsIndexRoute
@@ -1890,6 +1904,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/verify-reset-otp': typeof VerifyResetOtpRoute
+  '/ai-interview/$token': typeof AiInterviewTokenRoute
   '/ai/analytics-center': typeof AiAnalyticsCenterRoute
   '/ai/attendance-monitor': typeof AiAttendanceMonitorRoute
   '/ai/brain': typeof AiBrainRoute
@@ -2033,6 +2048,7 @@ export interface FileRoutesByTo {
   '/dashboard/workforce/leaves': typeof DashboardWorkforceLeavesRoute
   '/dashboard/workforce/people': typeof DashboardWorkforcePeopleRoute
   '/dashboard/workforce/timesheets': typeof DashboardWorkforceTimesheetsRoute
+  '/interview/book/$token': typeof InterviewBookTokenRoute
   '/jobs/apply/$ukey': typeof JobsApplyUkeyRoute
   '/dashboard/ai-hub': typeof DashboardAiHubIndexRoute
   '/dashboard/analytics': typeof DashboardAnalyticsIndexRoute
@@ -2124,6 +2140,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/verify-reset-otp': typeof VerifyResetOtpRoute
+  '/ai-interview/$token': typeof AiInterviewTokenRoute
   '/ai/analytics-center': typeof AiAnalyticsCenterRoute
   '/ai/attendance-monitor': typeof AiAttendanceMonitorRoute
   '/ai/brain': typeof AiBrainRoute
@@ -2282,6 +2299,7 @@ export interface FileRoutesById {
   '/dashboard/workforce/leaves': typeof DashboardWorkforceLeavesRoute
   '/dashboard/workforce/people': typeof DashboardWorkforcePeopleRoute
   '/dashboard/workforce/timesheets': typeof DashboardWorkforceTimesheetsRoute
+  '/interview/book/$token': typeof InterviewBookTokenRoute
   '/jobs/apply/$ukey': typeof JobsApplyUkeyRoute
   '/dashboard/ai-hub/': typeof DashboardAiHubIndexRoute
   '/dashboard/analytics/': typeof DashboardAnalyticsIndexRoute
@@ -2374,6 +2392,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/verify-email'
     | '/verify-reset-otp'
+    | '/ai-interview/$token'
     | '/ai/analytics-center'
     | '/ai/attendance-monitor'
     | '/ai/brain'
@@ -2532,6 +2551,7 @@ export interface FileRouteTypes {
     | '/dashboard/workforce/leaves'
     | '/dashboard/workforce/people'
     | '/dashboard/workforce/timesheets'
+    | '/interview/book/$token'
     | '/jobs/apply/$ukey'
     | '/dashboard/ai-hub/'
     | '/dashboard/analytics/'
@@ -2619,6 +2639,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/verify-email'
     | '/verify-reset-otp'
+    | '/ai-interview/$token'
     | '/ai/analytics-center'
     | '/ai/attendance-monitor'
     | '/ai/brain'
@@ -2762,6 +2783,7 @@ export interface FileRouteTypes {
     | '/dashboard/workforce/leaves'
     | '/dashboard/workforce/people'
     | '/dashboard/workforce/timesheets'
+    | '/interview/book/$token'
     | '/jobs/apply/$ukey'
     | '/dashboard/ai-hub'
     | '/dashboard/analytics'
@@ -2852,6 +2874,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/verify-email'
     | '/verify-reset-otp'
+    | '/ai-interview/$token'
     | '/ai/analytics-center'
     | '/ai/attendance-monitor'
     | '/ai/brain'
@@ -3010,6 +3033,7 @@ export interface FileRouteTypes {
     | '/dashboard/workforce/leaves'
     | '/dashboard/workforce/people'
     | '/dashboard/workforce/timesheets'
+    | '/interview/book/$token'
     | '/jobs/apply/$ukey'
     | '/dashboard/ai-hub/'
     | '/dashboard/analytics/'
@@ -3101,6 +3125,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   VerifyResetOtpRoute: typeof VerifyResetOtpRoute
+  AiInterviewTokenRoute: typeof AiInterviewTokenRoute
   ApiAiBrainRoute: typeof ApiAiBrainRoute
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthLoginRoute: typeof AuthLoginRoute
@@ -3108,6 +3133,7 @@ export interface RootRouteChildren {
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   AuthVerifyEmailRoute: typeof AuthVerifyEmailRoute
   AuthVerifyResetOtpRoute: typeof AuthVerifyResetOtpRoute
+  InterviewBookTokenRoute: typeof InterviewBookTokenRoute
   JobsApplyUkeyRoute: typeof JobsApplyUkeyRoute
   PayrollRunsRunIdApprovalRoute: typeof PayrollRunsRunIdApprovalRoute
   PayrollRunsRunIdFinalizeRoute: typeof PayrollRunsRunIdFinalizeRoute
@@ -3729,6 +3755,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AiAnalyticsCenterRouteImport
       parentRoute: typeof AiRoute
     }
+    '/ai-interview/$token': {
+      id: '/ai-interview/$token'
+      path: '/ai-interview/$token'
+      fullPath: '/ai-interview/$token'
+      preLoaderRoute: typeof AiInterviewTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/workforce/': {
       id: '/dashboard/workforce/'
       path: '/'
@@ -3825,6 +3858,13 @@ declare module '@tanstack/react-router' {
       path: '/jobs/apply/$ukey'
       fullPath: '/jobs/apply/$ukey'
       preLoaderRoute: typeof JobsApplyUkeyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/interview/book/$token': {
+      id: '/interview/book/$token'
+      path: '/interview/book/$token'
+      fullPath: '/interview/book/$token'
+      preLoaderRoute: typeof InterviewBookTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/workforce/timesheets': {
@@ -5551,6 +5591,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   VerifyResetOtpRoute: VerifyResetOtpRoute,
+  AiInterviewTokenRoute: AiInterviewTokenRoute,
   ApiAiBrainRoute: ApiAiBrainRoute,
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthLoginRoute: AuthLoginRoute,
@@ -5558,6 +5599,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthResetPasswordRoute: AuthResetPasswordRoute,
   AuthVerifyEmailRoute: AuthVerifyEmailRoute,
   AuthVerifyResetOtpRoute: AuthVerifyResetOtpRoute,
+  InterviewBookTokenRoute: InterviewBookTokenRoute,
   JobsApplyUkeyRoute: JobsApplyUkeyRoute,
   PayrollRunsRunIdApprovalRoute: PayrollRunsRunIdApprovalRoute,
   PayrollRunsRunIdFinalizeRoute: PayrollRunsRunIdFinalizeRoute,

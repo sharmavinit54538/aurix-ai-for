@@ -140,10 +140,10 @@ function useRecruitmentBase() {
   const shouldFetch =
     !loading &&
     (!lastFetchedAt || Date.now() - lastFetchedAt >= 30_000) &&
-    jobs.length === 0 &&
-    candidates.length === 0 &&
-    interviews.length === 0 &&
-    offers.length === 0;
+    (jobs?.length ?? 0) === 0 &&
+    (candidates?.length ?? 0) === 0 &&
+    (interviews?.length ?? 0) === 0 &&
+    (offers?.length ?? 0) === 0;
 
   useEffect(() => {
     if (shouldFetch) {
