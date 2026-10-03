@@ -242,8 +242,8 @@ export function RecruitmentAutomationPage() {
             const successRuns = logs.filter((l) => l.status === "Success" || l.status === "Delivered").length;
             const failedRuns = logs.filter((l) => l.status === "Failed").length;
             const totalLogged = successRuns + failedRuns;
-            const rate = totalLogged > 0 ? `${Math.round((successRuns / totalLogged) * 100)}%` : (totalRunsAll > 0 ? "100%" : "—");
-            const sub = totalLogged > 0 ? `${failedRuns} failures detected` : (totalRunsAll > 0 ? `${totalRunsAll} total runs` : "Awaiting first run");
+            const rate = totalLogged > 0 ? `${Math.round((successRuns / totalLogged) * 100)}%` : "—";
+            const sub = totalLogged > 0 ? `${failedRuns} failures detected` : "Awaiting first run";
             return (
               <>
                 <div className="mt-2 font-display text-2xl font-bold">

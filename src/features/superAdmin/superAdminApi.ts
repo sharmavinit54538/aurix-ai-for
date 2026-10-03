@@ -259,7 +259,6 @@ export function normalizeStatistics(body: unknown): PlatformStatistics {
       withoutSubscription: toNumber(k.free_organizations),
     },
     activeWorkforce: toNumber(k.total_workforce_managed ?? k.total_employees_count),
-    raw: body as unknown as SuperAdminStatisticsResponse,
   };
 }
 
@@ -276,19 +275,22 @@ export function normalizeUser(raw: unknown): PlatformUser | null {
   const rawOrgName = toText(raw.company_name ?? raw.companyName ?? raw.organization);
   const orgName = organizationId ? (rawOrgName === "Global Platform" ? null : rawOrgName) : null;
 
+  const lastLoginAt = toIsoTimestamp(raw.last_login ?? raw.lastLoginAt);
+  const lastLogin = lastLoginAt ? lastLoginAt.split("T")[0] : null;
+
   return {
     id,
     name: toText(raw.name) ?? "Platform User",
     email: toText(raw.email) ?? "",
-    phone: toText(raw.phone) ?? "",
+    phone: toText(raw.phone),
     role: toText(raw.role) ?? "employee",
     organization_id: organizationId,
     organizationId,
     companyId: organizationId ?? "",
     company_id: organizationId,
-    company_name: orgName ?? "Global Platform",
-    companyName: orgName ?? "Global Platform",
-    organization: orgName ?? "Global Platform",
+    company_name: orgName,
+    companyName: orgName,
+    organization: orgName,
     organizationName: orgName,
     status: isActive ? "Active" : "Inactive",
     is_active: Boolean(isActive),
@@ -297,9 +299,9 @@ export function normalizeUser(raw: unknown): PlatformUser | null {
     isVerified: toBool(raw.is_verified) ?? true,
     created_at: toIsoTimestamp(raw.created_at) ?? new Date().toISOString(),
     createdAt: (toIsoTimestamp(raw.created_at) ?? new Date().toISOString()).split("T")[0],
-    last_login: toIsoTimestamp(raw.last_login),
-    lastLoginAt: toIsoTimestamp(raw.last_login),
-    lastLogin: toIsoTimestamp(raw.last_login)?.split("T")[0] ?? "Never",
+    last_login: lastLoginAt,
+    lastLoginAt,
+    lastLogin,
   };
 }
 
@@ -309,45 +311,30 @@ export function normalizeOrganization(raw: unknown): OrganizationRecord | null {
   if (!id) return null;
 
   const hrAdmin = isRecord(raw.hr_admin) ? raw.hr_admin : null;
-  const hrAdminsRaw = Array.isArray(raw.hr_admins) ? raw.hr_admins : [];
-  const primaryHr = hrAdmin ? { name: toText(hrAdmin.name), email: toText(hrAdmin.email), phone: toText(hrAdmin.phone) } : null;
+  let primaryHr: PlatformHrAdminRef | null = null;
+  if (hrAdmin) {
+    const name = toText(hrAdmin.name);
+    const email = toText(hrAdmin.email);
+    const phone = toText(hrAdmin.phone);
+    primaryHr = {
+      name,
+      email,
+      ...(phone !== null ? { phone } : {}),
+    };
+  }
 
-  const createdIso = toIsoTimestamp(raw.created_at) ?? new Date().toISOString();
+  const createdAt = toIsoTimestamp(raw.created_at ?? raw.createdAt);
 
   return {
     id,
-    name: toText(raw.name) ?? "Unnamed Organization",
+    name: toText(raw.name),
     domain: toText(raw.domain),
     plan: toText(raw.plan),
-    status: toText(raw.status) ?? "Active",
-    access_status: toText(raw.access_status) ?? "ACTIVE",
-    access_type: toText(raw.access_type) ?? "FULL",
-    payment_status: toText(raw.payment_status) ?? "UNPAID",
-    access_source: toText(raw.access_source) ?? "SUPER_ADMIN",
-    access_granted_by: toText(raw.access_granted_by) ?? "Super Admin",
-    access_expires_at: toIsoTimestamp(raw.access_expires_at),
-    access_grant_reason: toText(raw.access_grant_reason),
-    mrr: toNumber(raw.mrr) ?? 0,
-    storageUsedGb: toNumber(raw.storageUsedGb) ?? 0,
-    industry: toText(raw.industry) ?? "General",
-    location: toText(raw.location) ?? "Global",
-    user_count: toNumber(raw.user_count) ?? 0,
-    userCount: toNumber(raw.user_count) ?? 0,
-    employee_count: toNumber(raw.employee_count ?? raw.employeeCount) ?? 0,
-    employeeCount: toNumber(raw.employee_count ?? raw.employeeCount) ?? 0,
-    hr_admin: primaryHr,
+    status: toText(raw.status),
+    userCount: toNumber(raw.userCount ?? raw.user_count),
+    employeeCount: toNumber(raw.employeeCount ?? raw.employee_count),
     primaryHrAdmin: primaryHr,
-    hr_admins: hrAdminsRaw.map((u: any) => ({
-      id: toText(u.id) ?? undefined,
-      name: toText(u.name),
-      email: toText(u.email),
-      phone: toText(u.phone),
-    })),
-    hrAdminName: toText(raw.hrAdminName) ?? primaryHr?.name ?? "",
-    hrAdminEmail: toText(raw.hrAdminEmail) ?? primaryHr?.email ?? "",
-    owner: primaryHr,
-    created_at: createdIso,
-    createdAt: createdIso.split("T")[0],
+    createdAt,
   };
 }
 
@@ -356,27 +343,25 @@ export function normalizeAuditEvent(raw: unknown): PlatformAuditEvent | null {
   const id = toText(raw.id);
   if (!id) return null;
 
-  const actor = toText(raw.actor);
+  const timestamp = toIsoTimestamp(raw.timestamp);
   const action = toText(raw.action);
-  const details = toText(raw.details);
-  const timestamp = toIsoTimestamp(raw.timestamp) ?? new Date().toISOString();
-  const ip = toText(raw.ip ?? raw.ip_address) ?? "127.0.0.1";
-  const resultRaw = toText(raw.result)?.toUpperCase();
-  const result = resultRaw === "BLOCKED" ? "BLOCKED" : "SUCCESS";
+
+  const rawActorEmail = toText(raw.actorEmail ?? raw.actor_email);
+  const rawActor = toText(raw.actor);
+  const candidateEmail = rawActorEmail ?? (rawActor && rawActor.includes("@") ? rawActor : null);
+  const actorEmail = candidateEmail && candidateEmail.toLowerCase() !== "superadmin@ofc360.com" ? candidateEmail : null;
+
+  const organizationId = toText(raw.organizationId ?? raw.organization_id ?? raw.targetCompany ?? raw.target_company);
+  const detailsText = toText(raw.details);
+  const details = detailsText && detailsText !== action ? detailsText : null;
 
   return {
     id,
     timestamp,
-    actor: actor ?? "System",
-    actorEmail: toText(raw.actorEmail) ?? (actor && actor !== "System" ? actor : "superadmin@ofc360.com"),
-    action: action ?? "ACTION",
-    resource: toText(raw.resource) ?? "PLATFORM_RESOURCE",
-    targetCompany: toText(raw.targetCompany),
-    organizationId: toText(raw.targetCompany),
-    result,
-    ip,
-    ip_address: ip,
-    details: details ?? action ?? "",
+    actorEmail,
+    action,
+    organizationId,
+    details,
   };
 }
 
@@ -384,21 +369,20 @@ export function normalizeSession(raw: unknown): SecuritySessionRecord | null {
   if (!isRecord(raw)) return null;
   const id = toText(raw.id);
   if (!id) return null;
+
+  const rawName = toText(raw.userName ?? raw.adminName);
+  const userName = rawName && rawName !== "Administrator" ? rawName : null;
+
+  const rawEmail = toText(raw.userEmail ?? raw.adminEmail);
+  const userEmail = rawEmail && rawEmail.toLowerCase() !== "admin@ofc360.com" ? rawEmail : null;
+
+  const startedAt = toIsoTimestamp(raw.startedAt ?? raw.loginTime);
+
   return {
     id,
-    adminName: toText(raw.adminName) ?? "Administrator",
-    userName: toText(raw.adminName) ?? "Administrator",
-    adminEmail: toText(raw.adminEmail) ?? "admin@ofc360.com",
-    userEmail: toText(raw.adminEmail) ?? "admin@ofc360.com",
-    ipAddress: toText(raw.ipAddress) ?? "127.0.0.1",
-    location: toText(raw.location) ?? "Production Gateway",
-    browser: toText(raw.browser) ?? "Chrome / Desktop",
-    os: toText(raw.os) ?? "Windows / Linux",
-    device: toText(raw.device) ?? "Desktop",
-    loginTime: toIsoTimestamp(raw.loginTime) ?? new Date().toISOString(),
-    startedAt: toIsoTimestamp(raw.loginTime) ?? new Date().toISOString(),
-    lastActivity: toText(raw.lastActivity) ?? "Active",
-    status: toText(raw.status) ?? "Active",
+    userName,
+    userEmail,
+    startedAt,
   };
 }
 

@@ -2,9 +2,12 @@ import type { ReactNode } from "react";
 import { describe, it, expect, vi, beforeAll, afterAll, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Provider } from "react-redux";
+import { configureStore } from "@reduxjs/toolkit";
 import { http, HttpResponse } from "msw";
 import { server } from "@/test/setup";
 import { aurix } from "@/lib/aurix-store";
+import superAdminReducer from "../redux/superAdminSlice";
 import { SuperAdminSettingsPage } from "../pages/SuperAdminSettingsPage";
 
 vi.mock("@tanstack/react-router", async (importOriginal) => {
@@ -47,12 +50,23 @@ const settingsBody = {
   securityAlertEmail: "security@example.test",
 };
 
+function createTestStore() {
+  return configureStore({
+    reducer: {
+      superAdmin: superAdminReducer,
+    },
+  });
+}
+
 function renderPage() {
   const client = new QueryClient({ defaultOptions: { queries: { retryDelay: 0, gcTime: 0 } } });
+  const store = createTestStore();
   return render(
-    <QueryClientProvider client={client}>
-      <SuperAdminSettingsPage />
-    </QueryClientProvider>,
+    <Provider store={store}>
+      <QueryClientProvider client={client}>
+        <SuperAdminSettingsPage />
+      </QueryClientProvider>
+    </Provider>,
   );
 }
 

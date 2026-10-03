@@ -2,10 +2,13 @@ import type { ReactNode } from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Provider } from "react-redux";
+import { configureStore } from "@reduxjs/toolkit";
 import { http, HttpResponse } from "msw";
 import { server } from "@/test/setup";
 import { aurix, type Role } from "@/lib/aurix-store";
 import apiInstance from "@/api/apiInstance";
+import superAdminReducer from "../redux/superAdminSlice";
 import { SuperAdminOverviewPage } from "../pages/SuperAdminOverviewPage";
 import { Route as SuperAdminLayoutRoute } from "@/routes/dashboard.super-admin";
 
@@ -49,9 +52,22 @@ function signInAs(role: Role) {
   });
 }
 
+function createTestStore() {
+  return configureStore({
+    reducer: {
+      superAdmin: superAdminReducer,
+    },
+  });
+}
+
 function renderWithQueryClient(ui: ReactNode) {
   const client = new QueryClient({ defaultOptions: { queries: { retryDelay: 0, gcTime: 0 } } });
-  return render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>);
+  const store = createTestStore();
+  return render(
+    <Provider store={store}>
+      <QueryClientProvider client={client}>{ui}</QueryClientProvider>
+    </Provider>,
+  );
 }
 
 function kpis(overrides: Record<string, number>) {

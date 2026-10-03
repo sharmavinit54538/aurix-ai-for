@@ -17,6 +17,18 @@ if (typeof globalThis !== "undefined" && !globalThis.ResizeObserver) {
   globalThis.ResizeObserver = ResizeObserverShim;
 }
 
+if (typeof Blob !== "undefined" && !Blob.prototype.stream) {
+  Blob.prototype.stream = function stream() {
+    return new ReadableStream({
+      start: async (controller) => {
+        const buffer = await this.arrayBuffer();
+        controller.enqueue(new Uint8Array(buffer));
+        controller.close();
+      },
+    });
+  };
+}
+
 beforeAll(() => {
   server.listen({ onUnhandledRequest: "warn" });
 });

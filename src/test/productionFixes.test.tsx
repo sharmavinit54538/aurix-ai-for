@@ -24,7 +24,7 @@ import apiInstance, {
   handleSessionExpired,
   resetSessionExpiredFlag,
 } from "@/api/apiInstance";
-import { getRefreshToken, setTokens } from "@/api/tokens";
+import { getRefreshToken, setTokens, setRefreshToken } from "@/api/tokens";
 import { bootstrapAuth } from "@/lib/auth-bootstrap";
 import { aurix } from "@/lib/aurix-store";
 import { safeStorage } from "@/lib/safe-storage";
@@ -163,7 +163,7 @@ describe("Production Fixes Test Suite", () => {
       expect(isUnreadCountCircuitBroken()).toBe(true);
 
       // 2. Second call should fail fast without sending another network request
-      await expect(notificationsApi.getUnreadCount()).rejects.toThrow("Unread count endpoint unavailable (404)");
+      await expect(notificationsApi.getUnreadCount()).rejects.toThrow("Unread count endpoint unavailable (circuit broken)");
 
       // Only one network attempt was made
       expect(getSpy).toHaveBeenCalledTimes(1);
@@ -270,6 +270,7 @@ describe("Production Fixes Test Suite", () => {
     it("shares a single refresh promise for concurrent 401s and sends refresh_token in body", async () => {
       const storedRefreshToken = "test-stored-refresh-token-xyz";
       safeStorage.setItem("aurix:refresh_token", storedRefreshToken);
+      setRefreshToken(storedRefreshToken);
 
       let refreshPostCalls = 0;
       let capturedBody: any = null;
