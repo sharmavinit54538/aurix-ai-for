@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import recruitmentReducer from "../recruitmentSlice";
-import type { RecruitmentState } from "../types";
+import type { RecruitmentState } from "../recruitmentTypes";
 import { CandidateInterviewBookingPage } from "@/pages/CandidateInterviewBookingPage";
 import { CandidateAIInterviewPage } from "@/pages/CandidateAIInterviewPage";
 import { AIInterviewResultsTab } from "../pages/AIInterviewResultsTab";
@@ -31,20 +31,22 @@ const defaultRecruitmentState: RecruitmentState = {
   candidates: [],
   interviews: [],
   offers: [],
-  pipelineMetrics: null,
-  recentActivity: [],
   loading: false,
+  lastFetchedAt: null,
+  submitting: false,
   error: null,
-  selectedJobId: null,
-  searchQuery: "",
-  stageFilter: "all",
-  interviewers: [],
-  screeningResults: {},
   screeningThresholds: null,
+  screeningJobId: null,
   screeningRun: null,
+  screeningResults: [],
   screeningLoading: false,
+  screeningSubmitting: false,
   screeningError: null,
-  lastFetched: null,
+  interviewPagination: null,
+  interviewers: [],
+  interviewLoading: false,
+  interviewSubmitting: false,
+  interviewError: null,
 };
 
 function createTestStore(preloadedState?: { recruitment?: Partial<RecruitmentState> }) {
