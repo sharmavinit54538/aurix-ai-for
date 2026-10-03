@@ -1,5 +1,5 @@
 import apiInstance from "@/api/apiInstance";
-import type { Candidate, Interview, Job, Offer, Stage } from "@/features/admin/recruitment/types";
+import type { Stage } from "@/features/admin/recruitment/types";
 import { parseRecruitmentApiResults } from "@/features/admin/recruitment/utils/apiMappers";
 import type { RecruitmentDataPayload } from "@/features/admin/recruitment/recruitmentTypes";
 

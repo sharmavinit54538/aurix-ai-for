@@ -50,20 +50,7 @@ import {
 
 const CHART_COLORS = ["oklch(0.65 0.22 285)", "oklch(0.7 0.18 200)", "oklch(0.74 0.16 140)", "oklch(0.75 0.18 60)", "oklch(0.68 0.2 25)"];
 
-const INITIAL_DISTRIBUTION = [
-  { key: "linkedin", label: "LinkedIn Jobs", desc: "Reach active professionals worldwide", status: "Connected", sync: "2 hours ago", active: true, url: "https://www.linkedin.com/jobs" },
-  { key: "indeed", label: "Indeed", desc: "The world's #1 job site", status: "Connected", sync: "4 hours ago", active: true, url: "https://www.indeed.com" },
-  { key: "naukri", label: "Naukri", desc: "India's largest employment platform", status: "Not Connected", sync: "Never", active: false, url: "https://www.naukri.com" },
-  { key: "foundit", label: "Foundit", desc: "Monster India newly upgraded board", status: "Not Connected", sync: "Never", active: false, url: "https://www.foundit.in" },
-  { key: "glassdoor", label: "Glassdoor", desc: "Employer branding & job distribution", status: "Connected", sync: "1 day ago", active: true, url: "https://www.glassdoor.com" },
-  { key: "wellfound", label: "Wellfound", desc: "Reach top startup talent", status: "Not Connected", sync: "Never", active: false, url: "https://wellfound.com" },
-  { key: "monster", label: "Monster Jobs", desc: "Global premium candidate database", status: "Not Connected", sync: "Never", active: false, url: "https://www.monster.com" },
-  { key: "ziprecruiter", label: "ZipRecruiter", desc: "Direct distribution to 100+ job boards", status: "Not Connected", sync: "Never", active: false, url: "https://www.ziprecruiter.com" },
-  { key: "google", label: "Google Jobs", desc: "Index directly in Google Search index", status: "Connected", sync: "1 hour ago", active: true, url: "https://google.com/search?q=jobs" },
-  { key: "shine", label: "Shine", desc: "India's premium resume database search", status: "Not Connected", sync: "Never", active: false, url: "https://www.shine.com" },
-  { key: "career_page", label: "Company Career Page", desc: "Host on your custom career website", status: "Connected", sync: "Real-time", active: true, url: "/careers" },
-  { key: "referral", label: "Employee Referral Portal", desc: "Internal employee sourcing portal", status: "Connected", sync: "Real-time", active: true, url: "/referrals" },
-];
+
 
 export function JobDetailPage() {
   const { jobId } = useParams({ from: "/dashboard/recruitment/jobs/$jobId" });
@@ -97,8 +84,7 @@ export function JobDetailPage() {
     { author: "HR Recruiter", at: "2026-06-29T14:30:00Z", text: "Synced job posting details across LinkedIn and Glassdoor." },
   ]);
 
-  // Distribution settings list local state
-  const [channels, setChannels] = useState(INITIAL_DISTRIBUTION);
+
 
   const userRole = (useAurix().user?.role || "employee") as string;
 
@@ -145,10 +131,14 @@ export function JobDetailPage() {
   };
 
   useEffect(() => {
-    if (showPublishModal) {
+    fetchPublishChannels();
+  }, [jobId]);
+
+  useEffect(() => {
+    if (showPublishModal || activeTab === "publish") {
       fetchPublishChannels();
     }
-  }, [showPublishModal]);
+  }, [showPublishModal, activeTab]);
 
   useEffect(() => {
     if (showDuplicateModal && job) {
@@ -347,13 +337,7 @@ export function JobDetailPage() {
     }
   };
 
-  const handleSync = (key: string) => {
-    setChannels(prev => prev.map(c => c.key === key ? { ...c, sync: "Just now" } : c));
-  };
 
-  const handleTogglePlatform = (key: string) => {
-    setChannels(prev => prev.map(c => c.key === key ? { ...c, active: !c.active, status: c.active ? "Not Connected" : "Connected", sync: c.active ? "Never" : "Just now" } : c));
-  };
 
   const handleConfirmCloseJob = async () => {
     setClosing(true);
@@ -439,6 +423,37 @@ export function JobDetailPage() {
   const hiredCount = applicants.filter(c => c.stage === "hired").length;
   const rejectedCount = applicants.filter(c => c.stage === "rejected").length;
   const conversionRate = applicants.length ? ((hiredCount / applicants.length) * 100).toFixed(0) : "0";
+
+  // Last 7 days real application flow calculation from applicant appliedAt dates
+  const dailyFlowData = useMemo(() => {
+    const days: { dateStr: string; name: string; apps: number }[] = [];
+    const now = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split("T")[0];
+      const dayName = d.toLocaleDateString("en-US", { weekday: "short" });
+      days.push({ dateStr, name: dayName, apps: 0 });
+    }
+
+    applicants.forEach((c) => {
+      const dateVal = c.appliedAt;
+      if (!dateVal) return;
+      try {
+        const itemDate = new Date(dateVal).toISOString().split("T")[0];
+        const target = days.find((d) => d.dateStr === itemDate);
+        if (target) {
+          target.apps += 1;
+        }
+      } catch {
+        // ignore parse error
+      }
+    });
+
+    return days;
+  }, [applicants]);
+
+  const hasFlowActivity = useMemo(() => dailyFlowData.some((d) => d.apps > 0), [dailyFlowData]);
 
   return (
     <>
@@ -723,64 +738,102 @@ export function JobDetailPage() {
           {/* TAB 3: PUBLISH CHANNELS */}
           {activeTab === "publish" && (
             <div className="space-y-6">
-              <div>
-                <h3 className="font-display text-sm font-semibold">Job Distribution Center</h3>
-                <p className="text-xs text-muted-foreground">Distribute and synchronize this role across international boards.</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-display text-sm font-semibold">Job Distribution Center</h3>
+                  <p className="text-xs text-muted-foreground">Distribute and synchronize this role across available channels.</p>
+                </div>
+                <Button size="sm" variant="outline" onClick={fetchPublishChannels} disabled={loadingChannels} className="h-8 text-xs">
+                  {loadingChannels ? "Refreshing..." : "Refresh Status"}
+                </Button>
               </div>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {channels.map((chan) => (
-                  <div key={chan.key} className="flex flex-col justify-between rounded-xl border border-border bg-card/50 p-4">
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <a 
-                          href={chan.url} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="font-semibold text-sm hover:text-primary transition-colors inline-flex items-center gap-1"
-                        >
-                          {chan.label}
-                          <ExternalLink className="h-3 w-3 opacity-60 hover:opacity-100 transition-opacity" />
-                        </a>
-                        <Badge variant="outline" className={`text-[10px] ${
-                          chan.active ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500" : "border-border text-muted-foreground"
-                        }`}>
-                          {chan.status}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
-                        {chan.desc}
-                      </p>
-                    </div>
 
-                    <div className="flex items-center justify-between border-t border-border/60 pt-3 mt-4 text-[10px] text-muted-foreground">
-                      <span>Sync: {chan.sync}</span>
-                      <div className="flex gap-2">
-                        {chan.active ? (
-                          <>
-                            <Button variant="outline" size="sm" asChild className="h-7 px-2 text-[10px]">
-                              <a href={chan.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1">
-                                <ExternalLink className="h-3 w-3" /> Visit
-                              </a>
+              {loadingChannels ? (
+                <div className="flex flex-col items-center justify-center p-8 space-y-2">
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  <p className="text-xs text-muted-foreground">Fetching publish channels...</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {[
+                    { key: "career_site", label: "Company Career Page", desc: "Host on your public career website" },
+                    { key: "public_link", label: "Public Apply Link", desc: "Shareable application URL for external job boards" },
+                    { key: "internal_portal", label: "Employee Referral Portal", desc: "Internal employee sourcing portal" },
+                  ].map((chanDef) => {
+                    const chanObj = publishChannels.find((c) => c.channel_name === chanDef.key) || {
+                      channel_name: chanDef.key,
+                      is_active: false,
+                      published_at: null,
+                      last_updated: null,
+                      url: "",
+                    };
+                    const chanUrl = chanObj.url
+                      ? sanitizePublicUrl(chanObj.url)
+                      : chanDef.key === "career_site"
+                      ? "/careers"
+                      : getJobApplicationUrl(jobId);
+
+                    return (
+                      <div key={chanDef.key} className="flex flex-col justify-between rounded-xl border border-border bg-card/50 p-4">
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-semibold text-sm text-foreground">{chanDef.label}</span>
+                            <Badge
+                              variant="outline"
+                              className={`text-[10px] ${
+                                chanObj.is_active
+                                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
+                                  : "border-border text-muted-foreground"
+                              }`}
+                            >
+                              {chanObj.is_active ? "Connected / Published" : "Not Connected"}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground leading-relaxed">{chanDef.desc}</p>
+                        </div>
+
+                        <div className="flex items-center justify-between border-t border-border/60 pt-3 mt-4 text-[10px] text-muted-foreground">
+                          <span>
+                            {chanObj.published_at
+                              ? `Published: ${new Date(chanObj.published_at).toLocaleDateString()}`
+                              : "Status: Inactive"}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            {chanObj.is_active && (
+                              <>
+                                <Button variant="outline" size="sm" asChild className="h-7 px-2 text-[10px]">
+                                  <a href={chanUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1">
+                                    <ExternalLink className="h-3 w-3" /> Visit
+                                  </a>
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(chanUrl);
+                                    toast.success("Link copied!");
+                                  }}
+                                  className="h-7 px-2 text-[10px]"
+                                >
+                                  <Copy className="h-3 w-3 mr-1" /> Copy
+                                </Button>
+                              </>
+                            )}
+                            <Button
+                              variant={chanObj.is_active ? "destructive" : "default"}
+                              size="sm"
+                              onClick={() => handleToggleChannel(chanDef.key, chanObj.is_active)}
+                              className="h-7 px-3 text-[10px]"
+                            >
+                              {chanObj.is_active ? "Disconnect" : "Publish Channel"}
                             </Button>
-                            <Button variant="outline" size="sm" onClick={() => handleSync(chan.key)} className="h-7 px-2 text-[10px]">
-                              Sync
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={() => handleTogglePlatform(chan.key)} className="h-7 px-2 text-[10px] text-destructive hover:bg-destructive/10">
-                              Disconnect
-                            </Button>
-                          </>
-                        ) : (
-                          <Button size="sm" asChild className="h-7 px-3 text-[10px]">
-                            <Link to="/dashboard/recruitment/jobs/$jobId/publish" params={{ jobId: job.id }}>
-                              Publish Channel
-                            </Link>
-                          </Button>
-                        )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
@@ -853,32 +906,32 @@ export function JobDetailPage() {
               {/* Funnel chart and per day area chart */}
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="rounded-xl border border-border bg-card/60 p-4">
-                  <span className="text-xs font-semibold block mb-4">Daily Application Flow</span>
-                  <div className="h-60">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={[
-                        { name: "Mon", apps: 3 },
-                        { name: "Tue", apps: 7 },
-                        { name: "Wed", apps: 5 },
-                        { name: "Thu", apps: applicants.length },
-                        { name: "Fri", apps: 4 },
-                        { name: "Sat", apps: 2 },
-                        { name: "Sun", apps: 1 },
-                      ]}>
-                        <defs>
-                          <linearGradient id="colorApps" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="var(--color-primary, oklch(0.65 0.22 285))" stopOpacity={0.4}/>
-                            <stop offset="95%" stopColor="var(--color-primary, oklch(0.65 0.22 285))" stopOpacity={0}/>
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.2 0.05 240 / 0.3)" />
-                        <XAxis dataKey="name" stroke="oklch(0.5 0.05 240)" fontSize={10} />
-                        <YAxis stroke="oklch(0.5 0.05 240)" fontSize={10} />
-                        <Tooltip />
-                        <Area type="monotone" dataKey="apps" stroke="var(--color-primary, oklch(0.65 0.22 285))" fillOpacity={1} fill="url(#colorApps)" />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
+                  <span className="text-xs font-semibold block mb-4">Daily Application Flow (Last 7 Days)</span>
+                  {hasFlowActivity ? (
+                    <div className="h-60">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={dailyFlowData}>
+                          <defs>
+                            <linearGradient id="colorApps" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="var(--color-primary, oklch(0.65 0.22 285))" stopOpacity={0.4}/>
+                              <stop offset="95%" stopColor="var(--color-primary, oklch(0.65 0.22 285))" stopOpacity={0}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.2 0.05 240 / 0.3)" />
+                          <XAxis dataKey="name" stroke="oklch(0.5 0.05 240)" fontSize={10} />
+                          <YAxis stroke="oklch(0.5 0.05 240)" fontSize={10} allowDecimals={false} />
+                          <Tooltip />
+                          <Area type="monotone" dataKey="apps" stroke="var(--color-primary, oklch(0.65 0.22 285))" fillOpacity={1} fill="url(#colorApps)" />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <div className="h-60 flex flex-col items-center justify-center text-center p-4 border border-dashed border-border rounded-lg bg-card/30">
+                      <Users className="h-8 w-8 text-muted-foreground/40 mb-2" />
+                      <p className="text-xs font-semibold text-foreground">No applications recorded</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">No applicants have applied in the past 7 days for this position.</p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="rounded-xl border border-border bg-card/60 p-4">
