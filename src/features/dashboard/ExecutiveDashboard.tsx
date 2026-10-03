@@ -46,6 +46,7 @@ import {
 } from "recharts";
 import { useExecutiveDashboardData } from "./hooks/useExecutiveDashboardData";
 import { ExecutiveKpiCards } from "./components/ExecutiveKpiCards";
+import { LatestAnnouncementsWidget } from "@/features/announcements/components/LatestAnnouncementsWidget";
 import { useNotifications, useArchive } from "@/features/notifications";
 import { formatRelativeTime } from "@/lib/notification-utils";
 import { Progress } from "@/components/ui/progress";
@@ -1207,15 +1208,20 @@ export function ExecutiveDashboard() {
         </WidgetErrorBoundary>
       </div>
 
-      {/* Notifications + Dept Performance */}
+      {/* Announcements + Notifications */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <WidgetErrorBoundary name="Latest Announcements">
+          <LatestAnnouncementsWidget />
+        </WidgetErrorBoundary>
         <WidgetErrorBoundary name="Notifications">
           <NotificationCenter />
         </WidgetErrorBoundary>
-        <WidgetErrorBoundary name="Department Performance">
-          <DepartmentPerformance />
-        </WidgetErrorBoundary>
       </div>
+
+      {/* Dept Performance */}
+      <WidgetErrorBoundary name="Department Performance">
+        <DepartmentPerformance />
+      </WidgetErrorBoundary>
 
       {/* Recruitment */}
       <WidgetErrorBoundary name="Recruitment Pipeline">

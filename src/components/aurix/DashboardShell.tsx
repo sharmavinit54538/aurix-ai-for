@@ -30,6 +30,7 @@ import {
   LayoutDashboard,
   LineChart as LineChartIcon,
   Lock,
+  Megaphone,
   Menu,
   Moon,
   Package,
@@ -125,6 +126,11 @@ const NAV_SECTIONS: SidebarNavSection[] = [
         exact: true,
       },
       {
+        to: "/dashboard/announcements",
+        label: "Announcements",
+        icon: Megaphone,
+      },
+      {
         to: "/dashboard/workforce",
         label: "Workforce",
         icon: Users,
@@ -182,6 +188,11 @@ const EMPLOYEE_NAV_SECTIONS: SidebarNavSection[] = [
         exact: true,
       },
       {
+        to: "/dashboard/announcements",
+        label: "Announcements",
+        icon: Megaphone,
+      },
+      {
         to: "/dashboard/timesheets",
         label: "Timesheets",
         icon: Timer,
@@ -223,6 +234,11 @@ const MANAGER_NAV_SECTIONS: SidebarNavSection[] = [
         label: "Manager Portal",
         icon: LayoutDashboard,
         exact: true,
+      },
+      {
+        to: "/dashboard/announcements",
+        label: "Announcements",
+        icon: Megaphone,
       },
       {
         to: "/dashboard/workforce",
@@ -705,6 +721,16 @@ export function DashboardShell() {
             >
               <Users className="mr-2 h-4 w-4" />
               <span>Workforce & Employees</span>
+            </CommandItem>
+            <CommandItem
+              onSelect={() => {
+                navigate({ to: "/dashboard/announcements" });
+                setSearchOpen(false);
+              }}
+              className="cursor-pointer"
+            >
+              <Megaphone className="mr-2 h-4 w-4" />
+              <span>Company Announcements</span>
             </CommandItem>
             <CommandItem
               onSelect={() => {

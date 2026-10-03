@@ -40,6 +40,7 @@ import type {
   PlanRecord,
   PlatformAnalyticsData,
   PlatformAuditEvent,
+  PlatformHrAdminRef,
   PlatformOrganization,
   PlatformSession,
   PlatformSettings,

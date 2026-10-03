@@ -199,6 +199,7 @@ import { Route as DashboardAttendanceShiftsRouteImport } from './routes/dashboar
 import { Route as DashboardAttendanceRostersRouteImport } from './routes/dashboard.attendance.rosters'
 import { Route as DashboardAttendanceHolidaysRouteImport } from './routes/dashboard.attendance.holidays'
 import { Route as DashboardAttendanceCheckinRouteImport } from './routes/dashboard.attendance.checkin'
+import { Route as DashboardAnnouncementsManageRouteImport } from './routes/dashboard.announcements.manage'
 import { Route as DashboardAnnouncementsIdRouteImport } from './routes/dashboard.announcements.$id'
 import { Route as DashboardAnalyticsReportsRouteImport } from './routes/dashboard.analytics.reports'
 import { Route as DashboardAnalyticsAiInsightsRouteImport } from './routes/dashboard.analytics.ai-insights'
@@ -1284,6 +1285,12 @@ const DashboardAttendanceCheckinRoute =
     path: '/checkin',
     getParentRoute: () => DashboardAttendanceRoute,
   } as any)
+const DashboardAnnouncementsManageRoute =
+  DashboardAnnouncementsManageRouteImport.update({
+    id: '/manage',
+    path: '/manage',
+    getParentRoute: () => DashboardAnnouncementsRoute,
+  } as any)
 const DashboardAnnouncementsIdRoute =
   DashboardAnnouncementsIdRouteImport.update({
     id: '/$id',
@@ -1691,6 +1698,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/analytics/ai-insights': typeof DashboardAnalyticsAiInsightsRoute
   '/dashboard/analytics/reports': typeof DashboardAnalyticsReportsRoute
   '/dashboard/announcements/$id': typeof DashboardAnnouncementsIdRoute
+  '/dashboard/announcements/manage': typeof DashboardAnnouncementsManageRoute
   '/dashboard/attendance/checkin': typeof DashboardAttendanceCheckinRoute
   '/dashboard/attendance/holidays': typeof DashboardAttendanceHolidaysRoute
   '/dashboard/attendance/rosters': typeof DashboardAttendanceRostersRoute
@@ -1921,6 +1929,7 @@ export interface FileRoutesByTo {
   '/dashboard/analytics/ai-insights': typeof DashboardAnalyticsAiInsightsRoute
   '/dashboard/analytics/reports': typeof DashboardAnalyticsReportsRoute
   '/dashboard/announcements/$id': typeof DashboardAnnouncementsIdRoute
+  '/dashboard/announcements/manage': typeof DashboardAnnouncementsManageRoute
   '/dashboard/attendance/checkin': typeof DashboardAttendanceCheckinRoute
   '/dashboard/attendance/holidays': typeof DashboardAttendanceHolidaysRoute
   '/dashboard/attendance/rosters': typeof DashboardAttendanceRostersRoute
@@ -2162,6 +2171,7 @@ export interface FileRoutesById {
   '/dashboard/analytics/ai-insights': typeof DashboardAnalyticsAiInsightsRoute
   '/dashboard/analytics/reports': typeof DashboardAnalyticsReportsRoute
   '/dashboard/announcements/$id': typeof DashboardAnnouncementsIdRoute
+  '/dashboard/announcements/manage': typeof DashboardAnnouncementsManageRoute
   '/dashboard/attendance/checkin': typeof DashboardAttendanceCheckinRoute
   '/dashboard/attendance/holidays': typeof DashboardAttendanceHolidaysRoute
   '/dashboard/attendance/rosters': typeof DashboardAttendanceRostersRoute
@@ -2408,6 +2418,7 @@ export interface FileRouteTypes {
     | '/dashboard/analytics/ai-insights'
     | '/dashboard/analytics/reports'
     | '/dashboard/announcements/$id'
+    | '/dashboard/announcements/manage'
     | '/dashboard/attendance/checkin'
     | '/dashboard/attendance/holidays'
     | '/dashboard/attendance/rosters'
@@ -2638,6 +2649,7 @@ export interface FileRouteTypes {
     | '/dashboard/analytics/ai-insights'
     | '/dashboard/analytics/reports'
     | '/dashboard/announcements/$id'
+    | '/dashboard/announcements/manage'
     | '/dashboard/attendance/checkin'
     | '/dashboard/attendance/holidays'
     | '/dashboard/attendance/rosters'
@@ -2878,6 +2890,7 @@ export interface FileRouteTypes {
     | '/dashboard/analytics/ai-insights'
     | '/dashboard/analytics/reports'
     | '/dashboard/announcements/$id'
+    | '/dashboard/announcements/manage'
     | '/dashboard/attendance/checkin'
     | '/dashboard/attendance/holidays'
     | '/dashboard/attendance/rosters'
@@ -4392,6 +4405,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAttendanceCheckinRouteImport
       parentRoute: typeof DashboardAttendanceRoute
     }
+    '/dashboard/announcements/manage': {
+      id: '/dashboard/announcements/manage'
+      path: '/manage'
+      fullPath: '/dashboard/announcements/manage'
+      preLoaderRoute: typeof DashboardAnnouncementsManageRouteImport
+      parentRoute: typeof DashboardAnnouncementsRoute
+    }
     '/dashboard/announcements/$id': {
       id: '/dashboard/announcements/$id'
       path: '/$id'
@@ -4844,11 +4864,13 @@ const DashboardAnalyticsRouteWithChildren =
 
 interface DashboardAnnouncementsRouteChildren {
   DashboardAnnouncementsIdRoute: typeof DashboardAnnouncementsIdRoute
+  DashboardAnnouncementsManageRoute: typeof DashboardAnnouncementsManageRoute
 }
 
 const DashboardAnnouncementsRouteChildren: DashboardAnnouncementsRouteChildren =
   {
     DashboardAnnouncementsIdRoute: DashboardAnnouncementsIdRoute,
+    DashboardAnnouncementsManageRoute: DashboardAnnouncementsManageRoute,
   }
 
 const DashboardAnnouncementsRouteWithChildren =
