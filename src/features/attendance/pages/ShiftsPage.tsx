@@ -559,7 +559,7 @@ function ShiftsPage() {
                         {s.startTime} – {s.endTime}
                       </div>
                       <span className="text-[10px] text-muted-foreground font-medium">
-                        {s.workHours}h total shift
+                        {s.workHours != null ? `${s.workHours}h total shift` : "—"}
                       </span>
                     </div>
                   </div>

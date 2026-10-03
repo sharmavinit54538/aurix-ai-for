@@ -63,7 +63,7 @@ function Page() {
     if (backendKpis && backendKpis.length > 0) {
       return backendKpis.map((k: any) => ({
         label: k.label,
-        value: `${k.score}`,
+        value: k.score != null ? `${k.score}` : "—",
         trend: k.trend,
         hint: k.hint,
         icon: k.icon && ICON_MAP[k.icon] ? ICON_MAP[k.icon] : Brain,
@@ -235,7 +235,7 @@ function Page() {
       title="Workforce intelligence, predicted in real time"
       description="Track workforce health, predict attrition and forecast headcount across every department."
       lastAnalysis={
-        summary?.lastAnalysis ?? (lastUpdated ? "Live DB Sync" : "Live DB Sync")
+        summary?.lastAnalysis || "Not available"
       }
       kpis={kpis}
       charts={charts}

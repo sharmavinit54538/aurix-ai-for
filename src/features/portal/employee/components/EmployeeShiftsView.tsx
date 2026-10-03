@@ -517,7 +517,7 @@ export function EmployeeShiftsView({ employeeId }: EmployeeShiftsViewProps) {
                             <Coffee className="h-3 w-3" /> Break: {item.breakDuration}
                           </span>
                           <span>•</span>
-                          <span>Working Hours: {item.workingHours}h</span>
+                          <span>Working Hours: {item.workingHours != null ? `${item.workingHours}h` : "—"}</span>
                         </div>
                       </div>
                     </div>

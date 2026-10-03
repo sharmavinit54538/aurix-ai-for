@@ -56,8 +56,10 @@ function Page() {
       return backendKpis.map((k) => ({
         label: k.label,
         value:
-          typeof k.score === "number" &&
-          (k.label.includes("Score") || k.label.includes("Readiness"))
+          k.score == null
+            ? "—"
+            : typeof k.score === "number" &&
+              (k.label.includes("Score") || k.label.includes("Readiness"))
             ? `${k.score}%`
             : `${k.score}`,
         trend: k.trend,
@@ -195,7 +197,7 @@ function Page() {
       title="Stay audit-ready, automatically"
       description="Monitor labor law compliance, missing documents, risk and audit readiness."
       lastAnalysis={
-        summary?.lastAnalysis ?? (lastUpdated ? "Live DB Sync" : "Live DB Sync")
+        summary?.lastAnalysis || "Not available"
       }
       kpis={kpis}
       charts={charts}

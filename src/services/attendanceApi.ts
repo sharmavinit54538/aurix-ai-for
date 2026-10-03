@@ -166,7 +166,7 @@ export interface Shift {
   code: string;
   startTime: string; // e.g. "09:00"
   endTime: string;   // e.g. "18:00"
-  workHours: number; // e.g. 9
+  workHours: number | null; // e.g. 9 or null if not provided
   gracePeriodMinutes: number; // e.g. 15
   breakDurationMinutes: number; // e.g. 60
   nightShift: boolean;
@@ -211,7 +211,7 @@ export interface RosterEntryRecord {
   shift: "Morning" | "Evening" | "Night" | "Off Day" | "Leave" | "Holiday" | "Training" | "WFH" | "Overtime";
   startTime: string;
   endTime: string;
-  workingHours: number;
+  workingHours: number | null;
   breakTime: string;
   location: string;
   manager: string;
@@ -1252,7 +1252,7 @@ export const attendanceApi = {
       code: item.code || item.shift_code || "SHIFT",
       startTime: item.start_time || item.startTime || "09:00",
       endTime: item.end_time || item.endTime || "18:00",
-      workHours: Number(item.work_hours ?? item.workHours ?? 9),
+      workHours: item.work_hours != null ? Number(item.work_hours) : (item.workHours != null ? Number(item.workHours) : null),
       gracePeriodMinutes: Number(item.grace_period_minutes ?? item.gracePeriodMinutes ?? 15),
       breakDurationMinutes: Number(item.break_duration_minutes ?? item.breakDurationMinutes ?? 60),
       nightShift: Boolean(item.night_shift ?? item.nightShift ?? false),
@@ -1294,7 +1294,7 @@ export const attendanceApi = {
       code: item.code || data.code,
       startTime: item.start_time || data.startTime,
       endTime: item.end_time || data.endTime,
-      workHours: Number(item.work_hours || 9),
+      workHours: item.work_hours != null ? Number(item.work_hours) : null,
       gracePeriodMinutes: Number(item.grace_period_minutes || data.gracePeriodMinutes),
       breakDurationMinutes: Number(item.break_duration_minutes || data.breakDurationMinutes),
       nightShift: Boolean(item.night_shift ?? data.nightShift),
@@ -1334,7 +1334,7 @@ export const attendanceApi = {
       code: item.code || data.code || "",
       startTime: item.start_time || data.startTime || "",
       endTime: item.end_time || data.endTime || "",
-      workHours: Number(item.work_hours || 9),
+      workHours: item.work_hours != null ? Number(item.work_hours) : null,
       gracePeriodMinutes: Number(item.grace_period_minutes || data.gracePeriodMinutes || 15),
       breakDurationMinutes: Number(item.break_duration_minutes || data.breakDurationMinutes || 60),
       nightShift: Boolean(item.night_shift ?? data.nightShift),
@@ -1405,7 +1405,7 @@ export const attendanceApi = {
       shift: item.shift || "Morning",
       startTime: item.start_time || item.startTime || "08:00",
       endTime: item.end_time || item.endTime || "16:00",
-      workingHours: Number(item.working_hours ?? item.workingHours ?? 8),
+      workingHours: item.working_hours != null ? Number(item.working_hours) : (item.workingHours != null ? Number(item.workingHours) : null),
       breakTime: item.break_time || item.breakTime || "45 mins",
       location: item.location || "Office",
       manager: item.manager || item.manager_name || "Manager",
@@ -1446,7 +1446,7 @@ export const attendanceApi = {
       shift: item.shift || data.shift as any,
       startTime: item.start_time || data.startTime,
       endTime: item.end_time || data.endTime,
-      workingHours: Number(item.working_hours ?? data.workingHours),
+      workingHours: item.working_hours != null ? Number(item.working_hours) : (data.workingHours != null ? Number(data.workingHours) : null),
       breakTime: item.break_time || data.breakTime,
       location: item.location || data.location,
       manager: item.manager || data.manager,
@@ -1486,7 +1486,7 @@ export const attendanceApi = {
       shift: item.shift || data.shift as any || "Morning",
       startTime: item.start_time || data.startTime || "",
       endTime: item.end_time || data.endTime || "",
-      workingHours: Number(item.working_hours ?? data.workingHours ?? 8),
+      workingHours: item.working_hours != null ? Number(item.working_hours) : (data.workingHours != null ? Number(data.workingHours) : null),
       breakTime: item.break_time || data.breakTime || "",
       location: item.location || data.location || "",
       manager: item.manager || data.manager || "",
