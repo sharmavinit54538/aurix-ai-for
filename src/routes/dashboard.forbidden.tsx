@@ -3,6 +3,7 @@ import { ShieldAlert, ArrowLeft, Home, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAurix } from "@/lib/aurix-store";
 import { getRoleDefaultHome } from "@/lib/route-guards";
+import { normalizeRole } from "@/lib/roles";
 
 export const Route = (createFileRoute as any)("/dashboard/forbidden")({
   head: () => ({
@@ -13,7 +14,7 @@ export const Route = (createFileRoute as any)("/dashboard/forbidden")({
 
 function DashboardForbiddenPage() {
   const ws = useAurix();
-  const role = ws.user?.role || "employee";
+  const role = normalizeRole(ws.user?.role) || "employee";
   const homePath = getRoleDefaultHome(role);
 
   return (

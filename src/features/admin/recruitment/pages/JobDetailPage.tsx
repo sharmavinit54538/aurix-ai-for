@@ -226,7 +226,7 @@ export function JobDetailPage() {
         setJob(draft);
         setEditing(false);
       } catch (err: any) {
-        alert("Failed to save job changes: " + (err.message || err));
+        toast.error("Failed to save job changes: " + (err.message || err));
       }
     }
   }
