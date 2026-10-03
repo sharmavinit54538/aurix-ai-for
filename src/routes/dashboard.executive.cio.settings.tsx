@@ -1,12 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
-
-const CioSettingsPage = lazyFeaturePage(
-  () => import("@/features/cio/pages/CioSettingsPage"),
-  "CioSettingsPage"
-);
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/executive/cio/settings")({
-  head: () => ({ meta: [{ title: "Enterprise IT Settings — CIO Portal" }] }),
-  component: CioSettingsPage,
+  beforeLoad: () => {
+    throw redirect({ to: "/dashboard/executive/cio" });
+  },
+  component: () => null,
 });

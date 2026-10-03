@@ -344,20 +344,19 @@ const SUPER_ADMIN_NAV_SECTIONS: SidebarNavSection[] = [
   },
 ];
 
-// TODO: Merging separate executive (CEO/CTO/CIO) nav sections into a single unified navigation structure is a product decision. Preserved unified executive navigation for 'executive' role.
+// F-08: Consolidated executive navigation pointing to real role command centers wired to executiveApi
 const EXECUTIVE_NAV_SECTIONS: SidebarNavSection[] = [
   {
-    title: "EXECUTIVE DASHBOARD",
+    title: "EXECUTIVE COMMAND CENTER",
     items: [
-      { to: "/dashboard/executive", label: "Overview", icon: Home, exact: true },
-      { to: "/dashboard/executive/ceo/business", label: "Business", icon: TrendingUp },
-      { to: "/dashboard/executive/ceo/finance", label: "Finance", icon: HandCoins },
-      { to: "/dashboard/executive/ceo/organization", label: "Organization", icon: Users },
-      { to: "/dashboard/executive/ceo/reports", label: "Reports", icon: LineChartIcon },
-      { to: "/dashboard/executive/cio/it-operations", label: "Technology Operations", icon: Laptop },
-      { to: "/dashboard/executive/cto/engineering", label: "Engineering", icon: Wrench },
-      { to: "/dashboard/executive/cto/security", label: "Security", icon: Lock },
-      { to: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
+      { to: "/dashboard/executive", label: "Executive Overview", icon: Home, exact: true },
+      { to: "/dashboard/executive/ceo", label: "CEO Portal", icon: TrendingUp },
+      { to: "/dashboard/executive/cfo", label: "CFO Finance", icon: HandCoins },
+      { to: "/dashboard/executive/coo", label: "COO Operations", icon: Users },
+      { to: "/dashboard/executive/cto", label: "CTO Technology", icon: Wrench },
+      { to: "/dashboard/executive/cio", label: "CIO IT Systems", icon: Laptop },
+      { to: "/dashboard/executive/cmo", label: "CMO Marketing", icon: Sparkles },
+      { to: "/dashboard/analytics", label: "Analytics & Reports", icon: BarChart3 },
     ],
   },
 ];

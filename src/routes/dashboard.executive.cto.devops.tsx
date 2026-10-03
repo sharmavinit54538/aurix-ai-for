@@ -1,12 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
-
-const CtoDevOpsPage = lazyFeaturePage(
-  () => import("@/features/cto/pages/CtoDevOpsPage"),
-  "CtoDevOpsPage"
-);
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/executive/cto/devops")({
-  head: () => ({ meta: [{ title: "DevOps & CI/CD Hub — OFC360 CTO" }] }),
-  component: CtoDevOpsPage,
+  beforeLoad: () => {
+    throw redirect({ to: "/dashboard/executive/cto" });
+  },
+  component: () => null,
 });

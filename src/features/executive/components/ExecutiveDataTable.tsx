@@ -23,7 +23,7 @@ export interface ExecutiveDataTableProps {
   rows: ExecutiveTableRow[];
 }
 
-export function ExecutiveDataTable({ title, description, headers, rows }: ExecutiveDataTableProps) {
+export function ExecutiveDataTable({ title, description, headers = [], rows = [] }: ExecutiveDataTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortKey, setSortKey] = useState<string>("name");

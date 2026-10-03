@@ -109,5 +109,6 @@
   "/api/v1/assets/{param}",
   "/api/v1/assets/analytics",
   "/api/v1/assets/{param}/assign",
-  "/api/v1/assets/{param}/return"
+  "/api/v1/assets/{param}/return",
+  "/api/v2/executive/overview"
 ]

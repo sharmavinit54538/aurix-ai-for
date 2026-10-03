@@ -56,9 +56,9 @@
 | **F-07.4** | DONE | `src/pages/DocumentGeneratorPage.tsx` | `RealHrmsApisAndPages.test.tsx` | Replaced hardcoded "Aanya Sharma" / "Senior Engineer" defaults with active employee selector and real POST /api/v1/documents/generate integration |
 | **F-07.5** | DONE | `src/pages/OnboardingPage.tsx` | `npm run check:contract` | Replaced 34-line synthetic fallback array with real data from onboarding API and actual personnel records |
 | **F-07.6** | DONE | `src/features/hrms/__tests__/RealHrmsApisAndPages.test.tsx` | 11 unit/integration tests passing | Comprehensive tests covering mappers, API calls, role gating, UI renders, and mutation handlers |
-| **F-08.1** | TODO | None | None | Executive dashboards wired to GET /api/v2/executive/overview |
-| **F-08.2** | TODO | None | None | Remove unsourced tiles, clean up sidebar, docs/EXEC_PAGES_STATUS.md |
-| **F-08.3** | TODO | None | None | Remove any[] placeholders and empty settings stubs |
+| **F-08.1** | DONE | `src/services/executiveApi.ts`, `src/features/executive/components/ExecutiveRoleDashboardView.tsx` | `src/features/executive/__tests__/ExecutiveDashboardWiring.test.tsx` | Wired executive dashboards to real GET /api/v2/executive/overview?role=… contract, filtering out unsourced metrics and rendering 12-month real time series |
+| **F-08.2** | DONE | `src/components/aurix/DashboardShell.tsx`, `docs/EXEC_PAGES_STATUS.md`, `src/routes/dashboard.executive.*.tsx` | `npm run check:contract`, `npm run typecheck` | Removed unsourced placeholder tiles and redirected 27 mock sub-routes to canonical command centers; documented all kept/removed routes in docs/EXEC_PAGES_STATUS.md |
+| **F-08.3** | DONE | `src/routes/dashboard.executive.{ceo,cto,cio}.settings.tsx`, `src/features/executive/components/ExecutiveRoleDashboardView.tsx`, `src/features/executive/components/ExecutiveDataTable.tsx` | `npm run typecheck` | Eliminated any[] empty mock placeholders and redirected duplicate settings stubs to canonical role indexes |
 | **F-09.1** | TODO | None | None | Consolidate duplicate routes to canonical URLs, regenerate routeTree |
 | **F-09.2** | TODO | None | None | Code-split settings area into sub-routes |
 | **F-09.3** | TODO | None | None | Remove unused services, thunks, and duplicate API wrappers |
