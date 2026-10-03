@@ -1,6 +1,7 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { filterNavTree } from "../sidebarSelectors";
 import { sidebarApi, DEFAULT_ROLE_PERMISSIONS } from "@/services/sidebarApi";
+import apiInstance from "@/api/apiInstance";
 import type { SidebarNavSection } from "../sidebarTypes";
 
 describe("Sidebar Navigation & HR Admin Access", () => {
@@ -105,6 +106,7 @@ describe("Sidebar Navigation & HR Admin Access", () => {
   });
 
   it("sidebarApi.getPermissions returns default permissions for hr_admin upon network/backend fallback", async () => {
+    vi.spyOn(apiInstance, "get").mockRejectedValueOnce(new Error("Backend route not available"));
     const res = await sidebarApi.getPermissions("hr_admin");
     expect(res.role).toBe("hr_admin");
     expect(res.permissions).toContain("overview.view");
