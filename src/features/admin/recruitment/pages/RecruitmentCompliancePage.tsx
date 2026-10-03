@@ -14,66 +14,34 @@ const COLORS = ["oklch(0.65 0.22 285)", "oklch(0.7 0.18 200)", "oklch(0.74 0.16 
 export function RecruitmentCompliancePage() {
   const candidates = useRecruitment((s) => s.candidates);
 
-  // Persistent privacy controls state
-  const [controls, setControls] = useState(() => {
-    if (typeof window !== "undefined") {
-      const raw = window.localStorage.getItem("aurix.compliance.controls");
-      if (raw) {
-        try {
-          return JSON.parse(raw);
-        } catch {
-          // ignore
-        }
-      }
-    }
-    return {
-      gdprConsent: true,
-      eeoSelfId: true,
-      ofccp: true,
-      anonymize: true,
-      blindReview: false,
-      dsar: true,
-    };
+  // Privacy controls state (in-memory)
+  const [controls, setControls] = useState({
+    gdprConsent: true,
+    eeoSelfId: true,
+    ofccp: true,
+    anonymize: true,
+    blindReview: false,
+    dsar: true,
   });
 
-  // Persistent compliance checklist state
-  const [checklist, setChecklist] = useState(() => {
-    if (typeof window !== "undefined") {
-      const raw = window.localStorage.getItem("aurix.compliance.checklist");
-      if (raw) {
-        try {
-          return JSON.parse(raw);
-        } catch {
-          // ignore
-        }
-      }
-    }
-    return {
-      eeo1: true,
-      dpa: true,
-      retention: true,
-      ccpa: true,
-      pentest: false,
-      soc2: true,
-    };
+  // Compliance checklist state (in-memory)
+  const [checklist, setChecklist] = useState({
+    eeo1: true,
+    dpa: true,
+    retention: true,
+    ccpa: true,
+    pentest: false,
+    soc2: true,
   });
 
   const updateControl = (key: keyof typeof controls, val: boolean) => {
-    const next = { ...controls, [key]: val };
-    setControls(next);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem("aurix.compliance.controls", JSON.stringify(next));
-    }
-    toast.success("Privacy control updated successfully!");
+    setControls((prev) => ({ ...prev, [key]: val }));
+    toast.success("Privacy control setting updated.");
   };
 
   const toggleChecklist = (key: keyof typeof checklist) => {
-    const next = { ...checklist, [key]: !checklist[key] };
-    setChecklist(next);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem("aurix.compliance.checklist", JSON.stringify(next));
-    }
-    toast.success("Compliance checklist item updated!");
+    setChecklist((prev) => ({ ...prev, [key]: !prev[key] }));
+    toast.success("Compliance checklist item updated.");
   };
 
   // Dynamically calculate EEO and diversity statistics based on registered candidates pool

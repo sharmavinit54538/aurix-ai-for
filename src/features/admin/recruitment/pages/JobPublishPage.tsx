@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRecruitment } from "@/features/admin/recruitment/hooks/useRecruitment";
 import { api } from "@/api";
+import { recruitmentApi } from "@/services/recruitmentApi";
+import { toast } from "sonner";
 
 const PLATFORMS = [
   { key: "linkedin", label: "LinkedIn Jobs", desc: "Reach active professionals worldwide", icon: "in" },
@@ -36,6 +38,7 @@ export function JobPublishPage() {
   const [appMethod, setAppMethod] = useState<string>("Easy Apply");
   const [expiryDate, setExpiryDate] = useState<string>("");
   const [publishing, setPublishing] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
 
   useEffect(() => {
     if (job) {
@@ -58,13 +61,29 @@ export function JobPublishPage() {
     );
   }
 
-  function handlePublish() {
+  async function handlePublish() {
     setPublishing(true);
-    // Simulate API connection & publishing latency
-    setTimeout(() => {
+    setPublishError(null);
+    try {
+      await recruitmentApi.publishJob(jobId, {
+        platform,
+        salary_visible: salaryVisible,
+        remote_option: remoteOption,
+        employment_type: empType,
+        skills: skills.split(",").map((s) => s.trim()).filter(Boolean),
+        category,
+        application_method: appMethod,
+        expiry_date: expiryDate || undefined,
+      });
+      toast.success("Job published successfully!");
       setStep(4);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to publish job. Please try again.";
+      setPublishError(message);
+      toast.error(message);
+    } finally {
       setPublishing(false);
-    }, 2000);
+    }
   }
 
   return (

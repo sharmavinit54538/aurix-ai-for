@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import {
-  Mail, Send, CheckCircle2, Eye, Copy
+  Mail, Send, CheckCircle2, Eye, Copy, AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,22 +40,7 @@ const TEMPLATE_TYPES = [
 
 export function CandidateCommunicationPage() {
   const { candidates, jobs } = useRecruitment();
-
-  // Load user-created messages from localStorage (no mock/seed data)
-  const [messages, setMessages] = useState<CommMessage[]>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem("aurix:comm_messages");
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed)) return parsed;
-        }
-      } catch {
-        /* ignore */
-      }
-    }
-    return [];
-  });
+  const [messages] = useState<CommMessage[]>([]);
 
   const [activeTemplateType, setActiveTemplateType] = useState<string>("");
   const [selectedChannel, setSelectedChannel] = useState<"Email" | "WhatsApp" | "SMS">("Email");
@@ -83,7 +68,6 @@ export function CandidateCommunicationPage() {
 
   const handleTemplateSelect = (type: string) => {
     setActiveTemplateType(type);
-    // Templates start empty — user fills in subject/body
     setComposerSubject("");
     setComposerBody("");
   };
@@ -104,38 +88,7 @@ export function CandidateCommunicationPage() {
     .replace(/\{\{meeting_link\}\}/g, "");
 
   const handleSendMessage = () => {
-    if (!selectedCandidate) {
-      toast.error("Please select a candidate first.");
-      return;
-    }
-    if (!composerBody.trim()) {
-      toast.error("Please write a message body before sending.");
-      return;
-    }
-
-    const newMsg: CommMessage = {
-      id: `msg-${Date.now()}`,
-      recipientName: selectedCandidate.name || "",
-      recipientContact:
-        selectedChannel === "Email"
-          ? selectedCandidate.email || ""
-          : selectedCandidate.phone || "",
-      templateType: activeTemplateType || "Custom",
-      channel: selectedChannel,
-      subject: previewSubject,
-      body: previewBody,
-      status: "Delivered",
-      sentAt: new Date().toLocaleString(),
-    };
-
-    const updated = [newMsg, ...messages];
-    setMessages(updated);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("aurix:comm_messages", JSON.stringify(updated));
-    }
-    toast.success(
-      `Message dispatched via ${selectedChannel} to ${selectedCandidate.name}!`,
-    );
+    toast.error("Candidate communication dispatch service is currently unavailable in the backend API.");
   };
 
   const filteredMessages = useMemo(() => {
@@ -145,6 +98,15 @@ export function CandidateCommunicationPage() {
 
   return (
     <div className="space-y-6">
+      <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-700 dark:text-amber-300 flex items-start gap-3">
+        <AlertCircle className="h-5 w-5 shrink-0 mt-0.5 text-amber-500" />
+        <div>
+          <h4 className="font-semibold">Candidate Communication Gateway Unavailable</h4>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Outbound transactional dispatch (Email, WhatsApp, SMS) is not supported by the current backend API contract. Message composer is in preview mode only.
+          </p>
+        </div>
+      </div>
 
       {/* Main Composer & Live Preview Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -245,12 +207,13 @@ export function CandidateCommunicationPage() {
 
             <div className="pt-2 flex justify-end">
               <Button
-                disabled={!selectedCandidate || !composerBody.trim()}
+                disabled={true}
                 onClick={handleSendMessage}
-                className="bg-gradient-brand text-brand-foreground shadow-glow gap-1.5 text-xs disabled:opacity-50"
+                variant="secondary"
+                className="gap-1.5 text-xs opacity-75 cursor-not-allowed"
               >
                 <Send className="h-3.5 w-3.5" />
-                Dispatch via {selectedChannel}
+                Dispatch Unavailable (Backend Integration Pending)
               </Button>
             </div>
           </div>
@@ -372,9 +335,9 @@ export function CandidateCommunicationPage() {
               {filteredMessages.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
-                    <p className="font-medium text-xs">No dispatched messages yet</p>
+                    <p className="font-medium text-xs">No dispatched messages</p>
                     <p className="text-[11px] mt-0.5 text-muted-foreground/80">
-                      Use the composer above to send messages to candidates.
+                      Outbound communication gateway is not connected. No server delivery logs are available.
                     </p>
                   </td>
                 </tr>

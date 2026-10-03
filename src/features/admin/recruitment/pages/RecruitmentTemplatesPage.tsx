@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import {
   Copy,
   Mail,
@@ -13,6 +13,7 @@ import {
   Eye,
   Edit3,
   Send,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,8 +84,6 @@ const CATEGORY_CONFIG: Record<TemplateCategory, CategoryConfig> = {
   },
 };
 
-const LOCAL_STORAGE_KEY = "aurix.recruitment.templates";
-
 const MERGE_TAGS = [
   { tag: "{{candidate.first_name}}", label: "First Name" },
   { tag: "{{candidate.last_name}}", label: "Last Name" },
@@ -98,54 +97,7 @@ const MERGE_TAGS = [
 ];
 
 export function RecruitmentTemplatesPage() {
-  const [items, setItems] = useState<Template[]>(() => {
-    if (typeof window !== "undefined") {
-      const raw = window.localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (raw) {
-        try {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed)) {
-            // Filter out any mock/seed templates and 'New Template' placeholders
-            return parsed.filter(
-              (item) =>
-                !item.id?.startsWith("t_") &&
-                !item.id?.startsWith("tmpl_") &&
-                item.name !== "New Template"
-            );
-          }
-        } catch {
-          // ignore error
-        }
-      }
-    }
-    return [];
-  });
-
-  // Permanently purge any old mock data from browser localStorage on load
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const raw = window.localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (raw) {
-        try {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed)) {
-            const cleanTemplates = parsed.filter(
-              (item) =>
-                !item.id?.startsWith("t_") &&
-                !item.id?.startsWith("tmpl_") &&
-                item.name !== "New Template"
-            );
-            window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cleanTemplates));
-            setItems(cleanTemplates);
-          }
-        } catch {
-          window.localStorage.removeItem(LOCAL_STORAGE_KEY);
-          setItems([]);
-        }
-      }
-    }
-  }, []);
-
+  const [items, setItems] = useState<Template[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"edit" | "preview">("edit");
   const [testEmailRecipient, setTestEmailRecipient] = useState("candidate@example.com");
@@ -154,9 +106,6 @@ export function RecruitmentTemplatesPage() {
 
   const saveItems = (newItems: Template[]) => {
     setItems(newItems);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newItems));
-    }
   };
 
   const currentTemplate = items.find((t) => t.id === selectedId) || null;
@@ -177,7 +126,7 @@ export function RecruitmentTemplatesPage() {
     const next = [newT, ...items];
     saveItems(next);
     setSelectedId(newTId);
-    toast.success("Template duplicated successfully!");
+    toast.success("Draft duplicated in memory.");
   };
 
   const handleDelete = (idToDelete: string) => {
@@ -222,11 +171,7 @@ export function RecruitmentTemplatesPage() {
   };
 
   const handleSendTestEmail = () => {
-    if (!testEmailRecipient) {
-      toast.error("Please provide a valid recipient email.");
-      return;
-    }
-    toast.success(`Test email dispatched to ${testEmailRecipient}!`);
+    toast.error("Test email dispatch service is currently unavailable in the backend API.");
   };
 
   const resolvePreviewContent = (template: Template) => {
@@ -255,6 +200,15 @@ export function RecruitmentTemplatesPage() {
 
   return (
     <div className="space-y-6">
+      <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-700 dark:text-amber-300 flex items-start gap-3">
+        <AlertCircle className="h-5 w-5 shrink-0 mt-0.5 text-amber-500" />
+        <div>
+          <h4 className="font-semibold">Recruitment Templates Storage & Dispatch Unavailable</h4>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Recruitment template persistence and email test dispatch endpoints are not supported in the current backend contract. Templates in this session are in-memory drafts.
+          </p>
+        </div>
+      </div>
       {/* ── 1. SETTINGS CARD GRID VIEW ──────────────────────────────── */}
       {!selectedId ? (
         <div className="space-y-6">
@@ -554,9 +508,10 @@ export function RecruitmentTemplatesPage() {
                         onChange={(e) => setTestEmailRecipient(e.target.value)}
                         placeholder="test@company.com"
                         className="text-xs h-8"
+                        disabled
                       />
-                      <Button size="sm" variant="outline" className="h-8 shrink-0" onClick={handleSendTestEmail}>
-                        <Send className="mr-1 h-3 w-3" /> Test
+                      <Button size="sm" variant="secondary" className="h-8 shrink-0 text-xs" disabled onClick={handleSendTestEmail}>
+                        <Send className="mr-1 h-3 w-3" /> Unavailable
                       </Button>
                     </div>
                   </div>
@@ -594,8 +549,8 @@ export function RecruitmentTemplatesPage() {
                   <Button variant="outline" onClick={() => setViewMode("edit")}>
                     <Edit3 className="mr-1.5 h-4 w-4" /> Back to Edit
                   </Button>
-                  <Button onClick={handleSendTestEmail}>
-                    <Send className="mr-1.5 h-4 w-4" /> Send Test Email
+                  <Button disabled variant="secondary" onClick={handleSendTestEmail}>
+                    <Send className="mr-1.5 h-4 w-4" /> Send Unavailable
                   </Button>
                 </div>
               </div>

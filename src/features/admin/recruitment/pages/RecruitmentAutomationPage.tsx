@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { automationApi } from "@/services/automationApi";
 
 interface WorkflowStep {
   id: string;
@@ -51,78 +52,11 @@ interface ExecutionLog {
   status: "Success" | "Delivered" | "Pending" | "Failed";
 }
 
-const LOCAL_STORAGE_KEY = "aurix.recruitment.workflows";
-const LOGS_LOCAL_STORAGE_KEY = "aurix.recruitment.workflow_logs";
-
 export function RecruitmentAutomationPage() {
-  const [workflows, setWorkflows] = useState<WorkflowRule[]>(() => {
-    if (typeof window !== "undefined") {
-      const raw = window.localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (raw) {
-        try {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed)) {
-            // Filter out any old mock workflows (wf-1 to wf-5)
-            return parsed.filter(
-              (w) => !w.id?.startsWith("wf-1") &&
-                     !w.id?.startsWith("wf-2") &&
-                     !w.id?.startsWith("wf-3") &&
-                     !w.id?.startsWith("wf-4") &&
-                     !w.id?.startsWith("wf-5")
-            );
-          }
-        } catch {
-          // ignore error
-        }
-      }
-    }
-    return [];
-  });
-
-  const [logs, setLogs] = useState<ExecutionLog[]>(() => {
-    if (typeof window !== "undefined") {
-      const raw = window.localStorage.getItem(LOGS_LOCAL_STORAGE_KEY);
-      if (raw) {
-        try {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed)) return parsed;
-        } catch {
-          // ignore error
-        }
-      }
-    }
-    return [];
-  });
-
-  // Permanently purge any old mock data from browser localStorage on load
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const raw = window.localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (raw) {
-        try {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed)) {
-            const cleanWorkflows = parsed.filter(
-              (w) => !w.id?.startsWith("wf-1") &&
-                     !w.id?.startsWith("wf-2") &&
-                     !w.id?.startsWith("wf-3") &&
-                     !w.id?.startsWith("wf-4") &&
-                     !w.id?.startsWith("wf-5")
-            );
-            window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cleanWorkflows));
-            setWorkflows(cleanWorkflows);
-          }
-        } catch {
-          window.localStorage.removeItem(LOCAL_STORAGE_KEY);
-          setWorkflows([]);
-        }
-      }
-    }
-  }, []);
-
-  const [activeWorkflowId, setActiveWorkflowId] = useState<string | null>(() => {
-    return workflows[0]?.id || null;
-  });
+  const [workflows, setWorkflows] = useState<WorkflowRule[]>([]);
+  const [logs, setLogs] = useState<ExecutionLog[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [activeWorkflowId, setActiveWorkflowId] = useState<string | null>(null);
   const [showBuilderModal, setShowBuilderModal] = useState(false);
 
   // New Workflow Form
@@ -130,83 +64,125 @@ export function RecruitmentAutomationPage() {
   const [newWorkflowTrigger, setNewWorkflowTrigger] = useState("Candidate applied");
   const [newWorkflowAction, setNewWorkflowAction] = useState("Send automated email");
 
+  const loadRules = async () => {
+    setLoading(true);
+    try {
+      const data = await automationApi.getAutomationRules();
+      if (Array.isArray(data)) {
+        const mapped: WorkflowRule[] = data.map((r: any, idx: number) => ({
+          id: String(r.id || `wf-${idx}`),
+          name: r.name || `Rule #${idx + 1}`,
+          description: r.description || "Automation rule",
+          enabled: Boolean(r.enabled ?? r.is_active ?? true),
+          totalRuns: Number(r.total_runs || r.runs_count || 0),
+          lastTriggered: r.last_triggered || "Never",
+          triggerEvent: r.trigger_event || "System Event",
+          steps: Array.isArray(r.steps) ? r.steps : [
+            { id: `st-${idx}-1`, type: "trigger", title: `Trigger: ${r.trigger_event || "Event"}`, detail: "Triggered on event", category: "System" },
+            { id: `st-${idx}-2`, type: "action", title: `Action: Automated Pipeline Step`, detail: "Dispatched automatically", category: "Notification" },
+          ],
+        }));
+        setWorkflows(mapped);
+        if (mapped.length > 0 && !activeWorkflowId) {
+          setActiveWorkflowId(mapped[0].id);
+        }
+      }
+    } catch {
+      // Backend empty or initial state
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadRules();
+  }, []);
+
   // Keep activeWorkflow valid
   const activeWorkflow = workflows.find((w) => w.id === activeWorkflowId) || workflows[0] || null;
 
-  const saveWorkflows = (updated: WorkflowRule[]) => {
-    setWorkflows(updated);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
+  const handleToggleWorkflow = async (id: string) => {
+    try {
+      await automationApi.toggleAutomationRule(id);
+      setWorkflows((prev) => prev.map((w) => (w.id === id ? { ...w, enabled: !w.enabled } : w)));
+      toast.success("Workflow rule status toggled!");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to toggle workflow rule";
+      toast.error(msg);
     }
-  };
-
-  const saveLogs = (updatedLogs: ExecutionLog[]) => {
-    setLogs(updatedLogs);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(LOGS_LOCAL_STORAGE_KEY, JSON.stringify(updatedLogs));
-    }
-  };
-
-  const handleToggleWorkflow = (id: string) => {
-    const updated = workflows.map((w) => (w.id === id ? { ...w, enabled: !w.enabled } : w));
-    saveWorkflows(updated);
-    toast.success("Workflow status updated!");
   };
 
   const handleDeleteWorkflow = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     const updated = workflows.filter((w) => w.id !== id);
-    saveWorkflows(updated);
+    setWorkflows(updated);
     if (activeWorkflowId === id) {
       setActiveWorkflowId(updated[0]?.id || null);
     }
-    toast.success("Workflow rule permanently deleted!");
+    toast.success("Workflow rule removed from session view.");
   };
 
-  const handleCreateWorkflow = (e: React.FormEvent) => {
+  const handleCreateWorkflow = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newWorkflowName.trim()) return;
 
-    const newWf: WorkflowRule = {
-      id: `wf-${Date.now()}`,
-      name: newWorkflowName,
-      description: `Automated trigger on ${newWorkflowTrigger}.`,
-      enabled: true,
-      totalRuns: 0,
-      lastTriggered: "Never",
-      triggerEvent: newWorkflowTrigger,
-      steps: [
-        { id: `st-${Date.now()}-1`, type: "trigger", title: `Trigger: ${newWorkflowTrigger}`, detail: "Initiated automatically by recruitment events", category: "System" },
-        { id: `st-${Date.now()}-2`, type: "action", title: `Action: ${newWorkflowAction}`, detail: "Dispatched without manual intervention", category: "Notification" },
-      ],
-    };
+    try {
+      const payload = {
+        name: newWorkflowName,
+        description: `Automated trigger on ${newWorkflowTrigger}.`,
+        trigger_event: newWorkflowTrigger,
+        action: newWorkflowAction,
+        enabled: true,
+      };
+      const created = await automationApi.createAutomationRule(payload);
+      const newWf: WorkflowRule = {
+        id: String(created.id || `wf-${Date.now()}`),
+        name: newWorkflowName,
+        description: `Automated trigger on ${newWorkflowTrigger}.`,
+        enabled: true,
+        totalRuns: 0,
+        lastTriggered: "Never",
+        triggerEvent: newWorkflowTrigger,
+        steps: [
+          { id: `st-${Date.now()}-1`, type: "trigger", title: `Trigger: ${newWorkflowTrigger}`, detail: "Initiated automatically by recruitment events", category: "System" },
+          { id: `st-${Date.now()}-2`, type: "action", title: `Action: ${newWorkflowAction}`, detail: "Dispatched without manual intervention", category: "Notification" },
+        ],
+      };
 
-    const updated = [newWf, ...workflows];
-    saveWorkflows(updated);
-    setActiveWorkflowId(newWf.id);
-    toast.success(`Workflow '${newWf.name}' created and activated!`);
-    setShowBuilderModal(false);
-    setNewWorkflowName("");
+      setWorkflows((prev) => [newWf, ...prev]);
+      setActiveWorkflowId(newWf.id);
+      toast.success(`Workflow '${newWf.name}' created and activated!`);
+      setShowBuilderModal(false);
+      setNewWorkflowName("");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to create workflow rule";
+      toast.error(msg);
+    }
   };
 
-  const handleTestRun = (wf: WorkflowRule) => {
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-    const dateStr = now.toISOString().split("T")[0];
+  const handleTestRun = async (wf: WorkflowRule) => {
+    try {
+      await automationApi.testAutomationRule(wf.id);
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      const dateStr = now.toISOString().split("T")[0];
 
-    const updatedWorkflows = workflows.map((w) =>
-      w.id === wf.id ? { ...w, totalRuns: w.totalRuns + 1, lastTriggered: "Just now" } : w
-    );
-    saveWorkflows(updatedWorkflows);
+      setWorkflows((prev) =>
+        prev.map((w) => (w.id === wf.id ? { ...w, totalRuns: w.totalRuns + 1, lastTriggered: "Just now" } : w))
+      );
 
-    const newLog: ExecutionLog = {
-      id: `log-${Date.now()}`,
-      timestamp: `${dateStr} ${timeStr}`,
-      message: `Simulated trigger for '${wf.name}' executed successfully`,
-      status: "Success",
-    };
-    saveLogs([newLog, ...logs.slice(0, 19)]);
-    toast.success(`Simulated test execution for '${wf.name}'!`);
+      const newLog: ExecutionLog = {
+        id: `log-${Date.now()}`,
+        timestamp: `${dateStr} ${timeStr}`,
+        message: `Test execution for '${wf.name}' dispatched successfully`,
+        status: "Success",
+      };
+      setLogs((prev) => [newLog, ...prev.slice(0, 19)]);
+      toast.success(`Test execution triggered for '${wf.name}'!`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to trigger test execution";
+      toast.error(msg);
+    }
   };
 
   const totalRunsAll = workflows.reduce((acc, w) => acc + w.totalRuns, 0);

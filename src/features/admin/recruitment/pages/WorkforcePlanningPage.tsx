@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import apiInstance from "@/api/apiInstance";
+import { recruitmentApi } from "@/services/recruitmentApi";
 import { useRecruitment } from "../hooks/useRecruitment";
 
 export interface WorkforceRequirement {
@@ -95,27 +96,43 @@ export function WorkforcePlanningPage() {
     };
   }, []);
 
-  const [requirements, setRequirements] = useState<WorkforceRequirement[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("ofc360:workforce_requirements");
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed)) {
-            // Purge mock records (WFR-101 to WFR-105)
-            const clean = parsed.filter(
-              (r: any) => !["WFR-101", "WFR-102", "WFR-103", "WFR-104", "WFR-105"].includes(r.id)
-            );
-            if (clean.length !== parsed.length) {
-              localStorage.setItem("ofc360:workforce_requirements", JSON.stringify(clean));
-            }
-            return clean;
-          }
-        } catch { /* ignore */ }
+  const [requirements, setRequirements] = useState<WorkforceRequirement[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadRequisitions() {
+      try {
+        const data = await recruitmentApi.getRequisitions();
+        const list = Array.isArray(data) ? data : data?.items || [];
+        if (mounted && Array.isArray(list)) {
+          const mapped: WorkforceRequirement[] = list.map((r: any, idx: number) => ({
+            id: String(r.id || `WFR-${idx + 100}`),
+            department: r.department || "Engineering",
+            roleTitle: r.title || r.role_title || "Role",
+            headcountNeeded: Number(r.headcount || r.headcount_needed || 1),
+            currentHeadcount: Number(r.current_headcount || 0),
+            plannedQuarter: r.planned_quarter || "Q2 2026",
+            priority: r.priority || "High",
+            budgetMin: Number(r.budget_min || 0),
+            budgetMax: Number(r.budget_max || 0),
+            currency: r.currency || "INR",
+            requiredSkills: Array.isArray(r.skills) ? r.skills : [],
+            experienceLevel: r.experience_level || "3-5 yrs",
+            justification: r.justification || r.reason || "",
+            status: r.status === "approved" ? "Approved" : r.status === "rejected" ? "Rejected" : "Submitted",
+            createdAt: r.created_at || new Date().toISOString().split("T")[0],
+          }));
+          setRequirements(mapped);
+        }
+      } catch {
+        // use initial empty state
       }
     }
-    return [];
-  });
+    loadRequisitions();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const [filterDept, setFilterDept] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
@@ -138,61 +155,81 @@ export function WorkforcePlanningPage() {
     justification: "",
   });
 
-  const saveRequirements = (updated: WorkforceRequirement[]) => {
-    setRequirements(updated);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("ofc360:workforce_requirements", JSON.stringify(updated));
-    }
-  };
-
-  const handleCreateSubmit = (e: React.FormEvent) => {
+  const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.roleTitle.trim()) {
       toast.error("Please enter a role title.");
       return;
     }
 
-    const newReq: WorkforceRequirement = {
-      id: `WFR-${Math.floor(100 + Math.random() * 900)}`,
-      department: form.department,
-      roleTitle: form.roleTitle,
-      headcountNeeded: Number(form.headcountNeeded) || 1,
-      currentHeadcount: Number(form.currentHeadcount) || 0,
-      plannedQuarter: form.plannedQuarter,
-      priority: form.priority,
-      budgetMin: Number(form.budgetMin),
-      budgetMax: Number(form.budgetMax),
-      currency: form.currency,
-      requiredSkills: form.requiredSkills.split(",").map((s) => s.trim()).filter(Boolean),
-      experienceLevel: form.experienceLevel,
-      justification: form.justification || "Headcount required for planned project milestones.",
-      status: "Submitted",
-      createdAt: new Date().toISOString().split("T")[0],
-    };
+    try {
+      const payload = {
+        title: form.roleTitle,
+        department: form.department,
+        headcount: Number(form.headcountNeeded) || 1,
+        planned_quarter: form.plannedQuarter,
+        priority: form.priority,
+        budget_min: Number(form.budgetMin),
+        budget_max: Number(form.budgetMax),
+        currency: form.currency,
+        skills: form.requiredSkills.split(",").map((s) => s.trim()).filter(Boolean),
+        experience_level: form.experienceLevel,
+        justification: form.justification,
+      };
 
-    saveRequirements([newReq, ...requirements]);
-    toast.success(`Workforce requirement ${newReq.id} created successfully!`);
-    setShowCreateModal(false);
-    setForm({
-      department: departments[0] || "Engineering",
-      roleTitle: "",
-      headcountNeeded: 1,
-      currentHeadcount: 0,
-      plannedQuarter: "Q2 2026",
-      priority: "High",
-      budgetMin: 0,
-      budgetMax: 0,
-      currency: "INR",
-      requiredSkills: "",
-      experienceLevel: "3-5 yrs (Mid-Level)",
-      justification: "",
-    });
+      const res = await recruitmentApi.createRequisition(payload);
+      const newReq: WorkforceRequirement = {
+        id: String(res?.id || `WFR-${Math.floor(100 + Math.random() * 900)}`),
+        department: form.department,
+        roleTitle: form.roleTitle,
+        headcountNeeded: Number(form.headcountNeeded) || 1,
+        currentHeadcount: Number(form.currentHeadcount) || 0,
+        plannedQuarter: form.plannedQuarter,
+        priority: form.priority,
+        budgetMin: Number(form.budgetMin),
+        budgetMax: Number(form.budgetMax),
+        currency: form.currency,
+        requiredSkills: form.requiredSkills.split(",").map((s) => s.trim()).filter(Boolean),
+        experienceLevel: form.experienceLevel,
+        justification: form.justification || "Headcount required for planned project milestones.",
+        status: "Submitted",
+        createdAt: new Date().toISOString().split("T")[0],
+      };
+
+      setRequirements((prev) => [newReq, ...prev]);
+      toast.success(`Workforce requirement ${newReq.id} created successfully!`);
+      setShowCreateModal(false);
+      setForm({
+        department: departments[0] || "Engineering",
+        roleTitle: "",
+        headcountNeeded: 1,
+        currentHeadcount: 0,
+        plannedQuarter: "Q2 2026",
+        priority: "High",
+        budgetMin: 0,
+        budgetMax: 0,
+        currency: "INR",
+        requiredSkills: "",
+        experienceLevel: "3-5 yrs (Mid-Level)",
+        justification: "",
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to create requisition";
+      toast.error(msg);
+    }
   };
 
-  const handleStatusChange = (id: string, newStatus: WorkforceRequirement["status"]) => {
-    const updated = requirements.map((r) => (r.id === id ? { ...r, status: newStatus } : r));
-    saveRequirements(updated);
-    toast.success(`Requirement ${id} marked as ${newStatus}`);
+  const handleStatusChange = async (id: string, newStatus: WorkforceRequirement["status"]) => {
+    try {
+      if (newStatus === "Approved") {
+        await recruitmentApi.approveRequisition(id);
+      }
+      setRequirements((prev) => prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r)));
+      toast.success(`Requirement ${id} marked as ${newStatus}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : `Failed to update status for ${id}`;
+      toast.error(msg);
+    }
   };
 
   const handleConvertToJob = (req: WorkforceRequirement) => {

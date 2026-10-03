@@ -40,16 +40,18 @@ function Page() {
   const [departmentCount, setDepartmentCount] = useState<number>(0);
   const [employeeCount, setEmployeeCount] = useState<number>(0);
   const [departmentsList, setDepartmentsList] = useState<string[]>([]);
+  const [serverReqs, setServerReqs] = useState<LocalRequirement[]>([]);
   const [lastSyncTime, setLastSyncTime] = useState<string>("Live sync with backend");
 
   const loadData = useCallback(async () => {
     try {
-      const [wfRes, insightsRes, jobsRes, deptRes, empRes] = await Promise.allSettled([
+      const [wfRes, insightsRes, jobsRes, deptRes, empRes, reqsRes] = await Promise.allSettled([
         aiHubApi.getWorkforcePlanning(),
         aiInsightsApi.getDashboard(),
         recruitmentApi.getJobs(),
         apiInstance.get("/departments", { params: { limit: 100 } }),
         apiInstance.get("/employees", { params: { limit: 1 } }),
+        recruitmentApi.getRequisitions(),
       ]);
 
       if (wfRes.status === "fulfilled" && wfRes.value) {
@@ -72,6 +74,25 @@ function Page() {
         setJobsCount(list.length);
         const vacancies = list.reduce((acc: number, j: any) => acc + (Number(j.vacancies) || 1), 0);
         setTotalVacancies(vacancies);
+      }
+
+      if (reqsRes.status === "fulfilled" && reqsRes.value) {
+        const rawReqs = reqsRes.value;
+        const list = Array.isArray(rawReqs)
+          ? rawReqs
+          : Array.isArray(rawReqs?.items)
+          ? rawReqs.items
+          : [];
+        const mapped: LocalRequirement[] = list.map((r: any, idx: number) => ({
+          id: String(r.id || `WFR-${idx}`),
+          department: r.department || "Engineering",
+          roleTitle: r.title || r.role_title || "Role",
+          headcountNeeded: Number(r.headcount || r.headcount_needed || 1),
+          currentHeadcount: Number(r.current_headcount || 0),
+          priority: r.priority || "High",
+          status: r.status || "Submitted",
+        }));
+        setServerReqs(mapped);
       }
 
       if (deptRes.status === "fulfilled" && deptRes.value) {
@@ -114,27 +135,6 @@ function Page() {
   useEffect(() => {
     loadData();
   }, [loadData]);
-
-  // Read saved user requirements from localStorage (clean out old mock IDs if present)
-  const localReqs: LocalRequirement[] = useMemo(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      const saved = localStorage.getItem("ofc360:workforce_requirements");
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          const clean = parsed.filter(
-            (r: any) => !["WFR-101", "WFR-102", "WFR-103", "WFR-104", "WFR-105"].includes(r.id)
-          );
-          if (clean.length !== parsed.length) {
-            localStorage.setItem("ofc360:workforce_requirements", JSON.stringify(clean));
-          }
-          return clean;
-        }
-      }
-    } catch { /* ignore */ }
-    return [];
-  }, []);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -246,10 +246,10 @@ function Page() {
         ],
         data: insightsData.charts.hiringDemand as unknown as AIRow[],
       });
-    } else if (localReqs.length > 0) {
+    } else if (serverReqs.length > 0) {
       // Group real user requisitions by department
       const deptMap: Record<string, { current: number; needed: number }> = {};
-      localReqs.forEach((r) => {
+      serverReqs.forEach((r) => {
         if (!deptMap[r.department]) {
           deptMap[r.department] = { current: r.currentHeadcount || 0, needed: 0 };
         }

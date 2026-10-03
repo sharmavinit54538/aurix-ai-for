@@ -2,7 +2,7 @@ import { Link, useParams } from "@tanstack/react-router";
 
 import { useState, useEffect } from "react";
 import {
-  Activity, Award, Briefcase, Calendar, CheckCircle2, Download, FileText, Globe2,
+  Activity, AlertCircle, Award, Briefcase, Calendar, CheckCircle2, Download, FileText, Globe2,
   GraduationCap, Mail, MapPin, MessageSquare, Phone, Send, Sparkles, Star, Tag, X,
 } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
@@ -16,6 +16,7 @@ import { Progress } from "@/components/hrms/Shared";
 import { STAGES, STAGE_LABEL, type Stage } from "@/features/admin/recruitment/types";
 import { toast } from "sonner";
 import { api } from "@/api";
+import { recruitmentApi } from "@/services/recruitmentApi";
 
 export function CandidateProfilePage() {
   const { candidateId } = useParams({ from: "/dashboard/recruitment/candidates/$candidateId" });
@@ -101,27 +102,23 @@ export function CandidateProfilePage() {
     }
   }
 
-  function addNote() {
-    if (note.trim()) {
-      saveNote(candidate!.id, note.trim());
-      setNote("");
-      toast.success("Private note saved successfully.");
+  async function addNote() {
+    if (note.trim() && candidate) {
+      try {
+        await recruitmentApi.addCandidateNote(candidate.id, note.trim());
+        saveNote(candidate.id, note.trim());
+        setNote("");
+        toast.success("Private note saved successfully.");
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Failed to save note";
+        toast.error(msg);
+      }
     }
   }
 
   const handleSendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSendingEmail(true);
-    try {
-      // Simulate real transactional email dispatch
-      await new Promise((r) => setTimeout(r, 1000));
-      toast.success(`Email dispatched to ${candidate.email} successfully!`);
-      setShowEmailModal(false);
-    } catch (err) {
-      toast.error("Failed to send email. Please try again.");
-    } finally {
-      setSendingEmail(false);
-    }
+    toast.error("Email dispatch service is currently unavailable in the backend API.");
   };
 
   const handleScheduleInterview = async (e: React.FormEvent) => {
@@ -382,19 +379,23 @@ export function CandidateProfilePage() {
               <X className="h-5 w-5" />
             </button>
             <h3 className="font-display text-lg font-semibold mb-1">Compose Email</h3>
-            <p className="text-xs text-muted-foreground mb-4">Send a transactional application update to {candidate.name} ({candidate.email})</p>
+            <p className="text-xs text-muted-foreground mb-3">Send a transactional application update to {candidate.name} ({candidate.email})</p>
+            <div className="mb-4 rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-xs text-amber-600 dark:text-amber-400 flex items-start gap-2">
+              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+              <span>Email dispatch integration is currently unavailable in the backend API. Outbound delivery is disabled.</span>
+            </div>
             <form onSubmit={handleSendEmail} className="space-y-4">
               <div className="space-y-1">
                 <label className="text-xs font-medium">Subject</label>
-                <Input value={emailSubject} onChange={(e) => setEmailSubject(e.target.value)} required />
+                <Input value={emailSubject} onChange={(e) => setEmailSubject(e.target.value)} disabled />
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-medium">Message Body</label>
-                <Textarea value={emailBody} onChange={(e) => setEmailBody(e.target.value)} rows={8} required />
+                <Textarea value={emailBody} onChange={(e) => setEmailBody(e.target.value)} rows={6} disabled />
               </div>
               <div className="flex justify-end gap-2 pt-2">
-                <Button type="button" variant="outline" onClick={() => setShowEmailModal(false)}>Cancel</Button>
-                <Button type="submit" disabled={sendingEmail}>{sendingEmail ? "Sending..." : "Send Email"}</Button>
+                <Button type="button" variant="outline" onClick={() => setShowEmailModal(false)}>Close</Button>
+                <Button type="submit" disabled variant="secondary">Backend Unavailable</Button>
               </div>
             </form>
           </div>

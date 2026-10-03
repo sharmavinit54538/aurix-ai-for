@@ -82,27 +82,7 @@ const BASE_SOURCES = [
 
 export function CandidateSourcingPage() {
   const { candidates, upsertCandidate, jobs } = useRecruitment();
-  const [sourcedList, setSourcedList] = useState<SourcedCandidate[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("ofc360:sourced_candidates");
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed)) {
-            // Purge mock candidates src-101 to src-104
-            const clean = parsed.filter(
-              (c: any) => !["src-101", "src-102", "src-103", "src-104"].includes(c.id)
-            );
-            if (clean.length !== parsed.length) {
-              localStorage.setItem("ofc360:sourced_candidates", JSON.stringify(clean));
-            }
-            return clean;
-          }
-        } catch { /* ignore */ }
-      }
-    }
-    return [];
-  });
+  const [sourcedList, setSourcedList] = useState<SourcedCandidate[]>([]);
 
   // Dynamically compute real metrics for each sourcing channel (0 mock data)
   const sources = useMemo(() => {
@@ -143,9 +123,6 @@ export function CandidateSourcingPage() {
 
   const saveSourced = (data: SourcedCandidate[]) => {
     setSourcedList(data);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("ofc360:sourced_candidates", JSON.stringify(data));
-    }
   };
 
   const handleOpenOutreach = (cand: SourcedCandidate) => {
@@ -160,21 +137,7 @@ export function CandidateSourcingPage() {
 
   const handleSendOutreach = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedCandidate) return;
-
-    const updated = sourcedList.map((c) =>
-      c.id === selectedCandidate.id
-        ? {
-            ...c,
-            status: "Outreach Sent" as const,
-            channel: composerChannel,
-            lastContacted: new Date().toISOString().split("T")[0],
-          }
-        : c
-    );
-    saveSourced(updated);
-    toast.success(`Outreach sent to ${selectedCandidate.name} via ${composerChannel}!`);
-    setShowOutreachModal(false);
+    toast.error("Direct candidate outreach dispatch is currently unavailable in the backend API.");
   };
 
   const handleBulkImport = (e: React.FormEvent) => {
@@ -502,6 +465,11 @@ export function CandidateSourcingPage() {
                 />
               </div>
 
+              <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-xs text-amber-600 dark:text-amber-400 flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                <span>Outbound outreach communication gateway is currently unavailable in the backend API contract.</span>
+              </div>
+
               <div className="rounded-lg bg-muted/40 p-2.5 border border-border/80">
                 <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground mb-1">
                   <Eye className="h-3.5 w-3.5" />
@@ -517,9 +485,9 @@ export function CandidateSourcingPage() {
               <Button type="button" variant="outline" onClick={() => setShowOutreachModal(false)}>
                 Cancel
               </Button>
-              <Button type="submit" className="gap-1.5">
+              <Button type="submit" disabled variant="secondary" className="gap-1.5">
                 <Send className="h-3.5 w-3.5" />
-                Send via {composerChannel}
+                Dispatch Unavailable
               </Button>
             </DialogFooter>
           </form>

@@ -43,9 +43,6 @@ interface SavedSearch {
   createdAt?: string;
 }
 
-const STORAGE_KEY = "ofc360:talent_pool_saved_searches";
-
-
 export function TalentPoolPage() {
   const { candidates, jobs, refreshAll } = useRecruitment();
   const [q, setQ] = useState("");
@@ -53,33 +50,11 @@ export function TalentPoolPage() {
   const [minScore, setMinScore] = useState(0);
   const [showAddModal, setShowAddModal] = useState(false);
 
-  // Saved Searches state — user-created only
-  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed)) {
-            return parsed;
-          }
-        }
-      } catch {
-        /* ignore */
-      }
-    }
-    return [];
-  });
+  // Saved Searches state — in-memory session filters
+  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
 
   const [saveSearchModalOpen, setSaveSearchModalOpen] = useState(false);
   const [newSearchName, setNewSearchName] = useState("");
-
-  const saveSearchesToStorage = (updated: SavedSearch[]) => {
-    setSavedSearches(updated);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    }
-  };
 
   const handleSaveSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,17 +68,15 @@ export function TalentPoolPage() {
       query: q.trim(),
       createdAt: new Date().toISOString(),
     };
-    const updated = [newSearch, ...savedSearches];
-    saveSearchesToStorage(updated);
+    setSavedSearches((prev) => [newSearch, ...prev]);
     setSaveSearchModalOpen(false);
     setNewSearchName("");
-    toast.success(`Search "${newSearch.name}" saved successfully`);
+    toast.success(`Search "${newSearch.name}" bookmarked`);
   };
 
   const handleDeleteSearch = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    const updated = savedSearches.filter((s) => s.id !== id);
-    saveSearchesToStorage(updated);
+    setSavedSearches((prev) => prev.filter((s) => s.id !== id));
     toast.success("Saved search removed");
   };
 

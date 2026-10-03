@@ -58,36 +58,7 @@ export function RecruitmentCRMPage() {
     }
   }, [candidates, activeId]);
 
-  const [watchSet, setWatchSet] = useState<Set<string>>(() => {
-    if (typeof window === "undefined") return new Set();
-    try {
-      const saved = JSON.parse(localStorage.getItem("crm.watch") ?? "[]");
-      // Purge any legacy mock IDs
-      const clean = (Array.isArray(saved) ? saved : []).filter(
-        (id: string) => !["cand-1", "cand-101", "cand-201"].includes(id),
-      );
-      return new Set(clean);
-    } catch {
-      return new Set();
-    }
-  });
-
-  // Clean watchlist of deleted or non-existent candidate records
-  useEffect(() => {
-    if (candidates.length > 0) {
-      setWatchSet((prev) => {
-        const clean = new Set(
-          [...prev].filter((id) => candidates.some((c) => c.id === id)),
-        );
-        if (clean.size !== prev.size) {
-          localStorage.setItem("crm.watch", JSON.stringify([...clean]));
-          return clean;
-        }
-        return prev;
-      });
-    }
-  }, [candidates]);
-
+  const [watchSet, setWatchSet] = useState<Set<string>>(new Set());
   const [filterWatch, setFilterWatch] = useState(false);
 
   // Form state
@@ -96,17 +67,6 @@ export function RecruitmentCRMPage() {
   const [body, setBody] = useState("");
   const [followDate, setFollowDate] = useState("");
   const [saving, setSaving] = useState(false);
-
-  // Stored notes cache: candidateId -> CrmNote[]
-  const [localNotes, setLocalNotes] = useState<Record<string, CrmNote[]>>(() => {
-    if (typeof window === "undefined") return {};
-    try {
-      const saved = localStorage.getItem("ofc360:crm_notes");
-      return saved ? JSON.parse(saved) : {};
-    } catch {
-      return {};
-    }
-  });
 
   const [apiNotes, setApiNotes] = useState<Record<string, CrmNote[]>>({});
   const [loading, setLoading] = useState(false);
@@ -222,12 +182,7 @@ export function RecruitmentCRMPage() {
     });
 
     return combined;
-  }, [candidates, apiNotes, localNotes]);
-
-  // Persist watchlist
-  useEffect(() => {
-    localStorage.setItem("crm.watch", JSON.stringify([...watchSet]));
-  }, [watchSet]);
+  }, [candidates, apiNotes]);
 
   function toggleWatch(id: string) {
     setWatchSet((s) => {
@@ -240,43 +195,40 @@ export function RecruitmentCRMPage() {
   async function logActivity() {
     if (!active || !body.trim()) return;
     setSaving(true);
-    const newNote: CrmNote = {
-      id: `crm-${Date.now()}`,
-      candidate_id: active.id,
-      author_id: "Recruiter",
-      channel,
-      subject: subject.trim() || null,
-      note_text: body.trim(),
-      follow_up_date: followDate || null,
-      created_at: new Date().toISOString(),
-    };
-
-    // Save to local storage cache immediately
-    const updatedCandidateNotes = [newNote, ...(localNotes[active.id] ?? [])];
-    const updatedLocal = { ...localNotes, [active.id]: updatedCandidateNotes };
-    setLocalNotes(updatedLocal);
-    try {
-      localStorage.setItem("ofc360:crm_notes", JSON.stringify(updatedLocal));
-    } catch {
-      /* ignore */
-    }
 
     try {
-      await api.post<any>("/crm/notes", {
+      const res = await api.post<any>("/crm/notes", {
         candidate_id: active.id,
         channel,
         subject: subject.trim() || null,
         note_text: body.trim(),
         follow_up_date: followDate || null,
       });
+
+      const returnedNote: CrmNote = res?.data || {
+        id: `crm-${Date.now()}`,
+        candidate_id: active.id,
+        author_id: "Recruiter",
+        channel,
+        subject: subject.trim() || null,
+        note_text: body.trim(),
+        follow_up_date: followDate || null,
+        created_at: new Date().toISOString(),
+      };
+
+      setApiNotes((prev) => ({
+        ...prev,
+        [active.id]: [returnedNote, ...(prev[active.id] || [])],
+      }));
+
       toast.success("Activity touchpoint logged");
-    } catch {
-      // Graceful offline/local save fallback
-      toast.success("Activity logged and saved");
-    } finally {
       setSubject("");
       setBody("");
       setFollowDate("");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to log CRM activity";
+      toast.error(msg);
+    } finally {
       setSaving(false);
     }
   }

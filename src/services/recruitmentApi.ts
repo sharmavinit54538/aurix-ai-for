@@ -48,6 +48,16 @@ export const recruitmentApi = {
     return res.data;
   },
 
+  publishJob: async (id: string, payload?: Record<string, unknown>) => {
+    const res = await apiInstance.post(`/jobs/${id}/publish`, payload);
+    return res.data;
+  },
+
+  getPublishChannels: async (id: string) => {
+    const res = await apiInstance.get(`/jobs/${id}/publish`);
+    return res.data;
+  },
+
   // Candidates
   getCandidates: async (params?: Record<string, string | number>) => {
     const res = await apiInstance.get("/candidates", { params });
@@ -96,6 +106,22 @@ export const recruitmentApi = {
 
   createOffer: async (applicationId: string, payload: Record<string, unknown>) => {
     const res = await apiInstance.post(`/applications/${applicationId}/offer`, payload);
+    return res.data;
+  },
+
+  // Requisitions
+  getRequisitions: async (params?: Record<string, unknown>) => {
+    const res = await apiInstance.get("/requisitions", { params });
+    return res.data;
+  },
+
+  createRequisition: async (payload: Record<string, unknown>) => {
+    const res = await apiInstance.post("/requisitions", payload);
+    return res.data;
+  },
+
+  approveRequisition: async (id: string, payload?: Record<string, unknown>) => {
+    const res = await apiInstance.post(`/requisitions/${id}/approve`, payload);
     return res.data;
   },
 

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from "react";
 import { ExternalLink, Eye, Globe, Palette, Share2, Save } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
@@ -8,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { useRecruitment } from "@/features/admin/recruitment/hooks/useRecruitment";
+import { settingsApi } from "@/services/settingsApi";
 import { toast } from "sonner";
 
 export function CareerSitePage() {
@@ -22,42 +22,45 @@ export function CareerSitePage() {
   const [eeoStatement, setEeoStatement] = useState(
     "We're an equal opportunity employer. We celebrate diversity and are committed to creating an inclusive environment for all employees."
   );
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    try {
-      if (typeof window !== "undefined" && window.localStorage) {
-        const savedBrand = window.localStorage.getItem("ofc360.careers.brand");
-        if (savedBrand) setBrand(savedBrand);
-
-        const savedTagline = window.localStorage.getItem("ofc360.careers.tagline");
-        if (savedTagline) setTagline(savedTagline);
-
-        const savedAccent = window.localStorage.getItem("ofc360.careers.accent");
-        if (savedAccent) setAccent(savedAccent);
-
-        const savedShowSalary = window.localStorage.getItem("ofc360.careers.showSalary");
-        if (savedShowSalary !== null) setShowSalary(savedShowSalary === "true");
-
-        const savedAllowReferrals = window.localStorage.getItem("ofc360.careers.allowReferrals");
-        if (savedAllowReferrals !== null) setAllowReferrals(savedAllowReferrals === "true");
-
-        const savedEeo = window.localStorage.getItem("ofc360.careers.eeoStatement");
-        if (savedEeo) setEeoStatement(savedEeo);
+    async function loadSettings() {
+      try {
+        const data = await settingsApi.getCompanySettings();
+        if (data) {
+          if (data.company_name || data.name) setBrand(data.company_name || data.name);
+          if (data.tagline) setTagline(data.tagline);
+          if (data.accent_color) setAccent(data.accent_color);
+          if (data.show_salary !== undefined) setShowSalary(Boolean(data.show_salary));
+          if (data.allow_referrals !== undefined) setAllowReferrals(Boolean(data.allow_referrals));
+          if (data.eeo_statement) setEeoStatement(data.eeo_statement);
+        }
+      } catch {
+        // use default state if settings not initialized
       }
-    } catch (e) {
-      console.warn("localStorage is not accessible:", e);
     }
+    loadSettings();
   }, []);
 
-  const handleSave = () => {
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem("ofc360.careers.brand", brand);
-      window.localStorage.setItem("ofc360.careers.tagline", tagline);
-      window.localStorage.setItem("ofc360.careers.accent", accent);
-      window.localStorage.setItem("ofc360.careers.showSalary", String(showSalary));
-      window.localStorage.setItem("ofc360.careers.allowReferrals", String(allowReferrals));
-      window.localStorage.setItem("ofc360.careers.eeoStatement", eeoStatement);
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await settingsApi.updateCompanySettings({
+        name: brand,
+        company_name: brand,
+        tagline,
+        accent_color: accent,
+        show_salary: showSalary,
+        allow_referrals: allowReferrals,
+        eeo_statement: eeoStatement,
+      });
       toast.success("Career site configuration saved successfully!");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to save career site settings";
+      toast.error(msg);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -75,7 +78,6 @@ export function CareerSitePage() {
       const slug = brand.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
       const url = `${window.location.origin}/careers/${slug}`;
       window.open(url, "_blank");
-      toast.info("Opening live public job board (simulated)...");
     }
   };
 
@@ -86,7 +88,10 @@ export function CareerSitePage() {
         description="Your public-facing job board. Branding, settings, and live preview."
         actions={
           <>
-            <Button variant="outline" onClick={handleSave}><Save className="mr-2 h-4 w-4" />Save Settings</Button>
+            <Button variant="outline" disabled={saving} onClick={handleSave}>
+              <Save className="mr-2 h-4 w-4" />
+              {saving ? "Saving..." : "Save Settings"}
+            </Button>
             <Button variant="outline" onClick={handleCopyUrl}><Share2 className="mr-2 h-4 w-4" />Copy URL</Button>
             <Button onClick={handleOpenLive}><ExternalLink className="mr-2 h-4 w-4" />Open Live</Button>
           </>
