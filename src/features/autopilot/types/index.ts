@@ -321,7 +321,7 @@ export interface ProactiveAlert {
     name: string;
     department: string;
   };
-  evidence: any;
+  evidence: AlertEvidenceItem[];
   suggestedNextStep?: string;
   suggestedAction?: string;
   status: AlertStatus;
