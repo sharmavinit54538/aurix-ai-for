@@ -1,17 +1,36 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { connectApi } from "../connectApi";
 import type { Colleague } from "../types";
-import { Search, User, MessageSquare, Phone, Video, Loader2 } from "lucide-react";
+import { Search, User, MessageSquare, Phone, Video, Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { callManager } from "../stores/callStore";
+import { toast } from "sonner";
 
 interface ColleagueSearchModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSelectColleague?: (colleague: Colleague) => void;
+}
+
+function formatErrorDetails(err: unknown): { status?: number | string; message: string } {
+  if (err && typeof err === "object") {
+    const e = err as {
+      response?: { status?: number; data?: { message?: string; detail?: string; error?: string } };
+      message?: string;
+    };
+    const status = e.response?.status;
+    const backendMessage =
+      e.response?.data?.message ||
+      e.response?.data?.detail ||
+      e.response?.data?.error ||
+      e.message ||
+      "Failed to load directory";
+    return { status, message: String(backendMessage) };
+  }
+  return { message: "Failed to load directory" };
 }
 
 export function ColleagueSearchModal({
@@ -22,18 +41,27 @@ export function ColleagueSearchModal({
   const [colleagues, setColleagues] = useState<Colleague[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<{ status?: number | string; message: string } | null>(null);
   const navigate = useNavigate();
+
+  const loadColleagues = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const items = await connectApi.getColleagues();
+      setColleagues(items);
+    } catch (err: unknown) {
+      setError(formatErrorDetails(err));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (open) {
-      setLoading(true);
-      connectApi
-        .getColleagues()
-        .then((items) => setColleagues(items))
-        .catch(() => setColleagues([]))
-        .finally(() => setLoading(false));
+      loadColleagues();
     }
-  }, [open]);
+  }, [open, loadColleagues]);
 
   const filtered = colleagues.filter(
     (c) =>
@@ -74,8 +102,14 @@ export function ColleagueSearchModal({
         to: "/dashboard/connect/dm/$conversationId",
         params: { conversationId: conv.id },
       });
-    } catch {
-      // Fallback
+    } catch (err: unknown) {
+      const errInfo = formatErrorDetails(err);
+      toast.error(
+        errInfo.status
+          ? `[HTTP ${errInfo.status}] ${errInfo.message}`
+          : errInfo.message || "Failed to start direct conversation"
+      );
+      // NOTE: Modal stays open on error
     } finally {
       setIsStartingDm(false);
     }
@@ -106,8 +140,31 @@ export function ColleagueSearchModal({
               <Loader2 className="h-4 w-4 animate-spin" />
               <span className="text-xs">Loading colleagues...</span>
             </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center p-6 text-center gap-3" data-testid="colleagues-error">
+              <div className="rounded-full bg-destructive/10 p-2 text-destructive">
+                <AlertCircle className="h-5 w-5" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-foreground">
+                  Failed to load directory
+                </p>
+                <p className="text-xs text-muted-foreground max-w-[280px]">
+                  {error.status ? `[HTTP ${error.status}] ` : ""}{error.message}
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={loadColleagues}
+                className="gap-1.5 h-8 text-xs cursor-pointer"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                Retry
+              </Button>
+            </div>
           ) : filtered.length === 0 ? (
-            <div className="p-8 text-center text-xs text-muted-foreground">
+            <div className="p-8 text-center text-xs text-muted-foreground" data-testid="colleagues-empty">
               {query ? "No colleagues matching your search." : "No colleagues found."}
             </div>
           ) : (

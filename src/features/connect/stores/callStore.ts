@@ -24,14 +24,24 @@ class CallManager {
       if (servers && servers.length > 0) {
         this.iceServers = servers;
       }
-    }).catch(() => {});
+    }).catch((err) => {
+      // Best-effort ICE server preload (Group b)
+      if (import.meta.env.DEV) {
+        console.warn("[callStore] Preload ICE servers failed:", err);
+      }
+    });
 
     // Listen for incoming calls
     realtimeClient.on("call.incoming", (data: any) => {
       if (!data?.call_id) return;
       if (this.activeSession && this.activeSession.status !== "ended") {
         // Send busy if already in another call
-        connectApi.updateCallStatus(String(data.call_id), "busy").catch(() => {});
+        connectApi.updateCallStatus(String(data.call_id), "busy").catch((err) => {
+          // Best-effort busy status broadcast (Group b)
+          if (import.meta.env.DEV) {
+            console.warn("[callStore] Send busy status failed:", err);
+          }
+        });
         return;
       }
 
@@ -200,7 +210,12 @@ class CallManager {
     if (!this.activeSession) return;
 
     const callId = this.activeSession.callId;
-    connectApi.updateCallStatus(callId, "rejected").catch(() => {});
+    connectApi.updateCallStatus(callId, "rejected").catch((err) => {
+      // Best-effort reject status sync (Group b)
+      if (import.meta.env.DEV) {
+        console.warn("[callStore] Update call status to rejected failed:", err);
+      }
+    });
     this.terminateCallLocally("rejected");
   }
 
@@ -211,7 +226,12 @@ class CallManager {
     if (!this.activeSession) return;
 
     const callId = this.activeSession.callId;
-    connectApi.updateCallStatus(callId, "ended").catch(() => {});
+    connectApi.updateCallStatus(callId, "ended").catch((err) => {
+      // Best-effort end call status sync (Group b)
+      if (import.meta.env.DEV) {
+        console.warn("[callStore] Update call status to ended failed:", err);
+      }
+    });
     this.terminateCallLocally("ended");
   }
 
@@ -254,7 +274,12 @@ class CallManager {
             sdpMLineIndex: event.candidate.sdpMLineIndex,
           },
         };
-        connectApi.sendCallSignal(this.activeSession.callId, payload).catch(() => {});
+        connectApi.sendCallSignal(this.activeSession.callId, payload).catch((err) => {
+          // Best-effort candidate signaling (Group b)
+          if (import.meta.env.DEV) {
+            console.warn("[callStore] Send ICE candidate signal failed:", err);
+          }
+        });
       }
     };
 

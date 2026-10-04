@@ -6,6 +6,8 @@ import { MessageComposer } from "./MessageComposer";
 import { X, MessageSquare, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+import { toast } from "sonner";
+
 interface ThreadSidebarProps {
   parentMessage: Message;
   currentUserId?: string;
@@ -30,18 +32,25 @@ export function ThreadSidebar({
         setReplies(items);
         onReplyCountUpdated?.(parentMessage.id, items.length);
       })
-      .catch(() => setReplies([]))
+      .catch(() => {
+        toast.error("Failed to load thread replies");
+        setReplies([]);
+      })
       .finally(() => setLoading(false));
   }, [parentMessage.id]);
 
   const handleSendReply = async ({ content }: { content: string }) => {
     if (!content.trim()) return;
-    const newReply = await connectApi.postThreadReply(parentMessage.id, content);
-    setReplies((prev) => {
-      const next = [...prev, newReply];
-      onReplyCountUpdated?.(parentMessage.id, next.length);
-      return next;
-    });
+    try {
+      const newReply = await connectApi.postThreadReply(parentMessage.id, content);
+      setReplies((prev) => {
+        const next = [...prev, newReply];
+        onReplyCountUpdated?.(parentMessage.id, next.length);
+        return next;
+      });
+    } catch {
+      toast.error("Failed to post reply. Please retry.");
+    }
   };
 
   return (

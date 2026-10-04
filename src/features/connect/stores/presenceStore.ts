@@ -60,8 +60,11 @@ class PresenceManager {
   public setMyStatus(status: PresenceStatus, customStatus?: string): void {
     this.myStatus = status;
     this.notify();
-    connectApi.updatePresence(status, customStatus).catch(() => {
-      // Ignore background presence sync failure
+    connectApi.updatePresence(status, customStatus).catch((err) => {
+      // Best-effort presence sync (Group b)
+      if (import.meta.env.DEV) {
+        console.warn("[Presence] updatePresence failed:", err);
+      }
     });
   }
 
@@ -108,8 +111,11 @@ class PresenceManager {
         }
       }
       this.notify();
-    } catch {
-      // Safe fallback
+    } catch (err) {
+      // Best-effort batch presence fetch (Group b)
+      if (import.meta.env.DEV) {
+        console.warn("[Presence] fetchBatchPresence failed:", err);
+      }
     }
   }
 
@@ -117,8 +123,11 @@ class PresenceManager {
     this.subscribers.forEach((cb) => {
       try {
         cb();
-      } catch {
-        // Safe notify
+      } catch (err) {
+        // Protect other subscriber callbacks (Group b)
+        if (import.meta.env.DEV) {
+          console.warn("[Presence] Subscriber callback error:", err);
+        }
       }
     });
   }

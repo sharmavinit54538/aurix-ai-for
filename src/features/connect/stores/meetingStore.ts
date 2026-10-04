@@ -132,7 +132,12 @@ class MeetingManager {
   public async leaveMeeting(): Promise<void> {
     if (this.activeMeeting) {
       const mid = this.activeMeeting.id;
-      connectApi.leaveMeeting(mid).catch(() => {});
+      connectApi.leaveMeeting(mid).catch((err) => {
+        // Best-effort leave meeting notification (Group b)
+        if (import.meta.env.DEV) {
+          console.warn("[meetingStore] Leave meeting API failed:", err);
+        }
+      });
     }
 
     if (this.localStream) {

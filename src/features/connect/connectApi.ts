@@ -33,6 +33,65 @@ function unwrapData<T>(res: unknown): T {
   return res as T;
 }
 
+/**
+ * Canonical list extractor helper for API responses.
+ * Inspects: [...], { items }, { data }, { colleagues }, { users }, { results }.
+ * If none found, throws an Error ("Unexpected response shape from <endpoint>").
+ * In DEV mode, warns with endpoint, HTTP status, and TOP-LEVEL KEY NAMES (no values/PII).
+ */
+export function extractListFromResponse(res: unknown, endpoint = "/api/v1/connect/colleagues"): unknown[] {
+  let status: number | string = "unknown";
+  let body: unknown = res;
+
+  if (res && typeof res === "object") {
+    if ("data" in res && ("status" in res || "headers" in res || "config" in res)) {
+      const axiosRes = res as { status?: number; data: unknown };
+      status = axiosRes.status ?? "unknown";
+      body = axiosRes.data;
+    }
+  }
+
+  // 1. Raw array [...]
+  if (Array.isArray(body)) {
+    if (import.meta.env.DEV) {
+      console.warn(`[connectApi] ${endpoint} HTTP ${status} (raw array, length ${body.length})`);
+    }
+    return body;
+  }
+
+  // 2. Object with candidate keys: {items}, {data}, {colleagues}, {users}, {results}
+  if (body && typeof body === "object") {
+    const record = body as Record<string, unknown>;
+    const keys = Object.keys(record);
+
+    if (import.meta.env.DEV) {
+      console.warn(`[connectApi] ${endpoint} HTTP ${status} keys:`, keys);
+    }
+
+    const candidateKeys = ["items", "data", "colleagues", "users", "results"] as const;
+    for (const key of candidateKeys) {
+      const val = record[key];
+      if (Array.isArray(val)) {
+        return val;
+      }
+    }
+
+    // Check one level nested in record.data, e.g. { data: { colleagues: [...] } }
+    if (record.data && typeof record.data === "object" && !Array.isArray(record.data)) {
+      const nested = record.data as Record<string, unknown>;
+      for (const key of candidateKeys) {
+        const val = nested[key];
+        if (Array.isArray(val)) {
+          return val;
+        }
+      }
+    }
+  }
+
+  // If no list found, throw error (never return empty list)
+  throw new Error(`Unexpected response shape from ${endpoint}`);
+}
+
 // ─────────────────────────────────────────────────────────────
 // Colleague & Presence Mapping Helpers
 // ─────────────────────────────────────────────────────────────
@@ -171,7 +230,10 @@ export async function getColleaguesCacheMap(): Promise<Map<string, Colleague>> {
       }
       colleaguesCache = map;
       return map;
-    } catch {
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.warn("[connectApi] Directory cache background preload failed:", err);
+      }
       return new Map<string, Colleague>();
     } finally {
       colleaguesPromise = null;
@@ -586,8 +648,7 @@ export const connectApi = {
 
   async getColleagues(): Promise<Colleague[]> {
     const res = await apiInstance.get("/api/v1/connect/colleagues");
-    const raw = unwrapData<unknown>(res);
-    const items = Array.isArray(raw) ? raw : (raw as { items?: unknown[] })?.items || [];
+    const items = extractListFromResponse(res, "/api/v1/connect/colleagues");
     const colleagues = items
       .filter((u): u is Record<string, unknown> => Boolean(u && typeof u === "object"))
       .map(mapColleague);

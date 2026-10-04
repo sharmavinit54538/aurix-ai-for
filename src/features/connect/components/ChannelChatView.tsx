@@ -107,7 +107,12 @@ export function ChannelChatView({ channelId }: ChannelChatViewProps) {
       // Re-synchronize on connection restore
       connectApi.getChannelMessages(channelId, { limit: 50 }).then((res) => {
         setMessages(res.items);
-      }).catch(() => {});
+      }).catch((err) => {
+        // Background sync on reconnect (Group b)
+        if (import.meta.env.DEV) {
+          console.warn("[ChannelChatView] Reconnect history sync failed:", err);
+        }
+      });
     });
 
     return () => {

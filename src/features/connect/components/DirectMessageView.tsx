@@ -101,7 +101,12 @@ export function DirectMessageView({ conversationId }: DirectMessageViewProps) {
     const unbindReconnect = realtimeClient.onReconnect(() => {
       connectApi.getConversationMessages(conversationId, { limit: 50 }).then((res) => {
         setMessages(res.items);
-      }).catch(() => {});
+      }).catch((err) => {
+        // Background sync on reconnect (Group b)
+        if (import.meta.env.DEV) {
+          console.warn("[DirectMessageView] Reconnect history sync failed:", err);
+        }
+      });
     });
 
     return () => {

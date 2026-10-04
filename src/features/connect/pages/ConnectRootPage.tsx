@@ -8,6 +8,7 @@ import { ChannelCreateDialog } from "../components/ChannelCreateDialog";
 import { SoundSettingsDialog } from "../components/SoundSettingsDialog";
 import { MessageSquare, Users, Hash, Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export function ConnectRootPage() {
   const [channels, setChannels] = useState<Channel[]>([]);
@@ -26,7 +27,7 @@ export function ConnectRootPage() {
       setChannels(chList);
       setConversations(dmList);
     } catch {
-      // Handle gracefully
+      toast.error("Failed to load channels and direct messages");
     } finally {
       setLoading(false);
     }

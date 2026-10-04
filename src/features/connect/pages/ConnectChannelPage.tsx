@@ -8,6 +8,7 @@ import { ChannelChatView } from "../components/ChannelChatView";
 import { ColleagueSearchModal } from "../components/ColleagueSearchModal";
 import { ChannelCreateDialog } from "../components/ChannelCreateDialog";
 import { SoundSettingsDialog } from "../components/SoundSettingsDialog";
+import { toast } from "sonner";
 
 export function ConnectChannelPage() {
   const { channelId } = useParams({ strict: false }) as { channelId: string };
@@ -25,7 +26,9 @@ export function ConnectChannelPage() {
       ]);
       setChannels(chList);
       setConversations(dmList);
-    } catch {}
+    } catch {
+      toast.error("Failed to load sidebar channels and direct messages");
+    }
   }, []);
 
   useEffect(() => {

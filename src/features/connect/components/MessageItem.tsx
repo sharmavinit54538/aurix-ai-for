@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface MessageItemProps {
   message: Message;
@@ -62,7 +63,9 @@ export function MessageItem({
         });
       }
       onUpdated?.({ ...message, reactions: updatedReactions });
-    } catch {}
+    } catch {
+      toast.error("Failed to update reaction");
+    }
     setShowEmojiPicker(false);
   };
 
@@ -71,14 +74,18 @@ export function MessageItem({
     try {
       await connectApi.pinMessage(message.id, nextPin);
       onUpdated?.({ ...message, isPinned: nextPin });
-    } catch {}
+    } catch {
+      toast.error("Failed to update pinned status");
+    }
   };
 
   const handleDelete = async () => {
     try {
       await connectApi.deleteMessage(message.id);
       onDeleted?.(message.id);
-    } catch {}
+    } catch {
+      toast.error("Failed to delete message");
+    }
   };
 
   const formatTime = (iso: string) => {
