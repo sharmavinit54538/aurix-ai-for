@@ -115,6 +115,7 @@ import { Route as DashboardMeetingsIndexRouteImport } from './routes/dashboard.m
 import { Route as DashboardHrOperationsIndexRouteImport } from './routes/dashboard.hr-operations.index'
 import { Route as DashboardExecutiveIndexRouteImport } from './routes/dashboard.executive.index'
 import { Route as DashboardConnectIndexRouteImport } from './routes/dashboard.connect.index'
+import { Route as DashboardAutopilotIndexRouteImport } from './routes/dashboard.autopilot.index'
 import { Route as DashboardAttendanceIndexRouteImport } from './routes/dashboard.attendance.index'
 import { Route as DashboardAnalyticsIndexRouteImport } from './routes/dashboard.analytics.index'
 import { Route as DashboardAiHubIndexRouteImport } from './routes/dashboard.ai-hub.index'
@@ -208,6 +209,8 @@ import { Route as DashboardAutopilotSettingsRouteImport } from './routes/dashboa
 import { Route as DashboardAutopilotRulesRouteImport } from './routes/dashboard.autopilot.rules'
 import { Route as DashboardAutopilotExceptionsRouteImport } from './routes/dashboard.autopilot.exceptions'
 import { Route as DashboardAutopilotAuditRouteImport } from './routes/dashboard.autopilot.audit'
+import { Route as DashboardAutopilotAlertsRouteImport } from './routes/dashboard.autopilot.alerts'
+import { Route as DashboardAutopilotAgentRouteImport } from './routes/dashboard.autopilot.agent'
 import { Route as DashboardAttendanceShiftsRouteImport } from './routes/dashboard.attendance.shifts'
 import { Route as DashboardAttendanceRostersRouteImport } from './routes/dashboard.attendance.rosters'
 import { Route as DashboardAttendanceHolidaysRouteImport } from './routes/dashboard.attendance.holidays'
@@ -803,6 +806,11 @@ const DashboardConnectIndexRoute = DashboardConnectIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardConnectRoute,
 } as any)
+const DashboardAutopilotIndexRoute = DashboardAutopilotIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardAutopilotRoute,
+} as any)
 const DashboardAttendanceIndexRoute =
   DashboardAttendanceIndexRouteImport.update({
     id: '/',
@@ -1345,6 +1353,17 @@ const DashboardAutopilotAuditRoute = DashboardAutopilotAuditRouteImport.update({
   path: '/audit',
   getParentRoute: () => DashboardAutopilotRoute,
 } as any)
+const DashboardAutopilotAlertsRoute =
+  DashboardAutopilotAlertsRouteImport.update({
+    id: '/alerts',
+    path: '/alerts',
+    getParentRoute: () => DashboardAutopilotRoute,
+  } as any)
+const DashboardAutopilotAgentRoute = DashboardAutopilotAgentRouteImport.update({
+  id: '/agent',
+  path: '/agent',
+  getParentRoute: () => DashboardAutopilotRoute,
+} as any)
 const DashboardAttendanceShiftsRoute =
   DashboardAttendanceShiftsRouteImport.update({
     id: '/shifts',
@@ -1804,6 +1823,8 @@ export interface FileRoutesByFullPath {
   '/dashboard/attendance/holidays': typeof DashboardAttendanceHolidaysRoute
   '/dashboard/attendance/rosters': typeof DashboardAttendanceRostersRoute
   '/dashboard/attendance/shifts': typeof DashboardAttendanceShiftsRoute
+  '/dashboard/autopilot/agent': typeof DashboardAutopilotAgentRoute
+  '/dashboard/autopilot/alerts': typeof DashboardAutopilotAlertsRoute
   '/dashboard/autopilot/audit': typeof DashboardAutopilotAuditRoute
   '/dashboard/autopilot/exceptions': typeof DashboardAutopilotExceptionsRoute
   '/dashboard/autopilot/rules': typeof DashboardAutopilotRulesRoute
@@ -1897,6 +1918,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/ai-hub/': typeof DashboardAiHubIndexRoute
   '/dashboard/analytics/': typeof DashboardAnalyticsIndexRoute
   '/dashboard/attendance/': typeof DashboardAttendanceIndexRoute
+  '/dashboard/autopilot/': typeof DashboardAutopilotIndexRoute
   '/dashboard/connect/': typeof DashboardConnectIndexRoute
   '/dashboard/executive/': typeof DashboardExecutiveIndexRoute
   '/dashboard/hr-operations/': typeof DashboardHrOperationsIndexRoute
@@ -2004,7 +2026,6 @@ export interface FileRoutesByTo {
   '/dashboard/asset-management': typeof DashboardAssetManagementRoute
   '/dashboard/assets': typeof DashboardAssetsRoute
   '/dashboard/audit-logs': typeof DashboardAuditLogsRoute
-  '/dashboard/autopilot': typeof DashboardAutopilotRouteWithChildren
   '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/calls': typeof DashboardCallsRoute
   '/dashboard/departments': typeof DashboardDepartmentsRoute
@@ -2048,6 +2069,8 @@ export interface FileRoutesByTo {
   '/dashboard/attendance/holidays': typeof DashboardAttendanceHolidaysRoute
   '/dashboard/attendance/rosters': typeof DashboardAttendanceRostersRoute
   '/dashboard/attendance/shifts': typeof DashboardAttendanceShiftsRoute
+  '/dashboard/autopilot/agent': typeof DashboardAutopilotAgentRoute
+  '/dashboard/autopilot/alerts': typeof DashboardAutopilotAlertsRoute
   '/dashboard/autopilot/audit': typeof DashboardAutopilotAuditRoute
   '/dashboard/autopilot/exceptions': typeof DashboardAutopilotExceptionsRoute
   '/dashboard/autopilot/rules': typeof DashboardAutopilotRulesRoute
@@ -2137,6 +2160,7 @@ export interface FileRoutesByTo {
   '/dashboard/ai-hub': typeof DashboardAiHubIndexRoute
   '/dashboard/analytics': typeof DashboardAnalyticsIndexRoute
   '/dashboard/attendance': typeof DashboardAttendanceIndexRoute
+  '/dashboard/autopilot': typeof DashboardAutopilotIndexRoute
   '/dashboard/connect': typeof DashboardConnectIndexRoute
   '/dashboard/executive': typeof DashboardExecutiveIndexRoute
   '/dashboard/hr-operations': typeof DashboardHrOperationsIndexRoute
@@ -2305,6 +2329,8 @@ export interface FileRoutesById {
   '/dashboard/attendance/holidays': typeof DashboardAttendanceHolidaysRoute
   '/dashboard/attendance/rosters': typeof DashboardAttendanceRostersRoute
   '/dashboard/attendance/shifts': typeof DashboardAttendanceShiftsRoute
+  '/dashboard/autopilot/agent': typeof DashboardAutopilotAgentRoute
+  '/dashboard/autopilot/alerts': typeof DashboardAutopilotAlertsRoute
   '/dashboard/autopilot/audit': typeof DashboardAutopilotAuditRoute
   '/dashboard/autopilot/exceptions': typeof DashboardAutopilotExceptionsRoute
   '/dashboard/autopilot/rules': typeof DashboardAutopilotRulesRoute
@@ -2398,6 +2424,7 @@ export interface FileRoutesById {
   '/dashboard/ai-hub/': typeof DashboardAiHubIndexRoute
   '/dashboard/analytics/': typeof DashboardAnalyticsIndexRoute
   '/dashboard/attendance/': typeof DashboardAttendanceIndexRoute
+  '/dashboard/autopilot/': typeof DashboardAutopilotIndexRoute
   '/dashboard/connect/': typeof DashboardConnectIndexRoute
   '/dashboard/executive/': typeof DashboardExecutiveIndexRoute
   '/dashboard/hr-operations/': typeof DashboardHrOperationsIndexRoute
@@ -2567,6 +2594,8 @@ export interface FileRouteTypes {
     | '/dashboard/attendance/holidays'
     | '/dashboard/attendance/rosters'
     | '/dashboard/attendance/shifts'
+    | '/dashboard/autopilot/agent'
+    | '/dashboard/autopilot/alerts'
     | '/dashboard/autopilot/audit'
     | '/dashboard/autopilot/exceptions'
     | '/dashboard/autopilot/rules'
@@ -2660,6 +2689,7 @@ export interface FileRouteTypes {
     | '/dashboard/ai-hub/'
     | '/dashboard/analytics/'
     | '/dashboard/attendance/'
+    | '/dashboard/autopilot/'
     | '/dashboard/connect/'
     | '/dashboard/executive/'
     | '/dashboard/hr-operations/'
@@ -2767,7 +2797,6 @@ export interface FileRouteTypes {
     | '/dashboard/asset-management'
     | '/dashboard/assets'
     | '/dashboard/audit-logs'
-    | '/dashboard/autopilot'
     | '/dashboard/billing'
     | '/dashboard/calls'
     | '/dashboard/departments'
@@ -2811,6 +2840,8 @@ export interface FileRouteTypes {
     | '/dashboard/attendance/holidays'
     | '/dashboard/attendance/rosters'
     | '/dashboard/attendance/shifts'
+    | '/dashboard/autopilot/agent'
+    | '/dashboard/autopilot/alerts'
     | '/dashboard/autopilot/audit'
     | '/dashboard/autopilot/exceptions'
     | '/dashboard/autopilot/rules'
@@ -2900,6 +2931,7 @@ export interface FileRouteTypes {
     | '/dashboard/ai-hub'
     | '/dashboard/analytics'
     | '/dashboard/attendance'
+    | '/dashboard/autopilot'
     | '/dashboard/connect'
     | '/dashboard/executive'
     | '/dashboard/hr-operations'
@@ -3067,6 +3099,8 @@ export interface FileRouteTypes {
     | '/dashboard/attendance/holidays'
     | '/dashboard/attendance/rosters'
     | '/dashboard/attendance/shifts'
+    | '/dashboard/autopilot/agent'
+    | '/dashboard/autopilot/alerts'
     | '/dashboard/autopilot/audit'
     | '/dashboard/autopilot/exceptions'
     | '/dashboard/autopilot/rules'
@@ -3160,6 +3194,7 @@ export interface FileRouteTypes {
     | '/dashboard/ai-hub/'
     | '/dashboard/analytics/'
     | '/dashboard/attendance/'
+    | '/dashboard/autopilot/'
     | '/dashboard/connect/'
     | '/dashboard/executive/'
     | '/dashboard/hr-operations/'
@@ -3999,6 +4034,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardConnectIndexRouteImport
       parentRoute: typeof DashboardConnectRoute
     }
+    '/dashboard/autopilot/': {
+      id: '/dashboard/autopilot/'
+      path: '/'
+      fullPath: '/dashboard/autopilot/'
+      preLoaderRoute: typeof DashboardAutopilotIndexRouteImport
+      parentRoute: typeof DashboardAutopilotRoute
+    }
     '/dashboard/attendance/': {
       id: '/dashboard/attendance/'
       path: '/'
@@ -4650,6 +4692,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAutopilotAuditRouteImport
       parentRoute: typeof DashboardAutopilotRoute
     }
+    '/dashboard/autopilot/alerts': {
+      id: '/dashboard/autopilot/alerts'
+      path: '/alerts'
+      fullPath: '/dashboard/autopilot/alerts'
+      preLoaderRoute: typeof DashboardAutopilotAlertsRouteImport
+      parentRoute: typeof DashboardAutopilotRoute
+    }
+    '/dashboard/autopilot/agent': {
+      id: '/dashboard/autopilot/agent'
+      path: '/agent'
+      fullPath: '/dashboard/autopilot/agent'
+      preLoaderRoute: typeof DashboardAutopilotAgentRouteImport
+      parentRoute: typeof DashboardAutopilotRoute
+    }
     '/dashboard/attendance/shifts': {
       id: '/dashboard/attendance/shifts'
       path: '/shifts'
@@ -5185,17 +5241,23 @@ const DashboardAttendanceRouteWithChildren =
   DashboardAttendanceRoute._addFileChildren(DashboardAttendanceRouteChildren)
 
 interface DashboardAutopilotRouteChildren {
+  DashboardAutopilotAgentRoute: typeof DashboardAutopilotAgentRoute
+  DashboardAutopilotAlertsRoute: typeof DashboardAutopilotAlertsRoute
   DashboardAutopilotAuditRoute: typeof DashboardAutopilotAuditRoute
   DashboardAutopilotExceptionsRoute: typeof DashboardAutopilotExceptionsRoute
   DashboardAutopilotRulesRoute: typeof DashboardAutopilotRulesRoute
   DashboardAutopilotSettingsRoute: typeof DashboardAutopilotSettingsRoute
+  DashboardAutopilotIndexRoute: typeof DashboardAutopilotIndexRoute
 }
 
 const DashboardAutopilotRouteChildren: DashboardAutopilotRouteChildren = {
+  DashboardAutopilotAgentRoute: DashboardAutopilotAgentRoute,
+  DashboardAutopilotAlertsRoute: DashboardAutopilotAlertsRoute,
   DashboardAutopilotAuditRoute: DashboardAutopilotAuditRoute,
   DashboardAutopilotExceptionsRoute: DashboardAutopilotExceptionsRoute,
   DashboardAutopilotRulesRoute: DashboardAutopilotRulesRoute,
   DashboardAutopilotSettingsRoute: DashboardAutopilotSettingsRoute,
+  DashboardAutopilotIndexRoute: DashboardAutopilotIndexRoute,
 }
 
 const DashboardAutopilotRouteWithChildren =

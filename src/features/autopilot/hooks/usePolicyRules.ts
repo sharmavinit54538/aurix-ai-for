@@ -133,7 +133,7 @@ export function usePolicyRules(): UsePolicyRulesReturn {
 
       try {
         const updated = await autopilotApi.updateRule(id, { isEnabled: !currentEnabled });
-        setRules((prev) => prev.map((r) => (r.id === id ? updated : r)));
+        setRules((prev) => prev.map((r) => (r.id === id ? (updated ?? { ...r, isEnabled: !currentEnabled }) : r)));
         toast.success(`Rule ${!currentEnabled ? "enabled" : "disabled"}`);
         return true;
       } catch (err: any) {

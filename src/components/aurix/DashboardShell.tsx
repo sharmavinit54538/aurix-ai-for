@@ -60,6 +60,7 @@ import { getDefaultDashboardPath } from "@/lib/role-routing";
 import { normalizeRole, useCurrentRole } from "@/lib/roles";
 import { UserProfileMenu } from "./UserProfileMenu";
 import { NotificationDropdown } from "./NotificationDropdown";
+import { AutopilotAlertBell } from "@/features/autopilot/components/AutopilotAlertBell";
 import { GeminiIcon } from "@/components/icons/GeminiIcon";
 import { hasValidAccessToken } from "@/api";
 import { AuthLoadingScreen } from "@/features/auth/components/AuthLoadingScreen";
@@ -168,6 +169,13 @@ const NAV_SECTIONS: SidebarNavSection[] = [
         roles: ["superadmin", "super_admin", "hr_admin", "executive", "manager"],
       },
       {
+        to: "/dashboard/autopilot",
+        label: "Autopilot HR",
+        icon: Bot,
+        badge: "AI",
+        roles: ["superadmin", "super_admin", "hr_admin", "manager"],
+      },
+      {
         to: "/dashboard/ai-hub",
         label: "AI Hub",
         icon: GeminiIcon,
@@ -230,6 +238,12 @@ const EMPLOYEE_NAV_SECTIONS: SidebarNavSection[] = [
         to: "/dashboard/performance",
         label: "Performance",
         icon: Target,
+      },
+      {
+        to: "/dashboard/autopilot/agent",
+        label: "HR Agent",
+        icon: Bot,
+        badge: "AI",
       },
       {
         to: "/dashboard/connect",
@@ -304,6 +318,12 @@ const MANAGER_NAV_SECTIONS: SidebarNavSection[] = [
         to: "/dashboard/reports",
         label: "Reports",
         icon: BarChart3,
+      },
+      {
+        to: "/dashboard/autopilot",
+        label: "Autopilot HR",
+        icon: Bot,
+        badge: "AI",
       },
       {
         to: "/dashboard/ai-hub",
@@ -715,6 +735,9 @@ export function DashboardShell() {
               >
                 {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </button>
+              {(currentRole === "hr_admin" || currentRole === "manager" || currentRole === "super_admin") && (
+                <AutopilotAlertBell />
+              )}
               <NotificationDropdown />
               <div className="hidden items-center gap-2 rounded-md border border-border bg-card/40 px-3 py-1.5 text-xs sm:flex">
                 <Building2 className="h-3.5 w-3.5 text-muted-foreground" />

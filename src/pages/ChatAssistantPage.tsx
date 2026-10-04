@@ -17,8 +17,9 @@ import {
   ThumbsDown,
   BarChart3,
   History,
-} from "lucide-react";
 import { AIHero } from "@/components/aurix/AIModule";
+import { AgentToolCallCard } from "@/features/autopilot/components/AgentToolCallCard";
+import { autopilotApi } from "@/features/autopilot/services/autopilotApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -70,10 +71,11 @@ import type {
 } from "@/store/aiHub/aiHub.types";
 
 const COMMAND_SUGGESTIONS = [
-  { label: "Search candidate", cmd: "Search candidate" },
+  { label: "Apply 2 days leave", cmd: "Apply 2 days casual leave from Monday" },
+  { label: "Send last payslip", cmd: "Send my last payslip to my email" },
+  { label: "Experience letter", cmd: "I need an experience letter generated" },
   { label: "Active job postings", cmd: "List active job openings" },
   { label: "Show onboarding progress", cmd: "Show employee onboarding progress" },
-  { label: "Show pending HR tasks", cmd: "Show pending HR tasks and approvals" },
   { label: "Payroll & attendance summary", cmd: "Show monthly payroll and attendance summary" },
 ];
 
@@ -995,6 +997,27 @@ export default function ChatAssistantPage() {
                             {src.document} {src.section ? `(${src.section})` : ""}
                           </Badge>
                         ))}
+                      </div>
+                    )}
+
+                    {/* Autopilot HR Tool Call Proposal & Execution Card */}
+                    {(m as any).toolCall && (
+                      <div className="mt-3">
+                        <AgentToolCallCard
+                          toolCall={(m as any).toolCall}
+                          onConfirm={async (id) => {
+                            await autopilotApi.confirmAgentAction(id);
+                            toast.success("Action executed via Autopilot");
+                          }}
+                          onCancel={async (id) => {
+                            await autopilotApi.cancelAgentAction(id);
+                            toast.info("Action cancelled");
+                          }}
+                          onUndo={async (id, reason) => {
+                            await autopilotApi.undoAuditAction(id, reason);
+                            toast.success("Action undone");
+                          }}
+                        />
                       </div>
                     )}
 

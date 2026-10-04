@@ -107,6 +107,7 @@ export const ROUTE_ROLE_ACCESS: Record<string, AppRole[]> = {
   "/dashboard/autopilot/exceptions": ["hr_admin", "manager"],
   "/dashboard/autopilot/audit": ["hr_admin", "super_admin"],
   "/dashboard/autopilot/alerts": ["hr_admin", "manager", "super_admin"],
+  "/dashboard/autopilot/agent": ["employee", "manager", "hr_admin", "super_admin"],
   "/dashboard/autopilot": ["hr_admin", "manager", "super_admin"],
 };
 

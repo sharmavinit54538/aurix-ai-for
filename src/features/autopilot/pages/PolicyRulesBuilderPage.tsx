@@ -372,9 +372,10 @@ export default function PolicyRulesBuilderPage() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {rules.map((rule) => {
-            const actionInfo = ACTION_COLORS[rule.consequence.action] || {
-              label: rule.consequence.action,
+          {rules.filter(Boolean).map((rule) => {
+            const action = rule.consequence?.action || "escalate_to_human";
+            const actionInfo = ACTION_COLORS[action] || {
+              label: action,
               color: "bg-muted text-muted-foreground",
             };
 

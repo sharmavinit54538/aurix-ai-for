@@ -35,9 +35,9 @@ const mockRule: PolicyRule = {
   priority: 10,
   isEnabled: true,
   conditions: [
-    { field: "leave_type", operator: "eq", value: "casual" },
-    { field: "days", operator: "lte", value: 2 },
-    { field: "balance", operator: "gte", value: "days" },
+    { id: "cond-1", field: "leave_type", operator: "eq", value: "casual" },
+    { id: "cond-2", field: "days", operator: "lte", value: 2 },
+    { id: "cond-3", field: "balance", operator: "gte", value: "days" },
   ],
   consequence: {
     action: "auto_approve",
@@ -82,7 +82,7 @@ describe("PolicyRulesBuilderPage", () => {
 
   it("toggles rule active state", async () => {
     vi.mocked(autopilotApi.getRules).mockResolvedValueOnce([mockRule]);
-    vi.mocked(autopilotApi.toggleRule).mockResolvedValueOnce({
+    vi.mocked(autopilotApi.updateRule).mockResolvedValueOnce({
       ...mockRule,
       isEnabled: false,
     });
@@ -95,7 +95,7 @@ describe("PolicyRulesBuilderPage", () => {
     fireEvent.click(switchBtn);
 
     await waitFor(() => {
-      expect(autopilotApi.toggleRule).toHaveBeenCalledWith("rule-1", false);
+      expect(autopilotApi.updateRule).toHaveBeenCalledWith("rule-1", { isEnabled: false });
     });
   });
 
@@ -112,7 +112,7 @@ describe("PolicyRulesBuilderPage", () => {
     fireEvent.click(testButtons[0]);
 
     // Now dry-run simulation panel is populated or open
-    const runBtn = screen.getByRole("button", { name: /run simulation/i });
+    const runBtn = screen.getByRole("button", { name: /execute simulation/i });
     fireEvent.click(runBtn);
 
     await waitFor(() => {
@@ -129,7 +129,8 @@ describe("PolicyRulesBuilderPage", () => {
 
     render(<PolicyRulesBuilderPage />);
 
-    expect(await screen.findByText("Backend Pending")).toBeInTheDocument();
-    expect(screen.getByText(/Feature unavailable — backend pending/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText("Feature unavailable — backend pending"),
+    ).toBeInTheDocument();
   });
 });
