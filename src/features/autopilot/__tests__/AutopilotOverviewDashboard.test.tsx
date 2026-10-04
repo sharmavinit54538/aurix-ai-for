@@ -79,10 +79,9 @@ describe("AutopilotOverviewDashboard", () => {
 
     render(<AutopilotOverviewDashboard />);
 
-    expect(await screen.findByText("OneHR Command Center")).toBeInTheDocument();
+    expect(await screen.findByText("Requests Auto-Resolved")).toBeInTheDocument();
 
     // Available metrics must render
-    expect(screen.getByText("Requests Auto-Resolved")).toBeInTheDocument();
     expect(screen.getByText("88%")).toBeInTheDocument();
     expect(screen.getByText("Exceptions Pending Triage")).toBeInTheDocument();
     expect(screen.getByText("12")).toBeInTheDocument();
@@ -112,6 +111,6 @@ describe("AutopilotOverviewDashboard", () => {
     expect(
       screen.queryByText("Feature unavailable — backend pending"),
     ).not.toBeInTheDocument();
-    expect(await screen.findByText("OneHR Command Center")).toBeInTheDocument();
+    expect(await screen.findByText("Requests Auto-Resolved")).toBeInTheDocument();
   });
 });

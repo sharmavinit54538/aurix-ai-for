@@ -13,7 +13,6 @@ import {
   Inbox,
   Layers,
   LineChart,
-  RefreshCw,
   RotateCcw,
   ShieldAlert,
   ShieldCheck,
@@ -89,35 +88,6 @@ export default function AutopilotOverviewDashboard() {
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-16">
-      {/* ── Page Header ────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">OneHR Command Center</h1>
-        </div>
-
-        <div className="flex items-center gap-2.5">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void refetch()}
-            className="rounded-xl h-9 gap-1.5 text-xs cursor-pointer"
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            Refresh
-          </Button>
-          <Button
-            size="sm"
-            asChild
-            className="rounded-xl h-9 gap-1.5 text-xs bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer shadow-xs"
-          >
-            <Link to="/dashboard/autopilot/exceptions">
-              <Inbox className="h-3.5 w-3.5" />
-              Exceptions Inbox
-            </Link>
-          </Button>
-        </div>
-      </div>
-
       {/* ── Inline Error with Retry ──────────────────────────────────── */}
       {error && !backendUnavailable && (
         <Alert variant="destructive" className="rounded-2xl">
