@@ -1,5 +1,5 @@
 import { api } from "./client";
-import { refreshAccessToken } from "./apiInstance";
+import { refreshAccessToken } from "./tokens";
 import type { ApiResponse, AuthMeResponse, LoginResponse } from "./types";
 
 import { AUTH_ENDPOINTS, type AuthEndpointKey } from "./endpoints";

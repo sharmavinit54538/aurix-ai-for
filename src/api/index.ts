@@ -1,5 +1,5 @@
 export { default as apiInstance, clearApiCache } from "./apiInstance";
-export { BASE_URL, API_BASE_URL, getApiBaseUrl, refreshAccessToken } from "./apiInstance";
+export { BASE_URL, API_BASE_URL, getApiBaseUrl } from "./baseUrl";
 export { api, apiRequest, ApiError, normalizeApiPath } from "./client";
 export type { RequestOptions } from "./client";
 export { AUTH_ENDPOINTS, type AuthEndpointKey } from "./endpoints";
@@ -20,7 +20,11 @@ export {
   getAccessToken,
   setAccessToken,
   getRefreshToken,
+  setRefreshToken,
   clearTokens,
+  refreshAccessToken,
+  handleSessionExpired,
+  resetSessionExpiredFlag,
   hasSessionHint,
   setSessionHint,
   clearSessionHint,

@@ -133,7 +133,7 @@ export function MeetingRoomView({ meetingId }: MeetingRoomViewProps) {
             {isCameraOff ? (
               <div className="flex flex-col items-center gap-2 text-center">
                 <div className="h-14 w-14 rounded-full bg-neutral-800 flex items-center justify-center text-primary font-bold text-lg">
-                  {currentUser?.name ? currentUser.name.slice(0, 2) : "Me"}
+                  {currentUser?.fullName ? currentUser.fullName.slice(0, 2) : "Me"}
                 </div>
                 <span className="text-xs text-neutral-400">Camera Off</span>
               </div>
@@ -141,7 +141,7 @@ export function MeetingRoomView({ meetingId }: MeetingRoomViewProps) {
 
             {/* Label Overlay */}
             <div className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-md bg-black/60 px-2 py-1 text-xs backdrop-blur-sm">
-              <span>{currentUser?.name || "You"} (You)</span>
+              <span>{currentUser?.fullName || "You"} (You)</span>
               {isMuted ? <MicOff className="h-3 w-3 text-destructive" /> : null}
             </div>
           </div>

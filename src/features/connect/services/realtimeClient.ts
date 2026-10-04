@@ -44,6 +44,11 @@ class RealtimeClient {
       return;
     }
 
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+
     this.isExplicitlyClosed = false;
     const token = getAccessToken();
     if (!token) {
