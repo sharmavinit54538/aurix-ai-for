@@ -8,7 +8,7 @@ const AgentChatPage = lazyFeaturePage(
 export const Route = createFileRoute("/dashboard/autopilot/agent")({
   head: () => ({
     meta: [
-      { title: "HR Agent that ACTS — Autopilot HR | OFC360" },
+      { title: "HR Agent that ACTS — OneHR | OFC360" },
       { name: "description", content: "Natural language autonomous HR agent executing routine workforce operations with policy validation and confirmation cards." },
     ],
   }),

@@ -251,7 +251,7 @@ export default function ExceptionsInboxPage() {
           </div>
           <CardTitle className="text-base font-semibold">Zero Exceptions Pending</CardTitle>
           <CardDescription className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
-            Autopilot HR is operating smoothly within defined policy rules. Any request requiring human judgment will be queued here.
+            OneHR is operating smoothly within defined policy rules. Any request requiring human judgment will be queued here.
           </CardDescription>
         </Card>
       ) : (

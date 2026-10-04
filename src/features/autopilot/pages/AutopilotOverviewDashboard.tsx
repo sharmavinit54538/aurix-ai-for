@@ -96,7 +96,7 @@ export default function AutopilotOverviewDashboard() {
             <div className="p-2 rounded-xl bg-primary/10 text-primary">
               <Bot className="h-5 w-5" />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight">Autopilot HR Command Center</h1>
+            <h1 className="text-2xl font-bold tracking-tight">OneHR Command Center</h1>
             <Badge variant="outline" className="text-xs uppercase font-mono tracking-wider ml-1 bg-primary/5 text-primary border-primary/20">
               Autonomous Layer
             </Badge>
@@ -298,7 +298,7 @@ export default function AutopilotOverviewDashboard() {
       <div className="space-y-4">
         <h2 className="text-base font-semibold tracking-tight flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-primary" />
-          Autopilot HR Modules
+          OneHR Modules
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

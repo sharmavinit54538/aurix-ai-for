@@ -8,7 +8,7 @@ const ActionAuditLogPage = lazyFeaturePage(
 export const Route = createFileRoute("/dashboard/autopilot/audit")({
   head: () => ({
     meta: [
-      { title: "AI Action Audit Log — Autopilot HR | OFC360" },
+      { title: "AI Action Audit Log — OneHR | OFC360" },
       { name: "description", content: "Inspect verifiable logs, undo actions, and override AI decisions." },
     ],
   }),

@@ -8,7 +8,7 @@ const ExceptionsInboxPage = lazyFeaturePage(
 export const Route = createFileRoute("/dashboard/autopilot/exceptions")({
   head: () => ({
     meta: [
-      { title: "Exceptions Inbox — Autopilot HR | OFC360" },
+      { title: "Exceptions Inbox — OneHR | OFC360" },
       { name: "description", content: "Review and resolve requests that could not be automated." },
     ],
   }),

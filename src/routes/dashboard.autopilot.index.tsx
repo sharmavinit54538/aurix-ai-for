@@ -8,7 +8,7 @@ const AutopilotOverviewDashboard = lazyFeaturePage(
 export const Route = createFileRoute("/dashboard/autopilot/")({
   head: () => ({
     meta: [
-      { title: "Autopilot HR Dashboard | OFC360" },
+      { title: "OneHR Dashboard | OFC360" },
       { name: "description", content: "Overview of autonomous HR operations, auto-resolved metrics, exception backlog, and efficiency telemetry." },
     ],
   }),

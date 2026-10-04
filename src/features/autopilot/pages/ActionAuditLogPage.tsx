@@ -177,7 +177,7 @@ export default function ActionAuditLogPage() {
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-            Complete verifiable log of every decision and autonomous database change made by Autopilot HR. Human overrides and reversals are logged with full justification.
+            Complete verifiable log of every decision and autonomous database change made by OneHR. Human overrides and reversals are logged with full justification.
           </p>
         </div>
 

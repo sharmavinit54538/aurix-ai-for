@@ -8,7 +8,7 @@ const PolicyRulesBuilderPage = lazyFeaturePage(
 export const Route = createFileRoute("/dashboard/autopilot/rules")({
   head: () => ({
     meta: [
-      { title: "Policy Rules Builder — Autopilot HR | OFC360" },
+      { title: "Policy Rules Builder — OneHR | OFC360" },
       { name: "description", content: "Build, configure, and dry-run if/then policy rules for autonomous HR decisions." },
     ],
   }),

@@ -8,7 +8,7 @@ const AutonomySettingsPage = lazyFeaturePage(
 export const Route = createFileRoute("/dashboard/autopilot/settings")({
   head: () => ({
     meta: [
-      { title: "Autonomy Settings — Autopilot HR | OFC360" },
+      { title: "Autonomy Settings — OneHR | OFC360" },
       { name: "description", content: "Configure autonomous execution thresholds and policy guardrails." },
     ],
   }),

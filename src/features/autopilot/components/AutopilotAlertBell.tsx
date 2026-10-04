@@ -32,7 +32,7 @@ export function AutopilotAlertBell() {
       <PopoverTrigger asChild>
         <button
           type="button"
-          aria-label="Autopilot HR Alerts"
+          aria-label="OneHR Alerts"
           className="relative rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer transition-colors"
         >
           <BellRing className="h-4 w-4" />

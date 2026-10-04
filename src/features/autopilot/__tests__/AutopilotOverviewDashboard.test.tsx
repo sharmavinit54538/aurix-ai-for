@@ -15,14 +15,40 @@ vi.mock("@tanstack/react-router", () => ({
   Link: ({ children, to }: any) => <a href={to}>{children}</a>,
 }));
 
-const mockOverview: AutopilotOverview = {
-  autoResolvedPercent: {
-    available: true,
-    value: 88,
-    unit: "%",
-    changePercent: 4.2,
-    description: "Percent of routine requests auto-resolved",
+const mockAutoResolved = {
+  available: true,
+  value: 88,
+  unit: "%",
+  changePercent: 4.2,
+  description: "Percent of routine requests auto-resolved",
+};
+
+const mockOverrideRate = {
+  available: false, // Should be omitted per Rule 1 & Rule 7!
+  value: 2.1,
+  unit: "%",
+};
+
+const mockTrendData = [
+  {
+    month: "2026-08",
+    autoResolved: 410,
+    exceptions: 35,
+    overridden: 8,
+    hoursSaved: 290,
   },
+  {
+    month: "2026-09",
+    autoResolved: 480,
+    exceptions: 28,
+    overridden: 5,
+    hoursSaved: 340,
+  },
+];
+
+const mockOverview: AutopilotOverview = {
+  autoResolvedPercent: mockAutoResolved,
+  autoResolvedPercentage: mockAutoResolved,
   exceptionsPending: {
     available: true,
     value: 12,
@@ -36,28 +62,11 @@ const mockOverview: AutopilotOverview = {
     changePercent: 8,
     description: "HR manual effort saved this month",
   },
-  overrideRate: {
-    available: false, // Should be omitted per Rule 1 & Rule 7!
-    value: 2.1,
-    unit: "%",
-  },
-  timeSeries12Months: [
-    {
-      month: "2026-08",
-      autoResolved: 410,
-      exceptions: 35,
-      overridden: 8,
-      hoursSaved: 290,
-    },
-    {
-      month: "2026-09",
-      autoResolved: 480,
-      exceptions: 28,
-      overridden: 5,
-      hoursSaved: 340,
-    },
-  ],
-  lastUpdated: "2026-10-04T07:00:00.000Z",
+  overrideRate: mockOverrideRate,
+  overrideRatePercentage: mockOverrideRate,
+  timeSeries12Months: mockTrendData,
+  history12Months: mockTrendData,
+  lastUpdated: "2026-10-04T12:00:00.000Z",
 };
 
 describe("AutopilotOverviewDashboard", () => {
@@ -70,7 +79,7 @@ describe("AutopilotOverviewDashboard", () => {
 
     render(<AutopilotOverviewDashboard />);
 
-    expect(await screen.findByText("Autopilot HR Command Center")).toBeInTheDocument();
+    expect(await screen.findByText("OneHR Command Center")).toBeInTheDocument();
 
     // Available metrics must render
     expect(screen.getByText("Requests Auto-Resolved")).toBeInTheDocument();

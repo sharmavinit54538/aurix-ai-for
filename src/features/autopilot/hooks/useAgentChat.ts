@@ -15,7 +15,7 @@ const INITIAL_WELCOME: AgentChatMessage = {
   id: "msg-welcome",
   role: "assistant",
   content:
-    "Hello! I am your Autopilot HR Agent. Unlike basic chatbots that only give advice, I can autonomously perform HR tasks for you — like applying leaves, pulling payslips, generating employment letters, or regularizing attendance.\n\nTell me what you need done, and I will prepare the action for your confirmation.",
+    "Hello! I am your OneHR Agent. Unlike basic chatbots that only give advice, I can autonomously perform HR tasks for you — like applying leaves, pulling payslips, generating employment letters, or regularizing attendance.\n\nTell me what you need done, and I will prepare the action for your confirmation.",
   timestamp: new Date().toISOString(),
 };
 

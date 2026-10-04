@@ -68,6 +68,8 @@ describe("AgentChatPage", () => {
       tool_call: mockProposedToolCall,
     });
     vi.mocked(autopilotApi.confirmAgentAction).mockResolvedValueOnce({
+      id: "act-leave-101",
+      parameters: {},
       success: true,
       recordId: "LR-9821",
       recordType: "leave",
@@ -103,6 +105,8 @@ describe("AgentChatPage", () => {
       tool_call: mockProposedToolCall,
     });
     vi.mocked(autopilotApi.cancelAgentAction).mockResolvedValueOnce({
+      id: "act-leave-101",
+      parameters: {},
       success: true,
       message: "Action cancelled",
     });

@@ -351,13 +351,13 @@ export interface MonthlyAutopilotTrend {
 }
 
 export interface AutopilotOverview {
-  autoResolvedPercentage?: MetricValue<number>;
+  autoResolvedPercentage: MetricValue<number>;
   autoResolvedPercent?: MetricValue<number>;
   exceptionsPending: MetricValue<number>;
   hoursSaved: MetricValue<number>;
-  overrideRatePercentage?: MetricValue<number>;
+  overrideRatePercentage: MetricValue<number>;
   overrideRate?: MetricValue<number>;
-  history12Months?: MonthlyAutopilotTrend[];
+  history12Months: MonthlyAutopilotTrend[];
   timeSeries12Months?: MonthlyAutopilotTrend[];
   lastUpdated?: string;
 }

@@ -283,7 +283,7 @@ export default function AutonomySettingsPage() {
               Confirm Autonomy Policy Update
             </DialogTitle>
             <DialogDescription className="text-center text-xs text-muted-foreground">
-              You are modifying the operational boundaries of Autopilot HR. These thresholds directly dictate autonomous approval versus escalation into the Exceptions Inbox.
+              You are modifying the operational boundaries of OneHR. These thresholds directly dictate autonomous approval versus escalation into the Exceptions Inbox.
             </DialogDescription>
           </DialogHeader>
 

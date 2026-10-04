@@ -170,7 +170,7 @@ const NAV_SECTIONS: SidebarNavSection[] = [
       },
       {
         to: "/dashboard/autopilot",
-        label: "Autopilot HR",
+        label: "OneHR",
         icon: Bot,
         roles: ["superadmin", "super_admin", "hr_admin", "manager"],
       },
@@ -319,7 +319,7 @@ const MANAGER_NAV_SECTIONS: SidebarNavSection[] = [
       },
       {
         to: "/dashboard/autopilot",
-        label: "Autopilot HR",
+        label: "OneHR",
         icon: Bot,
       },
       {

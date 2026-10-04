@@ -56,6 +56,7 @@ export function AgentToolCallCard({
   const [cancelling, setCancelling] = useState(false);
   const [undoDialogOpen, setUndoDialogOpen] = useState(false);
   const [undoReason, setUndoReason] = useState("");
+  const [undoing, setUndoing] = useState(false);
   const actionKey = toolCall.action || toolCall.actionType || "action";
   const actionName = (ACTION_LABELS as Record<string, string>)[actionKey] || actionKey.replace(/_/g, " ");
 
@@ -192,7 +193,7 @@ export function AgentToolCallCard({
               Executing {actionName}...
             </div>
             <div className="text-muted-foreground text-[11px] mt-0.5">
-              The Autopilot HR engine is applying the action with live policy verification.
+              The OneHR engine is applying the action with live policy verification.
             </div>
           </div>
         </CardContent>
