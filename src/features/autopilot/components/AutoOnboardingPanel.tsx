@@ -25,6 +25,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { autopilotApi } from "../services/autopilotApi";
 import type { AutoOnboardingRun, AutoStepStatus, OnboardingStepId } from "../types";
+import { parseApiError } from "@/api/utils";
 
 const STEP_META: Record<
   OnboardingStepId,
@@ -96,12 +97,12 @@ export function AutoOnboardingPanel() {
       const data = await autopilotApi.getOnboardingRuns();
       setRuns(data);
       setBackendUnavailable(false);
-    } catch (err: any) {
-      const status = err?.response?.status;
+    } catch (err: unknown) {
+      const { status, message } = parseApiError(err, "Failed to load auto-onboarding runs");
       if (status === 404 || status === 501) {
         setBackendUnavailable(true);
       } else {
-        setError(err?.response?.data?.message || "Failed to load auto-onboarding runs");
+        setError(message);
       }
     } finally {
       setLoading(false);
@@ -119,12 +120,12 @@ export function AutoOnboardingPanel() {
       const updated = await autopilotApi.retryOnboardingStep(runId, step);
       setRuns((prev) => prev.map((r) => (r.id === runId ? updated : r)));
       toast.success(`Retrying ${STEP_META[step].label}...`);
-    } catch (err: any) {
-      const status = err?.response?.status;
+    } catch (err: unknown) {
+      const { status, message } = parseApiError(err, "Failed to retry step");
       if (status === 404 || status === 501) {
         toast.error("Feature unavailable — backend pending");
       } else {
-        toast.error(err?.response?.data?.message || "Failed to retry step");
+        toast.error(message);
       }
     } finally {
       setRetryingStep(null);

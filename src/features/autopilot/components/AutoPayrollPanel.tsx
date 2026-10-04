@@ -28,6 +28,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Skeleton } from "@/components/ui/skeleton";
 import { autopilotApi } from "../services/autopilotApi";
 import type { AutoPayrollRunStatus, AutoPayrollStage, PayrollStageId } from "../types";
+import { parseApiError } from "@/api/utils";
 
 const STAGE_META: Record<
   PayrollStageId,
@@ -72,12 +73,12 @@ export function AutoPayrollPanel() {
       const data = await autopilotApi.getPayrollRunStatus();
       setPayrollStatus(data);
       setBackendUnavailable(false);
-    } catch (err: any) {
-      const status = err?.response?.status;
+    } catch (err: unknown) {
+      const { status, message } = parseApiError(err, "Failed to load Autopilot payroll status");
       if (status === 404 || status === 501) {
         setBackendUnavailable(true);
       } else {
-        setError(err?.response?.data?.message || "Failed to load Autopilot payroll status");
+        setError(message);
       }
     } finally {
       setLoading(false);
@@ -195,7 +196,7 @@ export function AutoPayrollPanel() {
         ) : payrollStatus ? (
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
-              {payrollStatus.stages.map((st: any) => {
+              {payrollStatus.stages.map((st) => {
                 const stageKey = (st.stage || st.id || "attendance_sync") as PayrollStageId;
                 const meta = STAGE_META[stageKey] || {
                   label: st.label || st.name || String(stageKey),

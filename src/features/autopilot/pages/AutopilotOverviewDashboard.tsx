@@ -21,6 +21,7 @@ import {
   TrendingUp,
   UserCheck,
   Zap,
+  type LucideIcon,
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -37,7 +38,17 @@ export default function AutopilotOverviewDashboard() {
   const hoursSaved = overview?.hoursSaved;
   const overrideRate = overview?.overrideRatePercentage ?? overview?.overrideRate;
 
-  const metrics = [
+  interface MetricItem {
+    id: string;
+    label: string;
+    value: string;
+    description: string;
+    icon: LucideIcon;
+    color: string;
+    change: number | undefined;
+  }
+
+  const rawMetrics: (MetricItem | null)[] = [
     autoResolved?.available
       ? {
           id: "auto-resolved",
@@ -82,7 +93,9 @@ export default function AutopilotOverviewDashboard() {
           change: overrideRate.changePercent,
         }
       : null,
-  ].filter(Boolean);
+  ];
+
+  const metrics: MetricItem[] = rawMetrics.filter((m): m is MetricItem => m !== null);
 
   const timeSeries = overview?.history12Months ?? overview?.timeSeries12Months ?? [];
 
@@ -127,7 +140,7 @@ export default function AutopilotOverviewDashboard() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {metrics.map((m: any) => {
+          {metrics.map((m) => {
             const Icon = m.icon;
             return (
               <Card
@@ -188,7 +201,7 @@ export default function AutopilotOverviewDashboard() {
                 <span className="col-span-3 text-amber-600 dark:text-amber-400 font-semibold">Exceptions</span>
                 <span className="col-span-3 text-purple-600 dark:text-purple-400 font-semibold">Overridden</span>
               </div>
-              {timeSeries.slice(-6).map((pt: any) => {
+              {timeSeries.slice(-6).map((pt) => {
                 const total = (pt.autoResolved ?? 0) + (pt.exceptions ?? 0) + (pt.overridden ?? 0);
                 const autoPct = total > 0 ? Math.round(((pt.autoResolved ?? 0) / total) * 100) : 0;
 

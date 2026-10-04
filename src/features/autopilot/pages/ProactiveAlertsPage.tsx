@@ -197,7 +197,7 @@ export default function ProactiveAlertsPage() {
           {/* Category Filter */}
           <Select
             value={selectedCategory}
-            onValueChange={(val) => setSelectedCategory(val as any)}
+            onValueChange={(val) => setSelectedCategory(val as AlertCategory | "all")}
           >
             <SelectTrigger className="h-8 text-xs rounded-xl w-[170px] bg-background">
               <SelectValue placeholder="All Categories" />
@@ -215,7 +215,7 @@ export default function ProactiveAlertsPage() {
           {/* Severity Filter */}
           <Select
             value={selectedSeverity}
-            onValueChange={(val) => setSelectedSeverity(val as any)}
+            onValueChange={(val) => setSelectedSeverity(val as AlertSeverity | "all")}
           >
             <SelectTrigger className="h-8 text-xs rounded-xl w-[140px] bg-background">
               <SelectValue placeholder="All Severities" />
