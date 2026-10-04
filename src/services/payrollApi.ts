@@ -605,7 +605,7 @@ export interface PayrollPayslipStatutory {
   tds?: number | null;
   eps?: number | null;
   edli?: number | null;
-  other?: Record<string, any> | null;
+  other?: Record<string, unknown> | null;
 }
 
 export interface PayrollPayslipEmployerContributions {
@@ -717,6 +717,15 @@ export interface GeneratePayslipsResponse {
   totalCount?: number;
   documentIds?: string[];
   [key: string]: unknown;
+}
+
+export class PayrollNotFoundError extends Error {
+  response = { status: 404 };
+  status = 404;
+  constructor(message = "Payslip record not found for employee on backend.") {
+    super(message);
+    this.name = "PayrollNotFoundError";
+  }
 }
 
 // ── Helper to extract API data safely ─────────────────────────────────
