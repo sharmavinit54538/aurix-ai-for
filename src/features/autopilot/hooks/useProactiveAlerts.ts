@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
+import { parseApiError } from "@/api/utils";
 import { usePoller } from "@/hooks/usePoller";
 import { autopilotApi } from "../services/autopilotApi";
 import type {
@@ -24,14 +25,14 @@ export function useProactiveAlerts() {
         category: selectedCategory !== "all" ? selectedCategory : undefined,
         severity: selectedSeverity !== "all" ? selectedSeverity : undefined,
       });
-      setAlerts(Array.isArray(data) ? data : (data as any)?.items || []);
+      setAlerts(Array.isArray(data) ? data : (data as { items?: AutopilotAlert[] })?.items || []);
       setBackendUnavailable(false);
-    } catch (err: any) {
-      const status = err?.response?.status;
+    } catch (err: unknown) {
+      const { status, message: msg } = parseApiError(err, "Failed to load proactive alerts");
       if (status === 404 || status === 501) {
         setBackendUnavailable(true);
       } else {
-        setError(err?.response?.data?.message || "Failed to load proactive alerts");
+        setError(msg);
       }
     } finally {
       setLoading(false);
@@ -57,16 +58,16 @@ export function useProactiveAlerts() {
         await autopilotApi.acknowledgeAlert(id);
         toast.success("Alert acknowledged");
         return true;
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Rollback
         setAlerts((prev) =>
           prev.map((a) => (a.id === id ? { ...a, status: "active" as AlertStatus } : a)),
         );
-        const status = err?.response?.status;
+        const { status, message: msg } = parseApiError(err, "Failed to acknowledge alert");
         if (status === 404 || status === 501) {
           toast.error("Feature unavailable — backend pending");
         } else {
-          toast.error(err?.response?.data?.message || "Failed to acknowledge alert");
+          toast.error(msg);
         }
         return false;
       }
@@ -90,16 +91,16 @@ export function useProactiveAlerts() {
         await autopilotApi.snoozeAlert(id, snoozeUntil);
         toast.success(`Alert snoozed for ${hours} hours`);
         return true;
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Rollback
         setAlerts((prev) =>
           prev.map((a) => (a.id === id ? { ...a, status: "active" as AlertStatus } : a)),
         );
-        const status = err?.response?.status;
+        const { status, message: msg } = parseApiError(err, "Failed to snooze alert");
         if (status === 404 || status === 501) {
           toast.error("Feature unavailable — backend pending");
         } else {
-          toast.error(err?.response?.data?.message || "Failed to snooze alert");
+          toast.error(msg);
         }
         return false;
       }
@@ -122,12 +123,12 @@ export function useProactiveAlerts() {
         );
         toast.success(`Action task created: ${taskTitle}`);
         return true;
-      } catch (err: any) {
-        const status = err?.response?.status;
+      } catch (err: unknown) {
+        const { status, message: msg } = parseApiError(err, "Failed to create task");
         if (status === 404 || status === 501) {
           toast.error("Feature unavailable — backend pending");
         } else {
-          toast.error(err?.response?.data?.message || "Failed to create task");
+          toast.error(msg);
         }
         return false;
       }

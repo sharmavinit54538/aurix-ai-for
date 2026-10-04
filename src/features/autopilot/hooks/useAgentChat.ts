@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import { toast } from "sonner";
+import { parseApiError } from "@/api/utils";
 import { autopilotApi } from "../services/autopilotApi";
 import type { AgentChatMessage, AgentToolCall } from "../types";
 
@@ -52,7 +53,7 @@ export function useAgentChat() {
       let toolCall: AgentToolCall | undefined;
 
       if (response && typeof response === "object") {
-        if ("content" in response) {
+        if ("content" in response && typeof response.content === "string") {
           assistantContent = response.content || "";
         }
         if ("toolCall" in response && response.toolCall) {
@@ -85,8 +86,8 @@ export function useAgentChat() {
 
       setMessages((prev) => [...prev, assistantMsg]);
       setBackendUnavailable(false);
-    } catch (err: any) {
-      const status = err?.response?.status;
+    } catch (err: unknown) {
+      const { status, message: msg } = parseApiError(err, "Failed to send message to agent");
       if (status === 404 || status === 501) {
         setBackendUnavailable(true);
         // Render system notice without fake responses
@@ -99,7 +100,6 @@ export function useAgentChat() {
         };
         setMessages((prev) => [...prev, pendingMsg]);
       } else {
-        const msg = err?.response?.data?.message || err?.message || "Failed to send message to agent";
         setError(msg);
         toast.error(msg);
       }
@@ -143,12 +143,12 @@ export function useAgentChat() {
         ),
       );
       toast.success(result.message || "Action executed successfully.");
-    } catch (err: any) {
-      const status = err?.response?.status;
+    } catch (err: unknown) {
+      const { status, message } = parseApiError(err, "Action execution failed");
       const errMsg =
         status === 404 || status === 501
           ? "Feature unavailable — backend pending (/api/v2/autopilot/agent/actions/confirm)"
-          : err?.response?.data?.message || "Action execution failed";
+          : message;
 
       setMessages((prev) =>
         prev.map((m) =>
@@ -215,12 +215,12 @@ export function useAgentChat() {
             : m,
         ),
       );
-    } catch (err: any) {
-      const status = err?.response?.status;
+    } catch (err: unknown) {
+      const { status, message } = parseApiError(err, "Failed to undo action");
       if (status === 404 || status === 501) {
         toast.error("Feature unavailable — backend pending");
       } else {
-        toast.error(err?.response?.data?.message || "Failed to undo action");
+        toast.error(message);
       }
     }
   }, []);

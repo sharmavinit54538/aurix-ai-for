@@ -46,14 +46,13 @@ export function usePolicyRules(): UsePolicyRulesReturn {
       setRules(items);
       setError(null);
       setBackendUnavailable(false);
-    } catch (err: any) {
-      const status = err?.response?.status;
+    } catch (err: unknown) {
+      const { status, message: msg } = parseApiError(err, "Failed to load policy rules");
       if (status === 404 || status === 501) {
         setBackendUnavailable(true);
         setRules([]);
         setError(null);
       } else {
-        const msg = err?.response?.data?.message || err?.message || "Failed to load policy rules";
         setError(msg);
       }
     } finally {
@@ -72,12 +71,12 @@ export function usePolicyRules(): UsePolicyRulesReturn {
         setRules((prev) => [created, ...prev]);
         toast.success(`Rule "${created.name}" created successfully`);
         return true;
-      } catch (err: any) {
-        const status = err?.response?.status;
+      } catch (err: unknown) {
+        const { status, message: msg } = parseApiError(err, "Failed to create rule");
         if (status === 404 || status === 501) {
           toast.error("Feature unavailable — backend pending");
         } else {
-          toast.error(err?.response?.data?.message || "Failed to create rule");
+          toast.error(msg);
         }
         return false;
       }
@@ -92,12 +91,12 @@ export function usePolicyRules(): UsePolicyRulesReturn {
         setRules((prev) => prev.map((r) => (r.id === id ? updated : r)));
         toast.success("Rule updated successfully");
         return true;
-      } catch (err: any) {
-        const status = err?.response?.status;
+      } catch (err: unknown) {
+        const { status, message: msg } = parseApiError(err, "Failed to update rule");
         if (status === 404 || status === 501) {
           toast.error("Feature unavailable — backend pending");
         } else {
-          toast.error(err?.response?.data?.message || "Failed to update rule");
+          toast.error(msg);
         }
         return false;
       }
@@ -111,12 +110,12 @@ export function usePolicyRules(): UsePolicyRulesReturn {
       setRules((prev) => prev.filter((r) => r.id !== id));
       toast.success("Rule deleted");
       return true;
-    } catch (err: any) {
-      const status = err?.response?.status;
+    } catch (err: unknown) {
+      const { status, message: msg } = parseApiError(err, "Failed to delete rule");
       if (status === 404 || status === 501) {
         toast.error("Feature unavailable — backend pending");
       } else {
-        toast.error(err?.response?.data?.message || "Failed to delete rule");
+        toast.error(msg);
       }
       return false;
     }
@@ -137,7 +136,7 @@ export function usePolicyRules(): UsePolicyRulesReturn {
         setRules((prev) => prev.map((r) => (r.id === id ? (updated ?? { ...r, isEnabled: !currentEnabled }) : r)));
         toast.success(`Rule ${!currentEnabled ? "enabled" : "disabled"}`);
         return true;
-      } catch (err: any) {
+      } catch {
         // Rollback
         setRules((prev) =>
           prev.map((r) => (r.id === id ? { ...r, isEnabled: currentEnabled } : r)),
@@ -156,12 +155,12 @@ export function usePolicyRules(): UsePolicyRulesReturn {
         const result = await autopilotApi.simulateRule(req);
         setSimulationResult(result);
         return result;
-      } catch (err: any) {
-        const status = err?.response?.status;
+      } catch (err: unknown) {
+        const { status, message: msg } = parseApiError(err, "Simulation failed");
         if (status === 404 || status === 501) {
           toast.error("Simulation unavailable — backend pending");
         } else {
-          toast.error(err?.response?.data?.message || "Simulation failed");
+          toast.error(msg);
         }
         return null;
       } finally {
