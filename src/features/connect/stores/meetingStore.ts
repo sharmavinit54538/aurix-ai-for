@@ -2,6 +2,26 @@ import { connectApi } from "../connectApi";
 import { realtimeClient } from "../services/realtimeClient";
 import type { MeetingChatMessage, MeetingParticipant, MeetingSession } from "../types";
 
+function mapMeetingError(err: any): Error {
+  if (typeof window !== "undefined" && !window.isSecureContext) {
+    return new Error("Microphone and camera access requires a secure context (HTTPS or localhost).");
+  }
+  const name = err?.name || "";
+  if (name === "NotAllowedError" || name === "PermissionDeniedError") {
+    return new Error("Microphone or camera access was denied by the browser.");
+  }
+  if (name === "NotFoundError" || name === "DevicesNotFoundError") {
+    return new Error("No microphone or camera device found on this system.");
+  }
+  if (name === "NotReadableError" || name === "TrackStartError") {
+    return new Error("Microphone or camera is currently in use by another application.");
+  }
+  if (err?.message) {
+    return new Error(err.message);
+  }
+  return new Error("Failed to join meeting.");
+}
+
 class MeetingManager {
   private activeMeeting: MeetingSession | null = null;
   private localStream: MediaStream | null = null;
@@ -121,25 +141,7 @@ class MeetingManager {
       this.activeMeeting = details;
       this.chatMessages = [];
       this.notify();
-function mapMeetingError(err: any): Error {
-  if (typeof window !== "undefined" && !window.isSecureContext) {
-    return new Error("Microphone and camera access requires a secure context (HTTPS or localhost).");
-  }
-  const name = err?.name || "";
-  if (name === "NotAllowedError" || name === "PermissionDeniedError") {
-    return new Error("Microphone or camera access was denied by the browser.");
-  }
-  if (name === "NotFoundError" || name === "DevicesNotFoundError") {
-    return new Error("No microphone or camera device found on this system.");
-  }
-  if (name === "NotReadableError" || name === "TrackStartError") {
-    return new Error("Microphone or camera is currently in use by another application.");
-  }
-  if (err?.message) {
-    return new Error(err.message);
-  }
-  return new Error("Failed to join meeting.");
-}
+
 
     } catch (err: any) {
       this.leaveMeeting();

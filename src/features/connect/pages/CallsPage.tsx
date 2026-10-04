@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { connectApi } from "../connectApi";
 import { callManager } from "../stores/callStore";
+import { useIsRealtimeOpen } from "../services/realtimeClient";
 import { ColleagueSearchModal } from "../components/ColleagueSearchModal";
 import type { CallType, Colleague } from "../types";
 import {
@@ -20,6 +21,7 @@ import { PageHeader } from "@/components/aurix/DashboardShell";
 import { toast } from "sonner";
 
 export function CallsPage() {
+  const isRealtimeOpen = useIsRealtimeOpen();
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
@@ -42,8 +44,9 @@ export function CallsPage() {
   }, []);
 
   const handleStartCallWithColleague = (colleague: Colleague) => {
-    callManager.startCall(colleague, selectedCallType).catch(() => {
-      toast.error(`Could not initiate ${selectedCallType} call`);
+    if (!isRealtimeOpen) return;
+    callManager.startCall(colleague, selectedCallType).catch((err) => {
+      toast.error(err?.message || `Could not initiate ${selectedCallType} call`);
     });
   };
 
@@ -75,8 +78,11 @@ export function CallsPage() {
             <Button
               variant="outline"
               size="sm"
-              className="gap-1.5 cursor-pointer shadow-sm"
+              className="gap-1.5 cursor-pointer shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={!isRealtimeOpen}
+              title={isRealtimeOpen ? "Start Audio Call" : "Realtime connection not available"}
               onClick={() => {
+                if (!isRealtimeOpen) return;
                 setSelectedCallType("audio");
                 setSearchModalOpen(true);
               }}
@@ -87,8 +93,11 @@ export function CallsPage() {
 
             <Button
               size="sm"
-              className="gap-1.5 cursor-pointer shadow-sm"
+              className="gap-1.5 cursor-pointer shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={!isRealtimeOpen}
+              title={isRealtimeOpen ? "Start Video Call" : "Realtime connection not available"}
               onClick={() => {
+                if (!isRealtimeOpen) return;
                 setSelectedCallType("video");
                 setSearchModalOpen(true);
               }}
@@ -180,10 +189,14 @@ export function CallsPage() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-8 w-8 p-0 cursor-pointer ml-2"
-                      title="Call Again"
+                      className="h-8 w-8 p-0 cursor-pointer ml-2 disabled:cursor-not-allowed disabled:opacity-40"
+                      disabled={!isRealtimeOpen}
+                      title={isRealtimeOpen ? "Call Again" : "Realtime connection not available"}
                       onClick={() => {
-                        callManager.startCall(otherParty, item.call_type || "audio");
+                        if (!isRealtimeOpen) return;
+                        callManager.startCall(otherParty, item.call_type || "audio").catch((err) => {
+                          toast.error(err?.message || `Could not initiate ${item.call_type || "audio"} call`);
+                        });
                       }}
                     >
                       <Phone className="h-3.5 w-3.5 text-brand" />

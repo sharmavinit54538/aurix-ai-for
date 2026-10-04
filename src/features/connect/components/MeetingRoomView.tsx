@@ -48,8 +48,8 @@ export function MeetingRoomView({ meetingId }: MeetingRoomViewProps) {
         setIsMuted(meetingManager.getIsMuted());
         setIsCameraOff(meetingManager.getIsCameraOff());
       })
-      .catch((err) => {
-        toast.error("Could not join meeting. Check permissions.");
+      .catch((err: any) => {
+        toast.error(err?.message || "Could not join meeting. Check permissions.");
         navigate({ to: "/dashboard/meetings" });
       })
       .finally(() => setConnecting(false));

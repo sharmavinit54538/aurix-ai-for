@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { connectApi } from "../connectApi";
-import { realtimeClient } from "../services/realtimeClient";
+import { realtimeClient, useIsRealtimeOpen } from "../services/realtimeClient";
 import { soundService } from "../services/soundService";
 import { callManager } from "../stores/callStore";
 import { usePresence } from "../stores/presenceStore";
@@ -28,6 +28,7 @@ export function DirectMessageView({ conversationId }: DirectMessageViewProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeThreadMessage, setActiveThreadMessage] = useState<Message | null>(null);
+  const isRealtimeOpen = useIsRealtimeOpen();
   const [isPeerTyping, setIsPeerTyping] = useState(false);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
 
@@ -146,9 +147,9 @@ export function DirectMessageView({ conversationId }: DirectMessageViewProps) {
   };
 
   const startCall = (type: "audio" | "video") => {
-    if (!conversation) return;
-    callManager.startCall(conversation.participant, type).catch(() => {
-      toast.error(`Could not initiate ${type} call. Check device permissions.`);
+    if (!conversation || !isRealtimeOpen) return;
+    callManager.startCall(conversation.participant, type).catch((err) => {
+      toast.error(err?.message || `Could not initiate ${type} call.`);
     });
   };
 
@@ -208,9 +209,10 @@ export function DirectMessageView({ conversationId }: DirectMessageViewProps) {
             <Button
               size="sm"
               variant="outline"
-              className="h-8 gap-1.5 text-xs cursor-pointer shadow-sm"
+              className="h-8 gap-1.5 text-xs cursor-pointer shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={!isRealtimeOpen}
               onClick={() => startCall("audio")}
-              title="Start Audio Call"
+              title={isRealtimeOpen ? "Start Audio Call" : "Realtime connection not available"}
             >
               <Phone className="h-3.5 w-3.5 text-brand" />
               <span className="hidden sm:inline">Audio</span>
@@ -219,9 +221,10 @@ export function DirectMessageView({ conversationId }: DirectMessageViewProps) {
             <Button
               size="sm"
               variant="outline"
-              className="h-8 gap-1.5 text-xs cursor-pointer shadow-sm"
+              className="h-8 gap-1.5 text-xs cursor-pointer shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={!isRealtimeOpen}
               onClick={() => startCall("video")}
-              title="Start Video Call"
+              title={isRealtimeOpen ? "Start Video Call" : "Realtime connection not available"}
             >
               <Video className="h-3.5 w-3.5 text-brand" />
               <span className="hidden sm:inline">Video</span>

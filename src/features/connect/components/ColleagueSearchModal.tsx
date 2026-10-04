@@ -7,6 +7,7 @@ import type { Colleague } from "../types";
 import { Search, User, MessageSquare, Phone, Video, Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { callManager } from "../stores/callStore";
+import { useIsRealtimeOpen } from "../services/realtimeClient";
 import { toast } from "sonner";
 
 interface ColleagueSearchModalProps {
@@ -38,6 +39,7 @@ export function ColleagueSearchModal({
   onOpenChange,
   onSelectColleague,
 }: ColleagueSearchModalProps) {
+  const isRealtimeOpen = useIsRealtimeOpen();
   const [colleagues, setColleagues] = useState<Colleague[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
@@ -212,9 +214,11 @@ export function ColleagueSearchModal({
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-8 w-8 p-0 cursor-pointer"
-                    title="Audio Call"
+                    className="h-8 w-8 p-0 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
+                    disabled={!isRealtimeOpen}
+                    title={isRealtimeOpen ? "Audio Call" : "Realtime connection not available"}
                     onClick={() => {
+                      if (!isRealtimeOpen) return;
                       onOpenChange(false);
                       callManager.startCall(colleague, "audio");
                     }}
@@ -225,9 +229,11 @@ export function ColleagueSearchModal({
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-8 w-8 p-0 cursor-pointer"
-                    title="Video Call"
+                    className="h-8 w-8 p-0 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
+                    disabled={!isRealtimeOpen}
+                    title={isRealtimeOpen ? "Video Call" : "Realtime connection not available"}
                     onClick={() => {
+                      if (!isRealtimeOpen) return;
                       onOpenChange(false);
                       callManager.startCall(colleague, "video");
                     }}
