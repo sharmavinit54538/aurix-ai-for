@@ -217,8 +217,8 @@ export async function refreshAccessToken(options?: { silent?: boolean }): Promis
           if (import.meta.env.DEV && !options?.silent) {
             console.log(`[AUTH] Response: [REFRESH] POST ${refreshUrl} -> ${res.status}`);
           }
-        } catch (postErr: any) {
-          const status = postErr?.response?.status;
+        } catch (postErr: unknown) {
+          const status = axios.isAxiosError(postErr) ? postErr.response?.status : undefined;
           if (import.meta.env.DEV && !options?.silent) {
             console.log(`[AUTH] Response: [REFRESH] POST ${refreshUrl} -> ${status || "NETWORK_ERROR"}`);
           }

@@ -2,11 +2,12 @@ import { connectApi } from "../connectApi";
 import { realtimeClient } from "../services/realtimeClient";
 import type { MeetingChatMessage, MeetingParticipant, MeetingSession } from "../types";
 
-function mapMeetingError(err: any): Error {
+function mapMeetingError(err: unknown): Error {
   if (typeof window !== "undefined" && !window.isSecureContext) {
     return new Error("Microphone and camera access requires a secure context (HTTPS or localhost).");
   }
-  const name = err?.name || "";
+  const errObj = err && typeof err === "object" ? (err as { name?: string; message?: string }) : null;
+  const name = errObj?.name || "";
   if (name === "NotAllowedError" || name === "PermissionDeniedError") {
     return new Error("Microphone or camera access was denied by the browser.");
   }
@@ -16,8 +17,8 @@ function mapMeetingError(err: any): Error {
   if (name === "NotReadableError" || name === "TrackStartError") {
     return new Error("Microphone or camera is currently in use by another application.");
   }
-  if (err?.message) {
-    return new Error(err.message);
+  if (errObj?.message) {
+    return new Error(errObj.message);
   }
   return new Error("Failed to join meeting.");
 }
@@ -38,7 +39,7 @@ class MeetingManager {
     this.isInitialized = true;
 
     // Realtime: participant joined
-    realtimeClient.on("meeting.participant_joined", (data: any) => {
+    realtimeClient.on("meeting.participant_joined", (data: { meeting_id?: string | number; user_id?: string | number; name?: string; avatar?: string }) => {
       if (this.activeMeeting && String(data?.meeting_id) === this.activeMeeting.id) {
         const newPart: MeetingParticipant = {
           userId: String(data.user_id),
@@ -57,7 +58,7 @@ class MeetingManager {
     });
 
     // Realtime: participant left
-    realtimeClient.on("meeting.participant_left", (data: any) => {
+    realtimeClient.on("meeting.participant_left", (data: { meeting_id?: string | number; user_id?: string | number }) => {
       if (this.activeMeeting && String(data?.meeting_id) === this.activeMeeting.id) {
         const uid = String(data.user_id);
         this.activeMeeting.participants = this.activeMeeting.participants.filter(
@@ -69,7 +70,7 @@ class MeetingManager {
     });
 
     // Realtime: meeting chat message
-    realtimeClient.on("meeting.chat", (data: any) => {
+    realtimeClient.on("meeting.chat", (data: { meeting_id?: string | number; id?: string | number; sender_id?: string | number; sender_name?: string; content?: string; timestamp?: string }) => {
       if (this.activeMeeting && String(data?.meeting_id) === this.activeMeeting.id) {
         this.chatMessages.push({
           id: String(data.id || Date.now()),
@@ -143,7 +144,7 @@ class MeetingManager {
       this.notify();
 
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       this.leaveMeeting();
       const mapped = mapMeetingError(err);
       if (import.meta.env.DEV) {

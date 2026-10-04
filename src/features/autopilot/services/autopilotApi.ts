@@ -61,6 +61,20 @@ export interface AlertsQueryParams {
   status?: string;
 }
 
+export interface AgentChatResponse {
+  content?: string;
+  toolCall?: AgentActionToolCall;
+  tool_call?: {
+    id?: string;
+    tool?: string;
+    action?: string;
+    parameters?: Record<string, unknown>;
+    expected_effect?: string;
+    expectedEffect?: string;
+  };
+  [key: string]: unknown;
+}
+
 export const autopilotApi = {
   // ── 1) Autonomy Settings ──────────────────────────────────────────
   async getSettings(): Promise<AutonomySettings> {
@@ -121,9 +135,9 @@ export const autopilotApi = {
       policyClause: String(raw?.policy_clause || ""),
       reasoning: String(raw?.reasoning || ""),
       evaluatedConditions: Array.isArray(raw?.evaluated_conditions)
-        ? raw.evaluated_conditions.map((ec: any) => ({
+        ? (raw.evaluated_conditions as Array<Record<string, unknown>>).map((ec) => ({
             field: String(ec.field || ""),
-            operator: ec.operator,
+            operator: (ec.operator || "eq") as RuleConditionOperator,
             expected: ec.expected,
             actual: ec.actual,
             passed: Boolean(ec.passed),
@@ -162,7 +176,7 @@ export const autopilotApi = {
   },
 
   // ── 4) HR Agent Chat and Action Execution ─────────────────────────
-  async sendAgentChat(message: string, conversationId?: string): Promise<any> {
+  async sendAgentChat(message: string, conversationId?: string): Promise<AgentChatResponse> {
     const res = await apiInstance.post("/api/v2/autopilot/agent/chat", {
       message,
       conversation_id: conversationId,
@@ -170,7 +184,7 @@ export const autopilotApi = {
     return res.data;
   },
 
-  async sendAgentMessage(body: { message: string; conversationId?: string; context?: Record<string, unknown> }): Promise<any> {
+  async sendAgentMessage(body: { message: string; conversationId?: string; context?: Record<string, unknown> }): Promise<AgentChatResponse> {
     return this.sendAgentChat(body.message, body.conversationId);
   },
 

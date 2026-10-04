@@ -7,7 +7,7 @@ class PresenceManager {
   private myStatus: PresenceStatus = "online";
   private colleagueStatuses = new Map<string, PresenceStatus>();
   private pendingBatchUserIds = new Set<string>();
-  private batchDebounceTimer: any = null;
+  private batchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   private subscribers = new Set<() => void>();
   private isInitialized = false;
 
@@ -36,9 +36,9 @@ class PresenceManager {
     });
 
     // Listen to realtime presence broadcasts from backend
-    realtimeClient.on("presence.updated", (data: any) => {
+    realtimeClient.on("presence.updated", (data: { user_id?: string | number; status?: PresenceStatus }) => {
       if (data?.user_id && data?.status) {
-        this.colleagueStatuses.set(String(data.user_id), data.status as PresenceStatus);
+        this.colleagueStatuses.set(String(data.user_id), data.status);
         this.notify();
       }
     });

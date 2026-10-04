@@ -126,6 +126,42 @@ export function extractIceSchemes(servers: IceServerConfig[]): string[] {
   return Array.from(schemes);
 }
 
+interface IncomingCallPayload {
+  call_id?: string;
+  id?: string;
+  caller_id?: string;
+  callerId?: string;
+  caller_name?: string;
+  callerName?: string;
+  caller_avatar?: string | null;
+  callerAvatar?: string | null;
+  recipient_id?: string;
+  recipientId?: string;
+  call_type?: CallType;
+  callType?: CallType;
+  offer?: unknown;
+  sdp_offer?: unknown;
+  sdpOffer?: unknown;
+  signal?: unknown;
+}
+
+interface CallSignalPayload {
+  type?: string;
+  candidate?: {
+    candidate?: string;
+    sdpMid?: string | null;
+    sdpMLineIndex?: number | null;
+  } | string;
+  sdp?: string;
+}
+
+interface CallStatusPayload {
+  call_id?: string;
+  id?: string;
+  status?: string;
+  reason?: string;
+}
+
 class CallManager {
   private activeSession: CallSession | null = null;
   private peerConnection: RTCPeerConnection | null = null;
@@ -156,7 +192,7 @@ class CallManager {
     });
 
     // Listen for incoming calls (supports both call.incoming and call.invite)
-    const handleIncoming = (data: any) => {
+    const handleIncoming = (data: IncomingCallPayload) => {
       const callId = String(data?.call_id || data?.id || "");
       if (!callId) return;
 
@@ -224,14 +260,14 @@ class CallManager {
     realtimeClient.on("call.invite", handleIncoming);
 
     // Listen for incoming WebRTC signals (supports both call.signaling and call.signal)
-    const handleSignal = (data: any) => {
+    const handleSignal = (data: CallSignalPayload) => {
       this.handleIncomingSignal(data);
     };
     realtimeClient.on("call.signaling", handleSignal);
     realtimeClient.on("call.signal", handleSignal);
 
     // Listen for remote call status changes
-    realtimeClient.on("call.status", (data: any) => {
+    realtimeClient.on("call.status", (data: CallStatusPayload) => {
       const callId = data?.call_id || data?.id;
       if (callId && this.activeSession?.callId === String(callId)) {
         const nextStatus = data.status as CallStatus;
@@ -350,7 +386,7 @@ class CallManager {
         type: "offer",
         sdp: offer.sdp || "",
       });
-      const callId = initResult?.callId || (initResult as any)?.id || "";
+      const callId = initResult?.callId || (initResult as { id?: string })?.id || "";
 
       this.activeSession = {
         callId,
@@ -500,9 +536,10 @@ class CallManager {
     if (!this.peerConnection) return;
     try {
       const stats = await this.peerConnection.getStats();
-      stats.forEach((report: any) => {
-        if (report.type === "candidate-pair" && report.state === "succeeded") {
-          const localCand = stats.get(report.localCandidateId);
+      stats.forEach((report: RTCStats) => {
+        const rep = report as RTCStats & { state?: string; localCandidateId?: string };
+        if (rep.type === "candidate-pair" && rep.state === "succeeded" && rep.localCandidateId) {
+          const localCand = stats.get(rep.localCandidateId) as (RTCStats & { candidateType?: string }) | undefined;
           if (localCand) {
             this.selectedCandidatePairType = localCand.candidateType || "unknown";
           }
@@ -629,15 +666,16 @@ class CallManager {
     return navigator.mediaDevices.getUserMedia(constraints);
   }
 
-  private async handleIncomingSignal(data: any): Promise<void> {
+  private async handleIncomingSignal(data: CallSignalPayload): Promise<void> {
     if (!data) return;
 
     try {
       if (data.type === "candidate" && data.candidate) {
+        const candObj = typeof data.candidate === "object" && data.candidate !== null ? data.candidate : null;
         const candidateInit: RTCIceCandidateInit = {
-          candidate: data.candidate.candidate || data.candidate,
-          sdpMid: data.candidate.sdpMid ?? null,
-          sdpMLineIndex: data.candidate.sdpMLineIndex ?? null,
+          candidate: (candObj ? candObj.candidate : data.candidate) || "",
+          sdpMid: candObj?.sdpMid ?? null,
+          sdpMLineIndex: candObj?.sdpMLineIndex ?? null,
         };
         if (this.peerConnection && this.peerConnection.remoteDescription) {
           await this.peerConnection.addIceCandidate(candidateInit);

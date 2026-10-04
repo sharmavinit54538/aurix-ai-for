@@ -2,24 +2,24 @@ import { getAccessToken } from "@/api/tokens";
 import { getApiBaseUrl, refreshAccessToken } from "@/api/apiInstance";
 import { useEffect, useState } from "react";
 
-export type RealtimeEventHandler<T = any> = (payload: T) => void;
+export type RealtimeEventHandler<T = unknown> = (payload: T) => void;
 
 export interface RealtimeMessage {
   type?: string;
   event?: string;
-  data?: any;
+  data?: unknown;
   timestamp?: string;
   correlation_id?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 class RealtimeClient {
   private socket: WebSocket | null = null;
-  private listeners = new Map<string, Set<RealtimeEventHandler>>();
+  private listeners = new Map<string, Set<(payload: never) => void>>();
   private reconnectAttempt = 0;
   private maxReconnectDelay = 30000;
-  private reconnectTimer: any = null;
-  private heartbeatTimer: any = null;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
   private isExplicitlyClosed = false;
   private processedEventIds = new Set<string>();
   private readonly maxProcessedCacheSize = 500;
@@ -161,15 +161,16 @@ class RealtimeClient {
     });
   }
 
-  public on<T = any>(event: string, handler: RealtimeEventHandler<T>): () => void {
+  public on<T = unknown>(event: string, handler: RealtimeEventHandler<T>): () => void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
-    this.listeners.get(event)!.add(handler);
+    const fn = handler as (payload: never) => void;
+    this.listeners.get(event)!.add(fn);
 
     // Return unbind function
     return () => {
-      this.listeners.get(event)?.delete(handler);
+      this.listeners.get(event)?.delete(fn);
     };
   }
 
@@ -180,7 +181,7 @@ class RealtimeClient {
     };
   }
 
-  public emit(type: string, data: any): void {
+  public emit<T = unknown>(type: string, data: T): void {
     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
       return;
     }
@@ -200,7 +201,7 @@ class RealtimeClient {
     this.emit("typing", target);
   }
 
-  public sendSignal(callId: string, signalData: any): void {
+  public sendSignal(callId: string, signalData: Record<string, unknown>): void {
     this.emit("signal", { call_id: callId, ...signalData });
   }
 
@@ -242,7 +243,7 @@ class RealtimeClient {
       if (specificHandlers) {
         specificHandlers.forEach((h) => {
           try {
-            h(msg.data !== undefined ? msg.data : msg);
+            h((msg.data !== undefined ? msg.data : msg) as never);
           } catch (err) {
             console.error(`[Realtime] Handler error for ${eventName}:`, err);
           }
@@ -254,7 +255,7 @@ class RealtimeClient {
       if (allHandlers) {
         allHandlers.forEach((h) => {
           try {
-            h(msg);
+            h(msg as never);
           } catch (err) {
             console.error("[Realtime] Handler error for *:", err);
           }

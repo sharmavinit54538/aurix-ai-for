@@ -1,11 +1,15 @@
 import { connectApi } from "../connectApi";
 import type { SoundSettings } from "../types";
 
+interface WebkitWindow extends Window {
+  webkitAudioContext?: typeof AudioContext;
+}
+
 class SoundService {
   private audioCtx: AudioContext | null = null;
   private ringOscillator: OscillatorNode | null = null;
   private ringGain: GainNode | null = null;
-  private ringInterval: any = null;
+  private ringInterval: ReturnType<typeof setInterval> | null = null;
   private settings: SoundSettings = {
     incomingCall: true,
     messageAlert: true,
@@ -35,7 +39,7 @@ class SoundService {
   private getAudioContext(): AudioContext | null {
     if (typeof window === "undefined") return null;
     if (!this.audioCtx) {
-      const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
+      const AudioCtxClass = window.AudioContext || (window as WebkitWindow).webkitAudioContext;
       if (AudioCtxClass) {
         this.audioCtx = new AudioCtxClass();
       }

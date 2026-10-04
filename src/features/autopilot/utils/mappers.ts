@@ -5,6 +5,11 @@
 
 import {
   ALWAYS_HUMAN_ACTIONS,
+  type AlertCategory,
+  type AlertSeverity,
+  type AlertStatus,
+  type AuditDecision,
+  type AuditStatus,
   type AutopilotException,
   type AutopilotOverview,
   type AutopilotWorkflowId,
@@ -20,11 +25,16 @@ import {
   type BackendPayrollStatus,
   type BackendPolicyRule,
   type BackendProactiveAlert,
+  type BackendRuleCondition,
   type BackendWorkflowSetting,
   type AutoOnboardingRun,
   type AutoPayrollStatus,
   type AgentActionToolCall,
   type AuditLogEntry,
+  type OnboardingStepStatus,
+  type OnboardingStepType,
+  type PayrollStageName,
+  type PayrollStageStatus,
   type PolicyRule,
   type ProactiveAlert,
   type RuleCondition,
@@ -145,7 +155,7 @@ export function mapWorkflowSettingFromBackend(
   };
 }
 
-export function mapAutonomySettingsFromBackend(raw: BackendAutonomySettings | any): AutonomySettings {
+export function mapAutonomySettingsFromBackend(raw?: Partial<BackendAutonomySettings>): AutonomySettings {
   const workflowsRaw = raw?.workflows || {};
   const workflows: Record<AutopilotWorkflowId, AutonomyWorkflowSetting> = { ...DEFAULT_WORKFLOW_SETTINGS };
 
@@ -192,7 +202,7 @@ export function mapAutonomySettingsToBackend(
 }
 
 // ── Policy Rules Mappers ─────────────────────────────────────────────
-export function mapPolicyRuleFromBackend(raw: BackendPolicyRule | any): PolicyRule {
+export function mapPolicyRuleFromBackend(raw: BackendPolicyRule): PolicyRule {
   return {
     id: String(raw.id || ""),
     name: String(raw.name || "Untitled Rule"),
@@ -201,11 +211,11 @@ export function mapPolicyRuleFromBackend(raw: BackendPolicyRule | any): PolicyRu
     priority: Number(raw.priority ?? 1),
     isEnabled: Boolean(raw.is_enabled ?? true),
     conditions: Array.isArray(raw.conditions)
-      ? raw.conditions.map((c: any, index: number): RuleCondition => ({
+      ? raw.conditions.map((c: BackendRuleCondition, index: number): RuleCondition => ({
           id: String(c.id || `c-${index}`),
           field: String(c.field || ""),
           operator: (c.operator || "eq") as RuleConditionOperator,
-          value: c.value,
+          value: c.value as RuleCondition["value"],
         }))
       : [],
     consequence: {
@@ -247,7 +257,7 @@ export function mapPolicyRuleToBackend(rule: Partial<PolicyRule>): Partial<Backe
 }
 
 // ── Exceptions Mappers ───────────────────────────────────────────────
-export function mapExceptionFromBackend(raw: BackendAutopilotException | any): AutopilotException {
+export function mapExceptionFromBackend(raw: BackendAutopilotException): AutopilotException {
   return {
     id: String(raw.id || ""),
     workflow: (raw.workflow || "leave") as AutopilotWorkflowId,
@@ -279,7 +289,7 @@ export function mapExceptionFromBackend(raw: BackendAutopilotException | any): A
 }
 
 // ── Agent Action Tool Calls ──────────────────────────────────────────
-export function mapAgentActionFromBackend(raw: BackendAgentAction | any): AgentActionToolCall {
+export function mapAgentActionFromBackend(raw: BackendAgentAction): AgentActionToolCall {
   return {
     id: String(raw.id || ""),
     actionType: raw.action_type || "apply_leave",
@@ -303,14 +313,14 @@ export function mapAgentActionFromBackend(raw: BackendAgentAction | any): AgentA
 }
 
 // ── Audit Log Mappers ────────────────────────────────────────────────
-export function mapAuditLogFromBackend(raw: BackendAuditLogEntry | any): AuditLogEntry {
+export function mapAuditLogFromBackend(raw: BackendAuditLogEntry): AuditLogEntry {
   return {
     id: String(raw.id || ""),
     timestamp: raw.timestamp || new Date().toISOString(),
     workflow: (raw.workflow || "leave") as AutopilotWorkflowId,
     subject: String(raw.subject || ""),
     actionTaken: String(raw.action_taken || ""),
-    decision: (raw.decision || "auto_approved") as any,
+    decision: (raw.decision || "auto_approved") as AuditDecision,
     confidence: Number(raw.confidence ?? 90),
     ruleId: raw.rule_id,
     ruleName: raw.rule_name,
@@ -323,7 +333,7 @@ export function mapAuditLogFromBackend(raw: BackendAuditLogEntry | any): AuditLo
       name: String(raw.target_record?.name || "Item"),
       link: raw.target_record?.link,
     },
-    status: (raw.status || "active") as any,
+    status: (raw.status || "active") as AuditStatus,
     overrideBy: raw.override_by
       ? {
           id: String(raw.override_by.id),
@@ -346,11 +356,11 @@ export function mapAuditLogFromBackend(raw: BackendAuditLogEntry | any): AuditLo
 }
 
 // ── Proactive Alerts Mappers ─────────────────────────────────────────
-export function mapAlertFromBackend(raw: BackendProactiveAlert | any): ProactiveAlert {
+export function mapAlertFromBackend(raw: BackendProactiveAlert): ProactiveAlert {
   return {
     id: String(raw.id || ""),
-    category: (raw.category || "attrition_risk") as any,
-    severity: (raw.severity || "medium") as any,
+    category: (raw.category || "attrition_risk") as AlertCategory,
+    severity: (raw.severity || "medium") as AlertSeverity,
     title: String(raw.title || "Alert"),
     description: String(raw.description || ""),
     employee: raw.employee
@@ -361,10 +371,10 @@ export function mapAlertFromBackend(raw: BackendProactiveAlert | any): Proactive
         }
       : undefined,
     evidence: Array.isArray(raw.evidence)
-      ? raw.evidence.map((e: any) => ({ key: String(e.key), value: e.value }))
+      ? raw.evidence.map((e) => ({ key: String(e.key), value: e.value }))
       : [],
     suggestedNextStep: String(raw.suggested_next_step || ""),
-    status: (raw.status || "active") as any,
+    status: (raw.status || "active") as AlertStatus,
     snoozedUntil: raw.snoozed_until,
     createdAt: raw.created_at || new Date().toISOString(),
     taskId: raw.task_id,
@@ -372,7 +382,7 @@ export function mapAlertFromBackend(raw: BackendProactiveAlert | any): Proactive
 }
 
 // ── Overview Mappers ─────────────────────────────────────────────────
-export function mapOverviewFromBackend(raw: BackendAutopilotOverview | any): AutopilotOverview {
+export function mapOverviewFromBackend(raw: BackendAutopilotOverview): AutopilotOverview {
   return {
     autoResolvedPercentage: {
       value: Number(raw?.auto_resolved_percentage?.value ?? 0),
@@ -391,7 +401,7 @@ export function mapOverviewFromBackend(raw: BackendAutopilotOverview | any): Aut
       available: Boolean(raw?.override_rate_percentage?.available ?? true),
     },
     history12Months: Array.isArray(raw?.history_12_months)
-      ? raw.history_12_months.map((m: any) => ({
+      ? raw.history_12_months.map((m) => ({
           month: String(m.month || ""),
           autoResolved: Number(m.auto_resolved ?? 0),
           escalated: Number(m.escalated ?? 0),
@@ -403,7 +413,7 @@ export function mapOverviewFromBackend(raw: BackendAutopilotOverview | any): Aut
 }
 
 // ── Onboarding & Payroll Mappers ─────────────────────────────────────
-export function mapOnboardingRunFromBackend(raw: BackendOnboardingRun | any): AutoOnboardingRun {
+export function mapOnboardingRunFromBackend(raw: BackendOnboardingRun): AutoOnboardingRun {
   return {
     id: String(raw.id || ""),
     candidateId: String(raw.candidate_id || ""),
@@ -411,13 +421,13 @@ export function mapOnboardingRunFromBackend(raw: BackendOnboardingRun | any): Au
     jobTitle: String(raw.job_title || ""),
     department: String(raw.department || ""),
     startDate: raw.start_date || new Date().toISOString(),
-    status: (raw.status || "in_progress") as any,
+    status: (raw.status || "in_progress") as AutoOnboardingRun["status"],
     steps: Array.isArray(raw.steps)
-      ? raw.steps.map((s: any) => ({
+      ? raw.steps.map((s) => ({
           id: String(s.id),
-          step: s.step,
+          step: s.step as OnboardingStepType,
           label: String(s.label),
-          status: s.status,
+          status: s.status as OnboardingStepStatus,
           errorMessage: s.error_message,
           completedAt: s.completed_at,
         }))
@@ -425,17 +435,17 @@ export function mapOnboardingRunFromBackend(raw: BackendOnboardingRun | any): Au
   };
 }
 
-export function mapPayrollStatusFromBackend(raw: BackendPayrollStatus | any): AutoPayrollStatus {
+export function mapPayrollStatusFromBackend(raw: BackendPayrollStatus): AutoPayrollStatus {
   return {
     runId: String(raw?.run_id || ""),
     month: String(raw?.month || ""),
     year: Number(raw?.year || new Date().getFullYear()),
-    overallStatus: (raw?.overall_status || "running") as any,
+    overallStatus: (raw?.overall_status || "running") as AutoPayrollStatus["overallStatus"],
     stages: Array.isArray(raw?.stages)
-      ? raw.stages.map((st: any) => ({
-          id: st.id,
+      ? raw.stages.map((st) => ({
+          id: st.id as PayrollStageName,
           name: String(st.name),
-          status: st.status,
+          status: st.status as PayrollStageStatus,
           summary: String(st.summary || ""),
           anomaliesDetected: Number(st.anomalies_detected ?? 0),
         }))
