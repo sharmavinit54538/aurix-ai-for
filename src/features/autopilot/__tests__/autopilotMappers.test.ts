@@ -160,7 +160,7 @@ describe("Autopilot HR Mappers", () => {
     };
     const alert = mapAlertFromBackend(rawAlert);
     expect(alert.severity).toBe("critical");
-    expect(alert.evidence[0].key).toBe("Hours");
+    expect(Array.isArray(alert.evidence) ? alert.evidence[0].key : undefined).toBe("Hours");
 
     const rawOverview = {
       auto_resolved_percentage: { value: 82.5, available: true },
