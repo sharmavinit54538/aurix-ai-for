@@ -749,7 +749,7 @@ export const connectApi = {
     const res = await apiInstance.get("/api/v1/connect/calls/ice-servers");
     const raw = unwrapData<Record<string, unknown>>(res);
     const servers = raw?.iceServers || raw?.ice_servers || raw;
-    if (Array.isArray(servers)) {
+    if (Array.isArray(servers) && servers.length > 0) {
       return servers
         .filter((s): s is Record<string, unknown> => Boolean(s && typeof s === "object"))
         .map((s) => ({
@@ -758,7 +758,7 @@ export const connectApi = {
           credential: s.credential as string | undefined,
         }));
     }
-    return [{ urls: "stun:stun.l.google.com:19302" }];
+    throw new Error("No ICE servers returned from /api/v1/connect/calls/ice-servers");
   },
 
   async initiateCall(
@@ -814,7 +814,7 @@ export const connectApi = {
         meetingUrl: (m.meeting_url || m.meetingUrl) as string | undefined,
         hostId: String(m.host_id || m.hostId || ""),
         hostName: (m.host_name || m.hostName || "Host") as string,
-        status: (m.status as string) || "scheduled",
+        status: (m.status as "active" | "scheduled" | "ended") || "scheduled",
         scheduledAt: (m.scheduled_at || m.scheduledAt) as string | undefined,
         createdAt: ((m.created_at || m.createdAt) as string) || new Date().toISOString(),
         participants: Array.isArray(m.participants)
@@ -846,7 +846,7 @@ export const connectApi = {
       meetingUrl: (m.meeting_url || m.meetingUrl) as string | undefined,
       hostId: String(m.host_id || m.hostId || ""),
       hostName: (m.host_name || m.hostName || "Host") as string,
-      status: (m.status as string) || "active",
+      status: (m.status as "active" | "scheduled" | "ended") || "active",
       scheduledAt: (m.scheduled_at || m.scheduledAt) as string | undefined,
       createdAt: ((m.created_at || m.createdAt) as string) || new Date().toISOString(),
       participants: [],
@@ -862,7 +862,7 @@ export const connectApi = {
       meetingUrl: (m.meeting_url || m.meetingUrl) as string | undefined,
       hostId: String(m.host_id || m.hostId || ""),
       hostName: (m.host_name || m.hostName || "Host") as string,
-      status: (m.status as string) || "active",
+      status: (m.status as "active" | "scheduled" | "ended") || "active",
       scheduledAt: (m.scheduled_at || m.scheduledAt) as string | undefined,
       createdAt: ((m.created_at || m.createdAt) as string) || new Date().toISOString(),
       participants: Array.isArray(m.participants)
@@ -915,7 +915,7 @@ export const connectApi = {
       .filter((n): n is Record<string, unknown> => Boolean(n && typeof n === "object"))
       .map((n) => ({
         id: String(n.id),
-        type: (n.type as string) || "message",
+        type: (n.type as "message" | "mention" | "call" | "meeting") || "message",
         title: (n.title as string) || "Notification",
         body: (n.body || n.message || "") as string,
         link: n.link as string | undefined,
@@ -1007,7 +1007,7 @@ function mapMessage(m: Record<string, unknown>): Message {
             emoji: String(r.emoji || ""),
             count: Number(r.count || 1),
             userIds: Array.isArray(r.user_ids || r.userIds)
-              ? (r.user_ids || r.userIds).map(String)
+              ? ((r.user_ids || r.userIds) as unknown[]).map(String)
               : [],
           }))
       : [],

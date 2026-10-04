@@ -62,7 +62,7 @@ import { NotificationDropdown } from "./NotificationDropdown";
 import { GeminiIcon } from "@/components/icons/GeminiIcon";
 import { hasValidAccessToken } from "@/api";
 import { AuthLoadingScreen } from "@/features/auth/components/AuthLoadingScreen";
-import { GlobalCallOverlay } from "@/features/connect/components/GlobalCallOverlay";
+import { GlobalCallOverlay, RealtimeCallProvider } from "@/features/connect";
 import {
   CommandDialog,
   CommandEmpty,
@@ -560,7 +560,8 @@ export function DashboardShell() {
   const homeLink = getDefaultDashboardPath(ws.user);
 
   return (
-    <div className="flex min-h-screen w-full flex-col overflow-x-hidden bg-background text-foreground">
+    <RealtimeCallProvider>
+      <div className="flex min-h-screen w-full flex-col overflow-x-hidden bg-background text-foreground">
 
       <div className="relative flex min-w-0 flex-1">
         {/* Sidebar — fixed to viewport; main content scrolls independently */}
@@ -807,7 +808,8 @@ export function DashboardShell() {
           </CommandGroup>
         </CommandList>
       </CommandDialog>
-    </div>
+      </div>
+    </RealtimeCallProvider>
   );
 }
 

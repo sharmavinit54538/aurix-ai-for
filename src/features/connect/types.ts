@@ -15,6 +15,8 @@ export const CallStatusSchema = z.enum([
   "busy",
   "missed",
   "ended",
+  "failed",
+  "reconnecting",
 ]);
 export type CallStatus = z.infer<typeof CallStatusSchema>;
 
@@ -174,6 +176,7 @@ export interface CallSession {
   recipientAvatar?: string | null;
   callType: CallType;
   status: CallStatus;
+  failureReason?: string;
   startedAt?: string;
   endedAt?: string;
   durationSeconds?: number;

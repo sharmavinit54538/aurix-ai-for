@@ -1,5 +1,6 @@
-import { getAccessToken, refreshAccessToken } from "@/api/tokens";
-import { getApiBaseUrl } from "@/api/apiInstance";
+import { getAccessToken } from "@/api/tokens";
+import { getApiBaseUrl, refreshAccessToken } from "@/api/apiInstance";
+import { useEffect, useState } from "react";
 
 export type RealtimeEventHandler<T = any> = (payload: T) => void;
 
@@ -24,6 +25,7 @@ class RealtimeClient {
   private readonly maxProcessedCacheSize = 500;
   private isConnected = false;
   private onReconnectCallbacks = new Set<() => void>();
+  private statusSubscribers = new Set<(status: "connecting" | "open" | "closed") => void>();
 
   constructor() {
     if (typeof window !== "undefined") {
@@ -62,9 +64,11 @@ class RealtimeClient {
 
     try {
       this.socket = new WebSocket(wsUrl);
+      this.notifyStatusChange();
 
       this.socket.onopen = () => {
         this.isConnected = true;
+        this.notifyStatusChange();
         const wasReconnecting = this.reconnectAttempt > 0;
         this.reconnectAttempt = 0;
         this.startHeartbeat();
@@ -85,12 +89,13 @@ class RealtimeClient {
       };
 
       this.socket.onerror = () => {
-        // Socket errors are followed by close
+        this.notifyStatusChange();
       };
 
       this.socket.onclose = (event) => {
         this.isConnected = false;
         this.cleanupHeartbeat();
+        this.notifyStatusChange();
 
         if (event.code === 1008) {
           // Token expired or policy violation -> refresh token and reconnect
@@ -109,6 +114,7 @@ class RealtimeClient {
         }
       };
     } catch {
+      this.notifyStatusChange();
       this.scheduleReconnect();
     }
   }
@@ -120,6 +126,39 @@ class RealtimeClient {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
+    this.notifyStatusChange();
+  }
+
+  public getStatus(): "connecting" | "open" | "closed" {
+    if (!this.socket) return "closed";
+    if (this.socket.readyState === WebSocket.OPEN) return "open";
+    if (this.socket.readyState === WebSocket.CONNECTING) return "connecting";
+    return "closed";
+  }
+
+  public isOpen(): boolean {
+    return this.getStatus() === "open";
+  }
+
+  public onStatusChange(callback: (status: "connecting" | "open" | "closed") => void): () => void {
+    this.statusSubscribers.add(callback);
+    callback(this.getStatus());
+    return () => {
+      this.statusSubscribers.delete(callback);
+    };
+  }
+
+  private notifyStatusChange(): void {
+    const status = this.getStatus();
+    this.statusSubscribers.forEach((cb) => {
+      try {
+        cb(status);
+      } catch (err) {
+        if (import.meta.env.DEV) {
+          console.warn("[Realtime] Status listener callback error:", err);
+        }
+      }
+    });
   }
 
   public on<T = any>(event: string, handler: RealtimeEventHandler<T>): () => void {
@@ -176,6 +215,16 @@ class RealtimeClient {
       const msg: RealtimeMessage = JSON.parse(raw);
       const eventName = msg.event || msg.type || "";
       if (!eventName) return;
+
+      // DEV-only WS frame inspector (Requirement 9a)
+      if (import.meta.env.DEV) {
+        const topLevelKeys = msg && typeof msg === "object" ? Object.keys(msg) : [];
+        const dataKeys = msg.data && typeof msg.data === "object" ? Object.keys(msg.data) : [];
+        console.debug(`[WS Frame Inspector] event: "${eventName}"`, {
+          topLevelKeys,
+          dataKeys,
+        });
+      }
 
       // Duplicate-event suppression
       const eventId = msg.correlation_id || msg.data?.id || `${eventName}-${msg.timestamp}-${JSON.stringify(msg.data).slice(0, 50)}`;
@@ -270,3 +319,19 @@ class RealtimeClient {
 }
 
 export const realtimeClient = new RealtimeClient();
+
+export function useRealtimeStatus(): "connecting" | "open" | "closed" {
+  const [status, setStatus] = useState<"connecting" | "open" | "closed">(() => realtimeClient.getStatus());
+
+  useEffect(() => {
+    return realtimeClient.onStatusChange(setStatus);
+  }, []);
+
+  return status;
+}
+
+export function useIsRealtimeOpen(): boolean {
+  const status = useRealtimeStatus();
+  return status === "open";
+}
+

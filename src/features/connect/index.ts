@@ -6,6 +6,7 @@ export * from "./stores/presenceStore";
 export * from "./stores/callStore";
 export * from "./stores/meetingStore";
 
+export * from "./providers/RealtimeCallProvider";
 export * from "./components/GlobalCallOverlay";
 export * from "./components/ConnectSidebar";
 export * from "./components/ChannelChatView";
