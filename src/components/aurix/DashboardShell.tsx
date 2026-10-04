@@ -32,6 +32,7 @@ import {
   Lock,
   Megaphone,
   Menu,
+  MessageSquare,
   Moon,
   Package,
   PanelLeft,
@@ -61,6 +62,7 @@ import { NotificationDropdown } from "./NotificationDropdown";
 import { GeminiIcon } from "@/components/icons/GeminiIcon";
 import { hasValidAccessToken } from "@/api";
 import { AuthLoadingScreen } from "@/features/auth/components/AuthLoadingScreen";
+import { GlobalCallOverlay } from "@/features/connect/components/GlobalCallOverlay";
 import {
   CommandDialog,
   CommandEmpty,
@@ -170,6 +172,11 @@ const NAV_SECTIONS: SidebarNavSection[] = [
         icon: GeminiIcon,
       },
       {
+        to: "/dashboard/connect",
+        label: "Connect",
+        icon: MessageSquare,
+      },
+      {
         to: "/dashboard/settings",
         label: "Settings",
         icon: Settings,
@@ -216,6 +223,11 @@ const EMPLOYEE_NAV_SECTIONS: SidebarNavSection[] = [
         to: "/dashboard/performance",
         label: "Performance",
         icon: Target,
+      },
+      {
+        to: "/dashboard/connect",
+        label: "Connect",
+        icon: MessageSquare,
       },
       {
         to: "/dashboard/settings/profile",
@@ -285,6 +297,11 @@ const MANAGER_NAV_SECTIONS: SidebarNavSection[] = [
         to: "/dashboard/ai-hub",
         label: "AI Assistant",
         icon: Brain,
+      },
+      {
+        to: "/dashboard/connect",
+        label: "Connect",
+        icon: MessageSquare,
       },
       {
         to: "/dashboard/settings",
@@ -696,6 +713,9 @@ export function DashboardShell() {
         </div>
       </div>
 
+      {/* Global Native WebRTC Call Overlay */}
+      <GlobalCallOverlay />
+
       {/* ChatGPT-style Quick Search Modal */}
       <CommandDialog open={searchOpen} onOpenChange={setSearchOpen}>
         <CommandInput placeholder="Search employees, departments, requests, pages..." />
@@ -772,6 +792,17 @@ export function DashboardShell() {
             >
               <GeminiIcon gradient className="mr-2 h-4 w-4 shrink-0 transition-transform duration-200 group-hover:scale-110" />
               <span>AI Hub</span>
+            </CommandItem>
+            <CommandItem
+              value="Connect Chat Messages Video Calls Meetings"
+              onSelect={() => {
+                navigate({ to: "/dashboard/connect" });
+                setSearchOpen(false);
+              }}
+              className="cursor-pointer"
+            >
+              <MessageSquare className="mr-2 h-4 w-4" />
+              <span>Connect / Team Chat</span>
             </CommandItem>
           </CommandGroup>
         </CommandList>

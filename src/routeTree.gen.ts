@@ -49,6 +49,7 @@ import { Route as DashboardPayrollRouteImport } from './routes/dashboard.payroll
 import { Route as DashboardOnboardingChecklistRouteImport } from './routes/dashboard.onboarding-checklist'
 import { Route as DashboardOffboardingRouteImport } from './routes/dashboard.offboarding'
 import { Route as DashboardNotificationsRouteImport } from './routes/dashboard.notifications'
+import { Route as DashboardMeetingsRouteImport } from './routes/dashboard.meetings'
 import { Route as DashboardManagersRouteImport } from './routes/dashboard.managers'
 import { Route as DashboardManagerRouteImport } from './routes/dashboard.manager'
 import { Route as DashboardLeavesRouteImport } from './routes/dashboard.leaves'
@@ -66,6 +67,8 @@ import { Route as DashboardEmployeesRouteImport } from './routes/dashboard.emplo
 import { Route as DashboardEmployeeRouteImport } from './routes/dashboard.employee'
 import { Route as DashboardDocumentsRouteImport } from './routes/dashboard.documents'
 import { Route as DashboardDepartmentsRouteImport } from './routes/dashboard.departments'
+import { Route as DashboardConnectRouteImport } from './routes/dashboard.connect'
+import { Route as DashboardCallsRouteImport } from './routes/dashboard.calls'
 import { Route as DashboardBillingRouteImport } from './routes/dashboard.billing'
 import { Route as DashboardAuditLogsRouteImport } from './routes/dashboard.audit-logs'
 import { Route as DashboardAttendanceRouteImport } from './routes/dashboard.attendance'
@@ -106,8 +109,10 @@ import { Route as DashboardResourcesIndexRouteImport } from './routes/dashboard.
 import { Route as DashboardRecruitmentIndexRouteImport } from './routes/dashboard/recruitment/index'
 import { Route as DashboardPeopleIndexRouteImport } from './routes/dashboard.people.index'
 import { Route as DashboardPayrollIndexRouteImport } from './routes/dashboard.payroll.index'
+import { Route as DashboardMeetingsIndexRouteImport } from './routes/dashboard.meetings.index'
 import { Route as DashboardHrOperationsIndexRouteImport } from './routes/dashboard.hr-operations.index'
 import { Route as DashboardExecutiveIndexRouteImport } from './routes/dashboard.executive.index'
+import { Route as DashboardConnectIndexRouteImport } from './routes/dashboard.connect.index'
 import { Route as DashboardAttendanceIndexRouteImport } from './routes/dashboard.attendance.index'
 import { Route as DashboardAnalyticsIndexRouteImport } from './routes/dashboard.analytics.index'
 import { Route as DashboardAiHubIndexRouteImport } from './routes/dashboard.ai-hub.index'
@@ -182,6 +187,7 @@ import { Route as DashboardPayrollPayslipsRouteImport } from './routes/dashboard
 import { Route as DashboardPayrollPaymentsRouteImport } from './routes/dashboard.payroll.payments'
 import { Route as DashboardPayrollFullAndFinalRouteImport } from './routes/dashboard.payroll.full-and-final'
 import { Route as DashboardPayrollCompensationRouteImport } from './routes/dashboard.payroll.compensation'
+import { Route as DashboardMeetingsMeetingIdRouteImport } from './routes/dashboard.meetings.$meetingId'
 import { Route as DashboardHrOperationsVisitorManagementRouteImport } from './routes/dashboard.hr-operations.visitor-management'
 import { Route as DashboardHrOperationsTimelineRouteImport } from './routes/dashboard.hr-operations.timeline'
 import { Route as DashboardHrOperationsOnboardingRouteImport } from './routes/dashboard.hr-operations.onboarding'
@@ -242,6 +248,8 @@ import { Route as DashboardExecutiveCeoOperationsRouteImport } from './routes/da
 import { Route as DashboardExecutiveCeoFinanceRouteImport } from './routes/dashboard.executive.ceo.finance'
 import { Route as DashboardExecutiveCeoBusinessRouteImport } from './routes/dashboard.executive.ceo.business'
 import { Route as DashboardExecutiveCeoAiInsightsRouteImport } from './routes/dashboard.executive.ceo.ai-insights'
+import { Route as DashboardConnectDmConversationIdRouteImport } from './routes/dashboard.connect.dm.$conversationId'
+import { Route as DashboardConnectChannelsChannelIdRouteImport } from './routes/dashboard.connect.channels.$channelId'
 import { Route as DashboardRecruitmentJobsJobIdPublishRouteImport } from './routes/dashboard/recruitment/jobs/$jobId/publish'
 import { Route as DashboardPayrollRunsRunIdValidationRouteImport } from './routes/dashboard.payroll.runs.$runId.validation'
 import { Route as DashboardPayrollRunsRunIdReviewRouteImport } from './routes/dashboard.payroll.runs.$runId.review'
@@ -454,6 +462,11 @@ const DashboardNotificationsRoute = DashboardNotificationsRouteImport.update({
   path: '/notifications',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardMeetingsRoute = DashboardMeetingsRouteImport.update({
+  id: '/meetings',
+  path: '/meetings',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardManagersRoute = DashboardManagersRouteImport.update({
   id: '/managers',
   path: '/managers',
@@ -537,6 +550,16 @@ const DashboardDocumentsRoute = DashboardDocumentsRouteImport.update({
 const DashboardDepartmentsRoute = DashboardDepartmentsRouteImport.update({
   id: '/departments',
   path: '/departments',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardConnectRoute = DashboardConnectRouteImport.update({
+  id: '/connect',
+  path: '/connect',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardCallsRoute = DashboardCallsRouteImport.update({
+  id: '/calls',
+  path: '/calls',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardBillingRoute = DashboardBillingRouteImport.update({
@@ -742,6 +765,11 @@ const DashboardPayrollIndexRoute = DashboardPayrollIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardPayrollRoute,
 } as any)
+const DashboardMeetingsIndexRoute = DashboardMeetingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardMeetingsRoute,
+} as any)
 const DashboardHrOperationsIndexRoute =
   DashboardHrOperationsIndexRouteImport.update({
     id: '/',
@@ -752,6 +780,11 @@ const DashboardExecutiveIndexRoute = DashboardExecutiveIndexRouteImport.update({
   id: '/executive/',
   path: '/executive/',
   getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardConnectIndexRoute = DashboardConnectIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardConnectRoute,
 } as any)
 const DashboardAttendanceIndexRoute =
   DashboardAttendanceIndexRouteImport.update({
@@ -1189,6 +1222,12 @@ const DashboardPayrollCompensationRoute =
     path: '/compensation',
     getParentRoute: () => DashboardPayrollRoute,
   } as any)
+const DashboardMeetingsMeetingIdRoute =
+  DashboardMeetingsMeetingIdRouteImport.update({
+    id: '/$meetingId',
+    path: '/$meetingId',
+    getParentRoute: () => DashboardMeetingsRoute,
+  } as any)
 const DashboardHrOperationsVisitorManagementRoute =
   DashboardHrOperationsVisitorManagementRouteImport.update({
     id: '/visitor-management',
@@ -1541,6 +1580,18 @@ const DashboardExecutiveCeoAiInsightsRoute =
     path: '/ai-insights',
     getParentRoute: () => DashboardExecutiveCeoRoute,
   } as any)
+const DashboardConnectDmConversationIdRoute =
+  DashboardConnectDmConversationIdRouteImport.update({
+    id: '/dm/$conversationId',
+    path: '/dm/$conversationId',
+    getParentRoute: () => DashboardConnectRoute,
+  } as any)
+const DashboardConnectChannelsChannelIdRoute =
+  DashboardConnectChannelsChannelIdRouteImport.update({
+    id: '/channels/$channelId',
+    path: '/channels/$channelId',
+    getParentRoute: () => DashboardConnectRoute,
+  } as any)
 const DashboardRecruitmentJobsJobIdPublishRoute =
   DashboardRecruitmentJobsJobIdPublishRouteImport.update({
     id: '/publish',
@@ -1655,6 +1706,8 @@ export interface FileRoutesByFullPath {
   '/dashboard/attendance': typeof DashboardAttendanceRouteWithChildren
   '/dashboard/audit-logs': typeof DashboardAuditLogsRoute
   '/dashboard/billing': typeof DashboardBillingRoute
+  '/dashboard/calls': typeof DashboardCallsRoute
+  '/dashboard/connect': typeof DashboardConnectRouteWithChildren
   '/dashboard/departments': typeof DashboardDepartmentsRoute
   '/dashboard/documents': typeof DashboardDocumentsRoute
   '/dashboard/employee': typeof DashboardEmployeeRouteWithChildren
@@ -1672,6 +1725,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/leaves': typeof DashboardLeavesRoute
   '/dashboard/manager': typeof DashboardManagerRoute
   '/dashboard/managers': typeof DashboardManagersRoute
+  '/dashboard/meetings': typeof DashboardMeetingsRouteWithChildren
   '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/offboarding': typeof DashboardOffboardingRoute
   '/dashboard/onboarding-checklist': typeof DashboardOnboardingChecklistRoute
@@ -1716,6 +1770,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/hr-operations/onboarding': typeof DashboardHrOperationsOnboardingRoute
   '/dashboard/hr-operations/timeline': typeof DashboardHrOperationsTimelineRoute
   '/dashboard/hr-operations/visitor-management': typeof DashboardHrOperationsVisitorManagementRoute
+  '/dashboard/meetings/$meetingId': typeof DashboardMeetingsMeetingIdRoute
   '/dashboard/payroll/compensation': typeof DashboardPayrollCompensationRoute
   '/dashboard/payroll/full-and-final': typeof DashboardPayrollFullAndFinalRoute
   '/dashboard/payroll/payments': typeof DashboardPayrollPaymentsRouteWithChildren
@@ -1790,8 +1845,10 @@ export interface FileRoutesByFullPath {
   '/dashboard/ai-hub/': typeof DashboardAiHubIndexRoute
   '/dashboard/analytics/': typeof DashboardAnalyticsIndexRoute
   '/dashboard/attendance/': typeof DashboardAttendanceIndexRoute
+  '/dashboard/connect/': typeof DashboardConnectIndexRoute
   '/dashboard/executive/': typeof DashboardExecutiveIndexRoute
   '/dashboard/hr-operations/': typeof DashboardHrOperationsIndexRoute
+  '/dashboard/meetings/': typeof DashboardMeetingsIndexRoute
   '/dashboard/payroll/': typeof DashboardPayrollIndexRoute
   '/dashboard/people/': typeof DashboardPeopleIndexRoute
   '/dashboard/recruitment/': typeof DashboardRecruitmentIndexRoute
@@ -1800,6 +1857,8 @@ export interface FileRoutesByFullPath {
   '/dashboard/super-admin/': typeof DashboardSuperAdminIndexRoute
   '/dashboard/talent/': typeof DashboardTalentIndexRoute
   '/dashboard/workforce/': typeof DashboardWorkforceIndexRoute
+  '/dashboard/connect/channels/$channelId': typeof DashboardConnectChannelsChannelIdRoute
+  '/dashboard/connect/dm/$conversationId': typeof DashboardConnectDmConversationIdRoute
   '/dashboard/executive/ceo/ai-insights': typeof DashboardExecutiveCeoAiInsightsRoute
   '/dashboard/executive/ceo/business': typeof DashboardExecutiveCeoBusinessRoute
   '/dashboard/executive/ceo/finance': typeof DashboardExecutiveCeoFinanceRoute
@@ -1894,6 +1953,7 @@ export interface FileRoutesByTo {
   '/dashboard/assets': typeof DashboardAssetsRoute
   '/dashboard/audit-logs': typeof DashboardAuditLogsRoute
   '/dashboard/billing': typeof DashboardBillingRoute
+  '/dashboard/calls': typeof DashboardCallsRoute
   '/dashboard/departments': typeof DashboardDepartmentsRoute
   '/dashboard/documents': typeof DashboardDocumentsRoute
   '/dashboard/employee': typeof DashboardEmployeeRouteWithChildren
@@ -1944,6 +2004,7 @@ export interface FileRoutesByTo {
   '/dashboard/hr-operations/onboarding': typeof DashboardHrOperationsOnboardingRoute
   '/dashboard/hr-operations/timeline': typeof DashboardHrOperationsTimelineRoute
   '/dashboard/hr-operations/visitor-management': typeof DashboardHrOperationsVisitorManagementRoute
+  '/dashboard/meetings/$meetingId': typeof DashboardMeetingsMeetingIdRoute
   '/dashboard/payroll/compensation': typeof DashboardPayrollCompensationRoute
   '/dashboard/payroll/full-and-final': typeof DashboardPayrollFullAndFinalRoute
   '/dashboard/payroll/payments': typeof DashboardPayrollPaymentsRouteWithChildren
@@ -2017,8 +2078,10 @@ export interface FileRoutesByTo {
   '/dashboard/ai-hub': typeof DashboardAiHubIndexRoute
   '/dashboard/analytics': typeof DashboardAnalyticsIndexRoute
   '/dashboard/attendance': typeof DashboardAttendanceIndexRoute
+  '/dashboard/connect': typeof DashboardConnectIndexRoute
   '/dashboard/executive': typeof DashboardExecutiveIndexRoute
   '/dashboard/hr-operations': typeof DashboardHrOperationsIndexRoute
+  '/dashboard/meetings': typeof DashboardMeetingsIndexRoute
   '/dashboard/payroll': typeof DashboardPayrollIndexRoute
   '/dashboard/people': typeof DashboardPeopleIndexRoute
   '/dashboard/recruitment': typeof DashboardRecruitmentIndexRoute
@@ -2027,6 +2090,8 @@ export interface FileRoutesByTo {
   '/dashboard/super-admin': typeof DashboardSuperAdminIndexRoute
   '/dashboard/talent': typeof DashboardTalentIndexRoute
   '/dashboard/workforce': typeof DashboardWorkforceIndexRoute
+  '/dashboard/connect/channels/$channelId': typeof DashboardConnectChannelsChannelIdRoute
+  '/dashboard/connect/dm/$conversationId': typeof DashboardConnectDmConversationIdRoute
   '/dashboard/executive/ceo/ai-insights': typeof DashboardExecutiveCeoAiInsightsRoute
   '/dashboard/executive/ceo/business': typeof DashboardExecutiveCeoBusinessRoute
   '/dashboard/executive/ceo/finance': typeof DashboardExecutiveCeoFinanceRoute
@@ -2128,6 +2193,8 @@ export interface FileRoutesById {
   '/dashboard/attendance': typeof DashboardAttendanceRouteWithChildren
   '/dashboard/audit-logs': typeof DashboardAuditLogsRoute
   '/dashboard/billing': typeof DashboardBillingRoute
+  '/dashboard/calls': typeof DashboardCallsRoute
+  '/dashboard/connect': typeof DashboardConnectRouteWithChildren
   '/dashboard/departments': typeof DashboardDepartmentsRoute
   '/dashboard/documents': typeof DashboardDocumentsRoute
   '/dashboard/employee': typeof DashboardEmployeeRouteWithChildren
@@ -2145,6 +2212,7 @@ export interface FileRoutesById {
   '/dashboard/leaves': typeof DashboardLeavesRoute
   '/dashboard/manager': typeof DashboardManagerRoute
   '/dashboard/managers': typeof DashboardManagersRoute
+  '/dashboard/meetings': typeof DashboardMeetingsRouteWithChildren
   '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/offboarding': typeof DashboardOffboardingRoute
   '/dashboard/onboarding-checklist': typeof DashboardOnboardingChecklistRoute
@@ -2189,6 +2257,7 @@ export interface FileRoutesById {
   '/dashboard/hr-operations/onboarding': typeof DashboardHrOperationsOnboardingRoute
   '/dashboard/hr-operations/timeline': typeof DashboardHrOperationsTimelineRoute
   '/dashboard/hr-operations/visitor-management': typeof DashboardHrOperationsVisitorManagementRoute
+  '/dashboard/meetings/$meetingId': typeof DashboardMeetingsMeetingIdRoute
   '/dashboard/payroll/compensation': typeof DashboardPayrollCompensationRoute
   '/dashboard/payroll/full-and-final': typeof DashboardPayrollFullAndFinalRoute
   '/dashboard/payroll/payments': typeof DashboardPayrollPaymentsRouteWithChildren
@@ -2263,8 +2332,10 @@ export interface FileRoutesById {
   '/dashboard/ai-hub/': typeof DashboardAiHubIndexRoute
   '/dashboard/analytics/': typeof DashboardAnalyticsIndexRoute
   '/dashboard/attendance/': typeof DashboardAttendanceIndexRoute
+  '/dashboard/connect/': typeof DashboardConnectIndexRoute
   '/dashboard/executive/': typeof DashboardExecutiveIndexRoute
   '/dashboard/hr-operations/': typeof DashboardHrOperationsIndexRoute
+  '/dashboard/meetings/': typeof DashboardMeetingsIndexRoute
   '/dashboard/payroll/': typeof DashboardPayrollIndexRoute
   '/dashboard/people/': typeof DashboardPeopleIndexRoute
   '/dashboard/recruitment/': typeof DashboardRecruitmentIndexRoute
@@ -2273,6 +2344,8 @@ export interface FileRoutesById {
   '/dashboard/super-admin/': typeof DashboardSuperAdminIndexRoute
   '/dashboard/talent/': typeof DashboardTalentIndexRoute
   '/dashboard/workforce/': typeof DashboardWorkforceIndexRoute
+  '/dashboard/connect/channels/$channelId': typeof DashboardConnectChannelsChannelIdRoute
+  '/dashboard/connect/dm/$conversationId': typeof DashboardConnectDmConversationIdRoute
   '/dashboard/executive/ceo/ai-insights': typeof DashboardExecutiveCeoAiInsightsRoute
   '/dashboard/executive/ceo/business': typeof DashboardExecutiveCeoBusinessRoute
   '/dashboard/executive/ceo/finance': typeof DashboardExecutiveCeoFinanceRoute
@@ -2375,6 +2448,8 @@ export interface FileRouteTypes {
     | '/dashboard/attendance'
     | '/dashboard/audit-logs'
     | '/dashboard/billing'
+    | '/dashboard/calls'
+    | '/dashboard/connect'
     | '/dashboard/departments'
     | '/dashboard/documents'
     | '/dashboard/employee'
@@ -2392,6 +2467,7 @@ export interface FileRouteTypes {
     | '/dashboard/leaves'
     | '/dashboard/manager'
     | '/dashboard/managers'
+    | '/dashboard/meetings'
     | '/dashboard/notifications'
     | '/dashboard/offboarding'
     | '/dashboard/onboarding-checklist'
@@ -2436,6 +2512,7 @@ export interface FileRouteTypes {
     | '/dashboard/hr-operations/onboarding'
     | '/dashboard/hr-operations/timeline'
     | '/dashboard/hr-operations/visitor-management'
+    | '/dashboard/meetings/$meetingId'
     | '/dashboard/payroll/compensation'
     | '/dashboard/payroll/full-and-final'
     | '/dashboard/payroll/payments'
@@ -2510,8 +2587,10 @@ export interface FileRouteTypes {
     | '/dashboard/ai-hub/'
     | '/dashboard/analytics/'
     | '/dashboard/attendance/'
+    | '/dashboard/connect/'
     | '/dashboard/executive/'
     | '/dashboard/hr-operations/'
+    | '/dashboard/meetings/'
     | '/dashboard/payroll/'
     | '/dashboard/people/'
     | '/dashboard/recruitment/'
@@ -2520,6 +2599,8 @@ export interface FileRouteTypes {
     | '/dashboard/super-admin/'
     | '/dashboard/talent/'
     | '/dashboard/workforce/'
+    | '/dashboard/connect/channels/$channelId'
+    | '/dashboard/connect/dm/$conversationId'
     | '/dashboard/executive/ceo/ai-insights'
     | '/dashboard/executive/ceo/business'
     | '/dashboard/executive/ceo/finance'
@@ -2614,6 +2695,7 @@ export interface FileRouteTypes {
     | '/dashboard/assets'
     | '/dashboard/audit-logs'
     | '/dashboard/billing'
+    | '/dashboard/calls'
     | '/dashboard/departments'
     | '/dashboard/documents'
     | '/dashboard/employee'
@@ -2664,6 +2746,7 @@ export interface FileRouteTypes {
     | '/dashboard/hr-operations/onboarding'
     | '/dashboard/hr-operations/timeline'
     | '/dashboard/hr-operations/visitor-management'
+    | '/dashboard/meetings/$meetingId'
     | '/dashboard/payroll/compensation'
     | '/dashboard/payroll/full-and-final'
     | '/dashboard/payroll/payments'
@@ -2737,8 +2820,10 @@ export interface FileRouteTypes {
     | '/dashboard/ai-hub'
     | '/dashboard/analytics'
     | '/dashboard/attendance'
+    | '/dashboard/connect'
     | '/dashboard/executive'
     | '/dashboard/hr-operations'
+    | '/dashboard/meetings'
     | '/dashboard/payroll'
     | '/dashboard/people'
     | '/dashboard/recruitment'
@@ -2747,6 +2832,8 @@ export interface FileRouteTypes {
     | '/dashboard/super-admin'
     | '/dashboard/talent'
     | '/dashboard/workforce'
+    | '/dashboard/connect/channels/$channelId'
+    | '/dashboard/connect/dm/$conversationId'
     | '/dashboard/executive/ceo/ai-insights'
     | '/dashboard/executive/ceo/business'
     | '/dashboard/executive/ceo/finance'
@@ -2847,6 +2934,8 @@ export interface FileRouteTypes {
     | '/dashboard/attendance'
     | '/dashboard/audit-logs'
     | '/dashboard/billing'
+    | '/dashboard/calls'
+    | '/dashboard/connect'
     | '/dashboard/departments'
     | '/dashboard/documents'
     | '/dashboard/employee'
@@ -2864,6 +2953,7 @@ export interface FileRouteTypes {
     | '/dashboard/leaves'
     | '/dashboard/manager'
     | '/dashboard/managers'
+    | '/dashboard/meetings'
     | '/dashboard/notifications'
     | '/dashboard/offboarding'
     | '/dashboard/onboarding-checklist'
@@ -2908,6 +2998,7 @@ export interface FileRouteTypes {
     | '/dashboard/hr-operations/onboarding'
     | '/dashboard/hr-operations/timeline'
     | '/dashboard/hr-operations/visitor-management'
+    | '/dashboard/meetings/$meetingId'
     | '/dashboard/payroll/compensation'
     | '/dashboard/payroll/full-and-final'
     | '/dashboard/payroll/payments'
@@ -2982,8 +3073,10 @@ export interface FileRouteTypes {
     | '/dashboard/ai-hub/'
     | '/dashboard/analytics/'
     | '/dashboard/attendance/'
+    | '/dashboard/connect/'
     | '/dashboard/executive/'
     | '/dashboard/hr-operations/'
+    | '/dashboard/meetings/'
     | '/dashboard/payroll/'
     | '/dashboard/people/'
     | '/dashboard/recruitment/'
@@ -2992,6 +3085,8 @@ export interface FileRouteTypes {
     | '/dashboard/super-admin/'
     | '/dashboard/talent/'
     | '/dashboard/workforce/'
+    | '/dashboard/connect/channels/$channelId'
+    | '/dashboard/connect/dm/$conversationId'
     | '/dashboard/executive/ceo/ai-insights'
     | '/dashboard/executive/ceo/business'
     | '/dashboard/executive/ceo/finance'
@@ -3355,6 +3450,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardNotificationsRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/meetings': {
+      id: '/dashboard/meetings'
+      path: '/meetings'
+      fullPath: '/dashboard/meetings'
+      preLoaderRoute: typeof DashboardMeetingsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/managers': {
       id: '/dashboard/managers'
       path: '/managers'
@@ -3472,6 +3574,20 @@ declare module '@tanstack/react-router' {
       path: '/departments'
       fullPath: '/dashboard/departments'
       preLoaderRoute: typeof DashboardDepartmentsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/connect': {
+      id: '/dashboard/connect'
+      path: '/connect'
+      fullPath: '/dashboard/connect'
+      preLoaderRoute: typeof DashboardConnectRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/calls': {
+      id: '/dashboard/calls'
+      path: '/calls'
+      fullPath: '/dashboard/calls'
+      preLoaderRoute: typeof DashboardCallsRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/billing': {
@@ -3754,6 +3870,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardPayrollIndexRouteImport
       parentRoute: typeof DashboardPayrollRoute
     }
+    '/dashboard/meetings/': {
+      id: '/dashboard/meetings/'
+      path: '/'
+      fullPath: '/dashboard/meetings/'
+      preLoaderRoute: typeof DashboardMeetingsIndexRouteImport
+      parentRoute: typeof DashboardMeetingsRoute
+    }
     '/dashboard/hr-operations/': {
       id: '/dashboard/hr-operations/'
       path: '/'
@@ -3767,6 +3890,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/executive/'
       preLoaderRoute: typeof DashboardExecutiveIndexRouteImport
       parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/connect/': {
+      id: '/dashboard/connect/'
+      path: '/'
+      fullPath: '/dashboard/connect/'
+      preLoaderRoute: typeof DashboardConnectIndexRouteImport
+      parentRoute: typeof DashboardConnectRoute
     }
     '/dashboard/attendance/': {
       id: '/dashboard/attendance/'
@@ -4286,6 +4416,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardPayrollCompensationRouteImport
       parentRoute: typeof DashboardPayrollRoute
     }
+    '/dashboard/meetings/$meetingId': {
+      id: '/dashboard/meetings/$meetingId'
+      path: '/$meetingId'
+      fullPath: '/dashboard/meetings/$meetingId'
+      preLoaderRoute: typeof DashboardMeetingsMeetingIdRouteImport
+      parentRoute: typeof DashboardMeetingsRoute
+    }
     '/dashboard/hr-operations/visitor-management': {
       id: '/dashboard/hr-operations/visitor-management'
       path: '/visitor-management'
@@ -4706,6 +4843,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardExecutiveCeoAiInsightsRouteImport
       parentRoute: typeof DashboardExecutiveCeoRoute
     }
+    '/dashboard/connect/dm/$conversationId': {
+      id: '/dashboard/connect/dm/$conversationId'
+      path: '/dm/$conversationId'
+      fullPath: '/dashboard/connect/dm/$conversationId'
+      preLoaderRoute: typeof DashboardConnectDmConversationIdRouteImport
+      parentRoute: typeof DashboardConnectRoute
+    }
+    '/dashboard/connect/channels/$channelId': {
+      id: '/dashboard/connect/channels/$channelId'
+      path: '/channels/$channelId'
+      fullPath: '/dashboard/connect/channels/$channelId'
+      preLoaderRoute: typeof DashboardConnectChannelsChannelIdRouteImport
+      parentRoute: typeof DashboardConnectRoute
+    }
     '/dashboard/recruitment/jobs/$jobId/publish': {
       id: '/dashboard/recruitment/jobs/$jobId/publish'
       path: '/publish'
@@ -4897,6 +5048,22 @@ const DashboardAttendanceRouteChildren: DashboardAttendanceRouteChildren = {
 const DashboardAttendanceRouteWithChildren =
   DashboardAttendanceRoute._addFileChildren(DashboardAttendanceRouteChildren)
 
+interface DashboardConnectRouteChildren {
+  DashboardConnectIndexRoute: typeof DashboardConnectIndexRoute
+  DashboardConnectChannelsChannelIdRoute: typeof DashboardConnectChannelsChannelIdRoute
+  DashboardConnectDmConversationIdRoute: typeof DashboardConnectDmConversationIdRoute
+}
+
+const DashboardConnectRouteChildren: DashboardConnectRouteChildren = {
+  DashboardConnectIndexRoute: DashboardConnectIndexRoute,
+  DashboardConnectChannelsChannelIdRoute:
+    DashboardConnectChannelsChannelIdRoute,
+  DashboardConnectDmConversationIdRoute: DashboardConnectDmConversationIdRoute,
+}
+
+const DashboardConnectRouteWithChildren =
+  DashboardConnectRoute._addFileChildren(DashboardConnectRouteChildren)
+
 interface DashboardEmployeeRouteChildren {
   DashboardEmployeePayrollRoute: typeof DashboardEmployeePayrollRoute
 }
@@ -4935,6 +5102,19 @@ const DashboardHrOperationsRouteWithChildren =
   DashboardHrOperationsRoute._addFileChildren(
     DashboardHrOperationsRouteChildren,
   )
+
+interface DashboardMeetingsRouteChildren {
+  DashboardMeetingsMeetingIdRoute: typeof DashboardMeetingsMeetingIdRoute
+  DashboardMeetingsIndexRoute: typeof DashboardMeetingsIndexRoute
+}
+
+const DashboardMeetingsRouteChildren: DashboardMeetingsRouteChildren = {
+  DashboardMeetingsMeetingIdRoute: DashboardMeetingsMeetingIdRoute,
+  DashboardMeetingsIndexRoute: DashboardMeetingsIndexRoute,
+}
+
+const DashboardMeetingsRouteWithChildren =
+  DashboardMeetingsRoute._addFileChildren(DashboardMeetingsRouteChildren)
 
 interface DashboardPayrollPaymentsRouteChildren {
   DashboardPayrollPaymentsBatchIdRoute: typeof DashboardPayrollPaymentsBatchIdRoute
@@ -5363,6 +5543,8 @@ interface DashboardRouteChildren {
   DashboardAttendanceRoute: typeof DashboardAttendanceRouteWithChildren
   DashboardAuditLogsRoute: typeof DashboardAuditLogsRoute
   DashboardBillingRoute: typeof DashboardBillingRoute
+  DashboardCallsRoute: typeof DashboardCallsRoute
+  DashboardConnectRoute: typeof DashboardConnectRouteWithChildren
   DashboardDepartmentsRoute: typeof DashboardDepartmentsRoute
   DashboardDocumentsRoute: typeof DashboardDocumentsRoute
   DashboardEmployeeRoute: typeof DashboardEmployeeRouteWithChildren
@@ -5380,6 +5562,7 @@ interface DashboardRouteChildren {
   DashboardLeavesRoute: typeof DashboardLeavesRoute
   DashboardManagerRoute: typeof DashboardManagerRoute
   DashboardManagersRoute: typeof DashboardManagersRoute
+  DashboardMeetingsRoute: typeof DashboardMeetingsRouteWithChildren
   DashboardNotificationsRoute: typeof DashboardNotificationsRoute
   DashboardOffboardingRoute: typeof DashboardOffboardingRoute
   DashboardOnboardingChecklistRoute: typeof DashboardOnboardingChecklistRoute
@@ -5418,6 +5601,8 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAttendanceRoute: DashboardAttendanceRouteWithChildren,
   DashboardAuditLogsRoute: DashboardAuditLogsRoute,
   DashboardBillingRoute: DashboardBillingRoute,
+  DashboardCallsRoute: DashboardCallsRoute,
+  DashboardConnectRoute: DashboardConnectRouteWithChildren,
   DashboardDepartmentsRoute: DashboardDepartmentsRoute,
   DashboardDocumentsRoute: DashboardDocumentsRoute,
   DashboardEmployeeRoute: DashboardEmployeeRouteWithChildren,
@@ -5435,6 +5620,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardLeavesRoute: DashboardLeavesRoute,
   DashboardManagerRoute: DashboardManagerRoute,
   DashboardManagersRoute: DashboardManagersRoute,
+  DashboardMeetingsRoute: DashboardMeetingsRouteWithChildren,
   DashboardNotificationsRoute: DashboardNotificationsRoute,
   DashboardOffboardingRoute: DashboardOffboardingRoute,
   DashboardOnboardingChecklistRoute: DashboardOnboardingChecklistRoute,

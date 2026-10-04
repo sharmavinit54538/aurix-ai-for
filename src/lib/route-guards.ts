@@ -26,6 +26,11 @@ export const ROUTE_ROLE_ACCESS: Record<string, AppRole[]> = {
   // ── Universal Notifications Route (ALL AUTHENTICATED ROLES) ─────
   "/dashboard/notifications": [...ALL_COMPANY_ROLES, ...PLATFORM_ROLES],
 
+  // ── OFC360 Connect / Realtime Collaboration (ALL COMPANY ROLES) ──
+  "/dashboard/connect": ALL_COMPANY_ROLES,
+  "/dashboard/calls": ALL_COMPANY_ROLES,
+  "/dashboard/meetings": ALL_COMPANY_ROLES,
+
   // ── Company Announcements Routes ────────────────────────────────
   "/dashboard/announcements/manage": HR_OPERATIONS_ROLES,
   "/dashboard/announcements": ALL_COMPANY_ROLES,
