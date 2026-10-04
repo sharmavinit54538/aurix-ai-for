@@ -605,7 +605,7 @@ export interface PayrollPayslipStatutory {
   tds?: number | null;
   eps?: number | null;
   edli?: number | null;
-  other?: Record<string, unknown> | null;
+  other?: Record<string, unknown> | number | null;
 }
 
 export interface PayrollPayslipEmployerContributions {
@@ -1131,9 +1131,32 @@ export function normalizePayrollPreviewData(runId: string, raw: unknown): Payrol
   let validation: PayrollPreviewData["validation"] = null;
   const v = (r.validation || r.validation_results) as Record<string, unknown> | undefined;
   if (v && typeof v === "object") {
+    const mapIssue = (item: unknown, idx: number): PayrollPreviewValidationIssue => {
+      if (typeof item === "string") {
+        return { id: `issue_${idx}`, message: item };
+      }
+      const obj = (item && typeof item === "object" ? item : {}) as Record<string, unknown>;
+      return {
+        id: String(obj.id ?? `issue_${idx}`),
+        category: typeof obj.category === "string" ? obj.category : undefined,
+        message: String(obj.message ?? obj.error ?? obj.warning ?? obj.description ?? "Validation issue"),
+        employeeId:
+          typeof obj.employeeId === "string"
+            ? obj.employeeId
+            : typeof obj.employee_id === "string"
+              ? obj.employee_id
+              : undefined,
+        employeeName:
+          typeof obj.employeeName === "string"
+            ? obj.employeeName
+            : typeof obj.employee_name === "string"
+              ? obj.employee_name
+              : undefined,
+      };
+    };
     validation = {
-      errors: Array.isArray(v.errors) ? (v.errors as Record<string, unknown>[]) : [],
-      warnings: Array.isArray(v.warnings) ? (v.warnings as Record<string, unknown>[]) : [],
+      errors: Array.isArray(v.errors) ? v.errors.map(mapIssue) : [],
+      warnings: Array.isArray(v.warnings) ? v.warnings.map(mapIssue) : [],
     };
   }
 
@@ -1859,7 +1882,7 @@ export function normalizePayrollPayslipData(
       tds: (statEmployee?.tds ?? stat.tds ?? ded.tds ?? null) as number | null,
       eps: (statEmployer?.eps ?? stat.eps ?? null) as number | null,
       edli: (statEmployer?.edli ?? stat.edli ?? null) as number | null,
-      other: (stat.other || null) as number | null,
+      other: (stat.other || null) as Record<string, unknown> | number | null,
     } : null,
     employerContributions: (d.employerContributions || (statEmployer ? {
       pf: (statEmployer.epf ?? null) as number | null,
