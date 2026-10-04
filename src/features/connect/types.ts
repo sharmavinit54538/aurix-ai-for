@@ -176,6 +176,7 @@ export interface CallSession {
   recipientAvatar?: string | null;
   callType: CallType;
   status: CallStatus;
+  isInitiator?: boolean;
   failureReason?: string;
   startedAt?: string;
   endedAt?: string;

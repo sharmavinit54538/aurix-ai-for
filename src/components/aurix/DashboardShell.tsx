@@ -28,6 +28,7 @@ import {
   Home,
   Laptop,
   LayoutDashboard,
+  LifeBuoy,
   LineChart as LineChartIcon,
   Lock,
   Megaphone,
@@ -177,6 +178,12 @@ const NAV_SECTIONS: SidebarNavSection[] = [
         icon: MessageSquare,
       },
       {
+        to: "/dashboard/helpdesk",
+        label: "Helpdesk",
+        icon: LifeBuoy,
+        roles: ["hr_admin"],
+      },
+      {
         to: "/dashboard/settings",
         label: "Settings",
         icon: Settings,
@@ -228,6 +235,11 @@ const EMPLOYEE_NAV_SECTIONS: SidebarNavSection[] = [
         to: "/dashboard/connect",
         label: "Connect",
         icon: MessageSquare,
+      },
+      {
+        to: "/dashboard/helpdesk",
+        label: "Helpdesk & Support",
+        icon: LifeBuoy,
       },
       {
         to: "/dashboard/settings/profile",
@@ -302,6 +314,11 @@ const MANAGER_NAV_SECTIONS: SidebarNavSection[] = [
         to: "/dashboard/connect",
         label: "Connect",
         icon: MessageSquare,
+      },
+      {
+        to: "/dashboard/helpdesk",
+        label: "Team Helpdesk",
+        icon: LifeBuoy,
       },
       {
         to: "/dashboard/settings",
@@ -390,6 +407,7 @@ const EXECUTIVE_NAV_SECTIONS: SidebarNavSection[] = [
       { to: "/dashboard/executive/cio", label: "CIO IT Systems", icon: Laptop },
       { to: "/dashboard/executive/cmo", label: "CMO Marketing", icon: Sparkles },
       { to: "/dashboard/analytics", label: "Analytics & Reports", icon: BarChart3 },
+      { to: "/dashboard/helpdesk/analytics", label: "Helpdesk Analytics", icon: LifeBuoy },
     ],
   },
 ];
@@ -401,6 +419,7 @@ const IT_ADMIN_NAV_SECTIONS: SidebarNavSection[] = [
       { to: "/dashboard", label: "System Overview", icon: LayoutDashboard, exact: true },
       { to: "/dashboard/admin", label: "System Controls", icon: ShieldCheck },
       { to: "/dashboard/assets", label: "Assets", icon: Package },
+      { to: "/dashboard/helpdesk", label: "IT Helpdesk", icon: LifeBuoy },
       { to: "/dashboard/settings", label: "Settings", icon: Settings },
     ],
   },

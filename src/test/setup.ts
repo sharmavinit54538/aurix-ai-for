@@ -10,8 +10,13 @@ class ResizeObserverShim {
   disconnect() {}
 }
 
-if (typeof window !== "undefined" && !window.ResizeObserver) {
-  window.ResizeObserver = ResizeObserverShim;
+if (typeof window !== "undefined") {
+  if (!window.ResizeObserver) {
+    window.ResizeObserver = ResizeObserverShim;
+  }
+  if (typeof window.isSecureContext === "undefined") {
+    Object.defineProperty(window, "isSecureContext", { value: true, writable: true, configurable: true });
+  }
 }
 if (typeof globalThis !== "undefined" && !globalThis.ResizeObserver) {
   globalThis.ResizeObserver = ResizeObserverShim;

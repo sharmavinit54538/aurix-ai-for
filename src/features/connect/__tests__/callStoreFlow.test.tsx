@@ -114,6 +114,17 @@ function TestCallButton() {
   );
 }
 
+function simulateIncomingRealtimeEvent(event: string, data: any) {
+  (realtimeClient as any).handleIncomingMessage(
+    JSON.stringify({
+      event,
+      data,
+      timestamp: new Date().toISOString(),
+      correlation_id: `test-${Date.now()}-${Math.random()}`,
+    })
+  );
+}
+
 describe("WebRTC Call Store Flow & Reliability", () => {
   let createdPeerConnections: FakeRTCPeerConnection[] = [];
   let currentFakeStream: FakeMediaStream | null = null;
@@ -158,6 +169,12 @@ describe("WebRTC Call Store Flow & Reliability", () => {
     } as any);
     vi.spyOn(connectApi, "sendCallSignal").mockResolvedValue({ status: "delivered" } as any);
     vi.spyOn(connectApi, "updateCallStatus").mockResolvedValue({ status: "ok" } as any);
+    // Reset CallManager state
+    (callManager as any).iceServers = [];
+    (callManager as any).activeSession = null;
+    (callManager as any).peerConnection = null;
+    (callManager as any).pendingLocalCandidates = [];
+    (callManager as any).pendingRemoteCandidates = [];
   });
 
   afterEach(() => {
@@ -227,7 +244,7 @@ describe("WebRTC Call Store Flow & Reliability", () => {
       callManager.init();
 
       // Dispatch an incoming call invite with invalid SDP
-      (realtimeClient as any).emit("call.invite", {
+      simulateIncomingRealtimeEvent("call.incoming", {
         call_id: "call-invalid-offer",
         caller_id: "user-colleague",
         caller_name: "Colleague",
@@ -278,6 +295,7 @@ describe("WebRTC Call Store Flow & Reliability", () => {
 
       // Now resolve initiateCall with the real callId
       resolveInitiateCall!({
+        callId: "call-xyz-456",
         id: "call-xyz-456",
         caller_id: "user-me",
         recipient_id: "peer-1",
@@ -311,7 +329,7 @@ describe("WebRTC Call Store Flow & Reliability", () => {
       callManager.init();
 
       // Receive a valid incoming call
-      (realtimeClient as any).emit("call.invite", {
+      simulateIncomingRealtimeEvent("call.incoming", {
         call_id: "call-remote-test",
         caller_id: "user-colleague",
         caller_name: "Colleague",
@@ -320,19 +338,15 @@ describe("WebRTC Call Store Flow & Reliability", () => {
       });
 
       // Peer sends candidates BEFORE user clicks accept
-      (realtimeClient as any).emit("call.signal", {
+      simulateIncomingRealtimeEvent("call.signaling", {
         call_id: "call-remote-test",
-        signal: {
-          type: "candidate",
-          candidate: { candidate: "remote-cand-1", sdpMid: "0", sdpMLineIndex: 0 },
-        },
+        type: "candidate",
+        candidate: { candidate: "remote-cand-1", sdpMid: "0", sdpMLineIndex: 0 },
       });
-      (realtimeClient as any).emit("call.signal", {
+      simulateIncomingRealtimeEvent("call.signaling", {
         call_id: "call-remote-test",
-        signal: {
-          type: "candidate",
-          candidate: { candidate: "remote-cand-2", sdpMid: "0", sdpMLineIndex: 0 },
-        },
+        type: "candidate",
+        candidate: { candidate: "remote-cand-2", sdpMid: "0", sdpMLineIndex: 0 },
       });
 
       expect(createdPeerConnections.length).toBe(0);
@@ -373,9 +387,9 @@ describe("WebRTC Call Store Flow & Reliability", () => {
       await vi.advanceTimersByTimeAsync(45000);
 
       const session = callManager.getSession();
-      expect(session?.status).toBe("failed");
+      expect(session?.status).toBe("missed");
       expect(session?.failureReason).toContain("No answer");
-      expect(connectApi.updateCallStatus).toHaveBeenCalledWith("call-101", "ended");
+      expect(connectApi.updateCallStatus).toHaveBeenCalledWith("call-101", "missed", "No answer");
 
       vi.useRealTimers();
     });
@@ -394,6 +408,9 @@ describe("WebRTC Call Store Flow & Reliability", () => {
       await startPromise;
 
       const pc = createdPeerConnections[0];
+
+      // Simulate call was accepted and active
+      callManager.getSession()!.status = "accepted";
 
       // Simulate ICE disconnecting
       pc.iceConnectionState = "disconnected";
@@ -452,6 +469,7 @@ describe("WebRTC Call Store Flow & Reliability", () => {
       const colleague: Colleague = {
         id: "peer-tracks",
         name: "Tracks Colleague",
+        email: "tracks@example.com",
       };
 
       await callManager.startCall(colleague, "audio");
@@ -469,7 +487,7 @@ describe("WebRTC Call Store Flow & Reliability", () => {
     it("stops all media tracks on rejectIncomingCall()", async () => {
       callManager.init();
 
-      (realtimeClient as any).emit("call.invite", {
+      simulateIncomingRealtimeEvent("call.incoming", {
         call_id: "call-reject-tracks",
         caller_id: "user-peer",
         caller_name: "Peer",
@@ -506,7 +524,7 @@ describe("WebRTC Call Store Flow & Reliability", () => {
         new Error("No ICE servers returned by backend")
       );
 
-      const colleague: Colleague = { id: "p1", name: "Peer" };
+      const colleague: Colleague = { id: "p1", name: "Peer", email: "peer@example.com" };
       await expect(callManager.startCall(colleague, "audio")).rejects.toThrow();
 
       const session = callManager.getSession();
@@ -518,8 +536,8 @@ describe("WebRTC Call Store Flow & Reliability", () => {
   // ── 7. Call Button Gating ─────────────────────────────────
   describe("Call Button Disabled When Realtime Closed", () => {
     it("disables call button and displays tooltip when realtime is not open", () => {
-      // Force closed status
-      (realtimeClient as any).connectionStatus = "closed";
+      vi.spyOn(realtimeClient, "getStatus").mockReturnValue("closed");
+      vi.spyOn(realtimeClient, "isOpen").mockReturnValue(false);
 
       render(<TestCallButton />);
       const btn = screen.getByRole("button", { name: /call/i });
@@ -528,8 +546,8 @@ describe("WebRTC Call Store Flow & Reliability", () => {
     });
 
     it("enables call button when realtime is open", () => {
-      // Force open status
-      (realtimeClient as any).connectionStatus = "open";
+      vi.spyOn(realtimeClient, "getStatus").mockReturnValue("open");
+      vi.spyOn(realtimeClient, "isOpen").mockReturnValue(true);
 
       render(<TestCallButton />);
       const btn = screen.getByRole("button", { name: /call/i });

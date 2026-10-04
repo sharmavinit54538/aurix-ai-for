@@ -60,7 +60,7 @@ export function normalizeSdpOffer(rawOffer: unknown): { type: "offer"; sdp: stri
  * Maps WebRTC and media errors into user-friendly typed messages.
  */
 export function mapCallError(err: unknown, fallback = "Call failed"): string {
-  if (typeof window !== "undefined" && !window.isSecureContext) {
+  if (typeof window !== "undefined" && window.isSecureContext === false) {
     return "WebRTC calls require HTTPS or a secure context.";
   }
 
@@ -68,6 +68,10 @@ export function mapCallError(err: unknown, fallback = "Call failed"): string {
     const errorObj = err as { name?: string; message?: string };
     const name = errorObj.name || "";
     const msg = errorObj.message || "";
+
+    if (name === "SecurityError") {
+      return "WebRTC calls require HTTPS or a secure context.";
+    }
 
     if (
       name === "NotAllowedError" ||
@@ -151,12 +155,19 @@ class CallManager {
       }
     });
 
-    // Listen for incoming calls
-    realtimeClient.on("call.incoming", (data: any) => {
-      if (!data?.call_id) return;
-      const callId = String(data.call_id);
+    // Listen for incoming calls (supports both call.incoming and call.invite)
+    const handleIncoming = (data: any) => {
+      const callId = String(data?.call_id || data?.id || "");
+      if (!callId) return;
 
-      if (this.activeSession && this.activeSession.status !== "ended" && this.activeSession.status !== "failed") {
+      const isOngoing =
+        this.activeSession &&
+        (this.activeSession.status === "initiating" ||
+          this.activeSession.status === "ringing" ||
+          this.activeSession.status === "accepted" ||
+          this.activeSession.status === "reconnecting");
+
+      if (isOngoing) {
         connectApi.updateCallStatus(callId, "busy").catch((err) => {
           if (import.meta.env.DEV) {
             console.warn("[callStore] Send busy status failed:", err);
@@ -178,11 +189,11 @@ class CallManager {
 
         this.activeSession = {
           callId,
-          callerId: String(data.caller_id || ""),
-          callerName: data.caller_name || "Colleague",
-          callerAvatar: data.caller_avatar || null,
-          recipientId: String(data.recipient_id || ""),
-          callType: (data.call_type as CallType) || "audio",
+          callerId: String(data.caller_id || data.callerId || ""),
+          callerName: data.caller_name || data.callerName || "Colleague",
+          callerAvatar: data.caller_avatar || data.callerAvatar || null,
+          recipientId: String(data.recipient_id || data.recipientId || ""),
+          callType: (data.call_type || data.callType as CallType) || "audio",
           status: "failed",
           failureReason,
           startedAt: new Date().toISOString(),
@@ -194,11 +205,11 @@ class CallManager {
 
       this.activeSession = {
         callId,
-        callerId: String(data.caller_id || ""),
-        callerName: data.caller_name || "Colleague",
-        callerAvatar: data.caller_avatar || null,
-        recipientId: String(data.recipient_id || ""),
-        callType: (data.call_type as CallType) || "audio",
+        callerId: String(data.caller_id || data.callerId || ""),
+        callerName: data.caller_name || data.callerName || "Colleague",
+        callerAvatar: data.caller_avatar || data.callerAvatar || null,
+        recipientId: String(data.recipient_id || data.recipientId || ""),
+        callType: (data.call_type || data.callType as CallType) || "audio",
         status: "ringing",
         sdpOffer: normalizedOffer,
         startedAt: new Date().toISOString(),
@@ -207,16 +218,22 @@ class CallManager {
       soundService.startIncomingCallRing();
       this.startRingingTimer(callId, "recipient");
       this.notify();
-    });
+    };
 
-    // Listen for incoming WebRTC signals
-    realtimeClient.on("call.signaling", (data: any) => {
+    realtimeClient.on("call.incoming", handleIncoming);
+    realtimeClient.on("call.invite", handleIncoming);
+
+    // Listen for incoming WebRTC signals (supports both call.signaling and call.signal)
+    const handleSignal = (data: any) => {
       this.handleIncomingSignal(data);
-    });
+    };
+    realtimeClient.on("call.signaling", handleSignal);
+    realtimeClient.on("call.signal", handleSignal);
 
     // Listen for remote call status changes
     realtimeClient.on("call.status", (data: any) => {
-      if (data?.call_id && this.activeSession?.callId === String(data.call_id)) {
+      const callId = data?.call_id || data?.id;
+      if (callId && this.activeSession?.callId === String(callId)) {
         const nextStatus = data.status as CallStatus;
         if (
           nextStatus === "rejected" ||
@@ -285,7 +302,13 @@ class CallManager {
     recipient: { id: string; name: string; avatar?: string | null },
     callType: CallType
   ): Promise<void> {
-    if (this.activeSession && this.activeSession.status !== "ended" && this.activeSession.status !== "failed") {
+    const isOngoing =
+      this.activeSession &&
+      (this.activeSession.status === "initiating" ||
+        this.activeSession.status === "ringing" ||
+        this.activeSession.status === "accepted" ||
+        this.activeSession.status === "reconnecting");
+    if (isOngoing) {
       return;
     }
 
@@ -320,16 +343,17 @@ class CallManager {
       // 6. Real user fields (no hardcoded "me" / "Me" placeholder)
       const currentUser = aurix.get().user;
       const callerId = currentUser?.id || "current-user";
-      const callerName = currentUser?.name || currentUser?.email || "Colleague";
+      const callerName = currentUser?.fullName || currentUser?.email || "Colleague";
 
       // 7. Initiate via backend REST contract
       const initResult = await connectApi.initiateCall(recipient.id, callType, {
         type: "offer",
         sdp: offer.sdp || "",
       });
+      const callId = initResult?.callId || (initResult as any)?.id || "";
 
       this.activeSession = {
-        callId: initResult.callId,
+        callId,
         callerId,
         callerName,
         recipientId: recipient.id,
@@ -340,11 +364,11 @@ class CallManager {
         startedAt: new Date().toISOString(),
       };
 
-      this.startRingingTimer(initResult.callId, "caller");
+      this.startRingingTimer(callId, "caller");
       this.notify();
 
       // 8. Flush buffered local candidates now that callId is established
-      await this.flushPendingLocalCandidates(initResult.callId);
+      await this.flushPendingLocalCandidates(callId);
     } catch (err: unknown) {
       const reason = mapCallError(err);
       toast.error(reason);
@@ -386,9 +410,7 @@ class CallManager {
       });
 
       // 5. Set remote description from offer
-      await this.peerConnection.setRemoteDescription(
-        new RTCSessionDescription(sdpOffer)
-      );
+      await this.peerConnection.setRemoteDescription(sdpOffer);
       await this.drainPendingRemoteCandidates();
 
       // 6. Create and set local answer
@@ -588,7 +610,7 @@ class CallManager {
       const cand = this.pendingRemoteCandidates.shift();
       if (cand) {
         try {
-          await this.peerConnection.addIceCandidate(new RTCIceCandidate(cand));
+          await this.peerConnection.addIceCandidate(cand);
           this.remoteCandidateCount++;
         } catch (err) {
           if (import.meta.env.DEV) {
@@ -608,30 +630,33 @@ class CallManager {
   }
 
   private async handleIncomingSignal(data: any): Promise<void> {
-    if (!this.peerConnection || !data) return;
+    if (!data) return;
 
     try {
-      if (data.type === "answer" && data.sdp) {
-        await this.peerConnection.setRemoteDescription(
-          new RTCSessionDescription({ type: "answer", sdp: data.sdp })
-        );
-        this.clearRingingTimer();
-        await this.drainPendingRemoteCandidates();
-        if (this.activeSession) {
-          this.activeSession.status = "accepted";
-          this.notify();
-        }
-      } else if (data.type === "candidate" && data.candidate) {
+      if (data.type === "candidate" && data.candidate) {
         const candidateInit: RTCIceCandidateInit = {
           candidate: data.candidate.candidate || data.candidate,
           sdpMid: data.candidate.sdpMid ?? null,
           sdpMLineIndex: data.candidate.sdpMLineIndex ?? null,
         };
-        if (this.peerConnection.remoteDescription) {
-          await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidateInit));
+        if (this.peerConnection && this.peerConnection.remoteDescription) {
+          await this.peerConnection.addIceCandidate(candidateInit);
           this.remoteCandidateCount++;
         } else {
           this.pendingRemoteCandidates.push(candidateInit);
+        }
+        return;
+      }
+
+      if (!this.peerConnection) return;
+
+      if (data.type === "answer" && data.sdp) {
+        await this.peerConnection.setRemoteDescription({ type: "answer", sdp: data.sdp });
+        this.clearRingingTimer();
+        await this.drainPendingRemoteCandidates();
+        if (this.activeSession) {
+          this.activeSession.status = "accepted";
+          this.notify();
         }
       }
     } catch (err) {
@@ -677,7 +702,7 @@ class CallManager {
     this.iceDisconnectTimer = setTimeout(() => {
       this.iceDisconnectTimer = null;
       if (this.activeSession?.status === "reconnecting") {
-        const reason = "Call disconnected: connection lost";
+        const reason = "Call disconnected: ICE connection lost";
         toast.error(reason);
         this.terminateCallWithFailure(reason, "failed");
       }
@@ -702,13 +727,26 @@ class CallManager {
       this.activeSession.status = status;
       this.activeSession.failureReason = reason;
       this.notify();
-      setTimeout(() => {
-        if (this.activeSession?.status === status) {
-          this.activeSession = null;
-          this.notify();
-        }
-      }, 3000);
+    } else {
+      this.activeSession = {
+        callId: "",
+        callerId: aurix.get().user?.id || "caller",
+        callerName: aurix.get().user?.fullName || "Caller",
+        recipientId: "",
+        recipientName: "Colleague",
+        callType: "audio",
+        status,
+        failureReason: reason,
+        startedAt: new Date().toISOString(),
+      };
+      this.notify();
     }
+    setTimeout(() => {
+      if (this.activeSession?.status === status) {
+        this.activeSession = null;
+        this.notify();
+      }
+    }, 3000);
   }
 
   private terminateCallLocally(status: CallStatus, reason?: string): void {

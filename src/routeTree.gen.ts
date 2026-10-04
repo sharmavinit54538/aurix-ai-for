@@ -58,6 +58,7 @@ import { Route as DashboardHrOpsRouteImport } from './routes/dashboard.hr-ops'
 import { Route as DashboardHrOperationsRouteImport } from './routes/dashboard.hr-operations'
 import { Route as DashboardHrRouteImport } from './routes/dashboard.hr'
 import { Route as DashboardHierarchyRouteImport } from './routes/dashboard.hierarchy'
+import { Route as DashboardHelpdeskRouteImport } from './routes/dashboard.helpdesk'
 import { Route as DashboardForbiddenRouteImport } from './routes/dashboard.forbidden'
 import { Route as DashboardExpensesRouteImport } from './routes/dashboard.expenses'
 import { Route as DashboardExitManagementRouteImport } from './routes/dashboard.exit-management'
@@ -194,6 +195,7 @@ import { Route as DashboardHrOperationsOnboardingRouteImport } from './routes/da
 import { Route as DashboardHrOperationsOffboardingRouteImport } from './routes/dashboard.hr-operations.offboarding'
 import { Route as DashboardHrOperationsExitManagementRouteImport } from './routes/dashboard.hr-operations.exit-management'
 import { Route as DashboardHrOperationsCommandCenterRouteImport } from './routes/dashboard.hr-operations.command-center'
+import { Route as DashboardHelpdeskAnalyticsRouteImport } from './routes/dashboard.helpdesk.analytics'
 import { Route as DashboardExecutiveCtoRouteImport } from './routes/dashboard.executive.cto'
 import { Route as DashboardExecutiveCooRouteImport } from './routes/dashboard.executive.coo'
 import { Route as DashboardExecutiveCmoRouteImport } from './routes/dashboard.executive.cmo'
@@ -505,6 +507,11 @@ const DashboardHrRoute = DashboardHrRouteImport.update({
 const DashboardHierarchyRoute = DashboardHierarchyRouteImport.update({
   id: '/hierarchy',
   path: '/hierarchy',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardHelpdeskRoute = DashboardHelpdeskRouteImport.update({
+  id: '/helpdesk',
+  path: '/helpdesk',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardForbiddenRoute = DashboardForbiddenRouteImport.update({
@@ -1264,6 +1271,12 @@ const DashboardHrOperationsCommandCenterRoute =
     path: '/command-center',
     getParentRoute: () => DashboardHrOperationsRoute,
   } as any)
+const DashboardHelpdeskAnalyticsRoute =
+  DashboardHelpdeskAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => DashboardHelpdeskRoute,
+  } as any)
 const DashboardExecutiveCtoRoute = DashboardExecutiveCtoRouteImport.update({
   id: '/executive/cto',
   path: '/executive/cto',
@@ -1717,6 +1730,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/exit-management': typeof DashboardExitManagementRoute
   '/dashboard/expenses': typeof DashboardExpensesRoute
   '/dashboard/forbidden': typeof DashboardForbiddenRoute
+  '/dashboard/helpdesk': typeof DashboardHelpdeskRouteWithChildren
   '/dashboard/hierarchy': typeof DashboardHierarchyRoute
   '/dashboard/hr': typeof DashboardHrRoute
   '/dashboard/hr-operations': typeof DashboardHrOperationsRouteWithChildren
@@ -1764,6 +1778,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/executive/cmo': typeof DashboardExecutiveCmoRoute
   '/dashboard/executive/coo': typeof DashboardExecutiveCooRoute
   '/dashboard/executive/cto': typeof DashboardExecutiveCtoRouteWithChildren
+  '/dashboard/helpdesk/analytics': typeof DashboardHelpdeskAnalyticsRoute
   '/dashboard/hr-operations/command-center': typeof DashboardHrOperationsCommandCenterRoute
   '/dashboard/hr-operations/exit-management': typeof DashboardHrOperationsExitManagementRoute
   '/dashboard/hr-operations/offboarding': typeof DashboardHrOperationsOffboardingRoute
@@ -1963,6 +1978,7 @@ export interface FileRoutesByTo {
   '/dashboard/exit-management': typeof DashboardExitManagementRoute
   '/dashboard/expenses': typeof DashboardExpensesRoute
   '/dashboard/forbidden': typeof DashboardForbiddenRoute
+  '/dashboard/helpdesk': typeof DashboardHelpdeskRouteWithChildren
   '/dashboard/hierarchy': typeof DashboardHierarchyRoute
   '/dashboard/hr': typeof DashboardHrRoute
   '/dashboard/hr-ops': typeof DashboardHrOpsRoute
@@ -1998,6 +2014,7 @@ export interface FileRoutesByTo {
   '/dashboard/executive/cfo': typeof DashboardExecutiveCfoRoute
   '/dashboard/executive/cmo': typeof DashboardExecutiveCmoRoute
   '/dashboard/executive/coo': typeof DashboardExecutiveCooRoute
+  '/dashboard/helpdesk/analytics': typeof DashboardHelpdeskAnalyticsRoute
   '/dashboard/hr-operations/command-center': typeof DashboardHrOperationsCommandCenterRoute
   '/dashboard/hr-operations/exit-management': typeof DashboardHrOperationsExitManagementRoute
   '/dashboard/hr-operations/offboarding': typeof DashboardHrOperationsOffboardingRoute
@@ -2204,6 +2221,7 @@ export interface FileRoutesById {
   '/dashboard/exit-management': typeof DashboardExitManagementRoute
   '/dashboard/expenses': typeof DashboardExpensesRoute
   '/dashboard/forbidden': typeof DashboardForbiddenRoute
+  '/dashboard/helpdesk': typeof DashboardHelpdeskRouteWithChildren
   '/dashboard/hierarchy': typeof DashboardHierarchyRoute
   '/dashboard/hr': typeof DashboardHrRoute
   '/dashboard/hr-operations': typeof DashboardHrOperationsRouteWithChildren
@@ -2251,6 +2269,7 @@ export interface FileRoutesById {
   '/dashboard/executive/cmo': typeof DashboardExecutiveCmoRoute
   '/dashboard/executive/coo': typeof DashboardExecutiveCooRoute
   '/dashboard/executive/cto': typeof DashboardExecutiveCtoRouteWithChildren
+  '/dashboard/helpdesk/analytics': typeof DashboardHelpdeskAnalyticsRoute
   '/dashboard/hr-operations/command-center': typeof DashboardHrOperationsCommandCenterRoute
   '/dashboard/hr-operations/exit-management': typeof DashboardHrOperationsExitManagementRoute
   '/dashboard/hr-operations/offboarding': typeof DashboardHrOperationsOffboardingRoute
@@ -2459,6 +2478,7 @@ export interface FileRouteTypes {
     | '/dashboard/exit-management'
     | '/dashboard/expenses'
     | '/dashboard/forbidden'
+    | '/dashboard/helpdesk'
     | '/dashboard/hierarchy'
     | '/dashboard/hr'
     | '/dashboard/hr-operations'
@@ -2506,6 +2526,7 @@ export interface FileRouteTypes {
     | '/dashboard/executive/cmo'
     | '/dashboard/executive/coo'
     | '/dashboard/executive/cto'
+    | '/dashboard/helpdesk/analytics'
     | '/dashboard/hr-operations/command-center'
     | '/dashboard/hr-operations/exit-management'
     | '/dashboard/hr-operations/offboarding'
@@ -2705,6 +2726,7 @@ export interface FileRouteTypes {
     | '/dashboard/exit-management'
     | '/dashboard/expenses'
     | '/dashboard/forbidden'
+    | '/dashboard/helpdesk'
     | '/dashboard/hierarchy'
     | '/dashboard/hr'
     | '/dashboard/hr-ops'
@@ -2740,6 +2762,7 @@ export interface FileRouteTypes {
     | '/dashboard/executive/cfo'
     | '/dashboard/executive/cmo'
     | '/dashboard/executive/coo'
+    | '/dashboard/helpdesk/analytics'
     | '/dashboard/hr-operations/command-center'
     | '/dashboard/hr-operations/exit-management'
     | '/dashboard/hr-operations/offboarding'
@@ -2945,6 +2968,7 @@ export interface FileRouteTypes {
     | '/dashboard/exit-management'
     | '/dashboard/expenses'
     | '/dashboard/forbidden'
+    | '/dashboard/helpdesk'
     | '/dashboard/hierarchy'
     | '/dashboard/hr'
     | '/dashboard/hr-operations'
@@ -2992,6 +3016,7 @@ export interface FileRouteTypes {
     | '/dashboard/executive/cmo'
     | '/dashboard/executive/coo'
     | '/dashboard/executive/cto'
+    | '/dashboard/helpdesk/analytics'
     | '/dashboard/hr-operations/command-center'
     | '/dashboard/hr-operations/exit-management'
     | '/dashboard/hr-operations/offboarding'
@@ -3511,6 +3536,13 @@ declare module '@tanstack/react-router' {
       path: '/hierarchy'
       fullPath: '/dashboard/hierarchy'
       preLoaderRoute: typeof DashboardHierarchyRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/helpdesk': {
+      id: '/dashboard/helpdesk'
+      path: '/helpdesk'
+      fullPath: '/dashboard/helpdesk'
+      preLoaderRoute: typeof DashboardHelpdeskRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/forbidden': {
@@ -4465,6 +4497,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardHrOperationsCommandCenterRouteImport
       parentRoute: typeof DashboardHrOperationsRoute
     }
+    '/dashboard/helpdesk/analytics': {
+      id: '/dashboard/helpdesk/analytics'
+      path: '/analytics'
+      fullPath: '/dashboard/helpdesk/analytics'
+      preLoaderRoute: typeof DashboardHelpdeskAnalyticsRouteImport
+      parentRoute: typeof DashboardHelpdeskRoute
+    }
     '/dashboard/executive/cto': {
       id: '/dashboard/executive/cto'
       path: '/executive/cto'
@@ -5075,6 +5114,17 @@ const DashboardEmployeeRouteChildren: DashboardEmployeeRouteChildren = {
 const DashboardEmployeeRouteWithChildren =
   DashboardEmployeeRoute._addFileChildren(DashboardEmployeeRouteChildren)
 
+interface DashboardHelpdeskRouteChildren {
+  DashboardHelpdeskAnalyticsRoute: typeof DashboardHelpdeskAnalyticsRoute
+}
+
+const DashboardHelpdeskRouteChildren: DashboardHelpdeskRouteChildren = {
+  DashboardHelpdeskAnalyticsRoute: DashboardHelpdeskAnalyticsRoute,
+}
+
+const DashboardHelpdeskRouteWithChildren =
+  DashboardHelpdeskRoute._addFileChildren(DashboardHelpdeskRouteChildren)
+
 interface DashboardHrOperationsRouteChildren {
   DashboardHrOperationsCommandCenterRoute: typeof DashboardHrOperationsCommandCenterRoute
   DashboardHrOperationsExitManagementRoute: typeof DashboardHrOperationsExitManagementRoute
@@ -5554,6 +5604,7 @@ interface DashboardRouteChildren {
   DashboardExitManagementRoute: typeof DashboardExitManagementRoute
   DashboardExpensesRoute: typeof DashboardExpensesRoute
   DashboardForbiddenRoute: typeof DashboardForbiddenRoute
+  DashboardHelpdeskRoute: typeof DashboardHelpdeskRouteWithChildren
   DashboardHierarchyRoute: typeof DashboardHierarchyRoute
   DashboardHrRoute: typeof DashboardHrRoute
   DashboardHrOperationsRoute: typeof DashboardHrOperationsRouteWithChildren
@@ -5612,6 +5663,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardExitManagementRoute: DashboardExitManagementRoute,
   DashboardExpensesRoute: DashboardExpensesRoute,
   DashboardForbiddenRoute: DashboardForbiddenRoute,
+  DashboardHelpdeskRoute: DashboardHelpdeskRouteWithChildren,
   DashboardHierarchyRoute: DashboardHierarchyRoute,
   DashboardHrRoute: DashboardHrRoute,
   DashboardHrOperationsRoute: DashboardHrOperationsRouteWithChildren,
