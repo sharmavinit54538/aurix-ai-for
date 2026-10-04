@@ -65,14 +65,14 @@ class PresenceManager {
     });
   }
 
-  public getColleaguePresence(userId: string): PresenceStatus {
+  public getColleaguePresence(userId: string): PresenceStatus | undefined {
     const status = this.colleagueStatuses.get(userId);
     if (status) return status;
 
     // Queue for debounced batch query
     this.pendingBatchUserIds.add(userId);
     this.scheduleBatchFetch();
-    return "offline";
+    return undefined;
   }
 
   public setColleaguePresence(userId: string, status: PresenceStatus): void {
@@ -129,7 +129,7 @@ export const presenceManager = new PresenceManager();
 /**
  * React hook to observe a colleague's live presence.
  */
-export function usePresence(userId?: string): PresenceStatus {
+export function usePresence(userId?: string): PresenceStatus | undefined {
   const [, setTick] = useState(0);
 
   useEffect(() => {
@@ -140,7 +140,7 @@ export function usePresence(userId?: string): PresenceStatus {
     return unsubscribe;
   }, []);
 
-  if (!userId) return "offline";
+  if (!userId) return undefined;
   return presenceManager.getColleaguePresence(userId);
 }
 

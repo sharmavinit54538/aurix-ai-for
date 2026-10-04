@@ -43,6 +43,8 @@ export function ColleagueSearchModal({
       (c.designation && c.designation.toLowerCase().includes(query.toLowerCase()))
   );
 
+  const [isStartingDm, setIsStartingDm] = useState(false);
+
   const handleStartDm = async (colleague: Colleague) => {
     if (onSelectColleague) {
       onSelectColleague(colleague);
@@ -50,7 +52,22 @@ export function ColleagueSearchModal({
       return;
     }
 
+    if (isStartingDm) return;
+    setIsStartingDm(true);
+
     try {
+      // Check if conversation already exists to prevent duplicate creation
+      const existingConvs = await connectApi.listConversations();
+      const existing = existingConvs.find((c) => c.participant.id === colleague.id);
+      if (existing) {
+        onOpenChange(false);
+        navigate({
+          to: "/dashboard/connect/dm/$conversationId",
+          params: { conversationId: existing.id },
+        });
+        return;
+      }
+
       const conv = await connectApi.createConversation(colleague.id);
       onOpenChange(false);
       navigate({
@@ -59,6 +76,8 @@ export function ColleagueSearchModal({
       });
     } catch {
       // Fallback
+    } finally {
+      setIsStartingDm(false);
     }
   };
 
@@ -108,16 +127,18 @@ export function ColleagueSearchModal({
                     ) : (
                       <User className="h-4 w-4" />
                     )}
-                    <span
-                      className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full ring-2 ring-background ${
-                        colleague.presence === "online"
-                          ? "bg-emerald-500"
-                          : colleague.presence === "away"
-                          ? "bg-amber-500"
-                          : "bg-neutral-400"
-                      }`}
-                      title={colleague.presence}
-                    />
+                    {colleague.presence ? (
+                      <span
+                        className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full ring-2 ring-background ${
+                          colleague.presence === "online"
+                            ? "bg-emerald-500"
+                            : colleague.presence === "away"
+                            ? "bg-amber-500"
+                            : "bg-neutral-400"
+                        }`}
+                        title={colleague.presence}
+                      />
+                    ) : null}
                   </div>
 
                   <div className="min-w-0">

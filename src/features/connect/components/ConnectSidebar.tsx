@@ -52,15 +52,16 @@ export function ConnectSidebar({
     d.participant.name.toLowerCase().includes(filterQuery.toLowerCase())
   );
 
-  const getStatusColor = (status: PresenceStatus) => {
+  const getStatusColor = (status?: PresenceStatus) => {
     switch (status) {
       case "online":
         return "bg-emerald-500";
       case "away":
         return "bg-amber-500";
       case "offline":
-      default:
         return "bg-neutral-400";
+      default:
+        return "";
     }
   };
 
@@ -221,11 +222,13 @@ export function ConnectSidebar({
                       ) : (
                         conv.participant.name.slice(0, 1)
                       )}
-                      <span
-                        className={`absolute bottom-0 right-0 h-1.5 w-1.5 rounded-full ring-1 ring-background ${getStatusColor(
-                          conv.participant.presence
-                        )}`}
-                      />
+                      {conv.participant.presence ? (
+                        <span
+                          className={`absolute bottom-0 right-0 h-1.5 w-1.5 rounded-full ring-1 ring-background ${getStatusColor(
+                            conv.participant.presence
+                          )}`}
+                        />
+                      ) : null}
                     </div>
                     <span className="truncate">{conv.participant.name}</span>
                   </div>

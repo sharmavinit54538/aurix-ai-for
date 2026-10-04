@@ -4,7 +4,7 @@ import { realtimeClient } from "../services/realtimeClient";
 import { soundService } from "../services/soundService";
 import { callManager } from "../stores/callStore";
 import { usePresence } from "../stores/presenceStore";
-import type { DirectConversation, Message, MessageSendInput } from "../types";
+import type { DirectConversation, Message, MessageSendInput, PresenceStatus } from "../types";
 import { MessageItem } from "./MessageItem";
 import { MessageComposer } from "./MessageComposer";
 import { ThreadSidebar } from "./ThreadSidebar";
@@ -33,7 +33,8 @@ export function DirectMessageView({ conversationId }: DirectMessageViewProps) {
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const currentUser = aurix.get().user;
-  const presence = usePresence(conversation?.participant.id);
+  const livePresence = usePresence(conversation?.participant.id);
+  const currentPresence = livePresence ?? conversation?.participant.presence;
 
   // Load conversation and messages
   const loadData = useCallback(async () => {
@@ -146,15 +147,16 @@ export function DirectMessageView({ conversationId }: DirectMessageViewProps) {
     });
   };
 
-  const getStatusBadge = (st: string) => {
+  const getStatusBadge = (st?: PresenceStatus) => {
     switch (st) {
       case "online":
         return <span className="flex items-center gap-1 text-[11px] text-emerald-600 font-medium"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Online</span>;
       case "away":
         return <span className="flex items-center gap-1 text-[11px] text-amber-600 font-medium"><span className="h-1.5 w-1.5 rounded-full bg-amber-500" />Away</span>;
       case "offline":
-      default:
         return <span className="flex items-center gap-1 text-[11px] text-muted-foreground"><span className="h-1.5 w-1.5 rounded-full bg-neutral-400" />Offline</span>;
+      default:
+        return null;
     }
   };
 
@@ -190,9 +192,9 @@ export function DirectMessageView({ conversationId }: DirectMessageViewProps) {
 
             <div className="min-w-0">
               <h2 className="font-semibold text-sm text-foreground truncate">
-                {participant?.name || "Colleague"}
+                {participant?.name || (participant?.email ? participant.email : "Unnamed user")}
               </h2>
-              <div>{getStatusBadge(presence)}</div>
+              <div>{getStatusBadge(currentPresence)}</div>
             </div>
           </div>
 

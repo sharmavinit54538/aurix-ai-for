@@ -28,11 +28,11 @@ export type CallType = z.infer<typeof CallTypeSchema>;
 export const ColleagueSchema = z.object({
   id: z.string(),
   name: z.string(),
-  email: z.string().email(),
+  email: z.string().optional().default(""),
   department: z.string().nullable().optional(),
   designation: z.string().nullable().optional(),
   avatar: z.string().nullable().optional(),
-  presence: PresenceStatusSchema.optional().default("offline"),
+  presence: PresenceStatusSchema.optional(),
   lastActive: z.string().nullable().optional(),
 });
 export type Colleague = z.infer<typeof ColleagueSchema>;
