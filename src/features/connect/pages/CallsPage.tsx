@@ -17,7 +17,6 @@ import {
   User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import { toast } from "sonner";
 
 export function CallsPage() {
@@ -70,44 +69,38 @@ export function CallsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Calls & Audio/Video Huddles"
-        description="Review call history, initiate 1:1 voice/video huddles, or call any colleague."
-        actions={
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5 cursor-pointer shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
-              disabled={!isRealtimeOpen}
-              title={isRealtimeOpen ? "Start Audio Call" : "Realtime connection not available"}
-              onClick={() => {
-                if (!isRealtimeOpen) return;
-                setSelectedCallType("audio");
-                setSearchModalOpen(true);
-              }}
-            >
-              <Phone className="h-4 w-4 text-brand" />
-              <span>Audio Call</span>
-            </Button>
+      <div className="flex items-center justify-end gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5 cursor-pointer shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={!isRealtimeOpen}
+          title={isRealtimeOpen ? "Start Audio Call" : "Realtime connection not available"}
+          onClick={() => {
+            if (!isRealtimeOpen) return;
+            setSelectedCallType("audio");
+            setSearchModalOpen(true);
+          }}
+        >
+          <Phone className="h-4 w-4 text-brand" />
+          <span>Audio Call</span>
+        </Button>
 
-            <Button
-              size="sm"
-              className="gap-1.5 cursor-pointer shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
-              disabled={!isRealtimeOpen}
-              title={isRealtimeOpen ? "Start Video Call" : "Realtime connection not available"}
-              onClick={() => {
-                if (!isRealtimeOpen) return;
-                setSelectedCallType("video");
-                setSearchModalOpen(true);
-              }}
-            >
-              <Video className="h-4 w-4" />
-              <span>Video Call</span>
-            </Button>
-          </div>
-        }
-      />
+        <Button
+          size="sm"
+          className="gap-1.5 cursor-pointer shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={!isRealtimeOpen}
+          title={isRealtimeOpen ? "Start Video Call" : "Realtime connection not available"}
+          onClick={() => {
+            if (!isRealtimeOpen) return;
+            setSelectedCallType("video");
+            setSearchModalOpen(true);
+          }}
+        >
+          <Video className="h-4 w-4" />
+          <span>Video Call</span>
+        </Button>
+      </div>
 
       {/* Main Call History Card */}
       <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">

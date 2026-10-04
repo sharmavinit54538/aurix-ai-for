@@ -74,47 +74,30 @@ export default function AnnouncementsFeedPage() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12 px-4 sm:px-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-2">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-lg bg-primary/10 text-primary">
-              <Megaphone className="h-6 w-6" />
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              Company Announcements
-            </h1>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Official company broadcasts, organizational updates, and departmental notices.
-          </p>
+      {canManage && (
+        <div className="flex items-center justify-end gap-2 pt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            asChild
+            className="gap-1.5"
+          >
+            <Link to="/dashboard/announcements/manage">
+              <Settings className="h-4 w-4" />
+              <span>Manage</span>
+            </Link>
+          </Button>
+
+          <Button
+            size="sm"
+            onClick={() => setCreateDialogOpen(true)}
+            className="gap-1.5 shadow-xs"
+          >
+            <PlusCircle className="h-4 w-4" />
+            <span>New Announcement</span>
+          </Button>
         </div>
-
-        {canManage && (
-          <div className="flex items-center gap-2 shrink-0">
-            <Button
-              variant="outline"
-              size="sm"
-              asChild
-              className="gap-1.5"
-            >
-              <Link to="/dashboard/announcements/manage">
-                <Settings className="h-4 w-4" />
-                <span>Manage</span>
-              </Link>
-            </Button>
-
-            <Button
-              size="sm"
-              onClick={() => setCreateDialogOpen(true)}
-              className="gap-1.5 shadow-xs"
-            >
-              <PlusCircle className="h-4 w-4" />
-              <span>New Announcement</span>
-            </Button>
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-card border rounded-lg p-3 shadow-xs">

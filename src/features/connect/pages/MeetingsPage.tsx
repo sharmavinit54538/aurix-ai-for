@@ -11,7 +11,6 @@ import {
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import {
   Dialog,
   DialogContent,
@@ -94,32 +93,26 @@ export function MeetingsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Meetings & Video Huddles"
-        description="Collaborate in secure peer-to-peer audio/video rooms, schedule team standups, and review action items."
-        actions={
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5 cursor-pointer shadow-sm"
-              onClick={handleStartInstant}
-            >
-              <Video className="h-4 w-4 text-brand" />
-              <span>Instant Huddle</span>
-            </Button>
+      <div className="flex items-center justify-end gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5 cursor-pointer shadow-sm"
+          onClick={handleStartInstant}
+        >
+          <Video className="h-4 w-4 text-brand" />
+          <span>Instant Huddle</span>
+        </Button>
 
-            <Button
-              size="sm"
-              className="gap-1.5 cursor-pointer shadow-sm"
-              onClick={() => setCreateModalOpen(true)}
-            >
-              <Plus className="h-4 w-4" />
-              <span>Schedule Meeting</span>
-            </Button>
-          </div>
-        }
-      />
+        <Button
+          size="sm"
+          className="gap-1.5 cursor-pointer shadow-sm"
+          onClick={() => setCreateModalOpen(true)}
+        >
+          <Plus className="h-4 w-4" />
+          <span>Schedule Meeting</span>
+        </Button>
+      </div>
 
       {/* Main Meetings Grid */}
       {loading ? (

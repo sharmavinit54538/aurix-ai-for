@@ -39,13 +39,6 @@ export function HelpdeskMetricsGrid({ metrics, tickets = [], roleTitle }: Helpde
 
   return (
     <div className="space-y-4">
-      {roleTitle && (
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-foreground tracking-tight">{roleTitle} Live Metrics</h3>
-          <span className="text-xs text-muted-foreground">Aggregated from active support records</span>
-        </div>
-      )}
-
       {/* Primary KPI Row */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {/* Total Tickets */}

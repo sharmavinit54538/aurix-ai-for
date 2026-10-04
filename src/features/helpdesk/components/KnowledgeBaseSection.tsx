@@ -26,7 +26,6 @@ import {
 } from "@/components/ui/select";
 import {
   Search,
-  BookOpen,
   ThumbsUp,
   ThumbsDown,
   Plus,
@@ -151,25 +150,15 @@ export function KnowledgeBaseSection({
 
   return (
     <div className="space-y-6">
-      {/* Header and Search */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-        <div>
-          <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-            <BookOpen className="h-5 w-5 text-primary" />
-            Knowledge Base & Self-Service
-          </h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Search verified articles, policies, and standard procedures
-          </p>
-        </div>
-
-        {canManage && (
+      {/* Action Bar */}
+      {canManage && (
+        <div className="flex justify-end">
           <Button onClick={() => setIsModalOpen(true)} size="sm" className="gap-1.5 shrink-0">
             <Plus className="h-4 w-4" />
             Add Article
           </Button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
