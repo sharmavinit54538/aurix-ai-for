@@ -202,7 +202,7 @@ export async function refreshAccessToken(options?: { silent?: boolean }): Promis
         }
 
         const refreshUrl = `${API_BASE_URL}${AUTH_ENDPOINTS.refresh}`;
-        if (import.meta.env.DEV && !options?.silent) {
+        if (import.meta.env.DEV && import.meta.env.MODE !== "test" && !options?.silent) {
           console.log(`[AUTH] Request: [REFRESH] POST ${refreshUrl}`);
         }
 
@@ -214,17 +214,21 @@ export async function refreshAccessToken(options?: { silent?: boolean }): Promis
               "Content-Type": "application/json",
             },
           });
-          if (import.meta.env.DEV && !options?.silent) {
+          if (import.meta.env.DEV && import.meta.env.MODE !== "test" && !options?.silent) {
             console.log(`[AUTH] Response: [REFRESH] POST ${refreshUrl} -> ${res.status}`);
           }
         } catch (postErr: unknown) {
-          const status = axios.isAxiosError(postErr) ? postErr.response?.status : undefined;
-          if (import.meta.env.DEV && !options?.silent) {
+          const status = axios.isAxiosError(postErr)
+            ? postErr.response?.status
+            : postErr && typeof postErr === "object" && "response" in postErr && typeof (postErr as { response?: { status?: unknown } }).response?.status === "number"
+              ? (postErr as { response: { status: number } }).response.status
+              : undefined;
+          if (import.meta.env.DEV && import.meta.env.MODE !== "test" && !options?.silent) {
             console.log(`[AUTH] Response: [REFRESH] POST ${refreshUrl} -> ${status || "NETWORK_ERROR"}`);
           }
 
           if (status === 404) {
-            if (import.meta.env.DEV && !options?.silent) {
+            if (import.meta.env.DEV && import.meta.env.MODE !== "test" && !options?.silent) {
               console.error(
                 `[AUTH] 404 Not Found received on refresh endpoint: ${refreshUrl}. Route configuration problem.`,
               );

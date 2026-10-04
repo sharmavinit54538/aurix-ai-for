@@ -1,6 +1,5 @@
 import apiInstance from "@/api/apiInstance";
 import axios from "axios";
-import { ApiError } from "@/api/client";
 
 // ── Types ─────────────────────────────────────────────────────────────
 

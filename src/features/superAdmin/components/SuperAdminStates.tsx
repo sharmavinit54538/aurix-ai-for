@@ -184,6 +184,12 @@ export function AccessDeniedState({ error }: { error?: unknown }) {
               ? "The platform API rejected this session for Super Admin access. Sign in with the designated platform Super Admin account to continue."
               : "The Super Admin area is restricted to the platform Super Admin account. HR Admin, Manager, Employee, IT Admin and Executive roles cannot access it."}
         </p>
+        {failure && (
+          <p className="mt-2 font-mono text-[11px] text-rose-300/80">
+            {failure.status ? `HTTP ${failure.status} · ` : ""}
+            {failure.message}
+          </p>
+        )}
         <div className="mt-6 flex flex-col gap-2">
           {rejectedByApi ? (
             <button

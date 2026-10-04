@@ -66,7 +66,7 @@ apiInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     config.url = normalizeApiPath(config.url);
   }
 
-  if (import.meta.env.DEV) {
+  if (import.meta.env.DEV && import.meta.env.MODE !== "test") {
     const method = (config.method || "GET").toUpperCase();
     const fullUrl = resolveFullUrl(config.url, config.baseURL);
     const endpointTag = getEndpointTag(config.url || "");
@@ -78,7 +78,7 @@ apiInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 
 apiInstance.interceptors.response.use(
   (response) => {
-    if (import.meta.env.DEV) {
+    if (import.meta.env.DEV && import.meta.env.MODE !== "test") {
       const method = (response.config.method || "GET").toUpperCase();
       const fullUrl = resolveFullUrl(response.config.url, response.config.baseURL);
       const endpointTag = getEndpointTag(response.config.url || "");
@@ -87,7 +87,7 @@ apiInstance.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
-    if (import.meta.env.DEV && error.config) {
+    if (import.meta.env.DEV && import.meta.env.MODE !== "test" && error.config) {
       const method = (error.config.method || "GET").toUpperCase();
       const fullUrl = resolveFullUrl(error.config.url, error.config.baseURL);
       const endpointTag = getEndpointTag(error.config.url || "");

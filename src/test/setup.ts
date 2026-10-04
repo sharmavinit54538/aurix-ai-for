@@ -34,8 +34,25 @@ if (typeof Blob !== "undefined" && !Blob.prototype.stream) {
   };
 }
 
+// Silence [AUTH] Request/Response console logs in test runs
+const originalConsoleLog = console.log;
+console.log = (...args: unknown[]) => {
+  if (typeof args[0] === "string" && args[0].startsWith("[AUTH]")) {
+    return;
+  }
+  originalConsoleLog(...args);
+};
+
+const originalConsoleError = console.error;
+console.error = (...args: unknown[]) => {
+  if (typeof args[0] === "string" && args[0].startsWith("[AUTH]")) {
+    return;
+  }
+  originalConsoleError(...args);
+};
+
 beforeAll(() => {
-  server.listen({ onUnhandledRequest: "warn" });
+  server.listen({ onUnhandledRequest: "error" });
 });
 
 afterEach(() => {

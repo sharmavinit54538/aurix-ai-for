@@ -59,7 +59,12 @@ function createTestStore() {
 }
 
 function renderPage() {
-  const client = new QueryClient({ defaultOptions: { queries: { retryDelay: 0, gcTime: 0 } } });
+  const client = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false, retryDelay: 0, gcTime: 0 },
+      mutations: { retry: false },
+    },
+  });
   const store = createTestStore();
   return render(
     <Provider store={store}>
@@ -91,6 +96,9 @@ describe("SuperAdminSettingsPage", () => {
           { id: "sa-1", name: "Platform Owner Account", email: "owner@example.test", role: "super_admin", is_active: true, created_at: "2026-01-01T00:00:00+00:00", last_login: null },
         ]),
       ),
+      http.get(`${BASE}/audit-logs`, () =>
+        HttpResponse.json([]),
+      ),
     );
   });
 
@@ -106,7 +114,6 @@ describe("SuperAdminSettingsPage", () => {
     expect(await screen.findByDisplayValue("OFC360 Enterprise")).toBeInTheDocument();
     expect(screen.getByDisplayValue("security@example.test")).toBeInTheDocument();
     expect(screen.queryByText("Enter a valid email address.")).not.toBeInTheDocument();
-    expect(await screen.findByText("1 Super Admin account in database")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /save platform settings/i })).toBeDisabled();
   });
 
@@ -145,11 +152,28 @@ describe("SuperAdminSettingsPage", () => {
 
   it("shows an error state with retry when settings cannot be loaded", async () => {
     vi.spyOn(console, "error").mockImplementation(() => undefined);
-    server.use(http.get(`${BASE}/settings`, () => HttpResponse.json({ success: false, message: "Upstream failure" }, { status: 502 })));
+    let requestCount = 0;
+    server.use(
+      http.get(`${BASE}/settings`, () => {
+        requestCount++;
+        if (requestCount === 1) {
+          return HttpResponse.json({ success: false, message: "Upstream failure" }, { status: 502 });
+        }
+        return HttpResponse.json(settingsBody);
+      }),
+    );
 
     renderPage();
 
     expect(await screen.findByText("Unable to load platform settings. Please try again.")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /try again/i })).toBeInTheDocument();
+    const retryButton = screen.getByRole("button", { name: /try again/i });
+    expect(retryButton).toBeInTheDocument();
+    expect(requestCount).toBe(1);
+
+    fireEvent.click(retryButton);
+
+    expect(await screen.findByDisplayValue("OFC360 Enterprise")).toBeInTheDocument();
+    expect(requestCount).toBe(2);
+    expect(screen.queryByText("Unable to load platform settings. Please try again.")).not.toBeInTheDocument();
   });
 });

@@ -126,7 +126,9 @@ export function useSuperAdminStatistics() {
   }, [dispatch]);
 
   const errorObj = useMemo(() => {
-    return statistics.error ? new ApiError(statistics.error, 500, null) : null;
+    if (!statistics.error) return null;
+    const isAuth = /super admin access required|forbidden|permission denied|unauthorized/i.test(statistics.error);
+    return new ApiError(statistics.error, isAuth ? 403 : 500, null);
   }, [statistics.error]);
 
   return {
@@ -455,17 +457,19 @@ export function useSuperAdminSettings() {
   const settings = useAppSelector((state) => state.superAdmin.settings);
 
   useEffect(() => {
-    if (!settings.data && !settings.loading) {
+    if (!settings.data && !settings.loading && !settings.error) {
       dispatch(fetchPlatformSettings());
     }
-  }, [dispatch, settings.data, settings.loading]);
+  }, [dispatch, settings.data, settings.loading, settings.error]);
 
   const refetch = useCallback(() => {
     return dispatch(fetchPlatformSettings()).unwrap();
   }, [dispatch]);
 
   const errorObj = useMemo(() => {
-    return settings.error ? new ApiError(settings.error, 500, null) : null;
+    if (!settings.error) return null;
+    const isAuth = /super admin access required|forbidden|permission denied|unauthorized/i.test(settings.error);
+    return new ApiError(settings.error, isAuth ? 403 : 500, null);
   }, [settings.error]);
 
   return {
@@ -704,8 +708,9 @@ export function useSuperAdminAnnouncements() {
 }
 
 function getErrorMessage(err: unknown, defaultMessage = "Operation failed"): string {
-  if (err && typeof err === "object" && "message" in err && typeof (err as any).message === "string") {
-    return (err as any).message;
+  if (err && typeof err === "object" && "message" in err) {
+    const msg = (err as { message: unknown }).message;
+    if (typeof msg === "string") return msg;
   }
   if (typeof err === "string") return err;
   return defaultMessage;

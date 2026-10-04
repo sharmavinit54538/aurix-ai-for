@@ -47,8 +47,9 @@ import type {
 } from "../types";
 
 function getErrorMessage(err: unknown, defaultMessage = "Operation failed"): string {
-  if (err && typeof err === "object" && "message" in err && typeof (err as any).message === "string") {
-    return (err as any).message;
+  if (err && typeof err === "object" && "message" in err) {
+    const msg = (err as { message: unknown }).message;
+    if (typeof msg === "string") return msg;
   }
   if (typeof err === "string") return err;
   return defaultMessage;
