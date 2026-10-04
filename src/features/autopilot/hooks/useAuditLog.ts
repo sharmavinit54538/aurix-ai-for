@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { autopilotApi, type AuditQueryParams } from "../services/autopilotApi";
 import type { AuditLogEntry, AutopilotWorkflowId } from "../types";
 import { sanitizeCsvField } from "../utils/mappers";
+import { parseApiError } from "@/api/utils";
 
 export interface UseAuditLogReturn {
   items: AuditLogEntry[];
@@ -74,16 +75,15 @@ export function useAuditLog(): UseAuditLogReturn {
       setTotal(res.total);
       setError(null);
       setBackendUnavailable(false);
-    } catch (err: any) {
-      const status = err?.response?.status;
+    } catch (err: unknown) {
+      const { status, message } = parseApiError(err, "Failed to load audit logs");
       if (status === 404 || status === 501) {
         setBackendUnavailable(true);
         setItems([]);
         setTotal(0);
         setError(null);
       } else {
-        const msg = err?.response?.data?.message || err?.message || "Failed to load audit logs";
-        setError(msg);
+        setError(message);
       }
     } finally {
       setLoading(false);
@@ -103,13 +103,12 @@ export function useAuditLog(): UseAuditLogReturn {
       }
       toast.success("Action undone successfully");
       return true;
-    } catch (err: any) {
-      const status = err?.response?.status;
+    } catch (err: unknown) {
+      const { status, message } = parseApiError(err, "Failed to undo action");
       if (status === 404 || status === 501) {
         toast.error("Feature unavailable — backend pending");
       } else {
-        const msg = err?.response?.data?.message || err?.message || "Failed to undo action";
-        toast.error(msg);
+        toast.error(message);
       }
       return false;
     }
@@ -125,13 +124,12 @@ export function useAuditLog(): UseAuditLogReturn {
         }
         toast.success("Decision overridden and recorded in audit ledger");
         return true;
-      } catch (err: any) {
-        const status = err?.response?.status;
+      } catch (err: unknown) {
+        const { status, message } = parseApiError(err, "Failed to override action");
         if (status === 404 || status === 501) {
           toast.error("Feature unavailable — backend pending");
         } else {
-          const msg = err?.response?.data?.message || err?.message || "Failed to override action";
-          toast.error(msg);
+          toast.error(message);
         }
         return false;
       }

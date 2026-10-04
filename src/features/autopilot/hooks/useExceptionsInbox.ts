@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { usePoller } from "@/hooks/usePoller";
 import { autopilotApi, type ExceptionsQueryParams } from "../services/autopilotApi";
 import type { AutopilotException, ExceptionDecisionPayload } from "../types";
+import { parseApiError } from "@/api/utils";
 
 export interface UseExceptionsInboxReturn {
   exceptions: AutopilotException[];
@@ -44,17 +45,15 @@ export function useExceptionsInbox(): UseExceptionsInboxReturn {
       setTotal(res.total);
       setError(null);
       setBackendUnavailable(false);
-    } catch (err: any) {
-      const status = err?.response?.status;
+    } catch (err: unknown) {
+      const { status, message } = parseApiError(err, "Failed to load exceptions");
       if (status === 404 || status === 501) {
         setBackendUnavailable(true);
         setExceptions([]);
         setTotal(0);
         setError(null);
       } else {
-        const msg =
-          err?.response?.data?.message || err?.message || "Failed to load exceptions";
-        setError(msg);
+        setError(message);
       }
     } finally {
       setLoading(false);
@@ -88,21 +87,20 @@ export function useExceptionsInbox(): UseExceptionsInboxReturn {
           `Exception #${id.slice(-6)} marked as ${payload.decision === "approve" ? "Approved" : payload.decision === "reject" ? "Rejected" : "Reassigned"}`,
         );
         return true;
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Rollback on error
         setExceptions(previousExceptions);
         if (target) {
           setTotal((prev) => prev + 1);
         }
-        const status = err?.response?.status;
+        const { status, message } = parseApiError(
+          err,
+          "Failed to submit decision. Action rolled back.",
+        );
         if (status === 404 || status === 501) {
           toast.error("Feature unavailable — backend pending");
         } else {
-          const msg =
-            err?.response?.data?.message ||
-            err?.message ||
-            "Failed to submit decision. Action rolled back.";
-          toast.error(msg);
+          toast.error(message);
         }
         return false;
       }

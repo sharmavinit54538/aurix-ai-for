@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { usePoller } from "@/hooks/usePoller";
 import { autopilotApi } from "../services/autopilotApi";
 import type { AutopilotOverview } from "../types";
+import { parseApiError } from "@/api/utils";
 
 const FALLBACK_OVERVIEW: AutopilotOverview = {
   autoResolvedPercent: {
@@ -74,13 +75,13 @@ export function useAutopilotOverview() {
       const data = await autopilotApi.getOverview();
       setOverview(data);
       setBackendUnavailable(false);
-    } catch (err: any) {
-      const status = err?.response?.status;
+    } catch (err: unknown) {
+      const { status, message } = parseApiError(err, "Failed to load Autopilot overview");
       if (status === 404 || status === 501) {
         setOverview(FALLBACK_OVERVIEW);
         setBackendUnavailable(true);
       } else {
-        setError(err?.response?.data?.message || "Failed to load Autopilot overview");
+        setError(message);
       }
     } finally {
       setLoading(false);
