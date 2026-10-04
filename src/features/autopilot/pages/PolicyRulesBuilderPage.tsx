@@ -15,7 +15,6 @@ import {
   Layers,
   Play,
   Plus,
-  RefreshCw,
   Search,
   Shield,
   ShieldCheck,
@@ -239,63 +238,6 @@ export default function PolicyRulesBuilderPage() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
-      {/* ── Page Header ────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-6">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-primary/10 text-primary">
-              <ShieldCheck className="h-5 w-5" />
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight">Policy Rules Builder</h1>
-            <Badge variant="outline" className="text-xs uppercase font-mono tracking-wider ml-1 bg-primary/5 text-primary border-primary/20">
-              Logic Engine
-            </Badge>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-            Author declarative if/then rules for automated approval, rejection, or escalation. Test rules in dry-run simulation before activating.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void refetch()}
-            className="rounded-xl h-9 gap-1.5 text-xs"
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            Refresh
-          </Button>
-          <Button
-            size="sm"
-            onClick={handleOpenCreateModal}
-            className="rounded-xl h-9 gap-1.5 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            New Policy Rule
-          </Button>
-        </div>
-      </div>
-
-      {/* ── Backend Unavailable Banner ───────────────────────────────── */}
-      {backendUnavailable && (
-        <Alert className="border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200 rounded-2xl">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle className="font-semibold text-sm">
-            Feature unavailable — backend pending
-          </AlertTitle>
-          <AlertDescription className="text-xs mt-1 space-y-1">
-            <p>
-              The Policy Rules API (<code>/api/v2/autopilot/rules</code>) is pending deployment.
-              Rules authored here will sync once the server-side simulation engine is active.
-            </p>
-            <p className="font-mono text-[11px] opacity-80">
-              Contract reference: <code>docs/AUTOPILOT_BACKEND_CONTRACT.md</code>
-            </p>
-          </AlertDescription>
-        </Alert>
-      )}
-
       {/* ── Inline Error with Retry ──────────────────────────────────── */}
       {error && !backendUnavailable && (
         <Alert variant="destructive" className="rounded-2xl">
@@ -316,7 +258,7 @@ export default function PolicyRulesBuilderPage() {
       )}
 
       {/* ── Workflow Filter Bar ─────────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-border bg-card/40 backdrop-blur-sm">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 rounded-2xl border border-border bg-card/40 backdrop-blur-sm">
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground" />
           <span className="text-xs font-medium text-foreground">Filter Workflow:</span>
@@ -340,9 +282,19 @@ export default function PolicyRulesBuilderPage() {
           </Select>
         </div>
 
-        <span className="text-xs text-muted-foreground font-mono">
-          {rules.length} Active Rule{rules.length !== 1 ? "s" : ""}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-muted-foreground font-mono">
+            {rules.length} Active Rule{rules.length !== 1 ? "s" : ""}
+          </span>
+          <Button
+            size="sm"
+            onClick={handleOpenCreateModal}
+            className="rounded-xl h-8 gap-1.5 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            New Policy Rule
+          </Button>
+        </div>
       </div>
 
       {/* ── Rules List or Skeletons / Empty State ───────────────────── */}

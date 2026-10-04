@@ -9,12 +9,10 @@ import {
   ChevronRight,
   Download,
   Eye,
-  FileCheck,
   FileText,
   Filter,
   History,
   Lock,
-  RefreshCw,
   RotateCcw,
   Search,
   Shield,
@@ -164,64 +162,6 @@ export default function ActionAuditLogPage() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
-      {/* ── Page Header ────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-6">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-primary/10 text-primary">
-              <FileCheck className="h-5 w-5" />
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight">AI Action Audit Log</h1>
-            <Badge variant="outline" className="text-xs uppercase font-mono tracking-wider ml-1 bg-primary/5 text-primary border-primary/20">
-              Immutable Trail
-            </Badge>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-            Complete verifiable log of every decision and autonomous database change made by OneHR. Human overrides and reversals are logged with full justification.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={exportCsv}
-            className="rounded-xl h-9 gap-1.5 text-xs"
-          >
-            <Download className="h-3.5 w-3.5" />
-            Export CSV
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void refetch()}
-            className="rounded-xl h-9 gap-1.5 text-xs"
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            Refresh
-          </Button>
-        </div>
-      </div>
-
-      {/* ── Backend Unavailable Banner ───────────────────────────────── */}
-      {backendUnavailable && (
-        <Alert className="border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200 rounded-2xl">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle className="font-semibold text-sm">
-            Feature unavailable — backend pending
-          </AlertTitle>
-          <AlertDescription className="text-xs mt-1 space-y-1">
-            <p>
-              The Autopilot Audit Log API (<code>/api/v2/autopilot/audit</code>) is awaiting deployment.
-              Real-time audit events will appear here once connected.
-            </p>
-            <p className="font-mono text-[11px] opacity-80">
-              Contract reference: <code>docs/AUTOPILOT_BACKEND_CONTRACT.md</code>
-            </p>
-          </AlertDescription>
-        </Alert>
-      )}
-
       {/* ── Inline Error with Retry ──────────────────────────────────── */}
       {error && !backendUnavailable && (
         <Alert variant="destructive" className="rounded-2xl">
@@ -284,6 +224,16 @@ export default function ActionAuditLogPage() {
               <SelectItem value="executed_task">Executed Task</SelectItem>
             </SelectContent>
           </Select>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={exportCsv}
+            className="rounded-xl h-9 gap-1.5 text-xs bg-background/80 shrink-0"
+          >
+            <Download className="h-3.5 w-3.5" />
+            Export CSV
+          </Button>
         </div>
       </div>
 

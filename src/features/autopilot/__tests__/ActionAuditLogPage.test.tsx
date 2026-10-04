@@ -52,9 +52,8 @@ describe("ActionAuditLogPage", () => {
 
     render(<ActionAuditLogPage />);
 
-    expect(await screen.findByText("AI Action Audit Log")).toBeInTheDocument();
     expect(
-      screen.getByText("Expense Claim #EXP-4412 (₹3,200) by Priya Mehta"),
+      await screen.findByText("Expense Claim #EXP-4412 (₹3,200) by Priya Mehta"),
     ).toBeInTheDocument();
     expect(screen.getByText("94%")).toBeInTheDocument();
     expect(

@@ -8,8 +8,6 @@ import {
   CheckCircle2,
   Clock,
   Filter,
-  Inbox,
-  RefreshCw,
   Search,
   Shield,
   ShieldAlert,
@@ -57,7 +55,6 @@ const URGENCY_BADGES: Record<ExceptionUrgency, { label: string; color: string }>
 export default function ExceptionsInboxPage() {
   const {
     exceptions,
-    total,
     loading,
     error,
     backendUnavailable,
@@ -123,55 +120,6 @@ export default function ExceptionsInboxPage() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
-      {/* ── Page Header ────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-6">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-primary/10 text-primary">
-              <Inbox className="h-5 w-5" />
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight">Exceptions Inbox</h1>
-            <Badge variant="outline" className="text-xs uppercase font-mono tracking-wider ml-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30">
-              {total} Pending
-            </Badge>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-            Triage requests that could not be auto-resolved due to policy edge-cases, missing criteria, or low AI confidence.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void refetch()}
-            className="rounded-xl h-9 gap-1.5 text-xs"
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            Refresh
-          </Button>
-        </div>
-      </div>
-
-      {/* ── Backend Unavailable Banner ───────────────────────────────── */}
-      {backendUnavailable && (
-        <Alert className="border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200 rounded-2xl">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle className="font-semibold text-sm">
-            Feature unavailable — backend pending
-          </AlertTitle>
-          <AlertDescription className="text-xs mt-1 space-y-1">
-            <p>
-              The Autopilot Exceptions Inbox API (<code>/api/v2/autopilot/exceptions</code>) is awaiting deployment.
-              Real exceptions will appear automatically once the service is live.
-            </p>
-            <p className="font-mono text-[11px] opacity-80">
-              Contract reference: <code>docs/AUTOPILOT_BACKEND_CONTRACT.md</code>
-            </p>
-          </AlertDescription>
-        </Alert>
-      )}
-
       {/* ── Inline Error with Retry ──────────────────────────────────── */}
       {error && !backendUnavailable && (
         <Alert variant="destructive" className="rounded-2xl">

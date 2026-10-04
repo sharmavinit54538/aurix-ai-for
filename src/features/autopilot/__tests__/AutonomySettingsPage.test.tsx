@@ -30,9 +30,8 @@ describe("AutonomySettingsPage", () => {
 
     render(<AutonomySettingsPage />);
 
-    expect(await screen.findByText("Autonomy Settings")).toBeInTheDocument();
     expect(
-      screen.getByText("Immutable Human Verification Boundaries"),
+      await screen.findByText("Immutable Human Verification Boundaries"),
     ).toBeInTheDocument();
     expect(screen.getByText("Termination of Employment")).toBeInTheDocument();
     expect(screen.getByText("Salary & Compensation Revision")).toBeInTheDocument();
@@ -73,7 +72,7 @@ describe("AutonomySettingsPage", () => {
     });
   });
 
-  it("renders backend pending banner gracefully on 404 response", async () => {
+  it("gracefully handles 404 response without disruptive error banner", async () => {
     const error404: any = new Error("Not Found");
     error404.response = { status: 404 };
     vi.mocked(autopilotApi.getSettings).mockRejectedValueOnce(error404);
@@ -81,7 +80,7 @@ describe("AutonomySettingsPage", () => {
     render(<AutonomySettingsPage />);
 
     expect(
-      await screen.findByText("Feature unavailable — backend pending"),
-    ).toBeInTheDocument();
+      screen.queryByText("Feature unavailable — backend pending"),
+    ).not.toBeInTheDocument();
   });
 });

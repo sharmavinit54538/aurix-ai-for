@@ -4,7 +4,6 @@ import {
   AlertTriangle,
   ArrowRight,
   Bell,
-  BellRing,
   CalendarClock,
   Check,
   CheckCircle2,
@@ -13,7 +12,6 @@ import {
   Flame,
   ListTodo,
   Loader2,
-  RefreshCw,
   ShieldAlert,
   Sparkles,
   TrendingDown,
@@ -164,60 +162,6 @@ export default function ProactiveAlertsPage() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
-      {/* ── Header ─────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-6">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-primary/10 text-primary relative">
-              <BellRing className="h-5 w-5" />
-              {activeCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-xs">
-                  {activeCount}
-                </span>
-              )}
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight">Proactive Alerts Center</h1>
-            <Badge variant="outline" className="text-xs uppercase font-mono tracking-wider ml-1 bg-primary/5 text-primary border-primary/20">
-              AI Sentinel
-            </Badge>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-            Signals detected by continuous AI monitoring across attrition risks, burnout patterns, attendance anomalies, and payroll variances before they escalate.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void refetch()}
-            className="rounded-xl h-9 gap-1.5 text-xs cursor-pointer"
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            Refresh
-          </Button>
-        </div>
-      </div>
-
-      {/* ── Backend Unavailable Banner ───────────────────────────────── */}
-      {backendUnavailable && (
-        <Alert className="border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200 rounded-2xl">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle className="font-semibold text-sm">
-            Feature unavailable — backend pending
-          </AlertTitle>
-          <AlertDescription className="text-xs mt-1 space-y-1">
-            <p>
-              The Proactive Alerts API (<code>/api/v2/autopilot/alerts</code>) is pending deployment.
-              Signals will populate automatically once the live sentinel monitors are connected.
-            </p>
-            <p className="font-mono text-[11px] opacity-80">
-              Contract reference: <code>docs/AUTOPILOT_BACKEND_CONTRACT.md</code>
-            </p>
-          </AlertDescription>
-        </Alert>
-      )}
-
       {/* ── Inline Error with Retry ──────────────────────────────────── */}
       {error && !backendUnavailable && (
         <Alert variant="destructive" className="rounded-2xl">
@@ -241,7 +185,12 @@ export default function ProactiveAlertsPage() {
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 rounded-2xl border border-border bg-card/40 backdrop-blur-sm">
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground ml-1" />
-          <span className="text-xs font-semibold text-foreground">Filter Alerts:</span>
+          <span className="text-xs font-semibold text-foreground">Filter Alerts</span>
+          {activeCount > 0 && (
+            <span className="flex h-5 px-2 items-center justify-center rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-[10px] font-medium">
+              {activeCount} active
+            </span>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-2">

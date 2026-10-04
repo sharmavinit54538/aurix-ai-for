@@ -23,7 +23,6 @@ import {
   UserCheck,
   Zap,
 } from "lucide-react";
-import { OneHRIcon } from "@/components/icons/OneHRIcon";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -93,12 +92,7 @@ export default function AutopilotOverviewDashboard() {
       {/* ── Page Header ────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-6">
         <div>
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-xl bg-primary/10 text-primary border border-primary/20">
-              <OneHRIcon className="h-6 w-6" gradient />
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight">OneHR Command Center</h1>
-          </div>
+          <h1 className="text-2xl font-bold tracking-tight">OneHR Command Center</h1>
         </div>
 
         <div className="flex items-center gap-2.5">

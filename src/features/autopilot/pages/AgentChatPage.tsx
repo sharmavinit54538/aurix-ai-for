@@ -1,25 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import {
-  AlertTriangle,
-  ArrowRight,
   Bot,
-  CheckCircle2,
-  CornerDownLeft,
   Loader2,
-  MessageSquare,
   Plus,
-  RefreshCw,
   Send,
-  ShieldAlert,
   Sparkles,
   User,
-  Wrench,
 } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { AgentToolCallCard } from "../components/AgentToolCallCard";
 import { useAgentChat, AGENT_SUGGESTIONS } from "../hooks/useAgentChat";
@@ -70,66 +59,27 @@ export default function AgentChatPage() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-16">
-      {/* ── Page Header ────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-6">
-        <div>
+      {/* ── Chat Container ──────────────────────────────────────────── */}
+      <Card className="rounded-3xl border border-border bg-card/60 backdrop-blur-xl shadow-md overflow-hidden flex flex-col h-[650px]">
+        {/* Chat Header Toolbar */}
+        <div className="flex items-center justify-between px-5 py-3 border-b border-border/40 bg-card/40">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-primary/10 text-primary">
-              <Bot className="h-5 w-5" />
+            <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+              <Bot className="h-4 w-4" />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight">HR Agent that ACTS</h1>
-            <Badge variant="outline" className="text-xs uppercase font-mono tracking-wider ml-1 bg-primary/5 text-primary border-primary/20">
-              Autonomous Agent
-            </Badge>
+            <span className="font-semibold text-xs text-foreground">HR Agent Chat</span>
           </div>
-          <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-            Give natural language commands to perform HR actions directly. The agent evaluates policies, proposes concrete tool calls with clear consequences, and requires your explicit confirmation before executing.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5">
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={resetChat}
-            className="rounded-xl h-9 gap-1.5 text-xs cursor-pointer"
+            className="rounded-xl h-7 gap-1 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
           >
             <Plus className="h-3.5 w-3.5" />
             New Conversation
           </Button>
         </div>
-      </div>
 
-      {/* ── Hard Safety Invariants Notice ───────────────────────────── */}
-      <div className="flex items-center gap-3 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-200 text-xs">
-        <ShieldAlert className="h-4 w-4 shrink-0 text-amber-500" />
-        <div className="leading-relaxed">
-          <span className="font-semibold">Autonomous Guardrails: </span>
-          The agent can perform routine tasks (leaves, expense drafts, letters, attendance adjustments). Sensitive operations (terminations, salary changes, disciplinary measures, and final payroll sign-offs) are strictly gated to authorized humans.
-        </div>
-      </div>
-
-      {/* ── Backend Pending Alert ───────────────────────────────────── */}
-      {backendUnavailable && (
-        <Alert className="border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200 rounded-2xl">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle className="font-semibold text-sm">
-            Feature unavailable — backend pending
-          </AlertTitle>
-          <AlertDescription className="text-xs mt-1 space-y-1">
-            <p>
-              The HR Agent chat endpoint (<code>/api/v2/autopilot/agent/chat</code>) is pending deployment.
-              Action proposals and streaming will connect automatically once live.
-            </p>
-            <p className="font-mono text-[11px] opacity-80">
-              Contract reference: <code>docs/AUTOPILOT_BACKEND_CONTRACT.md</code>
-            </p>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* ── Chat Container ──────────────────────────────────────────── */}
-      <Card className="rounded-3xl border border-border bg-card/60 backdrop-blur-xl shadow-md overflow-hidden flex flex-col h-[650px]">
         {/* Messages Feed */}
         <div className="flex-1 overflow-y-auto p-5 space-y-4 text-xs">
           {messages.map((msg) => {

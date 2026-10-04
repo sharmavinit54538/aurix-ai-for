@@ -8,12 +8,10 @@ import {
   HelpCircle,
   Info,
   Lock,
-  RefreshCw,
   Save,
   Shield,
   ShieldAlert,
   ShieldCheck,
-  Sliders,
   Sparkles,
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -111,64 +109,6 @@ export default function AutonomySettingsPage() {
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-16">
-      {/* ── Page Header ────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-6">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-primary/10 text-primary">
-              <Sliders className="h-5 w-5" />
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight">Autonomy Settings</h1>
-            <Badge variant="outline" className="text-xs uppercase font-mono tracking-wider ml-1 bg-primary/5 text-primary border-primary/20">
-              Governance
-            </Badge>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-            Configure execution autonomy, confidence gates, and exception triggers per HR workflow. Routine work executes autonomously while high-risk actions stay human-gated.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void refetch()}
-            className="rounded-xl h-9 gap-1.5 text-xs"
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            Refresh
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => setConfirmModalOpen(true)}
-            disabled={saving}
-            className="rounded-xl h-9 gap-1.5 text-xs shadow-sm bg-primary text-primary-foreground hover:bg-primary/90"
-          >
-            <Save className="h-3.5 w-3.5" />
-            {saving ? "Saving..." : "Save Policy"}
-          </Button>
-        </div>
-      </div>
-
-      {/* ── Backend Unavailable Banner ───────────────────────────────── */}
-      {backendUnavailable && (
-        <Alert className="border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200 rounded-2xl">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle className="font-semibold text-sm">
-            Feature unavailable — backend pending
-          </AlertTitle>
-          <AlertDescription className="text-xs mt-1 space-y-1">
-            <p>
-              The Autopilot Settings API (<code>/api/v2/autopilot/settings</code>) is awaiting deployment on the backend server.
-              Local configuration rules and safety limits are active in client preview.
-            </p>
-            <p className="font-mono text-[11px] opacity-80">
-              Contract specification: <code>docs/AUTOPILOT_BACKEND_CONTRACT.md</code>
-            </p>
-          </AlertDescription>
-        </Alert>
-      )}
-
       {/* ── Inline Error with Retry ──────────────────────────────────── */}
       {error && !backendUnavailable && (
         <Alert variant="destructive" className="rounded-2xl">
@@ -248,13 +188,16 @@ export default function AutonomySettingsPage() {
 
       {/* ── Workflow Settings Grid ──────────────────────────────────── */}
       <div>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-lg font-semibold tracking-tight">Configurable HR Workflows</h2>
-            <p className="text-xs text-muted-foreground">
-              Define autonomy levels and numerical safety thresholds for each active workflow.
-            </p>
-          </div>
+        <div className="flex items-center justify-end mb-4">
+          <Button
+            size="sm"
+            onClick={() => setConfirmModalOpen(true)}
+            disabled={saving}
+            className="rounded-xl h-9 gap-1.5 text-xs shadow-sm bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            <Save className="h-3.5 w-3.5" />
+            {saving ? "Saving..." : "Save Policy"}
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

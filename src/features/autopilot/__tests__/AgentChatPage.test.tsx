@@ -34,7 +34,7 @@ describe("AgentChatPage", () => {
   it("renders the agent chat interface with welcome message and suggestions", () => {
     render(<AgentChatPage />);
 
-    expect(screen.getByText("HR Agent that ACTS")).toBeInTheDocument();
+    expect(screen.getByText("HR Agent Chat")).toBeInTheDocument();
     expect(screen.getByText(/I can autonomously perform HR tasks for you/i)).toBeInTheDocument();
     expect(screen.getByText("Apply 2 days casual leave from Monday")).toBeInTheDocument();
   });

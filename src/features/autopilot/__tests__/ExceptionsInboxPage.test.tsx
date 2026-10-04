@@ -45,8 +45,9 @@ describe("ExceptionsInboxPage", () => {
 
     render(<ExceptionsInboxPage />);
 
-    expect(await screen.findByText("Exceptions Inbox")).toBeInTheDocument();
-    expect(screen.getByText("Leave Request: Arjun Roy (Casual, 4 days)")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Leave Request: Arjun Roy (Casual, 4 days)"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Leave Policy 2026, Section 4.2")).toBeInTheDocument();
     expect(
       screen.getByText("Exceeds max leave threshold of 2 days for auto-approval."),

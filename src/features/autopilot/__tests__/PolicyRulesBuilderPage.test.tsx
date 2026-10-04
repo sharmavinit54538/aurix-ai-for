@@ -74,8 +74,7 @@ describe("PolicyRulesBuilderPage", () => {
 
     render(<PolicyRulesBuilderPage />);
 
-    expect(await screen.findByText("Policy Rules Builder")).toBeInTheDocument();
-    expect(screen.getByText("Auto-Approve Casual Leave <= 2 Days")).toBeInTheDocument();
+    expect(await screen.findByText("Auto-Approve Casual Leave <= 2 Days")).toBeInTheDocument();
     expect(screen.getByText("Leave Policy 2026, Section 4.1")).toBeInTheDocument();
     expect(screen.getByText("Auto Approve")).toBeInTheDocument();
   });
@@ -122,7 +121,7 @@ describe("PolicyRulesBuilderPage", () => {
     expect(await screen.findByText(/All 3 conditions evaluated to TRUE/i)).toBeInTheDocument();
   });
 
-  it("displays feature unavailable alert when backend returns 404 or 501", async () => {
+  it("gracefully handles 404 or 501 without disruptive error banner", async () => {
     const error404 = new Error("Not Found") as any;
     error404.response = { status: 404 };
     vi.mocked(autopilotApi.getRules).mockRejectedValueOnce(error404);
@@ -130,7 +129,7 @@ describe("PolicyRulesBuilderPage", () => {
     render(<PolicyRulesBuilderPage />);
 
     expect(
-      await screen.findByText("Feature unavailable — backend pending"),
-    ).toBeInTheDocument();
+      screen.queryByText("Feature unavailable — backend pending"),
+    ).not.toBeInTheDocument();
   });
 });

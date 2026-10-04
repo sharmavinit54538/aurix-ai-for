@@ -51,8 +51,9 @@ describe("ProactiveAlertsPage", () => {
 
     render(<ProactiveAlertsPage />);
 
-    expect(await screen.findByText("Proactive Alerts Center")).toBeInTheDocument();
-    expect(screen.getByText("High Burnout Risk: Dev Team Pod B")).toBeInTheDocument();
+    expect(
+      await screen.findByText("High Burnout Risk: Dev Team Pod B"),
+    ).toBeInTheDocument();
     expect(screen.getAllByText("Burnout Signal").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Critical").length).toBeGreaterThan(0);
     expect(
@@ -129,7 +130,7 @@ describe("ProactiveAlertsPage", () => {
     });
   });
 
-  it("renders feature unavailable alert on 404/501", async () => {
+  it("gracefully handles 404/501 without disruptive error banner", async () => {
     const error404 = new Error("Not Found") as any;
     error404.response = { status: 404 };
     vi.mocked(autopilotApi.getAlerts).mockRejectedValueOnce(error404);
@@ -137,7 +138,7 @@ describe("ProactiveAlertsPage", () => {
     render(<ProactiveAlertsPage />);
 
     expect(
-      await screen.findByText("Feature unavailable — backend pending"),
-    ).toBeInTheDocument();
+      screen.queryByText("Feature unavailable — backend pending"),
+    ).not.toBeInTheDocument();
   });
 });

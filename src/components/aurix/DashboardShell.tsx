@@ -27,6 +27,7 @@ import {
   HandCoins,
   Home,
   Laptop,
+  Layers,
   LayoutDashboard,
   LifeBuoy,
   LineChart as LineChartIcon,
@@ -62,7 +63,6 @@ import { UserProfileMenu } from "./UserProfileMenu";
 import { NotificationDropdown } from "./NotificationDropdown";
 import { AutopilotAlertBell } from "@/features/autopilot/components/AutopilotAlertBell";
 import { GeminiIcon } from "@/components/icons/GeminiIcon";
-import { OneHRIcon } from "@/components/icons/OneHRIcon";
 import { hasValidAccessToken } from "@/api";
 import { AuthLoadingScreen } from "@/features/auth/components/AuthLoadingScreen";
 import { GlobalCallOverlay, RealtimeCallProvider } from "@/features/connect";
@@ -172,7 +172,7 @@ const NAV_SECTIONS: SidebarNavSection[] = [
       {
         to: "/dashboard/autopilot",
         label: "OneHR",
-        icon: OneHRIcon,
+        icon: Layers,
         roles: ["superadmin", "super_admin", "hr_admin", "manager"],
       },
       {
@@ -242,7 +242,7 @@ const EMPLOYEE_NAV_SECTIONS: SidebarNavSection[] = [
       {
         to: "/dashboard/autopilot/agent",
         label: "HR Agent",
-        icon: OneHRIcon,
+        icon: Layers,
       },
       {
         to: "/dashboard/connect",
@@ -321,7 +321,7 @@ const MANAGER_NAV_SECTIONS: SidebarNavSection[] = [
       {
         to: "/dashboard/autopilot",
         label: "OneHR",
-        icon: OneHRIcon,
+        icon: Layers,
       },
       {
         to: "/dashboard/ai-hub",
