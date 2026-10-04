@@ -172,7 +172,6 @@ const NAV_SECTIONS: SidebarNavSection[] = [
         to: "/dashboard/autopilot",
         label: "Autopilot HR",
         icon: Bot,
-        badge: "AI",
         roles: ["superadmin", "super_admin", "hr_admin", "manager"],
       },
       {
@@ -243,7 +242,6 @@ const EMPLOYEE_NAV_SECTIONS: SidebarNavSection[] = [
         to: "/dashboard/autopilot/agent",
         label: "HR Agent",
         icon: Bot,
-        badge: "AI",
       },
       {
         to: "/dashboard/connect",
@@ -323,7 +321,6 @@ const MANAGER_NAV_SECTIONS: SidebarNavSection[] = [
         to: "/dashboard/autopilot",
         label: "Autopilot HR",
         icon: Bot,
-        badge: "AI",
       },
       {
         to: "/dashboard/ai-hub",

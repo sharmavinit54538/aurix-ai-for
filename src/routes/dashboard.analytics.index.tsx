@@ -35,7 +35,6 @@ const ALL_ANALYTICS_MODULES: ModuleItem[] = [
     icon: Sparkles,
     to: "/dashboard/analytics/ai-insights",
     color: "from-purple-500/20 to-pink-500/20 text-purple-400 border-purple-500/30",
-    badge: "AI",
   },
   {
     id: "ai-analytics-center",

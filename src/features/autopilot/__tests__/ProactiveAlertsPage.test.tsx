@@ -8,6 +8,8 @@ vi.mock("../services/autopilotApi", () => ({
   autopilotApi: {
     getAlerts: vi.fn(),
     acknowledgeAlert: vi.fn(),
+    snoozeAlert: vi.fn(),
+    createAlertTask: vi.fn(),
   },
 }));
 
@@ -45,10 +47,7 @@ describe("ProactiveAlertsPage", () => {
   });
 
   it("renders active proactive alerts with evidence and recommended action", async () => {
-    vi.mocked(autopilotApi.getAlerts).mockResolvedValueOnce({
-      items: [mockAlert],
-      total: 1,
-    });
+    vi.mocked(autopilotApi.getAlerts).mockResolvedValueOnce([mockAlert]);
 
     render(<ProactiveAlertsPage />);
 
@@ -62,13 +61,10 @@ describe("ProactiveAlertsPage", () => {
   });
 
   it("acknowledges an alert", async () => {
-    vi.mocked(autopilotApi.getAlerts).mockResolvedValueOnce({
-      items: [mockAlert],
-      total: 1,
-    });
+    vi.mocked(autopilotApi.getAlerts).mockResolvedValueOnce([mockAlert]);
     vi.mocked(autopilotApi.acknowledgeAlert).mockResolvedValueOnce({
-      success: true,
-      message: "Alert acknowledged",
+      ...mockAlert,
+      status: "acknowledged",
     });
 
     render(<ProactiveAlertsPage />);
@@ -79,20 +75,15 @@ describe("ProactiveAlertsPage", () => {
     fireEvent.click(ackBtn);
 
     await waitFor(() => {
-      expect(autopilotApi.acknowledgeAlert).toHaveBeenCalledWith("alt-burnout-101", {
-        action: "ack",
-      });
+      expect(autopilotApi.acknowledgeAlert).toHaveBeenCalledWith("alt-burnout-101");
     });
   });
 
   it("snoozes an alert with chosen duration", async () => {
-    vi.mocked(autopilotApi.getAlerts).mockResolvedValueOnce({
-      items: [mockAlert],
-      total: 1,
-    });
-    vi.mocked(autopilotApi.acknowledgeAlert).mockResolvedValueOnce({
-      success: true,
-      message: "Alert snoozed",
+    vi.mocked(autopilotApi.getAlerts).mockResolvedValueOnce([mockAlert]);
+    vi.mocked(autopilotApi.snoozeAlert).mockResolvedValueOnce({
+      ...mockAlert,
+      status: "snoozed",
     });
 
     render(<ProactiveAlertsPage />);
@@ -106,22 +97,18 @@ describe("ProactiveAlertsPage", () => {
     fireEvent.click(confirmSnoozeBtn);
 
     await waitFor(() => {
-      expect(autopilotApi.acknowledgeAlert).toHaveBeenCalledWith(
+      expect(autopilotApi.snoozeAlert).toHaveBeenCalledWith(
         "alt-burnout-101",
-        expect.objectContaining({ action: "snooze" }),
+        expect.any(String),
       );
     });
   });
 
   it("creates a follow-up action task from an alert", async () => {
-    vi.mocked(autopilotApi.getAlerts).mockResolvedValueOnce({
-      items: [mockAlert],
-      total: 1,
-    });
-    vi.mocked(autopilotApi.acknowledgeAlert).mockResolvedValueOnce({
-      success: true,
+    vi.mocked(autopilotApi.getAlerts).mockResolvedValueOnce([mockAlert]);
+    vi.mocked(autopilotApi.createAlertTask).mockResolvedValueOnce({
       taskId: "task-552",
-      message: "Task created",
+      alert: { ...mockAlert, taskId: "task-552" },
     });
 
     render(<ProactiveAlertsPage />);
@@ -135,9 +122,9 @@ describe("ProactiveAlertsPage", () => {
     fireEvent.click(confirmTaskBtn);
 
     await waitFor(() => {
-      expect(autopilotApi.acknowledgeAlert).toHaveBeenCalledWith(
+      expect(autopilotApi.createAlertTask).toHaveBeenCalledWith(
         "alt-burnout-101",
-        expect.objectContaining({ action: "create_task" }),
+        expect.objectContaining({ title: expect.stringContaining("High Burnout Risk") }),
       );
     });
   });

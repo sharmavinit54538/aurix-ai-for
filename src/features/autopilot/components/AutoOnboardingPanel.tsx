@@ -65,6 +65,10 @@ const STATUS_ICONS: Record<
     badge: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
     icon: CheckCircle2,
   },
+  running: {
+    badge: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
+    icon: Loader2,
+  },
   in_progress: {
     badge: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
     icon: Loader2,
@@ -207,7 +211,7 @@ export function AutoOnboardingPanel() {
                       </Badge>
                     </div>
                     <div className="text-[11px] text-muted-foreground mt-0.5">
-                      Offer Accepted: {new Date(run.offerAcceptedAt).toLocaleDateString()}
+                      Offer Accepted: {run.offerAcceptedAt ? new Date(run.offerAcceptedAt).toLocaleDateString() : (run.startDate ? new Date(run.startDate).toLocaleDateString() : "Pending")}
                     </div>
                   </div>
 
