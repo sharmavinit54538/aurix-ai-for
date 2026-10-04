@@ -100,6 +100,14 @@ export const ROUTE_ROLE_ACCESS: Record<string, AppRole[]> = {
   "/dashboard/settings/payroll": HR_OPERATIONS_ROLES,
   "/dashboard/settings/roles-permissions": HR_OPERATIONS_ROLES,
   "/dashboard/roles": HR_OPERATIONS_ROLES,
+
+  // ── Autopilot HR Routes ──────────────────────────────────────────
+  "/dashboard/autopilot/settings": ["hr_admin", "super_admin"],
+  "/dashboard/autopilot/rules": ["hr_admin", "super_admin"],
+  "/dashboard/autopilot/exceptions": ["hr_admin", "manager"],
+  "/dashboard/autopilot/audit": ["hr_admin", "super_admin"],
+  "/dashboard/autopilot/alerts": ["hr_admin", "manager", "super_admin"],
+  "/dashboard/autopilot": ["hr_admin", "manager", "super_admin"],
 };
 
 import { getDefaultDashboardPath } from "./role-paths";

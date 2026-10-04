@@ -110,5 +110,27 @@
   "/api/v1/assets/analytics",
   "/api/v1/assets/{param}/assign",
   "/api/v1/assets/{param}/return",
-  "/api/v2/executive/overview"
+  "/api/v2/executive/overview",
+  "/api/v2/autopilot/settings",
+  "/api/v2/autopilot/rules",
+  "/api/v2/autopilot/rules/{param}",
+  "/api/v2/autopilot/rules/simulate",
+  "/api/v2/autopilot/exceptions",
+  "/api/v2/autopilot/exceptions/{param}/decision",
+  "/api/v2/autopilot/agent/chat",
+  "/api/v2/autopilot/agent/actions/{param}/confirm",
+  "/api/v2/autopilot/agent/actions/{param}/cancel",
+  "/api/v2/autopilot/audit",
+  "/api/v2/autopilot/audit/{param}/undo",
+  "/api/v2/autopilot/audit/{param}/override",
+  "/api/v2/autopilot/alerts",
+  "/api/v2/autopilot/alerts/{param}/ack",
+  "/api/v2/autopilot/alerts/{param}/snooze",
+  "/api/v2/autopilot/alerts/{param}/task",
+  "/api/v2/autopilot/overview",
+  "/api/v2/autopilot/onboarding/runs",
+  "/api/v2/autopilot/onboarding/runs/{param}",
+  "/api/v2/autopilot/onboarding/runs/{param}/retry-step",
+  "/api/v2/autopilot/payroll/status"
 ]
+

@@ -71,6 +71,7 @@ import { Route as DashboardDepartmentsRouteImport } from './routes/dashboard.dep
 import { Route as DashboardConnectRouteImport } from './routes/dashboard.connect'
 import { Route as DashboardCallsRouteImport } from './routes/dashboard.calls'
 import { Route as DashboardBillingRouteImport } from './routes/dashboard.billing'
+import { Route as DashboardAutopilotRouteImport } from './routes/dashboard.autopilot'
 import { Route as DashboardAuditLogsRouteImport } from './routes/dashboard.audit-logs'
 import { Route as DashboardAttendanceRouteImport } from './routes/dashboard.attendance'
 import { Route as DashboardAssetsRouteImport } from './routes/dashboard.assets'
@@ -203,6 +204,10 @@ import { Route as DashboardExecutiveCioRouteImport } from './routes/dashboard.ex
 import { Route as DashboardExecutiveCfoRouteImport } from './routes/dashboard.executive.cfo'
 import { Route as DashboardExecutiveCeoRouteImport } from './routes/dashboard.executive.ceo'
 import { Route as DashboardEmployeePayrollRouteImport } from './routes/dashboard.employee.payroll'
+import { Route as DashboardAutopilotSettingsRouteImport } from './routes/dashboard.autopilot.settings'
+import { Route as DashboardAutopilotRulesRouteImport } from './routes/dashboard.autopilot.rules'
+import { Route as DashboardAutopilotExceptionsRouteImport } from './routes/dashboard.autopilot.exceptions'
+import { Route as DashboardAutopilotAuditRouteImport } from './routes/dashboard.autopilot.audit'
 import { Route as DashboardAttendanceShiftsRouteImport } from './routes/dashboard.attendance.shifts'
 import { Route as DashboardAttendanceRostersRouteImport } from './routes/dashboard.attendance.rosters'
 import { Route as DashboardAttendanceHolidaysRouteImport } from './routes/dashboard.attendance.holidays'
@@ -572,6 +577,11 @@ const DashboardCallsRoute = DashboardCallsRouteImport.update({
 const DashboardBillingRoute = DashboardBillingRouteImport.update({
   id: '/billing',
   path: '/billing',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardAutopilotRoute = DashboardAutopilotRouteImport.update({
+  id: '/autopilot',
+  path: '/autopilot',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardAuditLogsRoute = DashboardAuditLogsRouteImport.update({
@@ -1313,6 +1323,28 @@ const DashboardEmployeePayrollRoute =
     path: '/payroll',
     getParentRoute: () => DashboardEmployeeRoute,
   } as any)
+const DashboardAutopilotSettingsRoute =
+  DashboardAutopilotSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => DashboardAutopilotRoute,
+  } as any)
+const DashboardAutopilotRulesRoute = DashboardAutopilotRulesRouteImport.update({
+  id: '/rules',
+  path: '/rules',
+  getParentRoute: () => DashboardAutopilotRoute,
+} as any)
+const DashboardAutopilotExceptionsRoute =
+  DashboardAutopilotExceptionsRouteImport.update({
+    id: '/exceptions',
+    path: '/exceptions',
+    getParentRoute: () => DashboardAutopilotRoute,
+  } as any)
+const DashboardAutopilotAuditRoute = DashboardAutopilotAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => DashboardAutopilotRoute,
+} as any)
 const DashboardAttendanceShiftsRoute =
   DashboardAttendanceShiftsRouteImport.update({
     id: '/shifts',
@@ -1718,6 +1750,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/assets': typeof DashboardAssetsRoute
   '/dashboard/attendance': typeof DashboardAttendanceRouteWithChildren
   '/dashboard/audit-logs': typeof DashboardAuditLogsRoute
+  '/dashboard/autopilot': typeof DashboardAutopilotRouteWithChildren
   '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/calls': typeof DashboardCallsRoute
   '/dashboard/connect': typeof DashboardConnectRouteWithChildren
@@ -1771,6 +1804,10 @@ export interface FileRoutesByFullPath {
   '/dashboard/attendance/holidays': typeof DashboardAttendanceHolidaysRoute
   '/dashboard/attendance/rosters': typeof DashboardAttendanceRostersRoute
   '/dashboard/attendance/shifts': typeof DashboardAttendanceShiftsRoute
+  '/dashboard/autopilot/audit': typeof DashboardAutopilotAuditRoute
+  '/dashboard/autopilot/exceptions': typeof DashboardAutopilotExceptionsRoute
+  '/dashboard/autopilot/rules': typeof DashboardAutopilotRulesRoute
+  '/dashboard/autopilot/settings': typeof DashboardAutopilotSettingsRoute
   '/dashboard/employee/payroll': typeof DashboardEmployeePayrollRoute
   '/dashboard/executive/ceo': typeof DashboardExecutiveCeoRouteWithChildren
   '/dashboard/executive/cfo': typeof DashboardExecutiveCfoRoute
@@ -1967,6 +2004,7 @@ export interface FileRoutesByTo {
   '/dashboard/asset-management': typeof DashboardAssetManagementRoute
   '/dashboard/assets': typeof DashboardAssetsRoute
   '/dashboard/audit-logs': typeof DashboardAuditLogsRoute
+  '/dashboard/autopilot': typeof DashboardAutopilotRouteWithChildren
   '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/calls': typeof DashboardCallsRoute
   '/dashboard/departments': typeof DashboardDepartmentsRoute
@@ -2010,6 +2048,10 @@ export interface FileRoutesByTo {
   '/dashboard/attendance/holidays': typeof DashboardAttendanceHolidaysRoute
   '/dashboard/attendance/rosters': typeof DashboardAttendanceRostersRoute
   '/dashboard/attendance/shifts': typeof DashboardAttendanceShiftsRoute
+  '/dashboard/autopilot/audit': typeof DashboardAutopilotAuditRoute
+  '/dashboard/autopilot/exceptions': typeof DashboardAutopilotExceptionsRoute
+  '/dashboard/autopilot/rules': typeof DashboardAutopilotRulesRoute
+  '/dashboard/autopilot/settings': typeof DashboardAutopilotSettingsRoute
   '/dashboard/employee/payroll': typeof DashboardEmployeePayrollRoute
   '/dashboard/executive/cfo': typeof DashboardExecutiveCfoRoute
   '/dashboard/executive/cmo': typeof DashboardExecutiveCmoRoute
@@ -2209,6 +2251,7 @@ export interface FileRoutesById {
   '/dashboard/assets': typeof DashboardAssetsRoute
   '/dashboard/attendance': typeof DashboardAttendanceRouteWithChildren
   '/dashboard/audit-logs': typeof DashboardAuditLogsRoute
+  '/dashboard/autopilot': typeof DashboardAutopilotRouteWithChildren
   '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/calls': typeof DashboardCallsRoute
   '/dashboard/connect': typeof DashboardConnectRouteWithChildren
@@ -2262,6 +2305,10 @@ export interface FileRoutesById {
   '/dashboard/attendance/holidays': typeof DashboardAttendanceHolidaysRoute
   '/dashboard/attendance/rosters': typeof DashboardAttendanceRostersRoute
   '/dashboard/attendance/shifts': typeof DashboardAttendanceShiftsRoute
+  '/dashboard/autopilot/audit': typeof DashboardAutopilotAuditRoute
+  '/dashboard/autopilot/exceptions': typeof DashboardAutopilotExceptionsRoute
+  '/dashboard/autopilot/rules': typeof DashboardAutopilotRulesRoute
+  '/dashboard/autopilot/settings': typeof DashboardAutopilotSettingsRoute
   '/dashboard/employee/payroll': typeof DashboardEmployeePayrollRoute
   '/dashboard/executive/ceo': typeof DashboardExecutiveCeoRouteWithChildren
   '/dashboard/executive/cfo': typeof DashboardExecutiveCfoRoute
@@ -2466,6 +2513,7 @@ export interface FileRouteTypes {
     | '/dashboard/assets'
     | '/dashboard/attendance'
     | '/dashboard/audit-logs'
+    | '/dashboard/autopilot'
     | '/dashboard/billing'
     | '/dashboard/calls'
     | '/dashboard/connect'
@@ -2519,6 +2567,10 @@ export interface FileRouteTypes {
     | '/dashboard/attendance/holidays'
     | '/dashboard/attendance/rosters'
     | '/dashboard/attendance/shifts'
+    | '/dashboard/autopilot/audit'
+    | '/dashboard/autopilot/exceptions'
+    | '/dashboard/autopilot/rules'
+    | '/dashboard/autopilot/settings'
     | '/dashboard/employee/payroll'
     | '/dashboard/executive/ceo'
     | '/dashboard/executive/cfo'
@@ -2715,6 +2767,7 @@ export interface FileRouteTypes {
     | '/dashboard/asset-management'
     | '/dashboard/assets'
     | '/dashboard/audit-logs'
+    | '/dashboard/autopilot'
     | '/dashboard/billing'
     | '/dashboard/calls'
     | '/dashboard/departments'
@@ -2758,6 +2811,10 @@ export interface FileRouteTypes {
     | '/dashboard/attendance/holidays'
     | '/dashboard/attendance/rosters'
     | '/dashboard/attendance/shifts'
+    | '/dashboard/autopilot/audit'
+    | '/dashboard/autopilot/exceptions'
+    | '/dashboard/autopilot/rules'
+    | '/dashboard/autopilot/settings'
     | '/dashboard/employee/payroll'
     | '/dashboard/executive/cfo'
     | '/dashboard/executive/cmo'
@@ -2956,6 +3013,7 @@ export interface FileRouteTypes {
     | '/dashboard/assets'
     | '/dashboard/attendance'
     | '/dashboard/audit-logs'
+    | '/dashboard/autopilot'
     | '/dashboard/billing'
     | '/dashboard/calls'
     | '/dashboard/connect'
@@ -3009,6 +3067,10 @@ export interface FileRouteTypes {
     | '/dashboard/attendance/holidays'
     | '/dashboard/attendance/rosters'
     | '/dashboard/attendance/shifts'
+    | '/dashboard/autopilot/audit'
+    | '/dashboard/autopilot/exceptions'
+    | '/dashboard/autopilot/rules'
+    | '/dashboard/autopilot/settings'
     | '/dashboard/employee/payroll'
     | '/dashboard/executive/ceo'
     | '/dashboard/executive/cfo'
@@ -3627,6 +3689,13 @@ declare module '@tanstack/react-router' {
       path: '/billing'
       fullPath: '/dashboard/billing'
       preLoaderRoute: typeof DashboardBillingRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/autopilot': {
+      id: '/dashboard/autopilot'
+      path: '/autopilot'
+      fullPath: '/dashboard/autopilot'
+      preLoaderRoute: typeof DashboardAutopilotRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/audit-logs': {
@@ -4553,6 +4622,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardEmployeePayrollRouteImport
       parentRoute: typeof DashboardEmployeeRoute
     }
+    '/dashboard/autopilot/settings': {
+      id: '/dashboard/autopilot/settings'
+      path: '/settings'
+      fullPath: '/dashboard/autopilot/settings'
+      preLoaderRoute: typeof DashboardAutopilotSettingsRouteImport
+      parentRoute: typeof DashboardAutopilotRoute
+    }
+    '/dashboard/autopilot/rules': {
+      id: '/dashboard/autopilot/rules'
+      path: '/rules'
+      fullPath: '/dashboard/autopilot/rules'
+      preLoaderRoute: typeof DashboardAutopilotRulesRouteImport
+      parentRoute: typeof DashboardAutopilotRoute
+    }
+    '/dashboard/autopilot/exceptions': {
+      id: '/dashboard/autopilot/exceptions'
+      path: '/exceptions'
+      fullPath: '/dashboard/autopilot/exceptions'
+      preLoaderRoute: typeof DashboardAutopilotExceptionsRouteImport
+      parentRoute: typeof DashboardAutopilotRoute
+    }
+    '/dashboard/autopilot/audit': {
+      id: '/dashboard/autopilot/audit'
+      path: '/audit'
+      fullPath: '/dashboard/autopilot/audit'
+      preLoaderRoute: typeof DashboardAutopilotAuditRouteImport
+      parentRoute: typeof DashboardAutopilotRoute
+    }
     '/dashboard/attendance/shifts': {
       id: '/dashboard/attendance/shifts'
       path: '/shifts'
@@ -5087,6 +5184,23 @@ const DashboardAttendanceRouteChildren: DashboardAttendanceRouteChildren = {
 const DashboardAttendanceRouteWithChildren =
   DashboardAttendanceRoute._addFileChildren(DashboardAttendanceRouteChildren)
 
+interface DashboardAutopilotRouteChildren {
+  DashboardAutopilotAuditRoute: typeof DashboardAutopilotAuditRoute
+  DashboardAutopilotExceptionsRoute: typeof DashboardAutopilotExceptionsRoute
+  DashboardAutopilotRulesRoute: typeof DashboardAutopilotRulesRoute
+  DashboardAutopilotSettingsRoute: typeof DashboardAutopilotSettingsRoute
+}
+
+const DashboardAutopilotRouteChildren: DashboardAutopilotRouteChildren = {
+  DashboardAutopilotAuditRoute: DashboardAutopilotAuditRoute,
+  DashboardAutopilotExceptionsRoute: DashboardAutopilotExceptionsRoute,
+  DashboardAutopilotRulesRoute: DashboardAutopilotRulesRoute,
+  DashboardAutopilotSettingsRoute: DashboardAutopilotSettingsRoute,
+}
+
+const DashboardAutopilotRouteWithChildren =
+  DashboardAutopilotRoute._addFileChildren(DashboardAutopilotRouteChildren)
+
 interface DashboardConnectRouteChildren {
   DashboardConnectIndexRoute: typeof DashboardConnectIndexRoute
   DashboardConnectChannelsChannelIdRoute: typeof DashboardConnectChannelsChannelIdRoute
@@ -5592,6 +5706,7 @@ interface DashboardRouteChildren {
   DashboardAssetsRoute: typeof DashboardAssetsRoute
   DashboardAttendanceRoute: typeof DashboardAttendanceRouteWithChildren
   DashboardAuditLogsRoute: typeof DashboardAuditLogsRoute
+  DashboardAutopilotRoute: typeof DashboardAutopilotRouteWithChildren
   DashboardBillingRoute: typeof DashboardBillingRoute
   DashboardCallsRoute: typeof DashboardCallsRoute
   DashboardConnectRoute: typeof DashboardConnectRouteWithChildren
@@ -5651,6 +5766,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAssetsRoute: DashboardAssetsRoute,
   DashboardAttendanceRoute: DashboardAttendanceRouteWithChildren,
   DashboardAuditLogsRoute: DashboardAuditLogsRoute,
+  DashboardAutopilotRoute: DashboardAutopilotRouteWithChildren,
   DashboardBillingRoute: DashboardBillingRoute,
   DashboardCallsRoute: DashboardCallsRoute,
   DashboardConnectRoute: DashboardConnectRouteWithChildren,
