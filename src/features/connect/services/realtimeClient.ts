@@ -228,7 +228,8 @@ class RealtimeClient {
       }
 
       // Duplicate-event suppression
-      const eventId = msg.correlation_id || msg.data?.id || `${eventName}-${msg.timestamp}-${JSON.stringify(msg.data).slice(0, 50)}`;
+      const dataId = msg.data && typeof msg.data === "object" && "id" in msg.data ? String((msg.data as { id: unknown }).id) : "";
+      const eventId = msg.correlation_id || dataId || `${eventName}-${msg.timestamp}-${JSON.stringify(msg.data).slice(0, 50)}`;
       if (this.processedEventIds.has(eventId)) {
         return;
       }

@@ -202,7 +202,7 @@ export function mapAutonomySettingsToBackend(
 }
 
 // ── Policy Rules Mappers ─────────────────────────────────────────────
-export function mapPolicyRuleFromBackend(raw: BackendPolicyRule): PolicyRule {
+export function mapPolicyRuleFromBackend(raw: Partial<BackendPolicyRule>): PolicyRule {
   return {
     id: String(raw.id || ""),
     name: String(raw.name || "Untitled Rule"),
@@ -257,7 +257,7 @@ export function mapPolicyRuleToBackend(rule: Partial<PolicyRule>): Partial<Backe
 }
 
 // ── Exceptions Mappers ───────────────────────────────────────────────
-export function mapExceptionFromBackend(raw: BackendAutopilotException): AutopilotException {
+export function mapExceptionFromBackend(raw: Partial<BackendAutopilotException>): AutopilotException {
   return {
     id: String(raw.id || ""),
     workflow: (raw.workflow || "leave") as AutopilotWorkflowId,
@@ -289,7 +289,7 @@ export function mapExceptionFromBackend(raw: BackendAutopilotException): Autopil
 }
 
 // ── Agent Action Tool Calls ──────────────────────────────────────────
-export function mapAgentActionFromBackend(raw: BackendAgentAction): AgentActionToolCall {
+export function mapAgentActionFromBackend(raw: Partial<BackendAgentAction>): AgentActionToolCall {
   return {
     id: String(raw.id || ""),
     actionType: raw.action_type || "apply_leave",
@@ -313,7 +313,7 @@ export function mapAgentActionFromBackend(raw: BackendAgentAction): AgentActionT
 }
 
 // ── Audit Log Mappers ────────────────────────────────────────────────
-export function mapAuditLogFromBackend(raw: BackendAuditLogEntry): AuditLogEntry {
+export function mapAuditLogFromBackend(raw: Partial<BackendAuditLogEntry>): AuditLogEntry {
   return {
     id: String(raw.id || ""),
     timestamp: raw.timestamp || new Date().toISOString(),
@@ -356,7 +356,7 @@ export function mapAuditLogFromBackend(raw: BackendAuditLogEntry): AuditLogEntry
 }
 
 // ── Proactive Alerts Mappers ─────────────────────────────────────────
-export function mapAlertFromBackend(raw: BackendProactiveAlert): ProactiveAlert {
+export function mapAlertFromBackend(raw: Partial<BackendProactiveAlert>): ProactiveAlert {
   return {
     id: String(raw.id || ""),
     category: (raw.category || "attrition_risk") as AlertCategory,
@@ -382,7 +382,7 @@ export function mapAlertFromBackend(raw: BackendProactiveAlert): ProactiveAlert 
 }
 
 // ── Overview Mappers ─────────────────────────────────────────────────
-export function mapOverviewFromBackend(raw: BackendAutopilotOverview): AutopilotOverview {
+export function mapOverviewFromBackend(raw: Partial<BackendAutopilotOverview>): AutopilotOverview {
   return {
     autoResolvedPercentage: {
       value: Number(raw?.auto_resolved_percentage?.value ?? 0),
@@ -404,6 +404,7 @@ export function mapOverviewFromBackend(raw: BackendAutopilotOverview): Autopilot
       ? raw.history_12_months.map((m) => ({
           month: String(m.month || ""),
           autoResolved: Number(m.auto_resolved ?? 0),
+          exceptions: Number(m.escalated ?? 0),
           escalated: Number(m.escalated ?? 0),
           overridden: Number(m.overridden ?? 0),
           hoursSaved: Number(m.hours_saved ?? 0),
@@ -413,7 +414,7 @@ export function mapOverviewFromBackend(raw: BackendAutopilotOverview): Autopilot
 }
 
 // ── Onboarding & Payroll Mappers ─────────────────────────────────────
-export function mapOnboardingRunFromBackend(raw: BackendOnboardingRun): AutoOnboardingRun {
+export function mapOnboardingRunFromBackend(raw: Partial<BackendOnboardingRun>): AutoOnboardingRun {
   return {
     id: String(raw.id || ""),
     candidateId: String(raw.candidate_id || ""),
@@ -435,7 +436,7 @@ export function mapOnboardingRunFromBackend(raw: BackendOnboardingRun): AutoOnbo
   };
 }
 
-export function mapPayrollStatusFromBackend(raw: BackendPayrollStatus): AutoPayrollStatus {
+export function mapPayrollStatusFromBackend(raw: Partial<BackendPayrollStatus>): AutoPayrollStatus {
   return {
     runId: String(raw?.run_id || ""),
     month: String(raw?.month || ""),

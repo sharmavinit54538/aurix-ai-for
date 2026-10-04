@@ -672,8 +672,9 @@ class CallManager {
     try {
       if (data.type === "candidate" && data.candidate) {
         const candObj = typeof data.candidate === "object" && data.candidate !== null ? data.candidate : null;
+        const candStr = typeof data.candidate === "string" ? data.candidate : (candObj?.candidate || "");
         const candidateInit: RTCIceCandidateInit = {
-          candidate: (candObj ? candObj.candidate : data.candidate) || "",
+          candidate: candStr,
           sdpMid: candObj?.sdpMid ?? null,
           sdpMLineIndex: candObj?.sdpMLineIndex ?? null,
         };

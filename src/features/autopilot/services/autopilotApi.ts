@@ -17,6 +17,7 @@ import type {
   ExceptionDecisionPayload,
   PolicyRule,
   ProactiveAlert,
+  RuleConditionOperator,
   RuleSimulateRequest,
   RuleSimulateResult,
 } from "../types";

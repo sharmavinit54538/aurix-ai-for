@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { parseApiError } from "@/api/utils";
 import { autopilotApi } from "../services/autopilotApi";
-import type { AutonomySettings } from "../types";
+import type { AutonomyLevel, AutonomySettings, WorkflowThresholds } from "../types";
 import { mapAutonomySettingsFromBackend } from "../utils/mappers";
 
 export interface UseAutonomySettingsReturn {
@@ -11,8 +12,8 @@ export interface UseAutonomySettingsReturn {
   error: string | null;
   backendUnavailable: boolean;
   refetch: () => Promise<void>;
-  updateWorkflowLevel: (workflowId: string, level: any) => void;
-  updateWorkflowThresholds: (workflowId: string, thresholds: Record<string, any>) => void;
+  updateWorkflowLevel: (workflowId: string, level: AutonomyLevel) => void;
+  updateWorkflowThresholds: (workflowId: string, thresholds: Partial<WorkflowThresholds>) => void;
   saveSettings: () => Promise<boolean>;
   resetToDefaults: () => void;
 }
@@ -33,13 +34,12 @@ export function useAutonomySettings(): UseAutonomySettingsReturn {
       const data = await autopilotApi.getSettings();
       setSettings(data);
       setBackendUnavailable(false);
-    } catch (err: any) {
-      const status = err?.response?.status;
+    } catch (err: unknown) {
+      const { status, message: msg } = parseApiError(err, "Failed to load autonomy settings");
       if (status === 404 || status === 501) {
         setBackendUnavailable(true);
         setError(null);
       } else {
-        const msg = err?.response?.data?.message || err?.message || "Failed to load autonomy settings";
         setError(msg);
       }
     } finally {
@@ -51,7 +51,7 @@ export function useAutonomySettings(): UseAutonomySettingsReturn {
     void fetchSettings();
   }, [fetchSettings]);
 
-  const updateWorkflowLevel = useCallback((workflowId: string, level: any) => {
+  const updateWorkflowLevel = useCallback((workflowId: string, level: AutonomyLevel) => {
     setSettings((prev) => {
       const existing = prev.workflows[workflowId as keyof typeof prev.workflows];
       if (!existing) return prev;
@@ -69,7 +69,7 @@ export function useAutonomySettings(): UseAutonomySettingsReturn {
   }, []);
 
   const updateWorkflowThresholds = useCallback(
-    (workflowId: string, partialThresholds: Record<string, any>) => {
+    (workflowId: string, partialThresholds: Partial<WorkflowThresholds>) => {
       setSettings((prev) => {
         const existing = prev.workflows[workflowId as keyof typeof prev.workflows];
         if (!existing) return prev;
@@ -98,13 +98,12 @@ export function useAutonomySettings(): UseAutonomySettingsReturn {
       setSettings(updated);
       toast.success("Autonomy settings saved successfully");
       return true;
-    } catch (err: any) {
-      const status = err?.response?.status;
+    } catch (err: unknown) {
+      const { status, message: msg } = parseApiError(err, "Failed to save autonomy settings");
       if (status === 404 || status === 501) {
         toast.error("Feature unavailable — backend pending");
         setBackendUnavailable(true);
       } else {
-        const msg = err?.response?.data?.message || err?.message || "Failed to save autonomy settings";
         toast.error(msg);
       }
       return false;

@@ -467,7 +467,7 @@ export interface BackendWorkflowSetting {
 }
 
 export interface BackendAutonomySettings {
-  workflows?: Record<string, BackendWorkflowSetting>;
+  workflows: Record<string, BackendWorkflowSetting>;
   restricted_actions?: Array<{
     id: string;
     name: string;

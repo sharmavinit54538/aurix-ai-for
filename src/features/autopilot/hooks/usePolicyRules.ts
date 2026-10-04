@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { parseApiError } from "@/api/utils";
 import { autopilotApi } from "../services/autopilotApi";
 import type {
   AutopilotWorkflowId,
