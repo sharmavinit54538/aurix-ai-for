@@ -56,9 +56,8 @@ export function AgentToolCallCard({
   const [cancelling, setCancelling] = useState(false);
   const [undoDialogOpen, setUndoDialogOpen] = useState(false);
   const [undoReason, setUndoReason] = useState("");
-  const [undoing, setUndoing] = useState(false);
-
-  const actionName = ACTION_LABELS[toolCall.action] || toolCall.action.replace(/_/g, " ");
+  const actionKey = toolCall.action || toolCall.actionType || "action";
+  const actionName = (ACTION_LABELS as Record<string, string>)[actionKey] || actionKey.replace(/_/g, " ");
 
   const handleConfirm = async () => {
     try {

@@ -81,12 +81,24 @@ const SEVERITY_BADGES: Record<AlertSeverity, { label: string; color: string }> =
     label: "Critical",
     color: "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30",
   },
+  high: {
+    label: "High",
+    color: "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30",
+  },
   warning: {
     label: "Warning",
     color: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30",
   },
+  medium: {
+    label: "Medium",
+    color: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30",
+  },
   info: {
     label: "Info",
+    color: "bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30",
+  },
+  low: {
+    label: "Low",
     color: "bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30",
   },
 };
@@ -296,12 +308,12 @@ export default function ProactiveAlertsPage() {
       ) : (
         <div className="space-y-4">
           {alerts.map((alert) => {
-            const cat = CATEGORY_META[alert.category] || {
+            const cat = CATEGORY_META[alert.category as AlertCategory] || {
               label: alert.category,
               icon: AlertCircle,
               color: "bg-muted text-muted-foreground",
             };
-            const sev = SEVERITY_BADGES[alert.severity] || {
+            const sev = SEVERITY_BADGES[alert.severity as AlertSeverity] || {
               label: alert.severity,
               color: "bg-muted text-muted-foreground",
             };

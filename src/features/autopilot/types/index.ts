@@ -200,25 +200,57 @@ export type AgentActionType =
   | "send_payslip"
   | "generate_document"
   | "regularize_attendance"
-  | "submit_expense";
+  | "submit_expense"
+  | string;
 
 export interface AgentActionToolCall {
   id: string;
-  actionType: AgentActionType;
-  title: string;
+  actionType?: AgentActionType;
+  action?: string;
+  tool?: string;
+  title?: string;
   parameters: Record<string, unknown>;
-  effect: string;
-  state: ToolActionState;
-  createdAt: string;
+  effect?: string;
+  expectedEffect?: string;
+  state?: ToolActionState;
+  status?: ToolActionState;
+  createdAt?: string;
   resultRecord?: {
     type: string;
     id: string;
     label: string;
     url: string;
   };
-  undoable: boolean;
-  undone: boolean;
+  result?: {
+    success?: boolean;
+    recordId?: string;
+    recordType?: string;
+    recordUrl?: string;
+    message?: string;
+    canUndo?: boolean;
+    undoActionId?: string;
+  };
+  undoable?: boolean;
+  undone?: boolean;
+  canUndo?: boolean;
   errorMessage?: string;
+  error?: string;
+  success?: boolean;
+  recordId?: string;
+  recordType?: string;
+  recordUrl?: string;
+  message?: string;
+  undoActionId?: string;
+}
+
+export type AgentToolCall = AgentActionToolCall;
+
+export interface AgentChatMessage {
+  id: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  timestamp: string;
+  toolCall?: AgentActionToolCall;
 }
 
 // ── AI Action Audit Log ──────────────────────────────────────────────
@@ -259,6 +291,7 @@ export interface AuditLogEntry {
   undoAt?: string;
   canUndo: boolean;
   canOverride: boolean;
+  message?: string;
 }
 
 // ── Proactive Alerts Center ──────────────────────────────────────────
@@ -269,7 +302,7 @@ export type AlertCategory =
   | "payroll_variance"
   | "compliance_deadline";
 
-export type AlertSeverity = "low" | "medium" | "high" | "critical";
+export type AlertSeverity = "low" | "medium" | "high" | "critical" | "warning" | "info";
 export type AlertStatus = "active" | "acknowledged" | "snoozed" | "resolved";
 
 export interface AlertEvidenceItem {
@@ -288,34 +321,45 @@ export interface ProactiveAlert {
     name: string;
     department: string;
   };
-  evidence: AlertEvidenceItem[];
-  suggestedNextStep: string;
+  evidence: any;
+  suggestedNextStep?: string;
+  suggestedAction?: string;
   status: AlertStatus;
   snoozedUntil?: string;
   createdAt: string;
   taskId?: string;
 }
 
+export type AutopilotAlert = ProactiveAlert;
+
 // ── Autopilot Dashboard Overview ─────────────────────────────────────
 export interface MetricValue<T> {
   value: T;
   available: boolean;
+  unit?: string;
+  changePercent?: number;
+  description?: string;
 }
 
 export interface MonthlyAutopilotTrend {
   month: string;
   autoResolved: number;
-  escalated: number;
+  exceptions: number;
+  escalated?: number;
   overridden: number;
   hoursSaved: number;
 }
 
 export interface AutopilotOverview {
-  autoResolvedPercentage: MetricValue<number>;
+  autoResolvedPercentage?: MetricValue<number>;
+  autoResolvedPercent?: MetricValue<number>;
   exceptionsPending: MetricValue<number>;
   hoursSaved: MetricValue<number>;
-  overrideRatePercentage: MetricValue<number>;
-  history12Months: MonthlyAutopilotTrend[];
+  overrideRatePercentage?: MetricValue<number>;
+  overrideRate?: MetricValue<number>;
+  history12Months?: MonthlyAutopilotTrend[];
+  timeSeries12Months?: MonthlyAutopilotTrend[];
+  lastUpdated?: string;
 }
 
 // ── Auto Onboarding & Auto Payroll Panels ────────────────────────────
@@ -326,27 +370,38 @@ export type OnboardingStepType =
   | "welcome_mail"
   | "training";
 
-export type OnboardingStepStatus = "pending" | "running" | "completed" | "failed";
+export type OnboardingStepStatus = "pending" | "running" | "in_progress" | "completed" | "failed";
 
 export interface OnboardingStep {
-  id: string;
+  id?: string;
   step: OnboardingStepType;
   label: string;
   status: OnboardingStepStatus;
   errorMessage?: string;
+  error?: string;
   completedAt?: string;
+  canRetry?: boolean;
 }
 
 export interface AutoOnboardingRun {
   id: string;
-  candidateId: string;
-  candidateName: string;
-  jobTitle: string;
+  candidateId?: string;
+  candidateName?: string;
+  employeeId?: string;
+  employeeName?: string;
+  jobTitle?: string;
+  role?: string;
   department: string;
-  startDate: string;
-  status: "in_progress" | "completed" | "has_failures";
+  startDate?: string;
+  offerAcceptedAt?: string;
+  currentStep?: OnboardingStepType;
+  status: "in_progress" | "completed" | "has_failures" | "failed";
   steps: OnboardingStep[];
 }
+
+export type OnboardingStepId = OnboardingStepType;
+export type AutoStepStatus = OnboardingStepStatus;
+export type AutoOnboardingStep = OnboardingStep;
 
 export type PayrollStageName =
   | "attendance_sync"
@@ -355,26 +410,40 @@ export type PayrollStageName =
   | "validation"
   | "anomaly_check";
 
-export type PayrollStageStatus = "pending" | "in_progress" | "completed" | "flagged";
+export type PayrollStageStatus = "pending" | "in_progress" | "completed" | "flagged" | "failed";
 
 export interface PayrollStage {
-  id: PayrollStageName;
-  name: string;
+  id?: PayrollStageName;
+  stage?: PayrollStageName;
+  name?: string;
+  label?: string;
   status: PayrollStageStatus;
-  summary: string;
+  summary?: string;
+  description?: string;
   anomaliesDetected?: number;
+  anomaliesFound?: number;
 }
 
 export interface AutoPayrollStatus {
-  runId: string;
+  runId?: string;
+  id?: string;
+  payrollCycle?: string;
   month: string;
-  year: number;
-  overallStatus: "running" | "ready_for_review" | "flagged" | "completed";
+  year?: number;
+  overallStatus?: "running" | "ready_for_review" | "flagged" | "completed" | "in_progress" | "approved" | "failed";
+  status?: "running" | "ready_for_review" | "flagged" | "completed" | "in_progress" | "approved" | "failed";
   stages: PayrollStage[];
-  canApprove: boolean; // Always requires human maker-checker sign-off
+  canApprove?: boolean;
+  canReviewAndApprove?: boolean;
+  approvalRoute?: string;
+  makerCheckerNote?: string;
   reviewedBy?: string;
   reviewedAt?: string;
 }
+
+export type AutoPayrollRunStatus = AutoPayrollStatus;
+export type AutoPayrollStage = PayrollStage;
+export type PayrollStageId = PayrollStageName;
 
 // ─────────────────────────────────────────────────────────────────────
 // Backend Raw Contracts (snake_case)

@@ -24,7 +24,7 @@ export function useProactiveAlerts() {
         category: selectedCategory !== "all" ? selectedCategory : undefined,
         severity: selectedSeverity !== "all" ? selectedSeverity : undefined,
       });
-      setAlerts(data.items);
+      setAlerts(Array.isArray(data) ? data : (data as any)?.items || []);
       setBackendUnavailable(false);
     } catch (err: any) {
       const status = err?.response?.status;
@@ -44,7 +44,7 @@ export function useProactiveAlerts() {
   }, [fetchAlerts]);
 
   // Live polling every 20s
-  usePoller(fetchAlerts, 20000);
+  usePoller(fetchAlerts, { intervalMs: 20000 });
 
   const acknowledgeAlert = useCallback(
     async (id: string): Promise<boolean> => {
@@ -54,7 +54,7 @@ export function useProactiveAlerts() {
       );
 
       try {
-        await autopilotApi.acknowledgeAlert(id, { action: "ack" });
+        await autopilotApi.acknowledgeAlert(id);
         toast.success("Alert acknowledged");
         return true;
       } catch (err: any) {
@@ -87,10 +87,7 @@ export function useProactiveAlerts() {
       );
 
       try {
-        await autopilotApi.acknowledgeAlert(id, {
-          action: "snooze",
-          snooze_until: snoozeUntil,
-        });
+        await autopilotApi.snoozeAlert(id, snoozeUntil);
         toast.success(`Alert snoozed for ${hours} hours`);
         return true;
       } catch (err: any) {
@@ -113,9 +110,8 @@ export function useProactiveAlerts() {
   const createTaskFromAlert = useCallback(
     async (id: string, taskTitle: string): Promise<boolean> => {
       try {
-        const res = await autopilotApi.acknowledgeAlert(id, {
-          action: "create_task",
-          task_title: taskTitle.trim(),
+        const res = await autopilotApi.createAlertTask(id, {
+          title: taskTitle.trim(),
         });
         setAlerts((prev) =>
           prev.map((a) =>

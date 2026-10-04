@@ -33,54 +33,59 @@ import { useAutopilotOverview } from "../hooks/useAutopilotOverview";
 export default function AutopilotOverviewDashboard() {
   const { overview, loading, error, backendUnavailable, refetch } = useAutopilotOverview();
 
+  const autoResolved = overview?.autoResolvedPercentage ?? overview?.autoResolvedPercent;
+  const exceptionsPending = overview?.exceptionsPending;
+  const hoursSaved = overview?.hoursSaved;
+  const overrideRate = overview?.overrideRatePercentage ?? overview?.overrideRate;
+
   const metrics = [
-    overview?.autoResolvedPercent?.available
+    autoResolved?.available
       ? {
           id: "auto-resolved",
           label: "Requests Auto-Resolved",
-          value: `${overview.autoResolvedPercent.value ?? 0}%`,
-          description: overview.autoResolvedPercent.description || "Resolved without human intervention",
+          value: `${autoResolved.value ?? 0}%`,
+          description: autoResolved.description || "Resolved without human intervention",
           icon: Zap,
           color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20",
-          change: overview.autoResolvedPercent.changePercent,
+          change: autoResolved.changePercent,
         }
       : null,
-    overview?.exceptionsPending?.available
+    exceptionsPending?.available
       ? {
           id: "exceptions-pending",
           label: "Exceptions Pending Triage",
-          value: `${overview.exceptionsPending.value ?? 0}`,
-          description: overview.exceptionsPending.description || "Awaiting human review & decision",
+          value: `${exceptionsPending.value ?? 0}`,
+          description: exceptionsPending.description || "Awaiting human review & decision",
           icon: AlertTriangle,
           color: "text-amber-500 bg-amber-500/10 border-amber-500/20",
-          change: overview.exceptionsPending.changePercent,
+          change: exceptionsPending.changePercent,
         }
       : null,
-    overview?.hoursSaved?.available
+    hoursSaved?.available
       ? {
           id: "hours-saved",
           label: "Hours Saved This Month",
-          value: `${overview.hoursSaved.value ?? 0} hrs`,
-          description: overview.hoursSaved.description || "Routine manual HR operations eliminated",
+          value: `${hoursSaved.value ?? 0} hrs`,
+          description: hoursSaved.description || "Routine manual HR operations eliminated",
           icon: Clock,
           color: "text-blue-500 bg-blue-500/10 border-blue-500/20",
-          change: overview.hoursSaved.changePercent,
+          change: hoursSaved.changePercent,
         }
       : null,
-    overview?.overrideRate?.available
+    overrideRate?.available
       ? {
           id: "override-rate",
           label: "Human Override Rate",
-          value: `${overview.overrideRate.value ?? 0}%`,
-          description: overview.overrideRate.description || "Rate of human overrides on AI decisions",
+          value: `${overrideRate.value ?? 0}%`,
+          description: overrideRate.description || "Rate of human overrides on AI decisions",
           icon: RotateCcw,
           color: "text-purple-500 bg-purple-500/10 border-purple-500/20",
-          change: overview.overrideRate.changePercent,
+          change: overrideRate.changePercent,
         }
       : null,
   ].filter(Boolean);
 
-  const timeSeries = overview?.timeSeries12Months || [];
+  const timeSeries = overview?.history12Months ?? overview?.timeSeries12Months ?? [];
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-16">
@@ -243,9 +248,9 @@ export default function AutopilotOverviewDashboard() {
                 <span className="col-span-3 text-amber-600 dark:text-amber-400 font-semibold">Exceptions</span>
                 <span className="col-span-3 text-purple-600 dark:text-purple-400 font-semibold">Overridden</span>
               </div>
-              {timeSeries.slice(-6).map((pt) => {
-                const total = pt.autoResolved + pt.exceptions + pt.overridden;
-                const autoPct = total > 0 ? Math.round((pt.autoResolved / total) * 100) : 0;
+              {timeSeries.slice(-6).map((pt: any) => {
+                const total = (pt.autoResolved ?? 0) + (pt.exceptions ?? 0) + (pt.overridden ?? 0);
+                const autoPct = total > 0 ? Math.round(((pt.autoResolved ?? 0) / total) * 100) : 0;
 
                 return (
                   <div key={pt.month} className="space-y-1.5 py-1">

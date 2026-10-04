@@ -195,9 +195,10 @@ export function AutoPayrollPanel() {
         ) : payrollStatus ? (
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
-              {payrollStatus.stages.map((st) => {
-                const meta = STAGE_META[st.stage] || {
-                  label: st.stage,
+              {payrollStatus.stages.map((st: any) => {
+                const stageKey = (st.stage || st.id || "attendance_sync") as PayrollStageId;
+                const meta = STAGE_META[stageKey] || {
+                  label: st.label || st.name || String(stageKey),
                   icon: Layers,
                   description: "",
                 };

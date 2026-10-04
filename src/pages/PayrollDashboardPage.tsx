@@ -48,6 +48,7 @@ import {
 } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AutoPayrollPanel } from "@/features/autopilot/components/AutoPayrollPanel";
 import { useAurix } from "@/lib/aurix-store";
 import { useCurrentRole } from "@/lib/roles";
 import { useAppSelector } from "@/redux/hooks";
@@ -428,6 +429,8 @@ export function PayrollDashboardPage() {
         ) : null}
       </div>
 
+      {/* ── Autopilot Payroll Pre-Flight Run Panel ─────────────────── */}
+      <AutoPayrollPanel />
 
       {/* ── Summary Cards ───────────────────────────────────────────── */}
       <section aria-labelledby="summary-cards-heading">

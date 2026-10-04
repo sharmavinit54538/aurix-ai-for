@@ -170,6 +170,10 @@ export const autopilotApi = {
     return res.data;
   },
 
+  async sendAgentMessage(body: { message: string; conversationId?: string; context?: Record<string, unknown> }): Promise<any> {
+    return this.sendAgentChat(body.message, body.conversationId);
+  },
+
   async confirmAgentAction(id: string): Promise<AgentActionToolCall> {
     const res = await apiInstance.post(`/api/v2/autopilot/agent/actions/${id}/confirm`);
     const raw = res.data?.data ?? res.data;
@@ -300,5 +304,9 @@ export const autopilotApi = {
     const res = await apiInstance.get("/api/v2/autopilot/payroll/status");
     const raw = res.data?.data ?? res.data;
     return mapPayrollStatusFromBackend(raw);
+  },
+
+  async getPayrollRunStatus(): Promise<AutoPayrollStatus> {
+    return this.getPayrollStatus();
   },
 };

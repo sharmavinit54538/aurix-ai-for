@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Plus, UserCheck, ClipboardCheck, RefreshCw, AlertCircle } from "lucide-react";
 import { GlassCard, Progress, StatCard } from "@/components/hrms/Shared";
+import { AutoOnboardingPanel } from "@/features/autopilot/components/AutoOnboardingPanel";
 import { onboardingChecklistApi } from "@/services/onboardingChecklistApi";
 import type { OnboardingCase } from "@/lib/hrms/types";
 import { Button } from "@/components/ui/button";
@@ -127,6 +128,10 @@ export default function OnboardingChecklistPage() {
         >
           <Plus className="h-4 w-4" /> New onboarding
         </Button>
+      </div>
+
+      <div className="mb-6">
+        <AutoOnboardingPanel />
       </div>
 
       <div className="mb-6 grid gap-3 sm:grid-cols-3">

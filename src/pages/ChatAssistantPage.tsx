@@ -17,6 +17,7 @@ import {
   ThumbsDown,
   BarChart3,
   History,
+} from "lucide-react";
 import { AIHero } from "@/components/aurix/AIModule";
 import { AgentToolCallCard } from "@/features/autopilot/components/AgentToolCallCard";
 import { autopilotApi } from "@/features/autopilot/services/autopilotApi";

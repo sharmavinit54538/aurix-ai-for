@@ -31,7 +31,7 @@ export function useAutopilotOverview() {
     void fetchOverview();
   }, [fetchOverview]);
 
-  usePoller(fetchOverview, 30000);
+  usePoller(fetchOverview, { intervalMs: 30000 });
 
   return {
     overview,
