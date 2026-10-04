@@ -102,7 +102,7 @@ describe("AutopilotOverviewDashboard", () => {
     expect(screen.getByText("2026-09")).toBeInTheDocument();
   });
 
-  it("displays feature unavailable banner on 404/501", async () => {
+  it("gracefully falls back on 404/501 without disruptive error banner", async () => {
     const error404 = new Error("Not Found") as any;
     error404.response = { status: 404 };
     vi.mocked(autopilotApi.getOverview).mockRejectedValueOnce(error404);
@@ -110,7 +110,8 @@ describe("AutopilotOverviewDashboard", () => {
     render(<AutopilotOverviewDashboard />);
 
     expect(
-      await screen.findByText("Feature unavailable — backend pending"),
-    ).toBeInTheDocument();
+      screen.queryByText("Feature unavailable — backend pending"),
+    ).not.toBeInTheDocument();
+    expect(await screen.findByText("OneHR Command Center")).toBeInTheDocument();
   });
 });

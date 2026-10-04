@@ -98,13 +98,7 @@ export default function AutopilotOverviewDashboard() {
               <OneHRIcon className="h-6 w-6" gradient />
             </div>
             <h1 className="text-2xl font-bold tracking-tight">OneHR Command Center</h1>
-            <Badge variant="outline" className="text-xs uppercase font-mono tracking-wider ml-1 bg-primary/5 text-primary border-primary/20">
-              Autonomous Layer
-            </Badge>
           </div>
-          <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-            Autonomous HR execution engine: routine leave approvals, standard expense checks, document issuance, and attendance sync are resolved by AI within verified policy boundaries. Humans sign off on exceptions only.
-          </p>
         </div>
 
         <div className="flex items-center gap-2.5">
@@ -129,25 +123,6 @@ export default function AutopilotOverviewDashboard() {
           </Button>
         </div>
       </div>
-
-      {/* ── Backend Unavailable Banner ───────────────────────────────── */}
-      {backendUnavailable && (
-        <Alert className="border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200 rounded-2xl">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle className="font-semibold text-sm">
-            Feature unavailable — backend pending
-          </AlertTitle>
-          <AlertDescription className="text-xs mt-1 space-y-1">
-            <p>
-              The Autopilot Overview API (<code>/api/v2/autopilot/overview</code>) is pending deployment.
-              Real-time operational KPIs and historical trend time series will populate once live.
-            </p>
-            <p className="font-mono text-[11px] opacity-80">
-              Contract reference: <code>docs/AUTOPILOT_BACKEND_CONTRACT.md</code>
-            </p>
-          </AlertDescription>
-        </Alert>
-      )}
 
       {/* ── Inline Error with Retry ──────────────────────────────────── */}
       {error && !backendUnavailable && (
