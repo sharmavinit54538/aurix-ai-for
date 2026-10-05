@@ -35,6 +35,10 @@ export const ROUTE_ROLE_ACCESS: Record<string, AppRole[]> = {
   "/dashboard/announcements/manage": HR_OPERATIONS_ROLES,
   "/dashboard/announcements": ALL_COMPANY_ROLES,
 
+  // ── Helpdesk & Support Routes (COMPANY ROLES) ────────────────────
+  "/dashboard/helpdesk/analytics": ["hr_admin", "executive", "it_admin"],
+  "/dashboard/helpdesk": ALL_COMPANY_ROLES,
+
   // ── Platform Owner Routes (STRICTLY SUPER_ADMIN ONLY) ───────────
   "/dashboard/super-admin": PLATFORM_ROLES,
   "/dashboard/super-admin/users": PLATFORM_ROLES,
@@ -153,7 +157,8 @@ export function checkRouteAccess(pathname: string, userRole?: string | null): Ro
       pathname.startsWith("/dashboard/payroll") ||
       pathname.startsWith("/dashboard/employee") ||
       pathname.startsWith("/dashboard/manager") ||
-      pathname.startsWith("/dashboard/recruitment")
+      pathname.startsWith("/dashboard/recruitment") ||
+      pathname.startsWith("/dashboard/helpdesk")
     ) {
       return {
         allowed: false,

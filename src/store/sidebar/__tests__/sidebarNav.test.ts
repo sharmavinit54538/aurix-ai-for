@@ -113,5 +113,52 @@ describe("Sidebar Navigation & HR Admin Access", () => {
     expect(res.permissions).toContain("payroll.view");
     expect(res.permissions).toContain("workforce.attendance");
     expect(res.permissions).toContain("workforce.leaves");
+    expect(res.permissions).toContain("announcements.view");
+    expect(res.permissions).toContain("autopilot.view");
+    expect(res.permissions).toContain("connect.view");
+    expect(res.permissions).toContain("helpdesk.view");
+  });
+
+  it("verifies the full 13 enterprise navigation items are visible for hr_admin with permissions", () => {
+    const enterpriseSections: SidebarNavSection[] = [
+      {
+        items: [
+          { to: "/dashboard", label: "Overview", icon: () => null, permission: "overview.view" },
+          { to: "/dashboard/announcements", label: "Announcements", icon: () => null, permission: "announcements.view" },
+          { to: "/dashboard/workforce", label: "Workforce", icon: () => null, permission: "workforce.view" },
+          { to: "/dashboard/talent", label: "Talent Management", icon: () => null, permission: "talent.view", roles: ["super_admin", "hr_admin", "manager"] },
+          { to: "/dashboard/hr-operations", label: "HR Operations", icon: () => null, permission: "hrops.view", roles: ["super_admin", "hr_admin"] },
+          { to: "/dashboard/resources", label: "Resources", icon: () => null, permission: "resources.view" },
+          { to: "/dashboard/payroll", label: "Payroll", icon: () => null, permission: "payroll.view", roles: ["super_admin", "hr_admin"] },
+          { to: "/dashboard/analytics", label: "Analytics", icon: () => null, permission: "analytics.view", roles: ["super_admin", "hr_admin", "executive", "manager"] },
+          { to: "/dashboard/autopilot", label: "OneHR", icon: () => null, permission: "autopilot.view", roles: ["super_admin", "hr_admin", "manager"] },
+          { to: "/dashboard/ai-hub", label: "AI Hub", icon: () => null, permission: "ai.view" },
+          { to: "/dashboard/connect", label: "Connect", icon: () => null, permission: "connect.view" },
+          { to: "/dashboard/helpdesk", label: "Helpdesk", icon: () => null, permission: "helpdesk.view", roles: ["hr_admin"] },
+          { to: "/dashboard/settings", label: "Settings", icon: () => null, permission: "settings.view" },
+        ],
+      },
+    ];
+
+    const result = filterNavTree(enterpriseSections, "hr_admin", DEFAULT_ROLE_PERMISSIONS.hr_admin);
+    expect(result.length).toBe(1);
+    const labels = result[0].items.map((i) => i.label);
+
+    expect(labels).toEqual([
+      "Overview",
+      "Announcements",
+      "Workforce",
+      "Talent Management",
+      "HR Operations",
+      "Resources",
+      "Payroll",
+      "Analytics",
+      "OneHR",
+      "AI Hub",
+      "Connect",
+      "Helpdesk",
+      "Settings",
+    ]);
+    expect(labels.length).toBe(13);
   });
 });
