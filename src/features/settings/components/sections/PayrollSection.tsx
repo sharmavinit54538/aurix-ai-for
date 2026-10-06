@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Banknote, Save, RotateCcw } from "lucide-react";
+import { Banknote, Save, RotateCcw, AlertCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Select,
   SelectContent,
@@ -14,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { fetchPayrollSettings, updatePayrollSettings, isMissingApiError } from "../../api";
+import { statutoryApi } from "@/features/payroll/api/statutoryApi";
 import type { PayrollSettingsForm, SalaryComponentItem } from "../../types";
 import { UnsavedChangesBanner } from "../UnsavedChangesBanner";
 
@@ -22,7 +24,11 @@ interface PayrollSectionProps {
   onDirtyChange?: (isDirty: boolean) => void;
 }
 
-const DEFAULT_COMPONENTS: SalaryComponentItem[] = [
+/**
+ * Suggested template components for standard Indian CTC breakup.
+ * Never auto-applied — explicitly labeled as optional suggested template.
+ */
+export const SUGGESTED_TEMPLATE_COMPONENTS: SalaryComponentItem[] = [
   { name: "Basic Salary", percentageOfCtc: 40, taxExempt: false, type: "earning" },
   { name: "House Rent Allowance (HRA)", percentageOfCtc: 20, taxExempt: true, type: "earning" },
   { name: "Special Allowance", percentageOfCtc: 30, taxExempt: false, type: "earning" },
@@ -30,32 +36,35 @@ const DEFAULT_COMPONENTS: SalaryComponentItem[] = [
   { name: "Provident Fund (Employee)", percentageOfCtc: 12, taxExempt: true, type: "deduction" },
 ];
 
+const INITIAL_NEUTRAL_STATE: PayrollSettingsForm = {
+  payFrequency: "monthly",
+  currency: "INR (₹)",
+  salaryStructureName: "",
+  components: [],
+  pfEnabled: false,
+  pfEmployeePercent: 0,
+  pfEmployerPercent: 0,
+  pfWageCeiling: 0,
+  esiEnabled: false,
+  esiEmployeePercent: 0,
+  esiEmployerPercent: 0,
+  esiWageCeiling: 0,
+  ptEnabled: false,
+  ptState: "",
+  tdsWindowOpen: false,
+  tdsDefaultRegime: "new",
+  payslipGenerationDay: 1,
+  passwordProtectedPayslips: false,
+  showLeaveBalanceOnPayslip: false,
+};
+
 export function PayrollSection({ canEdit, onDirtyChange }: PayrollSectionProps) {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [initialData, setInitialData] = useState<PayrollSettingsForm | null>(null);
-  const [formData, setFormData] = useState<PayrollSettingsForm>({
-    payFrequency: "monthly",
-    currency: "INR (₹)",
-    salaryStructureName: "Standard CTC Breakup",
-    components: [],
-    pfEnabled: true,
-    pfEmployeePercent: 12,
-    pfEmployerPercent: 12,
-    pfWageCeiling: 15000,
-    esiEnabled: true,
-    esiEmployeePercent: 0.75,
-    esiEmployerPercent: 3.25,
-    esiWageCeiling: 21000,
-    ptEnabled: true,
-    ptState: "Maharashtra",
-    tdsWindowOpen: true,
-    tdsDefaultRegime: "new",
-    payslipGenerationDay: 1,
-    passwordProtectedPayslips: true,
-    showLeaveBalanceOnPayslip: true,
-  });
+  const [formData, setFormData] = useState<PayrollSettingsForm>(INITIAL_NEUTRAL_STATE);
 
   const isDirty = initialData ? JSON.stringify(initialData) !== JSON.stringify(formData) : false;
 
@@ -65,27 +74,59 @@ export function PayrollSection({ canEdit, onDirtyChange }: PayrollSectionProps) 
 
   const loadData = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
-      const data = await fetchPayrollSettings();
-      const combined = {
-        ...data,
-        components: data.components || [],
+      const [settingsData, statConfig] = await Promise.all([
+        fetchPayrollSettings().catch((err: unknown) => {
+          if (isMissingApiError(err)) return null;
+          throw err;
+        }),
+        statutoryApi.getStatutoryConfig().catch(() => null),
+      ]);
+
+      const base = settingsData || INITIAL_NEUTRAL_STATE;
+
+      // Populate statutory compliance rates from statutory config (/api/v2/payroll/statutory/config)
+      const resolvedForm: PayrollSettingsForm = {
+        ...base,
+        components: base.components || [],
+        pfEmployeePercent:
+          base.pfEmployeePercent ||
+          (statConfig ? Math.round(statConfig.pf.employeeContributionRate * 100 * 100) / 100 : 0),
+        pfEmployerPercent:
+          base.pfEmployerPercent ||
+          (statConfig
+            ? Math.round((statConfig.pf.employerEpfrate + statConfig.pf.employerEpsRate) * 100 * 100) / 100
+            : 0),
+        pfWageCeiling:
+          base.pfWageCeiling ||
+          (statConfig ? Math.round(statConfig.pf.wageCeilingPaise / 100) : 0),
+        esiEmployeePercent:
+          base.esiEmployeePercent ||
+          (statConfig ? Math.round(statConfig.esi.employeeContributionRate * 100 * 100) / 100 : 0),
+        esiEmployerPercent:
+          base.esiEmployerPercent ||
+          (statConfig ? Math.round(statConfig.esi.employerContributionRate * 100 * 100) / 100 : 0),
+        esiWageCeiling:
+          base.esiWageCeiling ||
+          (statConfig ? Math.round(statConfig.esi.grossWageCeilingPaise / 100) : 0),
+        pfEnabled: base.pfEnabled ?? Boolean(statConfig?.pf),
+        esiEnabled: base.esiEnabled ?? Boolean(statConfig?.esi),
       };
-      setInitialData(combined);
-      setFormData(combined);
+
+      setInitialData(resolvedForm);
+      setFormData(resolvedForm);
     } catch (err: unknown) {
-      if (!isMissingApiError(err)) {
-        const msg =
-          (err as { message?: string })?.message || "Failed to load payroll configuration.";
-        toast.error(msg);
-      }
+      const msg =
+        (err as { message?: string })?.message || "Failed to load payroll configuration from backend.";
+      setError(msg);
     } finally {
       setLoading(false);
     }
-  }, [formData]);
+  }, []);
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, [loadData]);
 
   const handleSave = async (e?: React.FormEvent) => {
@@ -119,6 +160,27 @@ export function PayrollSection({ canEdit, onDirtyChange }: PayrollSectionProps) 
           ))}
         </div>
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert variant="destructive" className="rounded-2xl">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle className="text-sm font-semibold">Failed to load payroll configuration</AlertTitle>
+        <AlertDescription className="text-xs flex items-center justify-between mt-2">
+          <span>{error}</span>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => void loadData()}
+            className="h-8 text-xs cursor-pointer"
+          >
+            <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+            Retry
+          </Button>
+        </AlertDescription>
+      </Alert>
     );
   }
 
@@ -192,8 +254,21 @@ export function PayrollSection({ canEdit, onDirtyChange }: PayrollSectionProps) 
           </Label>
           <div className="divide-y divide-border/60 rounded-xl border border-border bg-card/80 overflow-hidden">
             {formData.components.length === 0 ? (
-              <div className="p-4 text-center text-xs text-muted-foreground">
-                No salary components configured.
+              <div className="p-4 text-center text-xs text-muted-foreground space-y-2">
+                <div>No salary components configured in backend.</div>
+                {canEdit && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setFormData({ ...formData, components: SUGGESTED_TEMPLATE_COMPONENTS })
+                    }
+                    className="h-7 text-xs cursor-pointer"
+                  >
+                    Load Suggested Template (Optional)
+                  </Button>
+                )}
               </div>
             ) : (
               formData.components.map((c, i) => (
