@@ -76,7 +76,7 @@ export const compensationApi = {
     const res = await apiInstance.get<{
       success: boolean;
       data: SalaryStructureTemplate[];
-    }>("/api/v2/payroll/salary-structures", {
+    }>("/api/v1/payroll/salary-structures", {
       headers: { "Cache-Control": "no-store" },
     });
     return res.data.data || [];
@@ -88,7 +88,7 @@ export const compensationApi = {
     const res = await apiInstance.post<{
       success: boolean;
       data: SalaryStructureTemplate[];
-    }>("/api/v2/payroll/salary-structures", payload, {
+    }>("/api/v1/payroll/salary-structures", payload, {
       headers: {
         "Idempotency-Key": generateIdempotencyKey(),
         "Cache-Control": "no-store",

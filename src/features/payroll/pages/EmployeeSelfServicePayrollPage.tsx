@@ -193,7 +193,7 @@ export default function EmployeeSelfServicePayrollPage() {
                 <div>
                   <div className="text-muted-foreground font-medium">Disbursement Account</div>
                   <div className="font-mono font-medium">
-                    {data.bankDetails.bankName} • {data.bankDetails.accountNumberMasked || maskAccountNumber("1234567890")}
+                    {data.bankDetails.bankName} • {data.bankDetails.accountNumberMasked || "Not available"}
                   </div>
                 </div>
               </div>
@@ -475,7 +475,7 @@ export default function EmployeeSelfServicePayrollPage() {
                   <div>
                     <span className="text-xs text-muted-foreground">Account Number</span>
                     <p className="mt-1 font-mono font-semibold">
-                      {data.bankDetails.accountNumberMasked || maskAccountNumber("1234567890")}
+                      {data.bankDetails.accountNumberMasked || "Not available"}
                     </p>
                   </div>
                   <div>

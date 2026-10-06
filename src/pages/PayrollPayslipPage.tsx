@@ -40,73 +40,14 @@ import {
   type PayrollPayslipData,
 } from "@/services/payrollApi";
 import { toast } from "sonner";
-
-// ── Currency Formatter (INR) ──────────────────────────────────────────
-// STRICT ZERO MOCK DATA: operates purely on authentic backend numbers.
-function formatINR(value: number | null | undefined): string {
-  if (value === null || value === undefined || isNaN(value)) {
-    return "—";
-  }
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
-function formatCount(value: number | null | undefined): string {
-  if (value === null || value === undefined || isNaN(value)) {
-    return "—";
-  }
-  return new Intl.NumberFormat("en-IN").format(value);
-}
-
-function formatDate(val: string | null | undefined): string {
-  if (!val) return "—";
-  try {
-    const d = new Date(val);
-    if (isNaN(d.getTime())) return String(val);
-    return d.toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  } catch {
-    return String(val);
-  }
-}
-
-function formatDateTime(val: string | null | undefined): string {
-  if (!val) return "—";
-  try {
-    const d = new Date(val);
-    if (isNaN(d.getTime())) return String(val);
-    return d.toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return String(val);
-  }
-}
-
-// ── Data Masking Helper for Sensitive Financial Information ───────────
-function maskAccountNumber(acc?: string | null): string {
-  if (!acc) return "—";
-  const str = String(acc).trim();
-  if (str.length <= 4) return str;
-  return `••••••••${str.slice(-4)}`;
-}
-
-function maskIdentifier(val?: string | null): string {
-  if (!val) return "—";
-  const str = String(val).trim();
-  if (str.length <= 4) return str;
-  return `${str.slice(0, 2)}••••••${str.slice(-2)}`;
-}
+import {
+  formatINR,
+  formatCount,
+  formatDate,
+  formatDateTime,
+  maskAccountNumber,
+  maskIdentifier,
+} from "@/lib/format";
 
 export function PayrollPayslipPage() {
   const params = useParams({ strict: false }) as {

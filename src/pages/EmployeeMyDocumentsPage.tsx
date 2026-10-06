@@ -300,7 +300,7 @@ export function EmployeeMyDocumentsPage() {
   const handlePayslipFile = async (payslip: PayslipHistoryItem, action: "view" | "download") => {
     setBusyPayslipId(payslip.id);
     try {
-      const response = await apiInstance.get(`/api/v2/payroll/payslips/${payslip.id}/pdf`, {
+      const response = await apiInstance.get(`/api/v1/payroll/payslips/${payslip.id}/pdf`, {
         responseType: "blob",
       });
       downloadBlob(
