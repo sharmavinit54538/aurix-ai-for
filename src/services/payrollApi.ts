@@ -3061,20 +3061,44 @@ export const payrollApi = {
           ? (fbData as Record<string, unknown>[])
           : Array.isArray(fbData?.items)
             ? (fbData.items as Record<string, unknown>[])
-            : [];
+            : Array.isArray(fbData?.records)
+              ? (fbData.records as Record<string, unknown>[])
+              : [];
         return {
           items: fbItems.map((r: Record<string, unknown>) => ({
             id:
-              (typeof r.id === "string" ? r.id : null) ||
-              `${(typeof r.runId === "string" ? r.runId : null) || ""}_${employeeId}`,
-            runId: typeof r.runId === "string" ? r.runId : null,
-            employeeId,
-            periodName: typeof r.periodName === "string" ? r.periodName : null,
-            payslipNumber: typeof r.payslipNumber === "string" ? r.payslipNumber : null,
+              (typeof r.id === "string" ? r.id : typeof r.payslipId === "string" ? r.payslipId : null) ||
+              `${(typeof r.runId === "string" ? r.runId : typeof r.run_id === "string" ? r.run_id : null) || ""}_${employeeId}`,
+            runId: typeof r.runId === "string" ? r.runId : typeof r.run_id === "string" ? r.run_id : null,
+            employeeId:
+              (typeof r.employeeId === "string" ? r.employeeId : typeof r.employee_id === "string" ? r.employee_id : null) ||
+              employeeId,
+            employeeName: typeof r.employeeName === "string" ? r.employeeName : typeof r.name === "string" ? r.name : null,
+            department: typeof r.department === "string" ? r.department : null,
+            periodName:
+              typeof r.periodName === "string" ? r.periodName : typeof r.period_name === "string" ? r.period_name : null,
+            financialYear:
+              typeof r.financialYear === "string"
+                ? r.financialYear
+                : typeof r.financial_year === "string"
+                  ? r.financial_year
+                  : null,
+            payslipNumber:
+              typeof r.payslipNumber === "string"
+                ? r.payslipNumber
+                : typeof r.payslip_number === "string"
+                  ? r.payslip_number
+                  : null,
             netPay: r.netPay != null ? Number(r.netPay) : null,
+            grossEarnings: r.grossEarnings != null ? Number(r.grossEarnings) : null,
+            totalDeductions: r.totalDeductions != null ? Number(r.totalDeductions) : null,
             status: typeof r.status === "string" ? r.status : "Finalized",
-            isFinalized: true,
-            finalizedAt: typeof r.finalizedAt === "string" ? r.finalizedAt : null,
+            isFinalized: Boolean(r.isFinalized ?? true),
+            finalizedAt:
+              typeof r.finalizedAt === "string" ? r.finalizedAt : typeof r.finalized_at === "string" ? r.finalized_at : null,
+            paymentDate:
+              typeof r.paymentDate === "string" ? r.paymentDate : typeof r.payment_date === "string" ? r.payment_date : null,
+            hasDocument: Boolean(r.hasDocument || r.pdfUrl || r.downloadUrl),
           })),
           total: typeof fbData?.total === "number" ? fbData.total : fbItems.length,
         };
@@ -3149,16 +3173,35 @@ export const payrollApi = {
           ? (fbData as Record<string, unknown>[])
           : Array.isArray(fbData?.items)
             ? (fbData.items as Record<string, unknown>[])
-            : [];
+            : Array.isArray(fbData?.records)
+              ? (fbData.records as Record<string, unknown>[])
+              : [];
         return {
           items: fbItems.map((r: Record<string, unknown>) => ({
-            id: (typeof r.id === "string" ? r.id : null) || `${(typeof r.runId === "string" ? r.runId : null) || ""}_me`,
-            runId: typeof r.runId === "string" ? r.runId : null,
-            periodName: typeof r.periodName === "string" ? r.periodName : null,
-            payslipNumber: typeof r.payslipNumber === "string" ? r.payslipNumber : null,
+            id:
+              (typeof r.id === "string" ? r.id : typeof r.payslipId === "string" ? r.payslipId : null) ||
+              `${(typeof r.runId === "string" ? r.runId : typeof r.run_id === "string" ? r.run_id : null) || ""}_me`,
+            runId: typeof r.runId === "string" ? r.runId : typeof r.run_id === "string" ? r.run_id : null,
+            employeeId:
+              typeof r.employeeId === "string" ? r.employeeId : typeof r.employee_id === "string" ? r.employee_id : null,
+            periodName:
+              typeof r.periodName === "string" ? r.periodName : typeof r.period_name === "string" ? r.period_name : null,
+            payslipNumber:
+              typeof r.payslipNumber === "string"
+                ? r.payslipNumber
+                : typeof r.payslip_number === "string"
+                  ? r.payslip_number
+                  : null,
             netPay: r.netPay != null ? Number(r.netPay) : null,
+            grossEarnings: r.grossEarnings != null ? Number(r.grossEarnings) : null,
+            totalDeductions: r.totalDeductions != null ? Number(r.totalDeductions) : null,
             status: typeof r.status === "string" ? r.status : "Finalized",
-            isFinalized: true,
+            isFinalized: Boolean(r.isFinalized ?? true),
+            finalizedAt:
+              typeof r.finalizedAt === "string" ? r.finalizedAt : typeof r.finalized_at === "string" ? r.finalized_at : null,
+            paymentDate:
+              typeof r.paymentDate === "string" ? r.paymentDate : typeof r.payment_date === "string" ? r.payment_date : null,
+            hasDocument: Boolean(r.hasDocument || r.pdfUrl || r.downloadUrl),
           })),
           total: typeof fbData?.total === "number" ? fbData.total : fbItems.length,
         };
