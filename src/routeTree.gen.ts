@@ -9,356 +9,271 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as VerifyResetOtpRouteImport } from './routes/verify-reset-otp'
-import { Route as VerifyEmailRouteImport } from './routes/verify-email'
-import { Route as TermsRouteImport } from './routes/terms'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as RegisterRouteImport } from './routes/register'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as PricingRouteImport } from './routes/pricing'
-import { Route as OnboardingRouteImport } from './routes/onboarding'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
-import { Route as FeaturesRouteImport } from './routes/features'
-import { Route as FaqRouteImport } from './routes/faq'
-import { Route as EmployeeOnboardingRouteImport } from './routes/employee-onboarding'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as ContactRouteImport } from './routes/contact'
-import { Route as BlogRouteImport } from './routes/blog'
-import { Route as AiRouteImport } from './routes/ai'
-import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
-import { Route as BlogIndexRouteImport } from './routes/blog.index'
-import { Route as AiIndexRouteImport } from './routes/ai.index'
-import { Route as DashboardWorkforceRouteImport } from './routes/dashboard.workforce'
-import { Route as DashboardVisitorsRouteImport } from './routes/dashboard.visitors'
-import { Route as DashboardTravelRouteImport } from './routes/dashboard.travel'
-import { Route as DashboardTimesheetsRouteImport } from './routes/dashboard.timesheets'
-import { Route as DashboardTimelineRouteImport } from './routes/dashboard.timeline'
-import { Route as DashboardTalentRouteImport } from './routes/dashboard.talent'
-import { Route as DashboardSuperAdminRouteImport } from './routes/dashboard.super-admin'
-import { Route as DashboardSettingsRouteImport } from './routes/dashboard.settings'
-import { Route as DashboardRolesRouteImport } from './routes/dashboard.roles'
-import { Route as DashboardResourcesRouteImport } from './routes/dashboard.resources'
-import { Route as DashboardReportsRouteImport } from './routes/dashboard.reports'
-import { Route as DashboardRecruitmentRouteImport } from './routes/dashboard/recruitment'
-import { Route as DashboardPerformanceRouteImport } from './routes/dashboard.performance'
-import { Route as DashboardPayrollRouteImport } from './routes/dashboard.payroll'
-import { Route as DashboardOnboardingChecklistRouteImport } from './routes/dashboard.onboarding-checklist'
-import { Route as DashboardOffboardingRouteImport } from './routes/dashboard.offboarding'
-import { Route as DashboardNotificationsRouteImport } from './routes/dashboard.notifications'
-import { Route as DashboardMeetingsRouteImport } from './routes/dashboard.meetings'
-import { Route as DashboardManagersRouteImport } from './routes/dashboard.managers'
-import { Route as DashboardManagerRouteImport } from './routes/dashboard.manager'
-import { Route as DashboardLeavesRouteImport } from './routes/dashboard.leaves'
-import { Route as DashboardItAdminRouteImport } from './routes/dashboard.it-admin'
-import { Route as DashboardHrOpsRouteImport } from './routes/dashboard.hr-ops'
-import { Route as DashboardHrOperationsRouteImport } from './routes/dashboard.hr-operations'
-import { Route as DashboardHrRouteImport } from './routes/dashboard.hr'
-import { Route as DashboardHierarchyRouteImport } from './routes/dashboard.hierarchy'
-import { Route as DashboardHelpdeskRouteImport } from './routes/dashboard.helpdesk'
-import { Route as DashboardForbiddenRouteImport } from './routes/dashboard.forbidden'
-import { Route as DashboardExpensesRouteImport } from './routes/dashboard.expenses'
-import { Route as DashboardExitManagementRouteImport } from './routes/dashboard.exit-management'
-import { Route as DashboardExitRouteImport } from './routes/dashboard.exit'
-import { Route as DashboardExecutivesRouteImport } from './routes/dashboard.executives'
-import { Route as DashboardEmployeesRouteImport } from './routes/dashboard.employees'
-import { Route as DashboardEmployeeRouteImport } from './routes/dashboard.employee'
-import { Route as DashboardDocumentsRouteImport } from './routes/dashboard.documents'
-import { Route as DashboardDepartmentsRouteImport } from './routes/dashboard.departments'
-import { Route as DashboardConnectRouteImport } from './routes/dashboard.connect'
-import { Route as DashboardCallsRouteImport } from './routes/dashboard.calls'
-import { Route as DashboardBillingRouteImport } from './routes/dashboard.billing'
-import { Route as DashboardAutopilotRouteImport } from './routes/dashboard.autopilot'
-import { Route as DashboardAuditLogsRouteImport } from './routes/dashboard.audit-logs'
-import { Route as DashboardAttendanceRouteImport } from './routes/dashboard.attendance'
-import { Route as DashboardAssetsRouteImport } from './routes/dashboard.assets'
-import { Route as DashboardAssetManagementRouteImport } from './routes/dashboard.asset-management'
-import { Route as DashboardAnnouncementsRouteImport } from './routes/dashboard.announcements'
-import { Route as DashboardAnalyticsRouteImport } from './routes/dashboard.analytics'
-import { Route as DashboardAiInsightsRouteImport } from './routes/dashboard.ai-insights'
-import { Route as DashboardAiHubRouteImport } from './routes/dashboard.ai-hub'
-import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
-import { Route as AuthVerifyResetOtpRouteImport } from './routes/auth/verify-reset-otp'
-import { Route as AuthVerifyEmailRouteImport } from './routes/auth/verify-email'
-import { Route as AuthResetPasswordRouteImport } from './routes/auth/reset-password'
-import { Route as AuthRegisterRouteImport } from './routes/auth/register'
-import { Route as AuthLoginRouteImport } from './routes/auth/login'
-import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
-import { Route as ApiAiBrainRouteImport } from './routes/api/ai-brain'
-import { Route as AiWorkforcePlanningRouteImport } from './routes/ai.workforce-planning'
-import { Route as AiWorkforceInsightsRouteImport } from './routes/ai.workforce-insights'
-import { Route as AiRecruiterRouteImport } from './routes/ai.recruiter'
-import { Route as AiPolicyAssistantRouteImport } from './routes/ai.policy-assistant'
-import { Route as AiPerformanceCoachRouteImport } from './routes/ai.performance-coach'
-import { Route as AiMeetingIntelligenceRouteImport } from './routes/ai.meeting-intelligence'
-import { Route as AiLeaveAssistantRouteImport } from './routes/ai.leave-assistant'
-import { Route as AiEmployeeHealthRouteImport } from './routes/ai.employee-health'
-import { Route as AiDocumentGeneratorRouteImport } from './routes/ai.document-generator'
-import { Route as AiComplianceMonitorRouteImport } from './routes/ai.compliance-monitor'
-import { Route as AiChatAssistantRouteImport } from './routes/ai.chat-assistant'
-import { Route as AiBrainRouteImport } from './routes/ai.brain'
-import { Route as AiAttendanceMonitorRouteImport } from './routes/ai.attendance-monitor'
-import { Route as AiAnalyticsCenterRouteImport } from './routes/ai.analytics-center'
+import { Route as AboutRouteImport } from './routes/about'
+import { Route as AiRouteImport } from './routes/ai'
+import { Route as BlogRouteImport } from './routes/blog'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as EmployeeOnboardingRouteImport } from './routes/employee-onboarding'
+import { Route as FaqRouteImport } from './routes/faq'
+import { Route as FeaturesRouteImport } from './routes/features'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as VerifyEmailRouteImport } from './routes/verify-email'
+import { Route as VerifyResetOtpRouteImport } from './routes/verify-reset-otp'
 import { Route as AiInterviewTokenRouteImport } from './routes/ai-interview.$token'
-import { Route as DashboardWorkforceIndexRouteImport } from './routes/dashboard.workforce.index'
-import { Route as DashboardTalentIndexRouteImport } from './routes/dashboard.talent.index'
-import { Route as DashboardSuperAdminIndexRouteImport } from './routes/dashboard.super-admin.index'
-import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard.settings.index'
-import { Route as DashboardResourcesIndexRouteImport } from './routes/dashboard.resources.index'
-import { Route as DashboardRecruitmentIndexRouteImport } from './routes/dashboard/recruitment/index'
-import { Route as DashboardPeopleIndexRouteImport } from './routes/dashboard.people.index'
-import { Route as DashboardPayrollIndexRouteImport } from './routes/dashboard.payroll.index'
-import { Route as DashboardMeetingsIndexRouteImport } from './routes/dashboard.meetings.index'
-import { Route as DashboardHrOperationsIndexRouteImport } from './routes/dashboard.hr-operations.index'
-import { Route as DashboardExecutiveIndexRouteImport } from './routes/dashboard.executive.index'
-import { Route as DashboardConnectIndexRouteImport } from './routes/dashboard.connect.index'
-import { Route as DashboardAutopilotIndexRouteImport } from './routes/dashboard.autopilot.index'
-import { Route as DashboardAttendanceIndexRouteImport } from './routes/dashboard.attendance.index'
-import { Route as DashboardAnalyticsIndexRouteImport } from './routes/dashboard.analytics.index'
+import { Route as AiIndexRouteImport } from './routes/ai.index'
+import { Route as AiAnalyticsCenterRouteImport } from './routes/ai.analytics-center'
+import { Route as AiAttendanceMonitorRouteImport } from './routes/ai.attendance-monitor'
+import { Route as AiBrainRouteImport } from './routes/ai.brain'
+import { Route as AiChatAssistantRouteImport } from './routes/ai.chat-assistant'
+import { Route as AiComplianceMonitorRouteImport } from './routes/ai.compliance-monitor'
+import { Route as AiDocumentGeneratorRouteImport } from './routes/ai.document-generator'
+import { Route as AiEmployeeHealthRouteImport } from './routes/ai.employee-health'
+import { Route as AiLeaveAssistantRouteImport } from './routes/ai.leave-assistant'
+import { Route as AiMeetingIntelligenceRouteImport } from './routes/ai.meeting-intelligence'
+import { Route as AiPerformanceCoachRouteImport } from './routes/ai.performance-coach'
+import { Route as AiPolicyAssistantRouteImport } from './routes/ai.policy-assistant'
+import { Route as AiRecruiterRouteImport } from './routes/ai.recruiter'
+import { Route as AiWorkforceInsightsRouteImport } from './routes/ai.workforce-insights'
+import { Route as AiWorkforcePlanningRouteImport } from './routes/ai.workforce-planning'
+import { Route as ApiAiBrainRouteImport } from './routes/api/ai-brain'
+import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
+import { Route as AuthLoginRouteImport } from './routes/auth/login'
+import { Route as AuthRegisterRouteImport } from './routes/auth/register'
+import { Route as AuthResetPasswordRouteImport } from './routes/auth/reset-password'
+import { Route as AuthVerifyEmailRouteImport } from './routes/auth/verify-email'
+import { Route as AuthVerifyResetOtpRouteImport } from './routes/auth/verify-reset-otp'
+import { Route as BlogIndexRouteImport } from './routes/blog.index'
+import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
+import { Route as DashboardAiHubRouteImport } from './routes/dashboard.ai-hub'
+import { Route as DashboardAiInsightsRouteImport } from './routes/dashboard.ai-insights'
+import { Route as DashboardAnalyticsRouteImport } from './routes/dashboard.analytics'
+import { Route as DashboardAnnouncementsRouteImport } from './routes/dashboard.announcements'
+import { Route as DashboardAssetManagementRouteImport } from './routes/dashboard.asset-management'
+import { Route as DashboardAssetsRouteImport } from './routes/dashboard.assets'
+import { Route as DashboardAttendanceRouteImport } from './routes/dashboard.attendance'
+import { Route as DashboardAuditLogsRouteImport } from './routes/dashboard.audit-logs'
+import { Route as DashboardAutopilotRouteImport } from './routes/dashboard.autopilot'
+import { Route as DashboardBillingRouteImport } from './routes/dashboard.billing'
+import { Route as DashboardCallsRouteImport } from './routes/dashboard.calls'
+import { Route as DashboardConnectRouteImport } from './routes/dashboard.connect'
+import { Route as DashboardDepartmentsRouteImport } from './routes/dashboard.departments'
+import { Route as DashboardDocumentsRouteImport } from './routes/dashboard.documents'
+import { Route as DashboardEmployeeRouteImport } from './routes/dashboard.employee'
+import { Route as DashboardEmployeesRouteImport } from './routes/dashboard.employees'
+import { Route as DashboardExecutivesRouteImport } from './routes/dashboard.executives'
+import { Route as DashboardExitRouteImport } from './routes/dashboard.exit'
+import { Route as DashboardExitManagementRouteImport } from './routes/dashboard.exit-management'
+import { Route as DashboardExpensesRouteImport } from './routes/dashboard.expenses'
+import { Route as DashboardForbiddenRouteImport } from './routes/dashboard.forbidden'
+import { Route as DashboardHelpdeskRouteImport } from './routes/dashboard.helpdesk'
+import { Route as DashboardHierarchyRouteImport } from './routes/dashboard.hierarchy'
+import { Route as DashboardHrRouteImport } from './routes/dashboard.hr'
+import { Route as DashboardHrOperationsRouteImport } from './routes/dashboard.hr-operations'
+import { Route as DashboardHrOpsRouteImport } from './routes/dashboard.hr-ops'
+import { Route as DashboardItAdminRouteImport } from './routes/dashboard.it-admin'
+import { Route as DashboardLeavesRouteImport } from './routes/dashboard.leaves'
+import { Route as DashboardManagerRouteImport } from './routes/dashboard.manager'
+import { Route as DashboardManagersRouteImport } from './routes/dashboard.managers'
+import { Route as DashboardMeetingsRouteImport } from './routes/dashboard.meetings'
+import { Route as DashboardNotificationsRouteImport } from './routes/dashboard.notifications'
+import { Route as DashboardOffboardingRouteImport } from './routes/dashboard.offboarding'
+import { Route as DashboardOnboardingChecklistRouteImport } from './routes/dashboard.onboarding-checklist'
+import { Route as DashboardPayrollRouteImport } from './routes/dashboard.payroll'
+import { Route as DashboardPerformanceRouteImport } from './routes/dashboard.performance'
+import { Route as DashboardRecruitmentRouteImport } from './routes/dashboard/recruitment'
+import { Route as DashboardReportsRouteImport } from './routes/dashboard.reports'
+import { Route as DashboardResourcesRouteImport } from './routes/dashboard.resources'
+import { Route as DashboardRolesRouteImport } from './routes/dashboard.roles'
+import { Route as DashboardSettingsRouteImport } from './routes/dashboard.settings'
+import { Route as DashboardSuperAdminRouteImport } from './routes/dashboard.super-admin'
+import { Route as DashboardTalentRouteImport } from './routes/dashboard.talent'
+import { Route as DashboardTimelineRouteImport } from './routes/dashboard.timeline'
+import { Route as DashboardTimesheetsRouteImport } from './routes/dashboard.timesheets'
+import { Route as DashboardTravelRouteImport } from './routes/dashboard.travel'
+import { Route as DashboardVisitorsRouteImport } from './routes/dashboard.visitors'
+import { Route as DashboardWorkforceRouteImport } from './routes/dashboard.workforce'
 import { Route as DashboardAiHubIndexRouteImport } from './routes/dashboard.ai-hub.index'
-import { Route as JobsApplyUkeyRouteImport } from './routes/jobs.apply.$ukey'
-import { Route as InterviewBookTokenRouteImport } from './routes/interview.book.$token'
-import { Route as DashboardWorkforceTimesheetsRouteImport } from './routes/dashboard.workforce.timesheets'
-import { Route as DashboardWorkforcePeopleRouteImport } from './routes/dashboard.workforce.people'
-import { Route as DashboardWorkforceLeavesRouteImport } from './routes/dashboard.workforce.leaves'
-import { Route as DashboardWorkforceDepartmentsRouteImport } from './routes/dashboard.workforce.departments'
-import { Route as DashboardWorkforceAttendanceRouteImport } from './routes/dashboard.workforce.attendance'
-import { Route as DashboardTalentRecruitmentRouteImport } from './routes/dashboard.talent.recruitment'
-import { Route as DashboardTalentPerformanceRouteImport } from './routes/dashboard.talent.performance'
-import { Route as DashboardSuperAdminUsersRouteImport } from './routes/dashboard.super-admin.users'
-import { Route as DashboardSuperAdminSettingsRouteImport } from './routes/dashboard.super-admin.settings'
-import { Route as DashboardSuperAdminPlatformConfigRouteImport } from './routes/dashboard.super-admin.platform-config'
-import { Route as DashboardSuperAdminOrganizationsRouteImport } from './routes/dashboard.super-admin.organizations'
-import { Route as DashboardSuperAdminAuditLogsRouteImport } from './routes/dashboard.super-admin.audit-logs'
-import { Route as DashboardSuperAdminAnalyticsRouteImport } from './routes/dashboard.super-admin.analytics'
-import { Route as DashboardSuperAdminActivityRouteImport } from './routes/dashboard.super-admin.activity'
-import { Route as DashboardSettingsSecurityRouteImport } from './routes/dashboard.settings.security'
-import { Route as DashboardSettingsRolesPermissionsRouteImport } from './routes/dashboard.settings.roles-permissions'
-import { Route as DashboardSettingsProfileRouteImport } from './routes/dashboard.settings.profile'
-import { Route as DashboardSettingsNotificationsRouteImport } from './routes/dashboard.settings.notifications'
-import { Route as DashboardSettingsIntegrationsRouteImport } from './routes/dashboard.settings.integrations'
-import { Route as DashboardSettingsGeneralRouteImport } from './routes/dashboard.settings.general'
-import { Route as DashboardSettingsCompanyRouteImport } from './routes/dashboard.settings.company'
-import { Route as DashboardSettingsBillingRouteImport } from './routes/dashboard.settings.billing'
-import { Route as DashboardSettingsAuditLogsRouteImport } from './routes/dashboard.settings.audit-logs'
-import { Route as DashboardResourcesDocumentsRouteImport } from './routes/dashboard.resources.documents'
-import { Route as DashboardResourcesAssetsRouteImport } from './routes/dashboard.resources.assets'
-import { Route as DashboardResourcesAssetManagementRouteImport } from './routes/dashboard.resources.asset-management'
-import { Route as DashboardRecruitmentWorkforcePlanningRouteImport } from './routes/dashboard/recruitment/workforce-planning'
-import { Route as DashboardRecruitmentVerificationRouteImport } from './routes/dashboard/recruitment/verification'
-import { Route as DashboardRecruitmentVendorsRouteImport } from './routes/dashboard/recruitment/vendors'
-import { Route as DashboardRecruitmentTemplatesRouteImport } from './routes/dashboard/recruitment/templates'
-import { Route as DashboardRecruitmentTalentPoolRouteImport } from './routes/dashboard/recruitment/talent-pool'
-import { Route as DashboardRecruitmentSourcingRouteImport } from './routes/dashboard/recruitment/sourcing'
-import { Route as DashboardRecruitmentSearchRouteImport } from './routes/dashboard/recruitment/search'
-import { Route as DashboardRecruitmentScorecardsRouteImport } from './routes/dashboard/recruitment/scorecards'
-import { Route as DashboardRecruitmentResumeIntelligenceRouteImport } from './routes/dashboard/recruitment/resume-intelligence'
-import { Route as DashboardRecruitmentRequisitionsRouteImport } from './routes/dashboard/recruitment/requisitions'
-import { Route as DashboardRecruitmentReportsRouteImport } from './routes/dashboard/recruitment/reports'
-import { Route as DashboardRecruitmentReferralsRouteImport } from './routes/dashboard/recruitment/referrals'
-import { Route as DashboardRecruitmentPreboardingRouteImport } from './routes/dashboard/recruitment/preboarding'
-import { Route as DashboardRecruitmentPipelineRouteImport } from './routes/dashboard/recruitment/pipeline'
-import { Route as DashboardRecruitmentOnboardingRouteImport } from './routes/dashboard/recruitment/onboarding'
-import { Route as DashboardRecruitmentOffersRouteImport } from './routes/dashboard/recruitment/offers'
-import { Route as DashboardRecruitmentNotificationsRouteImport } from './routes/dashboard/recruitment/notifications'
-import { Route as DashboardRecruitmentKtProbationRouteImport } from './routes/dashboard/recruitment/kt-probation'
-import { Route as DashboardRecruitmentInterviewsRouteImport } from './routes/dashboard/recruitment/interviews'
-import { Route as DashboardRecruitmentImportExportRouteImport } from './routes/dashboard/recruitment/import-export'
-import { Route as DashboardRecruitmentHiringManagerRouteImport } from './routes/dashboard/recruitment/hiring-manager'
-import { Route as DashboardRecruitmentEmployeeOnboardingRouteImport } from './routes/dashboard/recruitment/employee-onboarding'
-import { Route as DashboardRecruitmentCrmRouteImport } from './routes/dashboard/recruitment/crm'
-import { Route as DashboardRecruitmentComplianceRouteImport } from './routes/dashboard/recruitment/compliance'
-import { Route as DashboardRecruitmentCompensationRouteImport } from './routes/dashboard/recruitment/compensation'
-import { Route as DashboardRecruitmentCommunicationRouteImport } from './routes/dashboard/recruitment/communication'
-import { Route as DashboardRecruitmentCareerSiteRouteImport } from './routes/dashboard/recruitment/career-site'
-import { Route as DashboardRecruitmentCandidatesRouteImport } from './routes/dashboard/recruitment/candidates'
-import { Route as DashboardRecruitmentCalendarRouteImport } from './routes/dashboard/recruitment/calendar'
-import { Route as DashboardRecruitmentAutomationRouteImport } from './routes/dashboard/recruitment/automation'
-import { Route as DashboardRecruitmentAnalyticsRouteImport } from './routes/dashboard/recruitment/analytics'
-import { Route as DashboardRecruitmentAiScreeningRouteImport } from './routes/dashboard/recruitment/ai-screening'
-import { Route as DashboardRecruitmentAiInterviewRouteImport } from './routes/dashboard/recruitment/ai-interview'
-import { Route as DashboardRecruitmentAiRouteImport } from './routes/dashboard/recruitment/ai'
-import { Route as DashboardPayrollVariableInputsRouteImport } from './routes/dashboard.payroll.variable-inputs'
-import { Route as DashboardPayrollStatutoryRouteImport } from './routes/dashboard.payroll.statutory'
-import { Route as DashboardPayrollSalaryStructureRouteImport } from './routes/dashboard.payroll.salary-structure'
-import { Route as DashboardPayrollReportsRouteImport } from './routes/dashboard.payroll.reports'
-import { Route as DashboardPayrollPeriodsRouteImport } from './routes/dashboard.payroll.periods'
-import { Route as DashboardPayrollPayslipsRouteImport } from './routes/dashboard.payroll.payslips'
-import { Route as DashboardPayrollPaymentsRouteImport } from './routes/dashboard.payroll.payments'
-import { Route as DashboardPayrollFullAndFinalRouteImport } from './routes/dashboard.payroll.full-and-final'
-import { Route as DashboardPayrollCompensationRouteImport } from './routes/dashboard.payroll.compensation'
-import { Route as DashboardMeetingsMeetingIdRouteImport } from './routes/dashboard.meetings.$meetingId'
-import { Route as DashboardHrOperationsVisitorManagementRouteImport } from './routes/dashboard.hr-operations.visitor-management'
-import { Route as DashboardHrOperationsTimelineRouteImport } from './routes/dashboard.hr-operations.timeline'
-import { Route as DashboardHrOperationsOnboardingRouteImport } from './routes/dashboard.hr-operations.onboarding'
-import { Route as DashboardHrOperationsOffboardingRouteImport } from './routes/dashboard.hr-operations.offboarding'
-import { Route as DashboardHrOperationsExitManagementRouteImport } from './routes/dashboard.hr-operations.exit-management'
-import { Route as DashboardHrOperationsCommandCenterRouteImport } from './routes/dashboard.hr-operations.command-center'
-import { Route as DashboardHelpdeskAnalyticsRouteImport } from './routes/dashboard.helpdesk.analytics'
-import { Route as DashboardExecutiveCtoRouteImport } from './routes/dashboard.executive.cto'
-import { Route as DashboardExecutiveCooRouteImport } from './routes/dashboard.executive.coo'
-import { Route as DashboardExecutiveCmoRouteImport } from './routes/dashboard.executive.cmo'
-import { Route as DashboardExecutiveCioRouteImport } from './routes/dashboard.executive.cio'
-import { Route as DashboardExecutiveCfoRouteImport } from './routes/dashboard.executive.cfo'
-import { Route as DashboardExecutiveCeoRouteImport } from './routes/dashboard.executive.ceo'
-import { Route as DashboardEmployeePayrollRouteImport } from './routes/dashboard.employee.payroll'
-import { Route as DashboardAutopilotSettingsRouteImport } from './routes/dashboard.autopilot.settings'
-import { Route as DashboardAutopilotRulesRouteImport } from './routes/dashboard.autopilot.rules'
-import { Route as DashboardAutopilotExceptionsRouteImport } from './routes/dashboard.autopilot.exceptions'
-import { Route as DashboardAutopilotAuditRouteImport } from './routes/dashboard.autopilot.audit'
-import { Route as DashboardAutopilotAlertsRouteImport } from './routes/dashboard.autopilot.alerts'
-import { Route as DashboardAutopilotAgentRouteImport } from './routes/dashboard.autopilot.agent'
-import { Route as DashboardAttendanceShiftsRouteImport } from './routes/dashboard.attendance.shifts'
-import { Route as DashboardAttendanceRostersRouteImport } from './routes/dashboard.attendance.rosters'
-import { Route as DashboardAttendanceHolidaysRouteImport } from './routes/dashboard.attendance.holidays'
-import { Route as DashboardAttendanceCheckinRouteImport } from './routes/dashboard.attendance.checkin'
-import { Route as DashboardAnnouncementsManageRouteImport } from './routes/dashboard.announcements.manage'
-import { Route as DashboardAnnouncementsIdRouteImport } from './routes/dashboard.announcements.$id'
-import { Route as DashboardAnalyticsReportsRouteImport } from './routes/dashboard.analytics.reports'
-import { Route as DashboardAnalyticsAiInsightsRouteImport } from './routes/dashboard.analytics.ai-insights'
-import { Route as DashboardAiHubDocumentGeneratorRouteImport } from './routes/dashboard.ai-hub.document-generator'
-import { Route as DashboardAiHubAutomationRouteImport } from './routes/dashboard.ai-hub.automation'
 import { Route as DashboardAiHubAssistantRouteImport } from './routes/dashboard.ai-hub.assistant'
-import { Route as DashboardRecruitmentJobsIndexRouteImport } from './routes/dashboard/recruitment/jobs/index'
-import { Route as DashboardRecruitmentCandidatesIndexRouteImport } from './routes/dashboard/recruitment/candidates/index'
-import { Route as DashboardExecutiveCtoIndexRouteImport } from './routes/dashboard.executive.cto.index'
-import { Route as DashboardExecutiveCioIndexRouteImport } from './routes/dashboard.executive.cio.index'
-import { Route as DashboardExecutiveCeoIndexRouteImport } from './routes/dashboard.executive.ceo.index'
-import { Route as DashboardRecruitmentJobsNewRouteImport } from './routes/dashboard/recruitment/jobs/new'
-import { Route as DashboardRecruitmentJobsJobIdRouteImport } from './routes/dashboard/recruitment/jobs/$jobId'
-import { Route as DashboardRecruitmentCandidatesCandidateIdRouteImport } from './routes/dashboard/recruitment/candidates/$candidateId'
-import { Route as DashboardPayrollPaymentsBatchIdRouteImport } from './routes/dashboard.payroll.payments.$batchId'
-import { Route as DashboardExecutiveCtoSettingsRouteImport } from './routes/dashboard.executive.cto.settings'
-import { Route as DashboardExecutiveCtoSecurityRouteImport } from './routes/dashboard.executive.cto.security'
-import { Route as DashboardExecutiveCtoProjectsRouteImport } from './routes/dashboard.executive.cto.projects'
-import { Route as DashboardExecutiveCtoMonitoringRouteImport } from './routes/dashboard.executive.cto.monitoring'
-import { Route as DashboardExecutiveCtoInfrastructureRouteImport } from './routes/dashboard.executive.cto.infrastructure'
-import { Route as DashboardExecutiveCtoEngineeringRouteImport } from './routes/dashboard.executive.cto.engineering'
-import { Route as DashboardExecutiveCtoDevopsRouteImport } from './routes/dashboard.executive.cto.devops'
-import { Route as DashboardExecutiveCtoDevelopersRouteImport } from './routes/dashboard.executive.cto.developers'
-import { Route as DashboardExecutiveCtoDatabaseRouteImport } from './routes/dashboard.executive.cto.database'
-import { Route as DashboardExecutiveCtoAnalyticsRouteImport } from './routes/dashboard.executive.cto.analytics'
-import { Route as DashboardExecutiveCtoAiRouteImport } from './routes/dashboard.executive.cto.ai'
-import { Route as DashboardExecutiveCioSettingsRouteImport } from './routes/dashboard.executive.cio.settings'
-import { Route as DashboardExecutiveCioItOperationsRouteImport } from './routes/dashboard.executive.cio.it-operations'
-import { Route as DashboardExecutiveCioItGovernanceRouteImport } from './routes/dashboard.executive.cio.it-governance'
-import { Route as DashboardExecutiveCioInfrastructureRouteImport } from './routes/dashboard.executive.cio.infrastructure'
-import { Route as DashboardExecutiveCioDigitalTransformationRouteImport } from './routes/dashboard.executive.cio.digital-transformation'
-import { Route as DashboardExecutiveCioCyberSecurityRouteImport } from './routes/dashboard.executive.cio.cyber-security'
-import { Route as DashboardExecutiveCioCloudNetworkRouteImport } from './routes/dashboard.executive.cio.cloud-network'
-import { Route as DashboardExecutiveCioAnalyticsRouteImport } from './routes/dashboard.executive.cio.analytics'
-import { Route as DashboardExecutiveCeoSettingsRouteImport } from './routes/dashboard.executive.ceo.settings'
-import { Route as DashboardExecutiveCeoSalesRouteImport } from './routes/dashboard.executive.ceo.sales'
-import { Route as DashboardExecutiveCeoReportsRouteImport } from './routes/dashboard.executive.ceo.reports'
-import { Route as DashboardExecutiveCeoOrganizationRouteImport } from './routes/dashboard.executive.ceo.organization'
-import { Route as DashboardExecutiveCeoOperationsRouteImport } from './routes/dashboard.executive.ceo.operations'
-import { Route as DashboardExecutiveCeoFinanceRouteImport } from './routes/dashboard.executive.ceo.finance'
-import { Route as DashboardExecutiveCeoBusinessRouteImport } from './routes/dashboard.executive.ceo.business'
-import { Route as DashboardExecutiveCeoAiInsightsRouteImport } from './routes/dashboard.executive.ceo.ai-insights'
-import { Route as DashboardConnectDmConversationIdRouteImport } from './routes/dashboard.connect.dm.$conversationId'
+import { Route as DashboardAiHubAutomationRouteImport } from './routes/dashboard.ai-hub.automation'
+import { Route as DashboardAiHubDocumentGeneratorRouteImport } from './routes/dashboard.ai-hub.document-generator'
+import { Route as DashboardAnalyticsIndexRouteImport } from './routes/dashboard.analytics.index'
+import { Route as DashboardAnalyticsAiInsightsRouteImport } from './routes/dashboard.analytics.ai-insights'
+import { Route as DashboardAnalyticsReportsRouteImport } from './routes/dashboard.analytics.reports'
+import { Route as DashboardAnnouncementsIdRouteImport } from './routes/dashboard.announcements.$id'
+import { Route as DashboardAnnouncementsManageRouteImport } from './routes/dashboard.announcements.manage'
+import { Route as DashboardAttendanceIndexRouteImport } from './routes/dashboard.attendance.index'
+import { Route as DashboardAttendanceCheckinRouteImport } from './routes/dashboard.attendance.checkin'
+import { Route as DashboardAttendanceHolidaysRouteImport } from './routes/dashboard.attendance.holidays'
+import { Route as DashboardAttendanceRostersRouteImport } from './routes/dashboard.attendance.rosters'
+import { Route as DashboardAttendanceShiftsRouteImport } from './routes/dashboard.attendance.shifts'
+import { Route as DashboardAutopilotIndexRouteImport } from './routes/dashboard.autopilot.index'
+import { Route as DashboardAutopilotAgentRouteImport } from './routes/dashboard.autopilot.agent'
+import { Route as DashboardAutopilotAlertsRouteImport } from './routes/dashboard.autopilot.alerts'
+import { Route as DashboardAutopilotAuditRouteImport } from './routes/dashboard.autopilot.audit'
+import { Route as DashboardAutopilotExceptionsRouteImport } from './routes/dashboard.autopilot.exceptions'
+import { Route as DashboardAutopilotRulesRouteImport } from './routes/dashboard.autopilot.rules'
+import { Route as DashboardAutopilotSettingsRouteImport } from './routes/dashboard.autopilot.settings'
+import { Route as DashboardConnectIndexRouteImport } from './routes/dashboard.connect.index'
+import { Route as DashboardEmployeePayrollRouteImport } from './routes/dashboard.employee.payroll'
+import { Route as DashboardExecutiveIndexRouteImport } from './routes/dashboard.executive.index'
+import { Route as DashboardExecutiveCeoRouteImport } from './routes/dashboard.executive.ceo'
+import { Route as DashboardExecutiveCfoRouteImport } from './routes/dashboard.executive.cfo'
+import { Route as DashboardExecutiveCioRouteImport } from './routes/dashboard.executive.cio'
+import { Route as DashboardExecutiveCmoRouteImport } from './routes/dashboard.executive.cmo'
+import { Route as DashboardExecutiveCooRouteImport } from './routes/dashboard.executive.coo'
+import { Route as DashboardExecutiveCtoRouteImport } from './routes/dashboard.executive.cto'
+import { Route as DashboardHelpdeskAnalyticsRouteImport } from './routes/dashboard.helpdesk.analytics'
+import { Route as DashboardHrOperationsIndexRouteImport } from './routes/dashboard.hr-operations.index'
+import { Route as DashboardHrOperationsCommandCenterRouteImport } from './routes/dashboard.hr-operations.command-center'
+import { Route as DashboardHrOperationsExitManagementRouteImport } from './routes/dashboard.hr-operations.exit-management'
+import { Route as DashboardHrOperationsOffboardingRouteImport } from './routes/dashboard.hr-operations.offboarding'
+import { Route as DashboardHrOperationsOnboardingRouteImport } from './routes/dashboard.hr-operations.onboarding'
+import { Route as DashboardHrOperationsTimelineRouteImport } from './routes/dashboard.hr-operations.timeline'
+import { Route as DashboardHrOperationsVisitorManagementRouteImport } from './routes/dashboard.hr-operations.visitor-management'
+import { Route as DashboardMeetingsIndexRouteImport } from './routes/dashboard.meetings.index'
+import { Route as DashboardMeetingsMeetingIdRouteImport } from './routes/dashboard.meetings.$meetingId'
+import { Route as DashboardPayrollIndexRouteImport } from './routes/dashboard.payroll.index'
+import { Route as DashboardPayrollCompensationRouteImport } from './routes/dashboard.payroll.compensation'
+import { Route as DashboardPayrollFullAndFinalRouteImport } from './routes/dashboard.payroll.full-and-final'
+import { Route as DashboardPayrollPaymentsRouteImport } from './routes/dashboard.payroll.payments'
+import { Route as DashboardPayrollPayslipsRouteImport } from './routes/dashboard.payroll.payslips'
+import { Route as DashboardPayrollPeriodsRouteImport } from './routes/dashboard.payroll.periods'
+import { Route as DashboardPayrollReportsRouteImport } from './routes/dashboard.payroll.reports'
+import { Route as DashboardPayrollSalaryStructureRouteImport } from './routes/dashboard.payroll.salary-structure'
+import { Route as DashboardPayrollStatutoryRouteImport } from './routes/dashboard.payroll.statutory'
+import { Route as DashboardPayrollVariableInputsRouteImport } from './routes/dashboard.payroll.variable-inputs'
+import { Route as DashboardPeopleIndexRouteImport } from './routes/dashboard.people.index'
+import { Route as DashboardRecruitmentIndexRouteImport } from './routes/dashboard/recruitment/index'
+import { Route as DashboardRecruitmentAiRouteImport } from './routes/dashboard/recruitment/ai'
+import { Route as DashboardRecruitmentAiInterviewRouteImport } from './routes/dashboard/recruitment/ai-interview'
+import { Route as DashboardRecruitmentAiScreeningRouteImport } from './routes/dashboard/recruitment/ai-screening'
+import { Route as DashboardRecruitmentAnalyticsRouteImport } from './routes/dashboard/recruitment/analytics'
+import { Route as DashboardRecruitmentAutomationRouteImport } from './routes/dashboard/recruitment/automation'
+import { Route as DashboardRecruitmentCalendarRouteImport } from './routes/dashboard/recruitment/calendar'
+import { Route as DashboardRecruitmentCandidatesRouteImport } from './routes/dashboard/recruitment/candidates'
+import { Route as DashboardRecruitmentCareerSiteRouteImport } from './routes/dashboard/recruitment/career-site'
+import { Route as DashboardRecruitmentCommunicationRouteImport } from './routes/dashboard/recruitment/communication'
+import { Route as DashboardRecruitmentCompensationRouteImport } from './routes/dashboard/recruitment/compensation'
+import { Route as DashboardRecruitmentComplianceRouteImport } from './routes/dashboard/recruitment/compliance'
+import { Route as DashboardRecruitmentCrmRouteImport } from './routes/dashboard/recruitment/crm'
+import { Route as DashboardRecruitmentEmployeeOnboardingRouteImport } from './routes/dashboard/recruitment/employee-onboarding'
+import { Route as DashboardRecruitmentHiringManagerRouteImport } from './routes/dashboard/recruitment/hiring-manager'
+import { Route as DashboardRecruitmentImportExportRouteImport } from './routes/dashboard/recruitment/import-export'
+import { Route as DashboardRecruitmentInterviewsRouteImport } from './routes/dashboard/recruitment/interviews'
+import { Route as DashboardRecruitmentKtProbationRouteImport } from './routes/dashboard/recruitment/kt-probation'
+import { Route as DashboardRecruitmentNotificationsRouteImport } from './routes/dashboard/recruitment/notifications'
+import { Route as DashboardRecruitmentOffersRouteImport } from './routes/dashboard/recruitment/offers'
+import { Route as DashboardRecruitmentOnboardingRouteImport } from './routes/dashboard/recruitment/onboarding'
+import { Route as DashboardRecruitmentPipelineRouteImport } from './routes/dashboard/recruitment/pipeline'
+import { Route as DashboardRecruitmentPreboardingRouteImport } from './routes/dashboard/recruitment/preboarding'
+import { Route as DashboardRecruitmentReferralsRouteImport } from './routes/dashboard/recruitment/referrals'
+import { Route as DashboardRecruitmentReportsRouteImport } from './routes/dashboard/recruitment/reports'
+import { Route as DashboardRecruitmentRequisitionsRouteImport } from './routes/dashboard/recruitment/requisitions'
+import { Route as DashboardRecruitmentResumeIntelligenceRouteImport } from './routes/dashboard/recruitment/resume-intelligence'
+import { Route as DashboardRecruitmentScorecardsRouteImport } from './routes/dashboard/recruitment/scorecards'
+import { Route as DashboardRecruitmentSearchRouteImport } from './routes/dashboard/recruitment/search'
+import { Route as DashboardRecruitmentSourcingRouteImport } from './routes/dashboard/recruitment/sourcing'
+import { Route as DashboardRecruitmentTalentPoolRouteImport } from './routes/dashboard/recruitment/talent-pool'
+import { Route as DashboardRecruitmentTemplatesRouteImport } from './routes/dashboard/recruitment/templates'
+import { Route as DashboardRecruitmentVendorsRouteImport } from './routes/dashboard/recruitment/vendors'
+import { Route as DashboardRecruitmentVerificationRouteImport } from './routes/dashboard/recruitment/verification'
+import { Route as DashboardRecruitmentWorkforcePlanningRouteImport } from './routes/dashboard/recruitment/workforce-planning'
+import { Route as DashboardResourcesIndexRouteImport } from './routes/dashboard.resources.index'
+import { Route as DashboardResourcesAssetManagementRouteImport } from './routes/dashboard.resources.asset-management'
+import { Route as DashboardResourcesAssetsRouteImport } from './routes/dashboard.resources.assets'
+import { Route as DashboardResourcesDocumentsRouteImport } from './routes/dashboard.resources.documents'
+import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard.settings.index'
+import { Route as DashboardSettingsAuditLogsRouteImport } from './routes/dashboard.settings.audit-logs'
+import { Route as DashboardSettingsBillingRouteImport } from './routes/dashboard.settings.billing'
+import { Route as DashboardSettingsCompanyRouteImport } from './routes/dashboard.settings.company'
+import { Route as DashboardSettingsGeneralRouteImport } from './routes/dashboard.settings.general'
+import { Route as DashboardSettingsIntegrationsRouteImport } from './routes/dashboard.settings.integrations'
+import { Route as DashboardSettingsNotificationsRouteImport } from './routes/dashboard.settings.notifications'
+import { Route as DashboardSettingsProfileRouteImport } from './routes/dashboard.settings.profile'
+import { Route as DashboardSettingsRolesPermissionsRouteImport } from './routes/dashboard.settings.roles-permissions'
+import { Route as DashboardSettingsSecurityRouteImport } from './routes/dashboard.settings.security'
+import { Route as DashboardSuperAdminIndexRouteImport } from './routes/dashboard.super-admin.index'
+import { Route as DashboardSuperAdminActivityRouteImport } from './routes/dashboard.super-admin.activity'
+import { Route as DashboardSuperAdminAnalyticsRouteImport } from './routes/dashboard.super-admin.analytics'
+import { Route as DashboardSuperAdminAuditLogsRouteImport } from './routes/dashboard.super-admin.audit-logs'
+import { Route as DashboardSuperAdminOrganizationsRouteImport } from './routes/dashboard.super-admin.organizations'
+import { Route as DashboardSuperAdminPlatformConfigRouteImport } from './routes/dashboard.super-admin.platform-config'
+import { Route as DashboardSuperAdminSettingsRouteImport } from './routes/dashboard.super-admin.settings'
+import { Route as DashboardSuperAdminUsersRouteImport } from './routes/dashboard.super-admin.users'
+import { Route as DashboardTalentIndexRouteImport } from './routes/dashboard.talent.index'
+import { Route as DashboardTalentPerformanceRouteImport } from './routes/dashboard.talent.performance'
+import { Route as DashboardTalentRecruitmentRouteImport } from './routes/dashboard.talent.recruitment'
+import { Route as DashboardWorkforceIndexRouteImport } from './routes/dashboard.workforce.index'
+import { Route as DashboardWorkforceAttendanceRouteImport } from './routes/dashboard.workforce.attendance'
+import { Route as DashboardWorkforceDepartmentsRouteImport } from './routes/dashboard.workforce.departments'
+import { Route as DashboardWorkforceLeavesRouteImport } from './routes/dashboard.workforce.leaves'
+import { Route as DashboardWorkforcePeopleRouteImport } from './routes/dashboard.workforce.people'
+import { Route as DashboardWorkforceTimesheetsRouteImport } from './routes/dashboard.workforce.timesheets'
+import { Route as InterviewBookTokenRouteImport } from './routes/interview.book.$token'
+import { Route as JobsApplyUkeyRouteImport } from './routes/jobs.apply.$ukey'
 import { Route as DashboardConnectChannelsChannelIdRouteImport } from './routes/dashboard.connect.channels.$channelId'
-import { Route as DashboardRecruitmentJobsJobIdPublishRouteImport } from './routes/dashboard/recruitment/jobs/$jobId/publish'
-import { Route as DashboardPayrollRunsRunIdValidationRouteImport } from './routes/dashboard.payroll.runs.$runId.validation'
-import { Route as DashboardPayrollRunsRunIdReviewRouteImport } from './routes/dashboard.payroll.runs.$runId.review'
-import { Route as DashboardPayrollRunsRunIdProcessingRouteImport } from './routes/dashboard.payroll.runs.$runId.processing'
-import { Route as DashboardPayrollRunsRunIdPreviewRouteImport } from './routes/dashboard.payroll.runs.$runId.preview'
-import { Route as DashboardPayrollRunsRunIdPaymentRouteImport } from './routes/dashboard.payroll.runs.$runId.payment'
-import { Route as DashboardPayrollRunsRunIdFinalizeRouteImport } from './routes/dashboard.payroll.runs.$runId.finalize'
+import { Route as DashboardConnectDmConversationIdRouteImport } from './routes/dashboard.connect.dm.$conversationId'
+import { Route as DashboardExecutiveCeoIndexRouteImport } from './routes/dashboard.executive.ceo.index'
+import { Route as DashboardExecutiveCeoAiInsightsRouteImport } from './routes/dashboard.executive.ceo.ai-insights'
+import { Route as DashboardExecutiveCeoBusinessRouteImport } from './routes/dashboard.executive.ceo.business'
+import { Route as DashboardExecutiveCeoFinanceRouteImport } from './routes/dashboard.executive.ceo.finance'
+import { Route as DashboardExecutiveCeoOperationsRouteImport } from './routes/dashboard.executive.ceo.operations'
+import { Route as DashboardExecutiveCeoOrganizationRouteImport } from './routes/dashboard.executive.ceo.organization'
+import { Route as DashboardExecutiveCeoReportsRouteImport } from './routes/dashboard.executive.ceo.reports'
+import { Route as DashboardExecutiveCeoSalesRouteImport } from './routes/dashboard.executive.ceo.sales'
+import { Route as DashboardExecutiveCeoSettingsRouteImport } from './routes/dashboard.executive.ceo.settings'
+import { Route as DashboardExecutiveCioIndexRouteImport } from './routes/dashboard.executive.cio.index'
+import { Route as DashboardExecutiveCioAnalyticsRouteImport } from './routes/dashboard.executive.cio.analytics'
+import { Route as DashboardExecutiveCioCloudNetworkRouteImport } from './routes/dashboard.executive.cio.cloud-network'
+import { Route as DashboardExecutiveCioCyberSecurityRouteImport } from './routes/dashboard.executive.cio.cyber-security'
+import { Route as DashboardExecutiveCioDigitalTransformationRouteImport } from './routes/dashboard.executive.cio.digital-transformation'
+import { Route as DashboardExecutiveCioInfrastructureRouteImport } from './routes/dashboard.executive.cio.infrastructure'
+import { Route as DashboardExecutiveCioItGovernanceRouteImport } from './routes/dashboard.executive.cio.it-governance'
+import { Route as DashboardExecutiveCioItOperationsRouteImport } from './routes/dashboard.executive.cio.it-operations'
+import { Route as DashboardExecutiveCioSettingsRouteImport } from './routes/dashboard.executive.cio.settings'
+import { Route as DashboardExecutiveCtoIndexRouteImport } from './routes/dashboard.executive.cto.index'
+import { Route as DashboardExecutiveCtoAiRouteImport } from './routes/dashboard.executive.cto.ai'
+import { Route as DashboardExecutiveCtoAnalyticsRouteImport } from './routes/dashboard.executive.cto.analytics'
+import { Route as DashboardExecutiveCtoDatabaseRouteImport } from './routes/dashboard.executive.cto.database'
+import { Route as DashboardExecutiveCtoDevelopersRouteImport } from './routes/dashboard.executive.cto.developers'
+import { Route as DashboardExecutiveCtoDevopsRouteImport } from './routes/dashboard.executive.cto.devops'
+import { Route as DashboardExecutiveCtoEngineeringRouteImport } from './routes/dashboard.executive.cto.engineering'
+import { Route as DashboardExecutiveCtoInfrastructureRouteImport } from './routes/dashboard.executive.cto.infrastructure'
+import { Route as DashboardExecutiveCtoMonitoringRouteImport } from './routes/dashboard.executive.cto.monitoring'
+import { Route as DashboardExecutiveCtoProjectsRouteImport } from './routes/dashboard.executive.cto.projects'
+import { Route as DashboardExecutiveCtoSecurityRouteImport } from './routes/dashboard.executive.cto.security'
+import { Route as DashboardExecutiveCtoSettingsRouteImport } from './routes/dashboard.executive.cto.settings'
+import { Route as DashboardPayrollPaymentsBatchIdRouteImport } from './routes/dashboard.payroll.payments.$batchId'
+import { Route as DashboardRecruitmentCandidatesIndexRouteImport } from './routes/dashboard/recruitment/candidates/index'
+import { Route as DashboardRecruitmentCandidatesCandidateIdRouteImport } from './routes/dashboard/recruitment/candidates/$candidateId'
+import { Route as DashboardRecruitmentJobsIndexRouteImport } from './routes/dashboard/recruitment/jobs/index'
+import { Route as DashboardRecruitmentJobsJobIdRouteImport } from './routes/dashboard/recruitment/jobs/$jobId'
+import { Route as DashboardRecruitmentJobsNewRouteImport } from './routes/dashboard/recruitment/jobs/new'
 import { Route as DashboardPayrollRunsRunIdApprovalRouteImport } from './routes/dashboard.payroll.runs.$runId.approval'
+import { Route as DashboardPayrollRunsRunIdFinalizeRouteImport } from './routes/dashboard.payroll.runs.$runId.finalize'
+import { Route as DashboardPayrollRunsRunIdPaymentRouteImport } from './routes/dashboard.payroll.runs.$runId.payment'
+import { Route as DashboardPayrollRunsRunIdPreviewRouteImport } from './routes/dashboard.payroll.runs.$runId.preview'
+import { Route as DashboardPayrollRunsRunIdProcessingRouteImport } from './routes/dashboard.payroll.runs.$runId.processing'
+import { Route as DashboardPayrollRunsRunIdReviewRouteImport } from './routes/dashboard.payroll.runs.$runId.review'
+import { Route as DashboardPayrollRunsRunIdValidationRouteImport } from './routes/dashboard.payroll.runs.$runId.validation'
+import { Route as DashboardRecruitmentJobsJobIdPublishRouteImport } from './routes/dashboard/recruitment/jobs/$jobId/publish'
 import { Route as DashboardPayrollRunsRunIdEmployeesEmployeeIdRouteImport } from './routes/dashboard.payroll.runs.$runId.employees.$employeeId'
 import { Route as DashboardPayrollRunsRunIdEmployeesEmployeeIdPayslipRouteImport } from './routes/dashboard.payroll.runs.$runId.employees.$employeeId.payslip'
 
-const VerifyResetOtpRoute = VerifyResetOtpRouteImport.update({
-  id: '/verify-reset-otp',
-  path: '/verify-reset-otp',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const VerifyEmailRoute = VerifyEmailRouteImport.update({
-  id: '/verify-email',
-  path: '/verify-email',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TermsRoute = TermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RegisterRoute = RegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PricingRoute = PricingRouteImport.update({
-  id: '/pricing',
-  path: '/pricing',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OnboardingRoute = OnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FeaturesRoute = FeaturesRouteImport.update({
-  id: '/features',
-  path: '/features',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FaqRoute = FaqRouteImport.update({
-  id: '/faq',
-  path: '/faq',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EmployeeOnboardingRoute = EmployeeOnboardingRouteImport.update({
-  id: '/employee-onboarding',
-  path: '/employee-onboarding',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContactRoute = ContactRouteImport.update({
-  id: '/contact',
-  path: '/contact',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BlogRoute = BlogRouteImport.update({
-  id: '/blog',
-  path: '/blog',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AiRoute = AiRouteImport.update({
-  id: '/ai',
-  path: '/ai',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -366,240 +281,244 @@ const AboutRoute = AboutRouteImport.update({
   path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AiRoute = AiRouteImport.update({
+  id: '/ai',
+  path: '/ai',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardIndexRoute = DashboardIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => DashboardRoute,
+const BlogRoute = BlogRouteImport.update({
+  id: '/blog',
+  path: '/blog',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const BlogIndexRoute = BlogIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => BlogRoute,
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployeeOnboardingRoute = EmployeeOnboardingRouteImport.update({
+  id: '/employee-onboarding',
+  path: '/employee-onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeaturesRoute = FeaturesRouteImport.update({
+  id: '/features',
+  path: '/features',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerifyResetOtpRoute = VerifyResetOtpRouteImport.update({
+  id: '/verify-reset-otp',
+  path: '/verify-reset-otp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AiInterviewTokenRoute = AiInterviewTokenRouteImport.update({
+  id: '/ai-interview/$token',
+  path: '/ai-interview/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AiIndexRoute = AiIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AiRoute,
 } as any)
-const DashboardWorkforceRoute = DashboardWorkforceRouteImport.update({
-  id: '/workforce',
-  path: '/workforce',
+const AiAnalyticsCenterRoute = AiAnalyticsCenterRouteImport.update({
+  id: '/analytics-center',
+  path: '/analytics-center',
+  getParentRoute: () => AiRoute,
+} as any)
+const AiAttendanceMonitorRoute = AiAttendanceMonitorRouteImport.update({
+  id: '/attendance-monitor',
+  path: '/attendance-monitor',
+  getParentRoute: () => AiRoute,
+} as any)
+const AiBrainRoute = AiBrainRouteImport.update({
+  id: '/brain',
+  path: '/brain',
+  getParentRoute: () => AiRoute,
+} as any)
+const AiChatAssistantRoute = AiChatAssistantRouteImport.update({
+  id: '/chat-assistant',
+  path: '/chat-assistant',
+  getParentRoute: () => AiRoute,
+} as any)
+const AiComplianceMonitorRoute = AiComplianceMonitorRouteImport.update({
+  id: '/compliance-monitor',
+  path: '/compliance-monitor',
+  getParentRoute: () => AiRoute,
+} as any)
+const AiDocumentGeneratorRoute = AiDocumentGeneratorRouteImport.update({
+  id: '/document-generator',
+  path: '/document-generator',
+  getParentRoute: () => AiRoute,
+} as any)
+const AiEmployeeHealthRoute = AiEmployeeHealthRouteImport.update({
+  id: '/employee-health',
+  path: '/employee-health',
+  getParentRoute: () => AiRoute,
+} as any)
+const AiLeaveAssistantRoute = AiLeaveAssistantRouteImport.update({
+  id: '/leave-assistant',
+  path: '/leave-assistant',
+  getParentRoute: () => AiRoute,
+} as any)
+const AiMeetingIntelligenceRoute = AiMeetingIntelligenceRouteImport.update({
+  id: '/meeting-intelligence',
+  path: '/meeting-intelligence',
+  getParentRoute: () => AiRoute,
+} as any)
+const AiPerformanceCoachRoute = AiPerformanceCoachRouteImport.update({
+  id: '/performance-coach',
+  path: '/performance-coach',
+  getParentRoute: () => AiRoute,
+} as any)
+const AiPolicyAssistantRoute = AiPolicyAssistantRouteImport.update({
+  id: '/policy-assistant',
+  path: '/policy-assistant',
+  getParentRoute: () => AiRoute,
+} as any)
+const AiRecruiterRoute = AiRecruiterRouteImport.update({
+  id: '/recruiter',
+  path: '/recruiter',
+  getParentRoute: () => AiRoute,
+} as any)
+const AiWorkforceInsightsRoute = AiWorkforceInsightsRouteImport.update({
+  id: '/workforce-insights',
+  path: '/workforce-insights',
+  getParentRoute: () => AiRoute,
+} as any)
+const AiWorkforcePlanningRoute = AiWorkforcePlanningRouteImport.update({
+  id: '/workforce-planning',
+  path: '/workforce-planning',
+  getParentRoute: () => AiRoute,
+} as any)
+const ApiAiBrainRoute = ApiAiBrainRouteImport.update({
+  id: '/api/ai-brain',
+  path: '/api/ai-brain',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
+  id: '/auth/forgot-password',
+  path: '/auth/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/auth/login',
+  path: '/auth/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRegisterRoute = AuthRegisterRouteImport.update({
+  id: '/auth/register',
+  path: '/auth/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
+  id: '/auth/reset-password',
+  path: '/auth/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
+  id: '/auth/verify-email',
+  path: '/auth/verify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthVerifyResetOtpRoute = AuthVerifyResetOtpRouteImport.update({
+  id: '/auth/verify-reset-otp',
+  path: '/auth/verify-reset-otp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogIndexRoute = BlogIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => BlogRoute,
+} as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => BlogRoute,
+} as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardVisitorsRoute = DashboardVisitorsRouteImport.update({
-  id: '/visitors',
-  path: '/visitors',
+const DashboardAiHubRoute = DashboardAiHubRouteImport.update({
+  id: '/ai-hub',
+  path: '/ai-hub',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardTravelRoute = DashboardTravelRouteImport.update({
-  id: '/travel',
-  path: '/travel',
+const DashboardAiInsightsRoute = DashboardAiInsightsRouteImport.update({
+  id: '/ai-insights',
+  path: '/ai-insights',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardTimesheetsRoute = DashboardTimesheetsRouteImport.update({
-  id: '/timesheets',
-  path: '/timesheets',
+const DashboardAnalyticsRoute = DashboardAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardTimelineRoute = DashboardTimelineRouteImport.update({
-  id: '/timeline',
-  path: '/timeline',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardTalentRoute = DashboardTalentRouteImport.update({
-  id: '/talent',
-  path: '/talent',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardSuperAdminRoute = DashboardSuperAdminRouteImport.update({
-  id: '/super-admin',
-  path: '/super-admin',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardRolesRoute = DashboardRolesRouteImport.update({
-  id: '/roles',
-  path: '/roles',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardResourcesRoute = DashboardResourcesRouteImport.update({
-  id: '/resources',
-  path: '/resources',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardReportsRoute = DashboardReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardRecruitmentRoute = DashboardRecruitmentRouteImport.update({
-  id: '/recruitment',
-  path: '/recruitment',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardPerformanceRoute = DashboardPerformanceRouteImport.update({
-  id: '/performance',
-  path: '/performance',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardPayrollRoute = DashboardPayrollRouteImport.update({
-  id: '/payroll',
-  path: '/payroll',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardOnboardingChecklistRoute =
-  DashboardOnboardingChecklistRouteImport.update({
-    id: '/onboarding-checklist',
-    path: '/onboarding-checklist',
-    getParentRoute: () => DashboardRoute,
-  } as any)
-const DashboardOffboardingRoute = DashboardOffboardingRouteImport.update({
-  id: '/offboarding',
-  path: '/offboarding',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardNotificationsRoute = DashboardNotificationsRouteImport.update({
-  id: '/notifications',
-  path: '/notifications',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardMeetingsRoute = DashboardMeetingsRouteImport.update({
-  id: '/meetings',
-  path: '/meetings',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardManagersRoute = DashboardManagersRouteImport.update({
-  id: '/managers',
-  path: '/managers',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardManagerRoute = DashboardManagerRouteImport.update({
-  id: '/manager',
-  path: '/manager',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardLeavesRoute = DashboardLeavesRouteImport.update({
-  id: '/leaves',
-  path: '/leaves',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardItAdminRoute = DashboardItAdminRouteImport.update({
-  id: '/it-admin',
-  path: '/it-admin',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardHrOpsRoute = DashboardHrOpsRouteImport.update({
-  id: '/hr-ops',
-  path: '/hr-ops',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardHrOperationsRoute = DashboardHrOperationsRouteImport.update({
-  id: '/hr-operations',
-  path: '/hr-operations',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardHrRoute = DashboardHrRouteImport.update({
-  id: '/hr',
-  path: '/hr',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardHierarchyRoute = DashboardHierarchyRouteImport.update({
-  id: '/hierarchy',
-  path: '/hierarchy',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardHelpdeskRoute = DashboardHelpdeskRouteImport.update({
-  id: '/helpdesk',
-  path: '/helpdesk',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardForbiddenRoute = DashboardForbiddenRouteImport.update({
-  id: '/forbidden',
-  path: '/forbidden',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardExpensesRoute = DashboardExpensesRouteImport.update({
-  id: '/expenses',
-  path: '/expenses',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardExitManagementRoute = DashboardExitManagementRouteImport.update({
-  id: '/exit-management',
-  path: '/exit-management',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardExitRoute = DashboardExitRouteImport.update({
-  id: '/exit',
-  path: '/exit',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardExecutivesRoute = DashboardExecutivesRouteImport.update({
-  id: '/executives',
-  path: '/executives',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardEmployeesRoute = DashboardEmployeesRouteImport.update({
-  id: '/employees',
-  path: '/employees',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardEmployeeRoute = DashboardEmployeeRouteImport.update({
-  id: '/employee',
-  path: '/employee',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardDocumentsRoute = DashboardDocumentsRouteImport.update({
-  id: '/documents',
-  path: '/documents',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardDepartmentsRoute = DashboardDepartmentsRouteImport.update({
-  id: '/departments',
-  path: '/departments',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardConnectRoute = DashboardConnectRouteImport.update({
-  id: '/connect',
-  path: '/connect',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardCallsRoute = DashboardCallsRouteImport.update({
-  id: '/calls',
-  path: '/calls',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardBillingRoute = DashboardBillingRouteImport.update({
-  id: '/billing',
-  path: '/billing',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardAutopilotRoute = DashboardAutopilotRouteImport.update({
-  id: '/autopilot',
-  path: '/autopilot',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardAuditLogsRoute = DashboardAuditLogsRouteImport.update({
-  id: '/audit-logs',
-  path: '/audit-logs',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardAttendanceRoute = DashboardAttendanceRouteImport.update({
-  id: '/attendance',
-  path: '/attendance',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardAssetsRoute = DashboardAssetsRouteImport.update({
-  id: '/assets',
-  path: '/assets',
+const DashboardAnnouncementsRoute = DashboardAnnouncementsRouteImport.update({
+  id: '/announcements',
+  path: '/announcements',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardAssetManagementRoute =
@@ -608,778 +527,277 @@ const DashboardAssetManagementRoute =
     path: '/asset-management',
     getParentRoute: () => DashboardRoute,
   } as any)
-const DashboardAnnouncementsRoute = DashboardAnnouncementsRouteImport.update({
-  id: '/announcements',
-  path: '/announcements',
+const DashboardAssetsRoute = DashboardAssetsRouteImport.update({
+  id: '/assets',
+  path: '/assets',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardAnalyticsRoute = DashboardAnalyticsRouteImport.update({
-  id: '/analytics',
-  path: '/analytics',
+const DashboardAttendanceRoute = DashboardAttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardAiInsightsRoute = DashboardAiInsightsRouteImport.update({
-  id: '/ai-insights',
-  path: '/ai-insights',
+const DashboardAuditLogsRoute = DashboardAuditLogsRouteImport.update({
+  id: '/audit-logs',
+  path: '/audit-logs',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardAiHubRoute = DashboardAiHubRouteImport.update({
-  id: '/ai-hub',
-  path: '/ai-hub',
+const DashboardAutopilotRoute = DashboardAutopilotRouteImport.update({
+  id: '/autopilot',
+  path: '/autopilot',
   getParentRoute: () => DashboardRoute,
 } as any)
-const BlogSlugRoute = BlogSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => BlogRoute,
+const DashboardBillingRoute = DashboardBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => DashboardRoute,
 } as any)
-const AuthVerifyResetOtpRoute = AuthVerifyResetOtpRouteImport.update({
-  id: '/auth/verify-reset-otp',
-  path: '/auth/verify-reset-otp',
-  getParentRoute: () => rootRouteImport,
+const DashboardCallsRoute = DashboardCallsRouteImport.update({
+  id: '/calls',
+  path: '/calls',
+  getParentRoute: () => DashboardRoute,
 } as any)
-const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
-  id: '/auth/verify-email',
-  path: '/auth/verify-email',
-  getParentRoute: () => rootRouteImport,
+const DashboardConnectRoute = DashboardConnectRouteImport.update({
+  id: '/connect',
+  path: '/connect',
+  getParentRoute: () => DashboardRoute,
 } as any)
-const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
-  id: '/auth/reset-password',
-  path: '/auth/reset-password',
-  getParentRoute: () => rootRouteImport,
+const DashboardDepartmentsRoute = DashboardDepartmentsRouteImport.update({
+  id: '/departments',
+  path: '/departments',
+  getParentRoute: () => DashboardRoute,
 } as any)
-const AuthRegisterRoute = AuthRegisterRouteImport.update({
-  id: '/auth/register',
-  path: '/auth/register',
-  getParentRoute: () => rootRouteImport,
+const DashboardDocumentsRoute = DashboardDocumentsRouteImport.update({
+  id: '/documents',
+  path: '/documents',
+  getParentRoute: () => DashboardRoute,
 } as any)
-const AuthLoginRoute = AuthLoginRouteImport.update({
-  id: '/auth/login',
-  path: '/auth/login',
-  getParentRoute: () => rootRouteImport,
+const DashboardEmployeeRoute = DashboardEmployeeRouteImport.update({
+  id: '/employee',
+  path: '/employee',
+  getParentRoute: () => DashboardRoute,
 } as any)
-const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
-  id: '/auth/forgot-password',
-  path: '/auth/forgot-password',
-  getParentRoute: () => rootRouteImport,
+const DashboardEmployeesRoute = DashboardEmployeesRouteImport.update({
+  id: '/employees',
+  path: '/employees',
+  getParentRoute: () => DashboardRoute,
 } as any)
-const ApiAiBrainRoute = ApiAiBrainRouteImport.update({
-  id: '/api/ai-brain',
-  path: '/api/ai-brain',
-  getParentRoute: () => rootRouteImport,
+const DashboardExecutivesRoute = DashboardExecutivesRouteImport.update({
+  id: '/executives',
+  path: '/executives',
+  getParentRoute: () => DashboardRoute,
 } as any)
-const AiWorkforcePlanningRoute = AiWorkforcePlanningRouteImport.update({
-  id: '/workforce-planning',
-  path: '/workforce-planning',
-  getParentRoute: () => AiRoute,
+const DashboardExitRoute = DashboardExitRouteImport.update({
+  id: '/exit',
+  path: '/exit',
+  getParentRoute: () => DashboardRoute,
 } as any)
-const AiWorkforceInsightsRoute = AiWorkforceInsightsRouteImport.update({
-  id: '/workforce-insights',
-  path: '/workforce-insights',
-  getParentRoute: () => AiRoute,
+const DashboardExitManagementRoute = DashboardExitManagementRouteImport.update({
+  id: '/exit-management',
+  path: '/exit-management',
+  getParentRoute: () => DashboardRoute,
 } as any)
-const AiRecruiterRoute = AiRecruiterRouteImport.update({
-  id: '/recruiter',
-  path: '/recruiter',
-  getParentRoute: () => AiRoute,
+const DashboardExpensesRoute = DashboardExpensesRouteImport.update({
+  id: '/expenses',
+  path: '/expenses',
+  getParentRoute: () => DashboardRoute,
 } as any)
-const AiPolicyAssistantRoute = AiPolicyAssistantRouteImport.update({
-  id: '/policy-assistant',
-  path: '/policy-assistant',
-  getParentRoute: () => AiRoute,
+const DashboardForbiddenRoute = DashboardForbiddenRouteImport.update({
+  id: '/forbidden',
+  path: '/forbidden',
+  getParentRoute: () => DashboardRoute,
 } as any)
-const AiPerformanceCoachRoute = AiPerformanceCoachRouteImport.update({
-  id: '/performance-coach',
-  path: '/performance-coach',
-  getParentRoute: () => AiRoute,
+const DashboardHelpdeskRoute = DashboardHelpdeskRouteImport.update({
+  id: '/helpdesk',
+  path: '/helpdesk',
+  getParentRoute: () => DashboardRoute,
 } as any)
-const AiMeetingIntelligenceRoute = AiMeetingIntelligenceRouteImport.update({
-  id: '/meeting-intelligence',
-  path: '/meeting-intelligence',
-  getParentRoute: () => AiRoute,
+const DashboardHierarchyRoute = DashboardHierarchyRouteImport.update({
+  id: '/hierarchy',
+  path: '/hierarchy',
+  getParentRoute: () => DashboardRoute,
 } as any)
-const AiLeaveAssistantRoute = AiLeaveAssistantRouteImport.update({
-  id: '/leave-assistant',
-  path: '/leave-assistant',
-  getParentRoute: () => AiRoute,
+const DashboardHrRoute = DashboardHrRouteImport.update({
+  id: '/hr',
+  path: '/hr',
+  getParentRoute: () => DashboardRoute,
 } as any)
-const AiEmployeeHealthRoute = AiEmployeeHealthRouteImport.update({
-  id: '/employee-health',
-  path: '/employee-health',
-  getParentRoute: () => AiRoute,
+const DashboardHrOperationsRoute = DashboardHrOperationsRouteImport.update({
+  id: '/hr-operations',
+  path: '/hr-operations',
+  getParentRoute: () => DashboardRoute,
 } as any)
-const AiDocumentGeneratorRoute = AiDocumentGeneratorRouteImport.update({
-  id: '/document-generator',
-  path: '/document-generator',
-  getParentRoute: () => AiRoute,
+const DashboardHrOpsRoute = DashboardHrOpsRouteImport.update({
+  id: '/hr-ops',
+  path: '/hr-ops',
+  getParentRoute: () => DashboardRoute,
 } as any)
-const AiComplianceMonitorRoute = AiComplianceMonitorRouteImport.update({
-  id: '/compliance-monitor',
-  path: '/compliance-monitor',
-  getParentRoute: () => AiRoute,
+const DashboardItAdminRoute = DashboardItAdminRouteImport.update({
+  id: '/it-admin',
+  path: '/it-admin',
+  getParentRoute: () => DashboardRoute,
 } as any)
-const AiChatAssistantRoute = AiChatAssistantRouteImport.update({
-  id: '/chat-assistant',
-  path: '/chat-assistant',
-  getParentRoute: () => AiRoute,
+const DashboardLeavesRoute = DashboardLeavesRouteImport.update({
+  id: '/leaves',
+  path: '/leaves',
+  getParentRoute: () => DashboardRoute,
 } as any)
-const AiBrainRoute = AiBrainRouteImport.update({
-  id: '/brain',
-  path: '/brain',
-  getParentRoute: () => AiRoute,
+const DashboardManagerRoute = DashboardManagerRouteImport.update({
+  id: '/manager',
+  path: '/manager',
+  getParentRoute: () => DashboardRoute,
 } as any)
-const AiAttendanceMonitorRoute = AiAttendanceMonitorRouteImport.update({
-  id: '/attendance-monitor',
-  path: '/attendance-monitor',
-  getParentRoute: () => AiRoute,
+const DashboardManagersRoute = DashboardManagersRouteImport.update({
+  id: '/managers',
+  path: '/managers',
+  getParentRoute: () => DashboardRoute,
 } as any)
-const AiAnalyticsCenterRoute = AiAnalyticsCenterRouteImport.update({
-  id: '/analytics-center',
-  path: '/analytics-center',
-  getParentRoute: () => AiRoute,
+const DashboardMeetingsRoute = DashboardMeetingsRouteImport.update({
+  id: '/meetings',
+  path: '/meetings',
+  getParentRoute: () => DashboardRoute,
 } as any)
-const AiInterviewTokenRoute = AiInterviewTokenRouteImport.update({
-  id: '/ai-interview/$token',
-  path: '/ai-interview/$token',
-  getParentRoute: () => rootRouteImport,
+const DashboardNotificationsRoute = DashboardNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardWorkforceIndexRoute = DashboardWorkforceIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => DashboardWorkforceRoute,
+const DashboardOffboardingRoute = DashboardOffboardingRouteImport.update({
+  id: '/offboarding',
+  path: '/offboarding',
+  getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardTalentIndexRoute = DashboardTalentIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => DashboardTalentRoute,
-} as any)
-const DashboardSuperAdminIndexRoute =
-  DashboardSuperAdminIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => DashboardSuperAdminRoute,
+const DashboardOnboardingChecklistRoute =
+  DashboardOnboardingChecklistRouteImport.update({
+    id: '/onboarding-checklist',
+    path: '/onboarding-checklist',
+    getParentRoute: () => DashboardRoute,
   } as any)
-const DashboardSettingsIndexRoute = DashboardSettingsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => DashboardSettingsRoute,
-} as any)
-const DashboardResourcesIndexRoute = DashboardResourcesIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => DashboardResourcesRoute,
-} as any)
-const DashboardRecruitmentIndexRoute =
-  DashboardRecruitmentIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardPeopleIndexRoute = DashboardPeopleIndexRouteImport.update({
-  id: '/people/',
-  path: '/people/',
+const DashboardPayrollRoute = DashboardPayrollRouteImport.update({
+  id: '/payroll',
+  path: '/payroll',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardPayrollIndexRoute = DashboardPayrollIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => DashboardPayrollRoute,
-} as any)
-const DashboardMeetingsIndexRoute = DashboardMeetingsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => DashboardMeetingsRoute,
-} as any)
-const DashboardHrOperationsIndexRoute =
-  DashboardHrOperationsIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => DashboardHrOperationsRoute,
-  } as any)
-const DashboardExecutiveIndexRoute = DashboardExecutiveIndexRouteImport.update({
-  id: '/executive/',
-  path: '/executive/',
+const DashboardPerformanceRoute = DashboardPerformanceRouteImport.update({
+  id: '/performance',
+  path: '/performance',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardConnectIndexRoute = DashboardConnectIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => DashboardConnectRoute,
+const DashboardRecruitmentRoute = DashboardRecruitmentRouteImport.update({
+  id: '/recruitment',
+  path: '/recruitment',
+  getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardAutopilotIndexRoute = DashboardAutopilotIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => DashboardAutopilotRoute,
+const DashboardReportsRoute = DashboardReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardAttendanceIndexRoute =
-  DashboardAttendanceIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => DashboardAttendanceRoute,
-  } as any)
-const DashboardAnalyticsIndexRoute = DashboardAnalyticsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => DashboardAnalyticsRoute,
+const DashboardResourcesRoute = DashboardResourcesRouteImport.update({
+  id: '/resources',
+  path: '/resources',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardRolesRoute = DashboardRolesRouteImport.update({
+  id: '/roles',
+  path: '/roles',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardSuperAdminRoute = DashboardSuperAdminRouteImport.update({
+  id: '/super-admin',
+  path: '/super-admin',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardTalentRoute = DashboardTalentRouteImport.update({
+  id: '/talent',
+  path: '/talent',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardTimelineRoute = DashboardTimelineRouteImport.update({
+  id: '/timeline',
+  path: '/timeline',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardTimesheetsRoute = DashboardTimesheetsRouteImport.update({
+  id: '/timesheets',
+  path: '/timesheets',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardTravelRoute = DashboardTravelRouteImport.update({
+  id: '/travel',
+  path: '/travel',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardVisitorsRoute = DashboardVisitorsRouteImport.update({
+  id: '/visitors',
+  path: '/visitors',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardWorkforceRoute = DashboardWorkforceRouteImport.update({
+  id: '/workforce',
+  path: '/workforce',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardAiHubIndexRoute = DashboardAiHubIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => DashboardAiHubRoute,
 } as any)
-const JobsApplyUkeyRoute = JobsApplyUkeyRouteImport.update({
-  id: '/jobs/apply/$ukey',
-  path: '/jobs/apply/$ukey',
-  getParentRoute: () => rootRouteImport,
+const DashboardAiHubAssistantRoute = DashboardAiHubAssistantRouteImport.update({
+  id: '/assistant',
+  path: '/assistant',
+  getParentRoute: () => DashboardAiHubRoute,
 } as any)
-const InterviewBookTokenRoute = InterviewBookTokenRouteImport.update({
-  id: '/interview/book/$token',
-  path: '/interview/book/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardWorkforceTimesheetsRoute =
-  DashboardWorkforceTimesheetsRouteImport.update({
-    id: '/timesheets',
-    path: '/timesheets',
-    getParentRoute: () => DashboardWorkforceRoute,
-  } as any)
-const DashboardWorkforcePeopleRoute =
-  DashboardWorkforcePeopleRouteImport.update({
-    id: '/people',
-    path: '/people',
-    getParentRoute: () => DashboardWorkforceRoute,
-  } as any)
-const DashboardWorkforceLeavesRoute =
-  DashboardWorkforceLeavesRouteImport.update({
-    id: '/leaves',
-    path: '/leaves',
-    getParentRoute: () => DashboardWorkforceRoute,
-  } as any)
-const DashboardWorkforceDepartmentsRoute =
-  DashboardWorkforceDepartmentsRouteImport.update({
-    id: '/departments',
-    path: '/departments',
-    getParentRoute: () => DashboardWorkforceRoute,
-  } as any)
-const DashboardWorkforceAttendanceRoute =
-  DashboardWorkforceAttendanceRouteImport.update({
-    id: '/attendance',
-    path: '/attendance',
-    getParentRoute: () => DashboardWorkforceRoute,
-  } as any)
-const DashboardTalentRecruitmentRoute =
-  DashboardTalentRecruitmentRouteImport.update({
-    id: '/recruitment',
-    path: '/recruitment',
-    getParentRoute: () => DashboardTalentRoute,
-  } as any)
-const DashboardTalentPerformanceRoute =
-  DashboardTalentPerformanceRouteImport.update({
-    id: '/performance',
-    path: '/performance',
-    getParentRoute: () => DashboardTalentRoute,
-  } as any)
-const DashboardSuperAdminUsersRoute =
-  DashboardSuperAdminUsersRouteImport.update({
-    id: '/users',
-    path: '/users',
-    getParentRoute: () => DashboardSuperAdminRoute,
-  } as any)
-const DashboardSuperAdminSettingsRoute =
-  DashboardSuperAdminSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => DashboardSuperAdminRoute,
-  } as any)
-const DashboardSuperAdminPlatformConfigRoute =
-  DashboardSuperAdminPlatformConfigRouteImport.update({
-    id: '/platform-config',
-    path: '/platform-config',
-    getParentRoute: () => DashboardSuperAdminRoute,
-  } as any)
-const DashboardSuperAdminOrganizationsRoute =
-  DashboardSuperAdminOrganizationsRouteImport.update({
-    id: '/organizations',
-    path: '/organizations',
-    getParentRoute: () => DashboardSuperAdminRoute,
-  } as any)
-const DashboardSuperAdminAuditLogsRoute =
-  DashboardSuperAdminAuditLogsRouteImport.update({
-    id: '/audit-logs',
-    path: '/audit-logs',
-    getParentRoute: () => DashboardSuperAdminRoute,
-  } as any)
-const DashboardSuperAdminAnalyticsRoute =
-  DashboardSuperAdminAnalyticsRouteImport.update({
-    id: '/analytics',
-    path: '/analytics',
-    getParentRoute: () => DashboardSuperAdminRoute,
-  } as any)
-const DashboardSuperAdminActivityRoute =
-  DashboardSuperAdminActivityRouteImport.update({
-    id: '/activity',
-    path: '/activity',
-    getParentRoute: () => DashboardSuperAdminRoute,
-  } as any)
-const DashboardSettingsSecurityRoute =
-  DashboardSettingsSecurityRouteImport.update({
-    id: '/security',
-    path: '/security',
-    getParentRoute: () => DashboardSettingsRoute,
-  } as any)
-const DashboardSettingsRolesPermissionsRoute =
-  DashboardSettingsRolesPermissionsRouteImport.update({
-    id: '/roles-permissions',
-    path: '/roles-permissions',
-    getParentRoute: () => DashboardSettingsRoute,
-  } as any)
-const DashboardSettingsProfileRoute =
-  DashboardSettingsProfileRouteImport.update({
-    id: '/profile',
-    path: '/profile',
-    getParentRoute: () => DashboardSettingsRoute,
-  } as any)
-const DashboardSettingsNotificationsRoute =
-  DashboardSettingsNotificationsRouteImport.update({
-    id: '/notifications',
-    path: '/notifications',
-    getParentRoute: () => DashboardSettingsRoute,
-  } as any)
-const DashboardSettingsIntegrationsRoute =
-  DashboardSettingsIntegrationsRouteImport.update({
-    id: '/integrations',
-    path: '/integrations',
-    getParentRoute: () => DashboardSettingsRoute,
-  } as any)
-const DashboardSettingsGeneralRoute =
-  DashboardSettingsGeneralRouteImport.update({
-    id: '/general',
-    path: '/general',
-    getParentRoute: () => DashboardSettingsRoute,
-  } as any)
-const DashboardSettingsCompanyRoute =
-  DashboardSettingsCompanyRouteImport.update({
-    id: '/company',
-    path: '/company',
-    getParentRoute: () => DashboardSettingsRoute,
-  } as any)
-const DashboardSettingsBillingRoute =
-  DashboardSettingsBillingRouteImport.update({
-    id: '/billing',
-    path: '/billing',
-    getParentRoute: () => DashboardSettingsRoute,
-  } as any)
-const DashboardSettingsAuditLogsRoute =
-  DashboardSettingsAuditLogsRouteImport.update({
-    id: '/audit-logs',
-    path: '/audit-logs',
-    getParentRoute: () => DashboardSettingsRoute,
-  } as any)
-const DashboardResourcesDocumentsRoute =
-  DashboardResourcesDocumentsRouteImport.update({
-    id: '/documents',
-    path: '/documents',
-    getParentRoute: () => DashboardResourcesRoute,
-  } as any)
-const DashboardResourcesAssetsRoute =
-  DashboardResourcesAssetsRouteImport.update({
-    id: '/assets',
-    path: '/assets',
-    getParentRoute: () => DashboardResourcesRoute,
-  } as any)
-const DashboardResourcesAssetManagementRoute =
-  DashboardResourcesAssetManagementRouteImport.update({
-    id: '/asset-management',
-    path: '/asset-management',
-    getParentRoute: () => DashboardResourcesRoute,
-  } as any)
-const DashboardRecruitmentWorkforcePlanningRoute =
-  DashboardRecruitmentWorkforcePlanningRouteImport.update({
-    id: '/workforce-planning',
-    path: '/workforce-planning',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentVerificationRoute =
-  DashboardRecruitmentVerificationRouteImport.update({
-    id: '/verification',
-    path: '/verification',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentVendorsRoute =
-  DashboardRecruitmentVendorsRouteImport.update({
-    id: '/vendors',
-    path: '/vendors',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentTemplatesRoute =
-  DashboardRecruitmentTemplatesRouteImport.update({
-    id: '/templates',
-    path: '/templates',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentTalentPoolRoute =
-  DashboardRecruitmentTalentPoolRouteImport.update({
-    id: '/talent-pool',
-    path: '/talent-pool',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentSourcingRoute =
-  DashboardRecruitmentSourcingRouteImport.update({
-    id: '/sourcing',
-    path: '/sourcing',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentSearchRoute =
-  DashboardRecruitmentSearchRouteImport.update({
-    id: '/search',
-    path: '/search',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentScorecardsRoute =
-  DashboardRecruitmentScorecardsRouteImport.update({
-    id: '/scorecards',
-    path: '/scorecards',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentResumeIntelligenceRoute =
-  DashboardRecruitmentResumeIntelligenceRouteImport.update({
-    id: '/resume-intelligence',
-    path: '/resume-intelligence',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentRequisitionsRoute =
-  DashboardRecruitmentRequisitionsRouteImport.update({
-    id: '/requisitions',
-    path: '/requisitions',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentReportsRoute =
-  DashboardRecruitmentReportsRouteImport.update({
-    id: '/reports',
-    path: '/reports',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentReferralsRoute =
-  DashboardRecruitmentReferralsRouteImport.update({
-    id: '/referrals',
-    path: '/referrals',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentPreboardingRoute =
-  DashboardRecruitmentPreboardingRouteImport.update({
-    id: '/preboarding',
-    path: '/preboarding',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentPipelineRoute =
-  DashboardRecruitmentPipelineRouteImport.update({
-    id: '/pipeline',
-    path: '/pipeline',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentOnboardingRoute =
-  DashboardRecruitmentOnboardingRouteImport.update({
-    id: '/onboarding',
-    path: '/onboarding',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentOffersRoute =
-  DashboardRecruitmentOffersRouteImport.update({
-    id: '/offers',
-    path: '/offers',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentNotificationsRoute =
-  DashboardRecruitmentNotificationsRouteImport.update({
-    id: '/notifications',
-    path: '/notifications',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentKtProbationRoute =
-  DashboardRecruitmentKtProbationRouteImport.update({
-    id: '/kt-probation',
-    path: '/kt-probation',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentInterviewsRoute =
-  DashboardRecruitmentInterviewsRouteImport.update({
-    id: '/interviews',
-    path: '/interviews',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentImportExportRoute =
-  DashboardRecruitmentImportExportRouteImport.update({
-    id: '/import-export',
-    path: '/import-export',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentHiringManagerRoute =
-  DashboardRecruitmentHiringManagerRouteImport.update({
-    id: '/hiring-manager',
-    path: '/hiring-manager',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentEmployeeOnboardingRoute =
-  DashboardRecruitmentEmployeeOnboardingRouteImport.update({
-    id: '/employee-onboarding',
-    path: '/employee-onboarding',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentCrmRoute = DashboardRecruitmentCrmRouteImport.update({
-  id: '/crm',
-  path: '/crm',
-  getParentRoute: () => DashboardRecruitmentRoute,
-} as any)
-const DashboardRecruitmentComplianceRoute =
-  DashboardRecruitmentComplianceRouteImport.update({
-    id: '/compliance',
-    path: '/compliance',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentCompensationRoute =
-  DashboardRecruitmentCompensationRouteImport.update({
-    id: '/compensation',
-    path: '/compensation',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentCommunicationRoute =
-  DashboardRecruitmentCommunicationRouteImport.update({
-    id: '/communication',
-    path: '/communication',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentCareerSiteRoute =
-  DashboardRecruitmentCareerSiteRouteImport.update({
-    id: '/career-site',
-    path: '/career-site',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentCandidatesRoute =
-  DashboardRecruitmentCandidatesRouteImport.update({
-    id: '/candidates',
-    path: '/candidates',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentCalendarRoute =
-  DashboardRecruitmentCalendarRouteImport.update({
-    id: '/calendar',
-    path: '/calendar',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentAutomationRoute =
-  DashboardRecruitmentAutomationRouteImport.update({
+const DashboardAiHubAutomationRoute =
+  DashboardAiHubAutomationRouteImport.update({
     id: '/automation',
     path: '/automation',
-    getParentRoute: () => DashboardRecruitmentRoute,
+    getParentRoute: () => DashboardAiHubRoute,
   } as any)
-const DashboardRecruitmentAnalyticsRoute =
-  DashboardRecruitmentAnalyticsRouteImport.update({
-    id: '/analytics',
-    path: '/analytics',
-    getParentRoute: () => DashboardRecruitmentRoute,
+const DashboardAiHubDocumentGeneratorRoute =
+  DashboardAiHubDocumentGeneratorRouteImport.update({
+    id: '/document-generator',
+    path: '/document-generator',
+    getParentRoute: () => DashboardAiHubRoute,
   } as any)
-const DashboardRecruitmentAiScreeningRoute =
-  DashboardRecruitmentAiScreeningRouteImport.update({
-    id: '/ai-screening',
-    path: '/ai-screening',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentAiInterviewRoute =
-  DashboardRecruitmentAiInterviewRouteImport.update({
-    id: '/ai-interview',
-    path: '/ai-interview',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentAiRoute = DashboardRecruitmentAiRouteImport.update({
-  id: '/ai',
-  path: '/ai',
-  getParentRoute: () => DashboardRecruitmentRoute,
+const DashboardAnalyticsIndexRoute = DashboardAnalyticsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardAnalyticsRoute,
 } as any)
-const DashboardPayrollVariableInputsRoute =
-  DashboardPayrollVariableInputsRouteImport.update({
-    id: '/variable-inputs',
-    path: '/variable-inputs',
-    getParentRoute: () => DashboardPayrollRoute,
+const DashboardAnalyticsAiInsightsRoute =
+  DashboardAnalyticsAiInsightsRouteImport.update({
+    id: '/ai-insights',
+    path: '/ai-insights',
+    getParentRoute: () => DashboardAnalyticsRoute,
   } as any)
-const DashboardPayrollStatutoryRoute =
-  DashboardPayrollStatutoryRouteImport.update({
-    id: '/statutory',
-    path: '/statutory',
-    getParentRoute: () => DashboardPayrollRoute,
+const DashboardAnalyticsReportsRoute =
+  DashboardAnalyticsReportsRouteImport.update({
+    id: '/reports',
+    path: '/reports',
+    getParentRoute: () => DashboardAnalyticsRoute,
   } as any)
-const DashboardPayrollSalaryStructureRoute =
-  DashboardPayrollSalaryStructureRouteImport.update({
-    id: '/salary-structure',
-    path: '/salary-structure',
-    getParentRoute: () => DashboardPayrollRoute,
+const DashboardAnnouncementsIdRoute =
+  DashboardAnnouncementsIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => DashboardAnnouncementsRoute,
   } as any)
-const DashboardPayrollReportsRoute = DashboardPayrollReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
-  getParentRoute: () => DashboardPayrollRoute,
-} as any)
-const DashboardPayrollPeriodsRoute = DashboardPayrollPeriodsRouteImport.update({
-  id: '/periods',
-  path: '/periods',
-  getParentRoute: () => DashboardPayrollRoute,
-} as any)
-const DashboardPayrollPayslipsRoute =
-  DashboardPayrollPayslipsRouteImport.update({
-    id: '/payslips',
-    path: '/payslips',
-    getParentRoute: () => DashboardPayrollRoute,
+const DashboardAnnouncementsManageRoute =
+  DashboardAnnouncementsManageRouteImport.update({
+    id: '/manage',
+    path: '/manage',
+    getParentRoute: () => DashboardAnnouncementsRoute,
   } as any)
-const DashboardPayrollPaymentsRoute =
-  DashboardPayrollPaymentsRouteImport.update({
-    id: '/payments',
-    path: '/payments',
-    getParentRoute: () => DashboardPayrollRoute,
-  } as any)
-const DashboardPayrollFullAndFinalRoute =
-  DashboardPayrollFullAndFinalRouteImport.update({
-    id: '/full-and-final',
-    path: '/full-and-final',
-    getParentRoute: () => DashboardPayrollRoute,
-  } as any)
-const DashboardPayrollCompensationRoute =
-  DashboardPayrollCompensationRouteImport.update({
-    id: '/compensation',
-    path: '/compensation',
-    getParentRoute: () => DashboardPayrollRoute,
-  } as any)
-const DashboardMeetingsMeetingIdRoute =
-  DashboardMeetingsMeetingIdRouteImport.update({
-    id: '/$meetingId',
-    path: '/$meetingId',
-    getParentRoute: () => DashboardMeetingsRoute,
-  } as any)
-const DashboardHrOperationsVisitorManagementRoute =
-  DashboardHrOperationsVisitorManagementRouteImport.update({
-    id: '/visitor-management',
-    path: '/visitor-management',
-    getParentRoute: () => DashboardHrOperationsRoute,
-  } as any)
-const DashboardHrOperationsTimelineRoute =
-  DashboardHrOperationsTimelineRouteImport.update({
-    id: '/timeline',
-    path: '/timeline',
-    getParentRoute: () => DashboardHrOperationsRoute,
-  } as any)
-const DashboardHrOperationsOnboardingRoute =
-  DashboardHrOperationsOnboardingRouteImport.update({
-    id: '/onboarding',
-    path: '/onboarding',
-    getParentRoute: () => DashboardHrOperationsRoute,
-  } as any)
-const DashboardHrOperationsOffboardingRoute =
-  DashboardHrOperationsOffboardingRouteImport.update({
-    id: '/offboarding',
-    path: '/offboarding',
-    getParentRoute: () => DashboardHrOperationsRoute,
-  } as any)
-const DashboardHrOperationsExitManagementRoute =
-  DashboardHrOperationsExitManagementRouteImport.update({
-    id: '/exit-management',
-    path: '/exit-management',
-    getParentRoute: () => DashboardHrOperationsRoute,
-  } as any)
-const DashboardHrOperationsCommandCenterRoute =
-  DashboardHrOperationsCommandCenterRouteImport.update({
-    id: '/command-center',
-    path: '/command-center',
-    getParentRoute: () => DashboardHrOperationsRoute,
-  } as any)
-const DashboardHelpdeskAnalyticsRoute =
-  DashboardHelpdeskAnalyticsRouteImport.update({
-    id: '/analytics',
-    path: '/analytics',
-    getParentRoute: () => DashboardHelpdeskRoute,
-  } as any)
-const DashboardExecutiveCtoRoute = DashboardExecutiveCtoRouteImport.update({
-  id: '/executive/cto',
-  path: '/executive/cto',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardExecutiveCooRoute = DashboardExecutiveCooRouteImport.update({
-  id: '/executive/coo',
-  path: '/executive/coo',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardExecutiveCmoRoute = DashboardExecutiveCmoRouteImport.update({
-  id: '/executive/cmo',
-  path: '/executive/cmo',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardExecutiveCioRoute = DashboardExecutiveCioRouteImport.update({
-  id: '/executive/cio',
-  path: '/executive/cio',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardExecutiveCfoRoute = DashboardExecutiveCfoRouteImport.update({
-  id: '/executive/cfo',
-  path: '/executive/cfo',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardExecutiveCeoRoute = DashboardExecutiveCeoRouteImport.update({
-  id: '/executive/ceo',
-  path: '/executive/ceo',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardEmployeePayrollRoute =
-  DashboardEmployeePayrollRouteImport.update({
-    id: '/payroll',
-    path: '/payroll',
-    getParentRoute: () => DashboardEmployeeRoute,
-  } as any)
-const DashboardAutopilotSettingsRoute =
-  DashboardAutopilotSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => DashboardAutopilotRoute,
-  } as any)
-const DashboardAutopilotRulesRoute = DashboardAutopilotRulesRouteImport.update({
-  id: '/rules',
-  path: '/rules',
-  getParentRoute: () => DashboardAutopilotRoute,
-} as any)
-const DashboardAutopilotExceptionsRoute =
-  DashboardAutopilotExceptionsRouteImport.update({
-    id: '/exceptions',
-    path: '/exceptions',
-    getParentRoute: () => DashboardAutopilotRoute,
-  } as any)
-const DashboardAutopilotAuditRoute = DashboardAutopilotAuditRouteImport.update({
-  id: '/audit',
-  path: '/audit',
-  getParentRoute: () => DashboardAutopilotRoute,
-} as any)
-const DashboardAutopilotAlertsRoute =
-  DashboardAutopilotAlertsRouteImport.update({
-    id: '/alerts',
-    path: '/alerts',
-    getParentRoute: () => DashboardAutopilotRoute,
-  } as any)
-const DashboardAutopilotAgentRoute = DashboardAutopilotAgentRouteImport.update({
-  id: '/agent',
-  path: '/agent',
-  getParentRoute: () => DashboardAutopilotRoute,
-} as any)
-const DashboardAttendanceShiftsRoute =
-  DashboardAttendanceShiftsRouteImport.update({
-    id: '/shifts',
-    path: '/shifts',
-    getParentRoute: () => DashboardAttendanceRoute,
-  } as any)
-const DashboardAttendanceRostersRoute =
-  DashboardAttendanceRostersRouteImport.update({
-    id: '/rosters',
-    path: '/rosters',
-    getParentRoute: () => DashboardAttendanceRoute,
-  } as any)
-const DashboardAttendanceHolidaysRoute =
-  DashboardAttendanceHolidaysRouteImport.update({
-    id: '/holidays',
-    path: '/holidays',
+const DashboardAttendanceIndexRoute =
+  DashboardAttendanceIndexRouteImport.update({
+    id: '/',
+    path: '/',
     getParentRoute: () => DashboardAttendanceRoute,
   } as any)
 const DashboardAttendanceCheckinRoute =
@@ -1388,254 +806,645 @@ const DashboardAttendanceCheckinRoute =
     path: '/checkin',
     getParentRoute: () => DashboardAttendanceRoute,
   } as any)
-const DashboardAnnouncementsManageRoute =
-  DashboardAnnouncementsManageRouteImport.update({
-    id: '/manage',
-    path: '/manage',
-    getParentRoute: () => DashboardAnnouncementsRoute,
+const DashboardAttendanceHolidaysRoute =
+  DashboardAttendanceHolidaysRouteImport.update({
+    id: '/holidays',
+    path: '/holidays',
+    getParentRoute: () => DashboardAttendanceRoute,
   } as any)
-const DashboardAnnouncementsIdRoute =
-  DashboardAnnouncementsIdRouteImport.update({
-    id: '/$id',
-    path: '/$id',
-    getParentRoute: () => DashboardAnnouncementsRoute,
+const DashboardAttendanceRostersRoute =
+  DashboardAttendanceRostersRouteImport.update({
+    id: '/rosters',
+    path: '/rosters',
+    getParentRoute: () => DashboardAttendanceRoute,
   } as any)
-const DashboardAnalyticsReportsRoute =
-  DashboardAnalyticsReportsRouteImport.update({
-    id: '/reports',
-    path: '/reports',
-    getParentRoute: () => DashboardAnalyticsRoute,
+const DashboardAttendanceShiftsRoute =
+  DashboardAttendanceShiftsRouteImport.update({
+    id: '/shifts',
+    path: '/shifts',
+    getParentRoute: () => DashboardAttendanceRoute,
   } as any)
-const DashboardAnalyticsAiInsightsRoute =
-  DashboardAnalyticsAiInsightsRouteImport.update({
-    id: '/ai-insights',
-    path: '/ai-insights',
-    getParentRoute: () => DashboardAnalyticsRoute,
-  } as any)
-const DashboardAiHubDocumentGeneratorRoute =
-  DashboardAiHubDocumentGeneratorRouteImport.update({
-    id: '/document-generator',
-    path: '/document-generator',
-    getParentRoute: () => DashboardAiHubRoute,
-  } as any)
-const DashboardAiHubAutomationRoute =
-  DashboardAiHubAutomationRouteImport.update({
-    id: '/automation',
-    path: '/automation',
-    getParentRoute: () => DashboardAiHubRoute,
-  } as any)
-const DashboardAiHubAssistantRoute = DashboardAiHubAssistantRouteImport.update({
-  id: '/assistant',
-  path: '/assistant',
-  getParentRoute: () => DashboardAiHubRoute,
+const DashboardAutopilotIndexRoute = DashboardAutopilotIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardAutopilotRoute,
 } as any)
-const DashboardRecruitmentJobsIndexRoute =
-  DashboardRecruitmentJobsIndexRouteImport.update({
-    id: '/jobs/',
-    path: '/jobs/',
+const DashboardAutopilotAgentRoute = DashboardAutopilotAgentRouteImport.update({
+  id: '/agent',
+  path: '/agent',
+  getParentRoute: () => DashboardAutopilotRoute,
+} as any)
+const DashboardAutopilotAlertsRoute =
+  DashboardAutopilotAlertsRouteImport.update({
+    id: '/alerts',
+    path: '/alerts',
+    getParentRoute: () => DashboardAutopilotRoute,
+  } as any)
+const DashboardAutopilotAuditRoute = DashboardAutopilotAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => DashboardAutopilotRoute,
+} as any)
+const DashboardAutopilotExceptionsRoute =
+  DashboardAutopilotExceptionsRouteImport.update({
+    id: '/exceptions',
+    path: '/exceptions',
+    getParentRoute: () => DashboardAutopilotRoute,
+  } as any)
+const DashboardAutopilotRulesRoute = DashboardAutopilotRulesRouteImport.update({
+  id: '/rules',
+  path: '/rules',
+  getParentRoute: () => DashboardAutopilotRoute,
+} as any)
+const DashboardAutopilotSettingsRoute =
+  DashboardAutopilotSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => DashboardAutopilotRoute,
+  } as any)
+const DashboardConnectIndexRoute = DashboardConnectIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardConnectRoute,
+} as any)
+const DashboardEmployeePayrollRoute =
+  DashboardEmployeePayrollRouteImport.update({
+    id: '/payroll',
+    path: '/payroll',
+    getParentRoute: () => DashboardEmployeeRoute,
+  } as any)
+const DashboardExecutiveIndexRoute = DashboardExecutiveIndexRouteImport.update({
+  id: '/executive/',
+  path: '/executive/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardExecutiveCeoRoute = DashboardExecutiveCeoRouteImport.update({
+  id: '/executive/ceo',
+  path: '/executive/ceo',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardExecutiveCfoRoute = DashboardExecutiveCfoRouteImport.update({
+  id: '/executive/cfo',
+  path: '/executive/cfo',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardExecutiveCioRoute = DashboardExecutiveCioRouteImport.update({
+  id: '/executive/cio',
+  path: '/executive/cio',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardExecutiveCmoRoute = DashboardExecutiveCmoRouteImport.update({
+  id: '/executive/cmo',
+  path: '/executive/cmo',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardExecutiveCooRoute = DashboardExecutiveCooRouteImport.update({
+  id: '/executive/coo',
+  path: '/executive/coo',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardExecutiveCtoRoute = DashboardExecutiveCtoRouteImport.update({
+  id: '/executive/cto',
+  path: '/executive/cto',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardHelpdeskAnalyticsRoute =
+  DashboardHelpdeskAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => DashboardHelpdeskRoute,
+  } as any)
+const DashboardHrOperationsIndexRoute =
+  DashboardHrOperationsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => DashboardHrOperationsRoute,
+  } as any)
+const DashboardHrOperationsCommandCenterRoute =
+  DashboardHrOperationsCommandCenterRouteImport.update({
+    id: '/command-center',
+    path: '/command-center',
+    getParentRoute: () => DashboardHrOperationsRoute,
+  } as any)
+const DashboardHrOperationsExitManagementRoute =
+  DashboardHrOperationsExitManagementRouteImport.update({
+    id: '/exit-management',
+    path: '/exit-management',
+    getParentRoute: () => DashboardHrOperationsRoute,
+  } as any)
+const DashboardHrOperationsOffboardingRoute =
+  DashboardHrOperationsOffboardingRouteImport.update({
+    id: '/offboarding',
+    path: '/offboarding',
+    getParentRoute: () => DashboardHrOperationsRoute,
+  } as any)
+const DashboardHrOperationsOnboardingRoute =
+  DashboardHrOperationsOnboardingRouteImport.update({
+    id: '/onboarding',
+    path: '/onboarding',
+    getParentRoute: () => DashboardHrOperationsRoute,
+  } as any)
+const DashboardHrOperationsTimelineRoute =
+  DashboardHrOperationsTimelineRouteImport.update({
+    id: '/timeline',
+    path: '/timeline',
+    getParentRoute: () => DashboardHrOperationsRoute,
+  } as any)
+const DashboardHrOperationsVisitorManagementRoute =
+  DashboardHrOperationsVisitorManagementRouteImport.update({
+    id: '/visitor-management',
+    path: '/visitor-management',
+    getParentRoute: () => DashboardHrOperationsRoute,
+  } as any)
+const DashboardMeetingsIndexRoute = DashboardMeetingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardMeetingsRoute,
+} as any)
+const DashboardMeetingsMeetingIdRoute =
+  DashboardMeetingsMeetingIdRouteImport.update({
+    id: '/$meetingId',
+    path: '/$meetingId',
+    getParentRoute: () => DashboardMeetingsRoute,
+  } as any)
+const DashboardPayrollIndexRoute = DashboardPayrollIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardPayrollRoute,
+} as any)
+const DashboardPayrollCompensationRoute =
+  DashboardPayrollCompensationRouteImport.update({
+    id: '/compensation',
+    path: '/compensation',
+    getParentRoute: () => DashboardPayrollRoute,
+  } as any)
+const DashboardPayrollFullAndFinalRoute =
+  DashboardPayrollFullAndFinalRouteImport.update({
+    id: '/full-and-final',
+    path: '/full-and-final',
+    getParentRoute: () => DashboardPayrollRoute,
+  } as any)
+const DashboardPayrollPaymentsRoute =
+  DashboardPayrollPaymentsRouteImport.update({
+    id: '/payments',
+    path: '/payments',
+    getParentRoute: () => DashboardPayrollRoute,
+  } as any)
+const DashboardPayrollPayslipsRoute =
+  DashboardPayrollPayslipsRouteImport.update({
+    id: '/payslips',
+    path: '/payslips',
+    getParentRoute: () => DashboardPayrollRoute,
+  } as any)
+const DashboardPayrollPeriodsRoute = DashboardPayrollPeriodsRouteImport.update({
+  id: '/periods',
+  path: '/periods',
+  getParentRoute: () => DashboardPayrollRoute,
+} as any)
+const DashboardPayrollReportsRoute = DashboardPayrollReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => DashboardPayrollRoute,
+} as any)
+const DashboardPayrollSalaryStructureRoute =
+  DashboardPayrollSalaryStructureRouteImport.update({
+    id: '/salary-structure',
+    path: '/salary-structure',
+    getParentRoute: () => DashboardPayrollRoute,
+  } as any)
+const DashboardPayrollStatutoryRoute =
+  DashboardPayrollStatutoryRouteImport.update({
+    id: '/statutory',
+    path: '/statutory',
+    getParentRoute: () => DashboardPayrollRoute,
+  } as any)
+const DashboardPayrollVariableInputsRoute =
+  DashboardPayrollVariableInputsRouteImport.update({
+    id: '/variable-inputs',
+    path: '/variable-inputs',
+    getParentRoute: () => DashboardPayrollRoute,
+  } as any)
+const DashboardPeopleIndexRoute = DashboardPeopleIndexRouteImport.update({
+  id: '/people/',
+  path: '/people/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardRecruitmentIndexRoute =
+  DashboardRecruitmentIndexRouteImport.update({
+    id: '/',
+    path: '/',
     getParentRoute: () => DashboardRecruitmentRoute,
   } as any)
-const DashboardRecruitmentCandidatesIndexRoute =
-  DashboardRecruitmentCandidatesIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => DashboardRecruitmentCandidatesRoute,
+const DashboardRecruitmentAiRoute = DashboardRecruitmentAiRouteImport.update({
+  id: '/ai',
+  path: '/ai',
+  getParentRoute: () => DashboardRecruitmentRoute,
+} as any)
+const DashboardRecruitmentAiInterviewRoute =
+  DashboardRecruitmentAiInterviewRouteImport.update({
+    id: '/ai-interview',
+    path: '/ai-interview',
+    getParentRoute: () => DashboardRecruitmentRoute,
   } as any)
-const DashboardExecutiveCtoIndexRoute =
-  DashboardExecutiveCtoIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => DashboardExecutiveCtoRoute,
+const DashboardRecruitmentAiScreeningRoute =
+  DashboardRecruitmentAiScreeningRouteImport.update({
+    id: '/ai-screening',
+    path: '/ai-screening',
+    getParentRoute: () => DashboardRecruitmentRoute,
   } as any)
-const DashboardExecutiveCioIndexRoute =
-  DashboardExecutiveCioIndexRouteImport.update({
+const DashboardRecruitmentAnalyticsRoute =
+  DashboardRecruitmentAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentAutomationRoute =
+  DashboardRecruitmentAutomationRouteImport.update({
+    id: '/automation',
+    path: '/automation',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentCalendarRoute =
+  DashboardRecruitmentCalendarRouteImport.update({
+    id: '/calendar',
+    path: '/calendar',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentCandidatesRoute =
+  DashboardRecruitmentCandidatesRouteImport.update({
+    id: '/candidates',
+    path: '/candidates',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentCareerSiteRoute =
+  DashboardRecruitmentCareerSiteRouteImport.update({
+    id: '/career-site',
+    path: '/career-site',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentCommunicationRoute =
+  DashboardRecruitmentCommunicationRouteImport.update({
+    id: '/communication',
+    path: '/communication',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentCompensationRoute =
+  DashboardRecruitmentCompensationRouteImport.update({
+    id: '/compensation',
+    path: '/compensation',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentComplianceRoute =
+  DashboardRecruitmentComplianceRouteImport.update({
+    id: '/compliance',
+    path: '/compliance',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentCrmRoute = DashboardRecruitmentCrmRouteImport.update({
+  id: '/crm',
+  path: '/crm',
+  getParentRoute: () => DashboardRecruitmentRoute,
+} as any)
+const DashboardRecruitmentEmployeeOnboardingRoute =
+  DashboardRecruitmentEmployeeOnboardingRouteImport.update({
+    id: '/employee-onboarding',
+    path: '/employee-onboarding',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentHiringManagerRoute =
+  DashboardRecruitmentHiringManagerRouteImport.update({
+    id: '/hiring-manager',
+    path: '/hiring-manager',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentImportExportRoute =
+  DashboardRecruitmentImportExportRouteImport.update({
+    id: '/import-export',
+    path: '/import-export',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentInterviewsRoute =
+  DashboardRecruitmentInterviewsRouteImport.update({
+    id: '/interviews',
+    path: '/interviews',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentKtProbationRoute =
+  DashboardRecruitmentKtProbationRouteImport.update({
+    id: '/kt-probation',
+    path: '/kt-probation',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentNotificationsRoute =
+  DashboardRecruitmentNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentOffersRoute =
+  DashboardRecruitmentOffersRouteImport.update({
+    id: '/offers',
+    path: '/offers',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentOnboardingRoute =
+  DashboardRecruitmentOnboardingRouteImport.update({
+    id: '/onboarding',
+    path: '/onboarding',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentPipelineRoute =
+  DashboardRecruitmentPipelineRouteImport.update({
+    id: '/pipeline',
+    path: '/pipeline',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentPreboardingRoute =
+  DashboardRecruitmentPreboardingRouteImport.update({
+    id: '/preboarding',
+    path: '/preboarding',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentReferralsRoute =
+  DashboardRecruitmentReferralsRouteImport.update({
+    id: '/referrals',
+    path: '/referrals',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentReportsRoute =
+  DashboardRecruitmentReportsRouteImport.update({
+    id: '/reports',
+    path: '/reports',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentRequisitionsRoute =
+  DashboardRecruitmentRequisitionsRouteImport.update({
+    id: '/requisitions',
+    path: '/requisitions',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentResumeIntelligenceRoute =
+  DashboardRecruitmentResumeIntelligenceRouteImport.update({
+    id: '/resume-intelligence',
+    path: '/resume-intelligence',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentScorecardsRoute =
+  DashboardRecruitmentScorecardsRouteImport.update({
+    id: '/scorecards',
+    path: '/scorecards',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentSearchRoute =
+  DashboardRecruitmentSearchRouteImport.update({
+    id: '/search',
+    path: '/search',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentSourcingRoute =
+  DashboardRecruitmentSourcingRouteImport.update({
+    id: '/sourcing',
+    path: '/sourcing',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentTalentPoolRoute =
+  DashboardRecruitmentTalentPoolRouteImport.update({
+    id: '/talent-pool',
+    path: '/talent-pool',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentTemplatesRoute =
+  DashboardRecruitmentTemplatesRouteImport.update({
+    id: '/templates',
+    path: '/templates',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentVendorsRoute =
+  DashboardRecruitmentVendorsRouteImport.update({
+    id: '/vendors',
+    path: '/vendors',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentVerificationRoute =
+  DashboardRecruitmentVerificationRouteImport.update({
+    id: '/verification',
+    path: '/verification',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentWorkforcePlanningRoute =
+  DashboardRecruitmentWorkforcePlanningRouteImport.update({
+    id: '/workforce-planning',
+    path: '/workforce-planning',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardResourcesIndexRoute = DashboardResourcesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardResourcesRoute,
+} as any)
+const DashboardResourcesAssetManagementRoute =
+  DashboardResourcesAssetManagementRouteImport.update({
+    id: '/asset-management',
+    path: '/asset-management',
+    getParentRoute: () => DashboardResourcesRoute,
+  } as any)
+const DashboardResourcesAssetsRoute =
+  DashboardResourcesAssetsRouteImport.update({
+    id: '/assets',
+    path: '/assets',
+    getParentRoute: () => DashboardResourcesRoute,
+  } as any)
+const DashboardResourcesDocumentsRoute =
+  DashboardResourcesDocumentsRouteImport.update({
+    id: '/documents',
+    path: '/documents',
+    getParentRoute: () => DashboardResourcesRoute,
+  } as any)
+const DashboardSettingsIndexRoute = DashboardSettingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardSettingsRoute,
+} as any)
+const DashboardSettingsAuditLogsRoute =
+  DashboardSettingsAuditLogsRouteImport.update({
+    id: '/audit-logs',
+    path: '/audit-logs',
+    getParentRoute: () => DashboardSettingsRoute,
+  } as any)
+const DashboardSettingsBillingRoute =
+  DashboardSettingsBillingRouteImport.update({
+    id: '/billing',
+    path: '/billing',
+    getParentRoute: () => DashboardSettingsRoute,
+  } as any)
+const DashboardSettingsCompanyRoute =
+  DashboardSettingsCompanyRouteImport.update({
+    id: '/company',
+    path: '/company',
+    getParentRoute: () => DashboardSettingsRoute,
+  } as any)
+const DashboardSettingsGeneralRoute =
+  DashboardSettingsGeneralRouteImport.update({
+    id: '/general',
+    path: '/general',
+    getParentRoute: () => DashboardSettingsRoute,
+  } as any)
+const DashboardSettingsIntegrationsRoute =
+  DashboardSettingsIntegrationsRouteImport.update({
+    id: '/integrations',
+    path: '/integrations',
+    getParentRoute: () => DashboardSettingsRoute,
+  } as any)
+const DashboardSettingsNotificationsRoute =
+  DashboardSettingsNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => DashboardSettingsRoute,
+  } as any)
+const DashboardSettingsProfileRoute =
+  DashboardSettingsProfileRouteImport.update({
+    id: '/profile',
+    path: '/profile',
+    getParentRoute: () => DashboardSettingsRoute,
+  } as any)
+const DashboardSettingsRolesPermissionsRoute =
+  DashboardSettingsRolesPermissionsRouteImport.update({
+    id: '/roles-permissions',
+    path: '/roles-permissions',
+    getParentRoute: () => DashboardSettingsRoute,
+  } as any)
+const DashboardSettingsSecurityRoute =
+  DashboardSettingsSecurityRouteImport.update({
+    id: '/security',
+    path: '/security',
+    getParentRoute: () => DashboardSettingsRoute,
+  } as any)
+const DashboardSuperAdminIndexRoute =
+  DashboardSuperAdminIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => DashboardExecutiveCioRoute,
+    getParentRoute: () => DashboardSuperAdminRoute,
+  } as any)
+const DashboardSuperAdminActivityRoute =
+  DashboardSuperAdminActivityRouteImport.update({
+    id: '/activity',
+    path: '/activity',
+    getParentRoute: () => DashboardSuperAdminRoute,
+  } as any)
+const DashboardSuperAdminAnalyticsRoute =
+  DashboardSuperAdminAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => DashboardSuperAdminRoute,
+  } as any)
+const DashboardSuperAdminAuditLogsRoute =
+  DashboardSuperAdminAuditLogsRouteImport.update({
+    id: '/audit-logs',
+    path: '/audit-logs',
+    getParentRoute: () => DashboardSuperAdminRoute,
+  } as any)
+const DashboardSuperAdminOrganizationsRoute =
+  DashboardSuperAdminOrganizationsRouteImport.update({
+    id: '/organizations',
+    path: '/organizations',
+    getParentRoute: () => DashboardSuperAdminRoute,
+  } as any)
+const DashboardSuperAdminPlatformConfigRoute =
+  DashboardSuperAdminPlatformConfigRouteImport.update({
+    id: '/platform-config',
+    path: '/platform-config',
+    getParentRoute: () => DashboardSuperAdminRoute,
+  } as any)
+const DashboardSuperAdminSettingsRoute =
+  DashboardSuperAdminSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => DashboardSuperAdminRoute,
+  } as any)
+const DashboardSuperAdminUsersRoute =
+  DashboardSuperAdminUsersRouteImport.update({
+    id: '/users',
+    path: '/users',
+    getParentRoute: () => DashboardSuperAdminRoute,
+  } as any)
+const DashboardTalentIndexRoute = DashboardTalentIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardTalentRoute,
+} as any)
+const DashboardTalentPerformanceRoute =
+  DashboardTalentPerformanceRouteImport.update({
+    id: '/performance',
+    path: '/performance',
+    getParentRoute: () => DashboardTalentRoute,
+  } as any)
+const DashboardTalentRecruitmentRoute =
+  DashboardTalentRecruitmentRouteImport.update({
+    id: '/recruitment',
+    path: '/recruitment',
+    getParentRoute: () => DashboardTalentRoute,
+  } as any)
+const DashboardWorkforceIndexRoute = DashboardWorkforceIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardWorkforceRoute,
+} as any)
+const DashboardWorkforceAttendanceRoute =
+  DashboardWorkforceAttendanceRouteImport.update({
+    id: '/attendance',
+    path: '/attendance',
+    getParentRoute: () => DashboardWorkforceRoute,
+  } as any)
+const DashboardWorkforceDepartmentsRoute =
+  DashboardWorkforceDepartmentsRouteImport.update({
+    id: '/departments',
+    path: '/departments',
+    getParentRoute: () => DashboardWorkforceRoute,
+  } as any)
+const DashboardWorkforceLeavesRoute =
+  DashboardWorkforceLeavesRouteImport.update({
+    id: '/leaves',
+    path: '/leaves',
+    getParentRoute: () => DashboardWorkforceRoute,
+  } as any)
+const DashboardWorkforcePeopleRoute =
+  DashboardWorkforcePeopleRouteImport.update({
+    id: '/people',
+    path: '/people',
+    getParentRoute: () => DashboardWorkforceRoute,
+  } as any)
+const DashboardWorkforceTimesheetsRoute =
+  DashboardWorkforceTimesheetsRouteImport.update({
+    id: '/timesheets',
+    path: '/timesheets',
+    getParentRoute: () => DashboardWorkforceRoute,
+  } as any)
+const InterviewBookTokenRoute = InterviewBookTokenRouteImport.update({
+  id: '/interview/book/$token',
+  path: '/interview/book/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JobsApplyUkeyRoute = JobsApplyUkeyRouteImport.update({
+  id: '/jobs/apply/$ukey',
+  path: '/jobs/apply/$ukey',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardConnectChannelsChannelIdRoute =
+  DashboardConnectChannelsChannelIdRouteImport.update({
+    id: '/channels/$channelId',
+    path: '/channels/$channelId',
+    getParentRoute: () => DashboardConnectRoute,
+  } as any)
+const DashboardConnectDmConversationIdRoute =
+  DashboardConnectDmConversationIdRouteImport.update({
+    id: '/dm/$conversationId',
+    path: '/dm/$conversationId',
+    getParentRoute: () => DashboardConnectRoute,
   } as any)
 const DashboardExecutiveCeoIndexRoute =
   DashboardExecutiveCeoIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => DashboardExecutiveCeoRoute,
-  } as any)
-const DashboardRecruitmentJobsNewRoute =
-  DashboardRecruitmentJobsNewRouteImport.update({
-    id: '/jobs/new',
-    path: '/jobs/new',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentJobsJobIdRoute =
-  DashboardRecruitmentJobsJobIdRouteImport.update({
-    id: '/jobs/$jobId',
-    path: '/jobs/$jobId',
-    getParentRoute: () => DashboardRecruitmentRoute,
-  } as any)
-const DashboardRecruitmentCandidatesCandidateIdRoute =
-  DashboardRecruitmentCandidatesCandidateIdRouteImport.update({
-    id: '/$candidateId',
-    path: '/$candidateId',
-    getParentRoute: () => DashboardRecruitmentCandidatesRoute,
-  } as any)
-const DashboardPayrollPaymentsBatchIdRoute =
-  DashboardPayrollPaymentsBatchIdRouteImport.update({
-    id: '/$batchId',
-    path: '/$batchId',
-    getParentRoute: () => DashboardPayrollPaymentsRoute,
-  } as any)
-const DashboardExecutiveCtoSettingsRoute =
-  DashboardExecutiveCtoSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => DashboardExecutiveCtoRoute,
-  } as any)
-const DashboardExecutiveCtoSecurityRoute =
-  DashboardExecutiveCtoSecurityRouteImport.update({
-    id: '/security',
-    path: '/security',
-    getParentRoute: () => DashboardExecutiveCtoRoute,
-  } as any)
-const DashboardExecutiveCtoProjectsRoute =
-  DashboardExecutiveCtoProjectsRouteImport.update({
-    id: '/projects',
-    path: '/projects',
-    getParentRoute: () => DashboardExecutiveCtoRoute,
-  } as any)
-const DashboardExecutiveCtoMonitoringRoute =
-  DashboardExecutiveCtoMonitoringRouteImport.update({
-    id: '/monitoring',
-    path: '/monitoring',
-    getParentRoute: () => DashboardExecutiveCtoRoute,
-  } as any)
-const DashboardExecutiveCtoInfrastructureRoute =
-  DashboardExecutiveCtoInfrastructureRouteImport.update({
-    id: '/infrastructure',
-    path: '/infrastructure',
-    getParentRoute: () => DashboardExecutiveCtoRoute,
-  } as any)
-const DashboardExecutiveCtoEngineeringRoute =
-  DashboardExecutiveCtoEngineeringRouteImport.update({
-    id: '/engineering',
-    path: '/engineering',
-    getParentRoute: () => DashboardExecutiveCtoRoute,
-  } as any)
-const DashboardExecutiveCtoDevopsRoute =
-  DashboardExecutiveCtoDevopsRouteImport.update({
-    id: '/devops',
-    path: '/devops',
-    getParentRoute: () => DashboardExecutiveCtoRoute,
-  } as any)
-const DashboardExecutiveCtoDevelopersRoute =
-  DashboardExecutiveCtoDevelopersRouteImport.update({
-    id: '/developers',
-    path: '/developers',
-    getParentRoute: () => DashboardExecutiveCtoRoute,
-  } as any)
-const DashboardExecutiveCtoDatabaseRoute =
-  DashboardExecutiveCtoDatabaseRouteImport.update({
-    id: '/database',
-    path: '/database',
-    getParentRoute: () => DashboardExecutiveCtoRoute,
-  } as any)
-const DashboardExecutiveCtoAnalyticsRoute =
-  DashboardExecutiveCtoAnalyticsRouteImport.update({
-    id: '/analytics',
-    path: '/analytics',
-    getParentRoute: () => DashboardExecutiveCtoRoute,
-  } as any)
-const DashboardExecutiveCtoAiRoute = DashboardExecutiveCtoAiRouteImport.update({
-  id: '/ai',
-  path: '/ai',
-  getParentRoute: () => DashboardExecutiveCtoRoute,
-} as any)
-const DashboardExecutiveCioSettingsRoute =
-  DashboardExecutiveCioSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => DashboardExecutiveCioRoute,
-  } as any)
-const DashboardExecutiveCioItOperationsRoute =
-  DashboardExecutiveCioItOperationsRouteImport.update({
-    id: '/it-operations',
-    path: '/it-operations',
-    getParentRoute: () => DashboardExecutiveCioRoute,
-  } as any)
-const DashboardExecutiveCioItGovernanceRoute =
-  DashboardExecutiveCioItGovernanceRouteImport.update({
-    id: '/it-governance',
-    path: '/it-governance',
-    getParentRoute: () => DashboardExecutiveCioRoute,
-  } as any)
-const DashboardExecutiveCioInfrastructureRoute =
-  DashboardExecutiveCioInfrastructureRouteImport.update({
-    id: '/infrastructure',
-    path: '/infrastructure',
-    getParentRoute: () => DashboardExecutiveCioRoute,
-  } as any)
-const DashboardExecutiveCioDigitalTransformationRoute =
-  DashboardExecutiveCioDigitalTransformationRouteImport.update({
-    id: '/digital-transformation',
-    path: '/digital-transformation',
-    getParentRoute: () => DashboardExecutiveCioRoute,
-  } as any)
-const DashboardExecutiveCioCyberSecurityRoute =
-  DashboardExecutiveCioCyberSecurityRouteImport.update({
-    id: '/cyber-security',
-    path: '/cyber-security',
-    getParentRoute: () => DashboardExecutiveCioRoute,
-  } as any)
-const DashboardExecutiveCioCloudNetworkRoute =
-  DashboardExecutiveCioCloudNetworkRouteImport.update({
-    id: '/cloud-network',
-    path: '/cloud-network',
-    getParentRoute: () => DashboardExecutiveCioRoute,
-  } as any)
-const DashboardExecutiveCioAnalyticsRoute =
-  DashboardExecutiveCioAnalyticsRouteImport.update({
-    id: '/analytics',
-    path: '/analytics',
-    getParentRoute: () => DashboardExecutiveCioRoute,
-  } as any)
-const DashboardExecutiveCeoSettingsRoute =
-  DashboardExecutiveCeoSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => DashboardExecutiveCeoRoute,
-  } as any)
-const DashboardExecutiveCeoSalesRoute =
-  DashboardExecutiveCeoSalesRouteImport.update({
-    id: '/sales',
-    path: '/sales',
-    getParentRoute: () => DashboardExecutiveCeoRoute,
-  } as any)
-const DashboardExecutiveCeoReportsRoute =
-  DashboardExecutiveCeoReportsRouteImport.update({
-    id: '/reports',
-    path: '/reports',
-    getParentRoute: () => DashboardExecutiveCeoRoute,
-  } as any)
-const DashboardExecutiveCeoOrganizationRoute =
-  DashboardExecutiveCeoOrganizationRouteImport.update({
-    id: '/organization',
-    path: '/organization',
-    getParentRoute: () => DashboardExecutiveCeoRoute,
-  } as any)
-const DashboardExecutiveCeoOperationsRoute =
-  DashboardExecutiveCeoOperationsRouteImport.update({
-    id: '/operations',
-    path: '/operations',
-    getParentRoute: () => DashboardExecutiveCeoRoute,
-  } as any)
-const DashboardExecutiveCeoFinanceRoute =
-  DashboardExecutiveCeoFinanceRouteImport.update({
-    id: '/finance',
-    path: '/finance',
-    getParentRoute: () => DashboardExecutiveCeoRoute,
-  } as any)
-const DashboardExecutiveCeoBusinessRoute =
-  DashboardExecutiveCeoBusinessRouteImport.update({
-    id: '/business',
-    path: '/business',
     getParentRoute: () => DashboardExecutiveCeoRoute,
   } as any)
 const DashboardExecutiveCeoAiInsightsRoute =
@@ -1644,52 +1453,213 @@ const DashboardExecutiveCeoAiInsightsRoute =
     path: '/ai-insights',
     getParentRoute: () => DashboardExecutiveCeoRoute,
   } as any)
-const DashboardConnectDmConversationIdRoute =
-  DashboardConnectDmConversationIdRouteImport.update({
-    id: '/dm/$conversationId',
-    path: '/dm/$conversationId',
-    getParentRoute: () => DashboardConnectRoute,
+const DashboardExecutiveCeoBusinessRoute =
+  DashboardExecutiveCeoBusinessRouteImport.update({
+    id: '/business',
+    path: '/business',
+    getParentRoute: () => DashboardExecutiveCeoRoute,
   } as any)
-const DashboardConnectChannelsChannelIdRoute =
-  DashboardConnectChannelsChannelIdRouteImport.update({
-    id: '/channels/$channelId',
-    path: '/channels/$channelId',
-    getParentRoute: () => DashboardConnectRoute,
+const DashboardExecutiveCeoFinanceRoute =
+  DashboardExecutiveCeoFinanceRouteImport.update({
+    id: '/finance',
+    path: '/finance',
+    getParentRoute: () => DashboardExecutiveCeoRoute,
   } as any)
-const DashboardRecruitmentJobsJobIdPublishRoute =
-  DashboardRecruitmentJobsJobIdPublishRouteImport.update({
-    id: '/publish',
-    path: '/publish',
-    getParentRoute: () => DashboardRecruitmentJobsJobIdRoute,
+const DashboardExecutiveCeoOperationsRoute =
+  DashboardExecutiveCeoOperationsRouteImport.update({
+    id: '/operations',
+    path: '/operations',
+    getParentRoute: () => DashboardExecutiveCeoRoute,
   } as any)
-const DashboardPayrollRunsRunIdValidationRoute =
-  DashboardPayrollRunsRunIdValidationRouteImport.update({
-    id: '/runs/$runId/validation',
-    path: '/runs/$runId/validation',
-    getParentRoute: () => DashboardPayrollRoute,
+const DashboardExecutiveCeoOrganizationRoute =
+  DashboardExecutiveCeoOrganizationRouteImport.update({
+    id: '/organization',
+    path: '/organization',
+    getParentRoute: () => DashboardExecutiveCeoRoute,
   } as any)
-const DashboardPayrollRunsRunIdReviewRoute =
-  DashboardPayrollRunsRunIdReviewRouteImport.update({
-    id: '/runs/$runId/review',
-    path: '/runs/$runId/review',
-    getParentRoute: () => DashboardPayrollRoute,
+const DashboardExecutiveCeoReportsRoute =
+  DashboardExecutiveCeoReportsRouteImport.update({
+    id: '/reports',
+    path: '/reports',
+    getParentRoute: () => DashboardExecutiveCeoRoute,
   } as any)
-const DashboardPayrollRunsRunIdProcessingRoute =
-  DashboardPayrollRunsRunIdProcessingRouteImport.update({
-    id: '/runs/$runId/processing',
-    path: '/runs/$runId/processing',
-    getParentRoute: () => DashboardPayrollRoute,
+const DashboardExecutiveCeoSalesRoute =
+  DashboardExecutiveCeoSalesRouteImport.update({
+    id: '/sales',
+    path: '/sales',
+    getParentRoute: () => DashboardExecutiveCeoRoute,
   } as any)
-const DashboardPayrollRunsRunIdPreviewRoute =
-  DashboardPayrollRunsRunIdPreviewRouteImport.update({
-    id: '/runs/$runId/preview',
-    path: '/runs/$runId/preview',
-    getParentRoute: () => DashboardPayrollRoute,
+const DashboardExecutiveCeoSettingsRoute =
+  DashboardExecutiveCeoSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => DashboardExecutiveCeoRoute,
   } as any)
-const DashboardPayrollRunsRunIdPaymentRoute =
-  DashboardPayrollRunsRunIdPaymentRouteImport.update({
-    id: '/runs/$runId/payment',
-    path: '/runs/$runId/payment',
+const DashboardExecutiveCioIndexRoute =
+  DashboardExecutiveCioIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => DashboardExecutiveCioRoute,
+  } as any)
+const DashboardExecutiveCioAnalyticsRoute =
+  DashboardExecutiveCioAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => DashboardExecutiveCioRoute,
+  } as any)
+const DashboardExecutiveCioCloudNetworkRoute =
+  DashboardExecutiveCioCloudNetworkRouteImport.update({
+    id: '/cloud-network',
+    path: '/cloud-network',
+    getParentRoute: () => DashboardExecutiveCioRoute,
+  } as any)
+const DashboardExecutiveCioCyberSecurityRoute =
+  DashboardExecutiveCioCyberSecurityRouteImport.update({
+    id: '/cyber-security',
+    path: '/cyber-security',
+    getParentRoute: () => DashboardExecutiveCioRoute,
+  } as any)
+const DashboardExecutiveCioDigitalTransformationRoute =
+  DashboardExecutiveCioDigitalTransformationRouteImport.update({
+    id: '/digital-transformation',
+    path: '/digital-transformation',
+    getParentRoute: () => DashboardExecutiveCioRoute,
+  } as any)
+const DashboardExecutiveCioInfrastructureRoute =
+  DashboardExecutiveCioInfrastructureRouteImport.update({
+    id: '/infrastructure',
+    path: '/infrastructure',
+    getParentRoute: () => DashboardExecutiveCioRoute,
+  } as any)
+const DashboardExecutiveCioItGovernanceRoute =
+  DashboardExecutiveCioItGovernanceRouteImport.update({
+    id: '/it-governance',
+    path: '/it-governance',
+    getParentRoute: () => DashboardExecutiveCioRoute,
+  } as any)
+const DashboardExecutiveCioItOperationsRoute =
+  DashboardExecutiveCioItOperationsRouteImport.update({
+    id: '/it-operations',
+    path: '/it-operations',
+    getParentRoute: () => DashboardExecutiveCioRoute,
+  } as any)
+const DashboardExecutiveCioSettingsRoute =
+  DashboardExecutiveCioSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => DashboardExecutiveCioRoute,
+  } as any)
+const DashboardExecutiveCtoIndexRoute =
+  DashboardExecutiveCtoIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => DashboardExecutiveCtoRoute,
+  } as any)
+const DashboardExecutiveCtoAiRoute = DashboardExecutiveCtoAiRouteImport.update({
+  id: '/ai',
+  path: '/ai',
+  getParentRoute: () => DashboardExecutiveCtoRoute,
+} as any)
+const DashboardExecutiveCtoAnalyticsRoute =
+  DashboardExecutiveCtoAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => DashboardExecutiveCtoRoute,
+  } as any)
+const DashboardExecutiveCtoDatabaseRoute =
+  DashboardExecutiveCtoDatabaseRouteImport.update({
+    id: '/database',
+    path: '/database',
+    getParentRoute: () => DashboardExecutiveCtoRoute,
+  } as any)
+const DashboardExecutiveCtoDevelopersRoute =
+  DashboardExecutiveCtoDevelopersRouteImport.update({
+    id: '/developers',
+    path: '/developers',
+    getParentRoute: () => DashboardExecutiveCtoRoute,
+  } as any)
+const DashboardExecutiveCtoDevopsRoute =
+  DashboardExecutiveCtoDevopsRouteImport.update({
+    id: '/devops',
+    path: '/devops',
+    getParentRoute: () => DashboardExecutiveCtoRoute,
+  } as any)
+const DashboardExecutiveCtoEngineeringRoute =
+  DashboardExecutiveCtoEngineeringRouteImport.update({
+    id: '/engineering',
+    path: '/engineering',
+    getParentRoute: () => DashboardExecutiveCtoRoute,
+  } as any)
+const DashboardExecutiveCtoInfrastructureRoute =
+  DashboardExecutiveCtoInfrastructureRouteImport.update({
+    id: '/infrastructure',
+    path: '/infrastructure',
+    getParentRoute: () => DashboardExecutiveCtoRoute,
+  } as any)
+const DashboardExecutiveCtoMonitoringRoute =
+  DashboardExecutiveCtoMonitoringRouteImport.update({
+    id: '/monitoring',
+    path: '/monitoring',
+    getParentRoute: () => DashboardExecutiveCtoRoute,
+  } as any)
+const DashboardExecutiveCtoProjectsRoute =
+  DashboardExecutiveCtoProjectsRouteImport.update({
+    id: '/projects',
+    path: '/projects',
+    getParentRoute: () => DashboardExecutiveCtoRoute,
+  } as any)
+const DashboardExecutiveCtoSecurityRoute =
+  DashboardExecutiveCtoSecurityRouteImport.update({
+    id: '/security',
+    path: '/security',
+    getParentRoute: () => DashboardExecutiveCtoRoute,
+  } as any)
+const DashboardExecutiveCtoSettingsRoute =
+  DashboardExecutiveCtoSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => DashboardExecutiveCtoRoute,
+  } as any)
+const DashboardPayrollPaymentsBatchIdRoute =
+  DashboardPayrollPaymentsBatchIdRouteImport.update({
+    id: '/$batchId',
+    path: '/$batchId',
+    getParentRoute: () => DashboardPayrollPaymentsRoute,
+  } as any)
+const DashboardRecruitmentCandidatesIndexRoute =
+  DashboardRecruitmentCandidatesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => DashboardRecruitmentCandidatesRoute,
+  } as any)
+const DashboardRecruitmentCandidatesCandidateIdRoute =
+  DashboardRecruitmentCandidatesCandidateIdRouteImport.update({
+    id: '/$candidateId',
+    path: '/$candidateId',
+    getParentRoute: () => DashboardRecruitmentCandidatesRoute,
+  } as any)
+const DashboardRecruitmentJobsIndexRoute =
+  DashboardRecruitmentJobsIndexRouteImport.update({
+    id: '/jobs/',
+    path: '/jobs/',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentJobsJobIdRoute =
+  DashboardRecruitmentJobsJobIdRouteImport.update({
+    id: '/jobs/$jobId',
+    path: '/jobs/$jobId',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardRecruitmentJobsNewRoute =
+  DashboardRecruitmentJobsNewRouteImport.update({
+    id: '/jobs/new',
+    path: '/jobs/new',
+    getParentRoute: () => DashboardRecruitmentRoute,
+  } as any)
+const DashboardPayrollRunsRunIdApprovalRoute =
+  DashboardPayrollRunsRunIdApprovalRouteImport.update({
+    id: '/runs/$runId/approval',
+    path: '/runs/$runId/approval',
     getParentRoute: () => DashboardPayrollRoute,
   } as any)
 const DashboardPayrollRunsRunIdFinalizeRoute =
@@ -1698,11 +1668,41 @@ const DashboardPayrollRunsRunIdFinalizeRoute =
     path: '/runs/$runId/finalize',
     getParentRoute: () => DashboardPayrollRoute,
   } as any)
-const DashboardPayrollRunsRunIdApprovalRoute =
-  DashboardPayrollRunsRunIdApprovalRouteImport.update({
-    id: '/runs/$runId/approval',
-    path: '/runs/$runId/approval',
+const DashboardPayrollRunsRunIdPaymentRoute =
+  DashboardPayrollRunsRunIdPaymentRouteImport.update({
+    id: '/runs/$runId/payment',
+    path: '/runs/$runId/payment',
     getParentRoute: () => DashboardPayrollRoute,
+  } as any)
+const DashboardPayrollRunsRunIdPreviewRoute =
+  DashboardPayrollRunsRunIdPreviewRouteImport.update({
+    id: '/runs/$runId/preview',
+    path: '/runs/$runId/preview',
+    getParentRoute: () => DashboardPayrollRoute,
+  } as any)
+const DashboardPayrollRunsRunIdProcessingRoute =
+  DashboardPayrollRunsRunIdProcessingRouteImport.update({
+    id: '/runs/$runId/processing',
+    path: '/runs/$runId/processing',
+    getParentRoute: () => DashboardPayrollRoute,
+  } as any)
+const DashboardPayrollRunsRunIdReviewRoute =
+  DashboardPayrollRunsRunIdReviewRouteImport.update({
+    id: '/runs/$runId/review',
+    path: '/runs/$runId/review',
+    getParentRoute: () => DashboardPayrollRoute,
+  } as any)
+const DashboardPayrollRunsRunIdValidationRoute =
+  DashboardPayrollRunsRunIdValidationRouteImport.update({
+    id: '/runs/$runId/validation',
+    path: '/runs/$runId/validation',
+    getParentRoute: () => DashboardPayrollRoute,
+  } as any)
+const DashboardRecruitmentJobsJobIdPublishRoute =
+  DashboardRecruitmentJobsJobIdPublishRouteImport.update({
+    id: '/publish',
+    path: '/publish',
+    getParentRoute: () => DashboardRecruitmentJobsJobIdRoute,
   } as any)
 const DashboardPayrollRunsRunIdEmployeesEmployeeIdRoute =
   DashboardPayrollRunsRunIdEmployeesEmployeeIdRouteImport.update({
@@ -3292,130 +3292,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/verify-reset-otp': {
-      id: '/verify-reset-otp'
-      path: '/verify-reset-otp'
-      fullPath: '/verify-reset-otp'
-      preLoaderRoute: typeof VerifyResetOtpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/verify-email': {
-      id: '/verify-email'
-      path: '/verify-email'
-      fullPath: '/verify-email'
-      preLoaderRoute: typeof VerifyEmailRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/terms': {
-      id: '/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof TermsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pricing': {
-      id: '/pricing'
-      path: '/pricing'
-      fullPath: '/pricing'
-      preLoaderRoute: typeof PricingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/onboarding': {
-      id: '/onboarding'
-      path: '/onboarding'
-      fullPath: '/onboarding'
-      preLoaderRoute: typeof OnboardingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/forgot-password': {
-      id: '/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof ForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/features': {
-      id: '/features'
-      path: '/features'
-      fullPath: '/features'
-      preLoaderRoute: typeof FeaturesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/faq': {
-      id: '/faq'
-      path: '/faq'
-      fullPath: '/faq'
-      preLoaderRoute: typeof FaqRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/employee-onboarding': {
-      id: '/employee-onboarding'
-      path: '/employee-onboarding'
-      fullPath: '/employee-onboarding'
-      preLoaderRoute: typeof EmployeeOnboardingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contact': {
-      id: '/contact'
-      path: '/contact'
-      fullPath: '/contact'
-      preLoaderRoute: typeof ContactRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/blog': {
-      id: '/blog'
-      path: '/blog'
-      fullPath: '/blog'
-      preLoaderRoute: typeof BlogRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ai': {
-      id: '/ai'
-      path: '/ai'
-      fullPath: '/ai'
-      preLoaderRoute: typeof AiRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -3425,515 +3306,144 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/ai': {
+      id: '/ai'
+      path: '/ai'
+      fullPath: '/ai'
+      preLoaderRoute: typeof AiRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard/': {
-      id: '/dashboard/'
-      path: '/'
-      fullPath: '/dashboard/'
-      preLoaderRoute: typeof DashboardIndexRouteImport
-      parentRoute: typeof DashboardRoute
+    '/blog': {
+      id: '/blog'
+      path: '/blog'
+      fullPath: '/blog'
+      preLoaderRoute: typeof BlogRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/blog/': {
-      id: '/blog/'
-      path: '/'
-      fullPath: '/blog/'
-      preLoaderRoute: typeof BlogIndexRouteImport
-      parentRoute: typeof BlogRoute
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employee-onboarding': {
+      id: '/employee-onboarding'
+      path: '/employee-onboarding'
+      fullPath: '/employee-onboarding'
+      preLoaderRoute: typeof EmployeeOnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/features': {
+      id: '/features'
+      path: '/features'
+      fullPath: '/features'
+      preLoaderRoute: typeof FeaturesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verify-email': {
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verify-reset-otp': {
+      id: '/verify-reset-otp'
+      path: '/verify-reset-otp'
+      fullPath: '/verify-reset-otp'
+      preLoaderRoute: typeof VerifyResetOtpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ai-interview/$token': {
+      id: '/ai-interview/$token'
+      path: '/ai-interview/$token'
+      fullPath: '/ai-interview/$token'
+      preLoaderRoute: typeof AiInterviewTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/ai/': {
       id: '/ai/'
       path: '/'
       fullPath: '/ai/'
       preLoaderRoute: typeof AiIndexRouteImport
-      parentRoute: typeof AiRoute
-    }
-    '/dashboard/workforce': {
-      id: '/dashboard/workforce'
-      path: '/workforce'
-      fullPath: '/dashboard/workforce'
-      preLoaderRoute: typeof DashboardWorkforceRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/visitors': {
-      id: '/dashboard/visitors'
-      path: '/visitors'
-      fullPath: '/dashboard/visitors'
-      preLoaderRoute: typeof DashboardVisitorsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/travel': {
-      id: '/dashboard/travel'
-      path: '/travel'
-      fullPath: '/dashboard/travel'
-      preLoaderRoute: typeof DashboardTravelRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/timesheets': {
-      id: '/dashboard/timesheets'
-      path: '/timesheets'
-      fullPath: '/dashboard/timesheets'
-      preLoaderRoute: typeof DashboardTimesheetsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/timeline': {
-      id: '/dashboard/timeline'
-      path: '/timeline'
-      fullPath: '/dashboard/timeline'
-      preLoaderRoute: typeof DashboardTimelineRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/talent': {
-      id: '/dashboard/talent'
-      path: '/talent'
-      fullPath: '/dashboard/talent'
-      preLoaderRoute: typeof DashboardTalentRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/super-admin': {
-      id: '/dashboard/super-admin'
-      path: '/super-admin'
-      fullPath: '/dashboard/super-admin'
-      preLoaderRoute: typeof DashboardSuperAdminRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/settings': {
-      id: '/dashboard/settings'
-      path: '/settings'
-      fullPath: '/dashboard/settings'
-      preLoaderRoute: typeof DashboardSettingsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/roles': {
-      id: '/dashboard/roles'
-      path: '/roles'
-      fullPath: '/dashboard/roles'
-      preLoaderRoute: typeof DashboardRolesRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/resources': {
-      id: '/dashboard/resources'
-      path: '/resources'
-      fullPath: '/dashboard/resources'
-      preLoaderRoute: typeof DashboardResourcesRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/reports': {
-      id: '/dashboard/reports'
-      path: '/reports'
-      fullPath: '/dashboard/reports'
-      preLoaderRoute: typeof DashboardReportsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/recruitment': {
-      id: '/dashboard/recruitment'
-      path: '/recruitment'
-      fullPath: '/dashboard/recruitment'
-      preLoaderRoute: typeof DashboardRecruitmentRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/performance': {
-      id: '/dashboard/performance'
-      path: '/performance'
-      fullPath: '/dashboard/performance'
-      preLoaderRoute: typeof DashboardPerformanceRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/payroll': {
-      id: '/dashboard/payroll'
-      path: '/payroll'
-      fullPath: '/dashboard/payroll'
-      preLoaderRoute: typeof DashboardPayrollRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/onboarding-checklist': {
-      id: '/dashboard/onboarding-checklist'
-      path: '/onboarding-checklist'
-      fullPath: '/dashboard/onboarding-checklist'
-      preLoaderRoute: typeof DashboardOnboardingChecklistRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/offboarding': {
-      id: '/dashboard/offboarding'
-      path: '/offboarding'
-      fullPath: '/dashboard/offboarding'
-      preLoaderRoute: typeof DashboardOffboardingRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/notifications': {
-      id: '/dashboard/notifications'
-      path: '/notifications'
-      fullPath: '/dashboard/notifications'
-      preLoaderRoute: typeof DashboardNotificationsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/meetings': {
-      id: '/dashboard/meetings'
-      path: '/meetings'
-      fullPath: '/dashboard/meetings'
-      preLoaderRoute: typeof DashboardMeetingsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/managers': {
-      id: '/dashboard/managers'
-      path: '/managers'
-      fullPath: '/dashboard/managers'
-      preLoaderRoute: typeof DashboardManagersRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/manager': {
-      id: '/dashboard/manager'
-      path: '/manager'
-      fullPath: '/dashboard/manager'
-      preLoaderRoute: typeof DashboardManagerRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/leaves': {
-      id: '/dashboard/leaves'
-      path: '/leaves'
-      fullPath: '/dashboard/leaves'
-      preLoaderRoute: typeof DashboardLeavesRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/it-admin': {
-      id: '/dashboard/it-admin'
-      path: '/it-admin'
-      fullPath: '/dashboard/it-admin'
-      preLoaderRoute: typeof DashboardItAdminRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/hr-ops': {
-      id: '/dashboard/hr-ops'
-      path: '/hr-ops'
-      fullPath: '/dashboard/hr-ops'
-      preLoaderRoute: typeof DashboardHrOpsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/hr-operations': {
-      id: '/dashboard/hr-operations'
-      path: '/hr-operations'
-      fullPath: '/dashboard/hr-operations'
-      preLoaderRoute: typeof DashboardHrOperationsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/hr': {
-      id: '/dashboard/hr'
-      path: '/hr'
-      fullPath: '/dashboard/hr'
-      preLoaderRoute: typeof DashboardHrRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/hierarchy': {
-      id: '/dashboard/hierarchy'
-      path: '/hierarchy'
-      fullPath: '/dashboard/hierarchy'
-      preLoaderRoute: typeof DashboardHierarchyRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/helpdesk': {
-      id: '/dashboard/helpdesk'
-      path: '/helpdesk'
-      fullPath: '/dashboard/helpdesk'
-      preLoaderRoute: typeof DashboardHelpdeskRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/forbidden': {
-      id: '/dashboard/forbidden'
-      path: '/forbidden'
-      fullPath: '/dashboard/forbidden'
-      preLoaderRoute: typeof DashboardForbiddenRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/expenses': {
-      id: '/dashboard/expenses'
-      path: '/expenses'
-      fullPath: '/dashboard/expenses'
-      preLoaderRoute: typeof DashboardExpensesRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/exit-management': {
-      id: '/dashboard/exit-management'
-      path: '/exit-management'
-      fullPath: '/dashboard/exit-management'
-      preLoaderRoute: typeof DashboardExitManagementRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/exit': {
-      id: '/dashboard/exit'
-      path: '/exit'
-      fullPath: '/dashboard/exit'
-      preLoaderRoute: typeof DashboardExitRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/executives': {
-      id: '/dashboard/executives'
-      path: '/executives'
-      fullPath: '/dashboard/executives'
-      preLoaderRoute: typeof DashboardExecutivesRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/employees': {
-      id: '/dashboard/employees'
-      path: '/employees'
-      fullPath: '/dashboard/employees'
-      preLoaderRoute: typeof DashboardEmployeesRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/employee': {
-      id: '/dashboard/employee'
-      path: '/employee'
-      fullPath: '/dashboard/employee'
-      preLoaderRoute: typeof DashboardEmployeeRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/documents': {
-      id: '/dashboard/documents'
-      path: '/documents'
-      fullPath: '/dashboard/documents'
-      preLoaderRoute: typeof DashboardDocumentsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/departments': {
-      id: '/dashboard/departments'
-      path: '/departments'
-      fullPath: '/dashboard/departments'
-      preLoaderRoute: typeof DashboardDepartmentsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/connect': {
-      id: '/dashboard/connect'
-      path: '/connect'
-      fullPath: '/dashboard/connect'
-      preLoaderRoute: typeof DashboardConnectRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/calls': {
-      id: '/dashboard/calls'
-      path: '/calls'
-      fullPath: '/dashboard/calls'
-      preLoaderRoute: typeof DashboardCallsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/billing': {
-      id: '/dashboard/billing'
-      path: '/billing'
-      fullPath: '/dashboard/billing'
-      preLoaderRoute: typeof DashboardBillingRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/autopilot': {
-      id: '/dashboard/autopilot'
-      path: '/autopilot'
-      fullPath: '/dashboard/autopilot'
-      preLoaderRoute: typeof DashboardAutopilotRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/audit-logs': {
-      id: '/dashboard/audit-logs'
-      path: '/audit-logs'
-      fullPath: '/dashboard/audit-logs'
-      preLoaderRoute: typeof DashboardAuditLogsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/attendance': {
-      id: '/dashboard/attendance'
-      path: '/attendance'
-      fullPath: '/dashboard/attendance'
-      preLoaderRoute: typeof DashboardAttendanceRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/assets': {
-      id: '/dashboard/assets'
-      path: '/assets'
-      fullPath: '/dashboard/assets'
-      preLoaderRoute: typeof DashboardAssetsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/asset-management': {
-      id: '/dashboard/asset-management'
-      path: '/asset-management'
-      fullPath: '/dashboard/asset-management'
-      preLoaderRoute: typeof DashboardAssetManagementRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/announcements': {
-      id: '/dashboard/announcements'
-      path: '/announcements'
-      fullPath: '/dashboard/announcements'
-      preLoaderRoute: typeof DashboardAnnouncementsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/analytics': {
-      id: '/dashboard/analytics'
-      path: '/analytics'
-      fullPath: '/dashboard/analytics'
-      preLoaderRoute: typeof DashboardAnalyticsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/ai-insights': {
-      id: '/dashboard/ai-insights'
-      path: '/ai-insights'
-      fullPath: '/dashboard/ai-insights'
-      preLoaderRoute: typeof DashboardAiInsightsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/ai-hub': {
-      id: '/dashboard/ai-hub'
-      path: '/ai-hub'
-      fullPath: '/dashboard/ai-hub'
-      preLoaderRoute: typeof DashboardAiHubRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/blog/$slug': {
-      id: '/blog/$slug'
-      path: '/$slug'
-      fullPath: '/blog/$slug'
-      preLoaderRoute: typeof BlogSlugRouteImport
-      parentRoute: typeof BlogRoute
-    }
-    '/auth/verify-reset-otp': {
-      id: '/auth/verify-reset-otp'
-      path: '/auth/verify-reset-otp'
-      fullPath: '/auth/verify-reset-otp'
-      preLoaderRoute: typeof AuthVerifyResetOtpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/verify-email': {
-      id: '/auth/verify-email'
-      path: '/auth/verify-email'
-      fullPath: '/auth/verify-email'
-      preLoaderRoute: typeof AuthVerifyEmailRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/reset-password': {
-      id: '/auth/reset-password'
-      path: '/auth/reset-password'
-      fullPath: '/auth/reset-password'
-      preLoaderRoute: typeof AuthResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/register': {
-      id: '/auth/register'
-      path: '/auth/register'
-      fullPath: '/auth/register'
-      preLoaderRoute: typeof AuthRegisterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/login': {
-      id: '/auth/login'
-      path: '/auth/login'
-      fullPath: '/auth/login'
-      preLoaderRoute: typeof AuthLoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/forgot-password': {
-      id: '/auth/forgot-password'
-      path: '/auth/forgot-password'
-      fullPath: '/auth/forgot-password'
-      preLoaderRoute: typeof AuthForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/ai-brain': {
-      id: '/api/ai-brain'
-      path: '/api/ai-brain'
-      fullPath: '/api/ai-brain'
-      preLoaderRoute: typeof ApiAiBrainRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ai/workforce-planning': {
-      id: '/ai/workforce-planning'
-      path: '/workforce-planning'
-      fullPath: '/ai/workforce-planning'
-      preLoaderRoute: typeof AiWorkforcePlanningRouteImport
-      parentRoute: typeof AiRoute
-    }
-    '/ai/workforce-insights': {
-      id: '/ai/workforce-insights'
-      path: '/workforce-insights'
-      fullPath: '/ai/workforce-insights'
-      preLoaderRoute: typeof AiWorkforceInsightsRouteImport
-      parentRoute: typeof AiRoute
-    }
-    '/ai/recruiter': {
-      id: '/ai/recruiter'
-      path: '/recruiter'
-      fullPath: '/ai/recruiter'
-      preLoaderRoute: typeof AiRecruiterRouteImport
-      parentRoute: typeof AiRoute
-    }
-    '/ai/policy-assistant': {
-      id: '/ai/policy-assistant'
-      path: '/policy-assistant'
-      fullPath: '/ai/policy-assistant'
-      preLoaderRoute: typeof AiPolicyAssistantRouteImport
-      parentRoute: typeof AiRoute
-    }
-    '/ai/performance-coach': {
-      id: '/ai/performance-coach'
-      path: '/performance-coach'
-      fullPath: '/ai/performance-coach'
-      preLoaderRoute: typeof AiPerformanceCoachRouteImport
-      parentRoute: typeof AiRoute
-    }
-    '/ai/meeting-intelligence': {
-      id: '/ai/meeting-intelligence'
-      path: '/meeting-intelligence'
-      fullPath: '/ai/meeting-intelligence'
-      preLoaderRoute: typeof AiMeetingIntelligenceRouteImport
-      parentRoute: typeof AiRoute
-    }
-    '/ai/leave-assistant': {
-      id: '/ai/leave-assistant'
-      path: '/leave-assistant'
-      fullPath: '/ai/leave-assistant'
-      preLoaderRoute: typeof AiLeaveAssistantRouteImport
-      parentRoute: typeof AiRoute
-    }
-    '/ai/employee-health': {
-      id: '/ai/employee-health'
-      path: '/employee-health'
-      fullPath: '/ai/employee-health'
-      preLoaderRoute: typeof AiEmployeeHealthRouteImport
-      parentRoute: typeof AiRoute
-    }
-    '/ai/document-generator': {
-      id: '/ai/document-generator'
-      path: '/document-generator'
-      fullPath: '/ai/document-generator'
-      preLoaderRoute: typeof AiDocumentGeneratorRouteImport
-      parentRoute: typeof AiRoute
-    }
-    '/ai/compliance-monitor': {
-      id: '/ai/compliance-monitor'
-      path: '/compliance-monitor'
-      fullPath: '/ai/compliance-monitor'
-      preLoaderRoute: typeof AiComplianceMonitorRouteImport
-      parentRoute: typeof AiRoute
-    }
-    '/ai/chat-assistant': {
-      id: '/ai/chat-assistant'
-      path: '/chat-assistant'
-      fullPath: '/ai/chat-assistant'
-      preLoaderRoute: typeof AiChatAssistantRouteImport
-      parentRoute: typeof AiRoute
-    }
-    '/ai/brain': {
-      id: '/ai/brain'
-      path: '/brain'
-      fullPath: '/ai/brain'
-      preLoaderRoute: typeof AiBrainRouteImport
-      parentRoute: typeof AiRoute
-    }
-    '/ai/attendance-monitor': {
-      id: '/ai/attendance-monitor'
-      path: '/attendance-monitor'
-      fullPath: '/ai/attendance-monitor'
-      preLoaderRoute: typeof AiAttendanceMonitorRouteImport
       parentRoute: typeof AiRoute
     }
     '/ai/analytics-center': {
@@ -3943,837 +3453,508 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AiAnalyticsCenterRouteImport
       parentRoute: typeof AiRoute
     }
-    '/ai-interview/$token': {
-      id: '/ai-interview/$token'
-      path: '/ai-interview/$token'
-      fullPath: '/ai-interview/$token'
-      preLoaderRoute: typeof AiInterviewTokenRouteImport
+    '/ai/attendance-monitor': {
+      id: '/ai/attendance-monitor'
+      path: '/attendance-monitor'
+      fullPath: '/ai/attendance-monitor'
+      preLoaderRoute: typeof AiAttendanceMonitorRouteImport
+      parentRoute: typeof AiRoute
+    }
+    '/ai/brain': {
+      id: '/ai/brain'
+      path: '/brain'
+      fullPath: '/ai/brain'
+      preLoaderRoute: typeof AiBrainRouteImport
+      parentRoute: typeof AiRoute
+    }
+    '/ai/chat-assistant': {
+      id: '/ai/chat-assistant'
+      path: '/chat-assistant'
+      fullPath: '/ai/chat-assistant'
+      preLoaderRoute: typeof AiChatAssistantRouteImport
+      parentRoute: typeof AiRoute
+    }
+    '/ai/compliance-monitor': {
+      id: '/ai/compliance-monitor'
+      path: '/compliance-monitor'
+      fullPath: '/ai/compliance-monitor'
+      preLoaderRoute: typeof AiComplianceMonitorRouteImport
+      parentRoute: typeof AiRoute
+    }
+    '/ai/document-generator': {
+      id: '/ai/document-generator'
+      path: '/document-generator'
+      fullPath: '/ai/document-generator'
+      preLoaderRoute: typeof AiDocumentGeneratorRouteImport
+      parentRoute: typeof AiRoute
+    }
+    '/ai/employee-health': {
+      id: '/ai/employee-health'
+      path: '/employee-health'
+      fullPath: '/ai/employee-health'
+      preLoaderRoute: typeof AiEmployeeHealthRouteImport
+      parentRoute: typeof AiRoute
+    }
+    '/ai/leave-assistant': {
+      id: '/ai/leave-assistant'
+      path: '/leave-assistant'
+      fullPath: '/ai/leave-assistant'
+      preLoaderRoute: typeof AiLeaveAssistantRouteImport
+      parentRoute: typeof AiRoute
+    }
+    '/ai/meeting-intelligence': {
+      id: '/ai/meeting-intelligence'
+      path: '/meeting-intelligence'
+      fullPath: '/ai/meeting-intelligence'
+      preLoaderRoute: typeof AiMeetingIntelligenceRouteImport
+      parentRoute: typeof AiRoute
+    }
+    '/ai/performance-coach': {
+      id: '/ai/performance-coach'
+      path: '/performance-coach'
+      fullPath: '/ai/performance-coach'
+      preLoaderRoute: typeof AiPerformanceCoachRouteImport
+      parentRoute: typeof AiRoute
+    }
+    '/ai/policy-assistant': {
+      id: '/ai/policy-assistant'
+      path: '/policy-assistant'
+      fullPath: '/ai/policy-assistant'
+      preLoaderRoute: typeof AiPolicyAssistantRouteImport
+      parentRoute: typeof AiRoute
+    }
+    '/ai/recruiter': {
+      id: '/ai/recruiter'
+      path: '/recruiter'
+      fullPath: '/ai/recruiter'
+      preLoaderRoute: typeof AiRecruiterRouteImport
+      parentRoute: typeof AiRoute
+    }
+    '/ai/workforce-insights': {
+      id: '/ai/workforce-insights'
+      path: '/workforce-insights'
+      fullPath: '/ai/workforce-insights'
+      preLoaderRoute: typeof AiWorkforceInsightsRouteImport
+      parentRoute: typeof AiRoute
+    }
+    '/ai/workforce-planning': {
+      id: '/ai/workforce-planning'
+      path: '/workforce-planning'
+      fullPath: '/ai/workforce-planning'
+      preLoaderRoute: typeof AiWorkforcePlanningRouteImport
+      parentRoute: typeof AiRoute
+    }
+    '/api/ai-brain': {
+      id: '/api/ai-brain'
+      path: '/api/ai-brain'
+      fullPath: '/api/ai-brain'
+      preLoaderRoute: typeof ApiAiBrainRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard/workforce/': {
-      id: '/dashboard/workforce/'
-      path: '/'
-      fullPath: '/dashboard/workforce/'
-      preLoaderRoute: typeof DashboardWorkforceIndexRouteImport
-      parentRoute: typeof DashboardWorkforceRoute
+    '/auth/forgot-password': {
+      id: '/auth/forgot-password'
+      path: '/auth/forgot-password'
+      fullPath: '/auth/forgot-password'
+      preLoaderRoute: typeof AuthForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/dashboard/talent/': {
-      id: '/dashboard/talent/'
-      path: '/'
-      fullPath: '/dashboard/talent/'
-      preLoaderRoute: typeof DashboardTalentIndexRouteImport
-      parentRoute: typeof DashboardTalentRoute
+    '/auth/login': {
+      id: '/auth/login'
+      path: '/auth/login'
+      fullPath: '/auth/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/dashboard/super-admin/': {
-      id: '/dashboard/super-admin/'
-      path: '/'
-      fullPath: '/dashboard/super-admin/'
-      preLoaderRoute: typeof DashboardSuperAdminIndexRouteImport
-      parentRoute: typeof DashboardSuperAdminRoute
+    '/auth/register': {
+      id: '/auth/register'
+      path: '/auth/register'
+      fullPath: '/auth/register'
+      preLoaderRoute: typeof AuthRegisterRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/dashboard/settings/': {
-      id: '/dashboard/settings/'
-      path: '/'
-      fullPath: '/dashboard/settings/'
-      preLoaderRoute: typeof DashboardSettingsIndexRouteImport
-      parentRoute: typeof DashboardSettingsRoute
+    '/auth/reset-password': {
+      id: '/auth/reset-password'
+      path: '/auth/reset-password'
+      fullPath: '/auth/reset-password'
+      preLoaderRoute: typeof AuthResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/dashboard/resources/': {
-      id: '/dashboard/resources/'
-      path: '/'
-      fullPath: '/dashboard/resources/'
-      preLoaderRoute: typeof DashboardResourcesIndexRouteImport
-      parentRoute: typeof DashboardResourcesRoute
+    '/auth/verify-email': {
+      id: '/auth/verify-email'
+      path: '/auth/verify-email'
+      fullPath: '/auth/verify-email'
+      preLoaderRoute: typeof AuthVerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/dashboard/recruitment/': {
-      id: '/dashboard/recruitment/'
-      path: '/'
-      fullPath: '/dashboard/recruitment/'
-      preLoaderRoute: typeof DashboardRecruitmentIndexRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
+    '/auth/verify-reset-otp': {
+      id: '/auth/verify-reset-otp'
+      path: '/auth/verify-reset-otp'
+      fullPath: '/auth/verify-reset-otp'
+      preLoaderRoute: typeof AuthVerifyResetOtpRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/dashboard/people/': {
-      id: '/dashboard/people/'
-      path: '/people'
-      fullPath: '/dashboard/people/'
-      preLoaderRoute: typeof DashboardPeopleIndexRouteImport
+    '/blog/': {
+      id: '/blog/'
+      path: '/'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof BlogRoute
+    }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof BlogRoute
+    }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/dashboard/payroll/': {
-      id: '/dashboard/payroll/'
-      path: '/'
-      fullPath: '/dashboard/payroll/'
-      preLoaderRoute: typeof DashboardPayrollIndexRouteImport
-      parentRoute: typeof DashboardPayrollRoute
-    }
-    '/dashboard/meetings/': {
-      id: '/dashboard/meetings/'
-      path: '/'
-      fullPath: '/dashboard/meetings/'
-      preLoaderRoute: typeof DashboardMeetingsIndexRouteImport
-      parentRoute: typeof DashboardMeetingsRoute
-    }
-    '/dashboard/hr-operations/': {
-      id: '/dashboard/hr-operations/'
-      path: '/'
-      fullPath: '/dashboard/hr-operations/'
-      preLoaderRoute: typeof DashboardHrOperationsIndexRouteImport
-      parentRoute: typeof DashboardHrOperationsRoute
-    }
-    '/dashboard/executive/': {
-      id: '/dashboard/executive/'
-      path: '/executive'
-      fullPath: '/dashboard/executive/'
-      preLoaderRoute: typeof DashboardExecutiveIndexRouteImport
+    '/dashboard/ai-hub': {
+      id: '/dashboard/ai-hub'
+      path: '/ai-hub'
+      fullPath: '/dashboard/ai-hub'
+      preLoaderRoute: typeof DashboardAiHubRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/dashboard/connect/': {
-      id: '/dashboard/connect/'
-      path: '/'
-      fullPath: '/dashboard/connect/'
-      preLoaderRoute: typeof DashboardConnectIndexRouteImport
-      parentRoute: typeof DashboardConnectRoute
+    '/dashboard/ai-insights': {
+      id: '/dashboard/ai-insights'
+      path: '/ai-insights'
+      fullPath: '/dashboard/ai-insights'
+      preLoaderRoute: typeof DashboardAiInsightsRouteImport
+      parentRoute: typeof DashboardRoute
     }
-    '/dashboard/autopilot/': {
-      id: '/dashboard/autopilot/'
-      path: '/'
-      fullPath: '/dashboard/autopilot/'
-      preLoaderRoute: typeof DashboardAutopilotIndexRouteImport
-      parentRoute: typeof DashboardAutopilotRoute
+    '/dashboard/analytics': {
+      id: '/dashboard/analytics'
+      path: '/analytics'
+      fullPath: '/dashboard/analytics'
+      preLoaderRoute: typeof DashboardAnalyticsRouteImport
+      parentRoute: typeof DashboardRoute
     }
-    '/dashboard/attendance/': {
-      id: '/dashboard/attendance/'
-      path: '/'
-      fullPath: '/dashboard/attendance/'
-      preLoaderRoute: typeof DashboardAttendanceIndexRouteImport
-      parentRoute: typeof DashboardAttendanceRoute
+    '/dashboard/announcements': {
+      id: '/dashboard/announcements'
+      path: '/announcements'
+      fullPath: '/dashboard/announcements'
+      preLoaderRoute: typeof DashboardAnnouncementsRouteImport
+      parentRoute: typeof DashboardRoute
     }
-    '/dashboard/analytics/': {
-      id: '/dashboard/analytics/'
-      path: '/'
-      fullPath: '/dashboard/analytics/'
-      preLoaderRoute: typeof DashboardAnalyticsIndexRouteImport
-      parentRoute: typeof DashboardAnalyticsRoute
+    '/dashboard/asset-management': {
+      id: '/dashboard/asset-management'
+      path: '/asset-management'
+      fullPath: '/dashboard/asset-management'
+      preLoaderRoute: typeof DashboardAssetManagementRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/assets': {
+      id: '/dashboard/assets'
+      path: '/assets'
+      fullPath: '/dashboard/assets'
+      preLoaderRoute: typeof DashboardAssetsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/attendance': {
+      id: '/dashboard/attendance'
+      path: '/attendance'
+      fullPath: '/dashboard/attendance'
+      preLoaderRoute: typeof DashboardAttendanceRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/audit-logs': {
+      id: '/dashboard/audit-logs'
+      path: '/audit-logs'
+      fullPath: '/dashboard/audit-logs'
+      preLoaderRoute: typeof DashboardAuditLogsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/autopilot': {
+      id: '/dashboard/autopilot'
+      path: '/autopilot'
+      fullPath: '/dashboard/autopilot'
+      preLoaderRoute: typeof DashboardAutopilotRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/billing': {
+      id: '/dashboard/billing'
+      path: '/billing'
+      fullPath: '/dashboard/billing'
+      preLoaderRoute: typeof DashboardBillingRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/calls': {
+      id: '/dashboard/calls'
+      path: '/calls'
+      fullPath: '/dashboard/calls'
+      preLoaderRoute: typeof DashboardCallsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/connect': {
+      id: '/dashboard/connect'
+      path: '/connect'
+      fullPath: '/dashboard/connect'
+      preLoaderRoute: typeof DashboardConnectRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/departments': {
+      id: '/dashboard/departments'
+      path: '/departments'
+      fullPath: '/dashboard/departments'
+      preLoaderRoute: typeof DashboardDepartmentsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/documents': {
+      id: '/dashboard/documents'
+      path: '/documents'
+      fullPath: '/dashboard/documents'
+      preLoaderRoute: typeof DashboardDocumentsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/employee': {
+      id: '/dashboard/employee'
+      path: '/employee'
+      fullPath: '/dashboard/employee'
+      preLoaderRoute: typeof DashboardEmployeeRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/employees': {
+      id: '/dashboard/employees'
+      path: '/employees'
+      fullPath: '/dashboard/employees'
+      preLoaderRoute: typeof DashboardEmployeesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/executives': {
+      id: '/dashboard/executives'
+      path: '/executives'
+      fullPath: '/dashboard/executives'
+      preLoaderRoute: typeof DashboardExecutivesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/exit': {
+      id: '/dashboard/exit'
+      path: '/exit'
+      fullPath: '/dashboard/exit'
+      preLoaderRoute: typeof DashboardExitRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/exit-management': {
+      id: '/dashboard/exit-management'
+      path: '/exit-management'
+      fullPath: '/dashboard/exit-management'
+      preLoaderRoute: typeof DashboardExitManagementRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/expenses': {
+      id: '/dashboard/expenses'
+      path: '/expenses'
+      fullPath: '/dashboard/expenses'
+      preLoaderRoute: typeof DashboardExpensesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/forbidden': {
+      id: '/dashboard/forbidden'
+      path: '/forbidden'
+      fullPath: '/dashboard/forbidden'
+      preLoaderRoute: typeof DashboardForbiddenRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/helpdesk': {
+      id: '/dashboard/helpdesk'
+      path: '/helpdesk'
+      fullPath: '/dashboard/helpdesk'
+      preLoaderRoute: typeof DashboardHelpdeskRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/hierarchy': {
+      id: '/dashboard/hierarchy'
+      path: '/hierarchy'
+      fullPath: '/dashboard/hierarchy'
+      preLoaderRoute: typeof DashboardHierarchyRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/hr': {
+      id: '/dashboard/hr'
+      path: '/hr'
+      fullPath: '/dashboard/hr'
+      preLoaderRoute: typeof DashboardHrRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/hr-operations': {
+      id: '/dashboard/hr-operations'
+      path: '/hr-operations'
+      fullPath: '/dashboard/hr-operations'
+      preLoaderRoute: typeof DashboardHrOperationsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/hr-ops': {
+      id: '/dashboard/hr-ops'
+      path: '/hr-ops'
+      fullPath: '/dashboard/hr-ops'
+      preLoaderRoute: typeof DashboardHrOpsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/it-admin': {
+      id: '/dashboard/it-admin'
+      path: '/it-admin'
+      fullPath: '/dashboard/it-admin'
+      preLoaderRoute: typeof DashboardItAdminRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/leaves': {
+      id: '/dashboard/leaves'
+      path: '/leaves'
+      fullPath: '/dashboard/leaves'
+      preLoaderRoute: typeof DashboardLeavesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/manager': {
+      id: '/dashboard/manager'
+      path: '/manager'
+      fullPath: '/dashboard/manager'
+      preLoaderRoute: typeof DashboardManagerRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/managers': {
+      id: '/dashboard/managers'
+      path: '/managers'
+      fullPath: '/dashboard/managers'
+      preLoaderRoute: typeof DashboardManagersRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/meetings': {
+      id: '/dashboard/meetings'
+      path: '/meetings'
+      fullPath: '/dashboard/meetings'
+      preLoaderRoute: typeof DashboardMeetingsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/notifications': {
+      id: '/dashboard/notifications'
+      path: '/notifications'
+      fullPath: '/dashboard/notifications'
+      preLoaderRoute: typeof DashboardNotificationsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/offboarding': {
+      id: '/dashboard/offboarding'
+      path: '/offboarding'
+      fullPath: '/dashboard/offboarding'
+      preLoaderRoute: typeof DashboardOffboardingRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/onboarding-checklist': {
+      id: '/dashboard/onboarding-checklist'
+      path: '/onboarding-checklist'
+      fullPath: '/dashboard/onboarding-checklist'
+      preLoaderRoute: typeof DashboardOnboardingChecklistRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/payroll': {
+      id: '/dashboard/payroll'
+      path: '/payroll'
+      fullPath: '/dashboard/payroll'
+      preLoaderRoute: typeof DashboardPayrollRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/performance': {
+      id: '/dashboard/performance'
+      path: '/performance'
+      fullPath: '/dashboard/performance'
+      preLoaderRoute: typeof DashboardPerformanceRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/recruitment': {
+      id: '/dashboard/recruitment'
+      path: '/recruitment'
+      fullPath: '/dashboard/recruitment'
+      preLoaderRoute: typeof DashboardRecruitmentRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/reports': {
+      id: '/dashboard/reports'
+      path: '/reports'
+      fullPath: '/dashboard/reports'
+      preLoaderRoute: typeof DashboardReportsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/resources': {
+      id: '/dashboard/resources'
+      path: '/resources'
+      fullPath: '/dashboard/resources'
+      preLoaderRoute: typeof DashboardResourcesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/roles': {
+      id: '/dashboard/roles'
+      path: '/roles'
+      fullPath: '/dashboard/roles'
+      preLoaderRoute: typeof DashboardRolesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/settings': {
+      id: '/dashboard/settings'
+      path: '/settings'
+      fullPath: '/dashboard/settings'
+      preLoaderRoute: typeof DashboardSettingsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/super-admin': {
+      id: '/dashboard/super-admin'
+      path: '/super-admin'
+      fullPath: '/dashboard/super-admin'
+      preLoaderRoute: typeof DashboardSuperAdminRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/talent': {
+      id: '/dashboard/talent'
+      path: '/talent'
+      fullPath: '/dashboard/talent'
+      preLoaderRoute: typeof DashboardTalentRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/timeline': {
+      id: '/dashboard/timeline'
+      path: '/timeline'
+      fullPath: '/dashboard/timeline'
+      preLoaderRoute: typeof DashboardTimelineRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/timesheets': {
+      id: '/dashboard/timesheets'
+      path: '/timesheets'
+      fullPath: '/dashboard/timesheets'
+      preLoaderRoute: typeof DashboardTimesheetsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/travel': {
+      id: '/dashboard/travel'
+      path: '/travel'
+      fullPath: '/dashboard/travel'
+      preLoaderRoute: typeof DashboardTravelRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/visitors': {
+      id: '/dashboard/visitors'
+      path: '/visitors'
+      fullPath: '/dashboard/visitors'
+      preLoaderRoute: typeof DashboardVisitorsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/workforce': {
+      id: '/dashboard/workforce'
+      path: '/workforce'
+      fullPath: '/dashboard/workforce'
+      preLoaderRoute: typeof DashboardWorkforceRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/dashboard/ai-hub/': {
       id: '/dashboard/ai-hub/'
       path: '/'
       fullPath: '/dashboard/ai-hub/'
       preLoaderRoute: typeof DashboardAiHubIndexRouteImport
-      parentRoute: typeof DashboardAiHubRoute
-    }
-    '/jobs/apply/$ukey': {
-      id: '/jobs/apply/$ukey'
-      path: '/jobs/apply/$ukey'
-      fullPath: '/jobs/apply/$ukey'
-      preLoaderRoute: typeof JobsApplyUkeyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/interview/book/$token': {
-      id: '/interview/book/$token'
-      path: '/interview/book/$token'
-      fullPath: '/interview/book/$token'
-      preLoaderRoute: typeof InterviewBookTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard/workforce/timesheets': {
-      id: '/dashboard/workforce/timesheets'
-      path: '/timesheets'
-      fullPath: '/dashboard/workforce/timesheets'
-      preLoaderRoute: typeof DashboardWorkforceTimesheetsRouteImport
-      parentRoute: typeof DashboardWorkforceRoute
-    }
-    '/dashboard/workforce/people': {
-      id: '/dashboard/workforce/people'
-      path: '/people'
-      fullPath: '/dashboard/workforce/people'
-      preLoaderRoute: typeof DashboardWorkforcePeopleRouteImport
-      parentRoute: typeof DashboardWorkforceRoute
-    }
-    '/dashboard/workforce/leaves': {
-      id: '/dashboard/workforce/leaves'
-      path: '/leaves'
-      fullPath: '/dashboard/workforce/leaves'
-      preLoaderRoute: typeof DashboardWorkforceLeavesRouteImport
-      parentRoute: typeof DashboardWorkforceRoute
-    }
-    '/dashboard/workforce/departments': {
-      id: '/dashboard/workforce/departments'
-      path: '/departments'
-      fullPath: '/dashboard/workforce/departments'
-      preLoaderRoute: typeof DashboardWorkforceDepartmentsRouteImport
-      parentRoute: typeof DashboardWorkforceRoute
-    }
-    '/dashboard/workforce/attendance': {
-      id: '/dashboard/workforce/attendance'
-      path: '/attendance'
-      fullPath: '/dashboard/workforce/attendance'
-      preLoaderRoute: typeof DashboardWorkforceAttendanceRouteImport
-      parentRoute: typeof DashboardWorkforceRoute
-    }
-    '/dashboard/talent/recruitment': {
-      id: '/dashboard/talent/recruitment'
-      path: '/recruitment'
-      fullPath: '/dashboard/talent/recruitment'
-      preLoaderRoute: typeof DashboardTalentRecruitmentRouteImport
-      parentRoute: typeof DashboardTalentRoute
-    }
-    '/dashboard/talent/performance': {
-      id: '/dashboard/talent/performance'
-      path: '/performance'
-      fullPath: '/dashboard/talent/performance'
-      preLoaderRoute: typeof DashboardTalentPerformanceRouteImport
-      parentRoute: typeof DashboardTalentRoute
-    }
-    '/dashboard/super-admin/users': {
-      id: '/dashboard/super-admin/users'
-      path: '/users'
-      fullPath: '/dashboard/super-admin/users'
-      preLoaderRoute: typeof DashboardSuperAdminUsersRouteImport
-      parentRoute: typeof DashboardSuperAdminRoute
-    }
-    '/dashboard/super-admin/settings': {
-      id: '/dashboard/super-admin/settings'
-      path: '/settings'
-      fullPath: '/dashboard/super-admin/settings'
-      preLoaderRoute: typeof DashboardSuperAdminSettingsRouteImport
-      parentRoute: typeof DashboardSuperAdminRoute
-    }
-    '/dashboard/super-admin/platform-config': {
-      id: '/dashboard/super-admin/platform-config'
-      path: '/platform-config'
-      fullPath: '/dashboard/super-admin/platform-config'
-      preLoaderRoute: typeof DashboardSuperAdminPlatformConfigRouteImport
-      parentRoute: typeof DashboardSuperAdminRoute
-    }
-    '/dashboard/super-admin/organizations': {
-      id: '/dashboard/super-admin/organizations'
-      path: '/organizations'
-      fullPath: '/dashboard/super-admin/organizations'
-      preLoaderRoute: typeof DashboardSuperAdminOrganizationsRouteImport
-      parentRoute: typeof DashboardSuperAdminRoute
-    }
-    '/dashboard/super-admin/audit-logs': {
-      id: '/dashboard/super-admin/audit-logs'
-      path: '/audit-logs'
-      fullPath: '/dashboard/super-admin/audit-logs'
-      preLoaderRoute: typeof DashboardSuperAdminAuditLogsRouteImport
-      parentRoute: typeof DashboardSuperAdminRoute
-    }
-    '/dashboard/super-admin/analytics': {
-      id: '/dashboard/super-admin/analytics'
-      path: '/analytics'
-      fullPath: '/dashboard/super-admin/analytics'
-      preLoaderRoute: typeof DashboardSuperAdminAnalyticsRouteImport
-      parentRoute: typeof DashboardSuperAdminRoute
-    }
-    '/dashboard/super-admin/activity': {
-      id: '/dashboard/super-admin/activity'
-      path: '/activity'
-      fullPath: '/dashboard/super-admin/activity'
-      preLoaderRoute: typeof DashboardSuperAdminActivityRouteImport
-      parentRoute: typeof DashboardSuperAdminRoute
-    }
-    '/dashboard/settings/security': {
-      id: '/dashboard/settings/security'
-      path: '/security'
-      fullPath: '/dashboard/settings/security'
-      preLoaderRoute: typeof DashboardSettingsSecurityRouteImport
-      parentRoute: typeof DashboardSettingsRoute
-    }
-    '/dashboard/settings/roles-permissions': {
-      id: '/dashboard/settings/roles-permissions'
-      path: '/roles-permissions'
-      fullPath: '/dashboard/settings/roles-permissions'
-      preLoaderRoute: typeof DashboardSettingsRolesPermissionsRouteImport
-      parentRoute: typeof DashboardSettingsRoute
-    }
-    '/dashboard/settings/profile': {
-      id: '/dashboard/settings/profile'
-      path: '/profile'
-      fullPath: '/dashboard/settings/profile'
-      preLoaderRoute: typeof DashboardSettingsProfileRouteImport
-      parentRoute: typeof DashboardSettingsRoute
-    }
-    '/dashboard/settings/notifications': {
-      id: '/dashboard/settings/notifications'
-      path: '/notifications'
-      fullPath: '/dashboard/settings/notifications'
-      preLoaderRoute: typeof DashboardSettingsNotificationsRouteImport
-      parentRoute: typeof DashboardSettingsRoute
-    }
-    '/dashboard/settings/integrations': {
-      id: '/dashboard/settings/integrations'
-      path: '/integrations'
-      fullPath: '/dashboard/settings/integrations'
-      preLoaderRoute: typeof DashboardSettingsIntegrationsRouteImport
-      parentRoute: typeof DashboardSettingsRoute
-    }
-    '/dashboard/settings/general': {
-      id: '/dashboard/settings/general'
-      path: '/general'
-      fullPath: '/dashboard/settings/general'
-      preLoaderRoute: typeof DashboardSettingsGeneralRouteImport
-      parentRoute: typeof DashboardSettingsRoute
-    }
-    '/dashboard/settings/company': {
-      id: '/dashboard/settings/company'
-      path: '/company'
-      fullPath: '/dashboard/settings/company'
-      preLoaderRoute: typeof DashboardSettingsCompanyRouteImport
-      parentRoute: typeof DashboardSettingsRoute
-    }
-    '/dashboard/settings/billing': {
-      id: '/dashboard/settings/billing'
-      path: '/billing'
-      fullPath: '/dashboard/settings/billing'
-      preLoaderRoute: typeof DashboardSettingsBillingRouteImport
-      parentRoute: typeof DashboardSettingsRoute
-    }
-    '/dashboard/settings/audit-logs': {
-      id: '/dashboard/settings/audit-logs'
-      path: '/audit-logs'
-      fullPath: '/dashboard/settings/audit-logs'
-      preLoaderRoute: typeof DashboardSettingsAuditLogsRouteImport
-      parentRoute: typeof DashboardSettingsRoute
-    }
-    '/dashboard/resources/documents': {
-      id: '/dashboard/resources/documents'
-      path: '/documents'
-      fullPath: '/dashboard/resources/documents'
-      preLoaderRoute: typeof DashboardResourcesDocumentsRouteImport
-      parentRoute: typeof DashboardResourcesRoute
-    }
-    '/dashboard/resources/assets': {
-      id: '/dashboard/resources/assets'
-      path: '/assets'
-      fullPath: '/dashboard/resources/assets'
-      preLoaderRoute: typeof DashboardResourcesAssetsRouteImport
-      parentRoute: typeof DashboardResourcesRoute
-    }
-    '/dashboard/resources/asset-management': {
-      id: '/dashboard/resources/asset-management'
-      path: '/asset-management'
-      fullPath: '/dashboard/resources/asset-management'
-      preLoaderRoute: typeof DashboardResourcesAssetManagementRouteImport
-      parentRoute: typeof DashboardResourcesRoute
-    }
-    '/dashboard/recruitment/workforce-planning': {
-      id: '/dashboard/recruitment/workforce-planning'
-      path: '/workforce-planning'
-      fullPath: '/dashboard/recruitment/workforce-planning'
-      preLoaderRoute: typeof DashboardRecruitmentWorkforcePlanningRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/verification': {
-      id: '/dashboard/recruitment/verification'
-      path: '/verification'
-      fullPath: '/dashboard/recruitment/verification'
-      preLoaderRoute: typeof DashboardRecruitmentVerificationRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/vendors': {
-      id: '/dashboard/recruitment/vendors'
-      path: '/vendors'
-      fullPath: '/dashboard/recruitment/vendors'
-      preLoaderRoute: typeof DashboardRecruitmentVendorsRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/templates': {
-      id: '/dashboard/recruitment/templates'
-      path: '/templates'
-      fullPath: '/dashboard/recruitment/templates'
-      preLoaderRoute: typeof DashboardRecruitmentTemplatesRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/talent-pool': {
-      id: '/dashboard/recruitment/talent-pool'
-      path: '/talent-pool'
-      fullPath: '/dashboard/recruitment/talent-pool'
-      preLoaderRoute: typeof DashboardRecruitmentTalentPoolRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/sourcing': {
-      id: '/dashboard/recruitment/sourcing'
-      path: '/sourcing'
-      fullPath: '/dashboard/recruitment/sourcing'
-      preLoaderRoute: typeof DashboardRecruitmentSourcingRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/search': {
-      id: '/dashboard/recruitment/search'
-      path: '/search'
-      fullPath: '/dashboard/recruitment/search'
-      preLoaderRoute: typeof DashboardRecruitmentSearchRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/scorecards': {
-      id: '/dashboard/recruitment/scorecards'
-      path: '/scorecards'
-      fullPath: '/dashboard/recruitment/scorecards'
-      preLoaderRoute: typeof DashboardRecruitmentScorecardsRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/resume-intelligence': {
-      id: '/dashboard/recruitment/resume-intelligence'
-      path: '/resume-intelligence'
-      fullPath: '/dashboard/recruitment/resume-intelligence'
-      preLoaderRoute: typeof DashboardRecruitmentResumeIntelligenceRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/requisitions': {
-      id: '/dashboard/recruitment/requisitions'
-      path: '/requisitions'
-      fullPath: '/dashboard/recruitment/requisitions'
-      preLoaderRoute: typeof DashboardRecruitmentRequisitionsRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/reports': {
-      id: '/dashboard/recruitment/reports'
-      path: '/reports'
-      fullPath: '/dashboard/recruitment/reports'
-      preLoaderRoute: typeof DashboardRecruitmentReportsRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/referrals': {
-      id: '/dashboard/recruitment/referrals'
-      path: '/referrals'
-      fullPath: '/dashboard/recruitment/referrals'
-      preLoaderRoute: typeof DashboardRecruitmentReferralsRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/preboarding': {
-      id: '/dashboard/recruitment/preboarding'
-      path: '/preboarding'
-      fullPath: '/dashboard/recruitment/preboarding'
-      preLoaderRoute: typeof DashboardRecruitmentPreboardingRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/pipeline': {
-      id: '/dashboard/recruitment/pipeline'
-      path: '/pipeline'
-      fullPath: '/dashboard/recruitment/pipeline'
-      preLoaderRoute: typeof DashboardRecruitmentPipelineRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/onboarding': {
-      id: '/dashboard/recruitment/onboarding'
-      path: '/onboarding'
-      fullPath: '/dashboard/recruitment/onboarding'
-      preLoaderRoute: typeof DashboardRecruitmentOnboardingRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/offers': {
-      id: '/dashboard/recruitment/offers'
-      path: '/offers'
-      fullPath: '/dashboard/recruitment/offers'
-      preLoaderRoute: typeof DashboardRecruitmentOffersRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/notifications': {
-      id: '/dashboard/recruitment/notifications'
-      path: '/notifications'
-      fullPath: '/dashboard/recruitment/notifications'
-      preLoaderRoute: typeof DashboardRecruitmentNotificationsRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/kt-probation': {
-      id: '/dashboard/recruitment/kt-probation'
-      path: '/kt-probation'
-      fullPath: '/dashboard/recruitment/kt-probation'
-      preLoaderRoute: typeof DashboardRecruitmentKtProbationRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/interviews': {
-      id: '/dashboard/recruitment/interviews'
-      path: '/interviews'
-      fullPath: '/dashboard/recruitment/interviews'
-      preLoaderRoute: typeof DashboardRecruitmentInterviewsRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/import-export': {
-      id: '/dashboard/recruitment/import-export'
-      path: '/import-export'
-      fullPath: '/dashboard/recruitment/import-export'
-      preLoaderRoute: typeof DashboardRecruitmentImportExportRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/hiring-manager': {
-      id: '/dashboard/recruitment/hiring-manager'
-      path: '/hiring-manager'
-      fullPath: '/dashboard/recruitment/hiring-manager'
-      preLoaderRoute: typeof DashboardRecruitmentHiringManagerRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/employee-onboarding': {
-      id: '/dashboard/recruitment/employee-onboarding'
-      path: '/employee-onboarding'
-      fullPath: '/dashboard/recruitment/employee-onboarding'
-      preLoaderRoute: typeof DashboardRecruitmentEmployeeOnboardingRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/crm': {
-      id: '/dashboard/recruitment/crm'
-      path: '/crm'
-      fullPath: '/dashboard/recruitment/crm'
-      preLoaderRoute: typeof DashboardRecruitmentCrmRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/compliance': {
-      id: '/dashboard/recruitment/compliance'
-      path: '/compliance'
-      fullPath: '/dashboard/recruitment/compliance'
-      preLoaderRoute: typeof DashboardRecruitmentComplianceRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/compensation': {
-      id: '/dashboard/recruitment/compensation'
-      path: '/compensation'
-      fullPath: '/dashboard/recruitment/compensation'
-      preLoaderRoute: typeof DashboardRecruitmentCompensationRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/communication': {
-      id: '/dashboard/recruitment/communication'
-      path: '/communication'
-      fullPath: '/dashboard/recruitment/communication'
-      preLoaderRoute: typeof DashboardRecruitmentCommunicationRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/career-site': {
-      id: '/dashboard/recruitment/career-site'
-      path: '/career-site'
-      fullPath: '/dashboard/recruitment/career-site'
-      preLoaderRoute: typeof DashboardRecruitmentCareerSiteRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/candidates': {
-      id: '/dashboard/recruitment/candidates'
-      path: '/candidates'
-      fullPath: '/dashboard/recruitment/candidates'
-      preLoaderRoute: typeof DashboardRecruitmentCandidatesRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/calendar': {
-      id: '/dashboard/recruitment/calendar'
-      path: '/calendar'
-      fullPath: '/dashboard/recruitment/calendar'
-      preLoaderRoute: typeof DashboardRecruitmentCalendarRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/automation': {
-      id: '/dashboard/recruitment/automation'
-      path: '/automation'
-      fullPath: '/dashboard/recruitment/automation'
-      preLoaderRoute: typeof DashboardRecruitmentAutomationRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/analytics': {
-      id: '/dashboard/recruitment/analytics'
-      path: '/analytics'
-      fullPath: '/dashboard/recruitment/analytics'
-      preLoaderRoute: typeof DashboardRecruitmentAnalyticsRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/ai-screening': {
-      id: '/dashboard/recruitment/ai-screening'
-      path: '/ai-screening'
-      fullPath: '/dashboard/recruitment/ai-screening'
-      preLoaderRoute: typeof DashboardRecruitmentAiScreeningRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/ai-interview': {
-      id: '/dashboard/recruitment/ai-interview'
-      path: '/ai-interview'
-      fullPath: '/dashboard/recruitment/ai-interview'
-      preLoaderRoute: typeof DashboardRecruitmentAiInterviewRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/ai': {
-      id: '/dashboard/recruitment/ai'
-      path: '/ai'
-      fullPath: '/dashboard/recruitment/ai'
-      preLoaderRoute: typeof DashboardRecruitmentAiRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/payroll/variable-inputs': {
-      id: '/dashboard/payroll/variable-inputs'
-      path: '/variable-inputs'
-      fullPath: '/dashboard/payroll/variable-inputs'
-      preLoaderRoute: typeof DashboardPayrollVariableInputsRouteImport
-      parentRoute: typeof DashboardPayrollRoute
-    }
-    '/dashboard/payroll/statutory': {
-      id: '/dashboard/payroll/statutory'
-      path: '/statutory'
-      fullPath: '/dashboard/payroll/statutory'
-      preLoaderRoute: typeof DashboardPayrollStatutoryRouteImport
-      parentRoute: typeof DashboardPayrollRoute
-    }
-    '/dashboard/payroll/salary-structure': {
-      id: '/dashboard/payroll/salary-structure'
-      path: '/salary-structure'
-      fullPath: '/dashboard/payroll/salary-structure'
-      preLoaderRoute: typeof DashboardPayrollSalaryStructureRouteImport
-      parentRoute: typeof DashboardPayrollRoute
-    }
-    '/dashboard/payroll/reports': {
-      id: '/dashboard/payroll/reports'
-      path: '/reports'
-      fullPath: '/dashboard/payroll/reports'
-      preLoaderRoute: typeof DashboardPayrollReportsRouteImport
-      parentRoute: typeof DashboardPayrollRoute
-    }
-    '/dashboard/payroll/periods': {
-      id: '/dashboard/payroll/periods'
-      path: '/periods'
-      fullPath: '/dashboard/payroll/periods'
-      preLoaderRoute: typeof DashboardPayrollPeriodsRouteImport
-      parentRoute: typeof DashboardPayrollRoute
-    }
-    '/dashboard/payroll/payslips': {
-      id: '/dashboard/payroll/payslips'
-      path: '/payslips'
-      fullPath: '/dashboard/payroll/payslips'
-      preLoaderRoute: typeof DashboardPayrollPayslipsRouteImport
-      parentRoute: typeof DashboardPayrollRoute
-    }
-    '/dashboard/payroll/payments': {
-      id: '/dashboard/payroll/payments'
-      path: '/payments'
-      fullPath: '/dashboard/payroll/payments'
-      preLoaderRoute: typeof DashboardPayrollPaymentsRouteImport
-      parentRoute: typeof DashboardPayrollRoute
-    }
-    '/dashboard/payroll/full-and-final': {
-      id: '/dashboard/payroll/full-and-final'
-      path: '/full-and-final'
-      fullPath: '/dashboard/payroll/full-and-final'
-      preLoaderRoute: typeof DashboardPayrollFullAndFinalRouteImport
-      parentRoute: typeof DashboardPayrollRoute
-    }
-    '/dashboard/payroll/compensation': {
-      id: '/dashboard/payroll/compensation'
-      path: '/compensation'
-      fullPath: '/dashboard/payroll/compensation'
-      preLoaderRoute: typeof DashboardPayrollCompensationRouteImport
-      parentRoute: typeof DashboardPayrollRoute
-    }
-    '/dashboard/meetings/$meetingId': {
-      id: '/dashboard/meetings/$meetingId'
-      path: '/$meetingId'
-      fullPath: '/dashboard/meetings/$meetingId'
-      preLoaderRoute: typeof DashboardMeetingsMeetingIdRouteImport
-      parentRoute: typeof DashboardMeetingsRoute
-    }
-    '/dashboard/hr-operations/visitor-management': {
-      id: '/dashboard/hr-operations/visitor-management'
-      path: '/visitor-management'
-      fullPath: '/dashboard/hr-operations/visitor-management'
-      preLoaderRoute: typeof DashboardHrOperationsVisitorManagementRouteImport
-      parentRoute: typeof DashboardHrOperationsRoute
-    }
-    '/dashboard/hr-operations/timeline': {
-      id: '/dashboard/hr-operations/timeline'
-      path: '/timeline'
-      fullPath: '/dashboard/hr-operations/timeline'
-      preLoaderRoute: typeof DashboardHrOperationsTimelineRouteImport
-      parentRoute: typeof DashboardHrOperationsRoute
-    }
-    '/dashboard/hr-operations/onboarding': {
-      id: '/dashboard/hr-operations/onboarding'
-      path: '/onboarding'
-      fullPath: '/dashboard/hr-operations/onboarding'
-      preLoaderRoute: typeof DashboardHrOperationsOnboardingRouteImport
-      parentRoute: typeof DashboardHrOperationsRoute
-    }
-    '/dashboard/hr-operations/offboarding': {
-      id: '/dashboard/hr-operations/offboarding'
-      path: '/offboarding'
-      fullPath: '/dashboard/hr-operations/offboarding'
-      preLoaderRoute: typeof DashboardHrOperationsOffboardingRouteImport
-      parentRoute: typeof DashboardHrOperationsRoute
-    }
-    '/dashboard/hr-operations/exit-management': {
-      id: '/dashboard/hr-operations/exit-management'
-      path: '/exit-management'
-      fullPath: '/dashboard/hr-operations/exit-management'
-      preLoaderRoute: typeof DashboardHrOperationsExitManagementRouteImport
-      parentRoute: typeof DashboardHrOperationsRoute
-    }
-    '/dashboard/hr-operations/command-center': {
-      id: '/dashboard/hr-operations/command-center'
-      path: '/command-center'
-      fullPath: '/dashboard/hr-operations/command-center'
-      preLoaderRoute: typeof DashboardHrOperationsCommandCenterRouteImport
-      parentRoute: typeof DashboardHrOperationsRoute
-    }
-    '/dashboard/helpdesk/analytics': {
-      id: '/dashboard/helpdesk/analytics'
-      path: '/analytics'
-      fullPath: '/dashboard/helpdesk/analytics'
-      preLoaderRoute: typeof DashboardHelpdeskAnalyticsRouteImport
-      parentRoute: typeof DashboardHelpdeskRoute
-    }
-    '/dashboard/executive/cto': {
-      id: '/dashboard/executive/cto'
-      path: '/executive/cto'
-      fullPath: '/dashboard/executive/cto'
-      preLoaderRoute: typeof DashboardExecutiveCtoRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/executive/coo': {
-      id: '/dashboard/executive/coo'
-      path: '/executive/coo'
-      fullPath: '/dashboard/executive/coo'
-      preLoaderRoute: typeof DashboardExecutiveCooRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/executive/cmo': {
-      id: '/dashboard/executive/cmo'
-      path: '/executive/cmo'
-      fullPath: '/dashboard/executive/cmo'
-      preLoaderRoute: typeof DashboardExecutiveCmoRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/executive/cio': {
-      id: '/dashboard/executive/cio'
-      path: '/executive/cio'
-      fullPath: '/dashboard/executive/cio'
-      preLoaderRoute: typeof DashboardExecutiveCioRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/executive/cfo': {
-      id: '/dashboard/executive/cfo'
-      path: '/executive/cfo'
-      fullPath: '/dashboard/executive/cfo'
-      preLoaderRoute: typeof DashboardExecutiveCfoRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/executive/ceo': {
-      id: '/dashboard/executive/ceo'
-      path: '/executive/ceo'
-      fullPath: '/dashboard/executive/ceo'
-      preLoaderRoute: typeof DashboardExecutiveCeoRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/employee/payroll': {
-      id: '/dashboard/employee/payroll'
-      path: '/payroll'
-      fullPath: '/dashboard/employee/payroll'
-      preLoaderRoute: typeof DashboardEmployeePayrollRouteImport
-      parentRoute: typeof DashboardEmployeeRoute
-    }
-    '/dashboard/autopilot/settings': {
-      id: '/dashboard/autopilot/settings'
-      path: '/settings'
-      fullPath: '/dashboard/autopilot/settings'
-      preLoaderRoute: typeof DashboardAutopilotSettingsRouteImport
-      parentRoute: typeof DashboardAutopilotRoute
-    }
-    '/dashboard/autopilot/rules': {
-      id: '/dashboard/autopilot/rules'
-      path: '/rules'
-      fullPath: '/dashboard/autopilot/rules'
-      preLoaderRoute: typeof DashboardAutopilotRulesRouteImport
-      parentRoute: typeof DashboardAutopilotRoute
-    }
-    '/dashboard/autopilot/exceptions': {
-      id: '/dashboard/autopilot/exceptions'
-      path: '/exceptions'
-      fullPath: '/dashboard/autopilot/exceptions'
-      preLoaderRoute: typeof DashboardAutopilotExceptionsRouteImport
-      parentRoute: typeof DashboardAutopilotRoute
-    }
-    '/dashboard/autopilot/audit': {
-      id: '/dashboard/autopilot/audit'
-      path: '/audit'
-      fullPath: '/dashboard/autopilot/audit'
-      preLoaderRoute: typeof DashboardAutopilotAuditRouteImport
-      parentRoute: typeof DashboardAutopilotRoute
-    }
-    '/dashboard/autopilot/alerts': {
-      id: '/dashboard/autopilot/alerts'
-      path: '/alerts'
-      fullPath: '/dashboard/autopilot/alerts'
-      preLoaderRoute: typeof DashboardAutopilotAlertsRouteImport
-      parentRoute: typeof DashboardAutopilotRoute
-    }
-    '/dashboard/autopilot/agent': {
-      id: '/dashboard/autopilot/agent'
-      path: '/agent'
-      fullPath: '/dashboard/autopilot/agent'
-      preLoaderRoute: typeof DashboardAutopilotAgentRouteImport
-      parentRoute: typeof DashboardAutopilotRoute
-    }
-    '/dashboard/attendance/shifts': {
-      id: '/dashboard/attendance/shifts'
-      path: '/shifts'
-      fullPath: '/dashboard/attendance/shifts'
-      preLoaderRoute: typeof DashboardAttendanceShiftsRouteImport
-      parentRoute: typeof DashboardAttendanceRoute
-    }
-    '/dashboard/attendance/rosters': {
-      id: '/dashboard/attendance/rosters'
-      path: '/rosters'
-      fullPath: '/dashboard/attendance/rosters'
-      preLoaderRoute: typeof DashboardAttendanceRostersRouteImport
-      parentRoute: typeof DashboardAttendanceRoute
-    }
-    '/dashboard/attendance/holidays': {
-      id: '/dashboard/attendance/holidays'
-      path: '/holidays'
-      fullPath: '/dashboard/attendance/holidays'
-      preLoaderRoute: typeof DashboardAttendanceHolidaysRouteImport
-      parentRoute: typeof DashboardAttendanceRoute
-    }
-    '/dashboard/attendance/checkin': {
-      id: '/dashboard/attendance/checkin'
-      path: '/checkin'
-      fullPath: '/dashboard/attendance/checkin'
-      preLoaderRoute: typeof DashboardAttendanceCheckinRouteImport
-      parentRoute: typeof DashboardAttendanceRoute
-    }
-    '/dashboard/announcements/manage': {
-      id: '/dashboard/announcements/manage'
-      path: '/manage'
-      fullPath: '/dashboard/announcements/manage'
-      preLoaderRoute: typeof DashboardAnnouncementsManageRouteImport
-      parentRoute: typeof DashboardAnnouncementsRoute
-    }
-    '/dashboard/announcements/$id': {
-      id: '/dashboard/announcements/$id'
-      path: '/$id'
-      fullPath: '/dashboard/announcements/$id'
-      preLoaderRoute: typeof DashboardAnnouncementsIdRouteImport
-      parentRoute: typeof DashboardAnnouncementsRoute
-    }
-    '/dashboard/analytics/reports': {
-      id: '/dashboard/analytics/reports'
-      path: '/reports'
-      fullPath: '/dashboard/analytics/reports'
-      preLoaderRoute: typeof DashboardAnalyticsReportsRouteImport
-      parentRoute: typeof DashboardAnalyticsRoute
-    }
-    '/dashboard/analytics/ai-insights': {
-      id: '/dashboard/analytics/ai-insights'
-      path: '/ai-insights'
-      fullPath: '/dashboard/analytics/ai-insights'
-      preLoaderRoute: typeof DashboardAnalyticsAiInsightsRouteImport
-      parentRoute: typeof DashboardAnalyticsRoute
-    }
-    '/dashboard/ai-hub/document-generator': {
-      id: '/dashboard/ai-hub/document-generator'
-      path: '/document-generator'
-      fullPath: '/dashboard/ai-hub/document-generator'
-      preLoaderRoute: typeof DashboardAiHubDocumentGeneratorRouteImport
-      parentRoute: typeof DashboardAiHubRoute
-    }
-    '/dashboard/ai-hub/automation': {
-      id: '/dashboard/ai-hub/automation'
-      path: '/automation'
-      fullPath: '/dashboard/ai-hub/automation'
-      preLoaderRoute: typeof DashboardAiHubAutomationRouteImport
       parentRoute: typeof DashboardAiHubRoute
     }
     '/dashboard/ai-hub/assistant': {
@@ -4783,249 +3964,844 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAiHubAssistantRouteImport
       parentRoute: typeof DashboardAiHubRoute
     }
-    '/dashboard/recruitment/jobs/': {
-      id: '/dashboard/recruitment/jobs/'
-      path: '/jobs'
-      fullPath: '/dashboard/recruitment/jobs/'
-      preLoaderRoute: typeof DashboardRecruitmentJobsIndexRouteImport
+    '/dashboard/ai-hub/automation': {
+      id: '/dashboard/ai-hub/automation'
+      path: '/automation'
+      fullPath: '/dashboard/ai-hub/automation'
+      preLoaderRoute: typeof DashboardAiHubAutomationRouteImport
+      parentRoute: typeof DashboardAiHubRoute
+    }
+    '/dashboard/ai-hub/document-generator': {
+      id: '/dashboard/ai-hub/document-generator'
+      path: '/document-generator'
+      fullPath: '/dashboard/ai-hub/document-generator'
+      preLoaderRoute: typeof DashboardAiHubDocumentGeneratorRouteImport
+      parentRoute: typeof DashboardAiHubRoute
+    }
+    '/dashboard/analytics/': {
+      id: '/dashboard/analytics/'
+      path: '/'
+      fullPath: '/dashboard/analytics/'
+      preLoaderRoute: typeof DashboardAnalyticsIndexRouteImport
+      parentRoute: typeof DashboardAnalyticsRoute
+    }
+    '/dashboard/analytics/ai-insights': {
+      id: '/dashboard/analytics/ai-insights'
+      path: '/ai-insights'
+      fullPath: '/dashboard/analytics/ai-insights'
+      preLoaderRoute: typeof DashboardAnalyticsAiInsightsRouteImport
+      parentRoute: typeof DashboardAnalyticsRoute
+    }
+    '/dashboard/analytics/reports': {
+      id: '/dashboard/analytics/reports'
+      path: '/reports'
+      fullPath: '/dashboard/analytics/reports'
+      preLoaderRoute: typeof DashboardAnalyticsReportsRouteImport
+      parentRoute: typeof DashboardAnalyticsRoute
+    }
+    '/dashboard/announcements/$id': {
+      id: '/dashboard/announcements/$id'
+      path: '/$id'
+      fullPath: '/dashboard/announcements/$id'
+      preLoaderRoute: typeof DashboardAnnouncementsIdRouteImport
+      parentRoute: typeof DashboardAnnouncementsRoute
+    }
+    '/dashboard/announcements/manage': {
+      id: '/dashboard/announcements/manage'
+      path: '/manage'
+      fullPath: '/dashboard/announcements/manage'
+      preLoaderRoute: typeof DashboardAnnouncementsManageRouteImport
+      parentRoute: typeof DashboardAnnouncementsRoute
+    }
+    '/dashboard/attendance/': {
+      id: '/dashboard/attendance/'
+      path: '/'
+      fullPath: '/dashboard/attendance/'
+      preLoaderRoute: typeof DashboardAttendanceIndexRouteImport
+      parentRoute: typeof DashboardAttendanceRoute
+    }
+    '/dashboard/attendance/checkin': {
+      id: '/dashboard/attendance/checkin'
+      path: '/checkin'
+      fullPath: '/dashboard/attendance/checkin'
+      preLoaderRoute: typeof DashboardAttendanceCheckinRouteImport
+      parentRoute: typeof DashboardAttendanceRoute
+    }
+    '/dashboard/attendance/holidays': {
+      id: '/dashboard/attendance/holidays'
+      path: '/holidays'
+      fullPath: '/dashboard/attendance/holidays'
+      preLoaderRoute: typeof DashboardAttendanceHolidaysRouteImport
+      parentRoute: typeof DashboardAttendanceRoute
+    }
+    '/dashboard/attendance/rosters': {
+      id: '/dashboard/attendance/rosters'
+      path: '/rosters'
+      fullPath: '/dashboard/attendance/rosters'
+      preLoaderRoute: typeof DashboardAttendanceRostersRouteImport
+      parentRoute: typeof DashboardAttendanceRoute
+    }
+    '/dashboard/attendance/shifts': {
+      id: '/dashboard/attendance/shifts'
+      path: '/shifts'
+      fullPath: '/dashboard/attendance/shifts'
+      preLoaderRoute: typeof DashboardAttendanceShiftsRouteImport
+      parentRoute: typeof DashboardAttendanceRoute
+    }
+    '/dashboard/autopilot/': {
+      id: '/dashboard/autopilot/'
+      path: '/'
+      fullPath: '/dashboard/autopilot/'
+      preLoaderRoute: typeof DashboardAutopilotIndexRouteImport
+      parentRoute: typeof DashboardAutopilotRoute
+    }
+    '/dashboard/autopilot/agent': {
+      id: '/dashboard/autopilot/agent'
+      path: '/agent'
+      fullPath: '/dashboard/autopilot/agent'
+      preLoaderRoute: typeof DashboardAutopilotAgentRouteImport
+      parentRoute: typeof DashboardAutopilotRoute
+    }
+    '/dashboard/autopilot/alerts': {
+      id: '/dashboard/autopilot/alerts'
+      path: '/alerts'
+      fullPath: '/dashboard/autopilot/alerts'
+      preLoaderRoute: typeof DashboardAutopilotAlertsRouteImport
+      parentRoute: typeof DashboardAutopilotRoute
+    }
+    '/dashboard/autopilot/audit': {
+      id: '/dashboard/autopilot/audit'
+      path: '/audit'
+      fullPath: '/dashboard/autopilot/audit'
+      preLoaderRoute: typeof DashboardAutopilotAuditRouteImport
+      parentRoute: typeof DashboardAutopilotRoute
+    }
+    '/dashboard/autopilot/exceptions': {
+      id: '/dashboard/autopilot/exceptions'
+      path: '/exceptions'
+      fullPath: '/dashboard/autopilot/exceptions'
+      preLoaderRoute: typeof DashboardAutopilotExceptionsRouteImport
+      parentRoute: typeof DashboardAutopilotRoute
+    }
+    '/dashboard/autopilot/rules': {
+      id: '/dashboard/autopilot/rules'
+      path: '/rules'
+      fullPath: '/dashboard/autopilot/rules'
+      preLoaderRoute: typeof DashboardAutopilotRulesRouteImport
+      parentRoute: typeof DashboardAutopilotRoute
+    }
+    '/dashboard/autopilot/settings': {
+      id: '/dashboard/autopilot/settings'
+      path: '/settings'
+      fullPath: '/dashboard/autopilot/settings'
+      preLoaderRoute: typeof DashboardAutopilotSettingsRouteImport
+      parentRoute: typeof DashboardAutopilotRoute
+    }
+    '/dashboard/connect/': {
+      id: '/dashboard/connect/'
+      path: '/'
+      fullPath: '/dashboard/connect/'
+      preLoaderRoute: typeof DashboardConnectIndexRouteImport
+      parentRoute: typeof DashboardConnectRoute
+    }
+    '/dashboard/employee/payroll': {
+      id: '/dashboard/employee/payroll'
+      path: '/payroll'
+      fullPath: '/dashboard/employee/payroll'
+      preLoaderRoute: typeof DashboardEmployeePayrollRouteImport
+      parentRoute: typeof DashboardEmployeeRoute
+    }
+    '/dashboard/executive/': {
+      id: '/dashboard/executive/'
+      path: '/executive'
+      fullPath: '/dashboard/executive/'
+      preLoaderRoute: typeof DashboardExecutiveIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/executive/ceo': {
+      id: '/dashboard/executive/ceo'
+      path: '/executive/ceo'
+      fullPath: '/dashboard/executive/ceo'
+      preLoaderRoute: typeof DashboardExecutiveCeoRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/executive/cfo': {
+      id: '/dashboard/executive/cfo'
+      path: '/executive/cfo'
+      fullPath: '/dashboard/executive/cfo'
+      preLoaderRoute: typeof DashboardExecutiveCfoRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/executive/cio': {
+      id: '/dashboard/executive/cio'
+      path: '/executive/cio'
+      fullPath: '/dashboard/executive/cio'
+      preLoaderRoute: typeof DashboardExecutiveCioRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/executive/cmo': {
+      id: '/dashboard/executive/cmo'
+      path: '/executive/cmo'
+      fullPath: '/dashboard/executive/cmo'
+      preLoaderRoute: typeof DashboardExecutiveCmoRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/executive/coo': {
+      id: '/dashboard/executive/coo'
+      path: '/executive/coo'
+      fullPath: '/dashboard/executive/coo'
+      preLoaderRoute: typeof DashboardExecutiveCooRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/executive/cto': {
+      id: '/dashboard/executive/cto'
+      path: '/executive/cto'
+      fullPath: '/dashboard/executive/cto'
+      preLoaderRoute: typeof DashboardExecutiveCtoRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/helpdesk/analytics': {
+      id: '/dashboard/helpdesk/analytics'
+      path: '/analytics'
+      fullPath: '/dashboard/helpdesk/analytics'
+      preLoaderRoute: typeof DashboardHelpdeskAnalyticsRouteImport
+      parentRoute: typeof DashboardHelpdeskRoute
+    }
+    '/dashboard/hr-operations/': {
+      id: '/dashboard/hr-operations/'
+      path: '/'
+      fullPath: '/dashboard/hr-operations/'
+      preLoaderRoute: typeof DashboardHrOperationsIndexRouteImport
+      parentRoute: typeof DashboardHrOperationsRoute
+    }
+    '/dashboard/hr-operations/command-center': {
+      id: '/dashboard/hr-operations/command-center'
+      path: '/command-center'
+      fullPath: '/dashboard/hr-operations/command-center'
+      preLoaderRoute: typeof DashboardHrOperationsCommandCenterRouteImport
+      parentRoute: typeof DashboardHrOperationsRoute
+    }
+    '/dashboard/hr-operations/exit-management': {
+      id: '/dashboard/hr-operations/exit-management'
+      path: '/exit-management'
+      fullPath: '/dashboard/hr-operations/exit-management'
+      preLoaderRoute: typeof DashboardHrOperationsExitManagementRouteImport
+      parentRoute: typeof DashboardHrOperationsRoute
+    }
+    '/dashboard/hr-operations/offboarding': {
+      id: '/dashboard/hr-operations/offboarding'
+      path: '/offboarding'
+      fullPath: '/dashboard/hr-operations/offboarding'
+      preLoaderRoute: typeof DashboardHrOperationsOffboardingRouteImport
+      parentRoute: typeof DashboardHrOperationsRoute
+    }
+    '/dashboard/hr-operations/onboarding': {
+      id: '/dashboard/hr-operations/onboarding'
+      path: '/onboarding'
+      fullPath: '/dashboard/hr-operations/onboarding'
+      preLoaderRoute: typeof DashboardHrOperationsOnboardingRouteImport
+      parentRoute: typeof DashboardHrOperationsRoute
+    }
+    '/dashboard/hr-operations/timeline': {
+      id: '/dashboard/hr-operations/timeline'
+      path: '/timeline'
+      fullPath: '/dashboard/hr-operations/timeline'
+      preLoaderRoute: typeof DashboardHrOperationsTimelineRouteImport
+      parentRoute: typeof DashboardHrOperationsRoute
+    }
+    '/dashboard/hr-operations/visitor-management': {
+      id: '/dashboard/hr-operations/visitor-management'
+      path: '/visitor-management'
+      fullPath: '/dashboard/hr-operations/visitor-management'
+      preLoaderRoute: typeof DashboardHrOperationsVisitorManagementRouteImport
+      parentRoute: typeof DashboardHrOperationsRoute
+    }
+    '/dashboard/meetings/': {
+      id: '/dashboard/meetings/'
+      path: '/'
+      fullPath: '/dashboard/meetings/'
+      preLoaderRoute: typeof DashboardMeetingsIndexRouteImport
+      parentRoute: typeof DashboardMeetingsRoute
+    }
+    '/dashboard/meetings/$meetingId': {
+      id: '/dashboard/meetings/$meetingId'
+      path: '/$meetingId'
+      fullPath: '/dashboard/meetings/$meetingId'
+      preLoaderRoute: typeof DashboardMeetingsMeetingIdRouteImport
+      parentRoute: typeof DashboardMeetingsRoute
+    }
+    '/dashboard/payroll/': {
+      id: '/dashboard/payroll/'
+      path: '/'
+      fullPath: '/dashboard/payroll/'
+      preLoaderRoute: typeof DashboardPayrollIndexRouteImport
+      parentRoute: typeof DashboardPayrollRoute
+    }
+    '/dashboard/payroll/compensation': {
+      id: '/dashboard/payroll/compensation'
+      path: '/compensation'
+      fullPath: '/dashboard/payroll/compensation'
+      preLoaderRoute: typeof DashboardPayrollCompensationRouteImport
+      parentRoute: typeof DashboardPayrollRoute
+    }
+    '/dashboard/payroll/full-and-final': {
+      id: '/dashboard/payroll/full-and-final'
+      path: '/full-and-final'
+      fullPath: '/dashboard/payroll/full-and-final'
+      preLoaderRoute: typeof DashboardPayrollFullAndFinalRouteImport
+      parentRoute: typeof DashboardPayrollRoute
+    }
+    '/dashboard/payroll/payments': {
+      id: '/dashboard/payroll/payments'
+      path: '/payments'
+      fullPath: '/dashboard/payroll/payments'
+      preLoaderRoute: typeof DashboardPayrollPaymentsRouteImport
+      parentRoute: typeof DashboardPayrollRoute
+    }
+    '/dashboard/payroll/payslips': {
+      id: '/dashboard/payroll/payslips'
+      path: '/payslips'
+      fullPath: '/dashboard/payroll/payslips'
+      preLoaderRoute: typeof DashboardPayrollPayslipsRouteImport
+      parentRoute: typeof DashboardPayrollRoute
+    }
+    '/dashboard/payroll/periods': {
+      id: '/dashboard/payroll/periods'
+      path: '/periods'
+      fullPath: '/dashboard/payroll/periods'
+      preLoaderRoute: typeof DashboardPayrollPeriodsRouteImport
+      parentRoute: typeof DashboardPayrollRoute
+    }
+    '/dashboard/payroll/reports': {
+      id: '/dashboard/payroll/reports'
+      path: '/reports'
+      fullPath: '/dashboard/payroll/reports'
+      preLoaderRoute: typeof DashboardPayrollReportsRouteImport
+      parentRoute: typeof DashboardPayrollRoute
+    }
+    '/dashboard/payroll/salary-structure': {
+      id: '/dashboard/payroll/salary-structure'
+      path: '/salary-structure'
+      fullPath: '/dashboard/payroll/salary-structure'
+      preLoaderRoute: typeof DashboardPayrollSalaryStructureRouteImport
+      parentRoute: typeof DashboardPayrollRoute
+    }
+    '/dashboard/payroll/statutory': {
+      id: '/dashboard/payroll/statutory'
+      path: '/statutory'
+      fullPath: '/dashboard/payroll/statutory'
+      preLoaderRoute: typeof DashboardPayrollStatutoryRouteImport
+      parentRoute: typeof DashboardPayrollRoute
+    }
+    '/dashboard/payroll/variable-inputs': {
+      id: '/dashboard/payroll/variable-inputs'
+      path: '/variable-inputs'
+      fullPath: '/dashboard/payroll/variable-inputs'
+      preLoaderRoute: typeof DashboardPayrollVariableInputsRouteImport
+      parentRoute: typeof DashboardPayrollRoute
+    }
+    '/dashboard/people/': {
+      id: '/dashboard/people/'
+      path: '/people'
+      fullPath: '/dashboard/people/'
+      preLoaderRoute: typeof DashboardPeopleIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/recruitment/': {
+      id: '/dashboard/recruitment/'
+      path: '/'
+      fullPath: '/dashboard/recruitment/'
+      preLoaderRoute: typeof DashboardRecruitmentIndexRouteImport
       parentRoute: typeof DashboardRecruitmentRoute
     }
-    '/dashboard/recruitment/candidates/': {
-      id: '/dashboard/recruitment/candidates/'
-      path: '/'
-      fullPath: '/dashboard/recruitment/candidates/'
-      preLoaderRoute: typeof DashboardRecruitmentCandidatesIndexRouteImport
-      parentRoute: typeof DashboardRecruitmentCandidatesRoute
+    '/dashboard/recruitment/ai': {
+      id: '/dashboard/recruitment/ai'
+      path: '/ai'
+      fullPath: '/dashboard/recruitment/ai'
+      preLoaderRoute: typeof DashboardRecruitmentAiRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
     }
-    '/dashboard/executive/cto/': {
-      id: '/dashboard/executive/cto/'
-      path: '/'
-      fullPath: '/dashboard/executive/cto/'
-      preLoaderRoute: typeof DashboardExecutiveCtoIndexRouteImport
-      parentRoute: typeof DashboardExecutiveCtoRoute
+    '/dashboard/recruitment/ai-interview': {
+      id: '/dashboard/recruitment/ai-interview'
+      path: '/ai-interview'
+      fullPath: '/dashboard/recruitment/ai-interview'
+      preLoaderRoute: typeof DashboardRecruitmentAiInterviewRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
     }
-    '/dashboard/executive/cio/': {
-      id: '/dashboard/executive/cio/'
+    '/dashboard/recruitment/ai-screening': {
+      id: '/dashboard/recruitment/ai-screening'
+      path: '/ai-screening'
+      fullPath: '/dashboard/recruitment/ai-screening'
+      preLoaderRoute: typeof DashboardRecruitmentAiScreeningRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/analytics': {
+      id: '/dashboard/recruitment/analytics'
+      path: '/analytics'
+      fullPath: '/dashboard/recruitment/analytics'
+      preLoaderRoute: typeof DashboardRecruitmentAnalyticsRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/automation': {
+      id: '/dashboard/recruitment/automation'
+      path: '/automation'
+      fullPath: '/dashboard/recruitment/automation'
+      preLoaderRoute: typeof DashboardRecruitmentAutomationRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/calendar': {
+      id: '/dashboard/recruitment/calendar'
+      path: '/calendar'
+      fullPath: '/dashboard/recruitment/calendar'
+      preLoaderRoute: typeof DashboardRecruitmentCalendarRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/candidates': {
+      id: '/dashboard/recruitment/candidates'
+      path: '/candidates'
+      fullPath: '/dashboard/recruitment/candidates'
+      preLoaderRoute: typeof DashboardRecruitmentCandidatesRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/career-site': {
+      id: '/dashboard/recruitment/career-site'
+      path: '/career-site'
+      fullPath: '/dashboard/recruitment/career-site'
+      preLoaderRoute: typeof DashboardRecruitmentCareerSiteRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/communication': {
+      id: '/dashboard/recruitment/communication'
+      path: '/communication'
+      fullPath: '/dashboard/recruitment/communication'
+      preLoaderRoute: typeof DashboardRecruitmentCommunicationRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/compensation': {
+      id: '/dashboard/recruitment/compensation'
+      path: '/compensation'
+      fullPath: '/dashboard/recruitment/compensation'
+      preLoaderRoute: typeof DashboardRecruitmentCompensationRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/compliance': {
+      id: '/dashboard/recruitment/compliance'
+      path: '/compliance'
+      fullPath: '/dashboard/recruitment/compliance'
+      preLoaderRoute: typeof DashboardRecruitmentComplianceRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/crm': {
+      id: '/dashboard/recruitment/crm'
+      path: '/crm'
+      fullPath: '/dashboard/recruitment/crm'
+      preLoaderRoute: typeof DashboardRecruitmentCrmRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/employee-onboarding': {
+      id: '/dashboard/recruitment/employee-onboarding'
+      path: '/employee-onboarding'
+      fullPath: '/dashboard/recruitment/employee-onboarding'
+      preLoaderRoute: typeof DashboardRecruitmentEmployeeOnboardingRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/hiring-manager': {
+      id: '/dashboard/recruitment/hiring-manager'
+      path: '/hiring-manager'
+      fullPath: '/dashboard/recruitment/hiring-manager'
+      preLoaderRoute: typeof DashboardRecruitmentHiringManagerRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/import-export': {
+      id: '/dashboard/recruitment/import-export'
+      path: '/import-export'
+      fullPath: '/dashboard/recruitment/import-export'
+      preLoaderRoute: typeof DashboardRecruitmentImportExportRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/interviews': {
+      id: '/dashboard/recruitment/interviews'
+      path: '/interviews'
+      fullPath: '/dashboard/recruitment/interviews'
+      preLoaderRoute: typeof DashboardRecruitmentInterviewsRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/kt-probation': {
+      id: '/dashboard/recruitment/kt-probation'
+      path: '/kt-probation'
+      fullPath: '/dashboard/recruitment/kt-probation'
+      preLoaderRoute: typeof DashboardRecruitmentKtProbationRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/notifications': {
+      id: '/dashboard/recruitment/notifications'
+      path: '/notifications'
+      fullPath: '/dashboard/recruitment/notifications'
+      preLoaderRoute: typeof DashboardRecruitmentNotificationsRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/offers': {
+      id: '/dashboard/recruitment/offers'
+      path: '/offers'
+      fullPath: '/dashboard/recruitment/offers'
+      preLoaderRoute: typeof DashboardRecruitmentOffersRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/onboarding': {
+      id: '/dashboard/recruitment/onboarding'
+      path: '/onboarding'
+      fullPath: '/dashboard/recruitment/onboarding'
+      preLoaderRoute: typeof DashboardRecruitmentOnboardingRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/pipeline': {
+      id: '/dashboard/recruitment/pipeline'
+      path: '/pipeline'
+      fullPath: '/dashboard/recruitment/pipeline'
+      preLoaderRoute: typeof DashboardRecruitmentPipelineRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/preboarding': {
+      id: '/dashboard/recruitment/preboarding'
+      path: '/preboarding'
+      fullPath: '/dashboard/recruitment/preboarding'
+      preLoaderRoute: typeof DashboardRecruitmentPreboardingRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/referrals': {
+      id: '/dashboard/recruitment/referrals'
+      path: '/referrals'
+      fullPath: '/dashboard/recruitment/referrals'
+      preLoaderRoute: typeof DashboardRecruitmentReferralsRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/reports': {
+      id: '/dashboard/recruitment/reports'
+      path: '/reports'
+      fullPath: '/dashboard/recruitment/reports'
+      preLoaderRoute: typeof DashboardRecruitmentReportsRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/requisitions': {
+      id: '/dashboard/recruitment/requisitions'
+      path: '/requisitions'
+      fullPath: '/dashboard/recruitment/requisitions'
+      preLoaderRoute: typeof DashboardRecruitmentRequisitionsRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/resume-intelligence': {
+      id: '/dashboard/recruitment/resume-intelligence'
+      path: '/resume-intelligence'
+      fullPath: '/dashboard/recruitment/resume-intelligence'
+      preLoaderRoute: typeof DashboardRecruitmentResumeIntelligenceRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/scorecards': {
+      id: '/dashboard/recruitment/scorecards'
+      path: '/scorecards'
+      fullPath: '/dashboard/recruitment/scorecards'
+      preLoaderRoute: typeof DashboardRecruitmentScorecardsRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/search': {
+      id: '/dashboard/recruitment/search'
+      path: '/search'
+      fullPath: '/dashboard/recruitment/search'
+      preLoaderRoute: typeof DashboardRecruitmentSearchRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/sourcing': {
+      id: '/dashboard/recruitment/sourcing'
+      path: '/sourcing'
+      fullPath: '/dashboard/recruitment/sourcing'
+      preLoaderRoute: typeof DashboardRecruitmentSourcingRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/talent-pool': {
+      id: '/dashboard/recruitment/talent-pool'
+      path: '/talent-pool'
+      fullPath: '/dashboard/recruitment/talent-pool'
+      preLoaderRoute: typeof DashboardRecruitmentTalentPoolRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/templates': {
+      id: '/dashboard/recruitment/templates'
+      path: '/templates'
+      fullPath: '/dashboard/recruitment/templates'
+      preLoaderRoute: typeof DashboardRecruitmentTemplatesRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/vendors': {
+      id: '/dashboard/recruitment/vendors'
+      path: '/vendors'
+      fullPath: '/dashboard/recruitment/vendors'
+      preLoaderRoute: typeof DashboardRecruitmentVendorsRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/verification': {
+      id: '/dashboard/recruitment/verification'
+      path: '/verification'
+      fullPath: '/dashboard/recruitment/verification'
+      preLoaderRoute: typeof DashboardRecruitmentVerificationRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/workforce-planning': {
+      id: '/dashboard/recruitment/workforce-planning'
+      path: '/workforce-planning'
+      fullPath: '/dashboard/recruitment/workforce-planning'
+      preLoaderRoute: typeof DashboardRecruitmentWorkforcePlanningRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/resources/': {
+      id: '/dashboard/resources/'
       path: '/'
-      fullPath: '/dashboard/executive/cio/'
-      preLoaderRoute: typeof DashboardExecutiveCioIndexRouteImport
-      parentRoute: typeof DashboardExecutiveCioRoute
+      fullPath: '/dashboard/resources/'
+      preLoaderRoute: typeof DashboardResourcesIndexRouteImport
+      parentRoute: typeof DashboardResourcesRoute
+    }
+    '/dashboard/resources/asset-management': {
+      id: '/dashboard/resources/asset-management'
+      path: '/asset-management'
+      fullPath: '/dashboard/resources/asset-management'
+      preLoaderRoute: typeof DashboardResourcesAssetManagementRouteImport
+      parentRoute: typeof DashboardResourcesRoute
+    }
+    '/dashboard/resources/assets': {
+      id: '/dashboard/resources/assets'
+      path: '/assets'
+      fullPath: '/dashboard/resources/assets'
+      preLoaderRoute: typeof DashboardResourcesAssetsRouteImport
+      parentRoute: typeof DashboardResourcesRoute
+    }
+    '/dashboard/resources/documents': {
+      id: '/dashboard/resources/documents'
+      path: '/documents'
+      fullPath: '/dashboard/resources/documents'
+      preLoaderRoute: typeof DashboardResourcesDocumentsRouteImport
+      parentRoute: typeof DashboardResourcesRoute
+    }
+    '/dashboard/settings/': {
+      id: '/dashboard/settings/'
+      path: '/'
+      fullPath: '/dashboard/settings/'
+      preLoaderRoute: typeof DashboardSettingsIndexRouteImport
+      parentRoute: typeof DashboardSettingsRoute
+    }
+    '/dashboard/settings/audit-logs': {
+      id: '/dashboard/settings/audit-logs'
+      path: '/audit-logs'
+      fullPath: '/dashboard/settings/audit-logs'
+      preLoaderRoute: typeof DashboardSettingsAuditLogsRouteImport
+      parentRoute: typeof DashboardSettingsRoute
+    }
+    '/dashboard/settings/billing': {
+      id: '/dashboard/settings/billing'
+      path: '/billing'
+      fullPath: '/dashboard/settings/billing'
+      preLoaderRoute: typeof DashboardSettingsBillingRouteImport
+      parentRoute: typeof DashboardSettingsRoute
+    }
+    '/dashboard/settings/company': {
+      id: '/dashboard/settings/company'
+      path: '/company'
+      fullPath: '/dashboard/settings/company'
+      preLoaderRoute: typeof DashboardSettingsCompanyRouteImport
+      parentRoute: typeof DashboardSettingsRoute
+    }
+    '/dashboard/settings/general': {
+      id: '/dashboard/settings/general'
+      path: '/general'
+      fullPath: '/dashboard/settings/general'
+      preLoaderRoute: typeof DashboardSettingsGeneralRouteImport
+      parentRoute: typeof DashboardSettingsRoute
+    }
+    '/dashboard/settings/integrations': {
+      id: '/dashboard/settings/integrations'
+      path: '/integrations'
+      fullPath: '/dashboard/settings/integrations'
+      preLoaderRoute: typeof DashboardSettingsIntegrationsRouteImport
+      parentRoute: typeof DashboardSettingsRoute
+    }
+    '/dashboard/settings/notifications': {
+      id: '/dashboard/settings/notifications'
+      path: '/notifications'
+      fullPath: '/dashboard/settings/notifications'
+      preLoaderRoute: typeof DashboardSettingsNotificationsRouteImport
+      parentRoute: typeof DashboardSettingsRoute
+    }
+    '/dashboard/settings/profile': {
+      id: '/dashboard/settings/profile'
+      path: '/profile'
+      fullPath: '/dashboard/settings/profile'
+      preLoaderRoute: typeof DashboardSettingsProfileRouteImport
+      parentRoute: typeof DashboardSettingsRoute
+    }
+    '/dashboard/settings/roles-permissions': {
+      id: '/dashboard/settings/roles-permissions'
+      path: '/roles-permissions'
+      fullPath: '/dashboard/settings/roles-permissions'
+      preLoaderRoute: typeof DashboardSettingsRolesPermissionsRouteImport
+      parentRoute: typeof DashboardSettingsRoute
+    }
+    '/dashboard/settings/security': {
+      id: '/dashboard/settings/security'
+      path: '/security'
+      fullPath: '/dashboard/settings/security'
+      preLoaderRoute: typeof DashboardSettingsSecurityRouteImport
+      parentRoute: typeof DashboardSettingsRoute
+    }
+    '/dashboard/super-admin/': {
+      id: '/dashboard/super-admin/'
+      path: '/'
+      fullPath: '/dashboard/super-admin/'
+      preLoaderRoute: typeof DashboardSuperAdminIndexRouteImport
+      parentRoute: typeof DashboardSuperAdminRoute
+    }
+    '/dashboard/super-admin/activity': {
+      id: '/dashboard/super-admin/activity'
+      path: '/activity'
+      fullPath: '/dashboard/super-admin/activity'
+      preLoaderRoute: typeof DashboardSuperAdminActivityRouteImport
+      parentRoute: typeof DashboardSuperAdminRoute
+    }
+    '/dashboard/super-admin/analytics': {
+      id: '/dashboard/super-admin/analytics'
+      path: '/analytics'
+      fullPath: '/dashboard/super-admin/analytics'
+      preLoaderRoute: typeof DashboardSuperAdminAnalyticsRouteImport
+      parentRoute: typeof DashboardSuperAdminRoute
+    }
+    '/dashboard/super-admin/audit-logs': {
+      id: '/dashboard/super-admin/audit-logs'
+      path: '/audit-logs'
+      fullPath: '/dashboard/super-admin/audit-logs'
+      preLoaderRoute: typeof DashboardSuperAdminAuditLogsRouteImport
+      parentRoute: typeof DashboardSuperAdminRoute
+    }
+    '/dashboard/super-admin/organizations': {
+      id: '/dashboard/super-admin/organizations'
+      path: '/organizations'
+      fullPath: '/dashboard/super-admin/organizations'
+      preLoaderRoute: typeof DashboardSuperAdminOrganizationsRouteImport
+      parentRoute: typeof DashboardSuperAdminRoute
+    }
+    '/dashboard/super-admin/platform-config': {
+      id: '/dashboard/super-admin/platform-config'
+      path: '/platform-config'
+      fullPath: '/dashboard/super-admin/platform-config'
+      preLoaderRoute: typeof DashboardSuperAdminPlatformConfigRouteImport
+      parentRoute: typeof DashboardSuperAdminRoute
+    }
+    '/dashboard/super-admin/settings': {
+      id: '/dashboard/super-admin/settings'
+      path: '/settings'
+      fullPath: '/dashboard/super-admin/settings'
+      preLoaderRoute: typeof DashboardSuperAdminSettingsRouteImport
+      parentRoute: typeof DashboardSuperAdminRoute
+    }
+    '/dashboard/super-admin/users': {
+      id: '/dashboard/super-admin/users'
+      path: '/users'
+      fullPath: '/dashboard/super-admin/users'
+      preLoaderRoute: typeof DashboardSuperAdminUsersRouteImport
+      parentRoute: typeof DashboardSuperAdminRoute
+    }
+    '/dashboard/talent/': {
+      id: '/dashboard/talent/'
+      path: '/'
+      fullPath: '/dashboard/talent/'
+      preLoaderRoute: typeof DashboardTalentIndexRouteImport
+      parentRoute: typeof DashboardTalentRoute
+    }
+    '/dashboard/talent/performance': {
+      id: '/dashboard/talent/performance'
+      path: '/performance'
+      fullPath: '/dashboard/talent/performance'
+      preLoaderRoute: typeof DashboardTalentPerformanceRouteImport
+      parentRoute: typeof DashboardTalentRoute
+    }
+    '/dashboard/talent/recruitment': {
+      id: '/dashboard/talent/recruitment'
+      path: '/recruitment'
+      fullPath: '/dashboard/talent/recruitment'
+      preLoaderRoute: typeof DashboardTalentRecruitmentRouteImport
+      parentRoute: typeof DashboardTalentRoute
+    }
+    '/dashboard/workforce/': {
+      id: '/dashboard/workforce/'
+      path: '/'
+      fullPath: '/dashboard/workforce/'
+      preLoaderRoute: typeof DashboardWorkforceIndexRouteImport
+      parentRoute: typeof DashboardWorkforceRoute
+    }
+    '/dashboard/workforce/attendance': {
+      id: '/dashboard/workforce/attendance'
+      path: '/attendance'
+      fullPath: '/dashboard/workforce/attendance'
+      preLoaderRoute: typeof DashboardWorkforceAttendanceRouteImport
+      parentRoute: typeof DashboardWorkforceRoute
+    }
+    '/dashboard/workforce/departments': {
+      id: '/dashboard/workforce/departments'
+      path: '/departments'
+      fullPath: '/dashboard/workforce/departments'
+      preLoaderRoute: typeof DashboardWorkforceDepartmentsRouteImport
+      parentRoute: typeof DashboardWorkforceRoute
+    }
+    '/dashboard/workforce/leaves': {
+      id: '/dashboard/workforce/leaves'
+      path: '/leaves'
+      fullPath: '/dashboard/workforce/leaves'
+      preLoaderRoute: typeof DashboardWorkforceLeavesRouteImport
+      parentRoute: typeof DashboardWorkforceRoute
+    }
+    '/dashboard/workforce/people': {
+      id: '/dashboard/workforce/people'
+      path: '/people'
+      fullPath: '/dashboard/workforce/people'
+      preLoaderRoute: typeof DashboardWorkforcePeopleRouteImport
+      parentRoute: typeof DashboardWorkforceRoute
+    }
+    '/dashboard/workforce/timesheets': {
+      id: '/dashboard/workforce/timesheets'
+      path: '/timesheets'
+      fullPath: '/dashboard/workforce/timesheets'
+      preLoaderRoute: typeof DashboardWorkforceTimesheetsRouteImport
+      parentRoute: typeof DashboardWorkforceRoute
+    }
+    '/interview/book/$token': {
+      id: '/interview/book/$token'
+      path: '/interview/book/$token'
+      fullPath: '/interview/book/$token'
+      preLoaderRoute: typeof InterviewBookTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jobs/apply/$ukey': {
+      id: '/jobs/apply/$ukey'
+      path: '/jobs/apply/$ukey'
+      fullPath: '/jobs/apply/$ukey'
+      preLoaderRoute: typeof JobsApplyUkeyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/connect/channels/$channelId': {
+      id: '/dashboard/connect/channels/$channelId'
+      path: '/channels/$channelId'
+      fullPath: '/dashboard/connect/channels/$channelId'
+      preLoaderRoute: typeof DashboardConnectChannelsChannelIdRouteImport
+      parentRoute: typeof DashboardConnectRoute
+    }
+    '/dashboard/connect/dm/$conversationId': {
+      id: '/dashboard/connect/dm/$conversationId'
+      path: '/dm/$conversationId'
+      fullPath: '/dashboard/connect/dm/$conversationId'
+      preLoaderRoute: typeof DashboardConnectDmConversationIdRouteImport
+      parentRoute: typeof DashboardConnectRoute
     }
     '/dashboard/executive/ceo/': {
       id: '/dashboard/executive/ceo/'
       path: '/'
       fullPath: '/dashboard/executive/ceo/'
       preLoaderRoute: typeof DashboardExecutiveCeoIndexRouteImport
-      parentRoute: typeof DashboardExecutiveCeoRoute
-    }
-    '/dashboard/recruitment/jobs/new': {
-      id: '/dashboard/recruitment/jobs/new'
-      path: '/jobs/new'
-      fullPath: '/dashboard/recruitment/jobs/new'
-      preLoaderRoute: typeof DashboardRecruitmentJobsNewRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/jobs/$jobId': {
-      id: '/dashboard/recruitment/jobs/$jobId'
-      path: '/jobs/$jobId'
-      fullPath: '/dashboard/recruitment/jobs/$jobId'
-      preLoaderRoute: typeof DashboardRecruitmentJobsJobIdRouteImport
-      parentRoute: typeof DashboardRecruitmentRoute
-    }
-    '/dashboard/recruitment/candidates/$candidateId': {
-      id: '/dashboard/recruitment/candidates/$candidateId'
-      path: '/$candidateId'
-      fullPath: '/dashboard/recruitment/candidates/$candidateId'
-      preLoaderRoute: typeof DashboardRecruitmentCandidatesCandidateIdRouteImport
-      parentRoute: typeof DashboardRecruitmentCandidatesRoute
-    }
-    '/dashboard/payroll/payments/$batchId': {
-      id: '/dashboard/payroll/payments/$batchId'
-      path: '/$batchId'
-      fullPath: '/dashboard/payroll/payments/$batchId'
-      preLoaderRoute: typeof DashboardPayrollPaymentsBatchIdRouteImport
-      parentRoute: typeof DashboardPayrollPaymentsRoute
-    }
-    '/dashboard/executive/cto/settings': {
-      id: '/dashboard/executive/cto/settings'
-      path: '/settings'
-      fullPath: '/dashboard/executive/cto/settings'
-      preLoaderRoute: typeof DashboardExecutiveCtoSettingsRouteImport
-      parentRoute: typeof DashboardExecutiveCtoRoute
-    }
-    '/dashboard/executive/cto/security': {
-      id: '/dashboard/executive/cto/security'
-      path: '/security'
-      fullPath: '/dashboard/executive/cto/security'
-      preLoaderRoute: typeof DashboardExecutiveCtoSecurityRouteImport
-      parentRoute: typeof DashboardExecutiveCtoRoute
-    }
-    '/dashboard/executive/cto/projects': {
-      id: '/dashboard/executive/cto/projects'
-      path: '/projects'
-      fullPath: '/dashboard/executive/cto/projects'
-      preLoaderRoute: typeof DashboardExecutiveCtoProjectsRouteImport
-      parentRoute: typeof DashboardExecutiveCtoRoute
-    }
-    '/dashboard/executive/cto/monitoring': {
-      id: '/dashboard/executive/cto/monitoring'
-      path: '/monitoring'
-      fullPath: '/dashboard/executive/cto/monitoring'
-      preLoaderRoute: typeof DashboardExecutiveCtoMonitoringRouteImport
-      parentRoute: typeof DashboardExecutiveCtoRoute
-    }
-    '/dashboard/executive/cto/infrastructure': {
-      id: '/dashboard/executive/cto/infrastructure'
-      path: '/infrastructure'
-      fullPath: '/dashboard/executive/cto/infrastructure'
-      preLoaderRoute: typeof DashboardExecutiveCtoInfrastructureRouteImport
-      parentRoute: typeof DashboardExecutiveCtoRoute
-    }
-    '/dashboard/executive/cto/engineering': {
-      id: '/dashboard/executive/cto/engineering'
-      path: '/engineering'
-      fullPath: '/dashboard/executive/cto/engineering'
-      preLoaderRoute: typeof DashboardExecutiveCtoEngineeringRouteImport
-      parentRoute: typeof DashboardExecutiveCtoRoute
-    }
-    '/dashboard/executive/cto/devops': {
-      id: '/dashboard/executive/cto/devops'
-      path: '/devops'
-      fullPath: '/dashboard/executive/cto/devops'
-      preLoaderRoute: typeof DashboardExecutiveCtoDevopsRouteImport
-      parentRoute: typeof DashboardExecutiveCtoRoute
-    }
-    '/dashboard/executive/cto/developers': {
-      id: '/dashboard/executive/cto/developers'
-      path: '/developers'
-      fullPath: '/dashboard/executive/cto/developers'
-      preLoaderRoute: typeof DashboardExecutiveCtoDevelopersRouteImport
-      parentRoute: typeof DashboardExecutiveCtoRoute
-    }
-    '/dashboard/executive/cto/database': {
-      id: '/dashboard/executive/cto/database'
-      path: '/database'
-      fullPath: '/dashboard/executive/cto/database'
-      preLoaderRoute: typeof DashboardExecutiveCtoDatabaseRouteImport
-      parentRoute: typeof DashboardExecutiveCtoRoute
-    }
-    '/dashboard/executive/cto/analytics': {
-      id: '/dashboard/executive/cto/analytics'
-      path: '/analytics'
-      fullPath: '/dashboard/executive/cto/analytics'
-      preLoaderRoute: typeof DashboardExecutiveCtoAnalyticsRouteImport
-      parentRoute: typeof DashboardExecutiveCtoRoute
-    }
-    '/dashboard/executive/cto/ai': {
-      id: '/dashboard/executive/cto/ai'
-      path: '/ai'
-      fullPath: '/dashboard/executive/cto/ai'
-      preLoaderRoute: typeof DashboardExecutiveCtoAiRouteImport
-      parentRoute: typeof DashboardExecutiveCtoRoute
-    }
-    '/dashboard/executive/cio/settings': {
-      id: '/dashboard/executive/cio/settings'
-      path: '/settings'
-      fullPath: '/dashboard/executive/cio/settings'
-      preLoaderRoute: typeof DashboardExecutiveCioSettingsRouteImport
-      parentRoute: typeof DashboardExecutiveCioRoute
-    }
-    '/dashboard/executive/cio/it-operations': {
-      id: '/dashboard/executive/cio/it-operations'
-      path: '/it-operations'
-      fullPath: '/dashboard/executive/cio/it-operations'
-      preLoaderRoute: typeof DashboardExecutiveCioItOperationsRouteImport
-      parentRoute: typeof DashboardExecutiveCioRoute
-    }
-    '/dashboard/executive/cio/it-governance': {
-      id: '/dashboard/executive/cio/it-governance'
-      path: '/it-governance'
-      fullPath: '/dashboard/executive/cio/it-governance'
-      preLoaderRoute: typeof DashboardExecutiveCioItGovernanceRouteImport
-      parentRoute: typeof DashboardExecutiveCioRoute
-    }
-    '/dashboard/executive/cio/infrastructure': {
-      id: '/dashboard/executive/cio/infrastructure'
-      path: '/infrastructure'
-      fullPath: '/dashboard/executive/cio/infrastructure'
-      preLoaderRoute: typeof DashboardExecutiveCioInfrastructureRouteImport
-      parentRoute: typeof DashboardExecutiveCioRoute
-    }
-    '/dashboard/executive/cio/digital-transformation': {
-      id: '/dashboard/executive/cio/digital-transformation'
-      path: '/digital-transformation'
-      fullPath: '/dashboard/executive/cio/digital-transformation'
-      preLoaderRoute: typeof DashboardExecutiveCioDigitalTransformationRouteImport
-      parentRoute: typeof DashboardExecutiveCioRoute
-    }
-    '/dashboard/executive/cio/cyber-security': {
-      id: '/dashboard/executive/cio/cyber-security'
-      path: '/cyber-security'
-      fullPath: '/dashboard/executive/cio/cyber-security'
-      preLoaderRoute: typeof DashboardExecutiveCioCyberSecurityRouteImport
-      parentRoute: typeof DashboardExecutiveCioRoute
-    }
-    '/dashboard/executive/cio/cloud-network': {
-      id: '/dashboard/executive/cio/cloud-network'
-      path: '/cloud-network'
-      fullPath: '/dashboard/executive/cio/cloud-network'
-      preLoaderRoute: typeof DashboardExecutiveCioCloudNetworkRouteImport
-      parentRoute: typeof DashboardExecutiveCioRoute
-    }
-    '/dashboard/executive/cio/analytics': {
-      id: '/dashboard/executive/cio/analytics'
-      path: '/analytics'
-      fullPath: '/dashboard/executive/cio/analytics'
-      preLoaderRoute: typeof DashboardExecutiveCioAnalyticsRouteImport
-      parentRoute: typeof DashboardExecutiveCioRoute
-    }
-    '/dashboard/executive/ceo/settings': {
-      id: '/dashboard/executive/ceo/settings'
-      path: '/settings'
-      fullPath: '/dashboard/executive/ceo/settings'
-      preLoaderRoute: typeof DashboardExecutiveCeoSettingsRouteImport
-      parentRoute: typeof DashboardExecutiveCeoRoute
-    }
-    '/dashboard/executive/ceo/sales': {
-      id: '/dashboard/executive/ceo/sales'
-      path: '/sales'
-      fullPath: '/dashboard/executive/ceo/sales'
-      preLoaderRoute: typeof DashboardExecutiveCeoSalesRouteImport
-      parentRoute: typeof DashboardExecutiveCeoRoute
-    }
-    '/dashboard/executive/ceo/reports': {
-      id: '/dashboard/executive/ceo/reports'
-      path: '/reports'
-      fullPath: '/dashboard/executive/ceo/reports'
-      preLoaderRoute: typeof DashboardExecutiveCeoReportsRouteImport
-      parentRoute: typeof DashboardExecutiveCeoRoute
-    }
-    '/dashboard/executive/ceo/organization': {
-      id: '/dashboard/executive/ceo/organization'
-      path: '/organization'
-      fullPath: '/dashboard/executive/ceo/organization'
-      preLoaderRoute: typeof DashboardExecutiveCeoOrganizationRouteImport
-      parentRoute: typeof DashboardExecutiveCeoRoute
-    }
-    '/dashboard/executive/ceo/operations': {
-      id: '/dashboard/executive/ceo/operations'
-      path: '/operations'
-      fullPath: '/dashboard/executive/ceo/operations'
-      preLoaderRoute: typeof DashboardExecutiveCeoOperationsRouteImport
-      parentRoute: typeof DashboardExecutiveCeoRoute
-    }
-    '/dashboard/executive/ceo/finance': {
-      id: '/dashboard/executive/ceo/finance'
-      path: '/finance'
-      fullPath: '/dashboard/executive/ceo/finance'
-      preLoaderRoute: typeof DashboardExecutiveCeoFinanceRouteImport
-      parentRoute: typeof DashboardExecutiveCeoRoute
-    }
-    '/dashboard/executive/ceo/business': {
-      id: '/dashboard/executive/ceo/business'
-      path: '/business'
-      fullPath: '/dashboard/executive/ceo/business'
-      preLoaderRoute: typeof DashboardExecutiveCeoBusinessRouteImport
       parentRoute: typeof DashboardExecutiveCeoRoute
     }
     '/dashboard/executive/ceo/ai-insights': {
@@ -5035,60 +4811,249 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardExecutiveCeoAiInsightsRouteImport
       parentRoute: typeof DashboardExecutiveCeoRoute
     }
-    '/dashboard/connect/dm/$conversationId': {
-      id: '/dashboard/connect/dm/$conversationId'
-      path: '/dm/$conversationId'
-      fullPath: '/dashboard/connect/dm/$conversationId'
-      preLoaderRoute: typeof DashboardConnectDmConversationIdRouteImport
-      parentRoute: typeof DashboardConnectRoute
+    '/dashboard/executive/ceo/business': {
+      id: '/dashboard/executive/ceo/business'
+      path: '/business'
+      fullPath: '/dashboard/executive/ceo/business'
+      preLoaderRoute: typeof DashboardExecutiveCeoBusinessRouteImport
+      parentRoute: typeof DashboardExecutiveCeoRoute
     }
-    '/dashboard/connect/channels/$channelId': {
-      id: '/dashboard/connect/channels/$channelId'
-      path: '/channels/$channelId'
-      fullPath: '/dashboard/connect/channels/$channelId'
-      preLoaderRoute: typeof DashboardConnectChannelsChannelIdRouteImport
-      parentRoute: typeof DashboardConnectRoute
+    '/dashboard/executive/ceo/finance': {
+      id: '/dashboard/executive/ceo/finance'
+      path: '/finance'
+      fullPath: '/dashboard/executive/ceo/finance'
+      preLoaderRoute: typeof DashboardExecutiveCeoFinanceRouteImport
+      parentRoute: typeof DashboardExecutiveCeoRoute
     }
-    '/dashboard/recruitment/jobs/$jobId/publish': {
-      id: '/dashboard/recruitment/jobs/$jobId/publish'
-      path: '/publish'
-      fullPath: '/dashboard/recruitment/jobs/$jobId/publish'
-      preLoaderRoute: typeof DashboardRecruitmentJobsJobIdPublishRouteImport
-      parentRoute: typeof DashboardRecruitmentJobsJobIdRoute
+    '/dashboard/executive/ceo/operations': {
+      id: '/dashboard/executive/ceo/operations'
+      path: '/operations'
+      fullPath: '/dashboard/executive/ceo/operations'
+      preLoaderRoute: typeof DashboardExecutiveCeoOperationsRouteImport
+      parentRoute: typeof DashboardExecutiveCeoRoute
     }
-    '/dashboard/payroll/runs/$runId/validation': {
-      id: '/dashboard/payroll/runs/$runId/validation'
-      path: '/runs/$runId/validation'
-      fullPath: '/dashboard/payroll/runs/$runId/validation'
-      preLoaderRoute: typeof DashboardPayrollRunsRunIdValidationRouteImport
-      parentRoute: typeof DashboardPayrollRoute
+    '/dashboard/executive/ceo/organization': {
+      id: '/dashboard/executive/ceo/organization'
+      path: '/organization'
+      fullPath: '/dashboard/executive/ceo/organization'
+      preLoaderRoute: typeof DashboardExecutiveCeoOrganizationRouteImport
+      parentRoute: typeof DashboardExecutiveCeoRoute
     }
-    '/dashboard/payroll/runs/$runId/review': {
-      id: '/dashboard/payroll/runs/$runId/review'
-      path: '/runs/$runId/review'
-      fullPath: '/dashboard/payroll/runs/$runId/review'
-      preLoaderRoute: typeof DashboardPayrollRunsRunIdReviewRouteImport
-      parentRoute: typeof DashboardPayrollRoute
+    '/dashboard/executive/ceo/reports': {
+      id: '/dashboard/executive/ceo/reports'
+      path: '/reports'
+      fullPath: '/dashboard/executive/ceo/reports'
+      preLoaderRoute: typeof DashboardExecutiveCeoReportsRouteImport
+      parentRoute: typeof DashboardExecutiveCeoRoute
     }
-    '/dashboard/payroll/runs/$runId/processing': {
-      id: '/dashboard/payroll/runs/$runId/processing'
-      path: '/runs/$runId/processing'
-      fullPath: '/dashboard/payroll/runs/$runId/processing'
-      preLoaderRoute: typeof DashboardPayrollRunsRunIdProcessingRouteImport
-      parentRoute: typeof DashboardPayrollRoute
+    '/dashboard/executive/ceo/sales': {
+      id: '/dashboard/executive/ceo/sales'
+      path: '/sales'
+      fullPath: '/dashboard/executive/ceo/sales'
+      preLoaderRoute: typeof DashboardExecutiveCeoSalesRouteImport
+      parentRoute: typeof DashboardExecutiveCeoRoute
     }
-    '/dashboard/payroll/runs/$runId/preview': {
-      id: '/dashboard/payroll/runs/$runId/preview'
-      path: '/runs/$runId/preview'
-      fullPath: '/dashboard/payroll/runs/$runId/preview'
-      preLoaderRoute: typeof DashboardPayrollRunsRunIdPreviewRouteImport
-      parentRoute: typeof DashboardPayrollRoute
+    '/dashboard/executive/ceo/settings': {
+      id: '/dashboard/executive/ceo/settings'
+      path: '/settings'
+      fullPath: '/dashboard/executive/ceo/settings'
+      preLoaderRoute: typeof DashboardExecutiveCeoSettingsRouteImport
+      parentRoute: typeof DashboardExecutiveCeoRoute
     }
-    '/dashboard/payroll/runs/$runId/payment': {
-      id: '/dashboard/payroll/runs/$runId/payment'
-      path: '/runs/$runId/payment'
-      fullPath: '/dashboard/payroll/runs/$runId/payment'
-      preLoaderRoute: typeof DashboardPayrollRunsRunIdPaymentRouteImport
+    '/dashboard/executive/cio/': {
+      id: '/dashboard/executive/cio/'
+      path: '/'
+      fullPath: '/dashboard/executive/cio/'
+      preLoaderRoute: typeof DashboardExecutiveCioIndexRouteImport
+      parentRoute: typeof DashboardExecutiveCioRoute
+    }
+    '/dashboard/executive/cio/analytics': {
+      id: '/dashboard/executive/cio/analytics'
+      path: '/analytics'
+      fullPath: '/dashboard/executive/cio/analytics'
+      preLoaderRoute: typeof DashboardExecutiveCioAnalyticsRouteImport
+      parentRoute: typeof DashboardExecutiveCioRoute
+    }
+    '/dashboard/executive/cio/cloud-network': {
+      id: '/dashboard/executive/cio/cloud-network'
+      path: '/cloud-network'
+      fullPath: '/dashboard/executive/cio/cloud-network'
+      preLoaderRoute: typeof DashboardExecutiveCioCloudNetworkRouteImport
+      parentRoute: typeof DashboardExecutiveCioRoute
+    }
+    '/dashboard/executive/cio/cyber-security': {
+      id: '/dashboard/executive/cio/cyber-security'
+      path: '/cyber-security'
+      fullPath: '/dashboard/executive/cio/cyber-security'
+      preLoaderRoute: typeof DashboardExecutiveCioCyberSecurityRouteImport
+      parentRoute: typeof DashboardExecutiveCioRoute
+    }
+    '/dashboard/executive/cio/digital-transformation': {
+      id: '/dashboard/executive/cio/digital-transformation'
+      path: '/digital-transformation'
+      fullPath: '/dashboard/executive/cio/digital-transformation'
+      preLoaderRoute: typeof DashboardExecutiveCioDigitalTransformationRouteImport
+      parentRoute: typeof DashboardExecutiveCioRoute
+    }
+    '/dashboard/executive/cio/infrastructure': {
+      id: '/dashboard/executive/cio/infrastructure'
+      path: '/infrastructure'
+      fullPath: '/dashboard/executive/cio/infrastructure'
+      preLoaderRoute: typeof DashboardExecutiveCioInfrastructureRouteImport
+      parentRoute: typeof DashboardExecutiveCioRoute
+    }
+    '/dashboard/executive/cio/it-governance': {
+      id: '/dashboard/executive/cio/it-governance'
+      path: '/it-governance'
+      fullPath: '/dashboard/executive/cio/it-governance'
+      preLoaderRoute: typeof DashboardExecutiveCioItGovernanceRouteImport
+      parentRoute: typeof DashboardExecutiveCioRoute
+    }
+    '/dashboard/executive/cio/it-operations': {
+      id: '/dashboard/executive/cio/it-operations'
+      path: '/it-operations'
+      fullPath: '/dashboard/executive/cio/it-operations'
+      preLoaderRoute: typeof DashboardExecutiveCioItOperationsRouteImport
+      parentRoute: typeof DashboardExecutiveCioRoute
+    }
+    '/dashboard/executive/cio/settings': {
+      id: '/dashboard/executive/cio/settings'
+      path: '/settings'
+      fullPath: '/dashboard/executive/cio/settings'
+      preLoaderRoute: typeof DashboardExecutiveCioSettingsRouteImport
+      parentRoute: typeof DashboardExecutiveCioRoute
+    }
+    '/dashboard/executive/cto/': {
+      id: '/dashboard/executive/cto/'
+      path: '/'
+      fullPath: '/dashboard/executive/cto/'
+      preLoaderRoute: typeof DashboardExecutiveCtoIndexRouteImport
+      parentRoute: typeof DashboardExecutiveCtoRoute
+    }
+    '/dashboard/executive/cto/ai': {
+      id: '/dashboard/executive/cto/ai'
+      path: '/ai'
+      fullPath: '/dashboard/executive/cto/ai'
+      preLoaderRoute: typeof DashboardExecutiveCtoAiRouteImport
+      parentRoute: typeof DashboardExecutiveCtoRoute
+    }
+    '/dashboard/executive/cto/analytics': {
+      id: '/dashboard/executive/cto/analytics'
+      path: '/analytics'
+      fullPath: '/dashboard/executive/cto/analytics'
+      preLoaderRoute: typeof DashboardExecutiveCtoAnalyticsRouteImport
+      parentRoute: typeof DashboardExecutiveCtoRoute
+    }
+    '/dashboard/executive/cto/database': {
+      id: '/dashboard/executive/cto/database'
+      path: '/database'
+      fullPath: '/dashboard/executive/cto/database'
+      preLoaderRoute: typeof DashboardExecutiveCtoDatabaseRouteImport
+      parentRoute: typeof DashboardExecutiveCtoRoute
+    }
+    '/dashboard/executive/cto/developers': {
+      id: '/dashboard/executive/cto/developers'
+      path: '/developers'
+      fullPath: '/dashboard/executive/cto/developers'
+      preLoaderRoute: typeof DashboardExecutiveCtoDevelopersRouteImport
+      parentRoute: typeof DashboardExecutiveCtoRoute
+    }
+    '/dashboard/executive/cto/devops': {
+      id: '/dashboard/executive/cto/devops'
+      path: '/devops'
+      fullPath: '/dashboard/executive/cto/devops'
+      preLoaderRoute: typeof DashboardExecutiveCtoDevopsRouteImport
+      parentRoute: typeof DashboardExecutiveCtoRoute
+    }
+    '/dashboard/executive/cto/engineering': {
+      id: '/dashboard/executive/cto/engineering'
+      path: '/engineering'
+      fullPath: '/dashboard/executive/cto/engineering'
+      preLoaderRoute: typeof DashboardExecutiveCtoEngineeringRouteImport
+      parentRoute: typeof DashboardExecutiveCtoRoute
+    }
+    '/dashboard/executive/cto/infrastructure': {
+      id: '/dashboard/executive/cto/infrastructure'
+      path: '/infrastructure'
+      fullPath: '/dashboard/executive/cto/infrastructure'
+      preLoaderRoute: typeof DashboardExecutiveCtoInfrastructureRouteImport
+      parentRoute: typeof DashboardExecutiveCtoRoute
+    }
+    '/dashboard/executive/cto/monitoring': {
+      id: '/dashboard/executive/cto/monitoring'
+      path: '/monitoring'
+      fullPath: '/dashboard/executive/cto/monitoring'
+      preLoaderRoute: typeof DashboardExecutiveCtoMonitoringRouteImport
+      parentRoute: typeof DashboardExecutiveCtoRoute
+    }
+    '/dashboard/executive/cto/projects': {
+      id: '/dashboard/executive/cto/projects'
+      path: '/projects'
+      fullPath: '/dashboard/executive/cto/projects'
+      preLoaderRoute: typeof DashboardExecutiveCtoProjectsRouteImport
+      parentRoute: typeof DashboardExecutiveCtoRoute
+    }
+    '/dashboard/executive/cto/security': {
+      id: '/dashboard/executive/cto/security'
+      path: '/security'
+      fullPath: '/dashboard/executive/cto/security'
+      preLoaderRoute: typeof DashboardExecutiveCtoSecurityRouteImport
+      parentRoute: typeof DashboardExecutiveCtoRoute
+    }
+    '/dashboard/executive/cto/settings': {
+      id: '/dashboard/executive/cto/settings'
+      path: '/settings'
+      fullPath: '/dashboard/executive/cto/settings'
+      preLoaderRoute: typeof DashboardExecutiveCtoSettingsRouteImport
+      parentRoute: typeof DashboardExecutiveCtoRoute
+    }
+    '/dashboard/payroll/payments/$batchId': {
+      id: '/dashboard/payroll/payments/$batchId'
+      path: '/$batchId'
+      fullPath: '/dashboard/payroll/payments/$batchId'
+      preLoaderRoute: typeof DashboardPayrollPaymentsBatchIdRouteImport
+      parentRoute: typeof DashboardPayrollPaymentsRoute
+    }
+    '/dashboard/recruitment/candidates/': {
+      id: '/dashboard/recruitment/candidates/'
+      path: '/'
+      fullPath: '/dashboard/recruitment/candidates/'
+      preLoaderRoute: typeof DashboardRecruitmentCandidatesIndexRouteImport
+      parentRoute: typeof DashboardRecruitmentCandidatesRoute
+    }
+    '/dashboard/recruitment/candidates/$candidateId': {
+      id: '/dashboard/recruitment/candidates/$candidateId'
+      path: '/$candidateId'
+      fullPath: '/dashboard/recruitment/candidates/$candidateId'
+      preLoaderRoute: typeof DashboardRecruitmentCandidatesCandidateIdRouteImport
+      parentRoute: typeof DashboardRecruitmentCandidatesRoute
+    }
+    '/dashboard/recruitment/jobs/': {
+      id: '/dashboard/recruitment/jobs/'
+      path: '/jobs'
+      fullPath: '/dashboard/recruitment/jobs/'
+      preLoaderRoute: typeof DashboardRecruitmentJobsIndexRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/jobs/$jobId': {
+      id: '/dashboard/recruitment/jobs/$jobId'
+      path: '/jobs/$jobId'
+      fullPath: '/dashboard/recruitment/jobs/$jobId'
+      preLoaderRoute: typeof DashboardRecruitmentJobsJobIdRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/recruitment/jobs/new': {
+      id: '/dashboard/recruitment/jobs/new'
+      path: '/jobs/new'
+      fullPath: '/dashboard/recruitment/jobs/new'
+      preLoaderRoute: typeof DashboardRecruitmentJobsNewRouteImport
+      parentRoute: typeof DashboardRecruitmentRoute
+    }
+    '/dashboard/payroll/runs/$runId/approval': {
+      id: '/dashboard/payroll/runs/$runId/approval'
+      path: '/runs/$runId/approval'
+      fullPath: '/dashboard/payroll/runs/$runId/approval'
+      preLoaderRoute: typeof DashboardPayrollRunsRunIdApprovalRouteImport
       parentRoute: typeof DashboardPayrollRoute
     }
     '/dashboard/payroll/runs/$runId/finalize': {
@@ -5098,12 +5063,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardPayrollRunsRunIdFinalizeRouteImport
       parentRoute: typeof DashboardPayrollRoute
     }
-    '/dashboard/payroll/runs/$runId/approval': {
-      id: '/dashboard/payroll/runs/$runId/approval'
-      path: '/runs/$runId/approval'
-      fullPath: '/dashboard/payroll/runs/$runId/approval'
-      preLoaderRoute: typeof DashboardPayrollRunsRunIdApprovalRouteImport
+    '/dashboard/payroll/runs/$runId/payment': {
+      id: '/dashboard/payroll/runs/$runId/payment'
+      path: '/runs/$runId/payment'
+      fullPath: '/dashboard/payroll/runs/$runId/payment'
+      preLoaderRoute: typeof DashboardPayrollRunsRunIdPaymentRouteImport
       parentRoute: typeof DashboardPayrollRoute
+    }
+    '/dashboard/payroll/runs/$runId/preview': {
+      id: '/dashboard/payroll/runs/$runId/preview'
+      path: '/runs/$runId/preview'
+      fullPath: '/dashboard/payroll/runs/$runId/preview'
+      preLoaderRoute: typeof DashboardPayrollRunsRunIdPreviewRouteImport
+      parentRoute: typeof DashboardPayrollRoute
+    }
+    '/dashboard/payroll/runs/$runId/processing': {
+      id: '/dashboard/payroll/runs/$runId/processing'
+      path: '/runs/$runId/processing'
+      fullPath: '/dashboard/payroll/runs/$runId/processing'
+      preLoaderRoute: typeof DashboardPayrollRunsRunIdProcessingRouteImport
+      parentRoute: typeof DashboardPayrollRoute
+    }
+    '/dashboard/payroll/runs/$runId/review': {
+      id: '/dashboard/payroll/runs/$runId/review'
+      path: '/runs/$runId/review'
+      fullPath: '/dashboard/payroll/runs/$runId/review'
+      preLoaderRoute: typeof DashboardPayrollRunsRunIdReviewRouteImport
+      parentRoute: typeof DashboardPayrollRoute
+    }
+    '/dashboard/payroll/runs/$runId/validation': {
+      id: '/dashboard/payroll/runs/$runId/validation'
+      path: '/runs/$runId/validation'
+      fullPath: '/dashboard/payroll/runs/$runId/validation'
+      preLoaderRoute: typeof DashboardPayrollRunsRunIdValidationRouteImport
+      parentRoute: typeof DashboardPayrollRoute
+    }
+    '/dashboard/recruitment/jobs/$jobId/publish': {
+      id: '/dashboard/recruitment/jobs/$jobId/publish'
+      path: '/publish'
+      fullPath: '/dashboard/recruitment/jobs/$jobId/publish'
+      preLoaderRoute: typeof DashboardRecruitmentJobsJobIdPublishRouteImport
+      parentRoute: typeof DashboardRecruitmentJobsJobIdRoute
     }
     '/dashboard/payroll/runs/$runId/employees/$employeeId': {
       id: '/dashboard/payroll/runs/$runId/employees/$employeeId'
@@ -5919,8 +5919,8 @@ export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
+import type { getRouter } from './D:/hub/aurix-ai-for/src/router.tsx'
+import type { startInstance } from './D:/hub/aurix-ai-for/src/start.ts'
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
