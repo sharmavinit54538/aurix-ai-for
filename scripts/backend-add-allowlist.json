@@ -13,7 +13,6 @@
   "/api/v1/documents/activity",
   "/api/v1/documents/generate",
   "/api/v1/employees/me",
-  "/api/v2/payroll/salary-structures",
   "/api/v1/designations",
   "/api/v1/settings/employees",
   "/api/v1/attendance/settings",
@@ -21,7 +20,6 @@
   "/api/v1/settings/documents",
   "/api/v1/settings/assets",
   "/api/v1/policy-assistant/search",
-  "/api/v2/payroll/payslips/{param}/pdf",
   "/api/v2/interview-bot/public/{param}",
   "/api/v2/interview-bot/public/{param}/start",
   "/api/v2/interview-bot/public/{param}/answer",
@@ -59,13 +57,6 @@
   "/api/v1/interviews/schedules/{param}/reminder",
   "/api/v1/interviews/schedules/{param}/no-show",
   "/api/v1/interviews/rounds/{param}/{param}",
-  "/api/v2/payroll/cycles/{param}/lock",
-  "/api/v2/payroll/runs/{param}/lock",
-  "/api/v2/payroll/payslips/{param}",
-  "/api/v2/payroll/employees/{param}/payslips{param}",
-  "/api/v1/payroll/employees/{param}/payslips{param}",
-  "/api/v2/payroll/my-payslips{param}",
-  "/api/v1/payroll/my-payslips{param}",
   "/api/v1/users/me/sessions",
   "/api/v1/users/me/sessions/{param}",
   "/api/v1/users/me/preferences",
@@ -133,4 +124,3 @@
   "/api/v2/autopilot/onboarding/runs/{param}/retry-step",
   "/api/v2/autopilot/payroll/status"
 ]
-

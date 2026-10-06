@@ -1,5 +1,6 @@
 import apiInstance from "@/api/apiInstance";
 import axios from "axios";
+import { generateIdempotencyKey } from "@/features/payroll/utils/idempotency";
 
 // ── Types ─────────────────────────────────────────────────────────────
 
@@ -1909,6 +1910,23 @@ export function normalizePayrollPayslipData(
   };
 }
 
+/**
+ * Executes a primary API call with graceful fallback when receiving 404 Not Found.
+ */
+export async function requestWithFallback<T>(
+  primaryFn: () => Promise<T>,
+  fallbackFn?: () => Promise<T>,
+): Promise<T> {
+  try {
+    return await primaryFn();
+  } catch (err: unknown) {
+    if (fallbackFn && axios.isAxiosError(err) && err.response?.status === 404) {
+      return await fallbackFn();
+    }
+    throw err;
+  }
+}
+
 // ── Real API Service ─────────────────────────────────────────────────
 
 export const payrollApi = {
@@ -2014,22 +2032,23 @@ export const payrollApi = {
    * Fetch a single pay cycle / period by ID.
    */
   async getPeriod(id: string): Promise<PayrollPeriod | null> {
-    try {
-      const res = await apiInstance.get(`/api/v2/payroll/cycles/${id}`);
-      const data = extractData(res);
-      return data ? normalizePayrollPeriod(data) : null;
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.status === 404) {
+    return requestWithFallback(
+      async () => {
+        const res = await apiInstance.get(`/api/v2/payroll/cycles/${id}`);
+        const data = extractData(res);
+        return data ? normalizePayrollPeriod(data) : null;
+      },
+      async () => {
         const res = await apiInstance.get(`/payroll/periods/${id}`);
         const data = extractData(res);
         return data ? normalizePayrollPeriod(data) : null;
       }
-      throw err;
-    }
+    );
   },
 
   /**
    * Create a new payroll period / cycle.
+   * Canonical in OpenAPI: POST /api/v1/payroll/cycles
    */
   async createPeriod(payload: CreatePeriodPayload): Promise<PayrollPeriod> {
     const body: Record<string, unknown> = {
@@ -2046,28 +2065,45 @@ export const payrollApi = {
     if (payload.periodYear) body.period_year = payload.periodYear;
     if (payload.companyId) body.company_id = payload.companyId;
 
-    try {
-      const res = await apiInstance.post("/api/v2/payroll/cycles", body);
-      const data = extractData(res);
-      return normalizePayrollPeriod(data);
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.status === 404) {
-        const res = await apiInstance.post("/payroll/periods", body);
+    const headers = {
+      "Idempotency-Key": generateIdempotencyKey(),
+      "Cache-Control": "no-cache",
+    };
+
+    return requestWithFallback(
+      async () => {
+        const res = await apiInstance.post("/api/v1/payroll/cycles", body, { headers });
+        const data = extractData(res);
+        return normalizePayrollPeriod(data);
+      },
+      async () => {
+        const res = await apiInstance.post("/payroll/periods", body, { headers });
         const data = extractData(res);
         return normalizePayrollPeriod(data);
       }
-      throw err;
-    }
+    );
   },
 
   /**
    * Lock pay cycle — freeze computed figures.
+   * Canonical in OpenAPI: POST /api/v1/payroll/cycles/{id}/lock
    */
   async lockPeriod(id: string, reason?: string): Promise<{ success: boolean; message?: string }> {
-    const res = await apiInstance.post(`/api/v2/payroll/cycles/${id}/lock`, {
-      reason: reason || null,
-    });
-    return extractData<{ success: boolean; message?: string }>(res) || { success: true };
+    const body = { reason: reason || null };
+    const headers = {
+      "Idempotency-Key": generateIdempotencyKey(),
+      "Cache-Control": "no-cache",
+    };
+    return requestWithFallback(
+      async () => {
+        const res = await apiInstance.post(`/api/v1/payroll/cycles/${id}/lock`, body, { headers });
+        return extractData<{ success: boolean; message?: string }>(res) || { success: true };
+      },
+      async () => {
+        const res = await apiInstance.post(`/payroll/cycles/${id}/lock`, body, { headers });
+        return extractData<{ success: boolean; message?: string }>(res) || { success: true };
+      }
+    );
   },
 
   /**
@@ -2107,7 +2143,16 @@ export const payrollApi = {
    * Note: Running payroll produces provisional results and does NOT finalize payroll or initiate payments.
    */
   async runPayroll(periodId: string): Promise<RunPayrollResponse> {
-    const res = await apiInstance.post("/payroll/run", { periodId });
+    const res = await apiInstance.post(
+      "/payroll/run",
+      { periodId },
+      {
+        headers: {
+          "Idempotency-Key": generateIdempotencyKey(),
+          "Cache-Control": "no-cache",
+        },
+      }
+    );
     return extractData<RunPayrollResponse>(res);
   },
 
@@ -2206,27 +2251,25 @@ export const payrollApi = {
    * POST /api/v2/payroll/runs/{runId}/process
    */
   async retryPayrollRun(runId: string): Promise<RetryRunResponse> {
-    try {
-      const res = await apiInstance.post(`/api/v2/payroll/runs/${runId}/process`);
-      return (
-        extractData<RetryRunResponse>(res) || {
-          success: true,
-          message: "Payroll calculation retried successfully.",
-        }
-      );
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.status === 404) {
-        // Fallback /revalidate or /payroll/runs/{runId}/retry
-        try {
-          const fbRes = await apiInstance.post(`/api/v2/payroll/runs/${runId}/revalidate`);
-          return extractData<RetryRunResponse>(fbRes) || { success: true };
-        } catch {
-          const fbRes2 = await apiInstance.post(`/payroll/runs/${runId}/retry`);
-          return extractData<RetryRunResponse>(fbRes2) || { success: true };
-        }
+    const headers = {
+      "Idempotency-Key": generateIdempotencyKey(),
+      "Cache-Control": "no-cache",
+    };
+    return requestWithFallback(
+      async () => {
+        const res = await apiInstance.post(`/api/v2/payroll/runs/${runId}/process`, {}, { headers });
+        return (
+          extractData<RetryRunResponse>(res) || {
+            success: true,
+            message: "Payroll calculation retried successfully.",
+          }
+        );
+      },
+      async () => {
+        const fbRes = await apiInstance.post(`/api/v1/payroll/runs/${runId}/retry`, {}, { headers });
+        return extractData<RetryRunResponse>(fbRes) || { success: true };
       }
-      throw err;
-    }
+    );
   },
 
   /**
@@ -2617,44 +2660,35 @@ export const payrollApi = {
     const body: Record<string, unknown> = {
       comments: payload?.comments || payload?.notes || undefined,
     };
+    const headers = {
+      "Idempotency-Key": generateIdempotencyKey(),
+      "Cache-Control": "no-cache",
+    };
 
-    try {
-      const res = await apiInstance.post(
-        `/api/v2/payroll/runs/${runId}/approve`,
-        body,
-        { headers: { "Cache-Control": "no-cache" } },
-      );
-      const data = extractData<Record<string, unknown>>(res);
-      return {
-        success: Boolean(data?.success ?? true),
-        message: typeof data?.message === "string" ? data.message : "Payroll run approved successfully.",
-        status: (typeof data?.status === "string" ? data.status : "Approved") as PayrollStatus,
-        approval: (data?.approval as PayrollApprovalInfo) || undefined,
-        ...data,
-      };
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.status === 404) {
-        // Fallback POST /payroll/runs/{runId}/approve
-        try {
-          const fbRes = await apiInstance.post(
-            `/payroll/runs/${runId}/approve`,
-            body,
-            { headers: { "Cache-Control": "no-cache" } },
-          );
-          const fbData = extractData<Record<string, unknown>>(fbRes);
-          return {
-            success: Boolean(fbData?.success ?? true),
-            message: typeof fbData?.message === "string" ? fbData.message : "Payroll run approved successfully.",
-            status: (typeof fbData?.status === "string" ? fbData.status : "Approved") as PayrollStatus,
-            approval: (fbData?.approval as PayrollApprovalInfo) || undefined,
-            ...fbData,
-          };
-        } catch {
-          // Fall through and throw original
-        }
+    return requestWithFallback(
+      async () => {
+        const res = await apiInstance.post(`/api/v2/payroll/runs/${runId}/approve`, body, { headers });
+        const data = extractData<Record<string, unknown>>(res);
+        return {
+          success: Boolean(data?.success ?? true),
+          message: typeof data?.message === "string" ? data.message : "Payroll run approved successfully.",
+          status: (typeof data?.status === "string" ? data.status : "Approved") as PayrollStatus,
+          approval: (data?.approval as PayrollApprovalInfo) || undefined,
+          ...data,
+        };
+      },
+      async () => {
+        const fbRes = await apiInstance.post(`/payroll/runs/${runId}/approve`, body, { headers });
+        const fbData = extractData<Record<string, unknown>>(fbRes);
+        return {
+          success: Boolean(fbData?.success ?? true),
+          message: typeof fbData?.message === "string" ? fbData.message : "Payroll run approved successfully.",
+          status: (typeof fbData?.status === "string" ? fbData.status : "Approved") as PayrollStatus,
+          approval: (fbData?.approval as PayrollApprovalInfo) || undefined,
+          ...fbData,
+        };
       }
-      throw err;
-    }
+    );
   },
 
   /**
@@ -2669,29 +2703,25 @@ export const payrollApi = {
       reason: payload.reason,
       comments: payload.comments || undefined,
     };
+    const headers = {
+      "Idempotency-Key": generateIdempotencyKey(),
+      "Cache-Control": "no-cache",
+    };
 
-    try {
-      const res = await apiInstance.post(
-        `/api/v2/payroll/runs/${runId}/reject`,
-        body,
-        { headers: { "Cache-Control": "no-cache" } },
-      );
-      const data = extractData<Record<string, unknown>>(res);
-      return {
-        success: Boolean(data?.success ?? true),
-        message: typeof data?.message === "string" ? data.message : "Payroll run returned for correction.",
-        status: (typeof data?.status === "string" ? data.status : "Rejected") as PayrollStatus,
-        ...data,
-      };
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.status === 404) {
-        // Fallback 1: POST /api/v2/payroll/runs/{runId}/send-back
+    return requestWithFallback(
+      async () => {
+        const res = await apiInstance.post(`/api/v2/payroll/runs/${runId}/reject`, body, { headers });
+        const data = extractData<Record<string, unknown>>(res);
+        return {
+          success: Boolean(data?.success ?? true),
+          message: typeof data?.message === "string" ? data.message : "Payroll run returned for correction.",
+          status: (typeof data?.status === "string" ? data.status : "Rejected") as PayrollStatus,
+          ...data,
+        };
+      },
+      async () => {
         try {
-          const fbRes = await apiInstance.post(
-            `/api/v2/payroll/runs/${runId}/send-back`,
-            body,
-            { headers: { "Cache-Control": "no-cache" } },
-          );
+          const fbRes = await apiInstance.post(`/api/v2/payroll/runs/${runId}/send-back`, body, { headers });
           const fbData = extractData<Record<string, unknown>>(fbRes);
           return {
             success: Boolean(fbData?.success ?? true),
@@ -2700,16 +2730,7 @@ export const payrollApi = {
             ...fbData,
           };
         } catch {
-          // Continue to fallback 2
-        }
-
-        // Fallback 2: POST /payroll/runs/{runId}/reject
-        try {
-          const fbRes2 = await apiInstance.post(
-            `/payroll/runs/${runId}/reject`,
-            body,
-            { headers: { "Cache-Control": "no-cache" } },
-          );
+          const fbRes2 = await apiInstance.post(`/payroll/runs/${runId}/reject`, body, { headers });
           const fbData2 = extractData<Record<string, unknown>>(fbRes2);
           return {
             success: Boolean(fbData2?.success ?? true),
@@ -2717,12 +2738,9 @@ export const payrollApi = {
             status: (typeof fbData2?.status === "string" ? fbData2.status : "Rejected") as PayrollStatus,
             ...fbData2,
           };
-        } catch {
-          // Fall through
         }
       }
-      throw err;
-    }
+    );
   },
 
   /**
@@ -2770,68 +2788,39 @@ export const payrollApi = {
       notes: payload?.notes || undefined,
       lock: payload?.lock ?? true,
     };
+    const headers = {
+      "Idempotency-Key": generateIdempotencyKey(),
+      "Cache-Control": "no-cache",
+    };
 
-    try {
-      const res = await apiInstance.post(
-        `/api/v2/payroll/runs/${runId}/finalize`,
-        body,
-        { headers: { "Cache-Control": "no-cache" } },
-      );
-      const data = extractData<Record<string, unknown>>(res);
-      return {
-        success: Boolean(data?.success ?? true),
-        message: typeof data?.message === "string" ? data.message : "Payroll run finalized and locked successfully.",
-        status: (typeof data?.status === "string" ? data.status : "Finalized") as PayrollStatus,
-        isFinalized: true,
-        isLocked: true,
-        finalizedAt: (data?.finalizedAt || data?.finalized_at || undefined) as string | undefined,
-        finalizedBy: (data?.finalizedBy || data?.finalized_by || undefined) as string | undefined,
-        ...data,
-      };
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.status === 404) {
-        // Fallback 1: POST /payroll/runs/{runId}/finalize
-        try {
-          const fbRes = await apiInstance.post(
-            `/payroll/runs/${runId}/finalize`,
-            body,
-            { headers: { "Cache-Control": "no-cache" } },
-          );
-          const fbData = extractData<Record<string, unknown>>(fbRes);
-          return {
-            success: Boolean(fbData?.success ?? true),
-            message: typeof fbData?.message === "string" ? fbData.message : "Payroll run finalized and locked successfully.",
-            status: (typeof fbData?.status === "string" ? fbData.status : "Finalized") as PayrollStatus,
-            isFinalized: true,
-            isLocked: true,
-            ...fbData,
-          };
-        } catch {
-          // Continue to fallback 2
-        }
-
-        // Fallback 2: POST /api/v2/payroll/runs/{runId}/lock
-        try {
-          const fbRes2 = await apiInstance.post(
-            `/api/v2/payroll/runs/${runId}/lock`,
-            body,
-            { headers: { "Cache-Control": "no-cache" } },
-          );
-          const fbData2 = extractData<Record<string, unknown>>(fbRes2);
-          return {
-            success: Boolean(fbData2?.success ?? true),
-            message: typeof fbData2?.message === "string" ? fbData2.message : "Payroll run locked and finalized.",
-            status: (typeof fbData2?.status === "string" ? fbData2.status : "Finalized") as PayrollStatus,
-            isFinalized: true,
-            isLocked: true,
-            ...fbData2,
-          };
-        } catch {
-          // Fall through
-        }
+    return requestWithFallback(
+      async () => {
+        const res = await apiInstance.post(`/api/v2/payroll/runs/${runId}/finalize`, body, { headers });
+        const data = extractData<Record<string, unknown>>(res);
+        return {
+          success: Boolean(data?.success ?? true),
+          message: typeof data?.message === "string" ? data.message : "Payroll run finalized and locked successfully.",
+          status: (typeof data?.status === "string" ? data.status : "Finalized") as PayrollStatus,
+          isFinalized: true,
+          isLocked: true,
+          finalizedAt: (data?.finalizedAt || data?.finalized_at || undefined) as string | undefined,
+          finalizedBy: (data?.finalizedBy || data?.finalized_by || undefined) as string | undefined,
+          ...data,
+        };
+      },
+      async () => {
+        const fbRes = await apiInstance.post(`/payroll/runs/${runId}/finalize`, body, { headers });
+        const fbData = extractData<Record<string, unknown>>(fbRes);
+        return {
+          success: Boolean(fbData?.success ?? true),
+          message: typeof fbData?.message === "string" ? fbData.message : "Payroll run finalized and locked successfully.",
+          status: (typeof fbData?.status === "string" ? fbData.status : "Finalized") as PayrollStatus,
+          isFinalized: true,
+          isLocked: true,
+          ...fbData,
+        };
       }
-      throw err;
-    }
+    );
   },
 
   /**
@@ -2892,35 +2881,31 @@ export const payrollApi = {
 
   /**
    * Fetch payslip by unique payslip ID or reference.
-   * GET /api/v2/payroll/payslips/{payslipId}
+   * Canonical in OpenAPI: GET /api/v1/payroll/payslips/{payslip_id}
    */
   async getPayslipById(payslipId: string): Promise<PayrollPayslipData> {
-    try {
-      const res = await apiInstance.get(`/api/v2/payroll/payslips/${payslipId}`, {
-        headers: { "Cache-Control": "no-cache" },
-        skipCache: true,
-      });
-      const data = extractData<Record<string, unknown>>(res);
-      const runId = typeof data?.runId === "string" ? data.runId : "";
-      const employeeId = typeof data?.employeeId === "string" ? data.employeeId : "";
-      return normalizePayrollPayslipData(runId, employeeId, data);
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.status === 404) {
-        try {
-          const fbRes = await apiInstance.get(`/payroll/payslips/${payslipId}`, {
-            headers: { "Cache-Control": "no-cache" },
-            skipCache: true,
-          });
-          const fbData = extractData<Record<string, unknown>>(fbRes);
-          const fbRunId = typeof fbData?.runId === "string" ? fbData.runId : "";
-          const fbEmpId = typeof fbData?.employeeId === "string" ? fbData.employeeId : "";
-          return normalizePayrollPayslipData(fbRunId, fbEmpId, fbData);
-        } catch {
-          // Fall through
-        }
+    return requestWithFallback(
+      async () => {
+        const res = await apiInstance.get(`/api/v1/payroll/payslips/${payslipId}`, {
+          headers: { "Cache-Control": "no-cache" },
+          skipCache: true,
+        });
+        const data = extractData<Record<string, unknown>>(res);
+        const runId = typeof data?.runId === "string" ? data.runId : "";
+        const employeeId = typeof data?.employeeId === "string" ? data.employeeId : "";
+        return normalizePayrollPayslipData(runId, employeeId, data);
+      },
+      async () => {
+        const fbRes = await apiInstance.get(`/payroll/payslips/${payslipId}`, {
+          headers: { "Cache-Control": "no-cache" },
+          skipCache: true,
+        });
+        const fbData = extractData<Record<string, unknown>>(fbRes);
+        const fbRunId = typeof fbData?.runId === "string" ? fbData.runId : "";
+        const fbEmpId = typeof fbData?.employeeId === "string" ? fbData.employeeId : "";
+        return normalizePayrollPayslipData(fbRunId, fbEmpId, fbData);
       }
-      throw err;
-    }
+    );
   },
 
   /**
@@ -2928,30 +2913,25 @@ export const payrollApi = {
    * GET /api/v2/payroll/runs/{runId}/employees/{employeeId}/payslip/download
    */
   async downloadPayslip(runId: string, employeeId: string): Promise<Blob> {
-    try {
-      const res = await apiInstance.get<Blob>(
-        `/api/v2/payroll/runs/${runId}/employees/${employeeId}/payslip/download`,
-        {
-          responseType: "blob",
-          headers: { "Cache-Control": "no-cache" },
-        },
-      );
-      return res.data;
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.status === 404) {
-        // Fallback 1: /payroll/runs/{runId}/employees/{employeeId}/payslip/download
-        try {
-          const fbRes = await apiInstance.get<Blob>(
-            `/payroll/runs/${runId}/employees/${employeeId}/payslip/download`,
-            { responseType: "blob" },
-          );
-          return fbRes.data;
-        } catch {
-          // Fall through
-        }
+    return requestWithFallback(
+      async () => {
+        const res = await apiInstance.get<Blob>(
+          `/api/v2/payroll/runs/${runId}/employees/${employeeId}/payslip/download`,
+          {
+            responseType: "blob",
+            headers: { "Cache-Control": "no-cache" },
+          },
+        );
+        return res.data;
+      },
+      async () => {
+        const fbRes = await apiInstance.get<Blob>(
+          `/payroll/runs/${runId}/employees/${employeeId}/payslip/download`,
+          { responseType: "blob" },
+        );
+        return fbRes.data;
       }
-      throw err;
-    }
+    );
   },
 
   /**
@@ -2962,45 +2942,46 @@ export const payrollApi = {
     runId: string,
     payload?: GeneratePayslipsPayload,
   ): Promise<GeneratePayslipsResponse> {
-    try {
-      const res = await apiInstance.post(
-        `/api/v2/payroll/runs/${runId}/payslips/generate`,
-        payload ?? {},
-        { headers: { "Cache-Control": "no-cache" } },
-      );
-      const data = extractData<Record<string, unknown>>(res);
-      return {
-        success: Boolean(data?.success ?? true),
-        message: typeof data?.message === "string" ? data.message : "Final payslips generated successfully.",
-        generatedCount:
-          typeof data?.generatedCount === "number"
-            ? data.generatedCount
-            : typeof data?.count === "number"
-              ? data.count
-              : undefined,
-        totalCount: typeof data?.totalCount === "number" ? data.totalCount : undefined,
-        ...data,
-      };
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.status === 404) {
-        try {
-          const fbRes = await apiInstance.post(
-            `/payroll/runs/${runId}/payslips/generate`,
-            payload ?? {},
-            { headers: { "Cache-Control": "no-cache" } },
-          );
-          const fbData = extractData<Record<string, unknown>>(fbRes);
-          return {
-            success: Boolean(fbData?.success ?? true),
-            message: typeof fbData?.message === "string" ? fbData.message : "Final payslips generated successfully.",
-            ...fbData,
-          };
-        } catch {
-          // Fall through
-        }
+    const headers = {
+      "Idempotency-Key": generateIdempotencyKey(),
+      "Cache-Control": "no-cache",
+    };
+
+    return requestWithFallback(
+      async () => {
+        const res = await apiInstance.post(
+          `/api/v2/payroll/runs/${runId}/payslips/generate`,
+          payload ?? {},
+          { headers },
+        );
+        const data = extractData<Record<string, unknown>>(res);
+        return {
+          success: Boolean(data?.success ?? true),
+          message: typeof data?.message === "string" ? data.message : "Final payslips generated successfully.",
+          generatedCount:
+            typeof data?.generatedCount === "number"
+              ? data.generatedCount
+              : typeof data?.count === "number"
+                ? data.count
+                : undefined,
+          totalCount: typeof data?.totalCount === "number" ? data.totalCount : undefined,
+          ...data,
+        };
+      },
+      async () => {
+        const fbRes = await apiInstance.post(
+          `/payroll/runs/${runId}/payslips/generate`,
+          payload ?? {},
+          { headers },
+        );
+        const fbData = extractData<Record<string, unknown>>(fbRes);
+        return {
+          success: Boolean(fbData?.success ?? true),
+          message: typeof fbData?.message === "string" ? fbData.message : "Final payslips generated successfully.",
+          ...fbData,
+        };
       }
-      throw err;
-    }
+    );
   },
 
   /**
@@ -3011,97 +2992,94 @@ export const payrollApi = {
     employeeId: string,
     params?: { page?: number; limit?: number },
   ): Promise<{ items: PayslipHistoryItem[]; total: number }> {
-    const p = new URLSearchParams();
-    if (params?.page) p.set("page", String(params.page));
-    if (params?.limit) p.set("limit", String(params.limit));
-    const q = p.toString() ? `?${p.toString()}` : "";
+    const queryParams: Record<string, unknown> = {};
+    if (params?.page) queryParams.page = params.page;
+    if (params?.limit) queryParams.limit = params.limit;
 
-    try {
-      const res = await apiInstance.get(`/api/v2/payroll/employees/${employeeId}/payslips${q}`, {
-        headers: { "Cache-Control": "no-cache" },
-        skipCache: true,
-      });
-      const data = extractData<Record<string, unknown>>(res);
-      const rawItems: Record<string, unknown>[] = Array.isArray(data)
-        ? (data as Record<string, unknown>[])
-        : Array.isArray(data?.items)
-          ? (data.items as Record<string, unknown>[])
-          : Array.isArray(data?.records)
-            ? (data.records as Record<string, unknown>[])
-            : [];
-      return {
-        items: rawItems.map((r: Record<string, unknown>) => ({
-          id:
-            (typeof r.id === "string" ? r.id : typeof r.payslipId === "string" ? r.payslipId : null) ||
-            `${(typeof r.runId === "string" ? r.runId : typeof r.run_id === "string" ? r.run_id : null) || ""}_${employeeId}`,
-          runId: typeof r.runId === "string" ? r.runId : typeof r.run_id === "string" ? r.run_id : null,
-          employeeId:
-            (typeof r.employeeId === "string" ? r.employeeId : typeof r.employee_id === "string" ? r.employee_id : null) ||
-            employeeId,
-          employeeName: typeof r.employeeName === "string" ? r.employeeName : typeof r.name === "string" ? r.name : null,
-          department: typeof r.department === "string" ? r.department : null,
-          periodName:
-            typeof r.periodName === "string" ? r.periodName : typeof r.period_name === "string" ? r.period_name : null,
-          financialYear:
-            typeof r.financialYear === "string"
-              ? r.financialYear
-              : typeof r.financial_year === "string"
-                ? r.financial_year
-                : null,
-          payslipNumber:
-            typeof r.payslipNumber === "string"
-              ? r.payslipNumber
-              : typeof r.payslip_number === "string"
-                ? r.payslip_number
-                : null,
-          netPay: r.netPay != null ? Number(r.netPay) : null,
-          grossEarnings: r.grossEarnings != null ? Number(r.grossEarnings) : null,
-          totalDeductions: r.totalDeductions != null ? Number(r.totalDeductions) : null,
-          status: typeof r.status === "string" ? r.status : "Finalized",
-          isFinalized: Boolean(r.isFinalized ?? true),
-          finalizedAt:
-            typeof r.finalizedAt === "string" ? r.finalizedAt : typeof r.finalized_at === "string" ? r.finalized_at : null,
-          paymentDate:
-            typeof r.paymentDate === "string" ? r.paymentDate : typeof r.payment_date === "string" ? r.payment_date : null,
-          hasDocument: Boolean(r.hasDocument || r.pdfUrl || r.downloadUrl),
-        })),
-        total: typeof data?.total === "number" ? data.total : rawItems.length,
-      };
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.status === 404) {
-        try {
-          const fbRes = await apiInstance.get(`/payroll/employees/${employeeId}/payslips${q}`, {
-            headers: { "Cache-Control": "no-cache" },
-            skipCache: true,
-          });
-          const fbData = extractData<Record<string, unknown>>(fbRes);
-          const fbItems: Record<string, unknown>[] = Array.isArray(fbData)
-            ? (fbData as Record<string, unknown>[])
-            : Array.isArray(fbData?.items)
-              ? (fbData.items as Record<string, unknown>[])
+    return requestWithFallback(
+      async () => {
+        const res = await apiInstance.get(`/api/v2/payroll/employees/${employeeId}/payslips`, {
+          params: queryParams,
+          headers: { "Cache-Control": "no-cache" },
+          skipCache: true,
+        });
+        const data = extractData<Record<string, unknown>>(res);
+        const rawItems: Record<string, unknown>[] = Array.isArray(data)
+          ? (data as Record<string, unknown>[])
+          : Array.isArray(data?.items)
+            ? (data.items as Record<string, unknown>[])
+            : Array.isArray(data?.records)
+              ? (data.records as Record<string, unknown>[])
               : [];
-          return {
-            items: fbItems.map((r: Record<string, unknown>) => ({
-              id:
-                (typeof r.id === "string" ? r.id : null) ||
-                `${(typeof r.runId === "string" ? r.runId : null) || ""}_${employeeId}`,
-              runId: typeof r.runId === "string" ? r.runId : null,
+        return {
+          items: rawItems.map((r: Record<string, unknown>) => ({
+            id:
+              (typeof r.id === "string" ? r.id : typeof r.payslipId === "string" ? r.payslipId : null) ||
+              `${(typeof r.runId === "string" ? r.runId : typeof r.run_id === "string" ? r.run_id : null) || ""}_${employeeId}`,
+            runId: typeof r.runId === "string" ? r.runId : typeof r.run_id === "string" ? r.run_id : null,
+            employeeId:
+              (typeof r.employeeId === "string" ? r.employeeId : typeof r.employee_id === "string" ? r.employee_id : null) ||
               employeeId,
-              periodName: typeof r.periodName === "string" ? r.periodName : null,
-              payslipNumber: typeof r.payslipNumber === "string" ? r.payslipNumber : null,
-              netPay: r.netPay != null ? Number(r.netPay) : null,
-              status: typeof r.status === "string" ? r.status : "Finalized",
-              isFinalized: true,
-              finalizedAt: typeof r.finalizedAt === "string" ? r.finalizedAt : null,
-            })),
-            total: typeof fbData?.total === "number" ? fbData.total : fbItems.length,
-          };
-        } catch {
-          return { items: [], total: 0 };
-        }
+            employeeName: typeof r.employeeName === "string" ? r.employeeName : typeof r.name === "string" ? r.name : null,
+            department: typeof r.department === "string" ? r.department : null,
+            periodName:
+              typeof r.periodName === "string" ? r.periodName : typeof r.period_name === "string" ? r.period_name : null,
+            financialYear:
+              typeof r.financialYear === "string"
+                ? r.financialYear
+                : typeof r.financial_year === "string"
+                  ? r.financial_year
+                  : null,
+            payslipNumber:
+              typeof r.payslipNumber === "string"
+                ? r.payslipNumber
+                : typeof r.payslip_number === "string"
+                  ? r.payslip_number
+                  : null,
+            netPay: r.netPay != null ? Number(r.netPay) : null,
+            grossEarnings: r.grossEarnings != null ? Number(r.grossEarnings) : null,
+            totalDeductions: r.totalDeductions != null ? Number(r.totalDeductions) : null,
+            status: typeof r.status === "string" ? r.status : "Finalized",
+            isFinalized: Boolean(r.isFinalized ?? true),
+            finalizedAt:
+              typeof r.finalizedAt === "string" ? r.finalizedAt : typeof r.finalized_at === "string" ? r.finalized_at : null,
+            paymentDate:
+              typeof r.paymentDate === "string" ? r.paymentDate : typeof r.payment_date === "string" ? r.payment_date : null,
+            hasDocument: Boolean(r.hasDocument || r.pdfUrl || r.downloadUrl),
+          })),
+          total: typeof data?.total === "number" ? data.total : rawItems.length,
+        };
+      },
+      async () => {
+        const fbRes = await apiInstance.get(`/payroll/employees/${employeeId}/payslips`, {
+          params: queryParams,
+          headers: { "Cache-Control": "no-cache" },
+          skipCache: true,
+        });
+        const fbData = extractData<Record<string, unknown>>(fbRes);
+        const fbItems: Record<string, unknown>[] = Array.isArray(fbData)
+          ? (fbData as Record<string, unknown>[])
+          : Array.isArray(fbData?.items)
+            ? (fbData.items as Record<string, unknown>[])
+            : [];
+        return {
+          items: fbItems.map((r: Record<string, unknown>) => ({
+            id:
+              (typeof r.id === "string" ? r.id : null) ||
+              `${(typeof r.runId === "string" ? r.runId : null) || ""}_${employeeId}`,
+            runId: typeof r.runId === "string" ? r.runId : null,
+            employeeId,
+            periodName: typeof r.periodName === "string" ? r.periodName : null,
+            payslipNumber: typeof r.payslipNumber === "string" ? r.payslipNumber : null,
+            netPay: r.netPay != null ? Number(r.netPay) : null,
+            status: typeof r.status === "string" ? r.status : "Finalized",
+            isFinalized: true,
+            finalizedAt: typeof r.finalizedAt === "string" ? r.finalizedAt : null,
+          })),
+          total: typeof fbData?.total === "number" ? fbData.total : fbItems.length,
+        };
       }
-      throw err;
-    }
+    );
   },
 
   /**
@@ -3111,90 +3089,81 @@ export const payrollApi = {
   async getMyPayslips(
     params?: { page?: number; limit?: number },
   ): Promise<{ items: PayslipHistoryItem[]; total: number }> {
-    const p = new URLSearchParams();
-    if (params?.page) p.set("page", String(params.page));
-    if (params?.limit) p.set("limit", String(params.limit));
-    const q = p.toString() ? `?${p.toString()}` : "";
+    const queryParams: Record<string, unknown> = {};
+    if (params?.page) queryParams.page = params.page;
+    if (params?.limit) queryParams.limit = params.limit;
 
-    try {
-      const res = await apiInstance.get(`/api/v2/payroll/my-payslips${q}`, {
-        headers: { "Cache-Control": "no-cache" },
-        skipCache: true,
-      });
-      const data = extractData<Record<string, unknown>>(res);
-      const rawItems: Record<string, unknown>[] = Array.isArray(data)
-        ? (data as Record<string, unknown>[])
-        : Array.isArray(data?.items)
-          ? (data.items as Record<string, unknown>[])
-          : Array.isArray(data?.records)
-            ? (data.records as Record<string, unknown>[])
-            : [];
-      return {
-        items: rawItems.map((r: Record<string, unknown>) => ({
-          id:
-            (typeof r.id === "string" ? r.id : typeof r.payslipId === "string" ? r.payslipId : null) ||
-            `${(typeof r.runId === "string" ? r.runId : typeof r.run_id === "string" ? r.run_id : null) || ""}_me`,
-          runId: typeof r.runId === "string" ? r.runId : typeof r.run_id === "string" ? r.run_id : null,
-          employeeId:
-            typeof r.employeeId === "string" ? r.employeeId : typeof r.employee_id === "string" ? r.employee_id : null,
-          periodName:
-            typeof r.periodName === "string" ? r.periodName : typeof r.period_name === "string" ? r.period_name : null,
-          financialYear:
-            typeof r.financialYear === "string"
-              ? r.financialYear
-              : typeof r.financial_year === "string"
-                ? r.financial_year
-                : null,
-          payslipNumber:
-            typeof r.payslipNumber === "string"
-              ? r.payslipNumber
-              : typeof r.payslip_number === "string"
-                ? r.payslip_number
-                : null,
-          netPay: r.netPay != null ? Number(r.netPay) : null,
-          grossEarnings: r.grossEarnings != null ? Number(r.grossEarnings) : null,
-          totalDeductions: r.totalDeductions != null ? Number(r.totalDeductions) : null,
-          status: typeof r.status === "string" ? r.status : "Finalized",
-          isFinalized: Boolean(r.isFinalized ?? true),
-          finalizedAt:
-            typeof r.finalizedAt === "string" ? r.finalizedAt : typeof r.finalized_at === "string" ? r.finalized_at : null,
-          paymentDate:
-            typeof r.paymentDate === "string" ? r.paymentDate : typeof r.payment_date === "string" ? r.payment_date : null,
-          hasDocument: Boolean(r.hasDocument || r.pdfUrl || r.downloadUrl),
-        })),
-        total: typeof data?.total === "number" ? data.total : rawItems.length,
-      };
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.status === 404) {
-        try {
-          const fbRes = await apiInstance.get(`/payroll/my-payslips${q}`, {
-            headers: { "Cache-Control": "no-cache" },
-            skipCache: true,
-          });
-          const fbData = extractData<Record<string, unknown>>(fbRes);
-          const fbItems: Record<string, unknown>[] = Array.isArray(fbData)
-            ? (fbData as Record<string, unknown>[])
-            : Array.isArray(fbData?.items)
-              ? (fbData.items as Record<string, unknown>[])
+    return requestWithFallback(
+      async () => {
+        const res = await apiInstance.get("/api/v2/payroll/my-payslips", {
+          params: queryParams,
+          headers: { "Cache-Control": "no-cache" },
+          skipCache: true,
+        });
+        const data = extractData<Record<string, unknown>>(res);
+        const rawItems: Record<string, unknown>[] = Array.isArray(data)
+          ? (data as Record<string, unknown>[])
+          : Array.isArray(data?.items)
+            ? (data.items as Record<string, unknown>[])
+            : Array.isArray(data?.records)
+              ? (data.records as Record<string, unknown>[])
               : [];
-          return {
-            items: fbItems.map((r: Record<string, unknown>) => ({
-              id: (typeof r.id === "string" ? r.id : null) || `${(typeof r.runId === "string" ? r.runId : null) || ""}_me`,
-              runId: typeof r.runId === "string" ? r.runId : null,
-              periodName: typeof r.periodName === "string" ? r.periodName : null,
-              payslipNumber: typeof r.payslipNumber === "string" ? r.payslipNumber : null,
-              netPay: r.netPay != null ? Number(r.netPay) : null,
-              status: typeof r.status === "string" ? r.status : "Finalized",
-              isFinalized: true,
-            })),
-            total: typeof fbData?.total === "number" ? fbData.total : fbItems.length,
-          };
-        } catch {
-          return { items: [], total: 0 };
-        }
+        return {
+          items: rawItems.map((r: Record<string, unknown>) => ({
+            id:
+              (typeof r.id === "string" ? r.id : typeof r.payslipId === "string" ? r.payslipId : null) ||
+              `${(typeof r.runId === "string" ? r.runId : typeof r.run_id === "string" ? r.run_id : null) || ""}_me`,
+            runId: typeof r.runId === "string" ? r.runId : typeof r.run_id === "string" ? r.run_id : null,
+            employeeId:
+              typeof r.employeeId === "string" ? r.employeeId : typeof r.employee_id === "string" ? r.employee_id : null,
+            periodName:
+              typeof r.periodName === "string" ? r.periodName : typeof r.period_name === "string" ? r.period_name : null,
+            payslipNumber:
+              typeof r.payslipNumber === "string"
+                ? r.payslipNumber
+                : typeof r.payslip_number === "string"
+                  ? r.payslip_number
+                  : null,
+            netPay: r.netPay != null ? Number(r.netPay) : null,
+            grossEarnings: r.grossEarnings != null ? Number(r.grossEarnings) : null,
+            totalDeductions: r.totalDeductions != null ? Number(r.totalDeductions) : null,
+            status: typeof r.status === "string" ? r.status : "Finalized",
+            isFinalized: Boolean(r.isFinalized ?? true),
+            finalizedAt:
+              typeof r.finalizedAt === "string" ? r.finalizedAt : typeof r.finalized_at === "string" ? r.finalized_at : null,
+            paymentDate:
+              typeof r.paymentDate === "string" ? r.paymentDate : typeof r.payment_date === "string" ? r.payment_date : null,
+            hasDocument: Boolean(r.hasDocument || r.pdfUrl || r.downloadUrl),
+          })),
+          total: typeof data?.total === "number" ? data.total : rawItems.length,
+        };
+      },
+      async () => {
+        const fbRes = await apiInstance.get("/payroll/my-payslips", {
+          params: queryParams,
+          headers: { "Cache-Control": "no-cache" },
+          skipCache: true,
+        });
+        const fbData = extractData<Record<string, unknown>>(fbRes);
+        const fbItems: Record<string, unknown>[] = Array.isArray(fbData)
+          ? (fbData as Record<string, unknown>[])
+          : Array.isArray(fbData?.items)
+            ? (fbData.items as Record<string, unknown>[])
+            : [];
+        return {
+          items: fbItems.map((r: Record<string, unknown>) => ({
+            id: (typeof r.id === "string" ? r.id : null) || `${(typeof r.runId === "string" ? r.runId : null) || ""}_me`,
+            runId: typeof r.runId === "string" ? r.runId : null,
+            periodName: typeof r.periodName === "string" ? r.periodName : null,
+            payslipNumber: typeof r.payslipNumber === "string" ? r.payslipNumber : null,
+            netPay: r.netPay != null ? Number(r.netPay) : null,
+            status: typeof r.status === "string" ? r.status : "Finalized",
+            isFinalized: true,
+          })),
+          total: typeof fbData?.total === "number" ? fbData.total : fbItems.length,
+        };
       }
-      throw err;
-    }
+    );
   },
 };
 
