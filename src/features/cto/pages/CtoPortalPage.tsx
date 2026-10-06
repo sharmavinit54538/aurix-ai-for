@@ -64,10 +64,6 @@ export function CtoPortalPage() {
     fetchCtoMetrics();
   }, []);
 
-  const handleExportCSV = () => {
-    toast.success("Exporting CTO Executive Metrics to CSV...");
-  };
-
   const filteredKpis = kpis.filter((k) =>
     k.title.toLowerCase().includes(search.toLowerCase()) ||
     k.value.toLowerCase().includes(search.toLowerCase()) ||
@@ -90,9 +86,6 @@ export function CtoPortalPage() {
               <Badge className="bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[11px] font-bold uppercase tracking-wider">
                 Enterprise Executive Hub
               </Badge>
-              <Badge className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[11px] font-bold">
-                SOC2 & ISO27001 Certified
-              </Badge>
             </div>
             <h1 className="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">
               CTO Engineering & Technology Control Center
@@ -106,16 +99,18 @@ export function CtoPortalPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={handleExportCSV}
-              className="border-border/80 text-foreground hover:bg-accent text-xs cursor-pointer"
+              disabled
+              title="Coming soon"
+              className="border-border/80 text-muted-foreground opacity-70 cursor-not-allowed text-xs"
             >
               <Download className="mr-1.5 h-3.5 w-3.5" />
               Export CSV
             </Button>
             <Button
               size="sm"
-              onClick={() => toast.info("Opening AI Assistant...")}
-              className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-medium text-xs shadow-glow cursor-pointer"
+              disabled
+              title="Coming soon"
+              className="bg-muted text-muted-foreground font-medium text-xs opacity-70 cursor-not-allowed"
             >
               <Sparkles className="mr-1.5 h-3.5 w-3.5" />
               AI CTO Assistant

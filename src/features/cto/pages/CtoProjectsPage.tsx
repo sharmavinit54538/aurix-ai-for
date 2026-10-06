@@ -44,7 +44,7 @@ export function CtoProjectsPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button size="sm" onClick={() => toast.success("New Project Modal Opened")} className="text-xs cursor-pointer">
+            <Button size="sm" disabled title="Coming soon" className="text-xs opacity-70 cursor-not-allowed">
               <Plus className="mr-1.5 h-3.5 w-3.5" />
               New Project
             </Button>
@@ -372,7 +372,7 @@ export function CtoProjectsPage() {
                         <Paperclip className="h-4 w-4 text-muted-foreground" />
                         <span className="text-xs font-semibold font-mono text-foreground">{file}</span>
                       </div>
-                      <Button size="sm" variant="ghost" onClick={() => toast.success(`Downloading ${file}`)} className="h-6 text-[10px] text-primary cursor-pointer">Download</Button>
+                      <Button size="sm" variant="ghost" disabled title="Coming soon" className="h-6 text-[10px] text-muted-foreground opacity-70 cursor-not-allowed">Download</Button>
                     </div>
                   ))}
                 </TabsContent>

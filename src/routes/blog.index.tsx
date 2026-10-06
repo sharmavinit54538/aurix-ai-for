@@ -32,6 +32,26 @@ function BlogIndex() {
     });
   }, [query, cat]);
 
+  if (posts.length === 0) {
+    return (
+      <SiteLayout>
+        <Section>
+          <SectionHeader
+            eyebrow="Blog"
+            title="Ideas, stories, and product updates"
+            subtitle="Writing from the team building OFC360."
+          />
+          <div className="mt-16 text-center py-20 border border-dashed border-border/80 rounded-3xl bg-card/20">
+            <h3 className="text-base font-semibold text-foreground">No articles published yet</h3>
+            <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
+              Our engineering and product teams are actively preparing new articles and updates. Check back soon.
+            </p>
+          </div>
+        </Section>
+      </SiteLayout>
+    );
+  }
+
   const featured = posts[0];
 
   return (

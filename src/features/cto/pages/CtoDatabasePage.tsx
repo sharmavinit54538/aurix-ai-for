@@ -1,16 +1,9 @@
 import React from "react";
-import { Coins, Zap, Clock, ListTodo, Archive, History, HeartPulse } from "lucide-react";
+import { Coins } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/common/EmptyState";
 
 export function CtoDatabasePage() {
-  const dbs: Array<{
-    name: string;
-    engine: string;
-    conn: string;
-    size: string;
-    status: string;
-  }> = [];
-
   return (
     <div className="space-y-6 pb-12 text-left">
       <div className="relative overflow-hidden rounded-2xl border border-amber-500/30 bg-gradient-to-r from-slate-900 via-amber-950/60 to-slate-950 p-6 shadow-xl backdrop-blur-xl">
@@ -34,40 +27,10 @@ export function CtoDatabasePage() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-border/80 bg-card/60 overflow-hidden">
-        <table className="w-full text-left text-xs">
-          <thead className="bg-muted/50 text-muted-foreground uppercase text-[10px] border-b border-border/60">
-            <tr>
-              <th className="p-3">Database Instance</th>
-              <th className="p-3">Engine Version</th>
-              <th className="p-3">Active Connections</th>
-              <th className="p-3">Data Size</th>
-              <th className="p-3">Health Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border/40">
-            {dbs.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="p-8 text-center text-xs text-muted-foreground">
-                  No database clusters connected or monitored.
-                </td>
-              </tr>
-            ) : (
-              dbs.map((d, idx) => (
-                <tr key={idx} className="hover:bg-accent/20 transition-colors">
-                  <td className="p-3 font-bold text-foreground">{d.name}</td>
-                  <td className="p-3 text-muted-foreground">{d.engine}</td>
-                  <td className="p-3 font-mono text-indigo-400">{d.conn}</td>
-                  <td className="p-3 font-mono text-amber-400">{d.size}</td>
-                  <td className="p-3">
-                    <Badge className="text-[10px] bg-emerald-500/20 text-emerald-400 border-emerald-500/30">{d.status}</Badge>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      <EmptyState
+        title="Data not available yet"
+        description="Database clusters, replication status, connection pool telemetry, and query logs are not connected to a backend service."
+      />
     </div>
   );
 }

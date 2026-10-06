@@ -1,11 +1,9 @@
 import React from "react";
-import { BarChart3, TrendingUp, Users, Target, CheckCircle2, DollarSign, Award } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { ResponsiveContainer, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
+import { EmptyState } from "@/components/common/EmptyState";
 
 export function CeoSalesPage() {
-  const salesData: any[] = [];
-
   return (
     <div className="space-y-6 pb-12 text-left">
       <div className="relative overflow-hidden rounded-2xl border border-indigo-500/30 bg-gradient-to-r from-slate-900 via-indigo-950/60 to-slate-950 p-6 shadow-xl backdrop-blur-xl">
@@ -29,40 +27,10 @@ export function CeoSalesPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          { label: "Active Sales Pipeline", val: "—", sub: "Live data pending", color: "text-indigo-400" },
-          { label: "Closed Revenue", val: "—", sub: "Live data pending", color: "text-emerald-400" },
-          { label: "Lead Conversion Rate", val: "—", sub: "Live data pending", color: "text-cyan-400" },
-          { label: "Avg Enterprise Deal", val: "—", sub: "Live data pending", color: "text-purple-400" },
-        ].map((k, i) => (
-          <div key={i} className="rounded-xl border border-border/80 bg-card/60 p-4 space-y-1">
-            <div className="text-xs text-muted-foreground font-semibold uppercase">{k.label}</div>
-            <div className={`text-2xl font-bold font-display ${k.color}`}>{k.val}</div>
-            <div className="text-[11px] text-muted-foreground">{k.sub}</div>
-          </div>
-        ))}
-      </div>
-
-      <div className="rounded-2xl border border-border/80 bg-card/60 p-5 space-y-3">
-        <h3 className="font-bold text-sm text-foreground">Monthly Closed Revenue ($M) & Deals Count</h3>
-        <div className="h-56 w-full pt-2 flex items-center justify-center">
-          {salesData.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={salesData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="month" stroke="#888888" fontSize={10} />
-                <YAxis stroke="#888888" fontSize={10} />
-                <Tooltip contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", borderRadius: "8px" }} />
-                <Bar dataKey="revenue" fill="#6366f1" radius={[4, 4, 0, 0]} name="Closed Revenue ($M)" />
-                <Bar dataKey="deals" fill="#10b981" radius={[4, 4, 0, 0]} name="Deals Count" />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <p className="text-xs text-muted-foreground">No sales pipeline data available. Backend API integration pending.</p>
-          )}
-        </div>
-      </div>
+      <EmptyState
+        title="Data not available yet"
+        description="Enterprise sales pipeline metrics, closed revenue statistics, and sales forecasting are not connected to a backend service."
+      />
     </div>
   );
 }

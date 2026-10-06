@@ -345,6 +345,14 @@ function ToolCard({ part }: { part: ToolPartLike }) {
   const toolName = part.toolName ?? part.type.replace(/^tool-/, "");
   const done = part.state === "output-available" || part.state === "result";
   const failed = part.state === "output-error" || !!part.errorText;
+  const isDraft =
+    (part.output as any)?.status === "draft_suggestion" ||
+    (part.output as any)?.isSubmitted === false ||
+    (part.output as any)?.isExecuted === false ||
+    toolName === "proposeAction" ||
+    toolName === "approveRequest" ||
+    toolName === "rejectRequest" ||
+    toolName === "createEmployee";
 
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-background/60">
@@ -356,6 +364,8 @@ function ToolCard({ part }: { part: ToolPartLike }) {
         <span className="flex min-w-0 items-center gap-2">
           {failed ? (
             <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+          ) : isDraft ? (
+            <FileText className="h-3.5 w-3.5 text-amber-500" />
           ) : done ? (
             <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
           ) : (
@@ -365,8 +375,15 @@ function ToolCard({ part }: { part: ToolPartLike }) {
             <Wrench className="h-3 w-3 text-muted-foreground" />
             <code className="truncate font-mono text-[12px] text-foreground">{toolName}</code>
           </span>
-          <Badge variant="secondary" className="ml-1 text-[10px]">
-            {failed ? "error" : done ? "done" : "running"}
+          <Badge
+            variant={isDraft ? "outline" : "secondary"}
+            className={`ml-1 text-[10px] ${
+              isDraft
+                ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30"
+                : ""
+            }`}
+          >
+            {failed ? "error" : isDraft ? "Draft only, not executed" : done ? "done" : "running"}
           </Badge>
         </span>
         {open ? (
@@ -377,6 +394,12 @@ function ToolCard({ part }: { part: ToolPartLike }) {
       </button>
       {open && (
         <div className="space-y-2 border-t border-border bg-muted/30 p-3">
+          {isDraft && (
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5 text-xs text-amber-600 dark:text-amber-400 font-medium flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              <span>Draft only, not executed. This action was staged as a draft and was NOT executed on the system.</span>
+            </div>
+          )}
           {part.input !== undefined && (
             <div>
               <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">

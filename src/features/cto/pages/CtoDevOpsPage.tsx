@@ -1,28 +1,10 @@
-import React, { useState } from "react";
-import { Rocket, Workflow, Send, History, Package, Layers, Globe, Building, Cpu, Folder, ShieldCheck, Scale, PlayCircle, RefreshCw } from "lucide-react";
+import React from "react";
+import { Rocket, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { toast } from "sonner";
+import { EmptyState } from "@/components/common/EmptyState";
 
 export function CtoDevOpsPage() {
-  const pipelines: Array<{
-    name: string;
-    env: string;
-    status: string;
-    duration: string;
-    lastRun: string;
-  }> = [];
-
-  const servers: Array<{
-    name: string;
-    type: string;
-    ip: string;
-    cpu: string;
-    ram: string;
-    status: string;
-  }> = [];
-
   return (
     <div className="space-y-6 pb-12 text-left">
       <div className="relative overflow-hidden rounded-2xl border border-purple-500/30 bg-gradient-to-r from-slate-900 via-purple-950/60 to-slate-950 p-6 shadow-xl backdrop-blur-xl">
@@ -45,7 +27,12 @@ export function CtoDevOpsPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button size="sm" onClick={() => toast.info("CI/CD pipeline webhook integration pending.")} className="bg-purple-600 hover:bg-purple-500 text-white text-xs cursor-pointer">
+            <Button
+              size="sm"
+              disabled
+              title="Coming soon"
+              className="bg-purple-600/50 text-white/70 text-xs cursor-not-allowed opacity-70"
+            >
               <PlayCircle className="mr-1.5 h-3.5 w-3.5" />
               Trigger Deploy
             </Button>
@@ -53,115 +40,10 @@ export function CtoDevOpsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          { label: "Build Success Rate", val: "—", sub: "No pipeline runs recorded", color: "text-emerald-400" },
-          { label: "Avg Deploy Duration", val: "—", sub: "Pipeline telemetry pending", color: "text-cyan-400" },
-          { label: "Active Containers", val: "—", sub: "Kubernetes cluster offline", color: "text-purple-400" },
-          { label: "Zero-Downtime Rollback", val: "—", sub: "Rollback target unconfigured", color: "text-emerald-400" },
-        ].map((kpi, idx) => (
-          <div key={idx} className="rounded-xl border border-border/80 bg-card/60 p-4 backdrop-blur-xl space-y-1">
-            <div className="text-xs text-muted-foreground font-semibold uppercase">{kpi.label}</div>
-            <div className={`text-2xl font-bold font-display ${kpi.color}`}>{kpi.val}</div>
-            <div className="text-[11px] text-muted-foreground">{kpi.sub}</div>
-          </div>
-        ))}
-      </div>
-
-      <Tabs defaultValue="pipelines" className="space-y-4">
-        <TabsList className="bg-card/60 border border-border/80 p-1 rounded-xl flex flex-wrap gap-1">
-          <TabsTrigger value="pipelines" className="text-xs font-semibold">CI/CD Pipelines</TabsTrigger>
-          <TabsTrigger value="deployments" className="text-xs font-semibold">Deployments & Builds</TabsTrigger>
-          <TabsTrigger value="k8s" className="text-xs font-semibold">Kubernetes & Docker</TabsTrigger>
-          <TabsTrigger value="servers" className="text-xs font-semibold">Servers & Storage</TabsTrigger>
-          <TabsTrigger value="networking" className="text-xs font-semibold">Networking & SSL</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="pipelines">
-          <div className="rounded-2xl border border-border/80 bg-card/60 p-5 space-y-4">
-            <h3 className="font-bold text-sm text-foreground">Active CI/CD Pipelines</h3>
-            {pipelines.length === 0 ? (
-              <div className="p-8 text-center text-xs text-muted-foreground">
-                No active CI/CD pipelines connected. Configure GitHub Actions, GitLab CI, or Jenkins.
-              </div>
-            ) : (
-              <div className="divide-y divide-border/40">
-                {pipelines.map((p, idx) => (
-                  <div key={idx} className="py-3 flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <div className="text-xs font-bold text-foreground flex items-center gap-2">
-                        <span>{p.name}</span>
-                        <Badge variant="outline" className="text-[9px] border-purple-500/30 text-purple-400">{p.env}</Badge>
-                      </div>
-                      <div className="text-[11px] text-muted-foreground">Duration: {p.duration} • Ran: {p.lastRun}</div>
-                    </div>
-                    <Badge className={`text-[10px] ${p.status === "Running" ? "bg-amber-500/20 text-amber-400 border-amber-500/30 animate-pulse" : "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"}`}>
-                      {p.status}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="deployments">
-          <div className="rounded-xl border border-border/80 bg-card/60 p-8 text-center text-xs text-muted-foreground">
-            No deployment logs or artifact releases recorded.
-          </div>
-        </TabsContent>
-
-        <TabsContent value="k8s">
-          <div className="rounded-xl border border-border/80 bg-card/60 p-8 text-center text-xs text-muted-foreground">
-            No Kubernetes clusters or Docker daemon connections detected.
-          </div>
-        </TabsContent>
-
-        <TabsContent value="servers">
-          <div className="rounded-xl border border-border/80 bg-card/60 overflow-hidden">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-muted/50 text-muted-foreground uppercase text-[10px] border-b border-border/60">
-                <tr>
-                  <th className="p-3">Server Instance</th>
-                  <th className="p-3">Instance Type</th>
-                  <th className="p-3">IP Address</th>
-                  <th className="p-3">CPU Usage</th>
-                  <th className="p-3">RAM Usage</th>
-                  <th className="p-3">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/40">
-                {servers.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="p-8 text-center text-xs text-muted-foreground">
-                      No cloud or on-premise compute servers connected.
-                    </td>
-                  </tr>
-                ) : (
-                  servers.map((s, idx) => (
-                    <tr key={idx} className="hover:bg-accent/20 transition-colors">
-                      <td className="p-3 font-bold text-foreground">{s.name}</td>
-                      <td className="p-3 text-muted-foreground">{s.type}</td>
-                      <td className="p-3 font-mono text-purple-400">{s.ip}</td>
-                      <td className="p-3 font-mono text-emerald-400">{s.cpu}</td>
-                      <td className="p-3 font-mono text-indigo-400">{s.ram}</td>
-                      <td className="p-3">
-                        <Badge className="text-[10px] bg-emerald-500/20 text-emerald-400 border-emerald-500/30">{s.status}</Badge>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="networking">
-          <div className="rounded-xl border border-border/80 bg-card/60 p-8 text-center text-xs text-muted-foreground">
-            No active load balancers, DNS zones, or SSL certificates configured.
-          </div>
-        </TabsContent>
-      </Tabs>
+      <EmptyState
+        title="Data not available yet"
+        description="CI/CD pipelines, container cluster orchestration, deployment builds, and server telemetry are not connected to a backend service."
+      />
     </div>
   );
 }

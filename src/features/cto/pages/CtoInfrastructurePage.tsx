@@ -1,18 +1,9 @@
 import React from "react";
-import { Globe, Building, Cpu, Folder, Workflow, ShieldCheck, Scale, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Globe } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/common/EmptyState";
 
 export function CtoInfrastructurePage() {
-  const servers: Array<{
-    name: string;
-    type: string;
-    ip: string;
-    cpu: string;
-    ram: string;
-    status: string;
-  }> = [];
-
   return (
     <div className="space-y-6 pb-12 text-left">
       <div className="relative overflow-hidden rounded-2xl border border-sky-500/30 bg-gradient-to-r from-slate-900 via-sky-950/60 to-slate-950 p-6 shadow-xl backdrop-blur-xl">
@@ -36,42 +27,10 @@ export function CtoInfrastructurePage() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-border/80 bg-card/60 overflow-hidden">
-        <table className="w-full text-left text-xs">
-          <thead className="bg-muted/50 text-muted-foreground uppercase text-[10px] border-b border-border/60">
-            <tr>
-              <th className="p-3">Server Instance</th>
-              <th className="p-3">Instance Type</th>
-              <th className="p-3">IP Address</th>
-              <th className="p-3">CPU Usage</th>
-              <th className="p-3">RAM Usage</th>
-              <th className="p-3">Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border/40">
-            {servers.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="p-8 text-center text-xs text-muted-foreground">
-                  No cloud or compute infrastructure connected.
-                </td>
-              </tr>
-            ) : (
-              servers.map((s, idx) => (
-                <tr key={idx} className="hover:bg-accent/20 transition-colors">
-                  <td className="p-3 font-bold text-foreground">{s.name}</td>
-                  <td className="p-3 text-muted-foreground">{s.type}</td>
-                  <td className="p-3 font-mono text-sky-400">{s.ip}</td>
-                  <td className="p-3 font-mono text-emerald-400">{s.cpu}</td>
-                  <td className="p-3 font-mono text-indigo-400">{s.ram}</td>
-                  <td className="p-3">
-                    <Badge className="text-[10px] bg-emerald-500/20 text-emerald-400 border-emerald-500/30">{s.status}</Badge>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      <EmptyState
+        title="Data not available yet"
+        description="Cloud compute instances, storage clusters, CDN distributions, and network gateways are not connected to a backend service."
+      />
     </div>
   );
 }

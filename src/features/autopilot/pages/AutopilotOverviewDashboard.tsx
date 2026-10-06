@@ -28,6 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/common/EmptyState";
 import { useAutopilotOverview } from "../hooks/useAutopilotOverview";
 
 export default function AutopilotOverviewDashboard() {
@@ -132,12 +133,10 @@ export default function AutopilotOverviewDashboard() {
           ))}
         </div>
       ) : metrics.length === 0 && !backendUnavailable ? (
-        <Card className="rounded-2xl border-dashed border-border/80 p-8 text-center bg-card/20">
-          <CardTitle className="text-sm font-semibold">Metrics pending telemetry</CardTitle>
-          <CardDescription className="text-xs mt-1">
-            Telemetry metrics will appear once autonomous execution workflows complete initial policy cycles.
-          </CardDescription>
-        </Card>
+        <EmptyState
+          title="Data not available yet"
+          description="Telemetry metrics will appear once autonomous execution workflows complete initial policy cycles."
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {metrics.map((m) => {

@@ -1,14 +1,9 @@
-import React, { useState } from "react";
-import { Settings, Building, CreditCard, Users, Shield, Bell, Sliders, Palette, Save } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import React from "react";
+import { Settings } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { EmptyState } from "@/components/common/EmptyState";
 
 export function CeoSettingsPage() {
-  const [compName, setCompName] = useState("");
-  const [taxId, setTaxId] = useState("");
-
   return (
     <div className="space-y-6 pb-12 text-left">
       <div className="relative overflow-hidden rounded-2xl border border-slate-700 bg-gradient-to-r from-slate-900 via-slate-950 to-slate-900 p-6 shadow-xl backdrop-blur-xl">
@@ -29,64 +24,13 @@ export function CeoSettingsPage() {
               Company legal entity profile, billing & enterprise tier, executive permissions, custom branding, and audit security policies.
             </p>
           </div>
-
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              disabled
-              className="bg-amber-600/50 text-white/70 text-xs cursor-not-allowed opacity-70"
-              title="Coming soon (Backend API pending)"
-            >
-              <Save className="mr-1.5 h-3.5 w-3.5" />
-              Save Changes (Coming soon)
-            </Button>
-          </div>
         </div>
       </div>
 
-      <Tabs defaultValue="profile" className="space-y-4">
-        <TabsList className="bg-card/60 border border-border/80 p-1 rounded-xl flex flex-wrap gap-1">
-          <TabsTrigger value="profile" className="text-xs font-semibold">Company Profile</TabsTrigger>
-          <TabsTrigger value="billing" className="text-xs font-semibold">Billing & Tier</TabsTrigger>
-          <TabsTrigger value="users" className="text-xs font-semibold">Executive Users</TabsTrigger>
-          <TabsTrigger value="security" className="text-xs font-semibold">Security & Audit</TabsTrigger>
-          <TabsTrigger value="branding" className="text-xs font-semibold">Branding</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="profile">
-          <div className="rounded-2xl border border-border/80 bg-card/60 p-6 space-y-4 max-w-2xl">
-            <div className="flex items-center justify-between">
-              <h3 className="font-bold text-sm text-foreground">Corporate Legal Entity Profile</h3>
-              <Badge variant="outline" className="text-[10px] text-amber-500/90 border-amber-500/30">Backend API Pending</Badge>
-            </div>
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground block mb-1">Company Legal Name</label>
-                <Input
-                  disabled
-                  value={compName}
-                  onChange={(e) => setCompName(e.target.value)}
-                  placeholder="Enter company legal name"
-                  className="bg-slate-900/60 text-xs opacity-60 cursor-not-allowed"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground block mb-1">Tax ID / Employer Identification Number (EIN)</label>
-                <Input
-                  disabled
-                  value={taxId}
-                  onChange={(e) => setTaxId(e.target.value)}
-                  placeholder="Enter Tax ID / EIN"
-                  className="bg-slate-900/60 font-mono text-xs text-amber-400 opacity-60 cursor-not-allowed"
-                />
-              </div>
-            </div>
-            <p className="text-[11px] text-muted-foreground/80">
-              Corporate legal entity profile persistence is pending backend CEO settings endpoint implementation.
-            </p>
-          </div>
-        </TabsContent>
-      </Tabs>
+      <EmptyState
+        title="Data not available yet"
+        description="Corporate legal entity profile persistence, executive governance, and enterprise billing endpoints are not connected to a backend service."
+      />
     </div>
   );
 }

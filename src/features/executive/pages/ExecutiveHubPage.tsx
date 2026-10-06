@@ -182,16 +182,16 @@ export function ExecutiveHubPage() {
                       ))}
                     </div>
                   ) : (
-                    <div className="bg-accent/10 rounded-lg p-2 border border-border/20 text-center">
-                      <span className="text-[10px] text-muted-foreground">
-                        Telemetry feeds pending integration
+                    <div className="bg-accent/10 rounded-lg p-2 border border-dashed border-border/40 text-center">
+                      <span className="text-[10px] text-muted-foreground font-medium">
+                        Data not available yet
                       </span>
                     </div>
                   )}
 
                   <div className="flex items-center justify-between text-[11px] text-muted-foreground">
                     <span className="flex items-center gap-1 font-semibold text-muted-foreground">
-                      <ShieldCheck className="h-3 w-3" /> Score: {dataset.healthScore > 0 ? `${dataset.healthScore}%` : "—"}
+                      <ShieldCheck className="h-3 w-3" /> Score: {dataset.healthScore > 0 ? `${dataset.healthScore}%` : "Not available"}
                     </span>
                     <span className="text-primary font-semibold group-hover:underline">Open Dashboard &rarr;</span>
                   </div>

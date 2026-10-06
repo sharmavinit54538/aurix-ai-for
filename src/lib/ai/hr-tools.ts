@@ -101,9 +101,71 @@ export function createHrTools({ token, role = "employee" }: CreateHrToolsOptions
       status: "draft_suggestion" as const,
       label: "Draft suggestion (not submitted)",
       isSubmitted: false,
+      isExecuted: false,
       proposalId: `draft_${Math.random().toString(36).slice(2, 10)}`,
       proposedAt: new Date().toISOString(),
-      notice: "This is a draft suggestion and has not been submitted or executed. Backend approval workflow is currently not connected.",
+      notice: "Draft only, not executed. Backend approval workflow is currently not connected.",
+      ...input,
+    }),
+  });
+
+  tools.approveRequest = tool({
+    description: "Stage an approval request draft for human review. Returns a draft suggestion — DOES NOT execute approval.",
+    inputSchema: z.object({
+      requestId: z.string().describe("ID of the request to approve"),
+      reason: z.string().optional().describe("Approval comments or notes"),
+    }),
+    execute: async ({ requestId, reason }) => ({
+      status: "draft_suggestion" as const,
+      label: "Draft suggestion (not executed)",
+      isSubmitted: false,
+      isExecuted: false,
+      proposalId: `draft_appr_${Math.random().toString(36).slice(2, 10)}`,
+      action: "approve_request",
+      requestId,
+      reason,
+      proposedAt: new Date().toISOString(),
+      notice: "Draft only, not executed. Backend approval workflow is currently not connected.",
+    }),
+  });
+
+  tools.rejectRequest = tool({
+    description: "Stage a rejection request draft for human review. Returns a draft suggestion — DOES NOT execute rejection.",
+    inputSchema: z.object({
+      requestId: z.string().describe("ID of the request to reject"),
+      reason: z.string().describe("Rejection reason"),
+    }),
+    execute: async ({ requestId, reason }) => ({
+      status: "draft_suggestion" as const,
+      label: "Draft suggestion (not executed)",
+      isSubmitted: false,
+      isExecuted: false,
+      proposalId: `draft_rej_${Math.random().toString(36).slice(2, 10)}`,
+      action: "reject_request",
+      requestId,
+      reason,
+      proposedAt: new Date().toISOString(),
+      notice: "Draft only, not executed. Backend rejection workflow is currently not connected.",
+    }),
+  });
+
+  tools.createEmployee = tool({
+    description: "Stage a new employee creation draft. Returns a draft suggestion — DOES NOT create employee in database.",
+    inputSchema: z.object({
+      name: z.string().describe("Full name of the employee"),
+      email: z.string().describe("Email address"),
+      department: z.string().describe("Department name"),
+      designation: z.string().describe("Role or designation"),
+    }),
+    execute: async (input) => ({
+      status: "draft_suggestion" as const,
+      label: "Draft suggestion (not executed)",
+      isSubmitted: false,
+      isExecuted: false,
+      proposalId: `draft_emp_${Math.random().toString(36).slice(2, 10)}`,
+      action: "create_employee",
+      proposedAt: new Date().toISOString(),
+      notice: "Draft only, not executed. Employee record has not been created in backend.",
       ...input,
     }),
   });

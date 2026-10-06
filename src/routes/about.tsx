@@ -25,21 +25,12 @@ const values = [
   { icon: Heart, title: "Respect", desc: "Kindness scales. We build a place people want to stay." },
 ];
 
-const team = [
-  { name: "Priya Patel", role: "CEO & Co-founder", bio: "Previously product at Stripe and Linear." },
-  { name: "Elena Rivera", role: "Head of Product", bio: "Built the Notion mobile experience from scratch." },
-  { name: "James Okoye", role: "VP Engineering", bio: "Distributed systems lead at Cloudflare." },
-  { name: "Marcus Chen", role: "Principal Designer", bio: "Design systems at Airbnb and Figma." },
-  { name: "Sara Lindqvist", role: "Director of AI", bio: "Applied research at DeepMind." },
-  { name: "Daniel Kim", role: "Head of Growth", bio: "Scaled three SaaS companies past 100M ARR." },
-];
-
 const timeline = [
-  { year: "2022", title: "The first sketch", desc: "Two co-founders, one Figma file, a shared frustration with bloated tools." },
-  { year: "2023", title: "Private beta", desc: "300 teams. 4 months of relentless iteration." },
-  { year: "2024", title: "Public launch", desc: "10,000 teams in the first quarter. The product began to define a category." },
-  { year: "2025", title: "OFC360", desc: "Native AI woven through every surface — not bolted on top." },
-  { year: "2026", title: "Today", desc: "12,000+ teams in 180 countries shipping with OFC360." },
+  { year: "2022", title: "The first sketch", desc: "A unified platform architecture designed to reduce operational complexity." },
+  { year: "2023", title: "Initial release", desc: "Core modules deployed with continuous feedback and architectural refinement." },
+  { year: "2024", title: "Enterprise expansion", desc: "Comprehensive workforce, payroll, and role-based permissions expansion." },
+  { year: "2025", title: "OFC360", desc: "AI-assisted workforce management integrated across platform surfaces." },
+  { year: "2026", title: "Today", desc: "A modern, reliable operating system for growing organizations." },
 ];
 
 function AboutPage() {
@@ -56,7 +47,7 @@ function AboutPage() {
             We're building the operating system <span className="text-gradient">teams deserve</span>.
           </h1>
           <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">
-            Software for work is stuck in 2012. OFC360 is a fresh take — engineered for the way modern teams actually move, with the polish of a product you'd pay double for.
+            OFC360 is engineered for modern organizations — unifying workforce workflows, payroll, compliance, and operations in a single, focused platform.
           </p>
         </Section>
       </section>
@@ -81,28 +72,11 @@ function AboutPage() {
 
       {/* Story */}
       <Section>
-        <SectionHeader eyebrow="Our story" title="Built by people who lived the problem" />
+        <SectionHeader eyebrow="Our story" title="Built to solve operational complexity" />
         <div className="mt-12 max-w-3xl mx-auto space-y-5 text-muted-foreground leading-relaxed text-lg">
-          <p>OFC360 started in a small studio in Lisbon in 2022. Our founders had built and shipped product at some of the most respected tech companies — and were tired of stitching together five tools to get anything done.</p>
-          <p>The first version of OFC360 was an opinionated weekend project. It got passed quietly between teams who told their friends. Within a year, thousands of companies were using it daily.</p>
-          <p>Today, OFC360 is a team of 60 across three continents, building one of the most loved products in its category. We're still early.</p>
-        </div>
-      </Section>
-
-      {/* Team */}
-      <Section>
-        <SectionHeader eyebrow="Team" title="The people building OFC360" />
-        <div className="mt-16 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {team.map((t) => (
-            <div key={t.name} className="glass rounded-2xl p-6">
-              <div className="h-14 w-14 rounded-full bg-gradient-brand grid place-items-center text-brand-foreground font-display font-bold text-lg mb-4">
-                {t.name.split(" ").map((n) => n[0]).join("")}
-              </div>
-              <h3 className="font-semibold">{t.name}</h3>
-              <div className="text-sm text-brand mb-2">{t.role}</div>
-              <p className="text-sm text-muted-foreground">{t.bio}</p>
-            </div>
-          ))}
+          <p>OFC360 was founded to eliminate the friction modern organizations face when managing distributed operations, payroll, compliance, and employee workflows.</p>
+          <p>Instead of stitching together disconnected tools and disparate spreadsheets, OFC360 provides a single, coherent source of truth for your business.</p>
+          <p>Our focus is delivering robust software that respects your team's time and gives administrators the clear oversight they need.</p>
         </div>
       </Section>
 

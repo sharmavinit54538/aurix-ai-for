@@ -71,8 +71,9 @@ export function CtoAiInsights({ insights }: CtoAiInsightsProps) {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => toast.success(`Applied action: ${item.action}`)}
-                className="w-full text-xs font-medium border-violet-500/30 text-violet-300 hover:bg-violet-500/20 cursor-pointer h-8"
+                disabled
+                title="Coming soon"
+                className="w-full text-xs font-medium border-border/40 text-muted-foreground opacity-70 cursor-not-allowed h-8"
               >
                 <span>{item.action}</span>
                 <ArrowRight className="ml-1.5 h-3 w-3" />

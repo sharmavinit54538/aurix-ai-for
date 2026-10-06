@@ -203,6 +203,32 @@ export function AgentToolCallCard({
 
   // ── 3) Done State ──────────────────────────────────────────────────
   if (toolCall.status === "done") {
+    const isDraft =
+      (toolCall.result as any)?.status === "draft_suggestion" ||
+      (toolCall.result as any)?.isSubmitted === false ||
+      (toolCall.result as any)?.isExecuted === false;
+
+    if (isDraft) {
+      return (
+        <Card className="rounded-2xl border border-amber-500/30 bg-amber-500/5 shadow-xs overflow-hidden my-3">
+          <CardHeader className="py-2 px-3.5 border-b border-amber-500/20 bg-amber-500/10 flex flex-row items-center justify-between space-y-0">
+            <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-semibold text-xs">
+              <AlertTriangle className="h-3.5 w-3.5" />
+              Draft Only, Not Executed
+            </div>
+            <Badge variant="outline" className="text-[10px] text-amber-600 dark:text-amber-400 border-amber-500/30">
+              Draft Only
+            </Badge>
+          </CardHeader>
+          <CardContent className="p-3.5 text-xs space-y-2">
+            <div className="text-foreground">
+              {toolCall.result?.message || `Draft suggestion created for ${actionName}. Action was NOT executed.`}
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
     return (
       <>
         <Card className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 shadow-xs overflow-hidden my-3">

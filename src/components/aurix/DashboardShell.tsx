@@ -431,12 +431,7 @@ const EXECUTIVE_NAV_SECTIONS: SidebarNavSection[] = [
     title: "EXECUTIVE COMMAND CENTER",
     items: [
       { to: "/dashboard/executive", label: "Executive Overview", icon: Home, exact: true },
-      { to: "/dashboard/executive/ceo", label: "CEO Portal", icon: TrendingUp },
-      { to: "/dashboard/executive/cfo", label: "CFO Finance", icon: HandCoins },
-      { to: "/dashboard/executive/coo", label: "COO Operations", icon: Users },
       { to: "/dashboard/executive/cto", label: "CTO Technology", icon: Wrench },
-      { to: "/dashboard/executive/cio", label: "CIO IT Systems", icon: Laptop },
-      { to: "/dashboard/executive/cmo", label: "CMO Marketing", icon: Sparkles },
       { to: "/dashboard/analytics", label: "Analytics & Reports", icon: BarChart3 },
       { to: "/dashboard/helpdesk/analytics", label: "Helpdesk Analytics", icon: LifeBuoy },
     ],

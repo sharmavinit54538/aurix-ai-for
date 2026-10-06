@@ -1,6 +1,7 @@
 import React from "react";
-import { Activity, Cpu, Folder, Zap, Clock, FileText, AlertCircle, HeartPulse } from "lucide-react";
+import { Activity } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/common/EmptyState";
 
 export function CtoMonitoringPage() {
   return (
@@ -26,19 +27,10 @@ export function CtoMonitoringPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {[
-          { name: "CPU Utilization", val: "—", status: "Telemetry pending", color: "text-emerald-400" },
-          { name: "RAM Memory Load", val: "—", status: "Telemetry pending", color: "text-indigo-400" },
-          { name: "GPU Cluster Load", val: "—", status: "Cluster offline", color: "text-purple-400" },
-        ].map((m, i) => (
-          <div key={i} className="rounded-xl border border-border/80 bg-card/60 p-4 space-y-2">
-            <div className="text-xs text-muted-foreground font-semibold uppercase">{m.name}</div>
-            <div className={`text-3xl font-bold font-display ${m.color}`}>{m.val}</div>
-            <Badge variant="outline" className="text-[10px] border-border text-muted-foreground">{m.status}</Badge>
-          </div>
-        ))}
-      </div>
+      <EmptyState
+        title="Data not available yet"
+        description="Real-time CPU, RAM, and GPU cluster utilization metrics and live application logs are not connected to a backend service."
+      />
     </div>
   );
 }

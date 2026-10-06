@@ -1,10 +1,9 @@
 import React from "react";
-import { ClipboardCheck, Activity, CheckCircle2, Clock, ShieldCheck, Zap, PackageCheck } from "lucide-react";
+import { ClipboardCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/common/EmptyState";
 
 export function CeoOperationsPage() {
-  const approvals: any[] = [];
-
   return (
     <div className="space-y-6 pb-12 text-left">
       <div className="relative overflow-hidden rounded-2xl border border-sky-500/30 bg-gradient-to-r from-slate-900 via-sky-950/60 to-slate-950 p-6 shadow-xl backdrop-blur-xl">
@@ -28,44 +27,10 @@ export function CeoOperationsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          { label: "Operational Health", val: "—", sub: "Pending integration", color: "text-sky-400" },
-          { label: "Pending Signoffs", val: "0", sub: "No pending signoffs", color: "text-amber-400" },
-          { label: "Resource Utilization", val: "—", sub: "Pending integration", color: "text-emerald-400" },
-          { label: "SOC2 Compliance", val: "—", sub: "Pending audit sync", color: "text-indigo-400" },
-        ].map((k, i) => (
-          <div key={i} className="rounded-xl border border-border/80 bg-card/60 p-4 space-y-1">
-            <div className="text-xs text-muted-foreground font-semibold uppercase">{k.label}</div>
-            <div className={`text-2xl font-bold font-display ${k.color}`}>{k.val}</div>
-            <div className="text-[11px] text-muted-foreground">{k.sub}</div>
-          </div>
-        ))}
-      </div>
-
-      <div className="rounded-2xl border border-border/80 bg-card/60 p-5 space-y-4">
-        <h3 className="font-bold text-sm text-foreground">Pending Executive Approvals</h3>
-        <div className="space-y-2.5">
-          {approvals.length > 0 ? (
-            approvals.map((app) => (
-              <div key={app.id} className="rounded-lg border border-border/60 bg-card/80 p-3 flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-sky-400 font-bold text-xs">{app.id}</span>
-                    <h4 className="font-bold text-xs text-foreground">{app.title}</h4>
-                  </div>
-                  <div className="text-[11px] text-muted-foreground">Requester: {app.requester} • Amount: {app.amount}</div>
-                </div>
-                <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs">{app.status}</Badge>
-              </div>
-            ))
-          ) : (
-            <div className="rounded-xl border border-dashed border-border/60 p-8 text-center text-xs text-muted-foreground">
-              No pending executive approvals.
-            </div>
-          )}
-        </div>
-      </div>
+      <EmptyState
+        title="Data not available yet"
+        description="Business operations health metrics, resource allocation, and executive approval workflows are not connected to a backend service."
+      />
     </div>
   );
 }
