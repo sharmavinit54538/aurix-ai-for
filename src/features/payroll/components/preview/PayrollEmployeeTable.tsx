@@ -1,13 +1,12 @@
-import { ArrowUpDown, ChevronLeft, ChevronRight, Eye, FileSpreadsheet, RefreshCw, Search, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowUpDown, FileSpreadsheet, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { GlassCard, Skeleton } from "@/components/hrms/Shared";
-import type { PayrollPreviewEmployee } from "@/services/payrollApi";
+import { Table } from "@/components/ui/table";
 import type { PayrollEmployeeTableProps } from "../../types/payrollPreview.types";
-import { formatINR, getValidationBadge } from "../../utils/payrollPreview.utils";
+import { PayrollTableHeader } from "./PayrollTableHeader";
+import { PayrollTableBody } from "./PayrollTableBody";
+import { PayrollFilters } from "./PayrollFilters";
+import { PayrollPagination } from "./PayrollPagination";
 
 export function PayrollEmployeeTable({
   employees,
@@ -65,139 +64,18 @@ export function PayrollEmployeeTable({
 
       <div className="mt-4 overflow-x-auto rounded-xl border border-border">
         <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/40 text-xs">
-              <TableHead className="cursor-pointer select-none" onClick={() => onSort("name")}>
-                <div className="flex items-center gap-1">
-                  <span>Employee</span>
-                  <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
-                </div>
-              </TableHead>
-              <TableHead>Employee ID</TableHead>
-              <TableHead className="cursor-pointer select-none" onClick={() => onSort("department")}>
-                <div className="flex items-center gap-1">
-                  <span>Department</span>
-                  <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
-                </div>
-              </TableHead>
-              <TableHead className="text-right cursor-pointer select-none" onClick={() => onSort("grossSalary")}>
-                <div className="flex items-center justify-end gap-1">
-                  <span>Gross Earnings</span>
-                  <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
-                </div>
-              </TableHead>
-              <TableHead className="text-right">Total Deductions</TableHead>
-              <TableHead className="text-right cursor-pointer select-none" onClick={() => onSort("netSalary")}>
-                <div className="flex items-center justify-end gap-1">
-                  <span>Net Pay</span>
-                  <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
-                </div>
-              </TableHead>
-              <TableHead>Validation</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loadingEmployees ? (
-              Array.from({ length: pageSize }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell colSpan={8} className="py-3">
-                    <Skeleton className="h-5 w-full" />
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : employees.length > 0 ? (
-              employees.map((emp) => {
-                const vBadge = getValidationBadge(emp.validationStatus);
-                return (
-                  <TableRow key={emp.id || emp.employeeId} className="text-xs">
-                    <TableCell className="font-medium text-foreground">
-                      <div>
-                        <div>{emp.name}</div>
-                        {emp.designation ? (
-                          <div className="text-[10px] text-muted-foreground">
-                            {emp.designation}
-                          </div>
-                        ) : null}
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-mono text-muted-foreground">
-                      {emp.employeeId}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {emp.department || "—"}
-                    </TableCell>
-                    <TableCell className="text-right font-mono">
-                      {formatINR(emp.grossEarnings)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-rose-600 dark:text-rose-400">
-                      {formatINR(emp.totalDeductions)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono font-semibold text-emerald-600 dark:text-emerald-400">
-                      {formatINR(emp.netPay)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={`text-[10px] font-medium ${vBadge.className}`}
-                      >
-                        {vBadge.label}
-                        {emp.issuesCount && emp.issuesCount > 0 ? ` (${emp.issuesCount})` : ""}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onViewDetail(emp)}
-                        className="h-7 text-xs text-primary hover:text-primary gap-1"
-                      >
-                        <Eye className="h-3.5 w-3.5" />
-                        <span>View</span>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            ) : employeesError ? (
-              <TableRow>
-                <TableCell colSpan={8} className="py-12 text-center">
-                  <div className="mx-auto max-w-sm space-y-3">
-                    <FileSpreadsheet className="mx-auto h-8 w-8 text-destructive" />
-                    <div className="font-display text-sm font-semibold text-destructive">
-                      Failed to load employee records
-                    </div>
-                    <p className="text-xs text-muted-foreground">{employeesError}</p>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={onRetry}
-                      className="h-8 text-xs rounded-xl"
-                    >
-                      <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
-                      Retry
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : (
-              <TableRow>
-                <TableCell colSpan={8} className="py-12 text-center">
-                  <div className="mx-auto max-w-sm">
-                    <FileSpreadsheet className="mx-auto h-8 w-8 text-muted-foreground/60" />
-                    <div className="mt-2 font-display text-sm font-semibold text-foreground">
-                      No payroll results available
-                    </div>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {searchQuery || selectedDept !== "all" || selectedValidation !== "all"
-                        ? "No employee records matched your filter criteria."
-                        : "Payroll results have not been generated for this run."}
-                    </p>
-                  </div>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
+          <PayrollTableHeader onSort={onSort} />
+          <PayrollTableBody
+            employees={employees}
+            loadingEmployees={loadingEmployees}
+            employeesError={employeesError}
+            searchQuery={searchQuery}
+            selectedDept={selectedDept}
+            selectedValidation={selectedValidation}
+            pageSize={pageSize}
+            onViewDetail={onViewDetail}
+            onRetry={onRetry}
+          />
         </Table>
       </div>
 
@@ -210,140 +88,5 @@ export function PayrollEmployeeTable({
         onPageChange={onPageChange}
       />
     </GlassCard>
-  );
-}
-
-function PayrollFilters({
-  searchQuery,
-  selectedDept,
-  selectedValidation,
-  availableDepartments,
-  pageSize,
-  onSearchChange,
-  onDeptChange,
-  onValidationChange,
-  onPageSizeChange,
-  onClearSearch,
-}: {
-  searchQuery: string;
-  selectedDept: string;
-  selectedValidation: string;
-  availableDepartments: string[];
-  pageSize: number;
-  onSearchChange: (query: string) => void;
-  onDeptChange: (dept: string) => void;
-  onValidationChange: (validation: string) => void;
-  onPageSizeChange: (size: number) => void;
-  onClearSearch: () => void;
-}) {
-  return (
-    <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative w-full sm:w-64">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search name or ID…"
-            className="h-8 pl-8 text-xs bg-background/50"
-          />
-          {searchQuery ? (
-            <button onClick={onClearSearch} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-              <X className="h-3 w-3" />
-            </button>
-          ) : null}
-        </div>
-
-        {availableDepartments.length > 0 ? (
-          <Select value={selectedDept} onValueChange={onDeptChange}>
-            <SelectTrigger className="h-8 w-36 text-xs bg-background/50">
-              <SelectValue placeholder="Department" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Departments</SelectItem>
-              {availableDepartments.map((dept) => (
-                <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : null}
-
-        <Select value={selectedValidation} onValueChange={onValidationChange}>
-          <SelectTrigger className="h-8 w-36 text-xs bg-background/50">
-            <SelectValue placeholder="Validation" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="valid">Valid Only</SelectItem>
-            <SelectItem value="warning">Warnings</SelectItem>
-            <SelectItem value="error">Errors</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <span>Rows:</span>
-        <Select value={String(pageSize)} onValueChange={(v) => onPageSizeChange(Number(v))}>
-          <SelectTrigger className="h-8 w-20 text-xs bg-background/50">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="10">10</SelectItem>
-            <SelectItem value="25">25</SelectItem>
-            <SelectItem value="50">50</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
-  );
-}
-
-function PayrollPagination({
-  currentPage,
-  totalPages,
-  totalEmployees,
-  pageSize,
-  loading,
-  onPageChange,
-}: {
-  currentPage: number;
-  totalPages: number;
-  totalEmployees: number;
-  pageSize: number;
-  loading: boolean;
-  onPageChange: (page: number) => void;
-}) {
-  if (totalPages <= 1) return null;
-
-  return (
-    <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
-      <div>
-        Page <strong className="text-foreground">{currentPage}</strong> of{" "}
-        <strong className="text-foreground">{totalPages}</strong> ({totalEmployees} total records)
-      </div>
-
-      <div className="flex items-center gap-1">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-          disabled={currentPage <= 1 || loading}
-          className="h-8 px-2 text-xs"
-        >
-          <ChevronLeft className="h-3.5 w-3.5" />
-          <span>Previous</span>
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-          disabled={currentPage >= totalPages || loading}
-          className="h-8 px-2 text-xs"
-        >
-          <span>Next</span>
-          <ChevronRight className="h-3.5 w-3.5" />
-        </Button>
-      </div>
-    </div>
   );
 }

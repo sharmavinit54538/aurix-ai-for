@@ -1,244 +1,126 @@
-import {
-  ArrowLeft,
-  Banknote,
-  CheckCircle2,
-  ExternalLink,
-  Eye,
-  FileCheck,
-  Layers,
-  RefreshCw,
-  RotateCcw,
-  Search,
-  ShieldAlert,
-  ShieldCheck,
-  TrendingDown,
-  TrendingUp,
-  UserCheck,
-  Users,
-  X,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Link } from "@tanstack/react-router";
-import { GlassCard, StatCard, EmptyState, Skeleton } from "@/components/hrms/Shared";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert";
-import { PayrollPreviewHeaderProps } from "../../types/payrollPreview.types";
-import { formatINR } from "../../utils/payrollPreview.utils";
 import { useNavigate } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
+import { GlassCard, Skeleton } from "@/components/hrms/Shared";
+import { ShieldAlert, RefreshCw, ArrowLeft } from "lucide-react";
+import { PayrollSubNavigation } from "./PayrollSubNavigation";
+import { PayrollPageHeader } from "./PayrollPageHeader";
+import { ProvisionalPayrollNotice } from "./ProvisionalPayrollNotice";
+import { PayrollSummaryCards } from "./PayrollSummaryCards";
 
-export function PayrollSubNavigation({ runId }: { runId: string }) {
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 pb-3">
-      <div className="flex items-center gap-2">
-        <Link
-          to="/dashboard/payroll"
-          className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
-        >
-          Payroll Dashboard
-        </Link>
-        <Link
-          to="/dashboard/payroll/periods"
-          className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
-        >
-          Payroll Periods
-        </Link>
-        <Link
-          to={`/dashboard/payroll/runs/${runId}/processing` as any}
-          className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
-        >
-          Processing Status
-        </Link>
-        <span className="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm">
-          Payroll Preview
-        </span>
-        <Link
-          to={`/dashboard/payroll/runs/${runId}/validation` as any}
-          className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
-        >
-          Validation & Issues
-        </Link>
-        <Link
-          to={`/dashboard/payroll/runs/${runId}/approval` as any}
-          className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
-        >
-          Review & Approval
-        </Link>
-        <Link
-          to={`/dashboard/payroll/runs/${runId}/finalize` as any}
-          className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
-        >
-          Finalization
-        </Link>
-        <Link
-          to="/dashboard/payroll/payslips"
-          className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
-        >
-          Final Payslips
-        </Link>
-      </div>
-
-      <Link
-        to="/dashboard/payroll"
-        className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" />
-        <span>Back to Payroll Dashboard</span>
-      </Link>
-    </div>
-  );
-}
-
-export function PayrollPageHeader({
+export function PayrollPreviewHeader({
   runId,
   previewData,
   statusTone,
+  loadingPreview,
+  isUnavailable,
+  apiError,
   canRunPayroll,
+  onRefresh,
+  onRecalculate,
   onNavigateToValidation,
   onNavigateToApproval,
-  onRecalculate,
 }: {
   runId: string;
   previewData: any;
   statusTone: any;
+  loadingPreview: boolean;
+  isUnavailable: boolean;
+  apiError: string | null;
   canRunPayroll: boolean;
+  onRefresh: () => void;
+  onRecalculate: () => void;
   onNavigateToValidation: () => void;
   onNavigateToApproval: () => void;
-  onRecalculate: () => void;
 }) {
+  const navigate = useNavigate();
 
-  return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <div className="flex flex-wrap items-center gap-2.5">
-          <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
-            Payroll Preview
-          </h1>
-          <Badge
-            variant="outline"
-            className="font-mono text-[11px] font-medium border-border/80 bg-muted/30"
-            title={`Payroll Run Identifier: ${runId}`}
-          >
-            Run: {runId}
-          </Badge>
-          {previewData?.status ? (
-            <Badge
+  // Permission Guard - handled at page level
+
+  // Missing or Invalid Run ID State - handled at page level
+
+  // Backend Unavailable / Error State
+  if (isUnavailable || apiError) {
+    return (
+      <div className="space-y-6">
+        <PayrollSubNavigation runId={runId} />
+        <div className="border-border/80 p-8 text-center">
+          <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 ring-1 ring-amber-500/20">
+            <ShieldAlert className="h-6 w-6" />
+          </div>
+          <h2 className="font-display text-base font-semibold text-foreground">
+            {isUnavailable
+              ? "Payroll Preview Data Unavailable"
+              : "Unable to Load Payroll Preview"}
+          </h2>
+          <p className="mx-auto mt-2 max-w-xl text-xs leading-relaxed text-muted-foreground">
+            {apiError ||
+              "The payroll preview endpoint is currently unavailable or pending deployment on the backend server. Live payroll calculations will render here once available."}
+          </p>
+
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <Button
+              size="sm"
               variant="outline"
-              className={`text-xs font-semibold capitalize ${statusTone.badgeClass}`}
+              onClick={onRefresh}
+              disabled={loadingPreview}
+              className="gap-1.5 text-xs"
             >
-              {statusTone.label}
-            </Badge>
-          ) : null}
+              <RefreshCw className={`h-3.5 w-3.5 ${loadingPreview ? "animate-spin" : ""}`} />
+              <span>Retry Connection</span>
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => navigate({ to: "/dashboard/payroll" as any })}
+              className="gap-1.5 text-xs"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span>Back to Payroll Dashboard</span>
+            </Button>
+          </div>
         </div>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Review and audit backend-calculated provisional payroll figures prior to formal review & approval.
-        </p>
       </div>
+    );
+  }
 
-      <div className="flex flex-wrap items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onNavigateToValidation}
-          className="h-9 gap-1.5 text-xs shadow-sm text-primary border-primary/30 hover:bg-primary/5"
-          title="View validation findings and rule violations"
-        >
-          <ShieldCheck className="h-3.5 w-3.5" />
-          <span>Validation & Issues</span>
-        </Button>
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onNavigateToApproval}
-          className="h-9 gap-1.5 text-xs shadow-sm text-foreground hover:bg-muted/60"
-          title="Proceed to Step 7 Review & Approval"
-        >
-          <UserCheck className="h-3.5 w-3.5 text-primary" />
-          <span>Review & Approval</span>
-        </Button>
-
-        {canRunPayroll ? (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onRecalculate}
-            className="h-9 gap-1.5 text-xs shadow-sm"
-            title="Recalculate payroll figures on backend"
-          >
-            <RotateCcw className="h-3.5 w-3.5" />
-            <span>Recalculate Payroll</span>
-          </Button>
-        ) : null}
+  // Initial Loading Skeleton
+  if (loadingPreview) {
+    return (
+      <div className="space-y-6">
+        <PayrollSubNavigation runId={runId} />
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-2xl border border-border bg-card/40 p-4">
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="mt-3 h-7 w-24" />
+            </div>
+          ))}
+        </div>
+        <GlassCard className="p-6">
+          <Skeleton className="h-9 w-64" />
+          <Skeleton className="mt-4 h-48 w-full" />
+        </GlassCard>
       </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <PayrollSubNavigation runId={runId} />
+
+      <PayrollPageHeader
+        runId={runId}
+        previewData={previewData}
+        statusTone={statusTone}
+        canRunPayroll={canRunPayroll}
+        onNavigateToValidation={onNavigateToValidation}
+        onNavigateToApproval={onNavigateToApproval}
+        onRecalculate={onRecalculate}
+      />
+
+      <ProvisionalPayrollNotice />
+
+      <PayrollSummaryCards previewData={previewData} />
     </div>
-  );
-}
-
-export function ProvisionalPayrollNotice() {
-  return (
-    <Alert className="border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200">
-      <ShieldAlert className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5" />
-      <div className="ml-2">
-        <AlertTitle className="text-xs font-bold uppercase tracking-wider text-amber-900 dark:text-amber-200">
-          Provisional Payroll Results
-        </AlertTitle>
-        <AlertDescription className="mt-1 text-xs leading-relaxed text-amber-800 dark:text-amber-300">
-          These payroll results are for <strong>review and audit purposes only</strong> and have not been finalized.
-          {" "}<strong>Payroll is not finalized, final payslips have not been generated, and employee payment has not been initiated.</strong>
-        </AlertDescription>
-      </div>
-    </Alert>
-  );
-}
-
-export function PayrollSummaryCards({ previewData }: { previewData: any }) {
-  return (
-    <section aria-labelledby="preview-summary-heading">
-      <h2 id="preview-summary-heading" className="sr-only">
-        Payroll Preview Summary
-      </h2>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
-        <StatCard
-          label="Employees"
-          value={formatINR(previewData?.summary?.employeeCount)}
-          icon={Users}
-          accent="brand"
-        />
-        <StatCard
-          label="Gross Payroll"
-          value={formatINR(previewData?.summary?.grossPayroll)}
-          icon={Banknote}
-          accent="muted"
-        />
-        <StatCard
-          label="Total Earnings"
-          value={formatINR(previewData?.summary?.totalEarnings ?? previewData?.summary?.grossPayroll)}
-          icon={TrendingUp}
-          accent="muted"
-        />
-        <StatCard
-          label="Total Deductions"
-          value={formatINR(previewData?.summary?.totalDeductions)}
-          icon={TrendingDown}
-          accent="warning"
-        />
-        <StatCard
-          label="Net Payroll"
-          value={formatINR(previewData?.summary?.netPayroll)}
-          icon={Banknote}
-          accent="success"
-        />
-        <StatCard
-          label="Employer Cost"
-          value={formatINR(previewData?.summary?.employerCost)}
-          icon={Layers}
-          accent="muted"
-        />
-      </div>
-    </section>
   );
 }

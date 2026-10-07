@@ -6,7 +6,7 @@ import {
   PayrollPageHeader,
   ProvisionalPayrollNotice,
   PayrollSummaryCards,
-} from "@/features/payroll/components/preview/PayrollPreviewHeader";
+} from "@/features/payroll/components/preview";
 import { PayrollValidationPanel } from "@/features/payroll/components/preview/PayrollValidationPanel";
 import { WorkflowActionNotice } from "@/features/payroll/components/preview/WorkflowActionNotice";
 import { PayrollEmployeeTable } from "@/features/payroll/components/preview/PayrollEmployeeTable";
