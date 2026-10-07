@@ -9,6 +9,8 @@ import {
   UserCheck,
   Users,
   XCircle,
+  X,
+  XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +23,7 @@ import {
 } from "@/components/ui/alert";
 import type { PayrollValidationSummary } from "@/services/payrollApi";
 import { formatDate } from "../../utils/payrollValidation.utils";
+import { XCircle, Users, X, Layers, ShieldAlert, ShieldCheck, UserCheck } from "lucide-react";
 
 export function ValidationSubNavigation({ runId }: { runId: string }) {
   return (
@@ -231,5 +234,3 @@ export function ValidationSummaryCards({
     </div>
   );
 }
-
-import { ShieldCheck, FileCheck, RotateCcw, UserCheck, Layers, XCircle, ShieldAlert, AlertTriangle, Users } from "lucide-react";

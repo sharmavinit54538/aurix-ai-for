@@ -2,7 +2,7 @@ import { Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ValidationFiltersProps } from "../types/payrollValidation.types";
+import { ValidationFiltersProps } from "../../types/payrollValidation.types";
 
 export function ValidationFilters({
   searchQuery,
@@ -69,7 +69,7 @@ export function ValidationFilters({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
-              {availableCategories.map((cat) => (
+              {availableCategories.map((cat: string) => (
                 <SelectItem key={cat} value={cat}>
                   {cat}
                 </SelectItem>
@@ -86,7 +86,7 @@ export function ValidationFilters({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Departments</SelectItem>
-              {availableDepartments.map((dept) => (
+              {availableDepartments.map((dept: string) => (
                 <SelectItem key={dept} value={dept}>
                   {dept}
                 </SelectItem>

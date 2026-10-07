@@ -1,4 +1,7 @@
 import type { PayrollValidationSummary, PayrollValidationIssue } from "@/services/payrollApi";
+import { getValidationStatusBadge } from "../utils/payrollValidation.utils";
+
+export type { PayrollValidationIssue };
 
 export interface ValidationPageProps {
   runId: string;
@@ -93,20 +96,20 @@ export type DepartmentOption = string;
 export type StatusOption = "all" | "open" | "resolved";
 export type BlockingOption = "all" | "blocking" | "non_blocking";
 
-export const SEVERITY_OPTIONS: { value: SeverityOption; label: string }[] = [
+export const SEVERITY_OPTIONS: { value: "all" | "error" | "warning" | "info"; label: string }[] = [
   { value: "all", label: "All Severity" },
   { value: "error", label: "Errors Only" },
   { value: "warning", label: "Warnings Only" },
   { value: "info", label: "Info Only" },
 ] as const;
 
-export const STATUS_OPTIONS: { value: StatusOption; label: string }[] = [
+export const STATUS_OPTIONS: { value: "all" | "open" | "resolved"; label: string }[] = [
   { value: "all", label: "All Statuses" },
   { value: "open", label: "Open" },
   { value: "resolved", label: "Resolved" },
 ] as const;
 
-export const BLOCKING_OPTIONS: { value: BlockingOption; label: string }[] = [
+export const BLOCKING_OPTIONS: { value: "all" | "blocking" | "non_blocking"; label: string }[] = [
   { value: "all", label: "All Impact" },
   { value: "blocking", label: "Blocking Only" },
   { value: "non_blocking", label: "Non-Blocking Only" },
