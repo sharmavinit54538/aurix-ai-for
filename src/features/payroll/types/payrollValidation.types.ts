@@ -17,6 +17,7 @@ export interface ValidationPageHeaderProps {
   statusBadge: ReturnType<typeof getValidationStatusBadge>;
   canRunPayroll: boolean;
   onNavigateToPreview: () => void;
+  onNavigateToValidation: () => void;
   onNavigateToApproval: () => void;
   onRecalculate: () => void;
   onRevalidate: () => void;

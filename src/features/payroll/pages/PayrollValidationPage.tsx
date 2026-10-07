@@ -10,6 +10,8 @@ import { ValidationIssueTable } from "@/features/payroll/components/validation/V
 import { ValidationIssueSheet } from "@/features/payroll/components/validation/ValidationIssueSheet";
 import { RevalidateDialog } from "@/features/payroll/components/validation/RevalidateDialog";
 import { RecalculateDialog } from "@/features/payroll/components/validation/RecalculateDialog";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 import { getValidationStatusBadge } from "@/features/payroll/utils/payrollValidation.utils";
 
 export function PayrollValidationPage() {
@@ -152,11 +154,11 @@ export function PayrollValidationPage() {
         hasStatusInfo={hasStatusInfo}
         hasBlockingInfo={hasBlockingInfo}
         onSearchChange={setSearchQuery}
-        onSeverityChange={setSelectedSeverity}
+        onSeverityChange={setSelectedSeverity as any}
         onCategoryChange={setSelectedCategory}
         onDepartmentChange={setSelectedDepartment}
-        onStatusChange={setSelectedStatus}
-        onBlockingChange={setSelectedBlocking}
+        onStatusChange={setSelectedStatus as any}
+        onBlockingChange={setSelectedBlocking as any}
         onPageSizeChange={setPageSize}
         onClearSearch={clearSearch}
       />
@@ -168,12 +170,17 @@ export function PayrollValidationPage() {
         pageSize={filters.pageSize}
         filteredIssuesCount={filteredIssues.length}
         runId={runId}
+        loadingEmployees={isLoading}
+        employeesError={apiError}
         onPageChange={setCurrentPage}
         onViewIssue={setSelectedIssue}
         onViewPayroll={(employeeId) => {
           setIssueSheetOpen(false);
           navigate({ to: `/dashboard/payroll/runs/${runId}/employees/${employeeId}` as any });
         }}
+        onRetry={handleRefresh}
+        onReturnToPreview={() => navigate({ to: `/dashboard/payroll/runs/${runId}/preview` as any })}
+        onClearFilters={clearAllFilters}
       />
 
       <ValidationIssueSheet
@@ -205,20 +212,3 @@ export function PayrollValidationPage() {
     </div>
   );
 }
-
-import { usePayrollValidation } from "@/features/payroll/hooks/usePayrollValidation";
-import { ArrowLeft, FileCheck, RotateCcw, ShieldCheck, UserCheck } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from "@tanstack/react-router";
-import {
-  ValidationSubNavigation,
-  ValidationPageHeader,
-  ProvisionalValidationNotice,
-  ValidationSummaryCards,
-} from "@/features/payroll/components/validation/ValidationHeader";
-import { ValidationFilters } from "@/features/payroll/components/validation/ValidationFilters";
-import { ValidationIssueTable } from "@/features/payroll/components/validation/ValidationIssueTable";
-import { ValidationIssueSheet } from "@/features/payroll/components/validation/ValidationIssueSheet";
-import { RevalidateDialog } from "@/features/payroll/components/validation/RevalidateDialog";
-import { RecalculateDialog } from "@/features/payroll/components/validation/RecalculateDialog";
-import { getValidationStatusBadge } from "@/features/payroll/utils/payrollValidation.utils";

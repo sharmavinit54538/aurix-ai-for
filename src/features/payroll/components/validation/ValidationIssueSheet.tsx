@@ -29,7 +29,14 @@ export function ValidationIssueSheet({
             <SheetTitle className="font-display text-base font-bold text-foreground">
               Validation Issue Detail
             </SheetTitle>
-            {issue ? renderSeverityBadge(issue.severity) : null}
+            {issue ? (
+              <Badge
+                variant={renderSeverityBadge(issue.severity).variant as any}
+                className={renderSeverityBadge(issue.severity).className}
+              >
+                {renderSeverityBadge(issue.severity).label}
+              </Badge>
+            ) : null}
           </div>
           <SheetDescription className="text-xs text-muted-foreground">
             Detailed breakdown of the validation finding reported by the payroll engine.

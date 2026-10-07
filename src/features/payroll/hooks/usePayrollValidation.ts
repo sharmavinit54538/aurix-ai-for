@@ -21,11 +21,11 @@ export function usePayrollValidation() {
   );
 
   // ── Dynamic Options for Filters ─────────────────────────────────────
-  const availableCategories = core.validationData?.issues
-    ? Array.from(new Set(core.validationData.issues.map((iss) => iss.category).filter(Boolean))).sort()
+  const availableCategories: string[] = core.validationData?.issues
+    ? Array.from(new Set(core.validationData.issues.map((iss) => iss.category).filter((c): c is string => Boolean(c)))).sort()
     : [];
-  const availableDepartments = core.validationData?.issues
-    ? Array.from(new Set(core.validationData.issues.map((iss) => iss.department).filter(Boolean))).sort()
+  const availableDepartments: string[] = core.validationData?.issues
+    ? Array.from(new Set(core.validationData.issues.map((iss) => iss.department).filter((d): d is string => Boolean(d)))).sort()
     : [];
   const hasBlockingInfoFlag = core.validationData?.issues?.some((iss) => iss.blocking !== undefined) ?? false;
   const hasStatusInfoFlag = core.validationData?.issues?.some((iss) => iss.status || iss.resolved !== undefined) ?? false;

@@ -1,235 +1,132 @@
-import {
-  ArrowLeft,
-  FileCheck,
-  Layers,
-  RefreshCw,
-  RotateCcw,
-  ShieldAlert,
-  ShieldCheck,
-  UserCheck,
-  Users,
-  XCircle,
-  X,
-  XCircle,
-} from "lucide-react";
+import { ValidationSubNavigation } from "./header/ValidationSubNavigation";
+import { ValidationPageHeader } from "./header/ValidationPageHeader";
+import { ProvisionalValidationNotice } from "./header/ProvisionalValidationNotice";
+import { ValidationSummaryCards } from "./header/ValidationSummaryCards";
+import { PayrollValidationSummary } from "@/services/payrollApi";
+import { getValidationStatusBadge } from "../../utils/payrollValidation.utils";
+import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Link, useNavigate } from "@tanstack/react-router";
-import { GlassCard, StatCard, EmptyState, Skeleton } from "@/components/hrms/Shared";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert";
-import type { PayrollValidationSummary } from "@/services/payrollApi";
-import { formatDate } from "../../utils/payrollValidation.utils";
-import { XCircle, Users, X, Layers, ShieldAlert, ShieldCheck, UserCheck } from "lucide-react";
+import { GlassCard, Skeleton } from "@/components/hrms/Shared";
+import { ShieldAlert, RefreshCw, ArrowLeft } from "lucide-react";
 
-export function ValidationSubNavigation({ runId }: { runId: string }) {
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-3">
-      <div className="flex flex-wrap items-center gap-1.5">
-        <Link
-          to="/dashboard/payroll/periods"
-          className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
-        >
-          Payroll Periods
-        </Link>
-        <Link
-          to={`/dashboard/payroll/runs/${runId}/processing` as any}
-          className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
-        >
-          Processing Status
-        </Link>
-        <Link
-          to={`/dashboard/payroll/runs/${runId}/preview` as any}
-          className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
-        >
-          Payroll Preview
-        </Link>
-        <span className="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm">
-          Validation & Issues
-        </span>
-        <Link
-          to={`/dashboard/payroll/runs/${runId}/approval` as any}
-          className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
-        >
-          Review & Approval
-        </Link>
-        <Link
-          to={`/dashboard/payroll/runs/${runId}/finalize` as any}
-          className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
-        >
-          Finalization
-        </Link>
-        <Link
-          to="/dashboard/payroll/payslips"
-          className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
-        >
-          Final Payslips
-        </Link>
-      </div>
+export * from "./header/ValidationSubNavigation";
+export * from "./header/ValidationPageHeader";
+export * from "./header/ProvisionalValidationNotice";
+export * from "./header/ValidationSummaryCards";
 
-      <Link
-        to={`/dashboard/payroll/runs/${runId}/preview` as any}
-        className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" />
-        <span>Back to Payroll Preview</span>
-      </Link>
-    </div>
-  );
-}
-
-export function ValidationPageHeader({
+export function ValidationHeader({
   runId,
   validationData,
-  statusBadge,
+  loadingPreview,
+  isUnavailable,
+  apiError,
   canRunPayroll,
-  onNavigateToPreview,
-  onNavigateToApproval,
+  onRefresh,
   onRecalculate,
-  onRevalidate,
+  onNavigateToValidation,
+  onNavigateToApproval,
 }: {
   runId: string;
   validationData: PayrollValidationSummary | null;
-  statusBadge: { label: string; className: string };
+  loadingPreview: boolean;
+  isUnavailable: boolean;
+  apiError: string | null;
   canRunPayroll: boolean;
-  onNavigateToPreview: () => void;
-  onNavigateToApproval: () => void;
+  onRefresh: () => void;
   onRecalculate: () => void;
-  onRevalidate: () => void;
+  onNavigateToValidation: () => void;
+  onNavigateToApproval: () => void;
 }) {
   const navigate = useNavigate();
+  const statusBadge = getValidationStatusBadge(validationData?.status);
 
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-4">
-      <div className="flex items-center gap-3">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onNavigateToPreview}
-          className="h-9 gap-1.5 text-xs"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          <span>Back to Payroll Preview</span>
-        </Button>
+  // Backend Unavailable / Error State
+  if (isUnavailable || apiError) {
+    return (
+      <div className="space-y-6">
+        <ValidationSubNavigation runId={runId} />
+        <div className="border-border/80 p-8 text-center">
+          <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 ring-1 ring-amber-500/20">
+            <ShieldAlert className="h-6 w-6" />
+          </div>
+          <h2 className="font-display text-base font-semibold text-foreground">
+            {isUnavailable
+              ? "Payroll Validation Findings Unavailable"
+              : "Unable to Load Payroll Validation"}
+          </h2>
+          <p className="mx-auto mt-2 max-w-xl text-xs leading-relaxed text-muted-foreground">
+            {apiError ||
+              "The payroll validation endpoint is currently unavailable or pending deployment on the backend server. Live payroll calculations will render here once available."}
+          </p>
 
-        <div className="hidden sm:block h-4 w-[1px] bg-border" />
-
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span>Run:</span>
-          <span className="font-mono font-medium text-foreground bg-muted/60 px-2 py-0.5 rounded-md border border-border">
-            {runId}
-          </span>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onRefresh}
+              disabled={loadingPreview}
+              className="gap-1.5 text-xs"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${loadingPreview ? "animate-spin" : ""}`} />
+              <span>Retry Connection</span>
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => navigate({ to: "/dashboard/payroll" as any })}
+              className="gap-1.5 text-xs"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span>Back to Payroll Dashboard</span>
+            </Button>
+          </div>
         </div>
       </div>
+    );
+  }
 
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onNavigateToApproval}
-          className="h-9 gap-1.5 text-xs text-foreground hover:bg-muted/50"
-          title="Proceed to Step 7 Payroll Review & Approval"
-        >
-          <UserCheck className="h-3.5 w-3.5 text-primary" />
-          <span>Review & Approval</span>
-        </Button>
-
-        {canRunPayroll ? (
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onRecalculate}
-              disabled={false}
-              className="h-9 gap-1.5 text-xs text-foreground hover:bg-muted/50"
-            >
-              <RotateCcw className="h-3.5 w-3.5" />
-              <span>Recalculate Run</span>
-            </Button>
-
-            <Button
-              size="sm"
-              onClick={onRevalidate}
-              disabled={false}
-              className="h-9 gap-1.5 text-xs text-primary border-primary/30 hover:bg-primary/5"
-            >
-              <FileCheck className="h-3.5 w-3.5" />
-              <span>Revalidate Payroll</span>
-            </Button>
-          </>
-        ) : null}
+  // Initial Loading Skeleton
+  if (loadingPreview) {
+    return (
+      <div className="space-y-6">
+        <ValidationSubNavigation runId={runId} />
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-2xl border border-border bg-card/40 p-4">
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="mt-3 h-7 w-24" />
+            </div>
+          ))}
+        </div>
+        <GlassCard className="p-6">
+          <Skeleton className="h-9 w-64" />
+          <Skeleton className="mt-4 h-48 w-full" />
+        </GlassCard>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
-export function ProvisionalValidationNotice() {
   return (
-    <Alert className="border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200">
-      <ShieldAlert className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-      <AlertTitle className="text-xs font-semibold tracking-wide uppercase">
-        PROVISIONAL PAYROLL AUDIT — Validation & Issues
-      </AlertTitle>
-      <AlertDescription className="text-xs text-amber-800/90 dark:text-amber-300/90 mt-1">
-        Validation issues are generated by the server-side payroll engine to highlight
-        inconsistencies, missing statutory numbers, or calculation discrepancies. Reviewing these
-        issues does not finalize payroll, generate final payslips, or initiate bank disbursement.
-        Salary has <strong>NOT</strong> been paid.
-      </AlertDescription>
-    </Alert>
-  );
-}
+    <div className="space-y-6">
+      <ValidationSubNavigation runId={runId} />
 
-export function ValidationSummaryCards({
-  validationData,
-  statusBadge,
-}: {
-  validationData: PayrollValidationSummary | null;
-  statusBadge: { label: string; className: string };
-}) {
-  return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-      <StatCard
-        label="Total Findings"
-        value={validationData?.totalIssues ?? 0}
-        hint="Detected validation issues"
-        icon={Layers}
-        accent="brand"
+      <ValidationPageHeader
+        runId={runId}
+        validationData={validationData}
+        statusBadge={statusBadge}
+        canRunPayroll={canRunPayroll}
+        onNavigateToPreview={onNavigateToPreview}
+        onNavigateToValidation={onNavigateToValidation}
+        onNavigateToApproval={onNavigateToApproval}
+        onRecalculate={onRecalculate}
+        onRevalidate={onRefresh}
       />
-      <StatCard
-        label="Errors / Critical"
-        value={validationData?.errorsCount ?? 0}
-        hint="Requires remediation"
-        icon={XCircle}
-        accent="danger"
-      />
-      <StatCard
-        label="Advisory Warnings"
-        value={validationData?.warningsCount ?? 0}
-        hint="Non-blocking recommendations"
-        icon={ShieldAlert}
-        accent="warning"
-      />
-      <StatCard
-        label="Employees Affected"
-        value={validationData?.affectedEmployeesCount ?? 0}
-        hint="Individuals requiring review"
-        icon={Users}
-        accent="muted"
-      />
-      <StatCard
-        label="Validation Status"
-        value={statusBadge?.label ?? "—"}
-        hint={
-          validationData && validationData.errorsCount > 0
-            ? "Remediation required"
-            : "Validation cycle completed"
-        }
-        icon={ShieldCheck}
-        accent={validationData && validationData.errorsCount > 0 ? "danger" : "success"}
+
+      <ProvisionalValidationNotice />
+
+      <ValidationSummaryCards
+        validationData={validationData}
+        statusBadge={statusBadge}
       />
     </div>
   );
