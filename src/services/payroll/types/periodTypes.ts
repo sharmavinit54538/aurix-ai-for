@@ -1,3 +1,5 @@
+import type { PayrollStatus } from "./runTypes";
+
 export interface PayrollPeriod {
   id: string;
   name: string; // e.g., "April 2026", "March 2026"
