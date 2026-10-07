@@ -2,7 +2,6 @@ import type {
   PayrollFinalizationData,
   PayrollReviewData,
   PayrollPreviewSummary,
-  PayrollReviewData["validation"],
   PayrollApprovalInfo,
   PayrollAuditRecord,
   PayrollFinalizationInfo,

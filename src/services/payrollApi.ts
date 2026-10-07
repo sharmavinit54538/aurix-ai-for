@@ -3,6 +3,7 @@
 
 export * from "./payroll";
 
-import payrollApi from "./payroll";
+import { payrollApi } from "./payroll";
 
+export { payrollApi };
 export default payrollApi;

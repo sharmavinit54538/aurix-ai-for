@@ -80,4 +80,5 @@ const payrollApi = {
   getMyPayslips: payslipsApi.getMyPayslips,
 };
 
+export { payrollApi };
 export default payrollApi;
