@@ -15,6 +15,7 @@ import {
   Building2,
   CalendarClock,
   CalendarDays,
+  ChevronDown,
   ClipboardCheck,
   Clock,
   Compass,
@@ -38,6 +39,7 @@ import {
   Moon,
   Package,
   PanelLeft,
+  PhoneCall,
   Receipt,
   Rocket,
   Search,
@@ -47,6 +49,7 @@ import {
   Sparkles,
   Sun,
   Target,
+  Ticket,
   Timer,
   TrendingUp,
   User,
@@ -61,7 +64,6 @@ import { getDefaultDashboardPath } from "@/lib/role-routing";
 import { normalizeRole, useCurrentRole } from "@/lib/roles";
 import { UserProfileMenu } from "./UserProfileMenu";
 import { NotificationDropdown } from "./NotificationDropdown";
-import { AutopilotAlertBell } from "@/features/autopilot/components/AutopilotAlertBell";
 import { GeminiIcon } from "@/components/icons/GeminiIcon";
 import { hasValidAccessToken } from "@/api";
 import { AuthLoadingScreen } from "@/features/auth/components/AuthLoadingScreen";
@@ -89,6 +91,7 @@ import {
 import type {
   BadgeKind,
   SidebarNavItem,
+  SidebarNavLeaf,
   SidebarNavParent,
   SidebarNavSection,
 } from "@/store/sidebar/sidebarTypes";
@@ -119,6 +122,13 @@ function NavCount({ count }: { count: number }) {
     </span>
   );
 }
+
+// ── Helpdesk Nav Item ──────────────────────────────────────────
+const HELP_NAV_ITEM: SidebarNavLeaf = {
+  to: "/dashboard/helpdesk",
+  label: "Helpdesk",
+  icon: LifeBuoy,
+};
 
 // ── Enterprise HRMS Nav Sections ────────────────────────────────
 const NAV_SECTIONS: SidebarNavSection[] = [
@@ -190,19 +200,7 @@ const NAV_SECTIONS: SidebarNavSection[] = [
         icon: GeminiIcon,
         permission: "ai.view",
       },
-      {
-        to: "/dashboard/connect",
-        label: "Connect",
-        icon: MessageSquare,
-        permission: "connect.view",
-      },
-      {
-        to: "/dashboard/helpdesk",
-        label: "Helpdesk",
-        icon: LifeBuoy,
-        permission: "helpdesk.view",
-        roles: ["hr_admin"],
-      },
+      HELP_NAV_ITEM,
       {
         to: "/dashboard/settings",
         label: "Settings",
@@ -257,16 +255,7 @@ const EMPLOYEE_NAV_SECTIONS: SidebarNavSection[] = [
         label: "HR Agent",
         icon: Layers,
       },
-      {
-        to: "/dashboard/connect",
-        label: "Connect",
-        icon: MessageSquare,
-      },
-      {
-        to: "/dashboard/helpdesk",
-        label: "Helpdesk & Support",
-        icon: LifeBuoy,
-      },
+      HELP_NAV_ITEM,
       {
         to: "/dashboard/settings/profile",
         label: "My Settings",
@@ -341,16 +330,7 @@ const MANAGER_NAV_SECTIONS: SidebarNavSection[] = [
         label: "AI Assistant",
         icon: Brain,
       },
-      {
-        to: "/dashboard/connect",
-        label: "Connect",
-        icon: MessageSquare,
-      },
-      {
-        to: "/dashboard/helpdesk",
-        label: "Team Helpdesk",
-        icon: LifeBuoy,
-      },
+      HELP_NAV_ITEM,
       {
         to: "/dashboard/settings",
         label: "Settings",
@@ -434,6 +414,7 @@ const EXECUTIVE_NAV_SECTIONS: SidebarNavSection[] = [
       { to: "/dashboard/executive/cto", label: "CTO Technology", icon: Wrench },
       { to: "/dashboard/analytics", label: "Analytics & Reports", icon: BarChart3 },
       { to: "/dashboard/helpdesk/analytics", label: "Helpdesk Analytics", icon: LifeBuoy },
+      HELP_NAV_ITEM,
     ],
   },
 ];
@@ -445,7 +426,7 @@ const IT_ADMIN_NAV_SECTIONS: SidebarNavSection[] = [
       { to: "/dashboard", label: "System Overview", icon: LayoutDashboard, exact: true },
       { to: "/dashboard/admin", label: "System Controls", icon: ShieldCheck },
       { to: "/dashboard/assets", label: "Assets", icon: Package },
-      { to: "/dashboard/helpdesk", label: "IT Helpdesk", icon: LifeBuoy },
+      HELP_NAV_ITEM,
       { to: "/dashboard/settings", label: "Settings", icon: Settings },
     ],
   },
@@ -495,6 +476,7 @@ const RECRUITER_NAV_SECTIONS: SidebarNavSection[] = [
         label: "AI Assistant",
         icon: GeminiIcon,
       },
+      HELP_NAV_ITEM,
       {
         to: "/dashboard/settings/profile",
         label: "My Settings",
@@ -741,9 +723,6 @@ export function DashboardShell() {
               >
                 {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </button>
-              {(currentRole === "hr_admin" || currentRole === "manager" || currentRole === "super_admin") && (
-                <AutopilotAlertBell />
-              )}
               <NotificationDropdown />
               <div className="hidden items-center gap-2 rounded-md border border-border bg-card/40 px-3 py-1.5 text-xs sm:flex">
                 <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
@@ -863,18 +842,46 @@ export function DashboardShell() {
 
 const NavGroup = memo(function NavGroup({
   item,
-  pathname,
   collapsed,
 }: {
   item: SidebarNavParent;
-  pathname: string;
+  pathname?: string;
   collapsed: boolean;
 }) {
   const dispatch = useAppDispatch();
+  const location = useRouterState({ select: (s) => s.location });
+  const pathname = location.pathname;
+  const search = (location.search || {}) as Record<string, any>;
   const expandedSections = useAppSelector(selectExpandedSections);
   const isExpanded = Boolean(expandedSections[item.id]);
 
-  const isActive = pathname === item.basePath || pathname.startsWith(item.basePath + "/");
+  const isChildActive = (child: SidebarNavLeaf) => {
+    const [targetPath, searchStr] = child.to.split("?");
+    const pathMatches = child.exact
+      ? pathname === targetPath
+      : pathname === targetPath || pathname.startsWith(targetPath + "/");
+
+    if (!pathMatches) return false;
+
+    if (searchStr) {
+      const childParams = new URLSearchParams(searchStr);
+      for (const [key, val] of childParams.entries()) {
+        if (String(search[key] ?? "") !== val) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    if (child.exact && (search.dept || search.category)) {
+      return false;
+    }
+
+    return true;
+  };
+
+  const hasActiveChild = item.children.some((child) => isChildActive(child));
+  const isActive = hasActiveChild || pathname === item.basePath || pathname.startsWith(item.basePath + "/");
 
   useEffect(() => {
     if (isActive && !isExpanded) {
@@ -887,7 +894,7 @@ const NavGroup = memo(function NavGroup({
   if (collapsed) {
     return (
       <Link
-        to={item.basePath as string}
+        to={item.basePath as any}
         className={`group relative flex items-center justify-center rounded-lg py-1.5 text-sm font-medium transition-colors ${
           isActive ? "bg-accent text-foreground font-semibold" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
         }`}
@@ -908,28 +915,37 @@ const NavGroup = memo(function NavGroup({
         }`}
       >
         {isActive ? <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r bg-foreground" /> : null}
-        <Link
-          to={item.basePath as string}
+        <button
+          type="button"
           onClick={() => {
             dispatch(toggleSectionExpand(item.id));
           }}
-          className="flex flex-1 items-center gap-2.5 rounded-lg px-2.5 py-1.5 min-w-0"
+          className="flex flex-1 items-center gap-2.5 rounded-lg px-2.5 py-1.5 min-w-0 text-left cursor-pointer"
         >
           <Icon className="h-4 w-4 shrink-0" />
-          <span className="flex-1 text-left truncate whitespace-nowrap text-[13px]">{item.label}</span>
+          <span className="flex-1 truncate whitespace-nowrap text-[13px]">{item.label}</span>
           {item.badge && !item.count && <NavBadge kind={item.badge} />}
           {item.count !== undefined && !item.badge && <NavCount count={item.count} />}
-        </Link>
+          <ChevronDown
+            className={`h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200 ${
+              isExpanded ? "rotate-180" : ""
+            }`}
+          />
+        </button>
       </div>
       {isExpanded ? (
         <div className="ml-3 mt-0.5 space-y-0.5 border-l border-border pl-2 transition-all duration-200">
           {item.children.map((child) => {
-            const childActive = child.exact ? pathname === child.to : pathname === child.to || pathname.startsWith(child.to + "/");
+            const childActive = isChildActive(child);
             const ChildIcon = child.icon;
+            const [targetPath, searchStr] = child.to.split("?");
+            const searchObj = searchStr ? Object.fromEntries(new URLSearchParams(searchStr)) : undefined;
+
             return (
               <Link
                 key={child.to}
-                to={child.to as string}
+                to={targetPath as any}
+                search={searchObj as any}
                 className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-xs transition-colors min-w-0 ${
                   childActive ? "bg-accent text-foreground font-medium" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
                 }`}

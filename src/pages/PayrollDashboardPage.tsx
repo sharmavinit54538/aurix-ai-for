@@ -5,11 +5,9 @@ import {
   Info,
   Play,
   RefreshCw,
-  Sparkles,
 } from "lucide-react";
 import { EmptyState, Skeleton } from "@/components/hrms/Shared";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Dialog,
@@ -29,10 +27,7 @@ import {
   type PayrollPeriod,
 } from "@/services/payrollApi";
 import { toast } from "sonner";
-import {
-  PAYROLL_MODULES_LIST,
-  PAYROLL_INTELLIGENCE_MODULES,
-} from "@/features/payroll/constants/modules";
+import { PAYROLL_MODULES_LIST } from "@/features/payroll/constants/modules";
 import { ModuleCard } from "@/features/payroll/components/ModuleCard";
 import { PayrollMetricsDashboard } from "@/features/payroll/components/PayrollMetricsDashboard";
 
@@ -239,63 +234,23 @@ export function PayrollDashboardPage() {
 
       {/* ── View Mode: Modules (Discovery Dashboard) ────────────────── */}
       {viewMode === "modules" ? (
-        <div className="space-y-8 animate-in fade-in duration-300">
-          {/* Section 1: 30 Core Payroll Modules (3-column responsive grid) */}
-          <section aria-labelledby="core-payroll-modules-heading">
-            <h2 id="core-payroll-modules-heading" className="sr-only">
-              Core Payroll Modules
-            </h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {PAYROLL_MODULES_LIST.map((module) => {
-                // If user clicks the "Payroll Dashboard" card while on the modules view,
-                // seamlessly switch them to the Payroll Metrics tab!
-                if (module.id === "payroll-dashboard") {
-                  return (
-                    <ModuleCard
-                      key={module.id}
-                      module={module}
-                      onClick={() => setViewMode("metrics")}
-                    />
-                  );
-                }
-                return <ModuleCard key={module.id} module={module} />;
-              })}
-            </div>
-          </section>
-
-          {/* Section 2: OFC360 Payroll Intelligence / Autopilot */}
-          <section
-            aria-labelledby="payroll-intelligence-heading"
-            className="space-y-4 pt-6 border-t border-border/40"
-          >
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between text-left">
-              <div>
-                <h2
-                  id="payroll-intelligence-heading"
-                  className="font-display text-lg font-semibold tracking-tight text-foreground flex items-center gap-2"
-                >
-                  <Sparkles className="h-5 w-5 text-indigo-400" />
-                  OFC360 Payroll Intelligence
-                </h2>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Autonomous payroll orchestration, anomaly detection, continuous compliance, and
-                  AI workflows.
-                </p>
-              </div>
-              <Badge
-                variant="outline"
-                className="w-fit border-indigo-500/30 bg-indigo-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-indigo-400 uppercase tracking-wider"
-              >
-                Autopilot Engine
-              </Badge>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {PAYROLL_INTELLIGENCE_MODULES.map((module) => (
-                <ModuleCard key={module.id} module={module} />
-              ))}
-            </div>
-          </section>
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {PAYROLL_MODULES_LIST.map((module) => {
+              // If user clicks the "Payroll Dashboard" card while on the modules view,
+              // seamlessly switch them to the Payroll Metrics tab!
+              if (module.id === "payroll-dashboard") {
+                return (
+                  <ModuleCard
+                    key={module.id}
+                    module={module}
+                    onClick={() => setViewMode("metrics")}
+                  />
+                );
+              }
+              return <ModuleCard key={module.id} module={module} />;
+            })}
+          </div>
         </div>
       ) : (
         /* ── View Mode: Payroll Metrics (Analytics Dashboard) ─────── */

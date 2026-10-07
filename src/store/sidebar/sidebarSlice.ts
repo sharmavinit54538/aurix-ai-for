@@ -26,6 +26,7 @@ function loadExpandedState(): Record<string, boolean> {
     analytics: true,
     aihub: true,
     settings: true,
+    help: true,
   };
 }
 
