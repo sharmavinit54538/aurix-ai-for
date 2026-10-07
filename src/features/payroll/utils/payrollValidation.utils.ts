@@ -229,5 +229,5 @@ export function filterIssues(
     }
 
     return true;
-  };
+  });
 }
