@@ -23,6 +23,7 @@ export function ValidationHeader({
   canRunPayroll,
   onRefresh,
   onRecalculate,
+  onNavigateToPreview,
   onNavigateToValidation,
   onNavigateToApproval,
 }: {
@@ -34,6 +35,7 @@ export function ValidationHeader({
   canRunPayroll: boolean;
   onRefresh: () => void;
   onRecalculate: () => void;
+  onNavigateToPreview: () => void;
   onNavigateToValidation: () => void;
   onNavigateToApproval: () => void;
 }) {

@@ -129,6 +129,7 @@ export function PayrollValidationPage() {
         statusBadge={statusBadge}
         canRunPayroll={canRunPayroll}
         onNavigateToPreview={() => navigate({ to: `/dashboard/payroll/runs/${runId}/preview` as any })}
+        onNavigateToValidation={() => navigate({ to: `/dashboard/payroll/runs/${runId}/validation` as any })}
         onNavigateToApproval={() => navigate({ to: `/dashboard/payroll/runs/${runId}/approval` as any })}
         onRecalculate={() => setRecalculateModalOpen(true)}
         onRevalidate={() => setRevalidateModalOpen(true)}
