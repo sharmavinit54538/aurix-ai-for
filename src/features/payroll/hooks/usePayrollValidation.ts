@@ -97,7 +97,8 @@ export function usePayrollValidation() {
         }
 
         return true;
-      }) || [];
+      }) || []
+    : [];
 
   // Pagination calculation
   const totalPages = Math.max(1, Math.ceil(filteredIssues.length / filterHook.filters.pageSize));

@@ -1,9 +1,24 @@
-import { ArrowLeft, FileCheck, Layers, RefreshCw, RotateCcw, ShieldAlert, ShieldCheck, UserCheck, Users, X, XCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  FileCheck,
+  Layers,
+  RefreshCw,
+  RotateCcw,
+  ShieldAlert,
+  ShieldCheck,
+  UserCheck,
+  Users,
+  XCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { GlassCard, StatCard, EmptyState, Skeleton } from "@/components/hrms/Shared";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert";
 import type { PayrollValidationSummary } from "@/services/payrollApi";
 import { formatDate } from "../../utils/payrollValidation.utils";
 
@@ -147,12 +162,6 @@ export function ValidationPageHeader({
     </div>
   );
 }
-
-import { useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, FileCheck, RotateCcw, UserCheck } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ValidationPageHeaderProps } from "../types/payrollValidation.types";
 
 export function ProvisionalValidationNotice() {
   return (

@@ -74,7 +74,7 @@ export function ValidationIssueTable({
                           <div className="font-mono text-[10px] text-muted-foreground">
                             {iss.employeeId}
                           </div>
-                        ) : null)
+                        ) : null}
                       </div>
                     ) : (
                       <span className="text-muted-foreground italic">Run-Level Check</span>
