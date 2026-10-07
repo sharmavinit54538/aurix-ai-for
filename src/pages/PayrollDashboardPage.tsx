@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   AlertCircle,
-  BadgeDollarSign,
   Info,
   Play,
   RefreshCw,
@@ -420,19 +419,8 @@ function PayrollHubHeader({
   onViewModeChange: (mode: ViewMode) => void;
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <div className="text-left">
-        <h1 className="font-display text-2xl font-bold tracking-tight text-foreground flex items-center gap-2.5">
-          <BadgeDollarSign className="h-6 w-6 text-indigo-400" />
-          Payroll Hub
-        </h1>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          Unified enterprise payroll discovery, cycle management, compliance, and compensation intelligence.
-        </p>
-      </div>
-
-      {/* Segmented Toggle matching Recruitment Header */}
-      <div className="flex items-center bg-card/65 border border-border/80 p-0.5 rounded-lg shadow-xs">
+    <div className="flex flex-wrap items-center justify-end gap-3">
+      <div className="flex items-center bg-card/65 border border-border/80 p-0.5 rounded-lg">
         <Button
           variant={viewMode === "modules" ? "secondary" : "ghost"}
           size="sm"
