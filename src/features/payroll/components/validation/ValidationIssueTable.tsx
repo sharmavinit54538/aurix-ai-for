@@ -208,7 +208,6 @@ export function ValidationIssueTable({
           )}
         </TableBody>
       </Table>
-    </div>
 
       {totalPages > 1 ? (
         <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
@@ -239,19 +238,3 @@ export function ValidationIssueTable({
               <span>Next</span>
               <ChevronRight className="h-3.5 w-3.5" />
             </Button>
-          </div>
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-import { CheckCircle2, ChevronLeft, ChevronRight, Eye, FileCheck, Info, Layers, RefreshCw, Search, ShieldAlert, ShieldCheck, UserCheck, Users, X, XCircle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Skeleton } from "@/components/hrms/Shared";
-import { renderSeverityBadge, formatDate } from "../../utils/payrollValidation.utils";
-import type { PayrollValidationIssue } from "@/services/payrollApi";

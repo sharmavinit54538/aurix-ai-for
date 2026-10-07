@@ -172,11 +172,3 @@ export function ValidationIssueSheet({
     </Sheet>
   );
 }
-
-import { AlertTriangle, Clock, Eye, FileCheck, Info, Layers, RefreshCw, RotateCcw, Search, ShieldAlert, ShieldCheck, UserCheck, Users, X, XCircle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from "@tanstack/react-router";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { formatDate, renderSeverityBadge } from "../../utils/payrollValidation.utils";
-import type { PayrollValidationIssue } from "@/services/payrollApi";
