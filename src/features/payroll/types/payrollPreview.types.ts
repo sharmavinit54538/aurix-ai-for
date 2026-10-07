@@ -1,5 +1,7 @@
 import type { PayrollPreviewData, PayrollPreviewEmployee, PayrollStatus } from "@/services/payrollApi";
 
+export type { PayrollPreviewEmployee, PayrollStatus };
+
 export interface PayrollPreviewPageProps {
   runId: string;
 }
