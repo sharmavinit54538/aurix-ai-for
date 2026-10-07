@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { isAxiosError, AxiosError } from "axios";
 
 export class PayrollNotFoundError extends Error {
   response = { status: 404 };
@@ -9,10 +9,10 @@ export class PayrollNotFoundError extends Error {
   }
 }
 
-export function isAxiosError(err: unknown): err is axios.AxiosError {
-  return axios.isAxiosError(err);
+export function isAxiosErrorFn(err: unknown): err is AxiosError {
+  return isAxiosError(err);
 }
 
 export function isNotFoundError(err: unknown): boolean {
-  return axios.isAxiosError(err) && err.response?.status === 404;
+  return isAxiosError(err) && err.response?.status === 404;
 }

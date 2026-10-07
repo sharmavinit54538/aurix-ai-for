@@ -1,4 +1,5 @@
 import type { PayrollStatus } from "./runTypes";
+import type { PayrollApprovalInfo } from "./reviewTypes";
 
 export interface ApprovePayrollPayload {
   comments?: string;

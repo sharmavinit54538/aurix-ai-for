@@ -1,4 +1,7 @@
-import type { PayrollStatus, PayrollPreviewSummary, PayrollReviewData, PayrollApprovalInfo, PayrollAuditRecord } from "./reviewTypes";
+import type { PayrollStatus } from "./runTypes";
+import type { PayrollPreviewSummary } from "./previewTypes";
+import type { PayrollApprovalInfo } from "./reviewTypes";
+import type { PayrollAuditRecord } from "./reviewTypes";
 
 export interface PayrollFinalizationInfo {
   isFinalized?: boolean;

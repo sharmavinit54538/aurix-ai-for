@@ -1,3 +1,7 @@
+import type { PayrollStatus } from "./runTypes";
+import type { PayrollPreviewSummary } from "./previewTypes";
+import type { PayrollValidationIssue } from "./validationTypes";
+
 export interface PayrollApprovalInfo {
   status?: string | null;
   approvedBy?: string | null;
