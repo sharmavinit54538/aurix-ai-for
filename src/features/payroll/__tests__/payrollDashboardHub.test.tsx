@@ -148,7 +148,7 @@ describe("PayrollMetricsDashboard Component", () => {
     ],
   };
 
-  it("renders all 18 requested metrics and analytics headings", () => {
+  it("renders authentic backend metrics and confirms fake KPIs & charts are removed", () => {
     render(
       <PayrollMetricsDashboard
         data={mockData}
@@ -160,42 +160,56 @@ describe("PayrollMetricsDashboard Component", () => {
       />
     );
 
-    // 1. Total Payroll Cost
+    // Authentic KPIs from live backend
     expect(screen.getByText("Total Payroll Cost")).toBeInTheDocument();
-    // 2. Net Payroll
     expect(screen.getAllByText("Net Payroll").length).toBeGreaterThanOrEqual(1);
-    // 3. Gross Payroll
     expect(screen.getAllByText("Gross Payroll").length).toBeGreaterThanOrEqual(1);
-    // 4. Total Employees Paid
+    expect(screen.getByText("Total Deductions")).toBeInTheDocument();
     expect(screen.getByText("Total Employees Paid")).toBeInTheDocument();
-    // 5. Pending Payroll
     expect(screen.getByText("Pending Payroll")).toBeInTheDocument();
-    // 6. Payroll Exceptions
     expect(screen.getByText("Payroll Exceptions")).toBeInTheDocument();
-    // 7. Failed Payments
     expect(screen.getByText("Failed Payments")).toBeInTheDocument();
-    // 8. Pending Approvals
     expect(screen.getByText("Pending Approvals")).toBeInTheDocument();
-    // 9. Tax / TDS
-    expect(screen.getByText("Tax / TDS")).toBeInTheDocument();
-    // 10. Employer Contributions
     expect(screen.getByText("Employer Contributions")).toBeInTheDocument();
-    // 11. Average Salary
     expect(screen.getByText("Average Salary")).toBeInTheDocument();
-    // 12. Payroll Processing Time
-    expect(screen.getByText("Payroll Processing Time")).toBeInTheDocument();
-    // 13. Payment Success Rate
-    expect(screen.getByText("Payment Success Rate")).toBeInTheDocument();
-    // 14. Payroll Error Rate
-    expect(screen.getByText("Payroll Error Rate")).toBeInTheDocument();
 
-    // 15. Payroll Cost Trend (Chart Heading)
+    // Authentic Chart Heading
     expect(screen.getByText("Payroll Cost Trend")).toBeInTheDocument();
-    // 16. Department-wise Payroll Cost (Chart Heading)
-    expect(screen.getByText("Department-wise Payroll Cost")).toBeInTheDocument();
-    // 17. Salary Distribution (Chart Heading)
-    expect(screen.getByText("Salary Distribution")).toBeInTheDocument();
-    // 18. Monthly Payroll Trend (Chart Heading)
-    expect(screen.getByText("Monthly Payroll Trend")).toBeInTheDocument();
+
+    // Verify all removed fake KPIs and synthetic charts do NOT exist in DOM
+    expect(screen.queryByText("Tax / TDS")).not.toBeInTheDocument();
+    expect(screen.queryByText("Payroll Processing Time")).not.toBeInTheDocument();
+    expect(screen.queryByText("Payment Success Rate")).not.toBeInTheDocument();
+    expect(screen.queryByText("Payroll Error Rate")).not.toBeInTheDocument();
+    expect(screen.queryByText("Department-wise Payroll Cost")).not.toBeInTheDocument();
+    expect(screen.queryByText("Salary Distribution")).not.toBeInTheDocument();
+    expect(screen.queryByText("Monthly Payroll Trend")).not.toBeInTheDocument();
+  });
+
+  it("renders dashes and empty states when data is null, never fabricated numbers", () => {
+    render(
+      <PayrollMetricsDashboard
+        data={null}
+        periods={mockPeriods}
+        selectedPeriodId="period-apr-2026"
+        onPeriodChange={vi.fn()}
+        isLoading={false}
+        onRefresh={vi.fn()}
+      />
+    );
+
+    // Should NOT contain fabricated fallback numbers (e.g. 142 employees, ₹44,50,000, 38 min, 99.4%)
+    expect(screen.queryByText("142")).not.toBeInTheDocument();
+    expect(screen.queryByText("₹44,50,000")).not.toBeInTheDocument();
+    expect(screen.queryByText("38 min")).not.toBeInTheDocument();
+    expect(screen.queryByText("99.4%")).not.toBeInTheDocument();
+
+    // Dash "—" must be displayed for missing numbers
+    const dashes = screen.getAllByText("—");
+    expect(dashes.length).toBeGreaterThan(0);
+
+    // Empty states must be shown for chart and table
+    expect(screen.getByText("No historical cycle runs available")).toBeInTheDocument();
+    expect(screen.getByText("No payroll runs yet")).toBeInTheDocument();
   });
 });

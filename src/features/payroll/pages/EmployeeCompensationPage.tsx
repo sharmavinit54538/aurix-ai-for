@@ -12,7 +12,6 @@ import {
   RefreshCw,
   Search,
   ShieldAlert,
-  ShieldCheck,
   TrendingUp,
   Upload,
   UserCheck,
@@ -237,7 +236,7 @@ export default function EmployeeCompensationPage() {
       )}
 
       {/* ── Summary Stats ───────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard
           label="Total Compensations"
           value={formatCount(totalCount)}
@@ -258,13 +257,6 @@ export default function EmployeeCompensationPage() {
           hint="Active templates in use"
           icon={Layers}
           accent="muted"
-        />
-        <StatCard
-          label="Arrears Protected"
-          value="Active"
-          hint="Retroactive revision guard"
-          icon={ShieldCheck}
-          accent="success"
         />
       </div>
 

@@ -700,7 +700,7 @@ export function PayrollPeriodsPage() {
                       {/* Status */}
                       <TableCell className="text-center">
                         <StatusBadge
-                          status={period.status || "Draft"}
+                          status={period.status || "—"}
                           tone={tone}
                         />
                       </TableCell>
@@ -1017,7 +1017,7 @@ export function PayrollPeriodsPage() {
                   <span className="text-muted-foreground">Status:</span>
                   <div className="mt-1">
                     <StatusBadge
-                      status={selectedDetailsPeriod.status || "Draft"}
+                      status={selectedDetailsPeriod.status || "—"}
                       tone={getPeriodStatusTone(selectedDetailsPeriod.status)}
                     />
                   </div>

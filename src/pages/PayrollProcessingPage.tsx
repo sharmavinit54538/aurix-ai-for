@@ -48,21 +48,7 @@ import {
 } from "@/services/payrollApi";
 import { toast } from "sonner";
 
-// ── Conceptual 12-Step India Payroll Pipeline Reference ─────────────────
-const CONCEPTUAL_PIPELINE_STEPS: { id: string; name: string; description: string }[] = [
-  { id: "employee_data", name: "Employee Data", description: "Active headcount, joining & exit validations" },
-  { id: "salary_structure", name: "Salary Structure", description: "Base CTC, HRA, allowances breakdown" },
-  { id: "attendance", name: "Attendance", description: "Payable days, LOP & biometric reconciliation" },
-  { id: "leave", name: "Leave", description: "Paid leaves, unpaid leaves & sandwich rules" },
-  { id: "overtime", name: "Overtime", description: "Approved OT hours & statutory multipliers" },
-  { id: "bonus_incentives", name: "Bonus / Incentives", description: "Performance awards & periodic incentives" },
-  { id: "loans_advances", name: "Loans / Advances", description: "EMI installments & salary advances recovery" },
-  { id: "deductions", name: "Deductions", description: "Voluntary & internal policy deductions" },
-  { id: "tax_statutory", name: "Tax / Statutory", description: "PF, ESI, PT, and TDS (Section 192)" },
-  { id: "payroll_calculation", name: "Payroll Calculation", description: "Gross earnings and net payable synthesis" },
-  { id: "validation", name: "Validation", description: "Cross-checks, negative pay & threshold audits" },
-  { id: "provision_payslips", name: "Provision Payslips", description: "Provisional statement generation for audit" },
-];
+
 
 // ── Terminal States where live polling must cease ───────────────────────
 const TERMINAL_STATUSES = new Set([
@@ -837,31 +823,12 @@ export function PayrollProcessingPage() {
                 <div className="rounded-xl border border-dashed border-border bg-muted/20 p-3 text-xs text-muted-foreground">
                   <div className="flex items-center gap-2 font-medium text-foreground">
                     <Info className="h-4 w-4 text-muted-foreground" />
-                    <span>Pipeline Granularity Note</span>
+                    <span>Pipeline Progress Note</span>
                   </div>
                   <p className="mt-1 text-[11px] leading-relaxed">
                     The backend execution engine reports overall progress and run status.
-                    Individual step-by-step progress flags are evaluated atomically on the server.
+                    Detailed execution steps will display here when provided by the server.
                   </p>
-                </div>
-
-                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                  {CONCEPTUAL_PIPELINE_STEPS.map((step, idx) => (
-                    <div
-                      key={step.id}
-                      className="flex items-start gap-2.5 rounded-xl border border-border bg-card p-2.5 text-xs"
-                    >
-                      <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
-                        {idx + 1}
-                      </span>
-                      <div>
-                        <div className="font-semibold text-foreground">{step.name}</div>
-                        <div className="text-[10px] text-muted-foreground">
-                          {step.description}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
                 </div>
               </div>
             )}

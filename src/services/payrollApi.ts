@@ -1556,8 +1556,8 @@ export function normalizePayrollReviewData(
         rawObj.approvalComments ||
         rawObj.approval_comments ||
         null) as string | null,
-      canApprove: Boolean(rawApp.canApprove ?? rawApp.can_approve ?? true),
-      canReject: Boolean(rawApp.canReject ?? rawApp.can_reject ?? true),
+      canApprove: Boolean(rawApp.canApprove ?? rawApp.can_approve ?? false),
+      canReject: Boolean(rawApp.canReject ?? rawApp.can_reject ?? false),
       blockingReasons: (rawApp.blockingReasons || rawApp.blocking_reasons || []) as string[],
       ...rawApp,
     };
@@ -1684,7 +1684,7 @@ export function normalizePayrollFinalizationData(
         rawObj.referenceNumber ||
         rawObj.reference_number ||
         null) as string | null,
-      canFinalize: Boolean(rawFin.canFinalize ?? rawFin.can_finalize ?? true),
+      canFinalize: Boolean(rawFin.canFinalize ?? rawFin.can_finalize ?? false),
       blockingReasons: (rawFin.blockingReasons || rawFin.blocking_reasons || []) as string[],
       ...rawFin,
     };
@@ -2212,7 +2212,7 @@ export const payrollApi = {
             return normalizePayrollRunStatus(runId, statusData);
           }
         } catch {
-          // Fall through and throw original error
+          // All status fallbacks exhausted
         }
       }
       throw err;
@@ -2226,21 +2226,22 @@ export const payrollApi = {
   async cancelPayrollRun(runId: string): Promise<CancelRunResponse> {
     try {
       const res = await apiInstance.delete(`/api/v2/payroll/runs/${runId}`);
-      return (
-        extractData<CancelRunResponse>(res) || {
-          success: true,
-          message: "Payroll run cancelled successfully.",
-        }
-      );
+      const data = extractData<CancelRunResponse>(res);
+      return {
+        ...data,
+        success: Boolean(data?.success),
+        message: data?.message || "Payroll run cancelled successfully.",
+      };
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response?.status === 404) {
         // Fallback POST /payroll/runs/{runId}/cancel
-        try {
-          const fallbackRes = await apiInstance.post(`/payroll/runs/${runId}/cancel`);
-          return extractData<CancelRunResponse>(fallbackRes) || { success: true };
-        } catch {
-          throw err;
-        }
+        const fallbackRes = await apiInstance.post(`/payroll/runs/{runId}/cancel`);
+        const fallbackData = extractData<CancelRunResponse>(fallbackRes);
+        return {
+          ...fallbackData,
+          success: Boolean(fallbackData?.success),
+          message: fallbackData?.message || "Payroll run cancelled.",
+        };
       }
       throw err;
     }
@@ -2258,16 +2259,21 @@ export const payrollApi = {
     return requestWithFallback(
       async () => {
         const res = await apiInstance.post(`/api/v2/payroll/runs/${runId}/process`, {}, { headers });
-        return (
-          extractData<RetryRunResponse>(res) || {
-            success: true,
-            message: "Payroll calculation retried successfully.",
-          }
-        );
+        const data = extractData<RetryRunResponse>(res);
+        return {
+          ...data,
+          success: Boolean(data?.success),
+          message: data?.message || "Payroll calculation retried successfully.",
+        };
       },
       async () => {
         const fbRes = await apiInstance.post(`/api/v1/payroll/runs/${runId}/retry`, {}, { headers });
-        return extractData<RetryRunResponse>(fbRes) || { success: true };
+        const fbData = extractData<RetryRunResponse>(fbRes);
+        return {
+          ...fbData,
+          success: Boolean(fbData?.success),
+          message: fbData?.message || "Payroll calculation retried.",
+        };
       }
     );
   },
@@ -2277,22 +2283,18 @@ export const payrollApi = {
    * GET /api/v2/payroll/runs/{runId}/validation-issues
    */
   async getPayrollRunValidationIssues(runId: string): Promise<PayrollRunValidationIssue[]> {
-    try {
-      const res = await apiInstance.get(`/api/v2/payroll/runs/${runId}/validation-issues`, {
-        headers: { "Cache-Control": "no-cache" },
-        skipCache: true,
-      });
-      const data = extractData(res);
-      if (Array.isArray(data)) return data as PayrollRunValidationIssue[];
-      if (data && typeof data === "object") {
-        const d = data as Record<string, unknown>;
-        if (Array.isArray(d.items)) return d.items as PayrollRunValidationIssue[];
-        if (Array.isArray(d.issues)) return d.issues as PayrollRunValidationIssue[];
-      }
-      return [];
-    } catch {
-      return [];
+    const res = await apiInstance.get(`/api/v2/payroll/runs/${runId}/validation-issues`, {
+      headers: { "Cache-Control": "no-cache" },
+      skipCache: true,
+    });
+    const data = extractData(res);
+    if (Array.isArray(data)) return data as PayrollRunValidationIssue[];
+    if (data && typeof data === "object") {
+      const d = data as Record<string, unknown>;
+      if (Array.isArray(d.items)) return d.items as PayrollRunValidationIssue[];
+      if (Array.isArray(d.issues)) return d.issues as PayrollRunValidationIssue[];
     }
+    return [];
   },
 
   /**
@@ -2560,9 +2562,9 @@ export const payrollApi = {
       );
       const data = extractData<Record<string, unknown>>(res);
       return {
-        success: Boolean(data?.success ?? true),
-        message: (data?.message || "Payroll validation completed successfully.") as string,
-        status: (data?.status || "Completed") as string,
+        success: Boolean(data?.success ?? false),
+        message: (data?.message || "Payroll validation completed.") as string,
+        status: (typeof data?.status === "string" ? data.status : (data?.success ? "Completed" : "—")) as string,
       };
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response?.status === 404) {
@@ -2571,9 +2573,9 @@ export const payrollApi = {
           const fbRes = await apiInstance.post(`/api/v2/payroll/runs/${runId}/revalidate`, {});
           const fbData = extractData<Record<string, unknown>>(fbRes);
           return {
-            success: Boolean(fbData?.success ?? true),
+            success: Boolean(fbData?.success ?? false),
             message: (fbData?.message || "Payroll validation completed.") as string,
-            status: (fbData?.status || "Completed") as string,
+            status: (typeof fbData?.status === "string" ? fbData.status : (fbData?.success ? "Completed" : "—")) as string,
           };
         } catch {
           // Re-throw
@@ -2670,9 +2672,9 @@ export const payrollApi = {
         const res = await apiInstance.post(`/api/v2/payroll/runs/${runId}/approve`, body, { headers });
         const data = extractData<Record<string, unknown>>(res);
         return {
-          success: Boolean(data?.success ?? true),
+          success: Boolean(data?.success ?? false),
           message: typeof data?.message === "string" ? data.message : "Payroll run approved successfully.",
-          status: (typeof data?.status === "string" ? data.status : "Approved") as PayrollStatus,
+          status: (typeof data?.status === "string" ? data.status : (data?.success ? "Approved" : "—")) as PayrollStatus,
           approval: (data?.approval as PayrollApprovalInfo) || undefined,
           ...data,
         };
@@ -2681,9 +2683,9 @@ export const payrollApi = {
         const fbRes = await apiInstance.post(`/payroll/runs/${runId}/approve`, body, { headers });
         const fbData = extractData<Record<string, unknown>>(fbRes);
         return {
-          success: Boolean(fbData?.success ?? true),
+          success: Boolean(fbData?.success ?? false),
           message: typeof fbData?.message === "string" ? fbData.message : "Payroll run approved successfully.",
-          status: (typeof fbData?.status === "string" ? fbData.status : "Approved") as PayrollStatus,
+          status: (typeof fbData?.status === "string" ? fbData.status : (fbData?.success ? "Approved" : "—")) as PayrollStatus,
           approval: (fbData?.approval as PayrollApprovalInfo) || undefined,
           ...fbData,
         };
@@ -2713,9 +2715,9 @@ export const payrollApi = {
         const res = await apiInstance.post(`/api/v2/payroll/runs/${runId}/reject`, body, { headers });
         const data = extractData<Record<string, unknown>>(res);
         return {
-          success: Boolean(data?.success ?? true),
+          success: Boolean(data?.success ?? false),
           message: typeof data?.message === "string" ? data.message : "Payroll run returned for correction.",
-          status: (typeof data?.status === "string" ? data.status : "Rejected") as PayrollStatus,
+          status: (typeof data?.status === "string" ? data.status : (data?.success ? "Rejected" : "—")) as PayrollStatus,
           ...data,
         };
       },
@@ -2724,18 +2726,18 @@ export const payrollApi = {
           const fbRes = await apiInstance.post(`/api/v2/payroll/runs/${runId}/send-back`, body, { headers });
           const fbData = extractData<Record<string, unknown>>(fbRes);
           return {
-            success: Boolean(fbData?.success ?? true),
+            success: Boolean(fbData?.success ?? false),
             message: typeof fbData?.message === "string" ? fbData.message : "Payroll run returned for correction.",
-            status: (typeof fbData?.status === "string" ? fbData.status : "Rejected") as PayrollStatus,
+            status: (typeof fbData?.status === "string" ? fbData.status : (fbData?.success ? "Rejected" : "—")) as PayrollStatus,
             ...fbData,
           };
         } catch {
           const fbRes2 = await apiInstance.post(`/payroll/runs/${runId}/reject`, body, { headers });
           const fbData2 = extractData<Record<string, unknown>>(fbRes2);
           return {
-            success: Boolean(fbData2?.success ?? true),
+            success: Boolean(fbData2?.success ?? false),
             message: typeof fbData2?.message === "string" ? fbData2.message : "Payroll run returned for correction.",
-            status: (typeof fbData2?.status === "string" ? fbData2.status : "Rejected") as PayrollStatus,
+            status: (typeof fbData2?.status === "string" ? fbData2.status : (fbData2?.success ? "Rejected" : "—")) as PayrollStatus,
             ...fbData2,
           };
         }
@@ -2798,11 +2800,11 @@ export const payrollApi = {
         const res = await apiInstance.post(`/api/v2/payroll/runs/${runId}/finalize`, body, { headers });
         const data = extractData<Record<string, unknown>>(res);
         return {
-          success: Boolean(data?.success ?? true),
+          success: Boolean(data?.success ?? false),
           message: typeof data?.message === "string" ? data.message : "Payroll run finalized and locked successfully.",
-          status: (typeof data?.status === "string" ? data.status : "Finalized") as PayrollStatus,
-          isFinalized: true,
-          isLocked: true,
+          status: (typeof data?.status === "string" ? data.status : (data?.success ? "Finalized" : "—")) as PayrollStatus,
+          isFinalized: Boolean(data?.isFinalized ?? data?.success ?? false),
+          isLocked: Boolean(data?.isLocked ?? data?.success ?? false),
           finalizedAt: (data?.finalizedAt || data?.finalized_at || undefined) as string | undefined,
           finalizedBy: (data?.finalizedBy || data?.finalized_by || undefined) as string | undefined,
           ...data,
@@ -2812,11 +2814,11 @@ export const payrollApi = {
         const fbRes = await apiInstance.post(`/payroll/runs/${runId}/finalize`, body, { headers });
         const fbData = extractData<Record<string, unknown>>(fbRes);
         return {
-          success: Boolean(fbData?.success ?? true),
+          success: Boolean(fbData?.success ?? false),
           message: typeof fbData?.message === "string" ? fbData.message : "Payroll run finalized and locked successfully.",
-          status: (typeof fbData?.status === "string" ? fbData.status : "Finalized") as PayrollStatus,
-          isFinalized: true,
-          isLocked: true,
+          status: (typeof fbData?.status === "string" ? fbData.status : (fbData?.success ? "Finalized" : "—")) as PayrollStatus,
+          isFinalized: Boolean(fbData?.isFinalized ?? fbData?.success ?? false),
+          isLocked: Boolean(fbData?.isLocked ?? fbData?.success ?? false),
           ...fbData,
         };
       }
@@ -2956,7 +2958,7 @@ export const payrollApi = {
         );
         const data = extractData<Record<string, unknown>>(res);
         return {
-          success: Boolean(data?.success ?? true),
+          success: Boolean(data?.success ?? false),
           message: typeof data?.message === "string" ? data.message : "Final payslips generated successfully.",
           generatedCount:
             typeof data?.generatedCount === "number"
@@ -2976,7 +2978,7 @@ export const payrollApi = {
         );
         const fbData = extractData<Record<string, unknown>>(fbRes);
         return {
-          success: Boolean(fbData?.success ?? true),
+          success: Boolean(fbData?.success ?? false),
           message: typeof fbData?.message === "string" ? fbData.message : "Final payslips generated successfully.",
           ...fbData,
         };
@@ -3039,8 +3041,8 @@ export const payrollApi = {
             netPay: r.netPay != null ? Number(r.netPay) : null,
             grossEarnings: r.grossEarnings != null ? Number(r.grossEarnings) : null,
             totalDeductions: r.totalDeductions != null ? Number(r.totalDeductions) : null,
-            status: typeof r.status === "string" ? r.status : "Finalized",
-            isFinalized: Boolean(r.isFinalized ?? true),
+            status: typeof r.status === "string" ? r.status : "—",
+            isFinalized: Boolean(r.isFinalized ?? false),
             finalizedAt:
               typeof r.finalizedAt === "string" ? r.finalizedAt : typeof r.finalized_at === "string" ? r.finalized_at : null,
             paymentDate:
@@ -3092,8 +3094,8 @@ export const payrollApi = {
             netPay: r.netPay != null ? Number(r.netPay) : null,
             grossEarnings: r.grossEarnings != null ? Number(r.grossEarnings) : null,
             totalDeductions: r.totalDeductions != null ? Number(r.totalDeductions) : null,
-            status: typeof r.status === "string" ? r.status : "Finalized",
-            isFinalized: Boolean(r.isFinalized ?? true),
+            status: typeof r.status === "string" ? r.status : "—",
+            isFinalized: Boolean(r.isFinalized ?? false),
             finalizedAt:
               typeof r.finalizedAt === "string" ? r.finalizedAt : typeof r.finalized_at === "string" ? r.finalized_at : null,
             paymentDate:
@@ -3151,8 +3153,8 @@ export const payrollApi = {
             netPay: r.netPay != null ? Number(r.netPay) : null,
             grossEarnings: r.grossEarnings != null ? Number(r.grossEarnings) : null,
             totalDeductions: r.totalDeductions != null ? Number(r.totalDeductions) : null,
-            status: typeof r.status === "string" ? r.status : "Finalized",
-            isFinalized: Boolean(r.isFinalized ?? true),
+            status: typeof r.status === "string" ? r.status : "—",
+            isFinalized: Boolean(r.isFinalized ?? false),
             finalizedAt:
               typeof r.finalizedAt === "string" ? r.finalizedAt : typeof r.finalized_at === "string" ? r.finalized_at : null,
             paymentDate:
@@ -3195,8 +3197,8 @@ export const payrollApi = {
             netPay: r.netPay != null ? Number(r.netPay) : null,
             grossEarnings: r.grossEarnings != null ? Number(r.grossEarnings) : null,
             totalDeductions: r.totalDeductions != null ? Number(r.totalDeductions) : null,
-            status: typeof r.status === "string" ? r.status : "Finalized",
-            isFinalized: Boolean(r.isFinalized ?? true),
+            status: typeof r.status === "string" ? r.status : "—",
+            isFinalized: Boolean(r.isFinalized ?? false),
             finalizedAt:
               typeof r.finalizedAt === "string" ? r.finalizedAt : typeof r.finalized_at === "string" ? r.finalized_at : null,
             paymentDate:

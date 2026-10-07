@@ -8,17 +8,12 @@ import {
   Banknote,
   Building,
   Calendar,
-  CheckCircle2,
   Clock,
   Coins,
-  CreditCard,
   FileSpreadsheet,
   Layers,
-  Percent,
   Play,
   RefreshCw,
-  ShieldAlert,
-  ShieldCheck,
   TrendingDown,
   TrendingUp,
   UserCheck,
@@ -28,13 +23,8 @@ import {
 import {
   Area,
   AreaChart,
-  Bar,
-  BarChart,
   CartesianGrid,
-  Cell,
   Legend,
-  Pie,
-  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -140,31 +130,37 @@ export function PayrollMetricsDashboard({
     return periods.find((p) => p.id === selectedPeriodId) || null;
   }, [periods, selectedPeriodId]);
 
-  // Derived Summary Figures (Prefer live backend numbers)
-  const employeeCount = data?.summary?.employeeCount ?? (data ? 0 : 142);
-  const grossPayroll = data?.summary?.grossPayroll ?? (data ? 0 : 4450000);
-  const totalDeductions = data?.summary?.totalDeductions ?? (data ? 0 : 530000);
-  const netPayroll = data?.summary?.netPayroll ?? (data ? 0 : 3920000);
-  const employerContributions = data?.summary?.employerCost ?? (data ? 0 : 400500);
-  const totalPayrollCost = grossPayroll + employerContributions;
+  // Derived Summary Figures (strictly from live backend data)
+  const employeeCount = data?.summary?.employeeCount ?? null;
+  const grossPayroll = data?.summary?.grossPayroll ?? null;
+  const totalDeductions = data?.summary?.totalDeductions ?? null;
+  const netPayroll = data?.summary?.netPayroll ?? null;
+  const employerContributions = data?.summary?.employerCost ?? null;
+  const totalPayrollCost =
+    grossPayroll !== null || employerContributions !== null
+      ? (grossPayroll ?? 0) + (employerContributions ?? 0)
+      : null;
 
-  const avgSalary = employeeCount > 0 ? Math.round(grossPayroll / employeeCount) : 0;
-  const taxTdsAmount = Math.round(totalDeductions * 0.65);
-  const pendingApprovalsCount = data?.status === "Review" || data?.status === "Processing" ? 1 : 0;
-  const payrollExceptionsCount =
-    (data?.issues?.errors?.length ?? 0) + (data?.issues?.warnings?.length ?? 0);
-  const failedPaymentsCount =
-    data?.recentRuns?.filter((r) => r.status?.toLowerCase() === "failed").length ?? 0;
+  const avgSalary =
+    employeeCount !== null && employeeCount > 0 && grossPayroll !== null
+      ? Math.round(grossPayroll / employeeCount)
+      : null;
+  const pendingApprovalsCount =
+    data?.status === "Review" || data?.status === "Processing" ? 1 : 0;
+  const payrollExceptionsCount = data?.issues
+    ? (data.issues.errors?.length ?? 0) + (data.issues.warnings?.length ?? 0)
+    : null;
+  const failedPaymentsCount = data?.recentRuns
+    ? data.recentRuns.filter((r) => r.status?.toLowerCase() === "failed").length
+    : null;
   const pendingPayrollAmount = data?.status === "Finalized" ? 0 : netPayroll;
 
-  // 14 Top KPI Cards
+  // Real Backend KPI Cards
   const kpiConfigs: MetricKpiConfig[] = [
     {
       label: "Total Payroll Cost",
       value: formatINR(totalPayrollCost),
       subtext: "Gross + Employer Statutory matching",
-      trend: "+3.2% vs last cycle",
-      trendDirection: "up",
       icon: Banknote,
       accent: "from-indigo-500/20 to-blue-500/10 text-indigo-400 border-indigo-500/30",
     },
@@ -172,8 +168,6 @@ export function PayrollMetricsDashboard({
       label: "Net Payroll",
       value: formatINR(netPayroll),
       subtext: "Net disbursed to employee accounts",
-      trend: "+2.8% cycle delta",
-      trendDirection: "up",
       icon: TrendingUp,
       accent: "from-emerald-500/20 to-teal-500/10 text-emerald-400 border-emerald-500/30",
     },
@@ -181,17 +175,20 @@ export function PayrollMetricsDashboard({
       label: "Gross Payroll",
       value: formatINR(grossPayroll),
       subtext: "Total earnings before deductions",
-      trend: "Base salary + allowances",
-      trendDirection: "neutral",
       icon: Layers,
       accent: "from-sky-500/20 to-cyan-500/10 text-sky-400 border-sky-500/30",
+    },
+    {
+      label: "Total Deductions",
+      value: formatINR(totalDeductions),
+      subtext: "Statutory & voluntary deductions",
+      icon: TrendingDown,
+      accent: "from-rose-500/20 to-pink-500/10 text-rose-400 border-rose-500/30",
     },
     {
       label: "Total Employees Paid",
       value: formatCount(employeeCount),
       subtext: "Active salaried personnel in cycle",
-      trend: "+4 joiners this month",
-      trendDirection: "up",
       icon: Users,
       accent: "from-violet-500/20 to-purple-500/10 text-violet-400 border-violet-500/30",
     },
@@ -199,7 +196,7 @@ export function PayrollMetricsDashboard({
       label: "Pending Payroll",
       value: formatINR(pendingPayrollAmount),
       subtext: "Scheduled / unreleased disbursement",
-      trend: data?.status || "Pending final approval",
+      trend: data?.status ? `Status: ${data.status}` : undefined,
       trendDirection: "neutral",
       icon: Clock,
       accent: "from-amber-500/20 to-orange-500/10 text-amber-400 border-amber-500/30",
@@ -209,13 +206,16 @@ export function PayrollMetricsDashboard({
       value: formatCount(payrollExceptionsCount),
       subtext: "Anomalies & validation warnings",
       trend:
-        payrollExceptionsCount > 0
-          ? `${payrollExceptionsCount} items flagged`
-          : "Clean validation pass",
-      trendDirection: payrollExceptionsCount > 0 ? "down" : "up",
+        payrollExceptionsCount !== null
+          ? payrollExceptionsCount > 0
+            ? `${payrollExceptionsCount} items flagged`
+            : "Clean validation pass"
+          : undefined,
+      trendDirection:
+        payrollExceptionsCount !== null && payrollExceptionsCount > 0 ? "down" : "up",
       icon: AlertCircle,
       accent:
-        payrollExceptionsCount > 0
+        payrollExceptionsCount !== null && payrollExceptionsCount > 0
           ? "from-amber-500/20 to-rose-500/10 text-amber-400 border-amber-500/30"
           : "from-emerald-500/20 to-teal-500/10 text-emerald-400 border-emerald-500/30",
     },
@@ -223,11 +223,16 @@ export function PayrollMetricsDashboard({
       label: "Failed Payments",
       value: formatCount(failedPaymentsCount),
       subtext: "Rejected / returned bank transfers",
-      trend: failedPaymentsCount === 0 ? "Zero failure rate" : "Retry needed",
+      trend:
+        failedPaymentsCount !== null
+          ? failedPaymentsCount === 0
+            ? "Zero failure rate"
+            : "Retry needed"
+          : undefined,
       trendDirection: failedPaymentsCount === 0 ? "up" : "down",
       icon: AlertOctagon,
       accent:
-        failedPaymentsCount > 0
+        failedPaymentsCount !== null && failedPaymentsCount > 0
           ? "from-rose-500/20 to-red-500/10 text-rose-400 border-rose-500/30"
           : "from-slate-500/20 to-slate-600/10 text-slate-400 border-slate-500/30",
     },
@@ -235,26 +240,16 @@ export function PayrollMetricsDashboard({
       label: "Pending Approvals",
       value: formatCount(pendingApprovalsCount),
       subtext: "Sign-offs awaiting HR / Finance",
-      trend: pendingApprovalsCount === 0 ? "All sign-offs completed" : "Approval queue active",
+      trend:
+        pendingApprovalsCount === 0 ? "All sign-offs completed" : "Approval queue active",
       trendDirection: "neutral",
       icon: UserCheck,
       accent: "from-cyan-500/20 to-blue-500/10 text-cyan-400 border-cyan-500/30",
     },
     {
-      label: "Tax / TDS",
-      value: formatINR(taxTdsAmount),
-      subtext: "Income tax deducted at source",
-      trend: "Form 24Q compliance",
-      trendDirection: "neutral",
-      icon: Percent,
-      accent: "from-blue-500/20 to-indigo-500/10 text-blue-400 border-blue-500/30",
-    },
-    {
       label: "Employer Contributions",
       value: formatINR(employerContributions),
       subtext: "PF, ESI, gratuity matching funds",
-      trend: "Statutory mandated share",
-      trendDirection: "neutral",
       icon: Building,
       accent: "from-purple-500/20 to-pink-500/10 text-purple-400 border-purple-500/30",
     },
@@ -262,88 +257,29 @@ export function PayrollMetricsDashboard({
       label: "Average Salary",
       value: formatINR(avgSalary),
       subtext: "Mean compensation per employee",
-      trend: "Across all departments",
-      trendDirection: "neutral",
       icon: Coins,
       accent: "from-emerald-500/20 to-green-500/10 text-emerald-400 border-emerald-500/30",
     },
-    {
-      label: "Payroll Processing Time",
-      value: "38 min",
-      subtext: "Automated engine execution speed",
-      trend: "-12% cycle reduction",
-      trendDirection: "up",
-      icon: Clock,
-      accent: "from-teal-500/20 to-cyan-500/10 text-teal-400 border-teal-500/30",
-    },
-    {
-      label: "Payment Success Rate",
-      value: "99.4%",
-      subtext: "Bank NEFT / RTGS transfer success",
-      trend: "+0.2% SLA benchmark",
-      trendDirection: "up",
-      icon: ShieldCheck,
-      accent: "from-green-500/20 to-emerald-500/10 text-green-400 border-green-500/30",
-    },
-    {
-      label: "Payroll Error Rate",
-      value: payrollExceptionsCount === 0 ? "0.1%" : "0.3%",
-      subtext: "Pre-validation calculation discrepancy",
-      trend: "Within 0.5% threshold",
-      trendDirection: "up",
-      icon: ShieldAlert,
-      accent: "from-indigo-500/20 to-violet-500/10 text-indigo-400 border-indigo-500/30",
-    },
   ];
 
-  // Chart 1: Payroll Cost Trend (6 Months)
-  const costTrendData = [
-    { month: "Nov", totalCost: 4120000, netPayroll: 3340000, employerCost: 345000 },
-    { month: "Dec", totalCost: 4250000, netPayroll: 3450000, employerCost: 355000 },
-    { month: "Jan", totalCost: 4410000, netPayroll: 3580000, employerCost: 368000 },
-    { month: "Feb", totalCost: 4580000, netPayroll: 3710000, employerCost: 382000 },
-    { month: "Mar", totalCost: 4720000, netPayroll: 3820000, employerCost: 394000 },
-    {
-      month: selectedPeriod?.name?.split(" ")[0]?.slice(0, 3) || "Apr",
-      totalCost: totalPayrollCost > 0 ? totalPayrollCost : 4850500,
-      netPayroll: netPayroll > 0 ? netPayroll : 3920000,
-      employerCost: employerContributions > 0 ? employerContributions : 400500,
-    },
-  ];
-
-  // Chart 2: Department-wise Payroll Cost
-  const deptCostData = [
-    { name: "Engineering", value: Math.round(grossPayroll * 0.38) },
-    { name: "Product & Design", value: Math.round(grossPayroll * 0.22) },
-    { name: "Sales & BD", value: Math.round(grossPayroll * 0.16) },
-    { name: "Marketing", value: Math.round(grossPayroll * 0.1) },
-    { name: "Operations", value: Math.round(grossPayroll * 0.08) },
-    { name: "HR & Finance", value: Math.round(grossPayroll * 0.06) },
-  ];
-
-  // Chart 3: Salary Distribution (Bands)
-  const salaryDistributionData = [
-    { band: "< ₹30k", employees: Math.round(employeeCount * 0.18) },
-    { band: "₹30k - ₹60k", employees: Math.round(employeeCount * 0.36) },
-    { band: "₹60k - ₹1L", employees: Math.round(employeeCount * 0.28) },
-    { band: "₹1L - ₹2L", employees: Math.round(employeeCount * 0.12) },
-    { band: "> ₹2L", employees: Math.max(1, Math.round(employeeCount * 0.06)) },
-  ];
-
-  // Chart 4: Monthly Payroll Trend (Gross vs Net vs Deductions)
-  const monthlyTrendData = [
-    { month: "Nov", gross: 3775000, net: 3340000, deductions: 435000 },
-    { month: "Dec", gross: 3895000, net: 3450000, deductions: 445000 },
-    { month: "Jan", gross: 4042000, net: 3580000, deductions: 462000 },
-    { month: "Feb", gross: 4198000, net: 3710000, deductions: 488000 },
-    { month: "Mar", gross: 4326000, net: 3820000, deductions: 506000 },
-    {
-      month: selectedPeriod?.name?.split(" ")[0]?.slice(0, 3) || "Apr",
-      gross: grossPayroll > 0 ? grossPayroll : 4450000,
-      net: netPayroll > 0 ? netPayroll : 3920000,
-      deductions: totalDeductions > 0 ? totalDeductions : 530000,
-    },
-  ];
+  // Chart: Payroll Cost Trend (Constructed strictly from real recent runs)
+  const costTrendData = useMemo(() => {
+    if (!data?.recentRuns || data.recentRuns.length === 0) return [];
+    return [...data.recentRuns]
+      .reverse()
+      .map((run) => ({
+        month:
+          run.periodName ||
+          (run.runDate
+            ? new Date(run.runDate).toLocaleDateString("en-IN", {
+                month: "short",
+                year: "2-digit",
+              })
+            : "—"),
+        totalCost: run.grossPayroll ?? 0,
+        netPayroll: run.netPayroll ?? 0,
+      }));
+  }, [data?.recentRuns]);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -468,24 +404,25 @@ export function PayrollMetricsDashboard({
         </div>
       </section>
 
-      {/* ── Charts Row 1: Cost Trend + Department Breakdown ─────────── */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {/* Payroll Cost Trend */}
-        <div className="lg:col-span-2 rounded-2xl border border-border/80 bg-card/45 backdrop-blur-md p-5 text-left">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h3 className="font-display text-sm font-semibold tracking-tight text-foreground">
-                Payroll Cost Trend
-              </h3>
-              <p className="text-xs text-muted-foreground">
-                Total company liability vs net disbursed over past 6 cycles
-              </p>
-            </div>
-            <Badge variant="outline" className="border-indigo-500/30 text-indigo-400 text-[10px]">
-              6 Months
-            </Badge>
+      {/* ── Chart: Payroll Cost Trend (from actual recent runs) ─────── */}
+      <div className="rounded-2xl border border-border/80 bg-card/45 backdrop-blur-md p-5 text-left">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h3 className="font-display text-sm font-semibold tracking-tight text-foreground">
+              Payroll Cost Trend
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Total gross payroll vs net disbursed over recorded cycle runs
+            </p>
           </div>
+          {costTrendData.length > 0 && (
+            <Badge variant="outline" className="border-indigo-500/30 text-indigo-400 text-[10px]">
+              {costTrendData.length} Cycles
+            </Badge>
+          )}
+        </div>
 
+        {costTrendData.length > 0 ? (
           <ResponsiveContainer width="100%" height={280}>
             <AreaChart data={costTrendData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
               <defs>
@@ -521,7 +458,7 @@ export function PayrollMetricsDashboard({
               <Area
                 type="monotone"
                 dataKey="totalCost"
-                name="Total Company Cost"
+                name="Gross Payroll"
                 stroke={CHART_COLORS[0]}
                 strokeWidth={2}
                 fill="url(#colorTotal)"
@@ -536,136 +473,17 @@ export function PayrollMetricsDashboard({
               />
             </AreaChart>
           </ResponsiveContainer>
-        </div>
-
-        {/* Department-wise Payroll Cost */}
-        <div className="rounded-2xl border border-border/80 bg-card/45 backdrop-blur-md p-5 text-left">
-          <div className="mb-4">
-            <h3 className="font-display text-sm font-semibold tracking-tight text-foreground">
-              Department-wise Payroll Cost
-            </h3>
-            <p className="text-xs text-muted-foreground">Compensation distribution by org unit</p>
-          </div>
-
-          <ResponsiveContainer width="100%" height={280}>
-            <PieChart>
-              <Pie
-                data={deptCostData}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                innerRadius={55}
-                outerRadius={88}
-                paddingAngle={3}
-              >
-                {deptCostData.map((_, index) => (
-                  <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={CHART_TOOLTIP_STYLE}
-                formatter={(val: any) => formatINR(Number(val))}
-              />
-              <Legend wrapperStyle={{ fontSize: 10, paddingTop: 10 }} />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* ── Charts Row 2: Salary Distribution + Monthly Payroll Trend ─ */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {/* Salary Distribution */}
-        <div className="rounded-2xl border border-border/80 bg-card/45 backdrop-blur-md p-5 text-left">
-          <div className="mb-4">
-            <h3 className="font-display text-sm font-semibold tracking-tight text-foreground">
-              Salary Distribution
-            </h3>
-            <p className="text-xs text-muted-foreground">
-              Headcount clustered across monthly compensation brackets
+        ) : (
+          <div className="flex h-[200px] flex-col items-center justify-center rounded-xl border border-dashed border-border/80 bg-background/30 text-center">
+            <Clock className="h-8 w-8 text-muted-foreground/50" />
+            <p className="mt-2 text-xs font-medium text-foreground">
+              No historical cycle runs available
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              Historical trends will populate once payroll runs are recorded.
             </p>
           </div>
-
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart
-              data={salaryDistributionData}
-              margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
-            >
-              <CartesianGrid stroke="rgba(255, 255, 255, 0.08)" vertical={false} />
-              <XAxis
-                dataKey="band"
-                stroke="currentColor"
-                className="text-xs text-muted-foreground"
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                stroke="currentColor"
-                className="text-xs text-muted-foreground"
-                tickLine={false}
-                axisLine={false}
-                allowDecimals={false}
-              />
-              <Tooltip
-                contentStyle={CHART_TOOLTIP_STYLE}
-                formatter={(val: any) => [`${val} Employees`, "Headcount"]}
-              />
-              <Bar dataKey="employees" name="Employees" radius={[8, 8, 0, 0]}>
-                {salaryDistributionData.map((_, index) => (
-                  <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Monthly Payroll Trend */}
-        <div className="rounded-2xl border border-border/80 bg-card/45 backdrop-blur-md p-5 text-left">
-          <div className="mb-4">
-            <h3 className="font-display text-sm font-semibold tracking-tight text-foreground">
-              Monthly Payroll Trend
-            </h3>
-            <p className="text-xs text-muted-foreground">
-              Gross earnings, net disbursement, and statutory deductions
-            </p>
-          </div>
-
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart
-              data={monthlyTrendData}
-              margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
-            >
-              <CartesianGrid stroke="rgba(255, 255, 255, 0.08)" vertical={false} />
-              <XAxis
-                dataKey="month"
-                stroke="currentColor"
-                className="text-xs text-muted-foreground"
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                stroke="currentColor"
-                className="text-xs text-muted-foreground"
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(val) => `₹${(val / 100000).toFixed(0)}L`}
-              />
-              <Tooltip
-                contentStyle={CHART_TOOLTIP_STYLE}
-                formatter={(val: any) => formatINR(Number(val))}
-              />
-              <Legend wrapperStyle={{ fontSize: 11, paddingTop: 10 }} />
-              <Bar dataKey="gross" name="Gross" fill={CHART_COLORS[0]} radius={[6, 6, 0, 0]} />
-              <Bar dataKey="net" name="Net Pay" fill={CHART_COLORS[2]} radius={[6, 6, 0, 0]} />
-              <Bar
-                dataKey="deductions"
-                name="Deductions"
-                fill={CHART_COLORS[3]}
-                radius={[6, 6, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        )}
       </div>
 
       {/* ── Recent Payroll Runs Table ───────────────────────────────── */}
@@ -731,7 +549,7 @@ export function PayrollMetricsDashboard({
                             : "border-amber-500/30 bg-amber-500/10 text-amber-400"
                         }`}
                       >
-                        {run.status || "Completed"}
+                        {run.status || "—"}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground">

@@ -301,10 +301,22 @@ Generated: 2026-09-24
 - Used for `user_role` fallback in RBAC checks
 - No payroll data cached in localStorage
 
-### 3.6 Mock/Hardcoded Data
-- **ZERO MOCK DATA** in payroll pages — all pages show authentic backend states or proper unavailable/error states
-- `DEFAULT_COMPONENTS` in PayrollSection.tsx is default form state, not mock API data
-- ExitManagementPage uses `hrms` Zustand store with `newId()` generating `Math.random()` IDs — **this is mock data but for exit management, not payroll**
+### 3.6 Zero Mock Data & Production Hardening Audit
+- **VERIFIED ZERO MOCK DATA** in all payroll pages, components, and services.
+- **Removed Hardcoded Fallbacks & Multipliers**:
+  - `PayrollMetricsDashboard.tsx`: Removed fake fallback numbers (`142` employee count, `4,450,000` gross payroll, `530,000` deductions, `3,920,000` net payroll, `400,500` employer cost). Missing values strictly render `null` which formatters display as `"—"`.
+  - `PayrollMetricsDashboard.tsx`: Permanently removed synthetic charts faked by percentage multipliers on gross payroll (`* 0.38`, `* 0.22`, etc. for Department Cost; `* 0.18`, `* 0.36`, etc. for Salary Distribution Bands; and synthetic 6-month history arrays).
+  - `PayrollMetricsDashboard.tsx`: Real Payroll Cost Trend chart now constructs strictly from actual `data.recentRuns`. If no runs are present, an explicit empty state is rendered (`No historical cycle runs available`).
+  - `PayrollMetricsDashboard.tsx`: Removed unbacked KPI cards: "Payroll Processing Time" ("38 min"), "Payment Success Rate" ("99.4%"), "Payroll Error Rate" ("0.1%"), and "Tax / TDS" (previously estimated as `deductions * 0.65`). Removed hardcoded trend labels (`+3.2% vs last cycle`, `+2.8% cycle delta`, `+4 joiners this month`).
+  - `PayrollProcessingPage.tsx`: Removed `CONCEPTUAL_PIPELINE_STEPS` 12-item static grid previously rendered in place of real backend execution stages.
+  - `EmployeeCompensationPage.tsx`: Removed unbacked "Arrears Protected" stat card (previously displayed static "Active").
+- **Fixed Swallowed Errors and Permission/Status Defaults**:
+  - `payrollApi.ts`: Defaulted `canApprove`, `canReject`, `canFinalize` to `false` instead of `true`.
+  - `payrollApi.ts`: Fixed validation, approval, rejection, and finalization endpoints to default `success` to `false` (never `true`) and never fake status strings when the server fails or omits them.
+  - `payrollApi.ts`: `getPayrollRunValidationIssues` no longer swallows errors in `catch { return []; }`; API failures are properly surfaced.
+  - `PaymentBatchListPage.tsx`, `SalaryStructurePage.tsx`, `PayrollPreviewPage.tsx`, `EmployeeSelfServicePayrollPage.tsx`: Swallowed API errors now trigger visible error alerts with retry buttons rather than silent empty tables.
+  - String fallbacks faking status (`|| "Completed"`, `|| "Approved"`, `|| "Draft"`, `|| "Provisional"`, `|| "Active"`, `|| "FINALIZED"`) replaced with `"—"`.
+- `DEFAULT_COMPONENTS` and `INITIAL_NEUTRAL_STATE` in `PayrollSection.tsx` remain strictly as form defaults and suggested templates for user configuration, never passed off as live backend server data.
 
 ---
 

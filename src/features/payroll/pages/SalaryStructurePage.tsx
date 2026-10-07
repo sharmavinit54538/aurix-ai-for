@@ -38,6 +38,7 @@ export default function SalaryStructurePage() {
   const [activeTab, setActiveTab] = useState<"components" | "structures">("components");
   const [loading, setLoading] = useState(false);
   const [backendUnavailable, setBackendUnavailable] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Components Data
   const [components, setComponents] = useState<PayComponent[]>([]);
@@ -56,25 +57,30 @@ export default function SalaryStructurePage() {
   const loadData = async () => {
     setLoading(true);
     setBackendUnavailable(false);
+    setLoadError(null);
     try {
       const [compRes, structRes] = await Promise.all([
         compensationApi.getPayComponents().catch((err) => {
           if (err?.response?.status === 404 || err?.response?.status === 501) {
             setBackendUnavailable(true);
+            return [];
           }
-          return [];
+          throw err;
         }),
         compensationApi.getSalaryStructures().catch((err) => {
           if (err?.response?.status === 404 || err?.response?.status === 501) {
             setBackendUnavailable(true);
+            return [];
           }
-          return [];
+          throw err;
         }),
       ]);
       setComponents(compRes);
       setStructures(structRes);
-    } catch {
-      toast.error("Failed to load salary structure details");
+    } catch (err: any) {
+      const msg = err?.message || "Failed to load salary structure details";
+      setLoadError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -171,6 +177,19 @@ export default function SalaryStructurePage() {
             <p className="font-mono text-[11px] opacity-80">
               Contract reference: <code>docs/PAYROLL_BACKEND_CONTRACT.md</code> • Requirements: <code>docs/PAYROLL_BACKEND_TODO.md</code>
             </p>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {loadError && !backendUnavailable && (
+        <Alert variant="destructive" className="rounded-2xl text-xs">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle className="text-xs font-semibold">Failed to load salary structure details</AlertTitle>
+          <AlertDescription className="text-xs flex items-center justify-between">
+            <span>{loadError}</span>
+            <Button size="sm" variant="outline" onClick={() => void loadData()} className="h-7 text-xs rounded-xl">
+              Retry
+            </Button>
           </AlertDescription>
         </Alert>
       )}

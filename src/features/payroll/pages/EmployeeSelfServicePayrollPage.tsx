@@ -69,7 +69,7 @@ export default function EmployeeSelfServicePayrollPage() {
       setPayslips(res.items || []);
       setPayslipsTotal(res.total || 0);
     } catch (err: any) {
-      // Non-blocking if dashboard already rendered
+      toast.error(err?.message || "Failed to load historical payslips.");
     } finally {
       setPayslipsLoading(false);
     }
@@ -354,7 +354,7 @@ export default function EmployeeSelfServicePayrollPage() {
                         </td>
                         <td className="px-4 py-3 text-center">
                           <Badge variant="outline" className="border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
-                            {p.status || "FINALIZED"}
+                            {p.status || "—"}
                           </Badge>
                         </td>
                         <td className="px-4 py-3 text-right">

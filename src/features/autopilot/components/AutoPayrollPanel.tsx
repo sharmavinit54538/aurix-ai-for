@@ -104,7 +104,7 @@ export function AutoPayrollPanel() {
                   Autopilot Payroll Pre-Flight Run
                 </CardTitle>
                 <Badge variant="outline" className="text-[10px] uppercase font-mono tracking-wider bg-background/60">
-                  {payrollStatus?.payrollCycle || "Active Cycle"}
+                  {payrollStatus?.payrollCycle || "—"}
                 </Badge>
               </div>
               <CardDescription className="text-xs mt-0.5">

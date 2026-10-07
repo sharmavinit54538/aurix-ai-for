@@ -322,14 +322,14 @@ export default function PayrollRunPaymentPage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <StatCard
           label="Total Employees"
-          value={formatCount(runData?.summary?.employeeCount ?? 0)}
+          value={formatCount(runData?.summary?.employeeCount ?? null)}
           hint="Eligible for payment"
           icon={Users}
           accent="brand"
         />
         <StatCard
           label="Net Payroll"
-          value={formatINR(runData?.summary?.netPayroll || 0)}
+          value={formatINR(runData?.summary?.netPayroll ?? null)}
           hint="Calculated in Finalization"
           icon={Banknote}
           accent="success"
@@ -343,7 +343,7 @@ export default function PayrollRunPaymentPage() {
         />
         <StatCard
           label="Run Status"
-          value={runData?.status || "Finalized"}
+          value={runData?.status || "—"}
           hint={isFinalized ? "Locked & Ready" : "Unfinalized"}
           icon={Lock}
           accent={isFinalized ? "success" : "danger"}
@@ -517,7 +517,7 @@ export default function PayrollRunPaymentPage() {
               </div>
               <div className="flex justify-between py-1 border-b border-border/50">
                 <span className="text-muted-foreground">Total In Run</span>
-                <span className="font-mono font-semibold">{formatCount(runData?.summary?.employeeCount ?? 0)}</span>
+                <span className="font-mono font-semibold">{formatCount(runData?.summary?.employeeCount ?? null)}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-border/50">
                 <span className="text-muted-foreground">Employees Held</span>
@@ -526,13 +526,15 @@ export default function PayrollRunPaymentPage() {
               <div className="flex justify-between py-1 border-b border-border/50">
                 <span className="text-muted-foreground">Batch Employees</span>
                 <span className="font-mono font-semibold text-foreground">
-                  {formatCount(Math.max(0, (runData?.summary?.employeeCount ?? 0) - heldEmployees.length))}
+                  {runData?.summary?.employeeCount != null
+                    ? formatCount(Math.max(0, runData.summary.employeeCount - heldEmployees.length))
+                    : "—"}
                 </span>
               </div>
               <div className="flex justify-between py-1 text-sm font-semibold">
                 <span>Net Payable (Run)</span>
                 <span className="text-emerald-600 font-mono">
-                  {formatINR(runData?.summary?.netPayroll || 0)}
+                  {formatINR(runData?.summary?.netPayroll ?? null)}
                 </span>
               </div>
             </div>

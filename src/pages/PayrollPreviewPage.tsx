@@ -223,6 +223,7 @@ export function PayrollPreviewPage() {
   const [loadingEmployees, setLoadingEmployees] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [employeesError, setEmployeesError] = useState<string | null>(null);
   const [isUnavailable, setIsUnavailable] = useState<boolean>(false);
 
   // Recalculate Dialog State
@@ -264,6 +265,7 @@ export function PayrollPreviewPage() {
   const fetchEmployeesList = useCallback(async () => {
     if (!runId) return;
     setLoadingEmployees(true);
+    setEmployeesError(null);
     try {
       const res = await payrollApi.getRunEmployees(runId, {
         page: currentPage,
@@ -279,10 +281,12 @@ export function PayrollPreviewPage() {
       setTotalEmployees(res.total || 0);
       setTotalPages(res.totalPages || 1);
     } catch (err: any) {
-      // In accordance with zero-mock-data rule: Do NOT synthesize fake rows on failure.
       setEmployees([]);
       setTotalEmployees(0);
       setTotalPages(1);
+      const msg = err?.response?.data?.message || err?.message || "Failed to load employee records.";
+      setEmployeesError(msg);
+      toast.error(msg);
     } finally {
       setLoadingEmployees(false);
     }
@@ -1020,6 +1024,27 @@ export function PayrollPreviewPage() {
                         </TableRow>
                       );
                     })
+                  ) : employeesError ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="py-12 text-center">
+                        <div className="mx-auto max-w-sm space-y-3">
+                          <AlertCircle className="mx-auto h-8 w-8 text-destructive" />
+                          <div className="font-display text-sm font-semibold text-destructive">
+                            Failed to load employee records
+                          </div>
+                          <p className="text-xs text-muted-foreground">{employeesError}</p>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => void fetchEmployeesList()}
+                            className="h-8 text-xs rounded-xl"
+                          >
+                            <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                            Retry
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
                   ) : (
                     <TableRow>
                       <TableCell colSpan={8} className="py-12 text-center">

@@ -280,8 +280,8 @@ export function EmployeePayrollDetailPage() {
   }
 
   // Computed display values
-  const periodName = employee?.periodName || runMeta?.periodName || "Current Period";
-  const runStatus = employee?.runStatus || runMeta?.status || "Provisional";
+  const periodName = employee?.periodName || runMeta?.periodName || "—";
+  const runStatus = employee?.runStatus || runMeta?.status || "—";
   const statusBadgeInfo = getStatusBadge(employee?.status || runStatus);
 
   // Separate errors and warnings from employee issues
@@ -587,7 +587,7 @@ export function EmployeePayrollDetailPage() {
                 <div className="rounded-xl bg-muted/30 p-2.5">
                   <div className="text-[10px] text-muted-foreground">Employment Status</div>
                   <div className="font-medium text-foreground mt-0.5">
-                    {employee.employmentStatus || "Active"}
+                    {employee.employmentStatus || "—"}
                   </div>
                 </div>
 
@@ -1009,7 +1009,7 @@ export function EmployeePayrollDetailPage() {
                 <div className="rounded-xl bg-muted/30 p-2.5">
                   <div className="text-[10px] text-muted-foreground">Structure Name</div>
                   <div className="font-medium text-foreground mt-0.5">
-                    {employee.salaryStructure.name || "Default Structure"}
+                    {employee.salaryStructure.name || "—"}
                   </div>
                 </div>
                 <div className="rounded-xl bg-muted/30 p-2.5">

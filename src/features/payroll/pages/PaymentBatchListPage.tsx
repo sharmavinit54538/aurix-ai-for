@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
+  AlertCircle,
+  AlertTriangle,
   Banknote,
   CheckCircle2,
   Clock,
@@ -14,6 +16,7 @@ import {
 import { GlassCard, StatCard } from "@/components/hrms/Shared";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { formatDate, formatCount } from "@/lib/format";
 import {
@@ -38,6 +41,8 @@ export default function PaymentBatchListPage() {
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [backendUnavailable, setBackendUnavailable] = useState(false);
 
   // Run selection modal state
   const [selectRunModalOpen, setSelectRunModalOpen] = useState(false);
@@ -68,7 +73,7 @@ export default function PaymentBatchListPage() {
           runs = periods.items.map((p) => ({
             id: p.id,
             name: p.name,
-            status: p.status || "draft",
+            status: p.status || "—",
             employeeCount: p.employeeCount,
           }));
         }
@@ -104,6 +109,8 @@ export default function PaymentBatchListPage() {
 
   const loadBatches = async () => {
     setLoading(true);
+    setLoadError(null);
+    setBackendUnavailable(false);
     try {
       const data = await paymentApi.getPaymentBatches({
         page,
@@ -115,10 +122,13 @@ export default function PaymentBatchListPage() {
       setTotalCount(data?.total || 0);
     } catch (err: any) {
       if (err?.response?.status === 404 || err?.response?.status === 501) {
+        setBackendUnavailable(true);
         setBatches([]);
         setTotalCount(0);
       } else {
-        toast.error("Failed to load payment batches");
+        const msg = err?.message || "Failed to load payment batches";
+        setLoadError(msg);
+        toast.error(msg);
       }
     } finally {
       setLoading(false);
@@ -173,6 +183,29 @@ export default function PaymentBatchListPage() {
           <span>New Batch from Run</span>
         </Button>
       </div>
+
+      {backendUnavailable && (
+        <Alert className="border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200 rounded-2xl text-xs">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle className="font-semibold text-xs">Payment Batches API pending backend deployment</AlertTitle>
+          <AlertDescription className="text-xs mt-0.5">
+            The payment batches endpoint is not yet implemented on the backend.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {loadError && (
+        <Alert variant="destructive" className="rounded-2xl text-xs">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle className="text-xs font-semibold">Failed to load payment batches</AlertTitle>
+          <AlertDescription className="text-xs flex items-center justify-between">
+            <span>{loadError}</span>
+            <Button size="sm" variant="outline" onClick={() => void loadBatches()} className="h-7 text-xs rounded-xl">
+              Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* ── Summary Stat Cards ──────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
