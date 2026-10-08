@@ -36,7 +36,7 @@ import {
 } from "@/services/myDocumentsApi";
 import { apiInstance } from "@/api";
 import QRCode from "qrcode";
-import { IdCardPreview } from "@/features/documents/components/IdCardPreview";
+import { IdCardPreview } from "@/features/documents/components/idCard/IdCardPreview";
 import { buildIdCardQrPayload, STANDARD_ID_CARD_TERMS } from "@/features/documents/lib/idCardTemplates";
 import type { EmployeeIdCardData } from "@/features/documents/lib/types";
 
@@ -239,6 +239,7 @@ export function EmployeeMyDocumentsPage() {
         return d.toISOString().split("T")[0];
       })(),
       cardVersion: 1,
+      generatedAt: new Date().toISOString(),
     };
   }, [matchedEmployee, employeeId, workspace.user, workspace.company, idCardQr]);
 

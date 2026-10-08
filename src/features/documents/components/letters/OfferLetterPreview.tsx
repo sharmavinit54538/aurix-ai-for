@@ -1,6 +1,7 @@
 import React from "react";
 import { statusBadgeClass } from "@/lib/status-styles";
 import type { Company } from "@/lib/aurix-store";
+import { CompanyStampAndSignature } from "./CompanyStampAndSignature";
 
 interface SelectedEmployeeData {
   id?: string;
@@ -129,14 +130,12 @@ export const OfferLetterPreview: React.FC<OfferLetterPreviewProps> = ({
         </p>
       </div>
 
-      {/* Signatory */}
-      <div className="pt-4 border-t border-border flex justify-between items-end text-[10px]">
-        <div>
-          <p className="font-bold text-foreground">Authorized Signatory</p>
-          <p className="text-muted-foreground">People Operations Team</p>
-          <p className="font-semibold text-foreground">{companyName}</p>
-        </div>
-      </div>
+      {/* Official Signatory & Company Stamp */}
+      <CompanyStampAndSignature
+        companyName={companyName}
+        date={startDate !== "—" ? startDate : undefined}
+        className="mt-6"
+      />
     </div>
   );
 };

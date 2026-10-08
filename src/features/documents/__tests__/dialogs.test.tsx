@@ -18,6 +18,8 @@ describe("Document Dialogs Components", () => {
     Education: [],
     Employment: [],
     "Company Documents": [mockCategories[2]],
+    "HR Letters": [],
+    "Employee ID Cards": [],
   };
 
   it("handles Change File behavior in UploadDocumentDialog", async () => {

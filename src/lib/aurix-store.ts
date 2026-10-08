@@ -80,8 +80,19 @@ export interface Company {
   id: string;
   name: string;
   logoDataUrl?: string;
+  logoUrl?: string;
   stampDataUrl?: string;
   stampUrl?: string;
+  company_stamp_url?: string;
+  company_stamp?: string;
+  company_logo_url?: string;
+  company_logo?: string;
+  signatureDataUrl?: string;
+  signatureUrl?: string;
+  signature_url?: string;
+  digital_signature_url?: string;
+  signatoryName?: string;
+  signatoryDesignation?: string;
   industry?: string;
   size?: string;
   website?: string;
@@ -92,6 +103,7 @@ export interface Company {
   state?: string;
   country?: string;
   timezone?: string;
+  currency?: string;
 }
 
 export interface HR {

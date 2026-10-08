@@ -1,5 +1,6 @@
 import React from "react";
 import type { Company } from "@/lib/aurix-store";
+import { CompanyStampAndSignature } from "./CompanyStampAndSignature";
 
 interface NDAPreviewProps {
   company: Company | null;
@@ -67,14 +68,17 @@ export const NDAPreview: React.FC<NDAPreviewProps> = ({
         </p>
       </div>
 
-      <div className="pt-6 border-t border-slate-200 grid grid-cols-2 gap-4 text-[10px]">
+      <div className="pt-6 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-6 text-[10px]">
         <div>
-          <p className="font-bold text-slate-900">Signed on behalf of {companyName}:</p>
-          <p className="text-slate-500 mt-4">Authorized Corporate Signatory</p>
+          <CompanyStampAndSignature companyName={companyName} compact={true} className="pt-0 border-t-0" />
         </div>
-        <div>
-          <p className="font-bold text-slate-900">Signed by Recipient:</p>
-          <p className="text-slate-500 mt-4">{recipient}</p>
+        <div className="space-y-2 border-t sm:border-t-0 sm:border-l border-slate-200 pt-4 sm:pt-0 sm:pl-6">
+          <p className="font-bold text-slate-900 text-xs">Signed by Recipient / Counterparty:</p>
+          <div className="h-12 flex items-center border-b border-dashed border-slate-400 w-48">
+            <span className="font-serif italic text-sm text-slate-600">{recipient}</span>
+          </div>
+          <p className="text-xs font-semibold text-slate-800">{recipient}</p>
+          <p className="text-[10px] text-slate-500">Authorized Recipient Signatory</p>
         </div>
       </div>
     </div>

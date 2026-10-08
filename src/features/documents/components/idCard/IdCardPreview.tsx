@@ -3,24 +3,30 @@ import { Building2, RotateCw, Printer, Download, QrCode, ShieldCheck, User } fro
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ID_CARD_THEMES } from "../../lib/idCardTemplates";
-import type { EmployeeIdCardData } from "../../lib/types";
+import type { EmployeeIdCardData, IdCardTheme } from "../../lib/types";
 
 interface IdCardPreviewProps {
   card: EmployeeIdCardData;
-  isFlipped: boolean;
-  onFlip: () => void;
-  onPrint: () => void;
-  onDownload: () => void;
+  isFlipped?: boolean;
+  onFlip?: () => void;
+  onPrint?: () => void;
+  onDownload?: () => void;
+  theme?: string;
 }
 
 export const IdCardPreview: React.FC<IdCardPreviewProps> = ({
   card,
-  isFlipped,
-  onFlip,
+  isFlipped: controlledFlipped,
+  onFlip: controlledOnFlip,
   onPrint,
   onDownload,
+  theme,
 }) => {
-  const themeConfig = ID_CARD_THEMES[card.theme] || ID_CARD_THEMES.navy;
+  const [internalFlipped, setInternalFlipped] = React.useState(false);
+  const isFlipped = controlledFlipped !== undefined ? controlledFlipped : internalFlipped;
+  const onFlip = controlledOnFlip || (() => setInternalFlipped((prev) => !prev));
+  const activeTheme = (theme || card.theme || "navy") as IdCardTheme;
+  const themeConfig = ID_CARD_THEMES[activeTheme] || ID_CARD_THEMES.navy;
 
   return (
     <div className="flex flex-col items-center gap-6">

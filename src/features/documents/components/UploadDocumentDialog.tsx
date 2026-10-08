@@ -29,6 +29,8 @@ interface UploadDocumentDialogProps {
     employeeId: string;
     categoryId: string;
     title: string;
+    documentType?: string;
+    documentNumber?: string;
     description?: string;
     issueDate?: string;
     expiryDate?: string;

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { useAurix } from "@/lib/aurix-store";
+import { CompanyStampAndSignature } from "./CompanyStampAndSignature";
 
 interface LetterPreviewProps {
   title: string;
@@ -160,33 +161,12 @@ export const LetterPreview: React.FC<LetterPreviewProps> = ({
           {content}
         </div>
 
-        {/* Official Signatory Footer */}
-        <div className="border-t border-slate-900/10 dark:border-slate-100/10 pt-8 mt-12 flex items-end justify-between font-sans">
-          <div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">For and on behalf of</p>
-            <p className="font-bold text-sm text-slate-900 dark:text-white">
-              {company?.name || "Company"}
-            </p>
-            <div className="h-10 my-1 flex items-center">
-              <span className="font-serif italic text-base text-indigo-600 dark:text-indigo-400 opacity-90">
-                Authorized Signatory
-              </span>
-            </div>
-            <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-              Authorized Signatory
-            </p>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              People Operations & Human Resources Management
-            </p>
-          </div>
-
-          <div className="text-right text-[11px] text-slate-400 dark:text-slate-500 max-w-[220px]">
-            <div className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium mb-1">
-              <ShieldCheck className="h-3.5 w-3.5" /> Digitally Authenticated
-            </div>
-            <p>This is a computer-generated official document generated via OFC360 enterprise HRMS.</p>
-          </div>
-        </div>
+        {/* Official Signatory Footer with Signature and Company Stamp */}
+        <CompanyStampAndSignature
+          companyName={company?.name}
+          date={effectiveDate}
+          className="mt-12"
+        />
       </Card>
     </div>
   );

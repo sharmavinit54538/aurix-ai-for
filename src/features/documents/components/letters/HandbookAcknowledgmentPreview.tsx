@@ -1,5 +1,6 @@
 import React from "react";
 import type { Company } from "@/lib/aurix-store";
+import { CompanyStampAndSignature } from "./CompanyStampAndSignature";
 
 interface HandbookAcknowledgmentPreviewProps {
   company: Company | null;
@@ -47,10 +48,23 @@ export const HandbookAcknowledgmentPreview: React.FC<HandbookAcknowledgmentPrevi
         </p>
       </div>
 
-      <div className="pt-6 border-t border-slate-200 text-[10px] space-y-1">
-        <p className="font-bold text-slate-900">Electronically Acknowledged</p>
-        <p className="text-slate-500">Employee Signature: {employeeName}</p>
-        <p className="text-slate-400">Date: {new Date().toLocaleDateString("en-IN")}</p>
+      <div className="pt-6 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-4 text-[10px]">
+        <div className="space-y-1">
+          <p className="font-bold text-slate-900">Electronically Acknowledged</p>
+          <div className="h-10 flex items-center border-b border-dashed border-slate-400 w-44">
+            <span className="font-serif italic text-sm text-slate-700">{employeeName}</span>
+          </div>
+          <p className="text-slate-600 font-medium">Employee Signature: {employeeName}</p>
+          <p className="text-slate-400 font-mono text-[9px]">Date: {new Date().toLocaleDateString("en-IN")}</p>
+        </div>
+        <div>
+          <CompanyStampAndSignature
+            companyName={companyName}
+            compact={true}
+            className="pt-0 border-t-0"
+            showSignature={false}
+          />
+        </div>
       </div>
     </div>
   );
