@@ -159,6 +159,8 @@ export function mapBackendDocument(
     fileType: detectFileType(fileName, fileUrl),
     fileUrl,
     description: d.description,
+    documentType: d.document_type || d.type || undefined,
+    documentNumber: d.document_number || undefined,
     rejectionReason: d.rejection_reason || d.rejection_comments || d.comments,
     department: d.department,
     branch: d.branch,

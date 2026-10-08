@@ -2,13 +2,17 @@ export type CategoryGroup =
   | "Employee Documents"
   | "Education"
   | "Employment"
-  | "Company Documents";
+  | "Company Documents"
+  | "HR Letters"
+  | "Employee ID Cards";
 
 export const CATEGORY_GROUPS: CategoryGroup[] = [
   "Employee Documents",
   "Education",
   "Employment",
   "Company Documents",
+  "HR Letters",
+  "Employee ID Cards",
 ];
 
 export interface BackendCategory {
@@ -32,7 +36,7 @@ export interface BackendDocumentItem {
   category_name?: string;
   category_group?: string;
   category?: { id?: string; name?: string; group?: string };
-  employee?: { first_name?: string; last_name?: string; full_name?: string };
+  employee?: { first_name?: string; last_name?: string; full_name?: string; employee_id?: string };
   uploaded_by?: string;
   uploaded_by_name?: string;
   verified_by?: string;
@@ -50,6 +54,7 @@ export interface BackendDocumentItem {
   title?: string;
   name?: string;
   document_type?: string;
+  document_number?: string;
   type?: string;
   description?: string;
   issue_date?: string;
@@ -77,6 +82,8 @@ export interface DocumentItem {
   categoryId?: string;
   categoryName: string;
   categoryGroup: CategoryGroup;
+  documentType?: string;
+  documentNumber?: string;
   uploadedByName: string;
   uploadedAt: string;
   issueDate?: string;
@@ -126,11 +133,32 @@ export interface DocumentListResult {
   meta: PaginationMeta;
 }
 
+export type DocumentsTabKey =
+  | "all"
+  | "employee-docs"
+  | "company-docs"
+  | "hr-letters"
+  | "id-cards"
+  | "templates"
+  | "verification"
+  | "expiry"
+  | "activity"
+  | "Employee Documents"
+  | "Company Documents"
+  | "Pending"
+  | "Verified"
+  | "Rejected"
+  | "Expired";
+
 export interface DocumentFilters {
-  tab: "all" | "Employee Documents" | "Company Documents" | "Pending" | "Verified" | "Rejected" | "Expired";
+  tab: DocumentsTabKey;
   search?: string;
+  employeeId?: string;
   categoryId?: string;
+  documentType?: string;
   status?: string;
+  verificationStatus?: "ALL" | "PENDING" | "VERIFIED" | "REJECTED";
+  expiryWindow?: "all" | "expired" | "7d" | "30d" | "60d" | "valid";
   sortBy?: "created_at" | "title" | "expiry_date" | "employee_name";
   order?: "asc" | "desc";
   page: number;
@@ -146,14 +174,33 @@ export interface DocumentSummary {
   expired: number;
 }
 
+export type DocumentAuditEventAction =
+  | "Document Uploaded"
+  | "Document Viewed"
+  | "Document Downloaded"
+  | "Document Verified"
+  | "Document Rejected"
+  | "Document Re-uploaded"
+  | "Document Deleted"
+  | "Letter Generated"
+  | "Letter Downloaded"
+  | "Letter Sent"
+  | "Template Created"
+  | "Template Updated"
+  | "ID Card Generated"
+  | "ID Card Replaced"
+  | string;
+
 export interface DocumentActivityItem {
   id: string;
   documentId: string;
   documentName: string;
-  action: "Uploaded" | "Verified" | "Rejected" | "Downloaded" | "Updated" | "ReuploadRequested" | string;
+  action: DocumentAuditEventAction;
   performedBy: string;
   timestamp: string;
   details?: string;
+  employeeName?: string;
+  employeeId?: string;
 }
 
 export interface UploadEmployeePayload {
@@ -161,6 +208,8 @@ export interface UploadEmployeePayload {
   employeeId: string;
   categoryId: string;
   title: string;
+  documentType?: string;
+  documentNumber?: string;
   description?: string;
   issueDate?: string;
   expiryDate?: string;
@@ -190,4 +239,105 @@ export interface DocumentTemplateConfig {
   title: string;
   categoryGroup: CategoryGroup;
   fields: Array<{ key: string; label: string; placeholder: string; required?: boolean }>;
+}
+
+// ── Reusable Document Template System ─────────────────────────────────────────
+
+export interface TemplatePlaceholder {
+  key: string;
+  label: string;
+  description: string;
+  example: string;
+}
+
+export interface DocumentTemplate {
+  id: string;
+  title: string;
+  category: string;
+  code: string;
+  description?: string;
+  subject?: string;
+  content: string;
+  variables: string[];
+  isActive: boolean;
+  isDefault?: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+// ── HR Letters Types & Generation ───────────────────────────────────────────
+
+export type HrLetterCategory =
+  | "JOINING & EMPLOYMENT"
+  | "SALARY & COMPENSATION"
+  | "EMPLOYMENT VERIFICATION"
+  | "ROLE & TRANSFER"
+  | "LEAVE & ABSENCE"
+  | "WARNING & DISCIPLINARY"
+  | "EXIT & SEPARATION"
+  | "GENERAL HR";
+
+export interface LetterTypeDefinition {
+  id: string;
+  title: string;
+  category: HrLetterCategory;
+  description: string;
+  defaultTemplateId: string;
+  requiredFields: Array<{
+    key: string;
+    label: string;
+    type?: "text" | "number" | "date" | "textarea" | "select";
+    placeholder?: string;
+    required: boolean;
+    defaultValue?: string;
+    options?: string[];
+  }>;
+}
+
+export interface GeneratedLetterRecord {
+  id: string;
+  letterTypeId: string;
+  letterTitle: string;
+  category: HrLetterCategory;
+  employeeId: string;
+  employeeName: string;
+  employeeCode?: string;
+  generatedBy: string;
+  generatedAt: string;
+  status: "Draft" | "Generated" | "Sent" | "Archived";
+  content: string;
+  savedDocumentId?: string;
+  fields: Record<string, string>;
+}
+
+// ── Employee ID Cards Types ──────────────────────────────────────────────────
+
+export type IdCardStatus = "Active" | "Inactive" | "Expired" | "Replaced";
+
+export type IdCardTheme = "navy" | "slate" | "emerald" | "purple";
+
+export interface EmployeeIdCardData {
+  id: string;
+  employeeId: string;
+  employeeCode: string;
+  employeeName: string;
+  designation: string;
+  department: string;
+  joiningDate: string;
+  bloodGroup?: string;
+  photoUrl?: string;
+  companyName: string;
+  companyAddress: string;
+  emergencyContact: string;
+  employeeContact: string;
+  email: string;
+  authorizedSignatoryName: string;
+  qrPayload: string;
+  terms: string;
+  theme: IdCardTheme;
+  status: IdCardStatus;
+  issueDate: string;
+  expiryDate?: string;
+  generatedAt: string;
+  cardVersion: number;
 }
