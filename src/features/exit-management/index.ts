@@ -2,6 +2,7 @@ export * from "./types";
 export * from "./constants";
 export * from "./utils/exportCsv";
 export * from "./utils/documentTemplates";
+export * from "./utils/createExitCase";
 export * from "./hooks/useExitData";
 export * from "./hooks/useExitFilters";
 export * from "./hooks/useExitModalForms";
