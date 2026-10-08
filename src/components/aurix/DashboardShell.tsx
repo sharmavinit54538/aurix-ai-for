@@ -408,13 +408,14 @@ const SUPER_ADMIN_NAV_SECTIONS: SidebarNavSection[] = [
 // F-08: Consolidated executive navigation pointing to real role command centers wired to executiveApi
 const EXECUTIVE_NAV_SECTIONS: SidebarNavSection[] = [
   {
-    title: "EXECUTIVE COMMAND CENTER",
     items: [
       { to: "/dashboard/executive", label: "Executive Overview", icon: Home, exact: true },
       { to: "/dashboard/executive/cto", label: "CTO Technology", icon: Wrench },
-      { to: "/dashboard/analytics", label: "Analytics & Reports", icon: BarChart3 },
-      { to: "/dashboard/helpdesk/analytics", label: "Helpdesk Analytics", icon: LifeBuoy },
+      { to: "/dashboard/announcements", label: "Announcements", icon: Megaphone },
+      { to: "/dashboard/reports", label: "Company Reports", icon: LineChartIcon },
+      { to: "/dashboard/analytics", label: "Analytics Hub", icon: BarChart3 },
       HELP_NAV_ITEM,
+      { to: "/dashboard/settings", label: "Settings", icon: Settings },
     ],
   },
 ];
