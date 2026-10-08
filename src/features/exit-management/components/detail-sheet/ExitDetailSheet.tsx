@@ -1,18 +1,9 @@
-import { PowerOff, FileText } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
-import { toast } from "sonner";
-import { STAGE_BADGES, getExitBadge } from "../../constants";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import type { ExitCase } from "../../types";
+import { ExitDetailSheetHeader } from "./ExitDetailSheetHeader";
+import { ExitDetailSheetFooter } from "./ExitDetailSheetFooter";
 import { OverviewTab } from "./OverviewTab";
 import { ClearanceTab } from "./ClearanceTab";
 import { SettlementTab } from "./SettlementTab";
@@ -104,40 +95,8 @@ export function ExitDetailSheet({
       <SheetContent className="sm:max-w-xl flex flex-col h-full bg-background border-l border-border p-0 shadow-2xl">
         {detailCase && (
           <>
-            {/* Header */}
-            <SheetHeader className="p-5 border-b border-border bg-muted/10 shrink-0 text-left">
-              <div className="flex items-center justify-between">
-                <Badge
-                  variant="outline"
-                  className="text-[10px] uppercase font-bold text-muted-foreground border-border"
-                >
-                  {detailCase.department || "Operations"}
-                </Badge>
-                {(() => {
-                  const badge = STAGE_BADGES[detailCase.stage] || {
-                    label: detailCase.stage,
-                  };
-                  return (
-                    <Badge
-                      className={`${getExitBadge(detailCase.stage)} border shadow-none text-xs font-bold`}
-                    >
-                      {badge.label}
-                    </Badge>
-                  );
-                })()}
-              </div>
-              <SheetTitle
-                className="font-display text-base font-bold text-foreground mt-2 truncate text-left"
-                title={detailCase.employee}
-              >
-                {detailCase.employee} ({detailCase.employeeId})
-              </SheetTitle>
-              <SheetDescription className="text-xs text-muted-foreground text-left mt-0.5">
-                Resigned Date: {detailCase.resignedAt} &bull; LWD: {detailCase.lastWorkingDay}
-              </SheetDescription>
-            </SheetHeader>
+            <ExitDetailSheetHeader detailCase={detailCase} />
 
-            {/* Body */}
             <Tabs defaultValue="overview" className="flex-1 flex flex-col min-h-0">
               <div className="px-5 border-b border-border bg-muted/5 shrink-0">
                 <TabsList className="bg-transparent border-none p-0 flex gap-2 h-10">
@@ -211,29 +170,10 @@ export function ExitDetailSheet({
                 />
               </ScrollArea>
 
-              {/* Footer buttons */}
-              <div className="p-4 border-t border-border bg-muted/10 shrink-0 flex gap-2 justify-end">
-                {detailCase.stage !== "completed" && detailCase.stage !== "cancelled" && (
-                  <Button
-                    variant="outline"
-                    onClick={() => onDeactivatePrompt(detailCase)}
-                    className="h-9 text-xs border-border bg-transparent hover:bg-destructive/10 hover:text-destructive cursor-pointer gap-1.5"
-                  >
-                    <PowerOff className="h-3.5 w-3.5" />
-                    Deactivate Login
-                  </Button>
-                )}
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    toast.success("Exit report exported as PDF.");
-                  }}
-                  className="h-9 text-xs border-border bg-transparent hover:bg-accent/60 cursor-pointer gap-1.5"
-                >
-                  <FileText className="h-3.5 w-3.5" />
-                  Print PDF Summary
-                </Button>
-              </div>
+              <ExitDetailSheetFooter
+                detailCase={detailCase}
+                onDeactivatePrompt={onDeactivatePrompt}
+              />
             </Tabs>
           </>
         )}
