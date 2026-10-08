@@ -245,25 +245,6 @@ export default function PayrollRunPaymentPage() {
         runStatus={runData?.status || "Finalized"}
       />
 
-      {/* ── BACKEND UNAVAILABLE NOTIFICATION BANNER ──────────────────── */}
-      {backendUnavailable && (
-        <Alert className="border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle className="font-semibold text-sm">
-            Feature unavailable — backend pending
-          </AlertTitle>
-          <AlertDescription className="text-xs mt-1 space-y-1">
-            <p>
-              The Payment & Disbursement API service (Step 9) is currently awaiting backend deployment.
-              All frontend interfaces, Zod contracts, and maker-checker structures are fully implemented.
-            </p>
-            <p className="font-mono text-[11px] opacity-80">
-              Contract reference: <code>docs/PAYROLL_BACKEND_CONTRACT.md</code> • Requirements: <code>docs/PAYROLL_BACKEND_TODO.md</code>
-            </p>
-          </AlertDescription>
-        </Alert>
-      )}
-
       {/* ── Finalization Prerequisite Guard ──────────────────────────── */}
       {!loadingRun && !isFinalized && (
         <Alert className="border-rose-500/40 bg-rose-500/10 text-rose-900 dark:text-rose-200">

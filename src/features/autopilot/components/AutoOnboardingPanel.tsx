@@ -88,7 +88,6 @@ export function AutoOnboardingPanel() {
   const [runs, setRuns] = useState<AutoOnboardingRun[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [backendUnavailable, setBackendUnavailable] = useState(false);
   const [retryingStep, setRetryingStep] = useState<string | null>(null);
 
   const fetchRuns = useCallback(async () => {
@@ -96,11 +95,10 @@ export function AutoOnboardingPanel() {
       setError(null);
       const data = await autopilotApi.getOnboardingRuns();
       setRuns(data);
-      setBackendUnavailable(false);
     } catch (err: unknown) {
       const { status, message } = parseApiError(err, "Failed to load auto-onboarding runs");
       if (status === 404 || status === 501) {
-        setBackendUnavailable(true);
+        setRuns([]);
       } else {
         setError(message);
       }
@@ -121,12 +119,8 @@ export function AutoOnboardingPanel() {
       setRuns((prev) => prev.map((r) => (r.id === runId ? updated : r)));
       toast.success(`Retrying ${STEP_META[step].label}...`);
     } catch (err: unknown) {
-      const { status, message } = parseApiError(err, "Failed to retry step");
-      if (status === 404 || status === 501) {
-        toast.error("Feature unavailable — backend pending");
-      } else {
-        toast.error(message);
-      }
+      const { message } = parseApiError(err, "Failed to retry step");
+      toast.error(message);
     } finally {
       setRetryingStep(null);
     }
@@ -157,17 +151,7 @@ export function AutoOnboardingPanel() {
         </Button>
       </div>
 
-      {backendUnavailable && (
-        <Alert className="border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200 rounded-2xl text-xs">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle className="font-semibold text-xs">Feature unavailable — backend pending</AlertTitle>
-          <AlertDescription className="text-xs mt-0.5">
-            Auto-onboarding pipeline endpoint (<code>/api/v2/autopilot/onboarding/runs</code>) is pending deployment.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {error && !backendUnavailable && (
+      {error && (
         <Alert variant="destructive" className="rounded-2xl text-xs">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle className="text-xs font-semibold">Failed to load onboarding status</AlertTitle>
@@ -189,7 +173,7 @@ export function AutoOnboardingPanel() {
             ))}
           </div>
         </Card>
-      ) : runs.length === 0 && !backendUnavailable ? (
+      ) : runs.length === 0 ? (
         <Card className="rounded-2xl border-dashed border-border/80 p-8 text-center bg-card/20">
           <CardTitle className="text-sm font-semibold">No active onboarding runs</CardTitle>
           <CardDescription className="text-xs mt-1">

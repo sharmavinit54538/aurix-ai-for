@@ -65,18 +65,16 @@ export function AutoPayrollPanel() {
   const [payrollStatus, setPayrollStatus] = useState<AutoPayrollRunStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [backendUnavailable, setBackendUnavailable] = useState(false);
 
   const fetchStatus = useCallback(async () => {
     try {
       setError(null);
       const data = await autopilotApi.getPayrollRunStatus();
       setPayrollStatus(data);
-      setBackendUnavailable(false);
     } catch (err: unknown) {
       const { status, message } = parseApiError(err, "Failed to load Autopilot payroll status");
       if (status === 404 || status === 501) {
-        setBackendUnavailable(true);
+        setPayrollStatus(null);
       } else {
         setError(message);
       }
@@ -148,21 +146,8 @@ export function AutoPayrollPanel() {
         </div>
       </div>
 
-      {/* ── Backend Unavailable Banner ───────────────────────────────── */}
-      {backendUnavailable && (
-        <div className="p-4">
-          <Alert className="border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200 rounded-2xl text-xs">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle className="font-semibold text-xs">Feature unavailable — backend pending</AlertTitle>
-            <AlertDescription className="text-xs mt-0.5">
-              Autopilot payroll pipeline status endpoint (<code>/api/v2/autopilot/payroll/status</code>) is pending deployment.
-            </AlertDescription>
-          </Alert>
-        </div>
-      )}
-
       {/* ── Inline Error ─────────────────────────────────────────────── */}
-      {error && !backendUnavailable && (
+      {error && (
         <div className="p-4">
           <Alert variant="destructive" className="rounded-2xl text-xs">
             <AlertCircle className="h-4 w-4" />
@@ -189,7 +174,7 @@ export function AutoPayrollPanel() {
               </div>
             ))}
           </div>
-        ) : !payrollStatus && !backendUnavailable ? (
+        ) : !payrollStatus ? (
           <div className="py-8 text-center text-xs text-muted-foreground">
             No active payroll run in progress.
           </div>
