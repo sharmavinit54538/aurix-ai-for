@@ -1,5 +1,5 @@
 import React from "react";
-import { Eye, Download, Trash2, FileText, AlertCircle, RefreshCw } from "lucide-react";
+import { Eye, Download, Trash2, FileText, AlertCircle, RefreshCw, CheckCircle, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -20,8 +20,12 @@ interface DocumentsTableProps {
   onSelectPreview: (doc: DocumentItem) => void;
   onSelectDelete: (doc: DocumentItem) => void;
   onDownload: (doc: DocumentItem) => void;
+  onVerify?: (doc: DocumentItem) => void;
+  onReject?: (doc: DocumentItem) => void;
+  onRequestReupload?: (doc: DocumentItem) => void;
   userRole?: string | null;
   currentEmployeeProfileId?: string;
+  showVerificationActions?: boolean;
 }
 
 export const DocumentsTable: React.FC<DocumentsTableProps> = ({
@@ -37,11 +41,19 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
   onSelectPreview,
   onSelectDelete,
   onDownload,
+  onVerify,
+  onReject,
+  onRequestReupload,
   userRole,
   currentEmployeeProfileId,
+  showVerificationActions = false,
 }) => {
   const totalPages = Math.max(1, Math.ceil(meta.total / (meta.limit || 10)));
   const currentPage = meta.page;
+
+  const canVerify = canDo(userRole, "verify");
+  const canReject = canDo(userRole, "reject");
+  const canRequestReupload = canDo(userRole, "requestReupload");
 
   const handleRowKeyDown = (e: React.KeyboardEvent, doc: DocumentItem) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -98,6 +110,13 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                 Uploaded
                 {filters.sortBy === "created_at" && (filters.order === "asc" ? " ↑" : " ↓")}
               </TableHead>
+              <TableHead
+                onClick={() => onSortChange("expiry_date")}
+                className="text-xs font-bold text-muted-foreground cursor-pointer hover:text-foreground select-none"
+              >
+                Expiry Date
+                {filters.sortBy === "expiry_date" && (filters.order === "asc" ? " ↑" : " ↓")}
+              </TableHead>
               <TableHead className="text-xs font-bold text-muted-foreground">Status</TableHead>
               <TableHead className="text-xs font-bold text-muted-foreground text-right">Actions</TableHead>
             </TableRow>
@@ -107,14 +126,14 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
             {isLoading ? (
               Array.from({ length: 5 }).map((_, idx) => (
                 <TableRow key={`skeleton-${idx}`} className="border-border animate-pulse">
-                  <TableCell colSpan={7} className="py-4">
+                  <TableCell colSpan={8} className="py-4">
                     <div className="h-4 bg-muted/40 rounded w-full" />
                   </TableCell>
                 </TableRow>
               ))
             ) : isError ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-12 text-xs text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-12 text-xs text-muted-foreground">
                   <AlertCircle className="h-8 w-8 mx-auto mb-2 text-rose-500/70" />
                   <p className="font-semibold text-foreground">Failed to load documents.</p>
                   <Button
@@ -129,7 +148,7 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
               </TableRow>
             ) : items.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-12 text-xs text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-12 text-xs text-muted-foreground">
                   <FileText className="h-8 w-8 mx-auto mb-2 text-muted-foreground/40" />
                   No documents found matching your filters.
                 </TableCell>
@@ -153,27 +172,60 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                     className="border-border hover:bg-accent/30 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
                     aria-label={`View details for ${doc.title}`}
                   >
-                    <TableCell className="text-xs font-medium text-foreground max-w-[200px] truncate">
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
-                        <span className="truncate">{doc.title}</span>
+                    <TableCell className="text-xs font-medium text-foreground max-w-[220px]">
+                      <div className="flex items-start gap-2">
+                        <FileText className="h-4 w-4 text-primary shrink-0 mt-0.5" aria-hidden="true" />
+                        <div className="min-w-0">
+                          <p className="truncate font-semibold">{doc.title}</p>
+                          {doc.documentNumber && (
+                            <p className="text-[10px] text-muted-foreground font-mono">
+                              Doc #: {doc.documentNumber}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </TableCell>
 
                     <TableCell className="text-xs text-muted-foreground truncate max-w-[150px]">
-                      {doc.employeeName || "—"}
+                      <div>
+                        <p className="font-medium text-foreground truncate">{doc.employeeName || "—"}</p>
+                        {doc.employeeCode && (
+                          <p className="text-[10px] text-muted-foreground font-mono">{doc.employeeCode}</p>
+                        )}
+                      </div>
                     </TableCell>
 
                     <TableCell className="text-xs text-muted-foreground">
-                      {doc.categoryName}
+                      <span className="truncate block max-w-[140px]">{doc.categoryName}</span>
                     </TableCell>
 
                     <TableCell className="text-xs text-muted-foreground">
-                      {doc.categoryGroup}
+                      <Badge variant="outline" className="text-[10px] font-normal border-border/80">
+                        {doc.documentType || doc.categoryGroup}
+                      </Badge>
                     </TableCell>
 
-                    <TableCell className="text-xs text-muted-foreground">
+                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                       {doc.uploadedAt}
+                    </TableCell>
+
+                    <TableCell className="text-xs whitespace-nowrap">
+                      {doc.expiryDate ? (
+                        <div className="flex items-center gap-1.5">
+                          <span>{doc.expiryDate}</span>
+                          {doc.isExpired ? (
+                            <Badge className="bg-rose-500/15 text-rose-600 border border-rose-500/30 text-[9px] px-1 py-0">
+                              Expired
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-[9px] px-1 py-0">
+                              Valid
+                            </Badge>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
                     </TableCell>
 
                     <TableCell>
@@ -197,12 +249,53 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                         className="flex items-center justify-end gap-1"
                         onClick={(e) => e.stopPropagation()}
                       >
+                        {/* Quick Verification Actions for HR/Admin on Pending docs */}
+                        {(showVerificationActions || canVerify) && doc.source === "employee" && doc.status === "PENDING" && onVerify && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onVerify(doc)}
+                            className="h-7 w-7 p-0 cursor-pointer text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10"
+                            title="Verify and Approve"
+                            aria-label={`Verify ${doc.title}`}
+                          >
+                            <CheckCircle className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+
+                        {(showVerificationActions || canReject) && doc.source === "employee" && doc.status === "PENDING" && onReject && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onReject(doc)}
+                            className="h-7 w-7 p-0 cursor-pointer text-rose-600 hover:text-rose-700 hover:bg-rose-500/10"
+                            title="Reject Document"
+                            aria-label={`Reject ${doc.title}`}
+                          >
+                            <XCircle className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+
+                        {canRequestReupload && doc.source === "employee" && onRequestReupload && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onRequestReupload(doc)}
+                            className="h-7 w-7 p-0 cursor-pointer text-amber-600 hover:text-amber-700 hover:bg-amber-500/10"
+                            title="Request Re-upload"
+                            aria-label={`Request Re-upload for ${doc.title}`}
+                          >
+                            <RefreshCw className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => onSelectPreview(doc)}
                           className="h-7 w-7 p-0 cursor-pointer"
                           aria-label={`Preview ${doc.title}`}
+                          title="Preview"
                         >
                           <Eye className="h-3.5 w-3.5 text-muted-foreground" />
                         </Button>
@@ -213,6 +306,7 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                           onClick={() => onDownload(doc)}
                           className="h-7 w-7 p-0 cursor-pointer"
                           aria-label={`Download ${doc.title}`}
+                          title="Download"
                         >
                           <Download className="h-3.5 w-3.5 text-muted-foreground" />
                         </Button>
@@ -224,6 +318,7 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                             onClick={() => onSelectDelete(doc)}
                             className="h-7 w-7 p-0 cursor-pointer"
                             aria-label={`Delete ${doc.title}`}
+                            title="Delete"
                           >
                             <Trash2 className="h-3.5 w-3.5 text-rose-500" />
                           </Button>
@@ -258,7 +353,7 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!meta.has_more && currentPage >= totalPages}
+                disabled={currentPage >= totalPages || isLoading}
                 onClick={() => onPageChange(currentPage + 1)}
                 className="h-7 text-xs cursor-pointer"
                 aria-label="Next page"

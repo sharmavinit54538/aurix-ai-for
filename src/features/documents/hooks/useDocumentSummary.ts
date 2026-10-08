@@ -4,6 +4,7 @@ import type { BackendDocumentItem, DocumentSummary } from "../lib/types";
 
 export const DOCUMENTS_SUMMARY_QUERY_KEY = ["documents", "summary"] as const;
 export const DOCUMENTS_EXPIRING_QUERY_KEY = ["documents", "expiring"] as const;
+export const DOCUMENTS_EXPIRED_QUERY_KEY = ["documents", "expired"] as const;
 
 export function useDocumentSummary() {
   const summaryQuery = useQuery<DocumentSummary, Error>({
@@ -18,26 +19,38 @@ export function useDocumentSummary() {
     staleTime: 2 * 60 * 1000,
   });
 
+  const expiredQuery = useQuery<BackendDocumentItem[], Error>({
+    queryKey: DOCUMENTS_EXPIRED_QUERY_KEY,
+    queryFn: () => documentsApi.getExpiredDocuments(),
+    staleTime: 2 * 60 * 1000,
+  });
+
   const summary = summaryQuery.data ?? {
     total: 0,
     verified: 0,
     pending: 0,
     rejected: 0,
-    expiring: expiringQuery.data?.length ?? 0,
+    expiring: 0,
     expired: 0,
   };
+
+  const finalExpiring = expiringQuery.data?.length ? expiringQuery.data.length : summary.expiring;
+  const finalExpired = expiredQuery.data?.length ? expiredQuery.data.length : summary.expired;
 
   return {
     summary: {
       ...summary,
-      expiring: expiringQuery.data?.length ? expiringQuery.data.length : summary.expiring,
+      expiring: finalExpiring,
+      expired: finalExpired,
     },
     expiringDocs: expiringQuery.data ?? [],
-    isLoading: summaryQuery.isLoading || expiringQuery.isLoading,
+    expiredDocs: expiredQuery.data ?? [],
+    isLoading: summaryQuery.isLoading || expiringQuery.isLoading || expiredQuery.isLoading,
     isError: summaryQuery.isError,
     refetch: () => {
       summaryQuery.refetch();
       expiringQuery.refetch();
+      expiredQuery.refetch();
     },
   };
 }

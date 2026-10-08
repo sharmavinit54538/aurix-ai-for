@@ -67,6 +67,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
   );
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
   const [title, setTitle] = useState("");
+  const [documentNumber, setDocumentNumber] = useState("");
   const [description, setDescription] = useState("");
   const [issueDate, setIssueDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [expiryDate, setExpiryDate] = useState("");
@@ -251,6 +252,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
           employeeId: empId,
           categoryId: selectedCategoryId,
           title: title.trim(),
+          documentNumber: documentNumber.trim() || undefined,
           description: description.trim() || undefined,
           issueDate: issueDate || undefined,
           expiryDate: expiryDate || undefined,
@@ -263,6 +265,7 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       // Reset form
       handleChangeFile();
       setTitle("");
+      setDocumentNumber("");
       setDescription("");
       setExpiryDate("");
       setErrors({});
@@ -286,8 +289,8 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg bg-background border-border shadow-2xl p-6">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col p-0 gap-0 bg-background border-border shadow-2xl overflow-hidden">
+        <DialogHeader className="p-6 pb-4 border-b border-border shrink-0">
           <DialogTitle className="font-display text-lg font-bold flex items-center gap-2">
             <Upload className="h-5 w-5 text-primary" />
             Upload New Document
@@ -300,13 +303,14 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
         </DialogHeader>
 
         {errors.general && (
-          <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 p-3 text-xs text-rose-600 dark:text-rose-400 flex items-center gap-2">
+          <div className="mx-6 mt-3 rounded-xl border border-rose-500/20 bg-rose-500/5 p-3 text-xs text-rose-600 dark:text-rose-400 flex items-center gap-2 shrink-0">
             <AlertCircle className="h-4 w-4 shrink-0" />
             <span>{errors.general}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
           {/* Target Employee (Only for HR/Admin) */}
           {!isEmployeeRole && (
             <div className="space-y-1.5">
@@ -394,6 +398,21 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
             />
             {errors.title && <p className="text-[11px] text-rose-500">{errors.title}</p>}
           </div>
+
+          {/* Document Number */}
+          {selectedGroup !== "Company Documents" && (
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-muted-foreground">
+                Document Number / ID <span className="font-normal text-muted-foreground/70">(Optional)</span>
+              </Label>
+              <Input
+                value={documentNumber}
+                onChange={(e) => setDocumentNumber(e.target.value)}
+                placeholder="e.g. 12-digit Aadhaar / PAN / Passport Number"
+                className="bg-background/50 border-border text-xs"
+              />
+            </div>
+          )}
 
           {/* Issue Date & Expiry Date */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -506,8 +525,9 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
             )}
             {errors.file && <p className="text-[11px] text-rose-500">{errors.file}</p>}
           </div>
+          </div>
 
-          <DialogFooter className="pt-2 border-t border-border">
+          <DialogFooter className="p-4 px-6 border-t border-border bg-card/40 shrink-0">
             <Button
               type="button"
               variant="outline"

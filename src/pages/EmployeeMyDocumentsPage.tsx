@@ -35,12 +35,17 @@ import {
   type ProvisionSlip,
 } from "@/services/myDocumentsApi";
 import { apiInstance } from "@/api";
+import QRCode from "qrcode";
+import { IdCardPreview } from "@/features/documents/components/IdCardPreview";
+import { buildIdCardQrPayload, STANDARD_ID_CARD_TERMS } from "@/features/documents/lib/idCardTemplates";
+import type { EmployeeIdCardData } from "@/features/documents/lib/types";
 
 type DocumentTab =
   | "all"
   | "employment"
   | "salary-slips"
   | "provision-slips"
+  | "id-card"
   | "pending"
   | "verified"
   | "rejected";
@@ -62,6 +67,7 @@ const TABS: Array<{ id: DocumentTab; label: string }> = [
   { id: "employment", label: "Employment" },
   { id: "salary-slips", label: "Salary Slips" },
   { id: "provision-slips", label: "Provision Slips" },
+  { id: "id-card", label: "Employee ID Card" },
   { id: "pending", label: "Pending" },
   { id: "verified", label: "Verified" },
   { id: "rejected", label: "Rejected" },
@@ -172,6 +178,69 @@ export function EmployeeMyDocumentsPage() {
   const [busyDocumentId, setBusyDocumentId] = useState<string | null>(null);
   const [busyPayslipId, setBusyPayslipId] = useState<string | null>(null);
   const [busyProvisionId, setBusyProvisionId] = useState<string | null>(null);
+  const [idCardQr, setIdCardQr] = useState<string>("");
+
+  const matchedEmployee = useMemo(() => {
+    return workspace.employees.find((e) => e.id === employeeId || (workspace.user?.email && e.email === workspace.user.email));
+  }, [workspace.employees, employeeId, workspace.user?.email]);
+
+  useEffect(() => {
+    if (activeTab === "id-card" && employeeId) {
+      const payload = buildIdCardQrPayload({
+        employeeId,
+        employeeCode: matchedEmployee?.employeeId || employeeId,
+        employeeName: matchedEmployee?.fullName || workspace.user?.fullName || "Employee",
+        companyName: workspace.company?.name || "OFC360 Enterprise Systems",
+      });
+      QRCode.toDataURL(payload, {
+        margin: 1,
+        width: 140,
+        color: { dark: "#0f172a", light: "#ffffff" },
+      })
+        .then(setIdCardQr)
+        .catch(() => setIdCardQr(""));
+    }
+  }, [activeTab, employeeId, matchedEmployee, workspace.user, workspace.company]);
+
+  const myCardData: EmployeeIdCardData = useMemo(() => {
+    const empCode = matchedEmployee?.employeeId || employeeId || "EMP-001";
+    const name = matchedEmployee?.fullName || workspace.user?.fullName || "Employee Name";
+    const desig = matchedEmployee?.designation || "Software Specialist";
+    const dept = matchedEmployee?.department || "Technology";
+    const joiningDate = matchedEmployee?.joiningDate || new Date().toISOString().split("T")[0];
+    const companyName = workspace.company?.name || "OFC360 Enterprise Systems Ltd.";
+    const companyAddress = workspace.company?.address
+      ? `${workspace.company.address}, ${workspace.company.city || ""}, ${workspace.company.state || ""}`.trim().replace(/^,|,$/g, "")
+      : "Plot 42, Cyber City Tech Park, Sector 21, Bengaluru 560100";
+
+    return {
+      id: `card_${employeeId}`,
+      employeeId,
+      employeeCode: empCode,
+      employeeName: name,
+      designation: desig,
+      department: dept,
+      joiningDate,
+      bloodGroup: "O+",
+      companyName,
+      companyAddress,
+      emergencyContact: "+91 98765 00000",
+      employeeContact: matchedEmployee?.phone || workspace.user?.phone || "+91 98765 43210",
+      email: matchedEmployee?.email || workspace.user?.email || "employee@ofc360.com",
+      authorizedSignatoryName: "Director – People Operations",
+      qrPayload: idCardQr,
+      terms: STANDARD_ID_CARD_TERMS,
+      theme: "navy",
+      status: "Active",
+      issueDate: new Date().toISOString().split("T")[0],
+      expiryDate: (() => {
+        const d = new Date();
+        d.setFullYear(d.getFullYear() + 3);
+        return d.toISOString().split("T")[0];
+      })(),
+      cardVersion: 1,
+    };
+  }, [matchedEmployee, employeeId, workspace.user, workspace.company, idCardQr]);
 
   const loadDocuments = useCallback(async () => {
     if (!employeeId) {
@@ -372,7 +441,7 @@ export function EmployeeMyDocumentsPage() {
     }
   };
 
-  const isDocumentTab = activeTab !== "salary-slips" && activeTab !== "provision-slips";
+  const isDocumentTab = activeTab !== "salary-slips" && activeTab !== "provision-slips" && activeTab !== "id-card";
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 py-2">
@@ -455,6 +524,22 @@ export function EmployeeMyDocumentsPage() {
           onRetry={() => void loadProvisionSlips()}
           onFile={handleProvisionFile}
         />
+      ) : null}
+
+      {activeTab === "id-card" ? (
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card/40 p-6 md:p-8">
+          <div className="mb-6 text-center">
+            <h3 className="text-base font-semibold text-foreground">Digital Employee Identity Badge</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Official verified corporate credentials. Click the badge to flip between Front and Back sides.
+            </p>
+          </div>
+          <IdCardPreview
+            card={myCardData}
+            theme="navy"
+            onPrint={() => window.print()}
+          />
+        </div>
       ) : null}
 
       <UploadDocumentDialog
@@ -623,17 +708,103 @@ function UploadDocumentDialog({ open, onOpenChange, categories, reuploadTarget, 
 
   const categoryAvailable = (category: DocumentCategoryLabel) => categories.some((entry) => categoryMatches(entry.name, category));
   const reupload = Boolean(reuploadTarget);
-  return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl"><DialogHeader>
-    <DialogTitle>{reupload ? "Re-upload Document" : "Upload Document"}</DialogTitle>
-    <DialogDescription>{reupload ? "Replace the rejected file. It will be sent for verification again." : "Upload a personal employment document for verification."}</DialogDescription>
-  </DialogHeader><form className="space-y-4" onSubmit={(event) => { event.preventDefault(); onSubmit(values, reupload); }}>
-    <div className="grid gap-4 sm:grid-cols-2"><div className="space-y-2"><Label htmlFor="document-name">Document Name</Label><Input id="document-name" value={values.name} required onChange={(event) => setValues({ ...values, name: event.target.value })} /></div><div className="space-y-2"><Label htmlFor="document-type">Document Type</Label><Input id="document-type" value={values.type} required placeholder="e.g. Passport" onChange={(event) => setValues({ ...values, type: event.target.value })} /></div></div>
-    {!reupload ? <div className="space-y-2"><Label>Document Category</Label><Select value={values.category} onValueChange={(category: DocumentCategoryLabel) => setValues({ ...values, category })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{CATEGORY_OPTIONS.map((category) => <SelectItem key={category} value={category}>{category}</SelectItem>)}</SelectContent></Select></div> : null}
-    <div className="space-y-2"><Label htmlFor="document-file">File Upload</Label><Input id="document-file" type="file" required onChange={(event) => setValues({ ...values, file: event.target.files?.[0] || null })} />{values.file ? <p className="text-xs text-muted-foreground">Selected: {values.file.name}</p> : null}</div>
-    <div className="space-y-2"><Label htmlFor="document-description">Description <span className="text-muted-foreground">(optional)</span></Label><Textarea id="document-description" value={values.description} onChange={(event) => setValues({ ...values, description: event.target.value })} /></div>
-    <div className="space-y-2"><Label htmlFor="expiry-date">Expiry Date <span className="text-muted-foreground">(where applicable)</span></Label><Input id="expiry-date" type="date" value={values.expiryDate} onChange={(event) => setValues({ ...values, expiryDate: event.target.value })} /></div>
-    <DialogFooter><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button><Button type="submit" disabled={saving}>{saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}{reupload ? "Re-upload" : "Upload Document"}</Button></DialogFooter>
-  </form></DialogContent></Dialog>;
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden bg-background border-border shadow-2xl">
+        <DialogHeader className="p-6 pb-4 border-b border-border shrink-0">
+          <DialogTitle>{reupload ? "Re-upload Document" : "Upload Document"}</DialogTitle>
+          <DialogDescription>
+            {reupload
+              ? "Replace the rejected file. It will be sent for verification again."
+              : "Upload a personal employment document for verification."}
+          </DialogDescription>
+        </DialogHeader>
+        <form
+          className="flex flex-col flex-1 min-h-0 overflow-hidden"
+          onSubmit={(event) => {
+            event.preventDefault();
+            onSubmit(values, reupload);
+          }}
+        >
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="document-name">Document Name</Label>
+                <Input
+                  id="document-name"
+                  value={values.name}
+                  required
+                  onChange={(event) => setValues({ ...values, name: event.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="document-type">Document Type</Label>
+                <Input
+                  id="document-type"
+                  value={values.type}
+                  required
+                  placeholder="e.g. Passport"
+                  onChange={(event) => setValues({ ...values, type: event.target.value })}
+                />
+              </div>
+            </div>
+            {!reupload ? (
+              <div className="space-y-2">
+                <Label>Document Category</Label>
+                <Select
+                  value={values.category}
+                  onValueChange={(category: DocumentCategoryLabel) => setValues({ ...values, category })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {CATEGORY_OPTIONS.map((category) => (
+                      <SelectItem key={category} value={category}>{category}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : null}
+            <div className="space-y-2">
+              <Label htmlFor="document-file">File Upload</Label>
+              <Input
+                id="document-file"
+                type="file"
+                required
+                onChange={(event) => setValues({ ...values, file: event.target.files?.[0] || null })}
+              />
+              {values.file ? <p className="text-xs text-muted-foreground">Selected: {values.file.name}</p> : null}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="document-description">Description <span className="text-muted-foreground">(optional)</span></Label>
+              <Textarea
+                id="document-description"
+                value={values.description}
+                onChange={(event) => setValues({ ...values, description: event.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="expiry-date">Expiry Date <span className="text-muted-foreground">(where applicable)</span></Label>
+              <Input
+                id="expiry-date"
+                type="date"
+                value={values.expiryDate}
+                onChange={(event) => setValues({ ...values, expiryDate: event.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter className="p-4 px-6 border-t border-border bg-card/40 shrink-0">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={saving}>
+              {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+              {reupload ? "Re-upload" : "Upload Document"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 function LoadingState() {

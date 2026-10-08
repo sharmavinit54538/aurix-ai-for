@@ -6,23 +6,24 @@ import { useDocumentCategories } from "@/features/documents/hooks/useDocumentCat
 import { useDocumentSummary } from "@/features/documents/hooks/useDocumentSummary";
 import { useDocumentsList } from "@/features/documents/hooks/useDocumentsList";
 import { useDocumentMutations } from "@/features/documents/hooks/useDocumentMutations";
+
 import { DocumentsToolbar } from "@/features/documents/components/DocumentsToolbar";
 import { DocumentsStatsCards } from "@/features/documents/components/DocumentsStatsCards";
 import { DocumentsTable } from "@/features/documents/components/DocumentsTable";
-import { DocumentPreviewSheet } from "@/features/documents/components/DocumentPreviewSheet";
+import { ActivityLog } from "@/features/documents/components/ActivityLog";
 import { UploadDocumentDialog } from "@/features/documents/components/UploadDocumentDialog";
+import { DocumentGeneratorDialog } from "@/features/documents/components/DocumentGeneratorDialog";
+import { DocumentPreviewSheet } from "@/features/documents/components/DocumentPreviewSheet";
 import { RejectDialog } from "@/features/documents/components/RejectDialog";
 import { ReuploadDialog } from "@/features/documents/components/ReuploadDialog";
 import { DeleteDialog } from "@/features/documents/components/DeleteDialog";
-import { DocumentGeneratorDialog } from "@/features/documents/components/DocumentGeneratorDialog";
-import { ActivityLog } from "@/features/documents/components/ActivityLog";
 import type { DocumentFilters, DocumentItem } from "@/features/documents/lib/types";
 
 export function DocumentsPage() {
   const ws = useAurix();
   const userRole = ws.user?.role;
 
-  // Step 0: Resolve caller employee profile UUID
+  // Resolve caller employee profile UUID
   const { employeeProfileId, isEmployeeRole } = useCurrentEmployeeProfile();
 
   // Categories
@@ -35,7 +36,7 @@ export function DocumentsPage() {
     refetch: refetchCategories,
   } = useDocumentCategories();
 
-  // Summary & Expiring Stats
+  // Real Summary & Expiring Stats
   const {
     summary,
     expiringDocs,
@@ -112,7 +113,7 @@ export function DocumentsPage() {
   const canUpload = canDo(userRole, "upload");
   const canGenerate = canDo(userRole, "generate");
 
-  // Handler for direct download from row
+  // Actions
   const handleDownloadRow = async (doc: DocumentItem) => {
     setPreviewDoc(doc);
   };
@@ -122,6 +123,8 @@ export function DocumentsPage() {
     if (previewDoc?.id === doc.id) {
       setPreviewDoc((prev) => (prev ? { ...prev, status: "VERIFIED", isVerified: true } : null));
     }
+    refetchSummary();
+    refetchDocs();
   };
 
   const handleConfirmReject = async (id: string, comments: string) => {
@@ -131,6 +134,8 @@ export function DocumentsPage() {
         prev ? { ...prev, status: "REJECTED", rejectionReason: comments } : null
       );
     }
+    refetchSummary();
+    refetchDocs();
   };
 
   const handleConfirmReupload = async (id: string, comments: string) => {
@@ -140,6 +145,8 @@ export function DocumentsPage() {
         prev ? { ...prev, status: "PENDING", rejectionReason: comments } : null
       );
     }
+    refetchSummary();
+    refetchDocs();
   };
 
   const handleConfirmDelete = async (doc: DocumentItem) => {
@@ -147,12 +154,29 @@ export function DocumentsPage() {
     if (previewDoc?.id === doc.id) {
       setPreviewDoc(null);
     }
+    refetchSummary();
+    refetchDocs();
   };
 
   const handleRetryAll = () => {
     refetchDocs();
     refetchSummary();
     if (isCategoriesError) refetchCategories();
+  };
+
+  // Quick stat click filter
+  const handleStatCardClick = (metricKey: string) => {
+    if (metricKey === "pending") {
+      handleFilterChange({ tab: "Pending", page: 1 });
+    } else if (metricKey === "verified") {
+      handleFilterChange({ tab: "Verified", page: 1 });
+    } else if (metricKey === "rejected") {
+      handleFilterChange({ tab: "Rejected", page: 1 });
+    } else if (metricKey === "expiring" || metricKey === "expired") {
+      handleFilterChange({ tab: "Expired", page: 1 });
+    } else {
+      handleFilterChange({ tab: "all", page: 1 });
+    }
   };
 
   return (
@@ -171,8 +195,12 @@ export function DocumentsPage() {
         isEmployeeRole={isEmployeeRole}
       />
 
-      {/* 2. STATS CARDS */}
-      <DocumentsStatsCards summary={summary} isLoading={isLoadingSummary} />
+      {/* 2. TOP DASHBOARD STATS INDICATORS (6 REAL BACKEND STATS) */}
+      <DocumentsStatsCards
+        summary={summary}
+        isLoading={isLoadingSummary}
+        onSelectMetric={handleStatCardClick}
+      />
 
       {/* 3. SERVER-PAGINATED DATA TABLE */}
       <DocumentsTable
@@ -190,9 +218,13 @@ export function DocumentsPage() {
         onDownload={handleDownloadRow}
         userRole={userRole}
         currentEmployeeProfileId={employeeProfileId}
+        onVerify={handleVerify}
+        onReject={(doc) => setRejectDoc(doc)}
+        onRequestReupload={(doc) => setReuploadDoc(doc)}
+        showVerificationActions={true}
       />
 
-      {/* 4. ACTIVITY AUDIT LOG */}
+      {/* 4. ACTIVITY & AUDIT LOGS */}
       <ActivityLog />
 
       {/* 5. UPLOAD DOCUMENT DIALOG */}
@@ -208,7 +240,7 @@ export function DocumentsPage() {
         isUploading={isUploading}
       />
 
-      {/* 6. AI DOCUMENT GENERATOR DIALOG */}
+      {/* 6. HR LETTERS, ID CARDS & TEMPLATES SUITE DIALOG */}
       {canGenerate && (
         <DocumentGeneratorDialog
           open={generateOpen}
@@ -216,7 +248,7 @@ export function DocumentsPage() {
         />
       )}
 
-      {/* 7. PREVIEW SLIDE-OUT SHEET */}
+      {/* 7. DOCUMENT PREVIEW SHEET */}
       <DocumentPreviewSheet
         doc={previewDoc}
         open={Boolean(previewDoc)}
@@ -230,7 +262,7 @@ export function DocumentsPage() {
         userRole={userRole}
       />
 
-      {/* 8. REJECT DIALOG */}
+      {/* 8. REJECT REASON DIALOG */}
       <RejectDialog
         open={Boolean(rejectDoc)}
         onOpenChange={(open) => {
@@ -241,7 +273,7 @@ export function DocumentsPage() {
         isRejecting={isRejecting}
       />
 
-      {/* 9. RE-UPLOAD DIALOG */}
+      {/* 9. RE-UPLOAD REQUEST DIALOG */}
       <ReuploadDialog
         open={Boolean(reuploadDoc)}
         onOpenChange={(open) => {

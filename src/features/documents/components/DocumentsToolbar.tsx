@@ -96,10 +96,10 @@ export const DocumentsToolbar: React.FC<DocumentsToolbarProps> = ({
           <Button
             onClick={onOpenGenerator}
             className="h-9 gap-2 bg-gradient-brand text-brand-foreground hover:opacity-90 cursor-pointer"
-            aria-label="AI Document Generator"
+            aria-label="Generate HR Letter"
           >
             <Wand2 className="h-4 w-4" />
-            AI Document Generator
+            Generate HR Letter
           </Button>
         )}
       </div>

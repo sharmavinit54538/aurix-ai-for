@@ -12,26 +12,63 @@ interface UseDocumentsListOptions {
   isEmployeeRole: boolean;
 }
 
+function matchesExpiryWindow(doc: DocumentItem, window?: string): boolean {
+  if (!window || window === "all") return true;
+  if (!doc.expiryDate) return window === "valid";
+
+  const expiryTime = new Date(doc.expiryDate).getTime();
+  if (isNaN(expiryTime)) return true;
+
+  const now = Date.now();
+  const diffDays = Math.ceil((expiryTime - now) / (1000 * 60 * 60 * 24));
+
+  if (window === "expired") return diffDays <= 0;
+  if (window === "7d") return diffDays > 0 && diffDays <= 7;
+  if (window === "30d") return diffDays > 0 && diffDays <= 30;
+  if (window === "60d") return diffDays > 0 && diffDays <= 60;
+  if (window === "valid") return diffDays > 60;
+
+  return true;
+}
+
 export function useDocumentsList({
   filters,
   categoriesMap,
   currentEmployeeProfileId,
   isEmployeeRole,
 }: UseDocumentsListOptions) {
-  const { tab, search, categoryId, status, sortBy, order, page, limit } = filters;
+  const {
+    tab,
+    search,
+    employeeId,
+    categoryId,
+    documentType,
+    status,
+    verificationStatus,
+    expiryWindow,
+    sortBy,
+    order,
+    page,
+    limit,
+  } = filters;
+
+  const effectiveEmployeeId = isEmployeeRole ? currentEmployeeProfileId : employeeId;
 
   const queryKey = [
     ...DOCUMENTS_LIST_QUERY_KEY,
     {
       tab,
       search: search || "",
+      employeeId: effectiveEmployeeId || "",
       categoryId: categoryId || "",
+      documentType: documentType || "",
       status: status || "",
+      verificationStatus: verificationStatus || "",
+      expiryWindow: expiryWindow || "",
       sortBy: sortBy || "created_at",
       order: order || "desc",
       page,
       limit,
-      currentEmployeeProfileId: isEmployeeRole ? currentEmployeeProfileId : "",
     },
   ];
 
@@ -42,8 +79,8 @@ export function useDocumentsList({
       meta: PaginationMeta;
       hasPartialError?: boolean;
     }> => {
-      // 1. Tab = "Company Documents"
-      if (tab === "Company Documents") {
+      // 1. Company Documents Only
+      if (tab === "company-docs" || tab === "Company Documents") {
         const res = await documentsApi.getCompanyDocuments({
           category_id: categoryId,
           search,
@@ -66,21 +103,25 @@ export function useDocumentsList({
         };
       }
 
-      // 2. Tab = "Employee Documents", "Pending", "Verified", "Rejected", "Expired"
+      // 2. Employee Documents / Verification Queue / Expiry
       if (
+        tab === "employee-docs" ||
         tab === "Employee Documents" ||
+        tab === "verification" ||
         tab === "Pending" ||
         tab === "Verified" ||
         tab === "Rejected" ||
+        tab === "expiry" ||
         tab === "Expired"
       ) {
         let apiStatus: string | undefined = undefined;
         if (tab === "Pending") apiStatus = "PENDING";
         else if (tab === "Verified") apiStatus = "VERIFIED";
         else if (tab === "Rejected") apiStatus = "REJECTED";
+        else if (verificationStatus && verificationStatus !== "ALL") apiStatus = verificationStatus;
 
         const res = await documentsApi.getEmployeeDocuments({
-          employee_id: isEmployeeRole ? currentEmployeeProfileId : undefined,
+          employee_id: effectiveEmployeeId,
           category_id: categoryId,
           status: apiStatus || status,
           search,
@@ -94,8 +135,20 @@ export function useDocumentsList({
           mapBackendDocument(d, "employee", categoriesMap)
         );
 
+        // Client-side refinement for document type or expiry window if applicable
+        if (documentType) {
+          const dtLower = documentType.toLowerCase();
+          items = items.filter(
+            (d) =>
+              (d.documentType && d.documentType.toLowerCase().includes(dtLower)) ||
+              d.categoryName.toLowerCase().includes(dtLower)
+          );
+        }
+
         if (tab === "Expired") {
           items = items.filter((d) => d.isExpired);
+        } else if (tab === "expiry" || expiryWindow) {
+          items = items.filter((d) => matchesExpiryWindow(d, expiryWindow));
         }
 
         return {
@@ -113,7 +166,7 @@ export function useDocumentsList({
       // Fetch both employee documents and company documents
       const [empRes, compRes] = await Promise.allSettled([
         documentsApi.getEmployeeDocuments({
-          employee_id: isEmployeeRole ? currentEmployeeProfileId : undefined,
+          employee_id: effectiveEmployeeId,
           category_id: categoryId,
           status,
           search,
@@ -154,7 +207,6 @@ export function useDocumentsList({
         const compDocs = (compRes.value.data || []).map((d) =>
           mapBackendDocument(d, "company", categoriesMap)
         );
-        // Avoid duplicate IDs if any
         const existingIds = new Set(allItems.map((d) => d.id));
         for (const cd of compDocs) {
           if (!existingIds.has(cd.id)) {
@@ -165,8 +217,21 @@ export function useDocumentsList({
         if (compRes.value.meta?.has_more) hasMore = true;
       }
 
+      let filteredItems = allItems;
+      if (documentType) {
+        const dtLower = documentType.toLowerCase();
+        filteredItems = filteredItems.filter(
+          (d) =>
+            (d.documentType && d.documentType.toLowerCase().includes(dtLower)) ||
+            d.categoryName.toLowerCase().includes(dtLower)
+        );
+      }
+      if (expiryWindow) {
+        filteredItems = filteredItems.filter((d) => matchesExpiryWindow(d, expiryWindow));
+      }
+
       return {
-        items: allItems,
+        items: filteredItems,
         meta: {
           total: totalCount,
           page,
@@ -176,18 +241,16 @@ export function useDocumentsList({
         hasPartialError,
       };
     },
-    staleTime: 60 * 1000, // 1 min
-    placeholderData: (previousData) => previousData,
+    staleTime: 60 * 1000,
   });
 
   return {
     items: query.data?.items ?? [],
-    meta: query.data?.meta ?? { total: 0, page, limit, has_more: false },
-    hasPartialError: query.data?.hasPartialError ?? false,
+    meta: query.data?.meta ?? { total: 0, page: 1, limit, has_more: false },
     isLoading: query.isLoading,
-    isFetching: query.isFetching,
     isError: query.isError,
     error: query.error,
+    hasPartialError: query.data?.hasPartialError ?? false,
     refetch: query.refetch,
   };
 }
