@@ -8,12 +8,12 @@ import type {
 import { getExitDocumentPreviewText } from "../../utils/documentTemplates";
 import type { useExitModalForms } from "../useExitModalForms";
 
+import type { Workspace } from "@/lib/aurix-store";
+
 interface UseSettlementActionsProps {
   saveExit: (caseData: ExitCase) => Promise<void> | void;
   forms: ReturnType<typeof useExitModalForms>;
-  authWs: {
-    user?: { fullName?: string };
-  };
+  authWs: Workspace;
 }
 
 export function useSettlementActions({ saveExit, forms, authWs }: UseSettlementActionsProps) {

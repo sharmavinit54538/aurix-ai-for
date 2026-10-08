@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { ExitCase } from "../../types";
+import type { ExitCase } from "../types";
 import { ExitPipelineFilterBar } from "./pipeline/ExitPipelineFilterBar";
 import { ExitPipelineTableRow } from "./pipeline/ExitPipelineTableRow";
 import { ExitPipelinePagination } from "./pipeline/ExitPipelinePagination";

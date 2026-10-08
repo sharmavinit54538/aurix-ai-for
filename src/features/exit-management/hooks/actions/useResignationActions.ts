@@ -5,22 +5,13 @@ import type { ExitCase, ExitTimelineEvent } from "../../types";
 import { createNewExitCase } from "../../utils/createExitCase";
 import type { useExitModalForms } from "../useExitModalForms";
 
+import type { Workspace } from "@/lib/aurix-store";
+
 interface UseResignationActionsProps {
   saveExit: (caseData: ExitCase) => Promise<void> | void;
   allAssets: any[];
   forms: ReturnType<typeof useExitModalForms>;
-  authWs: {
-    user?: { fullName?: string };
-    employees: Array<{
-      id: string;
-      fullName: string;
-      employeeId: string;
-      department?: string;
-      designation?: string;
-      joiningDate?: string;
-      managerName?: string;
-    }>;
-  };
+  authWs: Workspace;
 }
 
 export function useResignationActions({
@@ -202,4 +193,4 @@ export function useResignationActions({
     handleRejectSubmit,
     handleStartClearance,
   };
-}
+} 

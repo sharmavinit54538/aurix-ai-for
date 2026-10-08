@@ -4,22 +4,13 @@ import { useResignationActions } from "./actions/useResignationActions";
 import { useClearanceActions } from "./actions/useClearanceActions";
 import { useSettlementActions } from "./actions/useSettlementActions";
 
+import type { Workspace } from "@/lib/aurix-store";
+
 interface UseExitActionsProps {
   saveExit: (caseData: ExitCase) => Promise<void> | void;
   allAssets: any[];
   forms: ReturnType<typeof useExitModalForms>;
-  authWs: {
-    user?: { fullName?: string };
-    employees: Array<{
-      id: string;
-      fullName: string;
-      employeeId: string;
-      department?: string;
-      designation?: string;
-      joiningDate?: string;
-      managerName?: string;
-    }>;
-  };
+  authWs: Workspace;
 }
 
 export function useExitActions({ saveExit, allAssets, forms, authWs }: UseExitActionsProps) {

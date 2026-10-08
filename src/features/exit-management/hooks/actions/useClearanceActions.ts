@@ -3,12 +3,12 @@ import { toast } from "sonner";
 import type { ExitCase } from "../../types";
 import type { useExitModalForms } from "../useExitModalForms";
 
+import type { Workspace } from "@/lib/aurix-store";
+
 interface UseClearanceActionsProps {
   saveExit: (caseData: ExitCase) => Promise<void> | void;
   forms: ReturnType<typeof useExitModalForms>;
-  authWs: {
-    user?: { fullName?: string };
-  };
+  authWs: Workspace;
 }
 
 export function useClearanceActions({ saveExit, forms, authWs }: UseClearanceActionsProps) {
