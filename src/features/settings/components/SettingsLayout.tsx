@@ -2,13 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   Building2,
   User,
-  Users,
-  Clock,
-  CalendarDays,
-  Banknote,
-  FileText,
-  Package,
-  Bell,
   AlertTriangle,
 } from "lucide-react";
 import { useAurix } from "@/lib/aurix-store";
@@ -85,62 +78,6 @@ const SETTINGS_CARDS: SettingsCardMeta[] = [
     icon: User,
     color: "from-indigo-500/20 to-violet-500/20 text-indigo-400 border-indigo-500/30",
   },
-  {
-    id: "employees",
-    label: "Employees",
-    description:
-      "Structure departments, organizational designations, employee ID generation, notice period & probation.",
-    icon: Users,
-    color: "from-emerald-500/20 to-teal-500/20 text-emerald-400 border-emerald-500/30",
-  },
-  {
-    id: "attendance",
-    label: "Attendance",
-    description:
-      "Work hours, shift timing rules, grace periods, late-mark penalties, and live biometric face verification.",
-    icon: Clock,
-    color: "from-cyan-500/20 to-teal-500/20 text-cyan-400 border-cyan-500/30",
-  },
-  {
-    id: "leave",
-    label: "Leave",
-    description:
-      "Annual statutory leave quotas, negative balance prevention, carry-forward rules, and approval workflows.",
-    icon: CalendarDays,
-    color: "from-amber-500/20 to-orange-500/20 text-amber-400 border-amber-500/30",
-  },
-  {
-    id: "payroll",
-    label: "Payroll",
-    description:
-      "Indian statutory deductions (PF, ESI, Professional Tax, TDS), CTC components, and pay disbursement cadence.",
-    icon: Banknote,
-    color: "from-purple-500/20 to-violet-500/20 text-purple-400 border-purple-500/30",
-  },
-  {
-    id: "documents",
-    label: "Documents",
-    description:
-      "Salary slips vs provision slips separation, mandatory onboarding documents, compliance rules & expiry alerts.",
-    icon: FileText,
-    color: "from-rose-500/20 to-pink-500/20 text-rose-400 border-rose-500/30",
-  },
-  {
-    id: "assets",
-    label: "Assets",
-    description:
-      "Company equipment inventory, hardware allocation acknowledgment, serial logs, and return protocols.",
-    icon: Package,
-    color: "from-blue-600/20 to-cyan-500/20 text-blue-300 border-blue-500/30",
-  },
-  {
-    id: "notifications",
-    label: "Notifications",
-    description:
-      "HR transactional email alerts (leave, attendance, payroll, docs) with live SMTP test email dispatch.",
-    icon: Bell,
-    color: "from-fuchsia-500/20 to-purple-500/20 text-fuchsia-400 border-fuchsia-500/30",
-  },
 ];
 
 interface SettingsLayoutProps {
@@ -208,8 +145,8 @@ export function SettingsLayout({ initialSection, onSectionChange }: SettingsLayo
       {!activeSection ? (
         <div className="space-y-6">
 
-          {/* Grid of Module Cards (Workforce Style) */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Grid of Module Cards */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 max-w-4xl">
             {SETTINGS_CARDS.map((card) => {
               const Icon = card.icon;
               const accessible = canAccessSection(userRole, card.id);

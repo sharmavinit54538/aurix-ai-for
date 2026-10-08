@@ -48,6 +48,7 @@ export function useAssetForms(
   const [warrantyUntil, setWarrantyUntil] = useState("");
   const [location, setLocation] = useState("");
   const [notes, setNotes] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
 
   // Assignment Form State
   const [assignEmpId, setAssignEmpId] = useState("");
@@ -84,6 +85,7 @@ export function useAssetForms(
       purchase_cost: costNum,
       location: location || "HQ IT Desk",
       notes: notes,
+      ...(imageUrl ? { imageUrl, image_url: imageUrl } : {}),
     };
 
     const maxAttempts = 3;
@@ -106,6 +108,7 @@ export function useAssetForms(
         setWarrantyUntil("");
         setNotes("");
         setLocation("");
+        setImageUrl("");
         return;
       } catch (err: any) {
         lastError = err;
@@ -150,6 +153,7 @@ export function useAssetForms(
     setWarrantyUntil(asset.warrantyUntil);
     setLocation(asset.location || "");
     setNotes(asset.notes || "");
+    setImageUrl(asset.imageUrl || "");
     setEditOpen(true);
   };
 
@@ -171,6 +175,7 @@ export function useAssetForms(
         warranty_until: warrantyUntil,
         location,
         notes,
+        ...(imageUrl ? { imageUrl, image_url: imageUrl } : {}),
       },
     });
   };
@@ -329,6 +334,7 @@ export function useAssetForms(
     warrantyUntil, setWarrantyUntil,
     location, setLocation,
     notes, setNotes,
+    imageUrl, setImageUrl,
     assignEmpId, setAssignEmpId,
     assignReturnDate, setAssignReturnDate,
     assignNotes, setAssignNotes,

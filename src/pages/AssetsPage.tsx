@@ -9,7 +9,6 @@ import {
   AssetsStatsCards,
   AssetsTopActions,
   AssetsInventoryTable,
-  AssetsSidebarWidgets,
   AssetsReportsTab,
   AddAssetModal,
   EditAssetModal,
@@ -110,44 +109,31 @@ export function AssetsPage() {
         </TabsList>
 
         <TabsContent value="inventory" className="space-y-4">
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
-            <div className="space-y-4 lg:col-span-3">
-              <AssetsInventoryTable
-                q={q}
-                setQ={setQ}
-                statusFilter={statusFilter}
-                setStatusFilter={setStatusFilter}
-                currentPage={currentPage}
-                setCurrentPage={setCurrentPage}
-                totalPages={totalPages}
-                paginatedAssets={paginatedAssets}
-                employees={authWs.employees}
-                onSelectAsset={setDetailAsset}
-                onOpenQr={asset => {
-                  forms.setTargetAsset(asset);
-                  forms.setQrOpen(true);
-                }}
-                onAssignOpen={forms.handleAssignOpen}
-                onReturnAsset={forms.handleReturnAsset}
-                onTransferOpen={forms.handleTransferOpen}
-                onRepairOpen={forms.handleRepairOpen}
-                onEditOpen={forms.handleEditOpen}
-                onDeleteOpen={asset => {
-                  forms.setTargetAsset(asset);
-                  forms.setDeleteOpen(true);
-                }}
-              />
-            </div>
-
-            <AssetsSidebarWidgets
-              assets={assets}
-              scannedAssetTag={forms.scannedAssetTag}
-              setScannedAssetTag={forms.setScannedAssetTag}
-              onScanSimulation={forms.handleScanSimulation}
-              notifications={notifications}
-              onSelectAsset={setDetailAsset}
-            />
-          </div>
+          <AssetsInventoryTable
+            q={q}
+            setQ={setQ}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            totalPages={totalPages}
+            paginatedAssets={paginatedAssets}
+            employees={authWs.employees}
+            onSelectAsset={setDetailAsset}
+            onOpenQr={asset => {
+              forms.setTargetAsset(asset);
+              forms.setQrOpen(true);
+            }}
+            onAssignOpen={forms.handleAssignOpen}
+            onReturnAsset={forms.handleReturnAsset}
+            onTransferOpen={forms.handleTransferOpen}
+            onRepairOpen={forms.handleRepairOpen}
+            onEditOpen={forms.handleEditOpen}
+            onDeleteOpen={asset => {
+              forms.setTargetAsset(asset);
+              forms.setDeleteOpen(true);
+            }}
+          />
         </TabsContent>
 
         <TabsContent value="reports" className="space-y-6">
@@ -186,6 +172,8 @@ export function AssetsPage() {
         setLocation={forms.setLocation}
         notes={forms.notes}
         setNotes={forms.setNotes}
+        imageUrl={forms.imageUrl}
+        setImageUrl={forms.setImageUrl}
       />
 
       <EditAssetModal
