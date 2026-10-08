@@ -113,15 +113,20 @@ export function EmployeeDocumentsPage() {
       {loadError && (
         <Card className="border-rose-500/30 bg-rose-500/10">
           <CardContent className="flex items-center justify-between p-4 text-sm text-rose-400">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4" />
-              <span>{loadError}</span>
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="h-5 w-5 shrink-0 text-rose-400" />
+              <div>
+                <p className="font-semibold text-foreground text-sm">Unable to load documents</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Something went wrong while fetching documents. Please try again.
+                </p>
+              </div>
             </div>
             <Button
               onClick={fetchDocuments}
               variant="outline"
               size="sm"
-              className="border-rose-500/40 text-rose-300 hover:bg-rose-500/20"
+              className="border-rose-500/40 text-foreground hover:bg-rose-500/20 cursor-pointer"
             >
               Retry
             </Button>

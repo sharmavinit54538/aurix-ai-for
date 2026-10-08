@@ -131,6 +131,8 @@ export const CompanyDocumentsSection: React.FC<CompanyDocumentsSectionProps> = (
         onSelectDelete={onSelectDelete}
         onDownload={onDownload}
         userRole={userRole}
+        onOpenUpload={onOpenUpload}
+        canUpload={canUpload}
       />
     </div>
   );

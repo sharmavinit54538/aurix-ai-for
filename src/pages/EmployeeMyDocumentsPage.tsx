@@ -189,8 +189,8 @@ export function EmployeeMyDocumentsPage() {
       const payload = buildIdCardQrPayload({
         employeeId,
         employeeCode: matchedEmployee?.employeeId || employeeId,
-        employeeName: matchedEmployee?.fullName || workspace.user?.fullName || "Employee",
-        companyName: workspace.company?.name || "OFC360 Enterprise Systems",
+        employeeName: matchedEmployee?.fullName || workspace.user?.fullName || "",
+        companyName: workspace.company?.name || "",
       });
       QRCode.toDataURL(payload, {
         margin: 1,
@@ -203,15 +203,15 @@ export function EmployeeMyDocumentsPage() {
   }, [activeTab, employeeId, matchedEmployee, workspace.user, workspace.company]);
 
   const myCardData: EmployeeIdCardData = useMemo(() => {
-    const empCode = matchedEmployee?.employeeId || employeeId || "EMP-001";
-    const name = matchedEmployee?.fullName || workspace.user?.fullName || "Employee Name";
-    const desig = matchedEmployee?.designation || "Software Specialist";
-    const dept = matchedEmployee?.department || "Technology";
+    const empCode = matchedEmployee?.employeeId || employeeId || "—";
+    const name = matchedEmployee?.fullName || workspace.user?.fullName || "—";
+    const desig = matchedEmployee?.designation || "—";
+    const dept = matchedEmployee?.department || "—";
     const joiningDate = matchedEmployee?.joiningDate || new Date().toISOString().split("T")[0];
-    const companyName = workspace.company?.name || "OFC360 Enterprise Systems Ltd.";
+    const companyName = workspace.company?.name || "";
     const companyAddress = workspace.company?.address
       ? `${workspace.company.address}, ${workspace.company.city || ""}, ${workspace.company.state || ""}`.trim().replace(/^,|,$/g, "")
-      : "Plot 42, Cyber City Tech Park, Sector 21, Bengaluru 560100";
+      : "";
 
     return {
       id: `card_${employeeId}`,
@@ -221,13 +221,13 @@ export function EmployeeMyDocumentsPage() {
       designation: desig,
       department: dept,
       joiningDate,
-      bloodGroup: "O+",
+      bloodGroup: (matchedEmployee as { bloodGroup?: string })?.bloodGroup || "",
       companyName,
       companyAddress,
-      emergencyContact: "+91 98765 00000",
-      employeeContact: matchedEmployee?.phone || workspace.user?.phone || "+91 98765 43210",
-      email: matchedEmployee?.email || workspace.user?.email || "employee@ofc360.com",
-      authorizedSignatoryName: "Director – People Operations",
+      emergencyContact: (matchedEmployee as { emergencyContact?: string })?.emergencyContact || "",
+      employeeContact: matchedEmployee?.phone || workspace.user?.phone || "",
+      email: matchedEmployee?.email || workspace.user?.email || "",
+      authorizedSignatoryName: "Authorized Signatory",
       qrPayload: idCardQr,
       terms: STANDARD_ID_CARD_TERMS,
       theme: "navy",
@@ -257,7 +257,7 @@ export function EmployeeMyDocumentsPage() {
       setDocuments(items);
     } catch (error) {
       setDocuments([]);
-      setDocumentsError(errorMessage(error, "Unable to load your documents. Please try again."));
+      setDocumentsError(errorMessage(error, "Something went wrong while fetching documents. Please try again."));
     } finally {
       setIsLoadingDocuments(false);
     }
@@ -266,10 +266,9 @@ export function EmployeeMyDocumentsPage() {
   const loadCategories = useCallback(async () => {
     try {
       setCategories(await myDocumentsApi.listCategories());
-    } catch (error) {
+    } catch {
       // Documents remain accessible; the error is surfaced if the user opens the upload form.
       setCategories([]);
-      console.error("Unable to load document categories", error);
     }
   }, []);
 
@@ -281,7 +280,7 @@ export function EmployeeMyDocumentsPage() {
       setPayslips(result.items);
     } catch (error) {
       setPayslips([]);
-      setPayslipsError(errorMessage(error, "Unable to load your salary slips. Please try again."));
+      setPayslipsError(errorMessage(error, "Something went wrong while fetching documents. Please try again."));
     } finally {
       setIsLoadingPayroll(false);
     }
@@ -294,7 +293,7 @@ export function EmployeeMyDocumentsPage() {
       setProvisionSlips(await myDocumentsApi.listMyProvisionSlips());
     } catch (error) {
       setProvisionSlips([]);
-      setProvisionError(errorMessage(error, "Unable to load your provision slips. Please try again."));
+      setProvisionError(errorMessage(error, "Something went wrong while fetching documents. Please try again."));
     } finally {
       setIsLoadingProvision(false);
     }
@@ -500,6 +499,7 @@ export function EmployeeMyDocumentsPage() {
             onDownload={(document) => void handleDocumentFile(document, "download")}
             onReupload={setReuploadTarget}
             onDelete={(document) => void handleDelete(document)}
+            onUpload={() => setUploadOpen(true)}
           />
         </>
       ) : null}
@@ -592,6 +592,7 @@ function DocumentsTable({
   onDownload,
   onReupload,
   onDelete,
+  onUpload,
 }: {
   documents: EmployeeDocument[];
   categories: DocumentCategory[];
@@ -604,14 +605,22 @@ function DocumentsTable({
   onDownload: (document: EmployeeDocument) => void;
   onReupload: (document: EmployeeDocument) => void;
   onDelete: (document: EmployeeDocument) => void;
+  onUpload?: () => void;
 }) {
   if (isLoading) return <LoadingState />;
   if (error) return <ErrorState message={error} onRetry={onRetry} />;
   if (!documents.length) {
-    return <EmptyState
-      title={filtered ? "No documents found" : "No documents yet"}
-      description={filtered ? "No documents match this filter." : "Upload your employment documents to keep your records up to date."}
-    />;
+    return (
+      <EmptyState
+        title="No documents found"
+        description={
+          filtered
+            ? "Documents uploaded by employees or HR will appear here."
+            : "Documents uploaded by employees or HR will appear here."
+        }
+        onUpload={onUpload}
+      />
+    );
   }
 
   return (
@@ -661,7 +670,7 @@ function SalarySlipsTable({ items, isLoading, error, busyId, onRetry, onFile }: 
 }) {
   if (isLoading) return <LoadingState />;
   if (error) return <ErrorState message={error} onRetry={onRetry} />;
-  if (!items.length) return <EmptyState title="No Salary Slips Available" description="Your salary slips will appear here once they are generated." />;
+  if (!items.length) return <EmptyState title="No documents found" description="Documents uploaded by employees or HR will appear here." />;
   return <div className="overflow-hidden rounded-xl border border-border bg-card/60"><Table><TableHeader><TableRow>
     <TableHead>Pay Period / Month</TableHead><TableHead>Payslip Number</TableHead><TableHead>Gross Salary</TableHead><TableHead>Deductions</TableHead><TableHead>Net Salary</TableHead><TableHead>Generated Date</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead>
   </TableRow></TableHeader><TableBody>{items.map((item) => <TableRow key={item.id}>
@@ -676,7 +685,7 @@ function ProvisionSlipsTable({ items, isLoading, error, busyId, onRetry, onFile 
 }) {
   if (isLoading) return <LoadingState />;
   if (error) return <ErrorState message={error} onRetry={onRetry} />;
-  if (!items.length) return <EmptyState title="No Provision Slips Available" description="Your provision slips will appear here once they are generated." />;
+  if (!items.length) return <EmptyState title="No documents found" description="Documents uploaded by employees or HR will appear here." />;
   return <div className="overflow-hidden rounded-xl border border-border bg-card/60"><Table><TableHeader><TableRow>
     <TableHead>Provision Slip Number</TableHead><TableHead>Pay Period / Month</TableHead><TableHead>Employee Name</TableHead><TableHead>Provisioned Amount</TableHead><TableHead>Generated Date</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead>
   </TableRow></TableHeader><TableBody>{items.map((item) => <TableRow key={item.id}>
@@ -812,11 +821,31 @@ function LoadingState() {
 }
 
 function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
-  return <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-8 text-center"><AlertCircle className="mx-auto h-8 w-8 text-destructive" /><h2 className="mt-3 font-semibold">Unable to load your documents</h2><p className="mx-auto mt-1 max-w-lg text-sm text-muted-foreground">{message}</p><Button className="mt-4" variant="outline" size="sm" onClick={onRetry}><RefreshCw className="mr-2 h-4 w-4" />Try again</Button></div>;
+  return (
+    <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-8 text-center">
+      <AlertCircle className="mx-auto h-8 w-8 text-destructive" />
+      <h2 className="mt-3 font-semibold text-foreground">Unable to load documents</h2>
+      <p className="mx-auto mt-1 max-w-lg text-sm text-muted-foreground">{message || "Something went wrong while fetching documents. Please try again."}</p>
+      <Button className="mt-4 gap-1.5" variant="outline" size="sm" onClick={onRetry}>
+        <RefreshCw className="mr-2 h-4 w-4" />Retry
+      </Button>
+    </div>
+  );
 }
 
-function EmptyState({ title, description }: { title: string; description: string }) {
-  return <div className="rounded-xl border border-dashed border-border bg-card/40 p-10 text-center"><FileCheck2 className="mx-auto h-9 w-9 text-muted-foreground" /><h2 className="mt-3 font-semibold">{title}</h2><p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">{description}</p></div>;
+function EmptyState({ title, description, onUpload }: { title: string; description: string; onUpload?: () => void }) {
+  return (
+    <div className="rounded-xl border border-dashed border-border bg-card/40 p-10 text-center">
+      <FileCheck2 className="mx-auto h-9 w-9 text-muted-foreground" />
+      <h2 className="mt-3 font-semibold text-foreground">{title}</h2>
+      <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">{description}</p>
+      {onUpload && (
+        <Button className="mt-4 gap-1.5" size="sm" onClick={onUpload}>
+          <Upload className="h-4 w-4" /> Upload Document
+        </Button>
+      )}
+    </div>
+  );
 }
 
 export default EmployeeMyDocumentsPage;

@@ -101,7 +101,6 @@ export function useEmployeeDocumentsActions(
       setUploadOpen(false);
       await fetchDocuments();
     } catch (err: any) {
-      console.error("Upload error:", err);
       const errMsg =
         err?.response?.data?.message ||
         err?.response?.data?.detail ||
@@ -142,7 +141,6 @@ export function useEmployeeDocumentsActions(
       setReuploadOpen(false);
       await fetchDocuments();
     } catch (err: any) {
-      console.error("Re-upload error:", err);
       const errMsg =
         err?.response?.data?.message ||
         err?.response?.data?.detail ||
@@ -168,8 +166,7 @@ export function useEmployeeDocumentsActions(
       const blob = await myDocumentsApi.downloadMyDocument(doc.id);
       const url = URL.createObjectURL(blob);
       setPreviewBlobUrl(url);
-    } catch (err) {
-      console.error("Failed to load document preview:", err);
+    } catch {
       if (doc.fileUrl) {
         setPreviewBlobUrl(doc.fileUrl);
       } else {
@@ -201,8 +198,7 @@ export function useEmployeeDocumentsActions(
       );
       triggerFileDownload(blob, downloadName);
       toast.success("Document downloaded successfully.", { id: toastId });
-    } catch (err) {
-      console.error("Download failed:", err);
+    } catch {
       toast.error("Failed to download document from backend storage.", { id: toastId });
     }
   };
@@ -218,7 +214,6 @@ export function useEmployeeDocumentsActions(
       setSelectedDoc(null);
       await fetchDocuments();
     } catch (err: any) {
-      console.error("Delete failed:", err);
       const errMsg =
         err?.response?.data?.message ||
         err?.response?.data?.detail ||
@@ -238,8 +233,7 @@ export function useEmployeeDocumentsActions(
       const filename = `Payslip_${slip.periodName?.replace(/\s+/g, "_") || "slip"}_${slip.payslipNumber || ""}.pdf`;
       triggerFileDownload(blob, filename);
       toast.success("Salary slip downloaded successfully.", { id: toastId });
-    } catch (err) {
-      console.error("Payslip download failed:", err);
+    } catch {
       toast.error("Unable to download salary slip PDF.", { id: toastId });
     }
   };
@@ -252,8 +246,7 @@ export function useEmployeeDocumentsActions(
       const filename = `ProvisionSlip_${slip.periodName?.replace(/\s+/g, "_") || "slip"}_${slip.slipNumber || ""}.pdf`;
       triggerFileDownload(blob, filename);
       toast.success("Provision slip downloaded successfully.", { id: toastId });
-    } catch (err) {
-      console.error("Provision slip download failed:", err);
+    } catch {
       toast.error("Unable to download provision slip.", { id: toastId });
     }
   };

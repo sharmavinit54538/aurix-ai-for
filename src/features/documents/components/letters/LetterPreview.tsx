@@ -125,16 +125,18 @@ export const LetterPreview: React.FC<LetterPreviewProps> = ({
             )}
             <div>
               <h1 className="font-bold text-lg text-slate-900 dark:text-white leading-tight">
-                {company?.name || "OFC360 Enterprise Systems Ltd."}
+                {company?.name || "Company"}
               </h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                {company?.address
-                  ? `${company.address}, ${company.city || ""}, ${company.state || ""}`.replace(/^,|,$/g, "")
-                  : "Plot 42, Cyber City Tech Park, Sector 21, Bengaluru, Karnataka 560100"}
-              </p>
-              <p className="text-[11px] text-slate-400 dark:text-slate-500">
-                CIN: U72200KA2024PTC184920 • www.ofc360.com • hr@ofc360.com
-              </p>
+              {company?.address && (
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {[company.address, company.city, company.state].filter(Boolean).join(", ")}
+                </p>
+              )}
+              {(company?.website || company?.email || company?.phone) && (
+                <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                  {[company.website, company.email, company.phone].filter(Boolean).join(" • ")}
+                </p>
+              )}
             </div>
           </div>
 
@@ -163,11 +165,11 @@ export const LetterPreview: React.FC<LetterPreviewProps> = ({
           <div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">For and on behalf of</p>
             <p className="font-bold text-sm text-slate-900 dark:text-white">
-              {company?.name || "OFC360 Enterprise Systems Ltd."}
+              {company?.name || "Company"}
             </p>
             <div className="h-10 my-1 flex items-center">
               <span className="font-serif italic text-base text-indigo-600 dark:text-indigo-400 opacity-90">
-                Priya Menon
+                Authorized Signatory
               </span>
             </div>
             <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">

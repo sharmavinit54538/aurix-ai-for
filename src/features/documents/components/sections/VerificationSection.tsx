@@ -156,10 +156,11 @@ export const VerificationSection: React.FC<VerificationSectionProps> = ({
             ) : filteredItems.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-12 text-xs text-muted-foreground">
-                  <CheckCircle className="h-8 w-8 mx-auto mb-2 text-emerald-500/60" />
-                  {filterTab === "PENDING"
-                    ? "Great job! No pending documents requiring verification."
-                    : "No documents found in this verification status."}
+                  <CheckCircle className="h-8 w-8 mx-auto mb-2 text-muted-foreground/40" />
+                  <p className="font-semibold text-foreground text-sm">No documents found</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Documents uploaded by employees or HR will appear here.
+                  </p>
                 </TableCell>
               </TableRow>
             ) : (

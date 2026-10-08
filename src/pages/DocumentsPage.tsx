@@ -222,6 +222,8 @@ export function DocumentsPage() {
         onReject={(doc) => setRejectDoc(doc)}
         onRequestReupload={(doc) => setReuploadDoc(doc)}
         showVerificationActions={true}
+        onOpenUpload={() => setUploadOpen(true)}
+        canUpload={canUpload}
       />
 
       {/* 4. ACTIVITY & AUDIT LOGS */}

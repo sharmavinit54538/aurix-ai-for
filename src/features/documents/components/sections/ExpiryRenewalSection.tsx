@@ -190,7 +190,10 @@ export const ExpiryRenewalSection: React.FC<ExpiryRenewalSectionProps> = ({
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-12 text-xs text-muted-foreground">
                   <CalendarClock className="h-8 w-8 mx-auto mb-2 text-muted-foreground/40" />
-                  No documents found matching the selected expiry window.
+                  <p className="font-semibold text-foreground text-sm">No documents found</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Documents uploaded by employees or HR will appear here.
+                  </p>
                 </TableCell>
               </TableRow>
             ) : (

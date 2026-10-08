@@ -39,8 +39,8 @@ export default function DocumentGeneratorPage() {
         setEmployees(
           items.map((e: any) => ({
             id: String(e.id || e.employee_id || ""),
-            name: e.full_name || e.fullName || e.name || "Employee",
-            role: e.designation || e.role || "Team Member",
+            name: e.full_name || e.fullName || e.name || "",
+            role: e.designation || e.role || "",
           }))
         );
         return;
@@ -79,6 +79,7 @@ export default function DocumentGeneratorPage() {
     }
     const t = TEMPLATES.find((x) => x.id === selectedTemplate)!;
     setGenerating(true);
+    const companyName = ws.company?.name || "Company";
     try {
       const res = await apiInstance.post("/api/v1/documents/generate", {
         employee_id: selectedEmpId || undefined,
@@ -97,12 +98,12 @@ export default function DocumentGeneratorPage() {
 
 Date: ${new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
 To: ${name.trim()}
-Designation: ${role.trim() || "Team Member"}
-Organization: OFC360 Enterprise Systems
+Designation: ${role.trim() || "—"}
+Organization: ${companyName}
 
 Dear ${name.trim()},
 
-This official communication confirms the execution and terms of your ${t.title.toLowerCase()} with OFC360 Enterprise Systems.
+This official communication confirms the execution and terms of your ${t.title.toLowerCase()} with ${companyName}.
 
 The terms and provisions outlined herein have been recorded within the enterprise human resources management system and are binding as per organizational governance policy.
 
@@ -111,7 +112,7 @@ For any queries regarding this documentation, please contact the People Operatio
 Sincerely,
 
 People Operations & HR Management Office
-OFC360 Enterprise Systems`
+${companyName}`
         );
       }
       toast.success(`${t.title} generated successfully`);
@@ -124,7 +125,7 @@ OFC360 Enterprise Systems`
 
 Date: ${new Date().toLocaleDateString()}
 Recipient: ${name.trim()}
-Role: ${role.trim() || "Team Member"}
+Role: ${role.trim() || "—"}
 
 Notice: Document generated in local offline mode. Re-run when network service is restored.`
       );

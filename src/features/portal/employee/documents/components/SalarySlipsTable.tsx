@@ -38,10 +38,9 @@ export const SalarySlipsTable: React.FC<SalarySlipsTableProps> = ({
     return (
       <div className="py-16 text-center space-y-3">
         <FileSpreadsheet className="h-10 w-10 text-muted-foreground/40 mx-auto" />
-        <h3 className="font-semibold text-base">No Salary Slips Available</h3>
+        <h3 className="font-semibold text-base">No documents found</h3>
         <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-          Your salary slips will appear here once official payroll runs are finalized and
-          disbursed.
+          Documents uploaded by employees or HR will appear here.
         </p>
       </div>
     );

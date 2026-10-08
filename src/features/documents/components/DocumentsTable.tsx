@@ -1,5 +1,5 @@
 import React from "react";
-import { Eye, Download, Trash2, FileText, AlertCircle, RefreshCw, CheckCircle, XCircle } from "lucide-react";
+import { Eye, Download, Trash2, FileText, AlertCircle, RefreshCw, CheckCircle, XCircle, Upload } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -26,6 +26,8 @@ interface DocumentsTableProps {
   userRole?: string | null;
   currentEmployeeProfileId?: string;
   showVerificationActions?: boolean;
+  onOpenUpload?: () => void;
+  canUpload?: boolean;
 }
 
 export const DocumentsTable: React.FC<DocumentsTableProps> = ({
@@ -47,7 +49,10 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
   userRole,
   currentEmployeeProfileId,
   showVerificationActions = false,
+  onOpenUpload,
+  canUpload,
 }) => {
+  const isUploadAllowed = canUpload ?? canDo(userRole, "upload");
   const totalPages = Math.max(1, Math.ceil(meta.total / (meta.limit || 10)));
   const currentPage = meta.page;
 
@@ -135,14 +140,17 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
               <TableRow>
                 <TableCell colSpan={8} className="text-center py-12 text-xs text-muted-foreground">
                   <AlertCircle className="h-8 w-8 mx-auto mb-2 text-rose-500/70" />
-                  <p className="font-semibold text-foreground">Failed to load documents.</p>
+                  <p className="font-semibold text-foreground text-sm">Unable to load documents</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Something went wrong while fetching documents. Please try again.
+                  </p>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={onRetry}
                     className="mt-3 h-8 text-xs cursor-pointer"
                   >
-                    Retry Loading
+                    Retry
                   </Button>
                 </TableCell>
               </TableRow>
@@ -150,7 +158,20 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
               <TableRow>
                 <TableCell colSpan={8} className="text-center py-12 text-xs text-muted-foreground">
                   <FileText className="h-8 w-8 mx-auto mb-2 text-muted-foreground/40" />
-                  No documents found matching your filters.
+                  <p className="font-semibold text-foreground text-sm">No documents found</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Documents uploaded by employees or HR will appear here.
+                  </p>
+                  {isUploadAllowed && onOpenUpload && (
+                    <Button
+                      size="sm"
+                      onClick={onOpenUpload}
+                      className="mt-3 h-8 text-xs cursor-pointer"
+                    >
+                      <Upload className="h-3.5 w-3.5 mr-1.5" />
+                      Upload Document
+                    </Button>
+                  )}
                 </TableCell>
               </TableRow>
             ) : (

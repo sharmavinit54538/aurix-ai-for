@@ -98,30 +98,19 @@ export function EmployeeDocumentsTable({
     return (
       <div className="py-16 text-center space-y-3">
         <FileText className="h-10 w-10 text-muted-foreground/40 mx-auto" />
-        {documentsCount === 0 ? (
-          <>
-            <h3 className="font-semibold text-base">No documents yet</h3>
-            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-              Upload your employment documents to keep your records up to date.
-            </p>
-            <div className="pt-2">
-              <Button
-                onClick={onOpenUploadModal}
-                size="sm"
-                className="gap-1.5 bg-primary text-primary-foreground"
-              >
-                <Upload className="h-3.5 w-3.5" /> Upload Document
-              </Button>
-            </div>
-          </>
-        ) : (
-          <>
-            <h3 className="font-semibold text-base">No documents found</h3>
-            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-              No documents match this filter or search query.
-            </p>
-          </>
-        )}
+        <h3 className="font-semibold text-base">No documents found</h3>
+        <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+          Documents uploaded by employees or HR will appear here.
+        </p>
+        <div className="pt-2">
+          <Button
+            onClick={onOpenUploadModal}
+            size="sm"
+            className="gap-1.5 bg-primary text-primary-foreground"
+          >
+            <Upload className="h-3.5 w-3.5" /> Upload Document
+          </Button>
+        </div>
       </div>
     );
   }

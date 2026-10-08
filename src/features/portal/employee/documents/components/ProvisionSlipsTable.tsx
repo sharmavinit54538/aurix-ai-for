@@ -40,9 +40,9 @@ export const ProvisionSlipsTable: React.FC<ProvisionSlipsTableProps> = ({
     return (
       <div className="py-16 text-center space-y-3">
         <FileText className="h-10 w-10 text-muted-foreground/40 mx-auto" />
-        <h3 className="font-semibold text-base">No Provision Slips Available</h3>
+        <h3 className="font-semibold text-base">No documents found</h3>
         <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-          Your provision slips will appear here once they are generated.
+          Documents uploaded by employees or HR will appear here.
         </p>
       </div>
     );
@@ -66,7 +66,7 @@ export const ProvisionSlipsTable: React.FC<ProvisionSlipsTableProps> = ({
           {filteredProvisionSlips.map((slip) => (
             <TableRow key={slip.id} className="hover:bg-muted/20">
               <TableCell className="font-mono text-xs font-medium">
-                {slip.slipNumber || `PRV-${slip.id.slice(0, 8).toUpperCase()}`}
+                {slip.slipNumber || "—"}
               </TableCell>
               <TableCell className="text-xs font-medium">{slip.periodName || "—"}</TableCell>
               <TableCell className="text-xs text-muted-foreground">

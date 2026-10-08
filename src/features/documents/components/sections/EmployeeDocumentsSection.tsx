@@ -233,6 +233,8 @@ export const EmployeeDocumentsSection: React.FC<EmployeeDocumentsSectionProps> =
         userRole={userRole}
         currentEmployeeProfileId={currentEmployeeProfileId}
         showVerificationActions={true}
+        onOpenUpload={onOpenUpload}
+        canUpload={canUpload}
       />
     </div>
   );

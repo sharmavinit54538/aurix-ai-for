@@ -93,7 +93,7 @@ export function useLetterGeneration() {
             department: e.department,
             joiningDate: e.joiningDate,
             managerName: e.managerName,
-            location: "Headquarters",
+            location: (e as any).location || "",
           }))
         );
         if (!selectedEmployeeId) setSelectedEmployeeId(ws.employees[0].id);
@@ -118,29 +118,28 @@ export function useLetterGeneration() {
   // Build the complete context replacing all required variables
   const variableContext = useMemo(() => {
     const today = new Date().toISOString().split("T")[0];
-    const companyName = company?.name || "OFC360 Enterprise Systems Ltd.";
-    const companyAddress =
-      company?.address
-        ? `${company.address}, ${company.city || ""}, ${company.state || ""}`.trim().replace(/^,|,$/g, "")
-        : "Plot 42, Cyber City Tech Park, Sector 21, Bengaluru, Karnataka 560100";
+    const companyName = company?.name || "";
+    const companyAddress = company?.address
+      ? [company.address, company.city, company.state, company.country].filter(Boolean).join(", ")
+      : "";
 
     return {
-      employee_name: selectedEmployee?.fullName || "Employee Name",
-      employee_id: selectedEmployee?.employeeId || "EMP-001",
-      designation: selectedEmployee?.designation || "Software Specialist",
-      department: selectedEmployee?.department || "Engineering",
+      employee_name: selectedEmployee?.fullName || "",
+      employee_id: selectedEmployee?.employeeId || "",
+      designation: selectedEmployee?.designation || "",
+      department: selectedEmployee?.department || "",
       joining_date: selectedEmployee?.joiningDate || today,
       confirmation_date: today,
-      manager_name: selectedEmployee?.managerName || "Department Director",
+      manager_name: selectedEmployee?.managerName || "",
       company_name: companyName,
       company_address: companyAddress,
-      salary: selectedEmployee?.salary || "12,00,000",
-      ctc: selectedEmployee?.ctc || customFields.ctc || "15,00,000",
+      salary: selectedEmployee?.salary || "",
+      ctc: selectedEmployee?.ctc || customFields.ctc || "",
       effective_date: customFields.effective_date || today,
       last_working_date: customFields.last_working_date || today,
-      location: selectedEmployee?.location || "Bengaluru",
-      email: selectedEmployee?.email || "employee@ofc360.com",
-      phone: selectedEmployee?.phone || "+91 98765 43210",
+      location: selectedEmployee?.location || "",
+      email: selectedEmployee?.email || "",
+      phone: selectedEmployee?.phone || "",
       ...customFields,
     };
   }, [company, selectedEmployee, customFields]);
@@ -157,7 +156,7 @@ export function useLetterGeneration() {
     // Standard high-quality fallback template
     return `${selectedLetterType.title.toUpperCase()}
 DATE: ${variableContext.effective_date}
-REF NO: OFC/${selectedLetterType.id.toUpperCase()}/${variableContext.employee_id}
+REF NO: DOC/${selectedLetterType.id.toUpperCase()}/${variableContext.employee_id || "REF"}
 
 TO:
 ${variableContext.employee_name} (${variableContext.employee_id})

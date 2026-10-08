@@ -191,17 +191,23 @@ export const IdCardPreview: React.FC<IdCardPreviewProps> = ({
                 )}
                 <div className="text-[9px] opacity-80 leading-tight">
                   <p className="font-semibold text-white">Digital Verification</p>
-                  <p className="opacity-70 mt-0.5">Scan QR code to verify active employment credential on ofc360.com</p>
+                  <p className="opacity-70 mt-0.5">Scan QR code to verify active employment credential.</p>
                 </div>
               </div>
             </div>
 
             {/* Terms & Authorized Signature */}
             <div className="border-t border-white/10 pt-2 text-[8px] opacity-70 leading-tight space-y-1">
-              <p>Property of {card.companyName}. If found, please return to HQ address above.</p>
+              <p>
+                {card.companyName
+                  ? `Property of ${card.companyName}. If found, please return to HQ address above.`
+                  : "If found, please return to company headquarters."}
+              </p>
               <div className="flex items-center justify-between pt-1">
                 <span className="font-mono">VER: 2026.01</span>
-                <span className="font-serif italic text-[10px] opacity-90">Priya Menon</span>
+                <span className="font-serif italic text-[10px] opacity-90">
+                  {card.authorizedSignatoryName || "Authorized Signatory"}
+                </span>
               </div>
             </div>
           </div>

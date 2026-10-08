@@ -96,9 +96,8 @@ export function useEmployeeDocumentsData(activeTab: ActiveTab, searchQuery: stri
       }
       const data = await myDocumentsApi.listMyDocuments(employeeId);
       setDocuments(data);
-    } catch (err: any) {
-      console.error("Failed to fetch employee documents:", err);
-      setLoadError("Unable to load your documents. Please try again.");
+    } catch {
+      setLoadError("Something went wrong while fetching documents. Please try again.");
     } finally {
       setIsLoadingDocs(false);
     }
@@ -110,8 +109,8 @@ export function useEmployeeDocumentsData(activeTab: ActiveTab, searchQuery: stri
     try {
       const data = await myDocumentsApi.listMySalarySlips();
       setSalarySlips(data);
-    } catch (err) {
-      console.error("Failed to fetch salary slips:", err);
+    } catch {
+      // Handled silently
     } finally {
       setIsLoadingSalary(false);
     }
@@ -123,8 +122,8 @@ export function useEmployeeDocumentsData(activeTab: ActiveTab, searchQuery: stri
     try {
       const data = await myDocumentsApi.listMyProvisionSlips(employeeId || undefined);
       setProvisionSlips(data);
-    } catch (err) {
-      console.error("Failed to fetch provision slips:", err);
+    } catch {
+      // Handled silently
     } finally {
       setIsLoadingProvision(false);
     }

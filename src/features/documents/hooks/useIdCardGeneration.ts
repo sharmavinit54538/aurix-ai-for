@@ -55,8 +55,8 @@ export function useIdCardGeneration() {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
   const [theme, setTheme] = useState<IdCardTheme>("navy");
   const [isFlipped, setIsFlipped] = useState(false);
-  const [bloodGroup, setBloodGroup] = useState<string>("O+");
-  const [emergencyContact, setEmergencyContact] = useState<string>("+91 98765 00000");
+  const [bloodGroup, setBloodGroup] = useState<string>("");
+  const [emergencyContact, setEmergencyContact] = useState<string>("");
   const [employeePhone, setEmployeePhone] = useState<string>("");
   const [customPhotoUrl, setCustomPhotoUrl] = useState<string | null>(null);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>("");
@@ -96,7 +96,7 @@ export function useIdCardGeneration() {
             designation: e.designation,
             department: e.department,
             joiningDate: e.joiningDate,
-            bloodGroup: "B+",
+            bloodGroup: (e as any).bloodGroup || "",
           }))
         );
         if (!selectedEmployeeId) setSelectedEmployeeId(ws.employees[0].id);
@@ -131,7 +131,7 @@ export function useIdCardGeneration() {
       employeeId: selectedEmployee.id,
       employeeCode: selectedEmployee.employeeId,
       employeeName: selectedEmployee.fullName,
-      companyName: company?.name || "OFC360 Enterprise Systems",
+      companyName: company?.name || "",
     });
 
     QRCode.toDataURL(payload, {
@@ -148,28 +148,27 @@ export function useIdCardGeneration() {
 
   // Build the complete ID Card Data object
   const currentCardData: EmployeeIdCardData = useMemo(() => {
-    const companyName = company?.name || "OFC360 Enterprise Systems Ltd.";
-    const companyAddress =
-      company?.address
-        ? `${company.address}, ${company.city || ""}, ${company.state || ""}`.trim().replace(/^,|,$/g, "")
-        : "Plot 42, Cyber City Tech Park, Sector 21, Bengaluru 560100";
+    const companyName = company?.name || "";
+    const companyAddress = company?.address
+      ? [company.address, company.city, company.state, company.country].filter(Boolean).join(", ")
+      : "";
 
     return {
       id: `card_${selectedEmployee?.id || "draft"}`,
-      employeeId: selectedEmployee?.id || "EMP001",
-      employeeCode: selectedEmployee?.employeeId || "EMP-001",
-      employeeName: selectedEmployee?.fullName || "Employee Name",
-      designation: selectedEmployee?.designation || "Software Specialist",
-      department: selectedEmployee?.department || "Engineering",
-      joiningDate: selectedEmployee?.joiningDate || new Date().toISOString().split("T")[0],
-      bloodGroup,
+      employeeId: selectedEmployee?.id || "",
+      employeeCode: selectedEmployee?.employeeId || "",
+      employeeName: selectedEmployee?.fullName || "",
+      designation: selectedEmployee?.designation || "",
+      department: selectedEmployee?.department || "",
+      joiningDate: selectedEmployee?.joiningDate || "",
+      bloodGroup: bloodGroup || selectedEmployee?.bloodGroup || "",
       photoUrl: customPhotoUrl || undefined,
       companyName,
       companyAddress,
       emergencyContact,
-      employeeContact: employeePhone || selectedEmployee?.phone || "+91 98765 43210",
-      email: selectedEmployee?.email || "employee@ofc360.com",
-      authorizedSignatoryName: "Director – People Operations",
+      employeeContact: employeePhone || selectedEmployee?.phone || "",
+      email: selectedEmployee?.email || "",
+      authorizedSignatoryName: "Authorized Signatory",
       qrPayload: qrCodeDataUrl,
       terms: STANDARD_ID_CARD_TERMS,
       theme,
