@@ -13,6 +13,17 @@ export interface CurrentEmployeeProfile {
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+type UserProfileWithEmployeeId = {
+  id: string;
+  fullName: string;
+  email: string;
+  role: string;
+  designation?: string;
+  department?: string;
+  employeeId?: string;
+  employee_id?: string;
+};
+
 export function useCurrentEmployeeProfile() {
   const ws = useAurix();
   const user = ws.user;
@@ -35,19 +46,11 @@ export function useCurrentEmployeeProfile() {
 
       // 2. Get current user profile from /users/me (or /auth/me fallback)
       // to get user details including potential employeeId field
-      let profile: {
-        id: string;
-        fullName: string;
-        email: string;
-        role: string;
-        designation: string;
-        department: string;
-        employeeId?: string;
-        employee_id?: string;
-      } | null = null;
+      let profile: UserProfileWithEmployeeId | null = null;
 
       try {
         const profileRes = await profileApi.getCurrentUser();
+        const rawProfile = profileRes as unknown as Record<string, unknown>;
         profile = {
           id: profileRes.id,
           fullName: profileRes.fullName,
@@ -55,8 +58,8 @@ export function useCurrentEmployeeProfile() {
           role: profileRes.role,
           designation: profileRes.designation,
           department: profileRes.department,
-          employeeId: (profileRes as Record<string, unknown>).employeeId as string | undefined,
-          employee_id: (profileRes as Record<string, unknown>).employee_id as string | undefined,
+          employeeId: rawProfile.employeeId as string | undefined,
+          employee_id: rawProfile.employee_id as string | undefined,
         };
       } catch {
         // If profile fetch fails, use stored user
@@ -69,6 +72,8 @@ export function useCurrentEmployeeProfile() {
           department: "",
         };
       }
+
+      if (!profile) return null;
 
       // Check if profile has employeeId
       const profileEmpId = profile.employeeId || profile.employee_id;
@@ -83,7 +88,7 @@ export function useCurrentEmployeeProfile() {
       }
 
       // 3. Query /employees directory with user's email
-      if (profile?.email) {
+      if (profile.email) {
         try {
           const listRes = await apiInstance.get("/employees", {
             params: { search: profile.email, limit: 10 },
@@ -93,9 +98,9 @@ export function useCurrentEmployeeProfile() {
             const match = rawItems.find(
               (e: Record<string, unknown>) =>
                 e.user_id === user.id ||
-                e.company_email === profile?.email ||
-                e.personal_email === profile?.email ||
-                e.email === profile?.email
+                e.company_email === profile.email ||
+                e.personal_email === profile.email ||
+                e.email === profile.email
             );
             if (match && match.id) {
               return {
@@ -131,7 +136,7 @@ export function useCurrentEmployeeProfile() {
 
   return {
     profile: query.data,
-    employeeProfileId: query.data?.employeeProfileId || (UUID_REGEX.test(user?.id || "") ? user?.id : ""),
+    employeeProfileId: query.data?.employeeProfileId ?? (UUID_REGEX.test(user?.id ?? "") ? user?.id ?? "" : ""),
     isLoading: query.isLoading,
     isEmployeeRole,
   };

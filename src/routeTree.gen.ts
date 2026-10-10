@@ -110,6 +110,7 @@ import { Route as DashboardAiHubDocumentGeneratorRouteImport } from './routes/da
 import { Route as DashboardAnalyticsIndexRouteImport } from './routes/dashboard.analytics.index'
 import { Route as DashboardAnalyticsAiInsightsRouteImport } from './routes/dashboard.analytics.ai-insights'
 import { Route as DashboardAnalyticsReportsRouteImport } from './routes/dashboard.analytics.reports'
+import { Route as DashboardAnnouncementsIndexRouteImport } from './routes/dashboard.announcements.index'
 import { Route as DashboardAnnouncementsIdRouteImport } from './routes/dashboard.announcements.$id'
 import { Route as DashboardAnnouncementsManageRouteImport } from './routes/dashboard.announcements.manage'
 import { Route as DashboardAttendanceIndexRouteImport } from './routes/dashboard.attendance.index'
@@ -781,6 +782,12 @@ const DashboardAnalyticsReportsRoute =
     id: '/reports',
     path: '/reports',
     getParentRoute: () => DashboardAnalyticsRoute,
+  } as any)
+const DashboardAnnouncementsIndexRoute =
+  DashboardAnnouncementsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => DashboardAnnouncementsRoute,
   } as any)
 const DashboardAnnouncementsIdRoute =
   DashboardAnnouncementsIdRouteImport.update({
@@ -1917,6 +1924,7 @@ export interface FileRoutesByFullPath {
   '/jobs/apply/$ukey': typeof JobsApplyUkeyRoute
   '/dashboard/ai-hub/': typeof DashboardAiHubIndexRoute
   '/dashboard/analytics/': typeof DashboardAnalyticsIndexRoute
+  '/dashboard/announcements/': typeof DashboardAnnouncementsIndexRoute
   '/dashboard/attendance/': typeof DashboardAttendanceIndexRoute
   '/dashboard/autopilot/': typeof DashboardAutopilotIndexRoute
   '/dashboard/connect/': typeof DashboardConnectIndexRoute
@@ -2022,7 +2030,6 @@ export interface FileRoutesByTo {
   '/auth/verify-reset-otp': typeof AuthVerifyResetOtpRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/dashboard/ai-insights': typeof DashboardAiInsightsRoute
-  '/dashboard/announcements': typeof DashboardAnnouncementsRouteWithChildren
   '/dashboard/asset-management': typeof DashboardAssetManagementRoute
   '/dashboard/assets': typeof DashboardAssetsRoute
   '/dashboard/audit-logs': typeof DashboardAuditLogsRoute
@@ -2159,6 +2166,7 @@ export interface FileRoutesByTo {
   '/jobs/apply/$ukey': typeof JobsApplyUkeyRoute
   '/dashboard/ai-hub': typeof DashboardAiHubIndexRoute
   '/dashboard/analytics': typeof DashboardAnalyticsIndexRoute
+  '/dashboard/announcements': typeof DashboardAnnouncementsIndexRoute
   '/dashboard/attendance': typeof DashboardAttendanceIndexRoute
   '/dashboard/autopilot': typeof DashboardAutopilotIndexRoute
   '/dashboard/connect': typeof DashboardConnectIndexRoute
@@ -2423,6 +2431,7 @@ export interface FileRoutesById {
   '/jobs/apply/$ukey': typeof JobsApplyUkeyRoute
   '/dashboard/ai-hub/': typeof DashboardAiHubIndexRoute
   '/dashboard/analytics/': typeof DashboardAnalyticsIndexRoute
+  '/dashboard/announcements/': typeof DashboardAnnouncementsIndexRoute
   '/dashboard/attendance/': typeof DashboardAttendanceIndexRoute
   '/dashboard/autopilot/': typeof DashboardAutopilotIndexRoute
   '/dashboard/connect/': typeof DashboardConnectIndexRoute
@@ -2688,6 +2697,7 @@ export interface FileRouteTypes {
     | '/jobs/apply/$ukey'
     | '/dashboard/ai-hub/'
     | '/dashboard/analytics/'
+    | '/dashboard/announcements/'
     | '/dashboard/attendance/'
     | '/dashboard/autopilot/'
     | '/dashboard/connect/'
@@ -2793,7 +2803,6 @@ export interface FileRouteTypes {
     | '/auth/verify-reset-otp'
     | '/blog/$slug'
     | '/dashboard/ai-insights'
-    | '/dashboard/announcements'
     | '/dashboard/asset-management'
     | '/dashboard/assets'
     | '/dashboard/audit-logs'
@@ -2930,6 +2939,7 @@ export interface FileRouteTypes {
     | '/jobs/apply/$ukey'
     | '/dashboard/ai-hub'
     | '/dashboard/analytics'
+    | '/dashboard/announcements'
     | '/dashboard/attendance'
     | '/dashboard/autopilot'
     | '/dashboard/connect'
@@ -3193,6 +3203,7 @@ export interface FileRouteTypes {
     | '/jobs/apply/$ukey'
     | '/dashboard/ai-hub/'
     | '/dashboard/analytics/'
+    | '/dashboard/announcements/'
     | '/dashboard/attendance/'
     | '/dashboard/autopilot/'
     | '/dashboard/connect/'
@@ -3998,6 +4009,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/analytics/reports'
       preLoaderRoute: typeof DashboardAnalyticsReportsRouteImport
       parentRoute: typeof DashboardAnalyticsRoute
+    }
+    '/dashboard/announcements/': {
+      id: '/dashboard/announcements/'
+      path: '/'
+      fullPath: '/dashboard/announcements/'
+      preLoaderRoute: typeof DashboardAnnouncementsIndexRouteImport
+      parentRoute: typeof DashboardAnnouncementsRoute
     }
     '/dashboard/announcements/$id': {
       id: '/dashboard/announcements/$id'
@@ -5208,12 +5226,14 @@ const DashboardAnalyticsRouteWithChildren =
 interface DashboardAnnouncementsRouteChildren {
   DashboardAnnouncementsIdRoute: typeof DashboardAnnouncementsIdRoute
   DashboardAnnouncementsManageRoute: typeof DashboardAnnouncementsManageRoute
+  DashboardAnnouncementsIndexRoute: typeof DashboardAnnouncementsIndexRoute
 }
 
 const DashboardAnnouncementsRouteChildren: DashboardAnnouncementsRouteChildren =
   {
     DashboardAnnouncementsIdRoute: DashboardAnnouncementsIdRoute,
     DashboardAnnouncementsManageRoute: DashboardAnnouncementsManageRoute,
+    DashboardAnnouncementsIndexRoute: DashboardAnnouncementsIndexRoute,
   }
 
 const DashboardAnnouncementsRouteWithChildren =

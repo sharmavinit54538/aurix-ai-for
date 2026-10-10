@@ -364,16 +364,16 @@ export const documentsApi = {
     let isLocalFallback = false;
     let serverUnavailable = false;
 
-    try {
-      // Try to fetch audit logs filtered for document events
-      const res = await settingsApi.getAuditLogs({
-        page,
-        limit,
-        module: "documents",
-      });
-      const rawItems = res.items;
-      if (Array.isArray(rawItems) && rawItems.length > 0) {
-        backendItems = rawItems.map((item: Record<string, unknown>, idx: number) => {
+try {
+        // Try to fetch audit logs filtered for document events
+        const res = await settingsApi.getAuditLogs({
+          page,
+          limit,
+          module: "documents",
+        });
+        const rawItems: Record<string, unknown>[] = Array.isArray(res.items) ? res.items : [];
+        if (rawItems.length > 0) {
+          backendItems = rawItems.map((item: Record<string, unknown>, idx: number) => {
           const docId = String(item.document_id || item.documentId || item.id || "");
           const timestamp = String(item.timestamp || item.created_at || new Date().toISOString());
           const stableId = String(item.id || item._id || `act_${docId}_${timestamp}_${idx}`);

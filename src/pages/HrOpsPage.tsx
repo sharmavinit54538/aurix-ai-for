@@ -10,6 +10,8 @@ import {
   Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
 import { toast } from "sonner";
+import { hrOpsApi, type HrOpsOverview } from "@/services/hrOpsApi";
+import type { TimelineEvent } from "@/lib/hrms/types";
 
 const QUICK_LINKS = [
   { to: "/dashboard/hr-operations/onboarding", label: "Onboarding", icon: UserCheck },
@@ -165,7 +167,7 @@ export function HrOpsPage() {
             <div className="mb-3 font-medium">Recent timeline events</div>
             {data?.timeline && data.timeline.length > 0 ? (
               <ul className="divide-y divide-border">
-                {data.timeline.slice(0, 8).map((t) => (
+                {data.timeline.slice(0, 8).map((t: TimelineEvent) => (
                   <li key={t.id} className="flex items-center justify-between py-2 text-sm">
                     <div>
                       <div className="font-medium">{t.title}</div>

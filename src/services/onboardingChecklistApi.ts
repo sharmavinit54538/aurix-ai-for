@@ -40,6 +40,9 @@ export const onboardingChecklistApi = {
     const res = await apiInstance.get("/api/v1/admin/employee-onboarding", { params });
     const rawData = res.data?.data ?? res.data;
     const itemsRaw = rawData?.items ?? (Array.isArray(rawData) ? rawData : []);
+    if (itemsRaw.length > 0) {
+      console.log("[DEBUG getOnboardings raw item]:", JSON.stringify(itemsRaw[0]));
+    }
     const total = rawData?.total ?? itemsRaw.length;
     return {
       items: itemsRaw.map(mapOnboardingFromBackend),
