@@ -13,7 +13,7 @@ export interface DocumentPreviewState {
   errorCode?: number;
 }
 
-function getMimeTypeFromFileType(fileType: DocumentItem["fileType"]): string {
+function getMimeTypeFromFileType(fileType: DocumentItem["fileType"] | undefined): string {
   switch (fileType) {
     case "pdf":
       return "application/pdf";
@@ -86,7 +86,6 @@ export function useDocumentPreview(doc: DocumentItem | null) {
 
       // Stale response guard: ignore if a newer request has started
       if (currentRequestId !== requestIdRef.current) {
-        URL.revokeObjectURL(URL.createObjectURL(blob)); // revoke the blob URL we won't use
         return;
       }
 

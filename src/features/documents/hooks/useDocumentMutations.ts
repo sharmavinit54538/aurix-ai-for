@@ -33,7 +33,7 @@ export function useDocumentMutations() {
   // 1. Verify
   const verifyMutation = useMutation({
     mutationFn: ({ id, comments, documentName, employeeName }: DocumentMutationParams) =>
-      documentsApi.verifyDocument(id, comments, documentName, employeeName),
+      documentsApi.verifyDocument(id, comments ?? "", documentName ?? "Document", employeeName),
     onSuccess: (res) => {
       toast.success(res.message || "Document verified and approved!");
       invalidateDocumentQueries();
@@ -46,7 +46,7 @@ export function useDocumentMutations() {
   // 2. Reject
   const rejectMutation = useMutation({
     mutationFn: ({ id, comments, documentName, employeeName }: DocumentMutationParams) =>
-      documentsApi.rejectDocument(id, comments, documentName, employeeName),
+      documentsApi.rejectDocument(id, comments ?? "", documentName ?? "Document", employeeName),
     onSuccess: (res) => {
       toast.warning(res.message || "Document rejected.");
       invalidateDocumentQueries();
@@ -59,7 +59,7 @@ export function useDocumentMutations() {
   // 3. Request Reupload
   const reuploadMutation = useMutation({
     mutationFn: ({ id, comments, documentName, employeeName }: DocumentMutationParams) =>
-      documentsApi.requestReupload(id, comments, documentName, employeeName),
+      documentsApi.requestReupload(id, comments ?? "", documentName ?? "Document", employeeName),
     onSuccess: (res) => {
       toast.info(res.message || "Re-upload requested successfully.");
       invalidateDocumentQueries();
@@ -73,8 +73,8 @@ export function useDocumentMutations() {
   const deleteMutation = useMutation({
     mutationFn: ({ id, source, documentName }: DeleteMutationParams) =>
       source === "company"
-        ? documentsApi.deleteCompanyDocument(id, documentName)
-        : documentsApi.deleteEmployeeDocument(id, documentName),
+        ? documentsApi.deleteCompanyDocument(id, documentName ?? "Company Document")
+        : documentsApi.deleteEmployeeDocument(id, documentName ?? "Document"),
     onSuccess: (res) => {
       toast.success(res.message || "Document deleted successfully.");
       invalidateDocumentQueries();

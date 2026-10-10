@@ -165,7 +165,7 @@ export const VerificationSection: React.FC<VerificationSectionProps> = ({
               </TableRow>
             ) : (
               filteredItems.map((doc) => (
-                <TableRow key={doc.id} className="border-border hover:bg-accent/30 text-xs">
+                <TableRow key={`${doc.source}:${doc.id}`} className="border-border hover:bg-accent/30 text-xs">
                   <TableCell className="font-semibold text-foreground max-w-[200px]">
                     <p className="truncate">{doc.title}</p>
                     {doc.rejectionReason && (

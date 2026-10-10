@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { logDocumentAuditEvent } from "../../lib/auditLogger";
+import { getExpiryDiffDays } from "../../lib/mappers";
 import type { DocumentItem, PaginationMeta } from "../../lib/types";
 
 interface ExpiryRenewalSectionProps {
@@ -31,14 +32,6 @@ interface ExpiryRenewalSectionProps {
 }
 
 type ExpiryCategory = "all" | "expired" | "7d" | "30d" | "60d" | "valid";
-
-function getDaysRemaining(expiryDate?: string): number | null {
-  if (!expiryDate) return null;
-  const t = new Date(expiryDate).getTime();
-  if (isNaN(t)) return null;
-  const now = Date.now();
-  return Math.ceil((t - now) / (1000 * 60 * 60 * 24));
-}
 
 export const ExpiryRenewalSection: React.FC<ExpiryRenewalSectionProps> = ({
   items,
@@ -55,10 +48,10 @@ export const ExpiryRenewalSection: React.FC<ExpiryRenewalSectionProps> = ({
   const docsWithExpiry = items.filter((d) => Boolean(d.expiryDate));
 
   const categorizedDocs = docsWithExpiry.map((d) => {
-    const days = getDaysRemaining(d.expiryDate);
+    const days = getExpiryDiffDays(d.expiryDate);
     let category: ExpiryCategory = "valid";
     if (days !== null) {
-      if (days <= 0) category = "expired";
+      if (days < 0) category = "expired";
       else if (days <= 7) category = "7d";
       else if (days <= 30) category = "30d";
       else if (days <= 60) category = "60d";
@@ -199,10 +192,10 @@ export const ExpiryRenewalSection: React.FC<ExpiryRenewalSectionProps> = ({
             ) : (
               filteredDocs.map((doc) => {
                 const days = doc.daysRemaining;
-                const isExpired = days !== null && days <= 0;
+                const isExpired = days !== null && days < 0;
 
                 return (
-                  <TableRow key={doc.id} className="border-border hover:bg-accent/30 text-xs">
+                  <TableRow key={`${doc.source}:${doc.id}`} className="border-border hover:bg-accent/30 text-xs">
                     <TableCell className="font-semibold text-foreground max-w-[200px]">
                       <p className="truncate">{doc.title}</p>
                     </TableCell>

@@ -3,6 +3,8 @@ import type { DocumentActivityItem, DocumentAuditEventAction } from "./types";
 
 const LOCAL_AUDIT_KEY = "ofc360_documents_audit_log";
 
+let auditIdCounter = 0;
+
 function getLocalAuditEntries(): DocumentActivityItem[] {
   if (typeof window === "undefined") return [];
   try {
@@ -43,8 +45,9 @@ export function logDocumentAuditEvent(params: {
   const user = aurix.get().user;
   const performedBy = user?.fullName || "HR Administrator";
 
+  auditIdCounter += 1;
   const newEntry: DocumentActivityItem = {
-    id: `audit_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    id: `audit_${Date.now()}_${auditIdCounter}`,
     documentId: params.documentId || "doc_action",
     documentName: params.documentName,
     action: params.action,

@@ -18,6 +18,7 @@ import { RejectDialog } from "@/features/documents/components/RejectDialog";
 import { ReuploadDialog } from "@/features/documents/components/ReuploadDialog";
 import { DeleteDialog } from "@/features/documents/components/DeleteDialog";
 import type { DocumentFilters, DocumentItem } from "@/features/documents/lib/types";
+import { Button } from "@/components/ui/button";
 
 export function DocumentsPage() {
   const ws = useAurix();
@@ -41,6 +42,8 @@ export function DocumentsPage() {
     summary,
     expiringDocs,
     isLoading: isLoadingSummary,
+    isError: isSummaryError,
+    error: summaryError,
     refetch: refetchSummary,
   } = useDocumentSummary();
 
@@ -128,7 +131,7 @@ export function DocumentsPage() {
   };
 
   const handleConfirmReject = async (id: string, comments: string) => {
-    const doc = docs.find((d) => d.id === id) || rejectDoc;
+    const doc = docs.find((d: DocumentItem) => d.id === id) || rejectDoc;
     await rejectDocument({ id, comments, documentName: doc?.title, employeeName: doc?.employeeName });
     if (previewDoc?.id === id) {
       setPreviewDoc((prev) =>
@@ -140,7 +143,7 @@ export function DocumentsPage() {
   };
 
   const handleConfirmReupload = async (id: string, comments: string) => {
-    const doc = docs.find((d) => d.id === id) || reuploadDoc;
+    const doc = docs.find((d: DocumentItem) => d.id === id) || reuploadDoc;
     await requestReupload({ id, comments, documentName: doc?.title, employeeName: doc?.employeeName });
     if (previewDoc?.id === id) {
       setPreviewDoc((prev) =>
@@ -166,6 +169,10 @@ export function DocumentsPage() {
     if (isCategoriesError) refetchCategories();
   };
 
+  const handleRetrySummary = () => {
+    refetchSummary();
+  };
+
   // Quick stat click filter
   const handleStatCardClick = (metricKey: string) => {
     if (metricKey === "pending") {
@@ -183,6 +190,23 @@ export function DocumentsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Summary Error Banner */}
+      {isSummaryError && (
+        <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 px-4 py-2.5 text-xs text-rose-600 dark:text-rose-400 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span>Failed to load document summary.</span>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRetrySummary}
+            className="h-7 text-xs border-rose-500/30 hover:bg-rose-500/10 cursor-pointer"
+          >
+            Retry
+          </Button>
+        </div>
+      )}
+
       {/* 1. TOP ACTIONS, TABS, SEARCH, AND ALERTS */}
       <DocumentsToolbar
         filters={filters}
@@ -201,6 +225,8 @@ export function DocumentsPage() {
       <DocumentsStatsCards
         summary={summary}
         isLoading={isLoadingSummary}
+        isError={isSummaryError}
+        onRetry={handleRetrySummary}
         onSelectMetric={handleStatCardClick}
       />
 

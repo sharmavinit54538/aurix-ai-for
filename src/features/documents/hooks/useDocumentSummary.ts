@@ -37,6 +37,9 @@ export function useDocumentSummary() {
   const finalExpiring = expiringQuery.data?.length ? expiringQuery.data.length : summary.expiring;
   const finalExpired = expiredQuery.data?.length ? expiredQuery.data.length : summary.expired;
 
+  const isError = summaryQuery.isError || expiringQuery.isError || expiredQuery.isError;
+  const error = summaryQuery.error || expiringQuery.error || expiredQuery.error;
+
   return {
     summary: {
       ...summary,
@@ -46,7 +49,8 @@ export function useDocumentSummary() {
     expiringDocs: expiringQuery.data ?? [],
     expiredDocs: expiredQuery.data ?? [],
     isLoading: summaryQuery.isLoading || expiringQuery.isLoading || expiredQuery.isLoading,
-    isError: summaryQuery.isError,
+    isError,
+    error,
     refetch: () => {
       summaryQuery.refetch();
       expiringQuery.refetch();

@@ -6,6 +6,10 @@ import {
   LETTER_TYPES,
   DEFAULT_LETTER_TEMPLATES,
   replaceTemplateVariables,
+  validateLetterFields,
+  checkRequiredFieldsAndPlaceholders,
+  parseCurrencyInput,
+  formatCurrencyForLetter,
 } from "../lib/letterTemplates";
 import { logDocumentAuditEvent } from "../lib/auditLogger";
 import type { GeneratedLetterRecord, LetterTypeDefinition } from "../lib/types";
@@ -62,6 +66,7 @@ export function useLetterGeneration() {
   // Status flags
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSavingToDocs, setIsSavingToDocs] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Generation History
   const [history, setHistory] = useState<GeneratedLetterRecord[]>(() => getStoredLetters());
@@ -116,12 +121,57 @@ export function useLetterGeneration() {
   }, [employees, selectedEmployeeId]);
 
   // Build the complete context replacing all required variables
+  // CTC precedence: form value wins, else employee record. Cleared field stays empty and blocks generation.
   const variableContext = useMemo(() => {
     const today = new Date().toISOString().split("T")[0];
     const companyName = company?.name || "";
     const companyAddress = company?.address
       ? [company.address, company.city, company.state, company.country].filter(Boolean).join(", ")
       : "";
+
+    // Get CTC with precedence: customFields.ctc (form) > employee.ctc
+    let ctcValue = "";
+    if (customFields.ctc !== undefined && customFields.ctc !== "") {
+      ctcValue = customFields.ctc;
+    } else if (selectedEmployee?.ctc) {
+      ctcValue = selectedEmployee.ctc;
+    }
+
+    // Get salary with precedence
+    let salaryValue = "";
+    if (customFields.salary !== undefined && customFields.salary !== "") {
+      salaryValue = customFields.salary;
+    } else if (selectedEmployee?.salary) {
+      salaryValue = selectedEmployee.salary;
+    }
+
+    // Get gross_monthly with precedence
+    let grossMonthlyValue = "";
+    if (customFields.gross_monthly !== undefined && customFields.gross_monthly !== "") {
+      grossMonthlyValue = customFields.gross_monthly;
+    }
+
+    // Get annual_ctc with precedence
+    let annualCtcValue = "";
+    if (customFields.annual_ctc !== undefined && customFields.annual_ctc !== "") {
+      annualCtcValue = customFields.annual_ctc;
+    } else if (ctcValue) {
+      annualCtcValue = ctcValue;
+    }
+
+    // Get previous_ctc with precedence
+    let previousCtcValue = "";
+    if (customFields.previous_ctc !== undefined && customFields.previous_ctc !== "") {
+      previousCtcValue = customFields.previous_ctc;
+    } else if (selectedEmployee?.ctc) {
+      previousCtcValue = selectedEmployee.ctc;
+    }
+
+    // Get new_ctc with precedence
+    let newCtcValue = "";
+    if (customFields.new_ctc !== undefined && customFields.new_ctc !== "") {
+      newCtcValue = customFields.new_ctc;
+    }
 
     return {
       employee_name: selectedEmployee?.fullName || "",
@@ -133,13 +183,23 @@ export function useLetterGeneration() {
       manager_name: selectedEmployee?.managerName || "",
       company_name: companyName,
       company_address: companyAddress,
-      salary: selectedEmployee?.salary || "",
-      ctc: selectedEmployee?.ctc || customFields.ctc || "",
+      salary: salaryValue,
+      ctc: ctcValue,
       effective_date: customFields.effective_date || today,
       last_working_date: customFields.last_working_date || today,
       location: selectedEmployee?.location || "",
       email: selectedEmployee?.email || "",
       phone: selectedEmployee?.phone || "",
+      // Currency fields with precedence and formatting
+      gross_monthly: grossMonthlyValue,
+      annual_ctc: annualCtcValue,
+      previous_ctc: previousCtcValue,
+      new_ctc: newCtcValue,
+      fixed_pay: customFields.fixed_pay || "",
+      variable_pay: customFields.variable_pay || "",
+      bonus_amount: customFields.bonus_amount || "",
+      increment_percentage: customFields.increment_percentage || "",
+      settlement_amount: customFields.settlement_amount || "",
       ...customFields,
     };
   }, [company, selectedEmployee, customFields]);
@@ -154,13 +214,18 @@ export function useLetterGeneration() {
     }
 
     // Standard high-quality fallback template
+    const specifics = Object.entries(customFields)
+      .filter(([k]) => k !== "ctc" && k !== "effective_date")
+      .map(([k, v]) => `\u2022 ${k.replace(/_/g, " ")}: ${v}`)
+      .join("\n") || "\u2022 Standard terms as per employee handbook and compensation schedules apply.";
+
     return `${selectedLetterType.title.toUpperCase()}
 DATE: ${variableContext.effective_date}
 REF NO: DOC/${selectedLetterType.id.toUpperCase()}/${variableContext.employee_id || "REF"}
 
 TO:
 ${variableContext.employee_name} (${variableContext.employee_id})
-${variableContext.designation} – ${variableContext.department}
+${variableContext.designation} \u2013 ${variableContext.department}
 ${variableContext.company_name}
 
 Dear ${variableContext.employee_name},
@@ -170,10 +235,7 @@ This official letter serves as formal notification regarding your ${selectedLett
 The parameters governing this action have been reviewed and approved in accordance with company governance policy.
 
 Terms & Specifics:
-${Object.entries(customFields)
-  .filter(([k]) => k !== "ctc" && k !== "effective_date")
-  .map(([k, v]) => `• ${k.replace(/_/g, " ")}: ${v}`)
-  .join("\n") || "• Standard terms as per employee handbook and compensation schedules apply."}
+${specifics}
 
 For any queries regarding this documentation, please reach out to the People Operations Department.
 
@@ -185,11 +247,33 @@ ${variableContext.company_name}
 ${variableContext.company_address}`;
   }, [editedContent, selectedLetterType, variableContext, customFields]);
 
+  // Validate fields and check for placeholders
+  const validationResult = useMemo(() => {
+    if (!selectedLetterType) return { missingFields: [], placeholderErrors: [], fieldErrors: {} };
+
+    // Check required fields and placeholders
+    const { missingFields, placeholderErrors } = checkRequiredFieldsAndPlaceholders(
+      selectedLetterType,
+      customFields,
+      previewContent
+    );
+
+    // Run letter-type-specific validation
+    const fieldValidationErrors = validateLetterFields(
+      selectedLetterType.id,
+      customFields,
+      { ctc: selectedEmployee?.ctc, salary: selectedEmployee?.salary }
+    );
+
+    return { missingFields, placeholderErrors, fieldErrors: fieldValidationErrors };
+  }, [selectedLetterType, customFields, previewContent, selectedEmployee?.ctc, selectedEmployee?.salary]);
+
   // Reset custom fields when letter type changes
   const handleSelectLetterType = useCallback((typeId: string) => {
     setSelectedLetterTypeId(typeId);
     setEditedContent(null);
     setIsEditingContent(false);
+    setFieldErrors({});
     const newType = LETTER_TYPES.find((t) => t.id === typeId);
     if (newType) {
       const defaults: Record<string, string> = {};
@@ -203,7 +287,35 @@ ${variableContext.company_address}`;
   const handleFieldChange = useCallback((key: string, value: string) => {
     setCustomFields((prev) => ({ ...prev, [key]: value }));
     setEditedContent(null); // regenerate with updated fields
-  }, []);
+    // Clear field error when user types
+    if (fieldErrors[key]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+    }
+  }, [fieldErrors]);
+
+  // Check if generation is allowed
+  const canGenerate = useMemo(() => {
+    return (
+      validationResult.missingFields.length === 0 &&
+      validationResult.placeholderErrors.length === 0 &&
+      Object.keys(validationResult.fieldErrors).length === 0 &&
+      selectedEmployee !== undefined
+    );
+  }, [validationResult, selectedEmployee]);
+
+  // Check if download is allowed
+  const canDownload = useMemo(() => {
+    return (
+      previewContent.trim().length > 0 &&
+      validationResult.missingFields.length === 0 &&
+      validationResult.placeholderErrors.length === 0 &&
+      Object.keys(validationResult.fieldErrors).length === 0
+    );
+  }, [previewContent, validationResult]);
 
   // Action: Generate Document
   const handleGenerate = async (): Promise<GeneratedLetterRecord> => {
@@ -212,11 +324,26 @@ ${variableContext.company_address}`;
       throw new Error("No employee selected");
     }
 
+    // Check validation before generating
+    if (!canGenerate) {
+      if (validationResult.missingFields.length > 0) {
+        toast.error(`Missing required fields: ${validationResult.missingFields.join(", ")}`);
+      }
+      if (validationResult.placeholderErrors.length > 0) {
+        toast.error(`Unresolved placeholders: ${validationResult.placeholderErrors.join(", ")}`);
+      }
+      if (Object.keys(validationResult.fieldErrors).length > 0) {
+        const firstError = Object.values(validationResult.fieldErrors)[0];
+        toast.error(firstError);
+      }
+      throw new Error("Validation failed");
+    }
+
     setIsGenerating(true);
     try {
-      // Call backend generation endpoint
+      // Call backend generation endpoint with correct template_id (tpl_*)
       await documentsApi.generateDocument({
-        template_id: selectedLetterType.id,
+        template_id: selectedLetterType.defaultTemplateId,
         employee_id: selectedEmployee.id,
         employee_name: selectedEmployee.fullName,
         parameters: {
@@ -247,7 +374,7 @@ ${variableContext.company_address}`;
 
       toast.success(`${selectedLetterType.title} generated successfully!`);
       return newRecord;
-    } catch {
+    } catch (err) {
       // Create local valid record on network fallback
       const newRecord: GeneratedLetterRecord = {
         id: `ltr_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
@@ -277,6 +404,20 @@ ${variableContext.company_address}`;
 
   // Action: Download Text / Printable PDF format
   const handleDownloadPdf = (contentToDownload?: string, title?: string) => {
+    if (!canDownload) {
+      if (validationResult.missingFields.length > 0) {
+        toast.error(`Missing required fields: ${validationResult.missingFields.join(", ")}`);
+      }
+      if (validationResult.placeholderErrors.length > 0) {
+        toast.error(`Unresolved placeholders: ${validationResult.placeholderErrors.join(", ")}`);
+      }
+      if (Object.keys(validationResult.fieldErrors).length > 0) {
+        const firstError = Object.values(validationResult.fieldErrors)[0];
+        toast.error(firstError);
+      }
+      return;
+    }
+
     const text = contentToDownload || previewContent;
     const letterName = title || selectedLetterType.title;
     const recipient = selectedEmployee?.fullName || "Employee";
@@ -305,6 +446,10 @@ ${variableContext.company_address}`;
 
   // Action: Print Letter directly
   const handlePrint = () => {
+    if (!canDownload) {
+      toast.error("Cannot print: validation errors present");
+      return;
+    }
     window.print();
   };
 
@@ -332,6 +477,11 @@ ${variableContext.company_address}`;
   const handleSaveToEmployeeDocs = async (contentToSave?: string) => {
     if (!selectedEmployee) {
       toast.error("Please select an employee");
+      return;
+    }
+
+    if (!canDownload) {
+      toast.error("Cannot save: validation errors present");
       return;
     }
 
@@ -379,6 +529,11 @@ ${variableContext.company_address}`;
     isGenerating,
     isSavingToDocs,
     history,
+    fieldErrors: validationResult.fieldErrors,
+    missingFields: validationResult.missingFields,
+    placeholderErrors: validationResult.placeholderErrors,
+    canGenerate,
+    canDownload,
     setSelectedEmployeeId,
     handleSelectLetterType,
     handleFieldChange,
@@ -389,5 +544,7 @@ ${variableContext.company_address}`;
     handlePrint,
     handleSendToEmployee,
     handleSaveToEmployeeDocs,
+    formatCurrencyForLetter,
+    parseCurrencyInput,
   };
 }

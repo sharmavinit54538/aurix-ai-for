@@ -98,6 +98,7 @@ export function AutoOnboardingPanel() {
     } catch (err: unknown) {
       const { status, message } = parseApiError(err, "Failed to load auto-onboarding runs");
       if (status === 404 || status === 501) {
+        setError("Feature unavailable — backend pending");
         setRuns([]);
       } else {
         setError(message);

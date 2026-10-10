@@ -1,4 +1,5 @@
 import type { HrLetterCategory, LetterTypeDefinition } from "./types";
+import { formatINR, parseINR, calculateSalaryBreakup, type SalaryBreakup } from "./salaryConfig";
 
 export const HR_LETTER_CATEGORIES: HrLetterCategory[] = [
   "JOINING & EMPLOYMENT",
@@ -10,6 +11,150 @@ export const HR_LETTER_CATEGORIES: HrLetterCategory[] = [
   "EXIT & SEPARATION",
   "GENERAL HR",
 ];
+
+export interface LetterFieldValidation {
+  key: string;
+  message: string;
+}
+
+export interface LetterTypeValidationRule {
+  validate: (fields: Record<string, string>, employee?: { ctc?: string; salary?: string }) => LetterFieldValidation | null;
+  description: string;
+}
+
+// Validation rules for specific letter types
+export const LETTER_VALIDATION_RULES: Record<string, LetterTypeValidationRule> = {
+  ctc_letter: {
+    validate: (fields) => {
+      const grossMonthly = parseINR(fields.gross_monthly);
+      const annualCtc = parseINR(fields.annual_ctc);
+      if (grossMonthly !== null && annualCtc !== null) {
+        const calculatedAnnual = grossMonthly * 12;
+        if (Math.abs(calculatedAnnual - annualCtc) > 1) { // Allow 1 rupee rounding difference
+          return {
+            key: "annual_ctc",
+            message: `Annual CTC (₹${formatINR(annualCtc)}) should equal Gross Monthly × 12 (₹${formatINR(calculatedAnnual)}). Difference: ₹${formatINR(Math.abs(annualCtc - calculatedAnnual))}.`,
+          };
+        }
+      }
+      return null;
+    },
+    description: "Gross Monthly × 12 must match Annual CTC",
+  },
+  salary_revision_letter: {
+    validate: (fields) => {
+      const newCtc = parseINR(fields.new_ctc);
+      const previousCtc = parseINR(fields.previous_ctc);
+      if (newCtc !== null && previousCtc !== null && newCtc <= previousCtc) {
+        return {
+          key: "new_ctc",
+          message: `New CTC (₹${formatINR(newCtc)}) must be greater than Previous CTC (₹${formatINR(previousCtc)}).`,
+        };
+      }
+      return null;
+    },
+    description: "New CTC must be greater than Previous CTC",
+  },
+  promotion_letter: {
+    validate: (fields, employee) => {
+      const newCtc = parseINR(fields.new_ctc);
+      const previousCtc = parseINR(fields.previous_ctc || employee?.ctc || "");
+      if (newCtc !== null && previousCtc !== null && newCtc <= previousCtc) {
+        return {
+          key: "new_ctc",
+          message: `Revised CTC (₹${formatINR(newCtc)}) must be greater than Previous CTC (₹${formatINR(previousCtc)}).`,
+        };
+      }
+      return null;
+    },
+    description: "Revised CTC must be greater than Previous CTC",
+  },
+  increment_letter: {
+    validate: (fields) => {
+      const newCtc = parseINR(fields.new_ctc);
+      const incrementPct = fields.increment_percentage;
+      // Could add validation that increment % matches the CTC increase
+      return null;
+    },
+    description: "Increment percentage should be consistent with CTC change",
+  },
+  offer_letter: {
+    validate: (fields, employee) => {
+      const ctc = parseINR(fields.ctc || employee?.ctc || "");
+      if (ctc === null) {
+        return {
+          key: "ctc",
+          message: "Annual CTC is required. Enter a valid amount (e.g., 15,00,000) or ensure employee record has CTC.",
+        };
+      }
+      return null;
+    },
+    description: "CTC must be provided either in form or from employee record",
+  },
+};
+
+/**
+ * Validates letter fields for a specific letter type.
+ * Returns field-level errors for any validation failures.
+ */
+export function validateLetterFields(
+  letterTypeId: string,
+  fields: Record<string, string>,
+  employee?: { ctc?: string; salary?: string }
+): Record<string, string> {
+  const rule = LETTER_VALIDATION_RULES[letterTypeId];
+  if (!rule) return {};
+
+  const error = rule.validate(fields, employee);
+  if (error) {
+    return { [error.key]: error.message };
+  }
+  return {};
+}
+
+/**
+ * Checks if all required fields are filled and no placeholders remain.
+ */
+export function checkRequiredFieldsAndPlaceholders(
+  letterType: LetterTypeDefinition,
+  fields: Record<string, string>,
+  content: string
+): { missingFields: string[]; placeholderErrors: string[] } {
+  const missingFields: string[] = [];
+  const placeholderErrors: string[] = [];
+
+  for (const field of letterType.requiredFields) {
+    if (field.required) {
+      const value = fields[field.key];
+      if (!value || !value.trim()) {
+        missingFields.push(field.label);
+      }
+    }
+  }
+
+  const unresolved = getUnresolvedPlaceholders(content);
+  if (unresolved.length > 0) {
+    placeholderErrors.push(...unresolved.map((p) => `Unresolved placeholder: ${p}`));
+  }
+
+  return { missingFields, placeholderErrors };
+}
+
+/**
+ * Formats a currency value for display in letter content.
+ * Uses Indian numbering system (15,00,000).
+ */
+export function formatCurrencyForLetter(value: string | number | null | undefined): string {
+  return formatINR(value);
+}
+
+/**
+ * Parses a currency input, rejecting invalid formats like "15 LPA".
+ * Returns null if invalid.
+ */
+export function parseCurrencyInput(value: string | number | null | undefined): number | null {
+  return parseINR(value);
+}
 
 export const LETTER_TYPES: LetterTypeDefinition[] = [
   // ── 1. JOINING & EMPLOYMENT ──

@@ -104,6 +104,7 @@ export function detectFileType(
   }
 
   // Check file name first, then file URL - anchored regex to avoid false matches
+  // Order matters: .docx before .doc
   const candidates = [fileName || "", fileUrl || ""];
 
   for (const str of candidates) {
@@ -194,7 +195,7 @@ export function mapBackendDocument(
   const expiryDate = d.expiry_date ? d.expiry_date.split("T")[0] : undefined;
 
   const status = mapDocumentStatus(d, source);
-  // isVerified must be false when the document is expired or rejected
+  // isVerified must be false when the document is rejected or expired
   const isVerified = source === "employee" && status === "VERIFIED";
 
   return {

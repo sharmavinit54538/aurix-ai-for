@@ -74,6 +74,7 @@ export function AutoPayrollPanel() {
     } catch (err: unknown) {
       const { status, message } = parseApiError(err, "Failed to load Autopilot payroll status");
       if (status === 404 || status === 501) {
+        setError("Feature unavailable — backend pending");
         setPayrollStatus(null);
       } else {
         setError(message);

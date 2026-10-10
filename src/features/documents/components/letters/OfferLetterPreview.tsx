@@ -2,6 +2,7 @@ import React from "react";
 import { statusBadgeClass } from "@/lib/status-styles";
 import type { Company } from "@/lib/aurix-store";
 import { CompanyStampAndSignature } from "./CompanyStampAndSignature";
+import { formatINR, calculateSalaryBreakup, parseINR } from "../../lib/salaryConfig";
 
 interface SelectedEmployeeData {
   id?: string;
@@ -29,10 +30,13 @@ export const OfferLetterPreview: React.FC<OfferLetterPreviewProps> = ({
   const companyName = company?.name || "OFC360 Organization";
   const address = company?.address || company?.city ? `${company?.address || ""}, ${company?.city || ""}`.trim() : "Corporate Headquarters";
   const contact = [company?.website, company?.email, company?.phone].filter(Boolean).join(" • ");
-  const candidateName = employee?.fullName || fields["Candidate Name"] || "Candidate Name";
-  const role = fields["Role"] || employee?.designation || "—";
-  const salary = fields["Salary (LPA)"] || "—";
-  const startDate = fields["Start Date"] || "—";
+  const candidateName = employee?.fullName || fields["Candidate Name"] || fields["candidate_name"] || "Candidate Name";
+  const role = fields["Role"] || fields["designation"] || employee?.designation || "—";
+  const rawSalary = fields["annual_ctc"] || fields["ctc"] || fields["Salary (Annual CTC)"] || fields["Salary (LPA)"] || fields["Salary"] || "";
+  const startDate = fields["Start Date"] || fields["joining_date"] || fields["effective_date"] || "—";
+
+  const breakup = calculateSalaryBreakup(rawSalary);
+  const formattedCtc = breakup ? `₹${formatINR(breakup.annualCtc)} per annum` : rawSalary ? `INR ${rawSalary}` : "—";
 
   return (
     <div className="bg-card text-card-foreground shadow-sm border border-border rounded-xl p-6 sm:p-8 relative overflow-hidden font-sans text-left space-y-5 select-none">
@@ -93,9 +97,7 @@ export const OfferLetterPreview: React.FC<OfferLetterPreviewProps> = ({
           </div>
           <div>
             <span className="text-[9px] text-muted-foreground block">Annual Compensation</span>
-            <strong className="text-foreground font-bold">
-              {salary !== "—" ? `INR ${salary} Lakhs per annum` : "—"}
-            </strong>
+            <strong className="text-foreground font-bold">{formattedCtc}</strong>
           </div>
           <div>
             <span className="text-[9px] text-muted-foreground block">Start Date</span>
@@ -121,7 +123,7 @@ export const OfferLetterPreview: React.FC<OfferLetterPreviewProps> = ({
           you will make significant contributions to our team.
         </p>
         <p>
-          Your starting annualized compensation will be <strong>INR {salary} Lakhs</strong>, subject to statutory
+          Your starting annualized compensation will be <strong>{formattedCtc}</strong>, subject to statutory
           deductions. Your anticipated start date will be <strong>{startDate}</strong>.
         </p>
         <p>
@@ -129,6 +131,56 @@ export const OfferLetterPreview: React.FC<OfferLetterPreviewProps> = ({
           and receipt of required educational and identification documentation.
         </p>
       </div>
+
+      {/* Salary Breakup Annexure */}
+      {breakup && (
+        <div className="rounded-xl border border-border bg-card p-3.5 space-y-2 text-[11px]">
+          <h3 className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest border-b border-border pb-1">
+            ANNEXURE A — ITEMISED SALARY BREAKUP
+          </h3>
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-border text-[10px] text-muted-foreground">
+                <th className="py-1">Salary Component</th>
+                <th className="py-1 text-right">Monthly (₹)</th>
+                <th className="py-1 text-right">Annual (₹)</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/50 text-[11px]">
+              <tr>
+                <td className="py-1 font-medium">Basic Salary (40%)</td>
+                <td className="py-1 text-right font-mono">₹{formatINR(breakup.basicMonthly)}</td>
+                <td className="py-1 text-right font-mono">₹{formatINR(breakup.basicAnnual)}</td>
+              </tr>
+              <tr>
+                <td className="py-1 font-medium">House Rent Allowance (HRA - 50% of Basic)</td>
+                <td className="py-1 text-right font-mono">₹{formatINR(breakup.hraMonthly)}</td>
+                <td className="py-1 text-right font-mono">₹{formatINR(breakup.hraAnnual)}</td>
+              </tr>
+              <tr>
+                <td className="py-1 font-medium">Special Allowance</td>
+                <td className="py-1 text-right font-mono">₹{formatINR(breakup.specialAllowanceMonthly)}</td>
+                <td className="py-1 text-right font-mono">₹{formatINR(breakup.specialAllowanceAnnual)}</td>
+              </tr>
+              <tr className="bg-muted/30 font-semibold">
+                <td className="py-1">Gross Compensation (A)</td>
+                <td className="py-1 text-right font-mono">₹{formatINR(breakup.grossMonthly)}</td>
+                <td className="py-1 text-right font-mono">₹{formatINR(breakup.grossAnnual)}</td>
+              </tr>
+              <tr>
+                <td className="py-1 font-medium">Employer Provident Fund (PF - 12% of Basic) (B)</td>
+                <td className="py-1 text-right font-mono">₹{formatINR(breakup.employerPfMonthly)}</td>
+                <td className="py-1 text-right font-mono">₹{formatINR(breakup.employerPfAnnual)}</td>
+              </tr>
+              <tr className="border-t-2 border-border bg-primary/5 font-bold text-foreground">
+                <td className="py-1.5">Total Cost to Company (CTC = A + B)</td>
+                <td className="py-1.5 text-right font-mono text-primary">₹{formatINR(breakup.monthlyCtc)}</td>
+                <td className="py-1.5 text-right font-mono text-primary">₹{formatINR(breakup.annualCtc)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Official Signatory & Company Stamp */}
       <CompanyStampAndSignature

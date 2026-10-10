@@ -151,10 +151,9 @@ export function useDocumentsList({
         };
       }
 
-      // 3. Tab = "all" - Fetch both employee and company documents with split limit
-      // Strategy: fetch limit/2 from each source to ensure we never exceed limit rows per page
-      const splitLimit = Math.ceil(limit / 2);
-
+      // 3. Tab = "all" - Fetch both employee and company documents with proper pagination
+      // Strategy: For "all" tab, we fetch full limit from each source, merge, dedupe, then paginate client-side.
+      // This ensures accurate total and correct has_more. The trade-off is 2x API calls per page.
       const [empRes, compRes] = await Promise.allSettled([
         documentsApi.getEmployeeDocuments({
           employee_id: effectiveEmployeeId,
@@ -164,7 +163,7 @@ export function useDocumentsList({
           sort_by: sortBy,
           order,
           page,
-          limit: splitLimit,
+          limit,
         }),
         documentsApi.getCompanyDocuments({
           category_id: categoryId,
@@ -172,7 +171,7 @@ export function useDocumentsList({
           sort_by: sortBy,
           order,
           page,
-          limit: splitLimit,
+          limit,
         }),
       ]);
 
@@ -227,10 +226,13 @@ export function useDocumentsList({
       // When client-side filtering applies, total should reflect filtered count
       // TODO: Remove client-side filtering when backend supports document_type and expiry_window params
       const finalTotal = (documentType || expiryWindow) ? filteredItems.length : totalCount;
-      const finalHasMore = hasMore && filteredItems.length >= limit;
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      const paginatedItems = filteredItems.slice(startIndex, endIndex);
+      const finalHasMore = endIndex < filteredItems.length || (hasMore && filteredItems.length >= limit);
 
       return {
-        items: filteredItems.slice(0, limit), // Ensure we never return more than limit
+        items: paginatedItems,
         meta: {
           total: finalTotal,
           page,

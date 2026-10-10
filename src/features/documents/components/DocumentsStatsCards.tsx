@@ -1,11 +1,14 @@
 import React from "react";
-import { Folder, CheckCircle, Clock, XCircle, AlertTriangle, CalendarX } from "lucide-react";
+import { Folder, CheckCircle, Clock, XCircle, AlertTriangle, CalendarX, RefreshCw, AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import type { DocumentSummary } from "../lib/types";
 
 interface DocumentsStatsCardsProps {
   summary: DocumentSummary;
   isLoading?: boolean;
+  isError?: boolean;
+  onRetry?: () => void;
   onSelectMetric?: (key: string) => void;
   selectedMetric?: string;
 }
@@ -22,9 +25,32 @@ const STATS_CONFIG = [
 export const DocumentsStatsCards: React.FC<DocumentsStatsCardsProps> = ({
   summary,
   isLoading = false,
+  isError = false,
+  onRetry,
   onSelectMetric,
   selectedMetric,
 }) => {
+  if (isError) {
+    return (
+      <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 p-3 text-xs text-rose-600 dark:text-rose-400 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+          <span>Failed to load document statistics.</span>
+        </div>
+        {onRetry && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onRetry}
+            className="h-7 text-xs border-rose-500/30 hover:bg-rose-500/10 cursor-pointer"
+          >
+            <RefreshCw className="h-3 w-3 mr-1" /> Retry
+          </Button>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3" aria-label="Document Statistics">
       {STATS_CONFIG.map((card) => {
