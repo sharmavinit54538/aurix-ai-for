@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { useAurix } from "@/lib/aurix-store";
-import { useCurrentRole } from "@/lib/roles";
+import { useCurrentRole } from "@/lib/use-current-role";
 import { MONTH_NAMES } from "@/lib/constants";
 import { EmployeeHolidaysView } from "@/features/portal/employee/components/EmployeeHolidaysView";
 import {

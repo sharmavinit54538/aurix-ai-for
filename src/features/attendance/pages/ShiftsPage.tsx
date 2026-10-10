@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useRouterState } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { useAurix } from "@/lib/aurix-store";
-import { useCurrentRole } from "@/lib/roles";
+import { useCurrentRole } from "@/lib/use-current-role";
 import { EmployeeShiftsView } from "@/features/portal/employee/components/EmployeeShiftsView";
 import {
   Clock, Plus, Search, Users, Moon, Sun, Edit, Trash2, UserPlus,

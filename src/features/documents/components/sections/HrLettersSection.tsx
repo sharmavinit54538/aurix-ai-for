@@ -27,7 +27,8 @@ import { LetterPreview } from "../letters/LetterPreview";
 import { useLetterGeneration } from "../../hooks/useLetterGeneration";
 import { HR_LETTER_CATEGORIES, LETTER_TYPES } from "../../lib/letterTemplates";
 import { formatINR } from "../../lib/salaryConfig";
-import { useCurrentRole, isHrAdmin, isSuperAdmin, isExecutive } from "@/lib/roles";
+import { useCurrentRole } from "@/lib/use-current-role";
+import { isHrAdmin, isSuperAdmin, isExecutive } from "@/lib/roles";
 import type { HrLetterCategory, GeneratedLetterRecord } from "../../lib/types";
 
 export const HrLettersSection: React.FC = () => {

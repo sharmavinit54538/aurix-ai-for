@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCurrentRole } from "@/lib/roles";
+import { useCurrentRole } from "@/lib/use-current-role";
 import { useAnnouncements } from "../hooks/useAnnouncements";
 import { AnnouncementCard } from "../components/AnnouncementCard";
 import { AnnouncementFormDialog } from "../components/AnnouncementFormDialog";

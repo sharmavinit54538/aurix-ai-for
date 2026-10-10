@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { useCurrentRole, isSuperAdmin, isManager } from "@/lib/roles";
+import { useCurrentRole } from "@/lib/use-current-role";
+import { isSuperAdmin, isManager } from "@/lib/roles";
 import { useAurix } from "@/lib/aurix-store";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";

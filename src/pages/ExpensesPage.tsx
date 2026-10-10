@@ -3,7 +3,8 @@ import { Plus, Receipt, CheckCircle2, XCircle, Wallet, Clock, Upload, RefreshCw,
 import { CsvButton, GlassCard, SearchBox, StatCard, StatusBadge } from "@/components/hrms/Shared";
 import { expensesApi } from "@/services/expensesApi";
 import type { Expense, ExpenseCategory, ExpenseStatus } from "@/lib/hrms/types";
-import { useCurrentRole, isHrAdmin, isManager, isSuperAdmin } from "@/lib/roles";
+import { useCurrentRole } from "@/lib/use-current-role";
+import { isHrAdmin, isManager, isSuperAdmin } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

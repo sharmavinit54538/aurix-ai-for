@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useCurrentRole, isSuperAdmin } from "@/lib/roles";
+import { useCurrentRole } from "@/lib/use-current-role";
+import { isSuperAdmin } from "@/lib/roles";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {

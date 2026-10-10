@@ -3,7 +3,7 @@ import { Plus, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAurix } from "@/lib/aurix-store";
-import { useCurrentRole } from "@/lib/roles";
+import { useCurrentRole } from "@/lib/use-current-role";
 import { api } from "@/api";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";

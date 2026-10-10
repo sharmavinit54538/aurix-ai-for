@@ -61,7 +61,8 @@ import {
 import { useAurix } from "@/lib/aurix-store";
 import { useAuthReady } from "@/lib/auth-bootstrap";
 import { getDefaultDashboardPath } from "@/lib/role-routing";
-import { normalizeRole, useCurrentRole } from "@/lib/roles";
+import { normalizeRole } from "@/lib/roles";
+import { useCurrentRole } from "@/lib/use-current-role";
 import { UserProfileMenu } from "./UserProfileMenu";
 import { NotificationDropdown } from "./NotificationDropdown";
 import { GeminiIcon } from "@/components/icons/GeminiIcon";

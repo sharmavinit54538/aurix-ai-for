@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useAuthReady } from "@/lib/auth-bootstrap";
-import { useCurrentRole } from "@/lib/roles";
+import { useCurrentRole } from "@/lib/use-current-role";
 import type { LucideIcon } from "lucide-react";
 
 export interface ModuleItem {

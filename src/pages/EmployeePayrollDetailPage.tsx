@@ -37,7 +37,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useAurix } from "@/lib/aurix-store";
-import { useCurrentRole, canManagePayroll } from "@/lib/roles";
+import { useCurrentRole } from "@/lib/use-current-role";
+import { canManagePayroll } from "@/lib/roles";
 import { useAppSelector } from "@/redux/hooks";
 import { selectUserPermissions } from "@/store/sidebar/sidebarSelectors";
 import {

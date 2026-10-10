@@ -3,7 +3,7 @@ import { statusBadgeClass } from "@/lib/status-styles";
 import { useState, useMemo, useEffect } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { useAurix } from "@/lib/aurix-store";
-import { useCurrentRole } from "@/lib/roles";
+import { useCurrentRole } from "@/lib/use-current-role";
 import { EmployeeRostersView } from "@/features/portal/employee/components/EmployeeRostersView";
 import {
   ScrollText,
