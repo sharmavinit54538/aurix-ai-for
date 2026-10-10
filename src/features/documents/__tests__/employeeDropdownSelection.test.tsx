@@ -5,6 +5,7 @@ import { HrLettersSection } from "../components/sections/HrLettersSection";
 import { documentsApi } from "../api/documentsApi";
 import { apiInstance } from "@/api";
 import * as rolesModule from "@/lib/roles";
+import * as currentRoleModule from "@/lib/use-current-role";
 
 vi.mock("@/api", () => {
   const getMock = vi.fn();
@@ -57,7 +58,7 @@ describe("HrLettersSection - Select Recipient Employee Workflow", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.spyOn(rolesModule, "useCurrentRole").mockReturnValue("hr_admin");
+    vi.spyOn(currentRoleModule, "useCurrentRole").mockReturnValue("hr_admin");
   });
 
   describe("API Client: documentsApi.getEmployees and getEmployeeDetails", () => {
@@ -247,7 +248,7 @@ describe("HrLettersSection - Select Recipient Employee Workflow", () => {
     });
 
     it("hides confidential salary from regular employee role", async () => {
-      vi.spyOn(rolesModule, "useCurrentRole").mockReturnValue("employee");
+      vi.spyOn(currentRoleModule, "useCurrentRole").mockReturnValue("employee");
 
       vi.spyOn(documentsApi, "getEmployees").mockResolvedValueOnce([
         {

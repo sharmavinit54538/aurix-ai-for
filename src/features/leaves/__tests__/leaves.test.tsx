@@ -41,8 +41,11 @@ let mockRole: string = "hr_admin";
 let mockUser: any = { id: "user-1", fullName: "Admin User", role: "hr_admin" };
 
 vi.mock("@/lib/roles", () => ({
-  useCurrentRole: () => mockRole,
   normalizeRole: (r: string) => r,
+}));
+
+vi.mock("@/lib/use-current-role", () => ({
+  useCurrentRole: () => mockRole,
 }));
 
 vi.mock("@/lib/aurix-store", () => ({

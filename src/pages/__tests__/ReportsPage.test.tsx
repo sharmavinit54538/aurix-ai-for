@@ -23,8 +23,11 @@ vi.mock("@/services/reportsAnalyticsApi", () => ({
 }));
 
 vi.mock("@/lib/roles", () => ({
-  useCurrentRole: vi.fn(() => "hr_admin"),
   normalizeRole: (r: string) => r,
+}));
+
+vi.mock("@/lib/use-current-role", () => ({
+  useCurrentRole: vi.fn(() => "hr_admin"),
 }));
 
 vi.mock("@/api/apiInstance", () => ({

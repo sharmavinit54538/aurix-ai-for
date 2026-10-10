@@ -33,12 +33,15 @@ vi.mock("@/lib/roles", async (importOriginal) => {
   const actual = await importOriginal<any>();
   return {
     ...actual,
-    useCurrentRole: () => "hr_admin",
     isHrAdmin: (r?: string | null) => r === "hr_admin",
     isManager: (r?: string | null) => r === "manager",
     isSuperAdmin: (r?: string | null) => r === "super_admin",
   };
 });
+
+vi.mock("@/lib/use-current-role", () => ({
+  useCurrentRole: () => "hr_admin",
+}));
 
 // Mock recharts responsive container for testing environment
 vi.mock("recharts", async () => {
