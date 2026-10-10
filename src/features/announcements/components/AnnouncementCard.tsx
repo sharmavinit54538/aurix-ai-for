@@ -95,7 +95,11 @@ export function AnnouncementCard({
       </CardHeader>
 
       <CardContent className="pb-4">
-        {announcement.summary ? (
+        {announcement.description ? (
+          <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
+            {announcement.description}
+          </p>
+        ) : announcement.summary ? (
           <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
             {announcement.summary}
           </p>

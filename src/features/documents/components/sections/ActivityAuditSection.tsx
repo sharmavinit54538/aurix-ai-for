@@ -23,7 +23,7 @@ import { useDocumentActivity } from "../../hooks/useDocumentActivity";
 import { subscribeToAuditLog } from "../../lib/auditLogger";
 
 export const ActivityAuditSection: React.FC = () => {
-  const { activities, isLoading, refetch } = useDocumentActivity(1, 100);
+  const { activities, isLoading, refetch, isLocalFallback, serverUnavailable } = useDocumentActivity(1, 100);
   const [search, setSearch] = useState("");
   const [selectedAction, setSelectedAction] = useState("all");
 
@@ -76,7 +76,11 @@ export const ActivityAuditSection: React.FC = () => {
           <div>
             <h2 className="font-bold text-sm text-foreground">Document Activity & Audit Trail</h2>
             <p className="text-xs text-muted-foreground">
-              Comprehensive immutable audit ledger capturing uploads, approvals, rejections, downloads, letter generation, and ID badge issuance.
+              {serverUnavailable
+                ? "Server audit log is not available yet. Showing activity from this session only."
+                : isLocalFallback
+                ? "Local session activity (backend audit trail not available yet)."
+                : "Comprehensive immutable audit ledger capturing uploads, approvals, rejections, downloads, letter generation, and ID badge issuance."}
             </p>
           </div>
         </div>

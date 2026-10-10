@@ -141,20 +141,39 @@ export function useLetterGeneration() {
     []
   );
 
-  // Load employees from real backend API (no mock data fallback)
+  // Load employees from real backend API (no mock data fallback).
+  // fetchEmps intentionally has an empty dependency array so the effect
+  // fires exactly once on mount. selectedLetterTypeId and getPopulatedFields
+  // are NOT deps here — they affect field population after load, not whether
+  // to re-fetch. Closing over them would cause the API to be called again
+  // every time the letter-type dropdown changes, overwriting user selections.
   const fetchEmps = useCallback(async () => {
     setIsLoadingEmployees(true);
     setEmployeeError(null);
     try {
       const live = await documentsApi.getEmployees();
       if (live.length > 0) {
-        setEmployees(live);
+        // Compute the resolved employee synchronously from the API response.
+        // `live` is available in this closure; no need for a functional updater.
         setSelectedEmployeeId((prev) => {
-          const nextId = live.some((e) => e.id === prev) ? prev : live[0].id;
-          const chosenEmp = live.find((e) => e.id === nextId);
-          const initialType = LETTER_TYPES.find((t) => t.id === selectedLetterTypeId) || LETTER_TYPES[0];
-          setCustomFields(getPopulatedFields(initialType, chosenEmp));
-          return nextId;
+          const isValidPrev = prev !== "" && live.some((e) => e.id === prev);
+          // Side-effect-free: just return the resolved ID.
+          return isValidPrev ? prev : live[0].id;
+        });
+        setEmployees(live);
+        // Populate form fields only on initial load (customFields still empty).
+        // Use the default letter type to avoid a stale closure on selectedLetterTypeId.
+        setCustomFields((existingFields) => {
+          if (Object.keys(existingFields).length > 0) {
+            // User already has fields — do not overwrite.
+            return existingFields;
+          }
+          const initialType = LETTER_TYPES.find((t) => t.id === "offer_letter") || LETTER_TYPES[0];
+          // Resolve the employee to use for population.
+          // We re-resolve here because we can't read `selectedEmployeeId` state
+          // synchronously in this async context; but `live[0]` is the safe default.
+          const chosenEmp = live[0];
+          return getPopulatedFields(initialType, chosenEmp);
         });
       } else {
         setEmployees([]);
@@ -167,7 +186,8 @@ export function useLetterGeneration() {
     } finally {
       setIsLoadingEmployees(false);
     }
-  }, [selectedLetterTypeId, getPopulatedFields]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Intentionally empty: employees are fetched exactly once on mount.
 
   useEffect(() => {
     fetchEmps();

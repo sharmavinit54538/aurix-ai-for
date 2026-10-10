@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Activity, History, UserCheck, ClipboardCheck, LogOut, FileCheck } from "lucide-react";
+import { Activity, History, ClipboardCheck, LogOut, FileCheck, Users, Server } from "lucide-react";
 import { ModuleHubView, type ModuleItem } from "@/components/aurix/ModuleHubView";
+import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/dashboard/hr-operations/")({
   head: () => ({ meta: [{ title: "HR Operations Hub — OFC360" }] }),
@@ -23,14 +24,6 @@ const HR_OPS_MODULES: ModuleItem[] = [
     icon: History,
     to: "/dashboard/hr-operations/timeline",
     color: "from-violet-500/20 to-purple-500/20 text-violet-400 border-violet-500/30",
-  },
-  {
-    id: "visitor-management",
-    title: "Visitor Management",
-    description: "Visitor kiosk registration, host notifications, visitor passes, and security logs.",
-    icon: UserCheck,
-    to: "/dashboard/hr-operations/visitor-management",
-    color: "from-cyan-500/20 to-sky-500/20 text-cyan-400 border-cyan-500/30",
   },
   {
     id: "onboarding",
@@ -58,7 +51,28 @@ const HR_OPS_MODULES: ModuleItem[] = [
   },
 ];
 
+// Visitor Management is not yet available - backend endpoint pending
+const UNAVAILABLE_MODULES: ModuleItem[] = [
+  {
+    id: "visitor-management",
+    title: "Visitor Management",
+    description: "Visitor kiosk registration, host notifications, visitor passes, and security logs. (Not available yet)",
+    icon: Users,
+    to: "/dashboard/hr-operations/visitor-management",
+    color: "from-slate-500/20 to-gray-500/20 text-slate-400 border-slate-500/30",
+    badge: "Coming Soon",
+  },
+];
+
 function HrOperationsHubPage() {
-  return <ModuleHubView modules={HR_OPS_MODULES} />;
+  return (
+    <div className="space-y-6">
+      <ModuleHubView modules={HR_OPS_MODULES} />
+      <div className="border-t border-border pt-6">
+        <h3 className="mb-4 text-sm font-semibold text-muted-foreground uppercase tracking-wider">Coming Soon</h3>
+        <ModuleHubView modules={UNAVAILABLE_MODULES} />
+      </div>
+    </div>
+  );
 }
 

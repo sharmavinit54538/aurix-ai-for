@@ -1,10 +1,10 @@
 import React from "react";
-import { FileSpreadsheet, Upload, CheckCircle, XCircle, Download, RefreshCw, AlertCircle } from "lucide-react";
+import { FileSpreadsheet, Upload, CheckCircle, XCircle, Download, RefreshCw, AlertCircle, Server } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDocumentActivity } from "../hooks/useDocumentActivity";
 
 export const ActivityLog: React.FC = () => {
-  const { activities, isLoading, isError, isLocalFallback } = useDocumentActivity(1, 6);
+  const { activities, isLoading, isError, isLocalFallback, serverUnavailable } = useDocumentActivity(1, 6);
 
   // If there's an error or no activity endpoint, show clean fallback rather than fabricated log
   if (isError) {
@@ -36,7 +36,9 @@ export const ActivityLog: React.FC = () => {
           Recent Document Activity
         </CardTitle>
         <CardDescription className="text-[11px] text-muted-foreground">
-          {isLocalFallback
+          {serverUnavailable
+            ? "Server audit log is not available yet. Showing activity from this session only."
+            : isLocalFallback
             ? "Local session activity (backend audit trail not available yet)"
             : "Live audit trail of document events across the organization."}
         </CardDescription>

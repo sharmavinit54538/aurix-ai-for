@@ -46,6 +46,7 @@ export function AnnouncementFormDialog({
   const isEditing = Boolean(announcement);
 
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [content, setContent] = useState("");
   const [targetAudience, setTargetAudience] = useState("ALL_TENANTS");
   const [priority, setPriority] = useState<string>("normal");
@@ -60,12 +61,14 @@ export function AnnouncementFormDialog({
   useEffect(() => {
     if (announcement) {
       setTitle(announcement.title ?? "");
+      setDescription(announcement.description ?? announcement.summary ?? "");
       setContent(announcement.content ?? "");
       setTargetAudience(announcement.targetAudience ?? "ALL_TENANTS");
       setPriority(announcement.priority ?? "normal");
       setIsPinned(announcement.isPinned ?? false);
     } else {
       setTitle("");
+      setDescription("");
       setContent("");
       setTargetAudience("ALL_TENANTS");
       setPriority("normal");
@@ -83,10 +86,16 @@ export function AnnouncementFormDialog({
       return;
     }
 
+    if (!description.trim()) {
+      setFieldErrors({ description: "Description is required" });
+      return;
+    }
+
     try {
       if (isEditing && announcement) {
         const payload: UpdateAnnouncementInput = {
           title: title.trim(),
+          description: description.trim(),
           content: content.trim() || undefined,
           target_audience: targetAudience.trim() || undefined,
           priority,
@@ -97,6 +106,7 @@ export function AnnouncementFormDialog({
       } else {
         const payload: CreateAnnouncementInput = {
           title: title.trim(),
+          description: description.trim(),
           content: content.trim() || undefined,
           target_audience: targetAudience.trim() || undefined,
           priority,
@@ -152,6 +162,24 @@ export function AnnouncementFormDialog({
               />
               {fieldErrors.title && (
                 <p className="text-[11px] text-destructive font-medium">{fieldErrors.title}</p>
+              )}
+            </div>
+
+            {/* Description */}
+            <div className="space-y-1.5">
+              <Label htmlFor="description" className="text-xs font-semibold">
+                Description <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Short summary shown in feeds and notifications"
+                disabled={isPending}
+                className={fieldErrors.description ? "border-destructive focus-visible:ring-destructive" : ""}
+              />
+              {fieldErrors.description && (
+                <p className="text-[11px] text-destructive font-medium">{fieldErrors.description}</p>
               )}
             </div>
 

@@ -30,7 +30,6 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<AppRole, string[]> = {
     "hrops.view",
     "hrops.dashboard",
     "hrops.timeline",
-    "hrops.visitors",
     "hrops.onboarding",
     "hrops.offboarding",
     "hrops.exit",

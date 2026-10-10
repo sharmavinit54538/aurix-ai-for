@@ -1,6 +1,7 @@
 import { apiInstance } from "@/api";
 import { getMergedStandardCategories } from "../lib/categoryMap";
 import { logDocumentAuditEvent, getCombinedAuditActivities } from "../lib/auditLogger";
+import { settingsApi } from "@/services/settingsApi";
 import type {
   BackendCategory,
   BackendDocumentItem,
@@ -357,19 +358,20 @@ export const documentsApi = {
   async getDocumentActivity(
     page = 1,
     limit = 20
-  ): Promise<{ items: DocumentActivityItem[]; total: number; isLocalFallback?: boolean }> {
+  ): Promise<{ items: DocumentActivityItem[]; total: number; isLocalFallback?: boolean; serverUnavailable?: boolean }> {
     let backendItems: DocumentActivityItem[] = [];
     let total = 0;
     let isLocalFallback = false;
+    let serverUnavailable = false;
 
     try {
-      const res = await apiInstance.get("/documents/activity", {
-        params: { page, limit },
-        headers: { "Cache-Control": "no-cache" },
-        skipCache: true,
+      // Try to fetch audit logs filtered for document events
+      const res = await settingsApi.getAuditLogs({
+        page,
+        limit,
+        module: "documents",
       });
-      const body = res.data;
-      const rawItems = body?.data?.items ?? body?.data ?? body?.items ?? [];
+      const rawItems = res.items;
       if (Array.isArray(rawItems) && rawItems.length > 0) {
         backendItems = rawItems.map((item: Record<string, unknown>, idx: number) => {
           const docId = String(item.document_id || item.documentId || item.id || "");
@@ -379,20 +381,25 @@ export const documentsApi = {
           return {
             id: stableId,
             documentId: docId || "doc",
-            documentName: String(item.document_name || item.documentName || item.title || "Document"),
+            documentName: String(item.document_name || item.documentName || item.title || item.action || "Document"),
             action: String(item.action || "Updated"),
-            performedBy: String(item.performed_by || item.performedBy || item.user_name || "System"),
+            performedBy: String(item.user || item.performed_by || item.performedBy || item.user_name || "System"),
             timestamp,
             details: item.details ? String(item.details) : undefined,
             employeeName: item.employee_name ? String(item.employee_name) : undefined,
             employeeId: item.employee_id ? String(item.employee_id) : undefined,
           };
         });
-        total = body?.meta?.total ?? backendItems.length;
+        total = res.total ?? backendItems.length;
       } else {
         isLocalFallback = true;
       }
-    } catch {
+    } catch (err: unknown) {
+      const errObj = err as { response?: { status?: number } };
+      if (errObj?.response?.status === 404 || errObj?.response?.status === 501) {
+        // Server audit log endpoint not available
+        serverUnavailable = true;
+      }
       isLocalFallback = true;
     }
 
@@ -401,6 +408,7 @@ export const documentsApi = {
       items: combined.slice((page - 1) * limit, page * limit),
       total: Math.max(total, combined.length),
       isLocalFallback,
+      serverUnavailable,
     };
   },
 

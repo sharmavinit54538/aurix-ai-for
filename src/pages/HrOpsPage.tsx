@@ -2,9 +2,9 @@ import { Link } from "@tanstack/react-router";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Activity, Package, Users, Receipt, Plane, LogOut, UserCheck, Archive, RefreshCw, AlertCircle,
+  Server,
 } from "lucide-react";
 import { GlassCard, StatCard } from "@/components/hrms/Shared";
-import { hrOpsApi, type HrOpsOverview } from "@/services/hrOpsApi";
 import { Button } from "@/components/ui/button";
 import {
   Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
@@ -14,7 +14,6 @@ import { toast } from "sonner";
 const QUICK_LINKS = [
   { to: "/dashboard/hr-operations/onboarding", label: "Onboarding", icon: UserCheck },
   { to: "/dashboard/hr-operations/timeline", label: "Timeline", icon: Activity },
-  { to: "/dashboard/hr-operations/visitor-management", label: "Visitors", icon: Users },
   { to: "/dashboard/resources/assets", label: "Assets", icon: Package },
   { to: "/dashboard/expenses", label: "Expenses", icon: Receipt },
   { to: "/dashboard/travel", label: "Travel", icon: Plane },
@@ -28,13 +27,17 @@ export function HrOpsPage() {
   const [data, setData] = useState<HrOpsOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [serverUnavailable, setServerUnavailable] = useState(false);
 
   const loadOverview = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setServerUnavailable(false);
     try {
-      const res = await hrOpsApi.getOverview();
-      setData(res);
+      // The /api/v2/hr-ops/overview endpoint is not yet available on the backend.
+      // Show "not available yet" state instead of calling the missing endpoint.
+      setServerUnavailable(true);
+      setData(null);
     } catch (err: any) {
       const msg = err?.response?.data?.message || err?.message || "Failed to load HR Operations overview";
       setError(msg);
@@ -73,6 +76,21 @@ export function HrOpsPage() {
 
   return (
     <>
+      {serverUnavailable && (
+        <div className="mb-6 rounded-2xl border border-dashed border-border bg-card/40 p-6 text-center">
+          <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-xl text-amber-500 border border-amber-500/20">
+            <Server className="h-5 w-5" />
+          </div>
+          <h3 className="font-semibold text-foreground mb-1">HR Operations Overview Unavailable</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            The HR Operations overview dashboard is not available yet. Backend endpoint is pending implementation.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Use the quick links below to access individual HR Operations modules.
+          </p>
+        </div>
+      )}
+
       <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Timeline events" value={data?.timeline?.length ?? 0} icon={Activity} />
         <StatCard label="Assets tracked" value={data?.assets?.total ?? 0} icon={Package} accent="brand" />

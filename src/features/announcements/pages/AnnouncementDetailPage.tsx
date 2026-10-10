@@ -165,10 +165,10 @@ export default function AnnouncementDetailPage() {
                 )}
               </div>
 
-              {/* Summary Lead if present */}
-              {announcement.summary && (
+              {/* Summary / Description Lead if present */}
+              {(announcement.description || announcement.summary) && (
                 <div className="p-4 rounded-lg bg-muted/40 border-l-4 border-primary text-sm font-medium text-foreground leading-relaxed">
-                  {announcement.summary}
+                  {announcement.description ?? announcement.summary}
                 </div>
               )}
 

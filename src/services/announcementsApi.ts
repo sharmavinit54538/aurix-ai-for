@@ -15,6 +15,7 @@ export const RawAnnouncementItemSchema = z
   .object({
     id: z.union([z.string(), z.number()]).transform((v) => String(v)),
     title: z.string().min(1, "Announcement title is required"),
+    description: z.string().nullable().optional(),
     content: z.string().nullable().optional(),
     summary: z.string().nullable().optional(),
     target_audience: z.string().nullable().optional(),
@@ -47,6 +48,7 @@ export type RawAnnouncementItem = z.infer<typeof RawAnnouncementItemSchema>;
 export interface Announcement {
   id: string;
   title: string;
+  description: string | null;
   content: string | null;
   summary: string | null;
   targetAudience: string | null;
@@ -64,6 +66,7 @@ export function normalizeAnnouncement(raw: RawAnnouncementItem): Announcement {
   return {
     id: raw.id,
     title: raw.title,
+    description: raw.description ?? null,
     content: raw.content ?? null,
     summary: raw.summary ?? null,
     targetAudience: raw.target_audience ?? raw.targetAudience ?? null,
@@ -85,6 +88,7 @@ export interface AnnouncementsListResult {
 
 export interface CreateAnnouncementInput {
   title: string;
+  description: string;
   content?: string;
   target_audience?: string;
   priority?: "low" | "normal" | "high" | "urgent" | string;
@@ -93,6 +97,7 @@ export interface CreateAnnouncementInput {
 
 export interface UpdateAnnouncementInput {
   title?: string;
+  description?: string;
   content?: string;
   target_audience?: string;
   priority?: "low" | "normal" | "high" | "urgent" | string;

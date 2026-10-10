@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAurix } from "@/lib/aurix-store";
 import { apiInstance } from "@/api";
+import { profileApi } from "@/services/profileApi";
 
 export interface CurrentEmployeeProfile {
   employeeProfileId: string;
@@ -32,47 +33,76 @@ export function useCurrentEmployeeProfile() {
         };
       }
 
-      // 2. Try GET /employees/me
+      // 2. Get current user profile from /users/me (or /auth/me fallback)
+      // to get user details including potential employeeId field
+      let profile: {
+        id: string;
+        fullName: string;
+        email: string;
+        role: string;
+        designation: string;
+        department: string;
+        employeeId?: string;
+        employee_id?: string;
+      } | null = null;
+
       try {
-        const meRes = await apiInstance.get("/employees/me");
-        const meData = meRes.data?.data ?? meRes.data;
-        if (meData && meData.id) {
-          return {
-            employeeProfileId: String(meData.id),
-            employeeName:
-              [meData.first_name, meData.last_name].filter(Boolean).join(" ").trim() ||
-              meData.full_name ||
-              user.fullName,
-            employeeCode: meData.employee_id || meData.employee_code,
-            department: meData.department,
-            designation: meData.designation,
-          };
-        }
+        const profileRes = await profileApi.getCurrentUser();
+        profile = {
+          id: profileRes.id,
+          fullName: profileRes.fullName,
+          email: profileRes.email,
+          role: profileRes.role,
+          designation: profileRes.designation,
+          department: profileRes.department,
+          employeeId: (profileRes as Record<string, unknown>).employeeId as string | undefined,
+          employee_id: (profileRes as Record<string, unknown>).employee_id as string | undefined,
+        };
       } catch {
-        // Fall through to search
+        // If profile fetch fails, use stored user
+        profile = {
+          id: user.id,
+          fullName: user.fullName,
+          email: user.email,
+          role: user.role,
+          designation: "",
+          department: "",
+        };
+      }
+
+      // Check if profile has employeeId
+      const profileEmpId = profile.employeeId || profile.employee_id;
+      if (profileEmpId && UUID_REGEX.test(profileEmpId)) {
+        return {
+          employeeProfileId: profileEmpId,
+          employeeName: profile.fullName || "Employee",
+          employeeCode: "",
+          department: profile.department,
+          designation: profile.designation,
+        };
       }
 
       // 3. Query /employees directory with user's email
-      if (user.email) {
+      if (profile?.email) {
         try {
           const listRes = await apiInstance.get("/employees", {
-            params: { search: user.email, limit: 10 },
+            params: { search: profile.email, limit: 10 },
           });
           const rawItems = listRes.data?.data?.items ?? listRes.data?.data ?? listRes.data ?? [];
           if (Array.isArray(rawItems)) {
             const match = rawItems.find(
               (e: Record<string, unknown>) =>
                 e.user_id === user.id ||
-                e.company_email === user.email ||
-                e.personal_email === user.email ||
-                e.email === user.email
+                e.company_email === profile?.email ||
+                e.personal_email === profile?.email ||
+                e.email === profile?.email
             );
             if (match && match.id) {
               return {
                 employeeProfileId: String(match.id),
                 employeeName:
                   [match.first_name, match.last_name].filter(Boolean).join(" ").trim() ||
-                  String(match.full_name || user.fullName),
+                  String(match.full_name || profile.fullName),
                 employeeCode: String(match.employee_id || match.employee_code || ""),
                 department: String(match.department || ""),
                 designation: String(match.designation || ""),
@@ -95,8 +125,8 @@ export function useCurrentEmployeeProfile() {
       return null;
     },
     enabled: Boolean(user?.id),
-    staleTime: 10 * 60 * 1000, // 10 minutes cache
-    gcTime: 30 * 60 * 1000,
+    staleTime: 60 * 60 * 1000, // 1 hour cache (once per session)
+    gcTime: 24 * 60 * 60 * 1000, // 24 hours
   });
 
   return {
