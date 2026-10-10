@@ -186,6 +186,7 @@ const NAV_SECTIONS: SidebarNavSection[] = [
         icon: BarChart3,
         permission: "analytics.view",
         roles: ["super_admin", "hr_admin", "executive", "manager"],
+        matchPrefixes: ["/dashboard/recruitment/analytics"],
       },
       {
         to: "/dashboard/autopilot",
@@ -553,7 +554,6 @@ export function DashboardShell() {
     const isEmployeePortalPath = pathname === "/dashboard/employee" || pathname.startsWith("/dashboard/employee/");
     const isManagerPortalPath = pathname === "/dashboard/manager" || pathname.startsWith("/dashboard/manager/");
     const isExecutivePortalPath = pathname === "/dashboard/executive" || pathname.startsWith("/dashboard/executive/");
-    const isRecruiterPortalPath = pathname === "/dashboard/recruitment" || pathname.startsWith("/dashboard/recruitment/");
 
     if (currentRole === "super_admin" || isSuperAdminPortalPath) {
       return filterNavTree(SUPER_ADMIN_NAV_SECTIONS, currentRole || undefined, userPermissions);
@@ -570,7 +570,7 @@ export function DashboardShell() {
     if (currentRole === "manager" || isManagerPortalPath) {
       return filterNavTree(MANAGER_NAV_SECTIONS, currentRole || undefined, userPermissions);
     }
-    if (currentRole === "recruiter" || isRecruiterPortalPath) {
+    if (currentRole === "recruiter") {
       return filterNavTree(RECRUITER_NAV_SECTIONS, currentRole || undefined, userPermissions);
     }
     const computed = filterNavTree(NAV_SECTIONS, currentRole || undefined, userPermissions);
@@ -662,7 +662,11 @@ export function DashboardShell() {
                       />
                     );
                   }
-                  const active = item.exact ? pathname === item.to : pathname === item.to || pathname.startsWith(item.to + "/");
+                  const active = item.exact
+                      ? pathname === item.to
+                      : pathname === item.to ||
+                        pathname.startsWith(item.to + "/") ||
+                        (item.matchPrefixes?.some((prefix) => pathname === prefix || pathname.startsWith(prefix + "/")) ?? false);
                   const Icon = item.icon;
                   return (
                     <Link

@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AlertCircle, Download, RefreshCw } from "lucide-react";
 import { getErrorMessage } from "@/api/utils";
-import { useCurrentRole, normalizeRole } from "@/lib/roles";
+import { useCurrentRole } from "@/lib/use-current-role";
+import { normalizeRole } from "@/lib/roles";
 import apiInstance from "@/api/apiInstance";
 import {
   reportsAnalyticsApi,

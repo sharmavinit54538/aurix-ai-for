@@ -4,7 +4,8 @@ import { GlassCard, QrTile, SearchBox, StatCard, StatusBadge } from "@/component
 import { visitorsApi, createVisitorError } from "@/services/visitorsApi";
 import { documentsApi } from "@/features/documents/api/documentsApi";
 import type { Visitor, VisitorStatus } from "@/lib/hrms/types";
-import { useCurrentRole, isHrAdmin, isManager, isSuperAdmin } from "@/lib/roles";
+import { useCurrentRole } from "@/lib/use-current-role";
+import { isHrAdmin, isManager, isSuperAdmin } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

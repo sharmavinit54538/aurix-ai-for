@@ -126,7 +126,6 @@ export const ROUTE_ROLE_ACCESS: Record<string, AppRole[]> = {
 
 import { getDefaultDashboardPath } from "./role-paths";
 export { getDefaultDashboardPath } from "./role-paths";
-export { getSafeRedirectUrl } from "./role-routing";
 
 export function getRoleDefaultHome(role?: string | null): string {
   // Delegate to central role dashboard resolver

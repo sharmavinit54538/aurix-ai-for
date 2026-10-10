@@ -12,6 +12,7 @@ export interface SidebarNavLeaf {
   permission?: string;
   badge?: BadgeKind;
   count?: number;
+  matchPrefixes?: string[];
 }
 
 export interface SidebarNavParent {

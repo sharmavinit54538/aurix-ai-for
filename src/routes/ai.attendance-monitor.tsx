@@ -14,7 +14,7 @@ import {
 import { AIModulePage, AIChart, AIKpi, AIFeature } from "@/components/aurix/AIModule";
 import { Button } from "@/components/ui/button";
 import { attendanceApi, AttendanceAnalyticsSummary, AttendanceHistoryItem } from "@/services/attendanceApi";
-import { useCurrentRole } from "@/lib/roles";
+import { useCurrentRole } from "@/lib/use-current-role";
 
 export const Route = createFileRoute("/ai/attendance-monitor")({
   head: () => ({ meta: [{ title: "AI Attendance Monitor — OFC360" }] }),

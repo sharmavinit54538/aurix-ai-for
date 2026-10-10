@@ -32,7 +32,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAurix } from "@/lib/aurix-store";
-import { useCurrentRole } from "@/lib/roles";
+import { useCurrentRole } from "@/lib/use-current-role";
 import { useAppSelector } from "@/redux/hooks";
 import { selectUserPermissions } from "@/store/sidebar/sidebarSelectors";
 import {

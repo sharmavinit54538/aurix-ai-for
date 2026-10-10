@@ -1,5 +1,4 @@
 import type { PayrollValidationSummary, PayrollValidationIssue } from "@/services/payrollApi";
-import { getValidationStatusBadge } from "../utils/payrollValidation.utils";
 
 export type { PayrollValidationIssue };
 
@@ -14,7 +13,7 @@ export interface ValidationSubNavigationProps {
 export interface ValidationPageHeaderProps {
   runId: string;
   validationData: PayrollValidationSummary | null;
-  statusBadge: ReturnType<typeof getValidationStatusBadge>;
+  statusBadge: ValidationStatusBadge;
   canRunPayroll: boolean;
   onNavigateToPreview: () => void;
   onNavigateToValidation: () => void;
@@ -25,7 +24,7 @@ export interface ValidationPageHeaderProps {
 
 export interface ValidationSummaryCardsProps {
   validationData: PayrollValidationSummary | null;
-  statusBadge: ReturnType<typeof getValidationStatusBadge>;
+  statusBadge: ValidationStatusBadge;
 }
 
 export interface ValidationFiltersProps {

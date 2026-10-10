@@ -3,6 +3,7 @@
  * Re-exports role helpers from `roles.ts` and defines RBAC groups.
  */
 export * from "./roles";
+export { useCurrentRole } from "./use-current-role";
 export type { AppRole as Role } from "./roles";
 
 // Company organization role groups

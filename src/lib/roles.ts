@@ -1,4 +1,3 @@
-import { useAurix } from "./aurix-store";
 
 /**
  * Exactly 6 canonical roles supported by OFC360:
@@ -127,15 +126,6 @@ export function normalizeRole(raw?: string | null): AppRole | null {
     default:
       return null;
   }
-}
-
-/**
- * Reads the role ONLY from the authenticated user state (aurix store: ws.user.role).
- * NEVER reads from localStorage.getItem("user_role") or any client-writable source.
- */
-export function useCurrentRole(): AppRole | null {
-  const ws = useAurix();
-  return normalizeRole(ws.user?.role);
 }
 
 // ── Role Check Helpers ────────────────────────────────────────────────────────

@@ -15,12 +15,17 @@ import type { AuthMeResponse, AuthUserPayload } from "@/api";
 import { aurix } from "./aurix-store";
 import { safeStorage } from "./safe-storage";
 import { normalizeRole } from "./rbac";
-import { clearQueryCache } from "@/router";
+import { clearQueryCache } from "@/lib/query-client";
 
 type AuthStatus = "loading" | "ready";
 
-let status: AuthStatus = typeof window === "undefined" ? "ready" : "loading";
-let bootstrapPromise: Promise<void> | null = null;
+const authBootstrapState: {
+  status: AuthStatus;
+  bootstrapPromise: Promise<void> | null;
+} = {
+  status: typeof window === "undefined" ? "ready" : "loading",
+  bootstrapPromise: null,
+};
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -28,7 +33,7 @@ function emit() {
 }
 
 function setStatus(next: AuthStatus) {
-  status = next;
+  authBootstrapState.status = next;
   emit();
 }
 
@@ -80,9 +85,9 @@ export async function bootstrapAuth(): Promise<void> {
     /* ignore */
   }
 
-  if (bootstrapPromise) return bootstrapPromise;
+  if (authBootstrapState.bootstrapPromise) return authBootstrapState.bootstrapPromise;
 
-  bootstrapPromise = (async () => {
+  authBootstrapState.bootstrapPromise = (async () => {
     const finish = () => {
       aurix.set({ isRestoring: false });
       setStatus("ready");
@@ -138,7 +143,7 @@ export async function bootstrapAuth(): Promise<void> {
     }
   })();
 
-  return bootstrapPromise;
+  return authBootstrapState.bootstrapPromise;
 }
 
 if (typeof window !== "undefined") {
@@ -152,7 +157,14 @@ if (typeof window !== "undefined") {
  * refresh-token flow and incorrectly redirect to login on page refresh.
  */
 export function waitForAuth(): Promise<void> {
-  return bootstrapPromise ?? Promise.resolve();
+  try {
+    return (
+      (typeof authBootstrapState !== "undefined" && authBootstrapState.bootstrapPromise) ||
+      Promise.resolve()
+    );
+  } catch {
+    return Promise.resolve();
+  }
 }
 
 export function useAuthReady(): boolean {
@@ -161,7 +173,7 @@ export function useAuthReady(): boolean {
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
-    () => status === "ready",
+    () => (typeof authBootstrapState !== "undefined" && authBootstrapState.status === "ready"),
     () => true,
   );
 }

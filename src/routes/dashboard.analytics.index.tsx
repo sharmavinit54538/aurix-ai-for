@@ -5,11 +5,9 @@ import {
   Sparkles,
   Brain,
   UserCheck,
-  ShieldCheck,
-  Wrench,
 } from "lucide-react";
 import { ModuleHubView, type ModuleItem } from "@/components/aurix/ModuleHubView";
-import { useCurrentRole } from "@/lib/roles";
+import { useCurrentRole } from "@/lib/use-current-role";
 import { checkRouteAccess } from "@/lib/route-guards";
 
 export const Route = createFileRoute("/dashboard/analytics/")({
@@ -54,24 +52,6 @@ const ALL_ANALYTICS_MODULES: ModuleItem[] = [
     icon: UserCheck,
     to: "/dashboard/recruitment/analytics",
     color: "from-emerald-500/20 to-teal-500/20 text-emerald-400 border-emerald-500/30",
-  },
-  {
-    id: "cio-analytics",
-    title: "Technology & IT Analytics",
-    description:
-      "Infrastructure uptime, device compliance, SaaS licensing, and security telemetry for executive leaders.",
-    icon: ShieldCheck,
-    to: "/dashboard/executive/cio/analytics",
-    color: "from-sky-500/20 to-cyan-500/20 text-sky-400 border-sky-500/30",
-  },
-  {
-    id: "cto-analytics",
-    title: "Engineering & Tech Analytics",
-    description:
-      "Engineering velocity, deployment health, security vulnerability trends, and technical infrastructure ROI.",
-    icon: Wrench,
-    to: "/dashboard/executive/cto/analytics",
-    color: "from-amber-500/20 to-orange-500/20 text-amber-400 border-amber-500/30",
   },
 ];
 

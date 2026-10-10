@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { useCurrentRole } from "@/lib/roles";
+import { useCurrentRole } from "@/lib/use-current-role";
 import { AccessDeniedState } from "@/features/superAdmin/components/SuperAdminStates";
 
 /**
