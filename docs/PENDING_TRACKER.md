@@ -81,5 +81,6 @@
 | **F-12.2** | DONE | `src/api/apiInstance.ts`, `src/api/tokens.ts` | Existing tests pass (435) | Removed 6 console.log calls from auth modules (request/response interceptors and refreshAccessToken) |
 | **F-13.1** | DONE | `docs/FEATURE_READINESS.md` | None | Inventory of 110 pages across 8 categories: 44 LIVE, 5 PARTIAL, 33 UNAVAILABLE, 28 HIDDEN. Executive sub-routes redirected per EXEC_PAGES_STATUS.md; Payroll 14 UNAVAILABLE per PAYROLL_BACKEND_TODO.md; Settings 5 UNAVAILABLE; Recruitment 14 UNAVAILABLE. |
 | **F-14.1** | DONE | None (verified) | Existing tests pass (435) | Verified 125 allow-listed endpoints in backend-add-allowlist.json; all 547 frontend API calls match openapi.json or allowlist (check:contract passes); UI gracefully degrades for unavailable endpoints (activity log shows local fallback, letter generation falls back to sessionStorage, payroll pages show "Feature unavailable — backend pending" banners) |
+| **F-15.1** | DONE | `docs/FRONTEND_FINAL_REPORT.md` | Existing tests pass (435) | All 6 phases complete: 44 LIVE pages, 33 UNAVAILABLE (honest banners), 28 HIDDEN (redirected), 5 PARTIAL; 435 tests pass, typecheck 0 errors, build 4.83s, contract check 547/547 PASS |
 
 
