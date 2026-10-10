@@ -1,0 +1,9 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
+
+const ExpensesPage = lazyFeaturePage(() => import("@/pages/ExpensesPage"));
+
+export const Route = createFileRoute("/dashboard/resources/expenses")({
+  head: () => ({ meta: [{ title: "Expense Management — OFC360" }] }),
+  component: ExpensesPage,
+});

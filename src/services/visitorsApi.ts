@@ -1,4 +1,5 @@
 import apiInstance from "@/api/apiInstance";
+import { extractValidationErrors } from "@/api/utils";
 import type { Visitor, VisitorStatus } from "@/lib/hrms/types";
 
 export interface BackendVisitor {
@@ -20,23 +21,49 @@ export interface BackendVisitor {
   created_at: string;
 }
 
-export function mapVisitorFromBackend(raw: BackendVisitor | any): Visitor {
+const VALID_STATUSES: VisitorStatus[] = ["pending", "approved", "checked-in", "checked-out", "rejected"];
+
+function normalizeStatus(raw: string): VisitorStatus {
+  const normalized = raw.toLowerCase().replace(/[\s_]+/g, "-");
+  if (VALID_STATUSES.includes(normalized as VisitorStatus)) {
+    return normalized as VisitorStatus;
+  }
+  return "pending";
+}
+
+export function mapVisitorFromBackend(raw: BackendVisitor | Record<string, unknown>): Visitor {
+  const r = raw as Record<string, unknown>;
   return {
-    id: String(raw.id || raw._id || ""),
-    name: raw.name || "Anonymous Visitor",
-    company: raw.company || undefined,
-    email: raw.email || undefined,
-    phone: raw.phone || undefined,
-    photoUrl: raw.photo_url || raw.photoUrl || undefined,
-    hostEmployee: raw.host_employee || raw.host_employee_id || raw.hostEmployee || "Unassigned",
-    purpose: raw.purpose || "",
-    expectedDurationMins: raw.expected_duration_mins != null ? Number(raw.expected_duration_mins) : (raw.expectedDurationMins != null ? Number(raw.expectedDurationMins) : 0),
-    checkInAt: raw.check_in_at || raw.checkInAt || undefined,
-    checkOutAt: raw.check_out_at || raw.checkOutAt || undefined,
-    status: (raw.status || "pending").toLowerCase() as VisitorStatus,
-    passCode: raw.pass_code || raw.passCode || `VIS-${String(raw.id || "").slice(-4)}`,
-    createdAt: raw.created_at || raw.createdAt || new Date().toISOString(),
+    id: String(r.id ?? r._id ?? ""),
+    name: typeof r.name === "string" ? r.name : "",
+    company: typeof r.company === "string" ? r.company : undefined,
+    email: typeof r.email === "string" ? r.email : undefined,
+    phone: typeof r.phone === "string" ? r.phone : undefined,
+    photoUrl: typeof r.photo_url === "string" ? r.photo_url : (typeof r.photoUrl === "string" ? r.photoUrl : undefined),
+    hostEmployee: typeof r.host_employee === "string" ? r.host_employee : (typeof r.host_employee_id === "string" ? r.host_employee_id : ""),
+    purpose: typeof r.purpose === "string" ? r.purpose : "",
+    expectedDurationMins:
+      typeof r.expected_duration_mins === "number"
+        ? r.expected_duration_mins
+        : typeof r.expectedDurationMins === "number"
+        ? r.expectedDurationMins
+        : 0,
+    checkInAt: typeof r.check_in_at === "string" ? r.check_in_at : (typeof r.checkInAt === "string" ? r.checkInAt : undefined),
+    checkOutAt: typeof r.check_out_at === "string" ? r.check_out_at : (typeof r.checkOutAt === "string" ? r.checkOutAt : undefined),
+    status: normalizeStatus(typeof r.status === "string" ? r.status : "pending"),
+    passCode: typeof r.pass_code === "string" ? r.pass_code : (typeof r.passCode === "string" ? r.passCode : ""),
+    createdAt: typeof r.created_at === "string" ? r.created_at : (typeof r.createdAt === "string" ? r.createdAt : ""),
   };
+}
+
+function stripEmpty<T extends Record<string, unknown>>(obj: T): Partial<T> {
+  const result: Partial<T> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined && value !== "" && value !== null) {
+      result[key as keyof T] = value as T[keyof T];
+    }
+  }
+  return result;
 }
 
 export const visitorsApi = {
@@ -46,7 +73,7 @@ export const visitorsApi = {
     page?: number;
     limit?: number;
   }): Promise<{ items: Visitor[]; total: number }> {
-    const res = await apiInstance.get("/api/v2/visitors", { params });
+    const res = await apiInstance.get("/api/v1/visitors", { params });
     const rawData = res.data?.data ?? res.data;
     const itemsRaw = rawData?.items ?? (Array.isArray(rawData) ? rawData : []);
     const total = rawData?.total ?? itemsRaw.length;
@@ -62,51 +89,51 @@ export const visitorsApi = {
     email?: string;
     phone?: string;
     photoUrl?: string;
-    hostEmployee: string;
+    hostEmployeeId: string;
     purpose: string;
     expectedDurationMins: number;
   }): Promise<Visitor> {
-    const body = {
+    const body = stripEmpty({
       name: payload.name,
       company: payload.company,
       email: payload.email,
       phone: payload.phone,
       photo_url: payload.photoUrl,
-      host_employee: payload.hostEmployee,
+      host_employee_id: payload.hostEmployeeId,
       purpose: payload.purpose,
       expected_duration_mins: payload.expectedDurationMins,
-    };
-    const res = await apiInstance.post("/api/v2/visitors", body);
+    });
+    const res = await apiInstance.post("/api/v1/visitors", body);
     const raw = res.data?.data ?? res.data;
     return mapVisitorFromBackend(raw);
   },
 
   async approveVisitor(id: string): Promise<Visitor> {
-    const res = await apiInstance.post(`/api/v2/visitors/${id}/approve`);
+    const res = await apiInstance.post(`/api/v1/visitors/${id}/approve`);
     const raw = res.data?.data ?? res.data;
     return mapVisitorFromBackend(raw);
   },
 
   async rejectVisitor(id: string): Promise<Visitor> {
-    const res = await apiInstance.post(`/api/v2/visitors/${id}/reject`);
+    const res = await apiInstance.post(`/api/v1/visitors/${id}/reject`);
     const raw = res.data?.data ?? res.data;
     return mapVisitorFromBackend(raw);
   },
 
   async checkInVisitor(id: string): Promise<Visitor> {
-    const res = await apiInstance.post(`/api/v2/visitors/${id}/check-in`);
+    const res = await apiInstance.post(`/api/v1/visitors/${id}/check-in`);
     const raw = res.data?.data ?? res.data;
     return mapVisitorFromBackend(raw);
   },
 
   async checkOutVisitor(id: string): Promise<Visitor> {
-    const res = await apiInstance.post(`/api/v2/visitors/${id}/check-out`);
+    const res = await apiInstance.post(`/api/v1/visitors/${id}/check-out`);
     const raw = res.data?.data ?? res.data;
     return mapVisitorFromBackend(raw);
   },
 
   async getVisitorSummary(): Promise<{ today: number; checkedIn: number; pending: number; total: number }> {
-    const res = await apiInstance.get("/api/v2/visitors/summary");
+    const res = await apiInstance.get("/api/v1/visitors/summary");
     const raw = res.data?.data ?? res.data ?? {};
     return {
       today: Number(raw.today ?? 0),
@@ -117,7 +144,14 @@ export const visitorsApi = {
   },
 
   async exportVisitors(): Promise<Blob> {
-    const res = await apiInstance.get("/api/v2/visitors/export", { responseType: "blob" });
+    const res = await apiInstance.get("/api/v1/visitors/export", { responseType: "blob" });
     return res.data;
   },
 };
+
+export function createVisitorError(error: unknown): { message: string; fieldErrors: Record<string, string> } {
+  return {
+    message: error instanceof Error ? error.message : "Failed to create visitor",
+    fieldErrors: extractValidationErrors(error),
+  };
+}

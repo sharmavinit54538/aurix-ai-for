@@ -231,7 +231,7 @@ const EMPLOYEE_NAV_SECTIONS: SidebarNavSection[] = [
         icon: Timer,
       },
       {
-        to: "/dashboard/expenses",
+        to: "/dashboard/resources/expenses",
         label: "Expense Claims",
         icon: Receipt,
       },
@@ -290,7 +290,7 @@ const MANAGER_NAV_SECTIONS: SidebarNavSection[] = [
         icon: Timer,
       },
       {
-        to: "/dashboard/expenses",
+        to: "/dashboard/resources/expenses",
         label: "Expense Claims",
         icon: Receipt,
       },

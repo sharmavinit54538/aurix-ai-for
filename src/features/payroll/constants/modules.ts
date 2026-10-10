@@ -298,7 +298,7 @@ export const PAYROLL_MODULES_LIST: PayrollModuleItem[] = [
     description:
       "Manage employee expense claims, approvals, reimbursements and payroll integration.",
     icon: FileBadge,
-    to: "/dashboard/expenses",
+    to: "/dashboard/resources/expenses",
     color: "from-cyan-500/20 to-blue-500/20 text-cyan-400 border-cyan-500/30",
     row: 8,
   },

@@ -257,6 +257,11 @@ export interface OnboardingCase {
   joinDate: string;
   manager: string;
   tasks: OnboardingTask[];
+  // Fields from the real backend progress list endpoint
+  completionPercentage?: number;
+  currentStep?: string;
+  department?: string;
+  missingDocuments?: string[];
 }
 
 export interface OffboardingCase {

@@ -91,6 +91,15 @@ export const ROUTE_ROLE_ACCESS: Record<string, AppRole[]> = {
   "/dashboard/employees": TEAM_MANAGEMENT_ROLES,
   "/dashboard/manager": ["manager", "hr_admin"],
 
+  // ── Resources Routes (HR_ADMIN, MANAGER, EMPLOYEE) ─────────────────
+  "/dashboard/resources": ALL_COMPANY_ROLES,
+  "/dashboard/resources/expenses": ["hr_admin", "manager", "employee"],
+  "/dashboard/resources/travel": ["hr_admin", "manager", "employee"],
+  "/dashboard/resources/documents": ALL_COMPANY_ROLES,
+  "/dashboard/resources/assets": ["hr_admin", "manager", "employee", "it_admin"],
+  "/dashboard/assets": ["hr_admin", "manager", "employee", "it_admin"],
+  "/dashboard/asset-management": ["hr_admin", "manager", "employee", "it_admin"],
+
   // ── IT Admin Routes ─────────────────────────────────────────────
   "/dashboard/admin": SYSTEM_ADMIN_ROLES,
   "/dashboard/settings/audit-logs": SYSTEM_ADMIN_ROLES,

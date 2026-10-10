@@ -55,9 +55,9 @@ export function useCurrentEmployeeProfile() {
           id: profileRes.id,
           fullName: profileRes.fullName,
           email: profileRes.email,
-          role: profileRes.role,
-          designation: profileRes.designation,
-          department: profileRes.department,
+          role: profileRes.role ?? "employee",
+          designation: profileRes.designation ?? "",
+          department: profileRes.department ?? "",
           employeeId: rawProfile.employeeId as string | undefined,
           employee_id: rawProfile.employee_id as string | undefined,
         };

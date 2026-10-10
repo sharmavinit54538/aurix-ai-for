@@ -1,5 +1,50 @@
 import { ApiError } from "./client";
 
+/**
+ * Extracts field-level validation errors from FastAPI 422 or standard error responses.
+ * Moved from announcementsApi.ts for reuse across services.
+ */
+export function extractValidationErrors(error: unknown): Record<string, string> {
+  const fieldErrors: Record<string, string> = {};
+  if (!error || typeof error !== "object") return fieldErrors;
+
+  const errObj = error as { response?: { data?: unknown }; data?: unknown };
+  const data = errObj.response?.data ?? errObj.data;
+
+  if (data && typeof data === "object") {
+    const record = data as Record<string, unknown>;
+
+    // FastAPI 422: detail array
+    if (Array.isArray(record.detail)) {
+      for (const item of record.detail) {
+        if (item && typeof item === "object") {
+          const loc = (item as { loc?: unknown[] }).loc;
+          const msg = (item as { msg?: string }).msg;
+          if (Array.isArray(loc) && loc.length > 0 && typeof msg === "string") {
+            const field = String(loc[loc.length - 1]);
+            fieldErrors[field] = msg;
+          }
+        }
+      }
+    }
+
+    // OFC360 custom errors array
+    if (Array.isArray(record.errors)) {
+      for (const item of record.errors) {
+        if (item && typeof item === "object") {
+          const field = (item as { field?: string }).field;
+          const msg = (item as { message?: string }).message;
+          if (field && msg) {
+            fieldErrors[field] = msg;
+          }
+        }
+      }
+    }
+  }
+
+  return fieldErrors;
+}
+
 export interface ParsedError {
   message: string;
   fieldErrors: Record<string, string>;

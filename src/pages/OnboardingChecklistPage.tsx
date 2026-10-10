@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Plus, UserCheck, ClipboardCheck, RefreshCw, AlertCircle } from "lucide-react";
 import { GlassCard, Progress, StatCard } from "@/components/hrms/Shared";
 import { onboardingChecklistApi } from "@/services/onboardingChecklistApi";
@@ -41,6 +41,21 @@ function newCase(): OnboardingCase {
   };
 }
 
+function getCompletionPercentage(c: OnboardingCase): number {
+  if (c.tasks.length > 0) {
+    const done = c.tasks.filter((t) => t.done).length;
+    return Math.round((done / c.tasks.length) * 100);
+  }
+  return c.completionPercentage ?? 0;
+}
+
+function formatJoinDate(dateStr: string): string {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return "";
+  return date.toLocaleDateString();
+}
+
 export default function OnboardingChecklistPage() {
   const [cases, setCases] = useState<OnboardingCase[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,9 +84,25 @@ export default function OnboardingChecklistPage() {
     loadOnboardings();
   }, [loadOnboardings]);
 
-  const totalTasks = cases.reduce((s, c) => s + c.tasks.length, 0);
-  const doneTasks = cases.reduce((s, c) => s + c.tasks.filter((t) => t.done).length, 0);
-  const avgPct = totalTasks ? Math.round((doneTasks / totalTasks) * 100) : 0;
+  const stats = useMemo(() => {
+    const casesWithTasks = cases.filter((c) => c.tasks.length > 0);
+    const totalTasks = casesWithTasks.reduce((s, c) => s + c.tasks.length, 0);
+    const doneTasks = casesWithTasks.reduce((s, c) => s + c.tasks.filter((t) => t.done).length, 0);
+
+    const casesWithCompletion = cases.filter((c) => typeof c.completionPercentage === "number");
+    const avgFromCompletion = casesWithCompletion.length > 0
+      ? Math.round(casesWithCompletion.reduce((s, c) => s + (c.completionPercentage ?? 0), 0) / casesWithCompletion.length)
+      : 0;
+
+    const avgFromTasks = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
+
+    return {
+      totalTasks,
+      doneTasks,
+      avgPct: casesWithTasks.length > 0 ? avgFromTasks : avgFromCompletion,
+      showTasksCount: casesWithTasks.length > 0,
+    };
+  }, [cases]);
 
   async function handleToggle(caseId: string, taskKey: string, currentDone: boolean) {
     try {
@@ -132,12 +163,12 @@ export default function OnboardingChecklistPage() {
       <div className="mb-6 grid gap-3 sm:grid-cols-3">
         <StatCard label="Active onboardings" value={cases.length} icon={UserCheck} />
         <StatCard
-          label="Tasks completed"
-          value={`${doneTasks}/${totalTasks}`}
+          label={stats.showTasksCount ? "Tasks completed" : "Avg completion (backend)"}
+          value={stats.showTasksCount ? `${stats.doneTasks}/${stats.totalTasks}` : `${stats.avgPct}%`}
           icon={ClipboardCheck}
           accent="success"
         />
-        <StatCard label="Average completion" value={`${avgPct}%`} accent="brand" />
+        <StatCard label="Average completion" value={`${stats.avgPct}%`} accent="brand" />
       </div>
 
       {loading ? (
@@ -151,16 +182,21 @@ export default function OnboardingChecklistPage() {
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
           {cases.map((c) => {
-            const done = c.tasks.filter((t) => t.done).length;
-            const pct = c.tasks.length ? Math.round((done / c.tasks.length) * 100) : 0;
+            const pct = getCompletionPercentage(c);
+            const hasTasks = c.tasks.length > 0;
+            const joinDateFormatted = formatJoinDate(c.joinDate);
+
             return (
               <GlassCard key={c.id}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h3 className="font-medium">{c.employee}</h3>
-                    <div className="mt-1 text-xs text-muted-foreground">
-                      {c.role} · Joins {new Date(c.joinDate).toLocaleDateString()} · Manager{" "}
-                      {c.manager}
+                    <div className="mt-1 text-xs text-muted-foreground flex flex-wrap gap-2">
+                      {c.department && <span>{c.department}</span>}
+                      {c.role && <span>{c.role}</span>}
+                      {joinDateFormatted && <span>Joins {joinDateFormatted}</span>}
+                      {c.manager && <span>Manager {c.manager}</span>}
+                      {c.currentStep && <span>Step: {c.currentStep}</span>}
                     </div>
                   </div>
                   <div className="text-right">
@@ -171,26 +207,40 @@ export default function OnboardingChecklistPage() {
                 <div className="mt-3">
                   <Progress value={pct} />
                 </div>
-                <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                  {c.tasks.map((t) => (
-                    <label
-                      key={t.key}
-                      className="flex items-center gap-2 rounded-lg border border-border bg-card/40 px-3 py-2 text-sm cursor-pointer hover:bg-card/70 transition-colors"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={t.done}
-                        onChange={() => handleToggle(c.id, t.key, t.done)}
-                      />
-                      <span className={t.done ? "line-through text-muted-foreground" : ""}>
-                        {t.label}
-                      </span>
-                      <span className="ml-auto text-[10px] uppercase text-muted-foreground">
-                        {t.owner}
-                      </span>
-                    </label>
-                  ))}
-                </div>
+                {hasTasks && (
+                  <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                    {c.tasks.map((t) => (
+                      <label
+                        key={t.key}
+                        className="flex items-center gap-2 rounded-lg border border-border bg-card/40 px-3 py-2 text-sm cursor-pointer hover:bg-card/70 transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={t.done}
+                          onChange={() => handleToggle(c.id, t.key, t.done)}
+                        />
+                        <span className={t.done ? "line-through text-muted-foreground" : ""}>
+                          {t.label}
+                        </span>
+                        <span className="ml-auto text-[10px] uppercase text-muted-foreground">
+                          {t.owner}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+                {!hasTasks && c.missingDocuments && c.missingDocuments.length > 0 && (
+                  <div className="mt-4">
+                    <div className="text-xs text-muted-foreground mb-2">Missing documents:</div>
+                    <div className="flex flex-wrap gap-1">
+                      {c.missingDocuments.map((doc, idx) => (
+                        <span key={idx} className="text-xs px-2 py-1 rounded bg-rose-500/10 text-rose-500 border border-rose-500/20">
+                          {doc}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </GlassCard>
             );
           })}

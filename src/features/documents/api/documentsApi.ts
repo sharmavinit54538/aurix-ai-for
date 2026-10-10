@@ -371,7 +371,7 @@ try {
           limit,
           module: "documents",
         });
-        const rawItems: Record<string, unknown>[] = Array.isArray(res.items) ? res.items : [];
+        const rawItems: Record<string, unknown>[] = Array.isArray(res.items) ? (res.items as unknown as Record<string, unknown>[]) : [];
         if (rawItems.length > 0) {
           backendItems = rawItems.map((item: Record<string, unknown>, idx: number) => {
           const docId = String(item.document_id || item.documentId || item.id || "");

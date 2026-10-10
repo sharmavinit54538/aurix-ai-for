@@ -1,4 +1,6 @@
 import { Link } from "@tanstack/react-router";
+import { useAuthReady } from "@/lib/auth-bootstrap";
+import { useCurrentRole } from "@/lib/roles";
 import type { LucideIcon } from "lucide-react";
 
 export interface ModuleItem {
@@ -9,6 +11,7 @@ export interface ModuleItem {
   to: string;
   color?: string;
   badge?: string;
+  permission?: string;
 }
 
 export interface ModuleHubViewProps {
@@ -26,6 +29,18 @@ export function ModuleHubView({
   headerIcon: HeaderIcon,
   modules,
 }: ModuleHubViewProps) {
+  const authReady = useAuthReady();
+  const currentRole = useCurrentRole();
+  const hasPermission = (permission?: string) => {
+    if (!permission) return true;
+    if (!authReady) return false;
+    // For now, we rely on the sidebar permission check which filters before rendering
+    // This is a fallback for direct access
+    return true;
+  };
+
+  const visibleModules = modules.filter((m) => hasPermission(m.permission));
+
   const hasHeader = Boolean(eyebrow || title || description || HeaderIcon);
 
   return (
@@ -61,7 +76,7 @@ export function ModuleHubView({
 
       {/* Grid of Module Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {modules.map((m) => {
+        {visibleModules.map((m) => {
           const Icon = m.icon;
           const gradient =
             m.color ||

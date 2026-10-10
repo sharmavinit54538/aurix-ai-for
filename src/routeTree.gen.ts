@@ -194,6 +194,8 @@ import { Route as DashboardResourcesIndexRouteImport } from './routes/dashboard.
 import { Route as DashboardResourcesAssetManagementRouteImport } from './routes/dashboard.resources.asset-management'
 import { Route as DashboardResourcesAssetsRouteImport } from './routes/dashboard.resources.assets'
 import { Route as DashboardResourcesDocumentsRouteImport } from './routes/dashboard.resources.documents'
+import { Route as DashboardResourcesExpensesRouteImport } from './routes/dashboard.resources.expenses'
+import { Route as DashboardResourcesTravelRouteImport } from './routes/dashboard.resources.travel'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard.settings.index'
 import { Route as DashboardSettingsAuditLogsRouteImport } from './routes/dashboard.settings.audit-logs'
 import { Route as DashboardSettingsBillingRouteImport } from './routes/dashboard.settings.billing'
@@ -1267,6 +1269,18 @@ const DashboardResourcesDocumentsRoute =
     path: '/documents',
     getParentRoute: () => DashboardResourcesRoute,
   } as any)
+const DashboardResourcesExpensesRoute =
+  DashboardResourcesExpensesRouteImport.update({
+    id: '/expenses',
+    path: '/expenses',
+    getParentRoute: () => DashboardResourcesRoute,
+  } as any)
+const DashboardResourcesTravelRoute =
+  DashboardResourcesTravelRouteImport.update({
+    id: '/travel',
+    path: '/travel',
+    getParentRoute: () => DashboardResourcesRoute,
+  } as any)
 const DashboardSettingsIndexRoute = DashboardSettingsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -1897,6 +1911,8 @@ export interface FileRoutesByFullPath {
   '/dashboard/resources/asset-management': typeof DashboardResourcesAssetManagementRoute
   '/dashboard/resources/assets': typeof DashboardResourcesAssetsRoute
   '/dashboard/resources/documents': typeof DashboardResourcesDocumentsRoute
+  '/dashboard/resources/expenses': typeof DashboardResourcesExpensesRoute
+  '/dashboard/resources/travel': typeof DashboardResourcesTravelRoute
   '/dashboard/settings/audit-logs': typeof DashboardSettingsAuditLogsRoute
   '/dashboard/settings/billing': typeof DashboardSettingsBillingRoute
   '/dashboard/settings/company': typeof DashboardSettingsCompanyRoute
@@ -2139,6 +2155,8 @@ export interface FileRoutesByTo {
   '/dashboard/resources/asset-management': typeof DashboardResourcesAssetManagementRoute
   '/dashboard/resources/assets': typeof DashboardResourcesAssetsRoute
   '/dashboard/resources/documents': typeof DashboardResourcesDocumentsRoute
+  '/dashboard/resources/expenses': typeof DashboardResourcesExpensesRoute
+  '/dashboard/resources/travel': typeof DashboardResourcesTravelRoute
   '/dashboard/settings/audit-logs': typeof DashboardSettingsAuditLogsRoute
   '/dashboard/settings/billing': typeof DashboardSettingsBillingRoute
   '/dashboard/settings/company': typeof DashboardSettingsCompanyRoute
@@ -2404,6 +2422,8 @@ export interface FileRoutesById {
   '/dashboard/resources/asset-management': typeof DashboardResourcesAssetManagementRoute
   '/dashboard/resources/assets': typeof DashboardResourcesAssetsRoute
   '/dashboard/resources/documents': typeof DashboardResourcesDocumentsRoute
+  '/dashboard/resources/expenses': typeof DashboardResourcesExpensesRoute
+  '/dashboard/resources/travel': typeof DashboardResourcesTravelRoute
   '/dashboard/settings/audit-logs': typeof DashboardSettingsAuditLogsRoute
   '/dashboard/settings/billing': typeof DashboardSettingsBillingRoute
   '/dashboard/settings/company': typeof DashboardSettingsCompanyRoute
@@ -2670,6 +2690,8 @@ export interface FileRouteTypes {
     | '/dashboard/resources/asset-management'
     | '/dashboard/resources/assets'
     | '/dashboard/resources/documents'
+    | '/dashboard/resources/expenses'
+    | '/dashboard/resources/travel'
     | '/dashboard/settings/audit-logs'
     | '/dashboard/settings/billing'
     | '/dashboard/settings/company'
@@ -2912,6 +2934,8 @@ export interface FileRouteTypes {
     | '/dashboard/resources/asset-management'
     | '/dashboard/resources/assets'
     | '/dashboard/resources/documents'
+    | '/dashboard/resources/expenses'
+    | '/dashboard/resources/travel'
     | '/dashboard/settings/audit-logs'
     | '/dashboard/settings/billing'
     | '/dashboard/settings/company'
@@ -3176,6 +3200,8 @@ export interface FileRouteTypes {
     | '/dashboard/resources/asset-management'
     | '/dashboard/resources/assets'
     | '/dashboard/resources/documents'
+    | '/dashboard/resources/expenses'
+    | '/dashboard/resources/travel'
     | '/dashboard/settings/audit-logs'
     | '/dashboard/settings/billing'
     | '/dashboard/settings/company'
@@ -4598,6 +4624,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardResourcesDocumentsRouteImport
       parentRoute: typeof DashboardResourcesRoute
     }
+    '/dashboard/resources/expenses': {
+      id: '/dashboard/resources/expenses'
+      path: '/expenses'
+      fullPath: '/dashboard/resources/expenses'
+      preLoaderRoute: typeof DashboardResourcesExpensesRouteImport
+      parentRoute: typeof DashboardResourcesRoute
+    }
+    '/dashboard/resources/travel': {
+      id: '/dashboard/resources/travel'
+      path: '/travel'
+      fullPath: '/dashboard/resources/travel'
+      preLoaderRoute: typeof DashboardResourcesTravelRouteImport
+      parentRoute: typeof DashboardResourcesRoute
+    }
     '/dashboard/settings/': {
       id: '/dashboard/settings/'
       path: '/'
@@ -5571,6 +5611,8 @@ interface DashboardResourcesRouteChildren {
   DashboardResourcesAssetManagementRoute: typeof DashboardResourcesAssetManagementRoute
   DashboardResourcesAssetsRoute: typeof DashboardResourcesAssetsRoute
   DashboardResourcesDocumentsRoute: typeof DashboardResourcesDocumentsRoute
+  DashboardResourcesExpensesRoute: typeof DashboardResourcesExpensesRoute
+  DashboardResourcesTravelRoute: typeof DashboardResourcesTravelRoute
   DashboardResourcesIndexRoute: typeof DashboardResourcesIndexRoute
 }
 
@@ -5579,6 +5621,8 @@ const DashboardResourcesRouteChildren: DashboardResourcesRouteChildren = {
     DashboardResourcesAssetManagementRoute,
   DashboardResourcesAssetsRoute: DashboardResourcesAssetsRoute,
   DashboardResourcesDocumentsRoute: DashboardResourcesDocumentsRoute,
+  DashboardResourcesExpensesRoute: DashboardResourcesExpensesRoute,
+  DashboardResourcesTravelRoute: DashboardResourcesTravelRoute,
   DashboardResourcesIndexRoute: DashboardResourcesIndexRoute,
 }
 

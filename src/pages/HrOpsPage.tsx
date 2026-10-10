@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Activity, Package, Users, Receipt, Plane, LogOut, UserCheck, Archive, RefreshCw, AlertCircle,
@@ -12,16 +11,6 @@ import {
 import { toast } from "sonner";
 import { hrOpsApi, type HrOpsOverview } from "@/services/hrOpsApi";
 import type { TimelineEvent } from "@/lib/hrms/types";
-
-const QUICK_LINKS = [
-  { to: "/dashboard/hr-operations/onboarding", label: "Onboarding", icon: UserCheck },
-  { to: "/dashboard/hr-operations/timeline", label: "Timeline", icon: Activity },
-  { to: "/dashboard/resources/assets", label: "Assets", icon: Package },
-  { to: "/dashboard/expenses", label: "Expenses", icon: Receipt },
-  { to: "/dashboard/travel", label: "Travel", icon: Plane },
-  { to: "/dashboard/hr-operations/offboarding", label: "Offboarding", icon: Archive },
-  { to: "/dashboard/hr-operations/exit-management", label: "Exit", icon: LogOut },
-];
 
 const COLORS = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#06b6d4", "#8b5cf6"];
 
@@ -88,7 +77,7 @@ export function HrOpsPage() {
             The HR Operations overview dashboard is not available yet. Backend endpoint is pending implementation.
           </p>
           <p className="text-xs text-muted-foreground">
-            Use the quick links below to access individual HR Operations modules.
+            Use the navigation menu to access individual HR Operations modules.
           </p>
         </div>
       )}
@@ -102,19 +91,6 @@ export function HrOpsPage() {
         <StatCard label="Onboardings" value={data?.onboarding?.active ?? 0} icon={UserCheck} accent="success" />
         <StatCard label="Offboardings" value={data?.offboarding?.active ?? 0} icon={Archive} accent="warning" />
         <StatCard label="Exits in progress" value={data?.exits?.inProgress ?? 0} icon={LogOut} accent="danger" />
-      </div>
-
-      <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {QUICK_LINKS.map((l) => (
-          <Link key={l.to} to={l.to as any} className="group rounded-2xl border border-border bg-card/40 p-4 transition-colors hover:bg-accent/60">
-            <div className="flex items-center gap-3">
-              <div className="grid h-9 w-9 place-items-center rounded-xl text-brand-foreground shadow-glow" style={{ background: "var(--gradient-brand)" }}>
-                <l.icon className="h-4 w-4" />
-              </div>
-              <div className="font-medium">{l.label}</div>
-            </div>
-          </Link>
-        ))}
       </div>
 
       {loading ? (
