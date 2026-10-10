@@ -203,7 +203,6 @@ export async function refreshAccessToken(options?: { silent?: boolean }): Promis
 
         const refreshUrl = `${API_BASE_URL}${AUTH_ENDPOINTS.refresh}`;
         if (import.meta.env.DEV && import.meta.env.MODE !== "test" && !options?.silent) {
-          console.log(`[AUTH] Request: [REFRESH] POST ${refreshUrl}`);
         }
 
         let res;
@@ -224,7 +223,6 @@ export async function refreshAccessToken(options?: { silent?: boolean }): Promis
               ? (postErr as { response: { status: number } }).response.status
               : undefined;
           if (import.meta.env.DEV && import.meta.env.MODE !== "test" && !options?.silent) {
-            console.log(`[AUTH] Response: [REFRESH] POST ${refreshUrl} -> ${status || "NETWORK_ERROR"}`);
           }
 
           if (status === 404) {

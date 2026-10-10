@@ -70,7 +70,6 @@ apiInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     const method = (config.method || "GET").toUpperCase();
     const fullUrl = resolveFullUrl(config.url, config.baseURL);
     const endpointTag = getEndpointTag(config.url || "");
-    console.log(`[AUTH] Request:${endpointTag ? ` [${endpointTag}]` : ""} ${method} ${fullUrl}`);
   }
 
   return config;
@@ -82,7 +81,6 @@ apiInstance.interceptors.response.use(
       const method = (response.config.method || "GET").toUpperCase();
       const fullUrl = resolveFullUrl(response.config.url, response.config.baseURL);
       const endpointTag = getEndpointTag(response.config.url || "");
-      console.log(`[AUTH] Response:${endpointTag ? ` [${endpointTag}]` : ""} ${method} ${fullUrl} -> ${response.status}`);
     }
     return response;
   },
@@ -92,7 +90,6 @@ apiInstance.interceptors.response.use(
       const fullUrl = resolveFullUrl(error.config.url, error.config.baseURL);
       const endpointTag = getEndpointTag(error.config.url || "");
       const status = error.response?.status ?? "NETWORK_ERROR";
-      console.log(`[AUTH] Response:${endpointTag ? ` [${endpointTag}]` : ""} ${method} ${fullUrl} -> ${status}`);
     }
 
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
