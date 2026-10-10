@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { documentsApi } from "../api/documentsApi";
-import { mapBackendDocument } from "../lib/mappers";
+import { mapBackendDocument, matchesExpiryWindow } from "../lib/mappers";
 import type { BackendCategory, DocumentFilters, DocumentItem, PaginationMeta } from "../lib/types";
 
 export const DOCUMENTS_LIST_QUERY_KEY = ["documents", "list"] as const;
@@ -10,25 +10,6 @@ interface UseDocumentsListOptions {
   categoriesMap?: Map<string, BackendCategory>;
   currentEmployeeProfileId?: string;
   isEmployeeRole: boolean;
-}
-
-function matchesExpiryWindow(doc: DocumentItem, window?: string): boolean {
-  if (!window || window === "all") return true;
-  if (!doc.expiryDate) return window === "valid";
-
-  const expiryTime = new Date(doc.expiryDate).getTime();
-  if (isNaN(expiryTime)) return true;
-
-  const now = Date.now();
-  const diffDays = Math.ceil((expiryTime - now) / (1000 * 60 * 60 * 24));
-
-  if (window === "expired") return diffDays <= 0;
-  if (window === "7d") return diffDays > 0 && diffDays <= 7;
-  if (window === "30d") return diffDays > 0 && diffDays <= 30;
-  if (window === "60d") return diffDays > 0 && diffDays <= 60;
-  if (window === "valid") return diffDays > 60;
-
-  return true;
 }
 
 export function useDocumentsList({
@@ -71,6 +52,8 @@ export function useDocumentsList({
       limit,
     },
   ];
+
+  const enabled = !isEmployeeRole || !!currentEmployeeProfileId;
 
   const query = useQuery({
     queryKey,
@@ -136,6 +119,8 @@ export function useDocumentsList({
         );
 
         // Client-side refinement for document type or expiry window if applicable
+        // TODO: Backend doesn't support document_type or expiry_window query params yet
+        // When available, send them as query params and remove client-side filtering
         if (documentType) {
           const dtLower = documentType.toLowerCase();
           items = items.filter(
@@ -148,22 +133,28 @@ export function useDocumentsList({
         if (tab === "Expired") {
           items = items.filter((d) => d.isExpired);
         } else if (tab === "expiry" || expiryWindow) {
-          items = items.filter((d) => matchesExpiryWindow(d, expiryWindow));
+          items = items.filter((d) => matchesExpiryWindow(d.expiryDate, expiryWindow));
         }
+
+        // Adjust total to reflect client-side filtered count since backend doesn't support these filters yet
+        const filteredTotal = items.length;
+        const hasMore = res.meta?.has_more ?? false;
 
         return {
           items,
           meta: {
-            total: res.meta?.total ?? items.length,
+            total: filteredTotal,
             page: res.meta?.page ?? page,
             limit: res.meta?.limit ?? limit,
-            has_more: Boolean(res.meta?.has_more ?? res.meta?.hasMore),
+            has_more: hasMore && filteredTotal >= limit,
           },
         };
       }
 
-      // 3. Tab = "all"
-      // Fetch both employee documents and company documents
+      // 3. Tab = "all" - Fetch both employee and company documents with split limit
+      // Strategy: fetch limit/2 from each source to ensure we never exceed limit rows per page
+      const splitLimit = Math.ceil(limit / 2);
+
       const [empRes, compRes] = await Promise.allSettled([
         documentsApi.getEmployeeDocuments({
           employee_id: effectiveEmployeeId,
@@ -173,7 +164,7 @@ export function useDocumentsList({
           sort_by: sortBy,
           order,
           page,
-          limit,
+          limit: splitLimit,
         }),
         documentsApi.getCompanyDocuments({
           category_id: categoryId,
@@ -181,7 +172,7 @@ export function useDocumentsList({
           sort_by: sortBy,
           order,
           page,
-          limit,
+          limit: splitLimit,
         }),
       ]);
 
@@ -207,10 +198,13 @@ export function useDocumentsList({
         const compDocs = (compRes.value.data || []).map((d) =>
           mapBackendDocument(d, "company", categoriesMap)
         );
-        const existingIds = new Set(allItems.map((d) => d.id));
+        // Dedupe by composite key: ${source}:${id}
+        const existingKeys = new Set(allItems.map((d) => `${d.source}:${d.id}`));
         for (const cd of compDocs) {
-          if (!existingIds.has(cd.id)) {
+          const key = `company:${cd.id}`;
+          if (!existingKeys.has(key)) {
             allItems.push(cd);
+            existingKeys.add(key);
           }
         }
         totalCount += compRes.value.meta?.total ?? compDocs.length;
@@ -227,21 +221,27 @@ export function useDocumentsList({
         );
       }
       if (expiryWindow) {
-        filteredItems = filteredItems.filter((d) => matchesExpiryWindow(d, expiryWindow));
+        filteredItems = filteredItems.filter((d) => matchesExpiryWindow(d.expiryDate, expiryWindow));
       }
 
+      // When client-side filtering applies, total should reflect filtered count
+      // TODO: Remove client-side filtering when backend supports document_type and expiry_window params
+      const finalTotal = (documentType || expiryWindow) ? filteredItems.length : totalCount;
+      const finalHasMore = hasMore && filteredItems.length >= limit;
+
       return {
-        items: filteredItems,
+        items: filteredItems.slice(0, limit), // Ensure we never return more than limit
         meta: {
-          total: totalCount,
+          total: finalTotal,
           page,
           limit,
-          has_more: hasMore,
+          has_more: finalHasMore,
         },
         hasPartialError,
       };
     },
     staleTime: 60 * 1000,
+    enabled,
   });
 
   return {
@@ -252,5 +252,6 @@ export function useDocumentsList({
     error: query.error,
     hasPartialError: query.data?.hasPartialError ?? false,
     refetch: query.refetch,
+    isEnabled: enabled,
   };
 }

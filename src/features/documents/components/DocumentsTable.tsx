@@ -182,10 +182,12 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                   isVerified: doc.isVerified,
                   source: doc.source,
                 });
+                // Use composite key for React key and deduplication
+                const rowKey = `${doc.source}:${doc.id}`;
 
                 return (
                   <TableRow
-                    key={doc.id}
+                    key={rowKey}
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => handleRowKeyDown(e, doc)}

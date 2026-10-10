@@ -103,7 +103,7 @@ export function detectFileType(
     if (mime.includes("application/msword")) return "doc";
   }
 
-  // Check file name first, then file URL
+  // Check file name first, then file URL - anchored regex to avoid false matches
   const candidates = [fileName || "", fileUrl || ""];
 
   for (const str of candidates) {
@@ -129,7 +129,7 @@ export function mapDocumentStatus(
   const rawStatus = (backendDoc.status || backendDoc.status_field || "").toUpperCase();
   const isVerified = Boolean(backendDoc.is_verified || rawStatus === "VERIFIED");
 
-  // 1. REJECTED status must always remain REJECTED
+  // 1. REJECTED status must always remain REJECTED (highest priority)
   if (rawStatus === "REJECTED") {
     return "REJECTED";
   }
@@ -140,7 +140,7 @@ export function mapDocumentStatus(
   }
 
   // 3. Verified documents that are expired show as Expired
-  if (isDocumentExpired(backendDoc.expiry_date)) {
+  if (isVerified && isDocumentExpired(backendDoc.expiry_date)) {
     return "Expired";
   }
 

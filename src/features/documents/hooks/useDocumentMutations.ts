@@ -7,6 +7,19 @@ import { DOCUMENTS_SUMMARY_QUERY_KEY, DOCUMENTS_EXPIRING_QUERY_KEY } from "./use
 import { DOCUMENTS_ACTIVITY_QUERY_KEY } from "./useDocumentActivity";
 import type { UploadCompanyPayload, UploadEmployeePayload } from "../lib/types";
 
+interface DocumentMutationParams {
+  id: string;
+  comments?: string;
+  documentName?: string;
+  employeeName?: string;
+}
+
+interface DeleteMutationParams {
+  id: string;
+  source: "employee" | "company";
+  documentName?: string;
+}
+
 export function useDocumentMutations() {
   const queryClient = useQueryClient();
 
@@ -19,8 +32,8 @@ export function useDocumentMutations() {
 
   // 1. Verify
   const verifyMutation = useMutation({
-    mutationFn: ({ id, comments }: { id: string; comments?: string }) =>
-      documentsApi.verifyDocument(id, comments),
+    mutationFn: ({ id, comments, documentName, employeeName }: DocumentMutationParams) =>
+      documentsApi.verifyDocument(id, comments, documentName, employeeName),
     onSuccess: (res) => {
       toast.success(res.message || "Document verified and approved!");
       invalidateDocumentQueries();
@@ -32,8 +45,8 @@ export function useDocumentMutations() {
 
   // 2. Reject
   const rejectMutation = useMutation({
-    mutationFn: ({ id, comments }: { id: string; comments: string }) =>
-      documentsApi.rejectDocument(id, comments),
+    mutationFn: ({ id, comments, documentName, employeeName }: DocumentMutationParams) =>
+      documentsApi.rejectDocument(id, comments, documentName, employeeName),
     onSuccess: (res) => {
       toast.warning(res.message || "Document rejected.");
       invalidateDocumentQueries();
@@ -45,8 +58,8 @@ export function useDocumentMutations() {
 
   // 3. Request Reupload
   const reuploadMutation = useMutation({
-    mutationFn: ({ id, comments }: { id: string; comments: string }) =>
-      documentsApi.requestReupload(id, comments),
+    mutationFn: ({ id, comments, documentName, employeeName }: DocumentMutationParams) =>
+      documentsApi.requestReupload(id, comments, documentName, employeeName),
     onSuccess: (res) => {
       toast.info(res.message || "Re-upload requested successfully.");
       invalidateDocumentQueries();
@@ -58,10 +71,10 @@ export function useDocumentMutations() {
 
   // 4. Delete
   const deleteMutation = useMutation({
-    mutationFn: ({ id, source }: { id: string; source: "employee" | "company" }) =>
+    mutationFn: ({ id, source, documentName }: DeleteMutationParams) =>
       source === "company"
-        ? documentsApi.deleteCompanyDocument(id)
-        : documentsApi.deleteEmployeeDocument(id),
+        ? documentsApi.deleteCompanyDocument(id, documentName)
+        : documentsApi.deleteEmployeeDocument(id, documentName),
     onSuccess: (res) => {
       toast.success(res.message || "Document deleted successfully.");
       invalidateDocumentQueries();

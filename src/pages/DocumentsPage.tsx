@@ -119,7 +119,7 @@ export function DocumentsPage() {
   };
 
   const handleVerify = async (doc: DocumentItem) => {
-    await verifyDocument({ id: doc.id });
+    await verifyDocument({ id: doc.id, documentName: doc.title, employeeName: doc.employeeName });
     if (previewDoc?.id === doc.id) {
       setPreviewDoc((prev) => (prev ? { ...prev, status: "VERIFIED", isVerified: true } : null));
     }
@@ -128,7 +128,8 @@ export function DocumentsPage() {
   };
 
   const handleConfirmReject = async (id: string, comments: string) => {
-    await rejectDocument({ id, comments });
+    const doc = docs.find((d) => d.id === id) || rejectDoc;
+    await rejectDocument({ id, comments, documentName: doc?.title, employeeName: doc?.employeeName });
     if (previewDoc?.id === id) {
       setPreviewDoc((prev) =>
         prev ? { ...prev, status: "REJECTED", rejectionReason: comments } : null
@@ -139,7 +140,8 @@ export function DocumentsPage() {
   };
 
   const handleConfirmReupload = async (id: string, comments: string) => {
-    await requestReupload({ id, comments });
+    const doc = docs.find((d) => d.id === id) || reuploadDoc;
+    await requestReupload({ id, comments, documentName: doc?.title, employeeName: doc?.employeeName });
     if (previewDoc?.id === id) {
       setPreviewDoc((prev) =>
         prev ? { ...prev, status: "PENDING", rejectionReason: comments } : null
@@ -150,7 +152,7 @@ export function DocumentsPage() {
   };
 
   const handleConfirmDelete = async (doc: DocumentItem) => {
-    await deleteDocument({ id: doc.id, source: doc.source });
+    await deleteDocument({ id: doc.id, source: doc.source, documentName: doc.title });
     if (previewDoc?.id === doc.id) {
       setPreviewDoc(null);
     }

@@ -13,6 +13,23 @@ export interface DocumentPreviewState {
   errorCode?: number;
 }
 
+function getMimeTypeFromFileType(fileType: DocumentItem["fileType"]): string {
+  switch (fileType) {
+    case "pdf":
+      return "application/pdf";
+    case "png":
+      return "image/png";
+    case "jpg":
+      return "image/jpeg";
+    case "docx":
+      return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    case "doc":
+      return "application/msword";
+    default:
+      return "application/octet-stream";
+  }
+}
+
 export function useDocumentPreview(doc: DocumentItem | null) {
   const [state, setState] = useState<DocumentPreviewState>({
     blobUrl: null,
@@ -22,9 +39,16 @@ export function useDocumentPreview(doc: DocumentItem | null) {
   });
 
   const createdUrlRef = useRef<string | null>(null);
+  const requestIdRef = useRef<number>(0);
 
   const loadPreviewBlob = useCallback(async () => {
-    if (!doc || !doc.id) {
+    const docId = doc?.id;
+    const docSource = doc?.source;
+    const docFileUrl = doc?.fileUrl;
+    const docFileType = doc?.fileType;
+    const docTitle = doc?.title || "Document";
+
+    if (!docId || !docSource) {
       if (createdUrlRef.current) {
         URL.revokeObjectURL(createdUrlRef.current);
         createdUrlRef.current = null;
@@ -38,11 +62,13 @@ export function useDocumentPreview(doc: DocumentItem | null) {
       return;
     }
 
+    const currentRequestId = ++requestIdRef.current;
+
     // If doc already has a local blob: or data: URL
-    if (doc.fileUrl?.startsWith("blob:") || doc.fileUrl?.startsWith("data:")) {
+    if (docFileUrl?.startsWith("blob:") || docFileUrl?.startsWith("data:")) {
       setState({
-        blobUrl: doc.fileUrl,
-        mimeType: doc.fileType === "pdf" ? "application/pdf" : "image/jpeg",
+        blobUrl: docFileUrl,
+        mimeType: getMimeTypeFromFileType(docFileType),
         isLoading: false,
         error: null,
       });
@@ -52,10 +78,16 @@ export function useDocumentPreview(doc: DocumentItem | null) {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const res = await documentsApi.downloadDocument(doc.id, doc.source);
+      const res = await documentsApi.downloadDocument(docId, docSource, docTitle, { log: false });
       const blob = res.blob;
       if (!blob || blob.size === 0) {
         throw new Error("Received empty document file from server.");
+      }
+
+      // Stale response guard: ignore if a newer request has started
+      if (currentRequestId !== requestIdRef.current) {
+        URL.revokeObjectURL(URL.createObjectURL(blob)); // revoke the blob URL we won't use
+        return;
       }
 
       if (createdUrlRef.current) {
@@ -66,11 +98,14 @@ export function useDocumentPreview(doc: DocumentItem | null) {
 
       setState({
         blobUrl: objectUrl,
-        mimeType: blob.type || "",
+        mimeType: blob.type || getMimeTypeFromFileType(docFileType),
         isLoading: false,
         error: null,
       });
     } catch (err: unknown) {
+      // Stale response guard: ignore if a newer request has started
+      if (currentRequestId !== requestIdRef.current) return;
+
       const status = (err as { response?: { status?: number } })?.response?.status;
       let errorMsg = "Failed to load document preview.";
       if (status === 401) {
@@ -91,7 +126,7 @@ export function useDocumentPreview(doc: DocumentItem | null) {
         errorCode: status,
       });
     }
-  }, [doc]);
+  }, [doc?.id, doc?.source, doc?.fileUrl, doc?.fileType, doc?.title]);
 
   useEffect(() => {
     loadPreviewBlob();
@@ -104,20 +139,26 @@ export function useDocumentPreview(doc: DocumentItem | null) {
     };
   }, [loadPreviewBlob]);
 
-  // Authenticated Download Trigger
+  // Authenticated Download Trigger (logs audit event)
   const download = useCallback(async () => {
-    if (!doc || !doc.id) {
+    const docId = doc?.id;
+    const docSource = doc?.source;
+    const docTitle = doc?.title || "Document";
+    const docFileName = doc?.fileName;
+    const docFileType = doc?.fileType;
+
+    if (!docId || !docSource) {
       toast.error("Document cannot be downloaded: invalid document identifier.");
       return;
     }
 
-    const toastId = toast.loading(`Downloading ${doc.title}...`);
+    const toastId = toast.loading(`Downloading ${docTitle}...`);
     try {
-      const res = await documentsApi.downloadDocument(doc.id, doc.source);
+      const res = await documentsApi.downloadDocument(docId, docSource, docTitle, { log: true });
       const filename = extractFilenameFromHeader(
         res.contentDisposition,
-        doc.fileName || doc.title,
-        doc.fileType
+        docFileName || docTitle,
+        docFileType
       );
 
       const url = URL.createObjectURL(res.blob);
@@ -132,7 +173,7 @@ export function useDocumentPreview(doc: DocumentItem | null) {
       toast.success(`Downloaded ${filename}`, { id: toastId });
     } catch (err: unknown) {
       const status = (err as { response?: { status?: number } })?.response?.status;
-      let errorMsg = `Failed to download ${doc.title}.`;
+      let errorMsg = `Failed to download ${docTitle}.`;
       if (status === 401) errorMsg = "Session expired. Please log in again.";
       else if (status === 403) errorMsg = "Permission denied to download this document.";
       else if (status === 404) errorMsg = "Document file not found on the server.";
@@ -140,7 +181,7 @@ export function useDocumentPreview(doc: DocumentItem | null) {
 
       toast.error(errorMsg, { id: toastId });
     }
-  }, [doc]);
+  }, [doc?.id, doc?.source, doc?.title, doc?.fileName, doc?.fileType]);
 
   return {
     ...state,
