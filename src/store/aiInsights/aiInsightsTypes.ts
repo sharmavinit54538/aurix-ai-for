@@ -88,6 +88,12 @@ export interface AlertItem {
   icon?: string;
 }
 
+export interface PayrollData {
+  payrollHealth?: number;
+  savingsOpportunities?: string;
+  anomaliesDetected?: number;
+}
+
 export interface PayrollAlertItem {
   id?: string;
   title: string;
@@ -107,6 +113,7 @@ export interface AIInsightsCharts {
   headcountForecast: HeadcountForecastItem[];
   hiringDemand: HiringDemandItem[];
   satisfactionTrend: SatisfactionTrendItem[];
+  payrollTrend?: unknown[];
 }
 
 export interface RecruitmentData {
@@ -145,6 +152,8 @@ export interface AIInsightsDashboardData {
   alerts?: AlertItem[];
   recommendations?: string[];
   documents?: DocumentItem[];
+  payroll?: PayrollData;
+  payrollAlerts?: PayrollAlertItem[];
 }
 
 export interface AIInsightsState {
@@ -165,4 +174,6 @@ export interface AIInsightsState {
   alerts: AlertItem[];
   recommendations: string[];
   documents: DocumentItem[];
+  payroll?: PayrollData;
+  payrollAlerts?: PayrollAlertItem[];
 }

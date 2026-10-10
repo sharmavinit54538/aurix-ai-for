@@ -104,4 +104,4 @@ dirEntry.writeUInt32LE(22, 12); // offset (6 + 16)
 const icoBuffer: Buffer = Buffer.concat([header, dirEntry, pngBuffer]);
 const dest: string = path.resolve(__dirname, "../public/favicon.ico");
 fs.writeFileSync(dest, icoBuffer);
-console.log(`Generated favicon.ico successfully at ${dest} (${icoBuffer.length} bytes)`);
+process.stdout.write(`Generated favicon.ico successfully at ${dest} (${icoBuffer.length} bytes)\n`);

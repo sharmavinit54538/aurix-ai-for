@@ -117,13 +117,13 @@ for (const call of extractedCalls) {
   }
 }
 
-console.log("=================================================");
-console.log("             OFC360 API CONTRACT CHECK           ");
-console.log("=================================================");
-console.log(`Backend OpenAPI Routes:    ${registeredRoutes.size}`);
-console.log(`Allow-listed BACKEND_ADD:  ${allowedRoutes.size}`);
-console.log(`Frontend API Calls Checked:${extractedCalls.length}`);
-console.log("-------------------------------------------------");
+process.stdout.write("=================================================\n");
+process.stdout.write("             OFC360 API CONTRACT CHECK           \n");
+process.stdout.write("=================================================\n");
+process.stdout.write(`Backend OpenAPI Routes:    ${registeredRoutes.size}\n`);
+process.stdout.write(`Allow-listed BACKEND_ADD:  ${allowedRoutes.size}\n`);
+process.stdout.write(`Frontend API Calls Checked:${extractedCalls.length}\n`);
+process.stdout.write("-------------------------------------------------\n");
 
 if (unknownCalls.length > 0) {
   console.error(`FAIL: Found ${unknownCalls.length} unknown API call(s) not in OpenAPI or Allow-list:\n`);
@@ -134,6 +134,6 @@ if (unknownCalls.length > 0) {
   }
   process.exit(1);
 } else {
-  console.log("PASS: All frontend API calls match backend routes or allow-listed pending additions.\n");
+  process.stdout.write("PASS: All frontend API calls match backend routes or allow-listed pending additions.\n");
   process.exit(0);
 }

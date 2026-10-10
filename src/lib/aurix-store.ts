@@ -127,6 +127,10 @@ export interface Employee {
   managerName?: string;
   shift?: string;
   status?: string;
+  location?: string;
+  bloodGroup?: string;
+  salary?: string;
+  ctc?: string;
   activationToken?: string;
   activationTokenExpiresAt?: string;
 }

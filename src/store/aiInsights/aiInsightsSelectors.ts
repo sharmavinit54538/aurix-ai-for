@@ -115,17 +115,17 @@ export const selectAIInsightsDocuments = createSelector(
 
 export const selectAIInsightsPayroll = createSelector(
   [selectAIInsightsState],
-  (state: any) => state?.payroll ?? null,
+  (state) => state?.payroll ?? null,
 );
 
 export const selectAIInsightsPayrollAlerts = createSelector(
   [selectAIInsightsState],
-  (state: any) => (Array.isArray(state?.payrollAlerts) ? state.payrollAlerts : []),
+  (state) => (Array.isArray(state?.payrollAlerts) ? state.payrollAlerts : []),
 );
 
 export const selectAIInsightsPayrollTrend = createSelector(
   [selectAIInsightsState],
-  (state: any) => (Array.isArray(state?.charts?.payrollTrend) ? state.charts.payrollTrend : []),
+  (state) => (Array.isArray(state?.charts?.payrollTrend) ? state.charts.payrollTrend : []),
 );
 
 export const selectAIInsightsHasDataFlag = createSelector(

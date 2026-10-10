@@ -102,7 +102,7 @@ export const VerificationSection: React.FC<VerificationSectionProps> = ({
 
       {/* Sub-tabs & Search Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-card/40 border border-border">
-        <Tabs value={filterTab} onValueChange={(v) => setFilterTab(v as any)}>
+        <Tabs value={filterTab} onValueChange={(v) => setFilterTab(v as "PENDING" | "VERIFIED" | "REJECTED" | "ALL")}>
           <TabsList className="bg-muted/50 p-1">
             <TabsTrigger value="PENDING" className="text-xs gap-1 cursor-pointer">
               Pending ({pendingCount})

@@ -1,6 +1,6 @@
 import { createSelector } from "@reduxjs/toolkit";
 import type { RootState } from "@/redux/store";
-import type { BackendHierarchyNode } from "./employeeHierarchyTypes";
+import type { BackendHierarchyNode, HierarchyFilterState } from "./employeeHierarchyTypes";
 
 export const selectHierarchyState = (state: RootState) =>
   state.employeeHierarchy || {
@@ -121,16 +121,16 @@ function normType(str: string | null | undefined): string {
 function matchesFilterAndSearch(
   node: BackendHierarchyNode,
   search: string,
-  filters: any
+  filters: HierarchyFilterState
 ): boolean {
   const fullName = `${node.first_name || ""} ${node.last_name || ""}`.trim().toLowerCase();
   const searchLower = norm(search);
   const empId = norm(node.employee_id);
   const dept = norm(node.department);
   const desig = norm(node.designation);
-  const email = norm((node as any).email);
+  const email = norm(node.email);
   const role = norm(node.role);
-  const branch = norm(node.branch || (node as any).location);
+  const branch = norm(node.branch || node.location);
 
   const matchesSearch =
     !searchLower ||
@@ -152,7 +152,7 @@ function matchesFilterAndSearch(
     filters.designation === "all" ||
     norm(node.designation) === norm(filters.designation);
 
-  const nodeLoc = norm(node.branch || (node as any).location);
+  const nodeLoc = norm(node.branch || node.location);
   const filterLoc = norm(filters.location);
   const matchesLoc =
     !filters.location ||
@@ -177,7 +177,7 @@ function matchesFilterAndSearch(
 function filterNodeTree(
   node: BackendHierarchyNode,
   search: string,
-  filters: any
+  filters: HierarchyFilterState
 ): BackendHierarchyNode | null {
   const isCurrentMatch = matchesFilterAndSearch(node, search, filters);
 

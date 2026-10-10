@@ -78,7 +78,7 @@ export function useCompanyBranding(): CompanyBrandingData {
                 id: company?.id || data.id || "default",
                 name: company?.name || data.name || data.company_name || "Organization",
                 stampUrl: stampFromBackend || company?.stampUrl,
-                company_stamp_url: stampFromBackend || (company as any)?.company_stamp_url,
+                company_stamp_url: stampFromBackend || company?.company_stamp_url,
                 logoUrl: logoFromBackend || company?.logoUrl,
                 logoDataUrl: company?.logoDataUrl || (logoFromBackend ? resolveAssetUrl(logoFromBackend) || undefined : undefined),
               } as Company,
@@ -132,7 +132,7 @@ export function useCompanyBranding(): CompanyBrandingData {
     const rawSignature =
       company?.signatureDataUrl ||
       company?.signatureUrl ||
-      (company as any)?.digital_signature_url ||
+      company?.digital_signature_url ||
       backendOrg?.digital_signature_url ||
       backendOrg?.signature_url ||
       null;

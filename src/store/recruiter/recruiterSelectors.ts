@@ -1,7 +1,7 @@
 import { createSelector } from "@reduxjs/toolkit";
 import type { RootState } from "@/redux/store";
 
-export const selectRecruiterState = (state: RootState) => (state as any).aiRecruiter;
+export const selectRecruiterState = (state: RootState) => state.aiRecruiter;
 
 export const selectRecruiterLoading = createSelector(
   [selectRecruiterState],

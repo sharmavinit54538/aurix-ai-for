@@ -17,6 +17,7 @@ import { aurix } from "@/lib/aurix-store";
 import { safeStorage } from "@/lib/safe-storage";
 import { AUTH_ENDPOINTS } from "./endpoints";
 import { API_BASE_URL } from "./baseUrl";
+import { logger } from "@/lib/logger";
 
 export const SESSION_HINT_KEY = "ofc_session_hint";
 export const REFRESH_TOKEN_KEY = "aurix:refresh_token";
@@ -214,7 +215,7 @@ export async function refreshAccessToken(options?: { silent?: boolean }): Promis
             },
           });
           if (import.meta.env.DEV && import.meta.env.MODE !== "test" && !options?.silent) {
-            console.log(`[AUTH] Response: [REFRESH] POST ${refreshUrl} -> ${res.status}`);
+            logger.debug(`[AUTH] Response: [REFRESH] POST ${refreshUrl} -> ${res.status}`);
           }
         } catch (postErr: unknown) {
           const status = axios.isAxiosError(postErr)

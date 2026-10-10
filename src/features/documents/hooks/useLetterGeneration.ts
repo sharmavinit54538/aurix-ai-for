@@ -98,7 +98,7 @@ export function useLetterGeneration() {
             department: e.department,
             joiningDate: e.joiningDate,
             managerName: e.managerName,
-            location: (e as any).location || "",
+            location: e.location || "",
           }))
         );
         if (!selectedEmployeeId) setSelectedEmployeeId(ws.employees[0].id);

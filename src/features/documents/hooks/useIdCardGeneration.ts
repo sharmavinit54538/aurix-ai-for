@@ -96,7 +96,7 @@ export function useIdCardGeneration() {
             designation: e.designation,
             department: e.department,
             joiningDate: e.joiningDate,
-            bloodGroup: (e as any).bloodGroup || "",
+            bloodGroup: e.bloodGroup || "",
           }))
         );
         if (!selectedEmployeeId) setSelectedEmployeeId(ws.employees[0].id);

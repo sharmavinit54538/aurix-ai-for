@@ -10,7 +10,7 @@ export const fetchSidebarPermissions = createAsyncThunk<
   try {
     const data = await sidebarApi.getPermissions(userRole);
     return data;
-  } catch (err: any) {
-    return rejectWithValue(err?.message || "Failed to fetch sidebar permissions");
+  } catch (err: unknown) {
+    return rejectWithValue(err instanceof Error ? err.message : "Failed to fetch sidebar permissions");
   }
 });

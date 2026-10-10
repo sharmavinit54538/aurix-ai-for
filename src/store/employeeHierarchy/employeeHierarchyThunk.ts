@@ -12,9 +12,10 @@ export const fetchEmployeeHierarchy = createAsyncThunk<
   try {
     const data = await fetchEmployeeHierarchyApi();
     return data;
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
     return rejectWithValue(
-      err?.response?.data?.message || err?.message || "Failed to load employee hierarchy from backend."
+      errorObj?.response?.data?.message || errorObj?.message || "Failed to load employee hierarchy from backend."
     );
   }
 });
@@ -27,9 +28,10 @@ export const fetchEmployeeReportingDetails = createAsyncThunk<
   try {
     const data = await fetchEmployeeReportingDetailsApi(employeeId);
     return data;
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
     return rejectWithValue(
-      err?.response?.data?.message || err?.message || "Failed to load employee reporting details."
+      errorObj?.response?.data?.message || errorObj?.message || "Failed to load employee reporting details."
     );
   }
 });
@@ -42,9 +44,10 @@ export const fetchOrganizationalGraph = createAsyncThunk<
   try {
     const data = await fetchOrganizationalGraphApi();
     return data;
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
     return rejectWithValue(
-      err?.response?.data?.message || err?.message || "Failed to load organizational graph data."
+      errorObj?.response?.data?.message || errorObj?.message || "Failed to load organizational graph data."
     );
   }
 });

@@ -17,6 +17,8 @@ export interface BackendHierarchyNode {
   ctc?: number | null;
   reporting_to: string | null;
   reporting_manager_name: string | null;
+  email?: string | null;
+  location?: string | null;
   children: BackendHierarchyNode[];
   work_location_type?: "remote" | "hybrid" | "office" | string | null;
   skills?: string[];
