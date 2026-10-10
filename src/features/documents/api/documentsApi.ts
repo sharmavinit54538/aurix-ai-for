@@ -15,6 +15,8 @@ import type {
 export interface ListDocumentsParams {
   employee_id?: string;
   category_id?: string;
+  document_type?: string;
+  expiry_window?: string;
   status?: string;
   search?: string;
   sort_by?: string;
@@ -26,29 +28,24 @@ export interface ListDocumentsParams {
 export const documentsApi = {
   // ── Categories ─────────────────────────────────────────────────────────────
   async getCategories(): Promise<BackendCategory[]> {
-    try {
-      const res = await apiInstance.get("/documents/categories", {
-        headers: { "Cache-Control": "no-cache" },
-        skipCache: true,
-      });
-      const raw = res.data?.data ?? res.data ?? [];
-      const parsed: BackendCategory[] = Array.isArray(raw)
-        ? raw
-            .map((item: Record<string, unknown>) => ({
-              id: String(item.id ?? item.category_id ?? ""),
-              name: String(item.name ?? item.title ?? ""),
-              code: item.code ? String(item.code) : undefined,
-              group: String(item.group ?? item.category_group ?? "Employee Documents"),
-              is_company: Boolean(item.is_company),
-            }))
-            .filter((c: BackendCategory) => c.id && c.name)
-        : [];
+    const res = await apiInstance.get("/documents/categories", {
+      headers: { "Cache-Control": "no-cache" },
+      skipCache: true,
+    });
+    const raw = res.data?.data ?? res.data ?? [];
+    const parsed: BackendCategory[] = Array.isArray(raw)
+      ? raw
+          .map((item: Record<string, unknown>) => ({
+            id: String(item.id ?? item.category_id ?? ""),
+            name: String(item.name ?? item.title ?? ""),
+            code: item.code ? String(item.code) : undefined,
+            group: String(item.group ?? item.category_group ?? "Employee Documents"),
+            is_company: Boolean(item.is_company),
+          }))
+          .filter((c: BackendCategory) => c.id && c.name)
+      : [];
 
-      return getMergedStandardCategories(parsed);
-    } catch {
-      // Gracefully fall back to standard required production categories
-      return getMergedStandardCategories([]);
-    }
+    return getMergedStandardCategories(parsed);
   },
 
   // ── Employee Documents Listing ─────────────────────────────────────────────
@@ -59,6 +56,8 @@ export const documentsApi = {
       params: {
         employee_id: params.employee_id || undefined,
         category_id: params.category_id || undefined,
+        document_type: params.document_type || undefined,
+        expiry_window: params.expiry_window || undefined,
         status: params.status || undefined,
         search: params.search?.trim() || undefined,
         sort_by: params.sort_by || undefined,
@@ -190,7 +189,12 @@ export const documentsApi = {
   },
 
   // ── Verification Workflow (Employee Documents Only) ────────────────────────
-  async verifyDocument(id: string, comments?: string, documentName = "Document", employeeName?: string): Promise<{ success: boolean; message?: string }> {
+  async verifyDocument(
+    id: string,
+    comments?: string,
+    documentName = "Document",
+    employeeName?: string
+  ): Promise<{ success: boolean; message?: string }> {
     const res = await apiInstance.patch(`/documents/${id}/verify`, {
       comments: comments || "",
     });
@@ -206,7 +210,12 @@ export const documentsApi = {
     return { success: true, message: res.data?.message || "Document verified successfully." };
   },
 
-  async rejectDocument(id: string, comments: string, documentName = "Document", employeeName?: string): Promise<{ success: boolean; message?: string }> {
+  async rejectDocument(
+    id: string,
+    comments: string,
+    documentName = "Document",
+    employeeName?: string
+  ): Promise<{ success: boolean; message?: string }> {
     const res = await apiInstance.patch(`/documents/${id}/reject`, {
       comments,
     });
@@ -222,13 +231,18 @@ export const documentsApi = {
     return { success: true, message: res.data?.message || "Document rejected." };
   },
 
-  async requestReupload(id: string, comments: string, documentName = "Document", employeeName?: string): Promise<{ success: boolean; message?: string }> {
+  async requestReupload(
+    id: string,
+    comments: string,
+    documentName = "Document",
+    employeeName?: string
+  ): Promise<{ success: boolean; message?: string }> {
     const res = await apiInstance.patch(`/documents/${id}/request-reupload`, {
       comments,
     });
 
     logDocumentAuditEvent({
-      action: "Document Re-uploaded",
+      action: "Re-upload Requested",
       documentId: id,
       documentName,
       employeeName,
@@ -239,7 +253,10 @@ export const documentsApi = {
   },
 
   // ── Delete ─────────────────────────────────────────────────────────────────
-  async deleteEmployeeDocument(id: string, documentName = "Document"): Promise<{ success: boolean; message?: string }> {
+  async deleteEmployeeDocument(
+    id: string,
+    documentName = "Document"
+  ): Promise<{ success: boolean; message?: string }> {
     const res = await apiInstance.delete(`/documents/employees/${id}`);
 
     logDocumentAuditEvent({
@@ -252,7 +269,10 @@ export const documentsApi = {
     return { success: true, message: res.data?.message || "Document deleted successfully." };
   },
 
-  async deleteCompanyDocument(id: string, documentName = "Company Document"): Promise<{ success: boolean; message?: string }> {
+  async deleteCompanyDocument(
+    id: string,
+    documentName = "Company Document"
+  ): Promise<{ success: boolean; message?: string }> {
     const res = await apiInstance.delete(`/documents/company/${id}`);
 
     logDocumentAuditEvent({
@@ -269,7 +289,8 @@ export const documentsApi = {
   async downloadDocument(
     id: string,
     source: "employee" | "company",
-    documentName = "Document"
+    documentName = "Document",
+    options?: { log?: boolean }
   ): Promise<{ blob: Blob; contentDisposition?: string }> {
     const path =
       source === "company"
@@ -282,12 +303,14 @@ export const documentsApi = {
       headers: { Accept: "application/octet-stream, application/pdf, image/*, */*" },
     });
 
-    logDocumentAuditEvent({
-      action: "Document Downloaded",
-      documentId: id,
-      documentName,
-      details: `Downloaded as ${source} document.`,
-    });
+    if (options?.log !== false) {
+      logDocumentAuditEvent({
+        action: "Document Downloaded",
+        documentId: id,
+        documentName,
+        details: `Downloaded as ${source} document.`,
+      });
+    }
 
     return {
       blob: res.data as Blob,
@@ -297,55 +320,47 @@ export const documentsApi = {
 
   // ── Summary & Expiring Stats ───────────────────────────────────────────────
   async getDocumentSummary(): Promise<DocumentSummary> {
-    try {
-      const res = await apiInstance.get("/documents/summary", {
-        headers: { "Cache-Control": "no-cache" },
-        skipCache: true,
-      });
-      const data = res.data?.data ?? res.data ?? {};
-      return {
-        total: Number(data.total ?? 0),
-        verified: Number(data.verified ?? 0),
-        pending: Number(data.pending ?? 0),
-        rejected: Number(data.rejected ?? 0),
-        expiring: Number(data.expiring ?? data.expiring_soon ?? 0),
-        expired: Number(data.expired ?? 0),
-      };
-    } catch {
-      return { total: 0, verified: 0, pending: 0, rejected: 0, expiring: 0, expired: 0 };
-    }
+    const res = await apiInstance.get("/documents/summary", {
+      headers: { "Cache-Control": "no-cache" },
+      skipCache: true,
+    });
+    const data = res.data?.data ?? res.data ?? {};
+    return {
+      total: Number(data.total ?? 0),
+      verified: Number(data.verified ?? 0),
+      pending: Number(data.pending ?? 0),
+      rejected: Number(data.rejected ?? 0),
+      expiring: Number(data.expiring ?? data.expiring_soon ?? 0),
+      expired: Number(data.expired ?? 0),
+    };
   },
 
   async getExpiringDocuments(): Promise<BackendDocumentItem[]> {
-    try {
-      const res = await apiInstance.get("/documents/expiring", {
-        headers: { "Cache-Control": "no-cache" },
-        skipCache: true,
-      });
-      const items = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
-      return Array.isArray(items) ? items : [];
-    } catch {
-      return [];
-    }
+    const res = await apiInstance.get("/documents/expiring", {
+      headers: { "Cache-Control": "no-cache" },
+      skipCache: true,
+    });
+    const items = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
+    return Array.isArray(items) ? items : [];
   },
 
   async getExpiredDocuments(): Promise<BackendDocumentItem[]> {
-    try {
-      const res = await apiInstance.get("/documents/expired", {
-        headers: { "Cache-Control": "no-cache" },
-        skipCache: true,
-      });
-      const items = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
-      return Array.isArray(items) ? items : [];
-    } catch {
-      return [];
-    }
+    const res = await apiInstance.get("/documents/expired", {
+      headers: { "Cache-Control": "no-cache" },
+      skipCache: true,
+    });
+    const items = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
+    return Array.isArray(items) ? items : [];
   },
 
   // ── Activity Log ───────────────────────────────────────────────────────────
-  async getDocumentActivity(page = 1, limit = 20): Promise<{ items: DocumentActivityItem[]; total: number }> {
+  async getDocumentActivity(
+    page = 1,
+    limit = 20
+  ): Promise<{ items: DocumentActivityItem[]; total: number; isLocalFallback?: boolean }> {
     let backendItems: DocumentActivityItem[] = [];
     let total = 0;
+    let isLocalFallback = false;
 
     try {
       const res = await apiInstance.get("/documents/activity", {
@@ -355,28 +370,37 @@ export const documentsApi = {
       });
       const body = res.data;
       const rawItems = body?.data?.items ?? body?.data ?? body?.items ?? [];
-      if (Array.isArray(rawItems)) {
-        backendItems = rawItems.map((item: Record<string, unknown>) => ({
-          id: String(item.id || Math.random().toString(36).slice(2)),
-          documentId: String(item.document_id || item.documentId || ""),
-          documentName: String(item.document_name || item.documentName || item.title || "Document"),
-          action: String(item.action || "Updated"),
-          performedBy: String(item.performed_by || item.performedBy || item.user_name || "System"),
-          timestamp: String(item.timestamp || item.created_at || new Date().toISOString()),
-          details: item.details ? String(item.details) : undefined,
-          employeeName: item.employee_name ? String(item.employee_name) : undefined,
-          employeeId: item.employee_id ? String(item.employee_id) : undefined,
-        }));
+      if (Array.isArray(rawItems) && rawItems.length > 0) {
+        backendItems = rawItems.map((item: Record<string, unknown>, idx: number) => {
+          const docId = String(item.document_id || item.documentId || item.id || "");
+          const timestamp = String(item.timestamp || item.created_at || new Date().toISOString());
+          const stableId = String(item.id || item._id || `act_${docId}_${timestamp}_${idx}`);
+
+          return {
+            id: stableId,
+            documentId: docId || "doc",
+            documentName: String(item.document_name || item.documentName || item.title || "Document"),
+            action: String(item.action || "Updated"),
+            performedBy: String(item.performed_by || item.performedBy || item.user_name || "System"),
+            timestamp,
+            details: item.details ? String(item.details) : undefined,
+            employeeName: item.employee_name ? String(item.employee_name) : undefined,
+            employeeId: item.employee_id ? String(item.employee_id) : undefined,
+          };
+        });
         total = body?.meta?.total ?? backendItems.length;
+      } else {
+        isLocalFallback = true;
       }
     } catch {
-      // Backend activity endpoint pending - continue with combined local session activities
+      isLocalFallback = true;
     }
 
     const combined = getCombinedAuditActivities(backendItems);
     return {
       items: combined.slice((page - 1) * limit, page * limit),
       total: Math.max(total, combined.length),
+      isLocalFallback,
     };
   },
 

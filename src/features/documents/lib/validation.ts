@@ -35,21 +35,39 @@ export function validateDocumentFile(file: File | null | undefined): FileValidat
     };
   }
 
-  // Check extension
+  // Check extension and mime type
   const fileName = file.name || "";
   const lastDot = fileName.lastIndexOf(".");
-  if (lastDot === -1) {
+  const ext = lastDot !== -1 ? fileName.slice(lastDot).toLowerCase() : "";
+  const mimeType = (file.type || "").toLowerCase().trim();
+
+  const isExtAllowed = ext ? ALLOWED_EXTENSIONS.includes(ext) : false;
+  const isMimeAllowed = mimeType ? ALLOWED_MIME_TYPES.includes(mimeType) : false;
+
+  // Clear mime mismatch if not in allowed mime types and not generic stream
+  const isExplicitMimeMismatch =
+    Boolean(mimeType) &&
+    !isMimeAllowed &&
+    !mimeType.startsWith("application/octet-stream");
+
+  if (!ext && !isMimeAllowed) {
     return {
       valid: false,
-      error: "File has no extension. Allowed formats: PDF, PNG, JPG, JPEG, DOCX.",
+      error: "File has no extension. Allowed formats: PDF, PNG, JPG, JPEG, DOC, DOCX.",
     };
   }
 
-  const ext = fileName.slice(lastDot).toLowerCase();
-  if (!ALLOWED_EXTENSIONS.includes(ext)) {
+  if (isExplicitMimeMismatch && !isExtAllowed) {
     return {
       valid: false,
-      error: `File format "${ext}" is not supported. Allowed: PDF, PNG, JPG, JPEG, DOCX.`,
+      error: `File format "${ext || mimeType}" is not supported. Allowed formats: PDF, PNG, JPG, JPEG, DOC, DOCX.`,
+    };
+  }
+
+  if (!isExtAllowed && !isMimeAllowed) {
+    return {
+      valid: false,
+      error: `File format "${ext}" is not supported. Allowed formats: PDF, PNG, JPG, JPEG, DOC, DOCX.`,
     };
   }
 
@@ -153,8 +171,10 @@ export function extractFilenameFromHeader(
       safeName = `${safeName}.png`;
     } else if (ext === "jpg" || ext === "jpeg" || ext?.includes("jpeg")) {
       safeName = `${safeName}.jpg`;
-    } else if (ext === "docx" || ext?.includes("word")) {
+    } else if (ext === "docx" || ext?.includes("wordprocessingml")) {
       safeName = `${safeName}.docx`;
+    } else if (ext === "doc" || ext?.includes("msword")) {
+      safeName = `${safeName}.doc`;
     }
   }
 

@@ -69,6 +69,10 @@ export interface BackendDocumentItem {
   rejection_comments?: string;
   comments?: string;
   last_review?: string;
+  mime_type?: string;
+  content_type?: string;
+  mimeType?: string;
+  contentType?: string;
 }
 
 export interface DocumentItem {
@@ -181,6 +185,7 @@ export type DocumentAuditEventAction =
   | "Document Verified"
   | "Document Rejected"
   | "Document Re-uploaded"
+  | "Re-upload Requested"
   | "Document Deleted"
   | "Letter Generated"
   | "Letter Downloaded"
@@ -286,7 +291,7 @@ export interface LetterTypeDefinition {
   requiredFields: Array<{
     key: string;
     label: string;
-    type?: "text" | "number" | "date" | "textarea" | "select";
+    type?: "text" | "number" | "date" | "textarea" | "select" | "currency";
     placeholder?: string;
     required: boolean;
     defaultValue?: string;

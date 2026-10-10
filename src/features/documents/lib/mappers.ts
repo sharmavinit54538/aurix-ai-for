@@ -20,48 +20,102 @@ export function formatFileSize(bytes?: number | null): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+/**
+ * Parses a date-only string (YYYY-MM-DD) as a local calendar date,
+ * avoiding UTC midnight conversion issues in US timezones.
+ */
+export function parseLocalDate(dateStr?: string | null): Date | null {
+  if (!dateStr || typeof dateStr !== "string") return null;
+  const trimmed = dateStr.trim();
+  const dateOnlyMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (dateOnlyMatch) {
+    const year = parseInt(dateOnlyMatch[1], 10);
+    const month = parseInt(dateOnlyMatch[2], 10) - 1;
+    const day = parseInt(dateOnlyMatch[3], 10);
+    return new Date(year, month, day);
+  }
+
+  const d = new Date(trimmed);
+  if (isNaN(d.getTime())) return null;
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+/**
+ * Calculates the calendar day difference between targetDate and baseDate (target - base).
+ */
+export function getCalendarDayDifference(targetDate: Date, baseDate = new Date()): number {
+  const targetMidnight = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+  const baseMidnight = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate());
+  const diffMs = targetMidnight.getTime() - baseMidnight.getTime();
+  return Math.round(diffMs / (1000 * 60 * 60 * 24));
+}
+
+/**
+ * Returns the calendar days remaining until expiry (0 = today, < 0 = expired, > 0 = days left).
+ */
+export function getExpiryDiffDays(expiryDate?: string | null, baseDate = new Date()): number | null {
+  const parsed = parseLocalDate(expiryDate);
+  if (!parsed) return null;
+  return getCalendarDayDifference(parsed, baseDate);
+}
+
+/**
+ * Returns true if the document expiry date has passed before today.
+ * Documents expiring today (diffDays === 0) are valid until end of day.
+ */
+export function isDocumentExpired(expiryDate?: string | null, baseDate = new Date()): boolean {
+  const diff = getExpiryDiffDays(expiryDate, baseDate);
+  if (diff === null) return false;
+  return diff < 0;
+}
+
+/**
+ * Shared helper for filtering documents against expiry windows based on local calendar days.
+ */
+export function matchesExpiryWindow(expiryDate?: string | null, window?: string, baseDate = new Date()): boolean {
+  if (!window || window === "all") return true;
+  if (!expiryDate) return window === "valid";
+
+  const diffDays = getExpiryDiffDays(expiryDate, baseDate);
+  if (diffDays === null) return true;
+
+  if (window === "expired") return diffDays < 0;
+  if (window === "7d") return diffDays >= 0 && diffDays <= 7;
+  if (window === "30d") return diffDays >= 0 && diffDays <= 30;
+  if (window === "60d") return diffDays >= 0 && diffDays <= 60;
+  if (window === "valid") return diffDays > 60;
+
+  return true;
+}
+
 export function detectFileType(
   fileName?: string | null,
   fileUrl?: string | null,
   mimeType?: string | null
 ): "pdf" | "jpg" | "png" | "docx" | "doc" | "other" {
-  const checkStr = `${fileName || ""} ${fileUrl || ""} ${mimeType || ""}`.toLowerCase();
+  const mime = (mimeType || "").toLowerCase().trim();
 
-  if (checkStr.includes(".pdf") || checkStr.includes("application/pdf")) {
-    return "pdf";
+  if (mime) {
+    if (mime.includes("application/pdf")) return "pdf";
+    if (mime.includes("image/png")) return "png";
+    if (mime.includes("image/jpeg") || mime.includes("image/jpg")) return "jpg";
+    if (mime.includes("application/vnd.openxmlformats-officedocument.wordprocessingml")) return "docx";
+    if (mime.includes("application/msword")) return "doc";
   }
-  if (checkStr.includes(".png") || checkStr.includes("image/png")) {
-    return "png";
-  }
-  if (
-    checkStr.includes(".jpg") ||
-    checkStr.includes(".jpeg") ||
-    checkStr.includes("image/jpeg") ||
-    checkStr.includes("image/jpg")
-  ) {
-    return "jpg";
-  }
-  if (
-    checkStr.includes(".docx") ||
-    checkStr.includes("application/vnd.openxmlformats-officedocument.wordprocessingml")
-  ) {
-    return "docx";
-  }
-  if (checkStr.includes(".doc") || checkStr.includes("application/msword")) {
-    return "doc";
+
+  // Check file name first, then file URL
+  const candidates = [fileName || "", fileUrl || ""];
+
+  for (const str of candidates) {
+    if (!str) continue;
+    if (/\.pdf($|\?|#)/i.test(str)) return "pdf";
+    if (/\.png($|\?|#)/i.test(str)) return "png";
+    if (/\.(jpe?g)($|\?|#)/i.test(str)) return "jpg";
+    if (/\.docx($|\?|#)/i.test(str)) return "docx";
+    if (/\.doc($|\?|#)/i.test(str)) return "doc";
   }
 
   return "other";
-}
-
-export function isDocumentExpired(expiryDate?: string | null): boolean {
-  if (!expiryDate) return false;
-  const t = new Date(expiryDate).getTime();
-  if (isNaN(t)) return false;
-  // End of the expiry day
-  const endOfDay = new Date(expiryDate);
-  endOfDay.setHours(23, 59, 59, 999);
-  return endOfDay.getTime() < Date.now();
 }
 
 export function mapDocumentStatus(
@@ -75,16 +129,24 @@ export function mapDocumentStatus(
   const rawStatus = (backendDoc.status || backendDoc.status_field || "").toUpperCase();
   const isVerified = Boolean(backendDoc.is_verified || rawStatus === "VERIFIED");
 
+  // 1. REJECTED status must always remain REJECTED
+  if (rawStatus === "REJECTED") {
+    return "REJECTED";
+  }
+
+  // 2. Unverified / Pending status stays PENDING
+  if (rawStatus === "PENDING" || (!isVerified && rawStatus !== "VERIFIED")) {
+    return "PENDING";
+  }
+
+  // 3. Verified documents that are expired show as Expired
   if (isDocumentExpired(backendDoc.expiry_date)) {
     return "Expired";
   }
 
+  // 4. Verified documents
   if (isVerified) {
     return "VERIFIED";
-  }
-
-  if (rawStatus === "REJECTED") {
-    return "REJECTED";
   }
 
   return "PENDING";
@@ -132,7 +194,8 @@ export function mapBackendDocument(
   const expiryDate = d.expiry_date ? d.expiry_date.split("T")[0] : undefined;
 
   const status = mapDocumentStatus(d, source);
-  const isVerified = source === "employee" && (status === "VERIFIED" || Boolean(d.is_verified));
+  // isVerified must be false when the document is expired or rejected
+  const isVerified = source === "employee" && status === "VERIFIED";
 
   return {
     id: String(d.id),
@@ -156,7 +219,7 @@ export function mapBackendDocument(
     verifiedAt: d.verified_at,
     fileSize: formatFileSize(d.file_size),
     fileSizeBytes: d.file_size,
-    fileType: detectFileType(fileName, fileUrl),
+    fileType: detectFileType(fileName, fileUrl, d.mime_type || d.content_type || d.mimeType || d.contentType),
     fileUrl,
     description: d.description,
     documentType: d.document_type || d.type || undefined,

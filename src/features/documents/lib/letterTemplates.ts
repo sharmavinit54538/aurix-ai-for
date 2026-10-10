@@ -20,7 +20,7 @@ export const LETTER_TYPES: LetterTypeDefinition[] = [
     description: "Formal job offer stating designation, compensation, reporting, and acceptance conditions.",
     defaultTemplateId: "tpl_offer_letter",
     requiredFields: [
-      { key: "ctc", label: "Annual CTC (₹)", type: "text", placeholder: "e.g. 15,00,000", required: true },
+      { key: "ctc", label: "Annual CTC (₹)", type: "currency", placeholder: "e.g. 15,00,000", required: true },
       { key: "effective_date", label: "Date of Joining", type: "date", required: true },
       { key: "probation_months", label: "Probation Period (Months)", type: "number", placeholder: "6", required: false, defaultValue: "6" },
       { key: "reporting_to", label: "Reporting Manager / Lead", type: "text", placeholder: "e.g. Engineering Director", required: false },
@@ -94,8 +94,8 @@ export const LETTER_TYPES: LetterTypeDefinition[] = [
     defaultTemplateId: "tpl_salary_revision",
     requiredFields: [
       { key: "effective_date", label: "Effective Date", type: "date", required: true },
-      { key: "new_ctc", label: "New Annual CTC (₹)", type: "text", placeholder: "e.g. 18,50,000", required: true },
-      { key: "previous_ctc", label: "Previous CTC (₹)", type: "text", placeholder: "e.g. 15,00,000", required: false },
+      { key: "new_ctc", label: "New Annual CTC (₹)", type: "currency", placeholder: "e.g. 18,50,000", required: true },
+      { key: "previous_ctc", label: "Previous CTC (₹)", type: "currency", placeholder: "e.g. 15,00,000", required: false },
     ],
   },
   {
@@ -107,7 +107,7 @@ export const LETTER_TYPES: LetterTypeDefinition[] = [
     requiredFields: [
       { key: "effective_date", label: "Effective Date", type: "date", required: true },
       { key: "increment_percentage", label: "Increment Percentage (%)", type: "text", placeholder: "e.g. 15%", required: true },
-      { key: "new_ctc", label: "Revised CTC (₹)", type: "text", placeholder: "e.g. 16,50,000", required: true },
+      { key: "new_ctc", label: "Revised CTC (₹)", type: "currency", placeholder: "e.g. 16,50,000", required: true },
     ],
   },
   {
@@ -119,7 +119,7 @@ export const LETTER_TYPES: LetterTypeDefinition[] = [
     requiredFields: [
       { key: "new_designation", label: "New Designation", type: "text", placeholder: "e.g. Lead Engineer", required: true },
       { key: "effective_date", label: "Effective Date", type: "date", required: true },
-      { key: "new_ctc", label: "Revised CTC (₹)", type: "text", placeholder: "e.g. 22,00,000", required: false },
+      { key: "new_ctc", label: "Revised CTC (₹)", type: "currency", placeholder: "e.g. 22,00,000", required: false },
     ],
   },
   {
@@ -129,7 +129,7 @@ export const LETTER_TYPES: LetterTypeDefinition[] = [
     description: "Performance or festive bonus award notification with payout timeline.",
     defaultTemplateId: "tpl_bonus_letter",
     requiredFields: [
-      { key: "bonus_amount", label: "Bonus Amount (₹)", type: "text", placeholder: "e.g. 1,50,000", required: true },
+      { key: "bonus_amount", label: "Bonus Amount (₹)", type: "currency", placeholder: "e.g. 1,50,000", required: true },
       { key: "payout_month", label: "Payout Payroll Cycle", type: "text", placeholder: "e.g. October 2026", required: true },
       { key: "performance_cycle", label: "Performance Period", type: "text", placeholder: "e.g. FY 2025-26", required: false },
     ],
@@ -142,8 +142,8 @@ export const LETTER_TYPES: LetterTypeDefinition[] = [
     defaultTemplateId: "tpl_comp_revision",
     requiredFields: [
       { key: "effective_date", label: "Effective Date", type: "date", required: true },
-      { key: "fixed_pay", label: "Fixed Base Pay (₹)", type: "text", placeholder: "e.g. 12,00,000", required: true },
-      { key: "variable_pay", label: "Variable / Performance Pay (₹)", type: "text", placeholder: "e.g. 2,00,000", required: false },
+      { key: "fixed_pay", label: "Fixed Base Pay (₹)", type: "currency", placeholder: "e.g. 12,00,000", required: true },
+      { key: "variable_pay", label: "Variable / Performance Pay (₹)", type: "currency", placeholder: "e.g. 2,00,000", required: false },
     ],
   },
   {
@@ -154,8 +154,8 @@ export const LETTER_TYPES: LetterTypeDefinition[] = [
     defaultTemplateId: "tpl_ctc_letter",
     requiredFields: [
       { key: "as_of_date", label: "As of Date", type: "date", required: true },
-      { key: "gross_monthly", label: "Gross Monthly Salary (₹)", type: "text", placeholder: "e.g. 1,25,000", required: true },
-      { key: "annual_ctc", label: "Total Annual CTC (₹)", type: "text", placeholder: "e.g. 15,00,000", required: true },
+      { key: "gross_monthly", label: "Gross Monthly Salary (₹)", type: "currency", placeholder: "e.g. 1,25,000", required: true },
+      { key: "annual_ctc", label: "Total Annual CTC (₹)", type: "currency", placeholder: "e.g. 15,00,000", required: true },
     ],
   },
 
@@ -784,11 +784,34 @@ export function replaceTemplateVariables(
   let result = templateContent;
 
   for (const [key, rawValue] of Object.entries(context)) {
+    const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const val = rawValue !== undefined && rawValue !== null && rawValue !== "" ? String(rawValue) : `[${key}]`;
-    const regex = new RegExp(`{{\\s*${key}\\s*}}`, "g");
+    const regex = new RegExp(`{{\\s*${escapedKey}\\s*}}`, "g");
     result = result.replace(regex, val);
   }
 
-  // Fallback cleanup for any unresolved {{placeholder}}
   return result;
+}
+
+/**
+ * Returns any unresolved placeholders remaining in the template content (e.g. {{key}} or [key]).
+ */
+export function getUnresolvedPlaceholders(content: string): string[] {
+  const matches = new Set<string>();
+  const curlyMatches = content.match(/\{\{\s*[\w.-]+\s*\}\}/g);
+  if (curlyMatches) {
+    curlyMatches.forEach((m) => matches.add(m));
+  }
+  const bracketMatches = content.match(/\[[\w.-]+\]/g);
+  if (bracketMatches) {
+    bracketMatches.forEach((m) => matches.add(m));
+  }
+  return Array.from(matches);
+}
+
+/**
+ * Checks if the content contains any unreplaced {{...}} or [...] placeholders.
+ */
+export function hasUnresolvedPlaceholders(content: string): boolean {
+  return getUnresolvedPlaceholders(content).length > 0;
 }
