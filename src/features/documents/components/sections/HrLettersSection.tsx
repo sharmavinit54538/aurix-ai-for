@@ -4,16 +4,15 @@ import {
   Wand2,
   Send,
   Download,
-  Printer,
   History,
-  CheckCircle,
   Eye,
   User,
   Calendar,
-  Building2,
   FileCheck,
   Edit3,
-  BookmarkCheck,
+  AlertCircle,
+  RefreshCw,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,17 +21,25 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { LetterPreview } from "../letters/LetterPreview";
 import { useLetterGeneration } from "../../hooks/useLetterGeneration";
 import { HR_LETTER_CATEGORIES, LETTER_TYPES } from "../../lib/letterTemplates";
+import { formatINR } from "../../lib/salaryConfig";
+import { useCurrentRole, isHrAdmin, isSuperAdmin, isExecutive } from "@/lib/roles";
 import type { HrLetterCategory, GeneratedLetterRecord } from "../../lib/types";
 
 export const HrLettersSection: React.FC = () => {
+  const role = useCurrentRole();
+  const canViewSalary = isSuperAdmin(role) || isHrAdmin(role) || isExecutive(role);
+
   const {
     employees,
     isLoadingEmployees,
+    employeeError,
+    isLoadingDetails,
+    refetchEmployees,
     selectedLetterTypeId,
     selectedLetterType,
     selectedEmployeeId,
@@ -95,51 +102,117 @@ export const HrLettersSection: React.FC = () => {
             {/* 1. Recipient Employee Selection */}
             <Card className="border-border bg-card/60 backdrop-blur-sm shadow-sm">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-bold flex items-center gap-2">
-                  <User className="h-4 w-4 text-primary" />
-                  1. Select Recipient Employee
+                <CardTitle className="text-sm font-bold flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-primary" />
+                    1. Select Recipient Employee
+                  </span>
+                  {isLoadingDetails && (
+                    <span className="flex items-center gap-1 text-[11px] font-normal text-muted-foreground animate-pulse">
+                      <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                      Syncing details...
+                    </span>
+                  )}
                 </CardTitle>
                 <CardDescription className="text-xs">
                   Pulls employee details, title, compensation, and reporting structure automatically.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Select
-                  value={selectedEmployeeId}
-                  onValueChange={setSelectedEmployeeId}
-                  disabled={isLoadingEmployees}
-                >
-                  <SelectTrigger className="h-9 text-xs bg-background/50 border-border cursor-pointer">
-                    <SelectValue placeholder="Select an active employee..." />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-64">
-                    {employees.map((emp) => (
-                      <SelectItem key={emp.id} value={emp.id}>
-                        {emp.fullName} ({emp.employeeId}) — {emp.designation}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                {selectedEmployee && (
-                  <div className="p-2.5 rounded-lg bg-muted/40 border border-border/60 text-xs space-y-1">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Department:</span>
-                      <span className="font-semibold">{selectedEmployee.department}</span>
+                {employeeError ? (
+                  <div className="p-3 rounded-lg border border-destructive/40 bg-destructive/10 text-xs text-destructive space-y-2">
+                    <div className="flex items-center gap-2 font-medium">
+                      <AlertCircle className="h-4 w-4 shrink-0" />
+                      Failed to load employees from directory
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Designation:</span>
-                      <span className="font-semibold">{selectedEmployee.designation}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Joining Date:</span>
-                      <span className="font-semibold">{selectedEmployee.joiningDate}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Official Email:</span>
-                      <span className="font-mono text-[11px]">{selectedEmployee.email}</span>
+                    <p className="text-[11px] text-destructive/80 pl-6">{employeeError}</p>
+                    <div className="pl-6 pt-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={refetchEmployees}
+                        className="h-7 text-xs border-destructive/30 hover:bg-destructive/20 text-destructive cursor-pointer gap-1.5"
+                      >
+                        <RefreshCw className="h-3 w-3" /> Retry
+                      </Button>
                     </div>
                   </div>
+                ) : (
+                  <>
+                    <Select
+                      value={selectedEmployeeId}
+                      onValueChange={setSelectedEmployeeId}
+                      disabled={isLoadingEmployees}
+                    >
+                      <SelectTrigger className="h-9 text-xs bg-background/50 border-border cursor-pointer">
+                        {isLoadingEmployees ? (
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            <span>Loading employees...</span>
+                          </div>
+                        ) : (
+                          <SelectValue placeholder="Select an active employee..." />
+                        )}
+                      </SelectTrigger>
+                      <SelectContent className="max-h-64">
+                        {employees.length === 0 ? (
+                          <div className="py-4 text-center text-xs text-muted-foreground">
+                            No active employees found.
+                          </div>
+                        ) : (
+                          employees.map((emp) => (
+                            <SelectItem key={emp.id} value={emp.id}>
+                              {emp.fullName} ({emp.employeeId}) — {emp.designation || "Staff"}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+
+                    {selectedEmployee && (
+                      <div className="p-2.5 rounded-lg bg-muted/40 border border-border/60 text-xs space-y-1">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Employee ID:</span>
+                          <span className="font-mono font-semibold">{selectedEmployee.employeeId}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Department:</span>
+                          <span className="font-semibold">{selectedEmployee.department || "—"}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Designation:</span>
+                          <span className="font-semibold">{selectedEmployee.designation || "—"}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Joining Date:</span>
+                          <span className="font-semibold">{selectedEmployee.joiningDate || "—"}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Official Email:</span>
+                          <span className="font-mono text-[11px]">{selectedEmployee.email || "—"}</span>
+                        </div>
+                        {selectedEmployee.managerName && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Reporting To:</span>
+                            <span className="font-semibold text-primary">{selectedEmployee.managerName}</span>
+                          </div>
+                        )}
+                        {canViewSalary && selectedEmployee.ctc && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Annual CTC:</span>
+                            <span className="font-semibold text-emerald-500">₹{formatINR(selectedEmployee.ctc)}</span>
+                          </div>
+                        )}
+                        {selectedEmployee.location && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Work Location:</span>
+                            <span className="font-semibold">{selectedEmployee.location}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </>
                 )}
               </CardContent>
             </Card>

@@ -79,36 +79,22 @@ export function useIdCardGeneration() {
         const live = await documentsApi.getEmployees();
         if (live.length > 0 && isMounted) {
           setEmployees(live);
-          if (!selectedEmployeeId) setSelectedEmployeeId(live[0].id);
-          return;
+          setSelectedEmployeeId((prev) => (live.some((e) => e.id === prev) ? prev : live[0].id));
         }
-      } catch {
-        // Fallback to store
+      } catch (err) {
+        console.warn("Failed to load employees for ID card generator:", err);
+      } finally {
+        if (isMounted) {
+          setIsLoadingEmployees(false);
+        }
       }
-      if (ws.employees.length > 0 && isMounted) {
-        setEmployees(
-          ws.employees.map((e) => ({
-            id: e.id,
-            fullName: e.fullName,
-            employeeId: e.employeeId || e.id,
-            email: e.email,
-            phone: e.phone,
-            designation: e.designation,
-            department: e.department,
-            joiningDate: e.joiningDate,
-            bloodGroup: e.bloodGroup || "",
-          }))
-        );
-        if (!selectedEmployeeId) setSelectedEmployeeId(ws.employees[0].id);
-      }
-      setIsLoadingEmployees(false);
     };
 
     fetchEmps();
     return () => {
       isMounted = false;
     };
-  }, [ws.employees, selectedEmployeeId]);
+  }, []);
 
   const selectedEmployee = useMemo(() => {
     return employees.find((e) => e.id === selectedEmployeeId);

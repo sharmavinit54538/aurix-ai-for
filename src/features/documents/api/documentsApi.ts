@@ -501,34 +501,192 @@ export const documentsApi = {
     ctc?: string;
     bloodGroup?: string;
     avatarUrl?: string;
+    reportingStructure?: string;
   }>> {
     try {
       const res = await apiInstance.get("/employees", {
         params: { search: search?.trim() || undefined, limit: 100 },
       });
-      const raw = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
+      const body = res.data;
+      const raw = body?.data?.items ?? body?.items ?? (Array.isArray(body?.data) ? body.data : Array.isArray(body) ? body : []);
       if (!Array.isArray(raw)) return [];
 
-      return raw.map((e: Record<string, unknown>) => ({
-        id: String(e.id || e.employee_id || ""),
-        fullName:
-          [e.first_name, e.last_name].filter(Boolean).join(" ").trim() ||
-          String(e.full_name || e.name || ""),
-        employeeId: String(e.employee_id || e.employee_code || e.id || ""),
-        email: String(e.email || ""),
-        phone: String(e.phone || e.phone_number || ""),
-        designation: String(e.designation || e.role || e.title || ""),
-        department: String(e.department || ""),
-        joiningDate: e.joining_date || e.created_at ? String(e.joining_date || e.created_at).split("T")[0] : "",
-        managerName: e.manager_name ? String(e.manager_name) : undefined,
-        location: e.location || e.branch || e.city ? String(e.location || e.branch || e.city) : undefined,
-        salary: e.salary ? String(e.salary) : undefined,
-        ctc: e.ctc ? String(e.ctc) : undefined,
-        bloodGroup: e.blood_group ? String(e.blood_group) : undefined,
-        avatarUrl: e.avatar_url ? String(e.avatar_url) : undefined,
-      }));
-    } catch {
-      return [];
+      return raw.map((e: Record<string, unknown>) => {
+        const id = String(e.id || e.employee_id || "");
+        const empCode = String(e.employee_id || e.employee_code || e.code || e.id || "");
+        const nameParts = [e.first_name, e.last_name].filter(Boolean).map(String).join(" ").trim();
+        const fullName = nameParts || String(e.full_name || e.name || "Employee");
+        const email = String(e.company_email || e.personal_email || e.work_email || e.email || "");
+        const phone = String(e.phone || e.phone_number || e.mobile || "");
+        const designation = String(e.designation || e.role || e.title || e.position || "");
+        const department = String(e.department || e.dept || "");
+        const rawDate = e.joining_date || e.hire_date || e.created_at;
+        const joiningDate = rawDate ? String(rawDate).split("T")[0] : "";
+        const managerName = String(
+          e.reporting_manager_name ||
+          e.manager_name ||
+          (typeof e.manager === "object" && e.manager ? (e.manager as Record<string, unknown>).name || (e.manager as Record<string, unknown>).full_name : e.manager) ||
+          ""
+        );
+        const location = String(e.branch || e.location || e.city || e.work_location || "");
+        const ctc = e.ctc
+          ? String(e.ctc)
+          : e.ctc_annual
+          ? String(e.ctc_annual)
+          : e.ctc_annual_paise
+          ? String(Math.round(Number(e.ctc_annual_paise) / 100))
+          : undefined;
+        const salary = e.salary ? String(e.salary) : undefined;
+        const bloodGroup = e.blood_group ? String(e.blood_group) : undefined;
+        const avatarUrl = (e.avatar_url || e.profile_photo_url) ? String(e.avatar_url || e.profile_photo_url) : undefined;
+
+        return {
+          id: id || empCode,
+          fullName,
+          employeeId: empCode,
+          email,
+          phone,
+          designation,
+          department,
+          joiningDate,
+          managerName: managerName || undefined,
+          location: location || undefined,
+          salary,
+          ctc,
+          bloodGroup,
+          avatarUrl,
+        };
+      });
+    } catch (err: unknown) {
+      const errObj = err as { response?: { data?: { detail?: string; message?: string } }; message?: string };
+      const msg = errObj?.response?.data?.detail || errObj?.response?.data?.message || errObj?.message || "Failed to fetch employees";
+      throw new Error(msg);
     }
+  },
+
+  // ── Single Employee Detail (with reporting structure & compensation) ────────
+  async getEmployeeDetails(id: string): Promise<{
+    id: string;
+    fullName: string;
+    employeeId: string;
+    email: string;
+    phone: string;
+    designation: string;
+    department: string;
+    joiningDate: string;
+    managerName?: string;
+    location?: string;
+    salary?: string;
+    ctc?: string;
+    bloodGroup?: string;
+    avatarUrl?: string;
+    reportingStructure?: string;
+  }> {
+    let rawEmp: Record<string, unknown> = {};
+
+    try {
+      const res = await apiInstance.get(`/employees/${id}`);
+      rawEmp = ((res.data?.data ?? res.data) || {}) as Record<string, unknown>;
+    } catch {
+      // In case /employees/{id} is not supported or returns 404, fallback to searching list
+      try {
+        const listRes = await apiInstance.get("/employees", { params: { search: id, limit: 10 } });
+        const listRaw = listRes.data?.data?.items ?? listRes.data?.items ?? listRes.data?.data ?? listRes.data ?? [];
+        if (Array.isArray(listRaw)) {
+          const match = listRaw.find(
+            (e: Record<string, unknown>) => String(e.id) === String(id) || String(e.employee_id) === String(id)
+          );
+          if (match) rawEmp = match;
+        }
+      } catch {
+        // Fallback gracefully
+      }
+    }
+
+    let managerName = String(
+      rawEmp.reporting_manager_name ||
+      rawEmp.manager_name ||
+      (typeof rawEmp.manager === "object" && rawEmp.manager
+        ? (rawEmp.manager as Record<string, unknown>).name || (rawEmp.manager as Record<string, unknown>).full_name
+        : rawEmp.manager) ||
+      ""
+    );
+    let reportingStructure = "";
+
+    try {
+      const hierRes = await apiInstance.get(`/hierarchy/${id}`);
+      const hierData = hierRes.data?.data ?? hierRes.data;
+      if (hierData?.manager) {
+        const mgr = hierData.manager;
+        const mgrFullName = [mgr.first_name, mgr.last_name].filter(Boolean).join(" ").trim() || mgr.name;
+        if (mgrFullName) {
+          managerName = mgrFullName;
+          reportingStructure = `${mgrFullName}${mgr.designation ? ` (${mgr.designation})` : ""}`;
+        }
+      } else if (hierData?.reporting_chain && Array.isArray(hierData.reporting_chain) && hierData.reporting_chain.length > 0) {
+        const chain = hierData.reporting_chain;
+        const topMgr = chain[0];
+        const topName = [topMgr.first_name, topMgr.last_name].filter(Boolean).join(" ").trim() || topMgr.name;
+        if (topName) {
+          managerName = topName;
+          reportingStructure = topName;
+        }
+      }
+    } catch {
+      // Hierarchy endpoint might be unavailable or 404; safe fallback
+    }
+
+    let ctc = rawEmp.ctc
+      ? String(rawEmp.ctc)
+      : rawEmp.ctc_annual
+      ? String(rawEmp.ctc_annual)
+      : rawEmp.ctc_annual_paise
+      ? String(Math.round(Number(rawEmp.ctc_annual_paise) / 100))
+      : undefined;
+    let salary = rawEmp.salary ? String(rawEmp.salary) : undefined;
+
+    if (!ctc) {
+      try {
+        const compRes = await apiInstance.get(`/api/v2/payroll/employees/${id}/compensation`, {
+          headers: { "Cache-Control": "no-store" },
+        });
+        const compData = compRes.data?.data ?? compRes.data;
+        if (compData?.ctcAnnualFormatted) {
+          ctc = String(compData.ctcAnnualFormatted);
+        } else if (compData?.ctcAnnualPaise) {
+          ctc = String(Math.round(Number(compData.ctcAnnualPaise) / 100));
+        }
+        if (compData?.ctcMonthlyFormatted && !salary) {
+          salary = String(compData.ctcMonthlyFormatted);
+        }
+      } catch {
+        // Payroll / compensation may be restricted by role (403); safe fallback
+      }
+    }
+
+    const nameParts = [rawEmp.first_name, rawEmp.last_name].filter(Boolean).map(String).join(" ").trim();
+    const fullName = nameParts || String(rawEmp.full_name || rawEmp.name || "Employee");
+    const empCode = String(rawEmp.employee_id || rawEmp.employee_code || id);
+    const rawDate = rawEmp.joining_date || rawEmp.created_at;
+    const joiningDate = rawDate ? String(rawDate).split("T")[0] : "";
+    const location = String(rawEmp.branch || rawEmp.location || rawEmp.city || rawEmp.work_location || "");
+
+    return {
+      id: String(rawEmp.id || id),
+      fullName,
+      employeeId: empCode,
+      email: String(rawEmp.company_email || rawEmp.personal_email || rawEmp.work_email || rawEmp.email || ""),
+      phone: String(rawEmp.phone || rawEmp.phone_number || ""),
+      designation: String(rawEmp.designation || rawEmp.role || rawEmp.title || ""),
+      department: String(rawEmp.department || ""),
+      joiningDate,
+      managerName: managerName || undefined,
+      reportingStructure: reportingStructure || managerName || undefined,
+      location: location || undefined,
+      salary,
+      ctc,
+      bloodGroup: rawEmp.blood_group ? String(rawEmp.blood_group) : undefined,
+      avatarUrl: (rawEmp.avatar_url || rawEmp.profile_photo_url) ? String(rawEmp.avatar_url || rawEmp.profile_photo_url) : undefined,
+    };
   },
 };

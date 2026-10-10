@@ -35,26 +35,33 @@ function saveStoredLetters(letters: GeneratedLetterRecord[]) {
   }
 }
 
+export interface RecipientEmployee {
+  id: string;
+  fullName: string;
+  employeeId: string;
+  email: string;
+  phone: string;
+  designation: string;
+  department: string;
+  joiningDate: string;
+  managerName?: string;
+  location?: string;
+  salary?: string;
+  ctc?: string;
+  bloodGroup?: string;
+  avatarUrl?: string;
+  reportingStructure?: string;
+}
+
 export function useLetterGeneration() {
   const ws = useAurix();
   const company = ws.company;
 
   // Active employees list from backend
-  const [employees, setEmployees] = useState<Array<{
-    id: string;
-    fullName: string;
-    employeeId: string;
-    email: string;
-    phone: string;
-    designation: string;
-    department: string;
-    joiningDate: string;
-    managerName?: string;
-    location?: string;
-    salary?: string;
-    ctc?: string;
-  }>>([]);
+  const [employees, setEmployees] = useState<RecipientEmployee[]>([]);
   const [isLoadingEmployees, setIsLoadingEmployees] = useState(false);
+  const [employeeError, setEmployeeError] = useState<string | null>(null);
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
 
   // Selected state
   const [selectedLetterTypeId, setSelectedLetterTypeId] = useState<string>("offer_letter");
@@ -71,46 +78,100 @@ export function useLetterGeneration() {
   // Generation History
   const [history, setHistory] = useState<GeneratedLetterRecord[]>(() => getStoredLetters());
 
-  // Load employees from real backend
-  useEffect(() => {
-    let isMounted = true;
-    const fetchEmps = async () => {
-      setIsLoadingEmployees(true);
-      try {
-        const live = await documentsApi.getEmployees();
-        if (live.length > 0 && isMounted) {
-          setEmployees(live);
-          if (!selectedEmployeeId) setSelectedEmployeeId(live[0].id);
-          return;
-        }
-      } catch {
-        // Fallback to store
-      }
-      if (ws.employees.length > 0 && isMounted) {
-        setEmployees(
-          ws.employees.map((e) => ({
-            id: e.id,
-            fullName: e.fullName,
-            employeeId: e.employeeId || e.id,
-            email: e.email,
-            phone: e.phone,
-            designation: e.designation,
-            department: e.department,
-            joiningDate: e.joiningDate,
-            managerName: e.managerName,
-            location: e.location || "",
-          }))
-        );
-        if (!selectedEmployeeId) setSelectedEmployeeId(ws.employees[0].id);
-      }
-      setIsLoadingEmployees(false);
-    };
+  // Helper to safely populate form fields from employee details
+  const getPopulatedFields = useCallback(
+    (letterType: LetterTypeDefinition, emp?: RecipientEmployee): Record<string, string> => {
+      const fields: Record<string, string> = {};
+      if (!letterType) return fields;
 
+      for (const f of letterType.requiredFields) {
+        if (f.defaultValue) {
+          fields[f.key] = f.defaultValue;
+        }
+      }
+
+      if (!emp) return fields;
+
+      if (emp.ctc) {
+        const formattedCtc = formatCurrencyForLetter(emp.ctc);
+        if (letterType.requiredFields.some((f) => f.key === "ctc")) {
+          fields.ctc = formattedCtc;
+        }
+        if (letterType.requiredFields.some((f) => f.key === "annual_ctc")) {
+          fields.annual_ctc = formattedCtc;
+        }
+        if (letterType.requiredFields.some((f) => f.key === "previous_ctc")) {
+          fields.previous_ctc = formattedCtc;
+        }
+      }
+
+      if (emp.salary) {
+        const formattedSal = formatCurrencyForLetter(emp.salary);
+        if (letterType.requiredFields.some((f) => f.key === "salary")) {
+          fields.salary = formattedSal;
+        }
+        if (letterType.requiredFields.some((f) => f.key === "gross_monthly")) {
+          fields.gross_monthly = formattedSal;
+        }
+      }
+
+      if (emp.managerName) {
+        if (letterType.requiredFields.some((f) => f.key === "reporting_to")) {
+          fields.reporting_to = emp.managerName;
+        }
+      }
+
+      if (emp.joiningDate) {
+        if (letterType.requiredFields.some((f) => f.key === "joining_date")) {
+          fields.joining_date = emp.joiningDate;
+        }
+      }
+
+      if (emp.location) {
+        if (letterType.requiredFields.some((f) => f.key === "reporting_location")) {
+          fields.reporting_location = emp.location;
+        }
+        if (letterType.requiredFields.some((f) => f.key === "location")) {
+          fields.location = emp.location;
+        }
+      }
+
+      return fields;
+    },
+    []
+  );
+
+  // Load employees from real backend API (no mock data fallback)
+  const fetchEmps = useCallback(async () => {
+    setIsLoadingEmployees(true);
+    setEmployeeError(null);
+    try {
+      const live = await documentsApi.getEmployees();
+      if (live.length > 0) {
+        setEmployees(live);
+        setSelectedEmployeeId((prev) => {
+          const nextId = live.some((e) => e.id === prev) ? prev : live[0].id;
+          const chosenEmp = live.find((e) => e.id === nextId);
+          const initialType = LETTER_TYPES.find((t) => t.id === selectedLetterTypeId) || LETTER_TYPES[0];
+          setCustomFields(getPopulatedFields(initialType, chosenEmp));
+          return nextId;
+        });
+      } else {
+        setEmployees([]);
+      }
+    } catch (err: unknown) {
+      const errObj = err as { message?: string };
+      const msg = errObj?.message || "Failed to load employees from directory";
+      setEmployeeError(msg);
+      toast.error(msg);
+    } finally {
+      setIsLoadingEmployees(false);
+    }
+  }, [selectedLetterTypeId, getPopulatedFields]);
+
+  useEffect(() => {
     fetchEmps();
-    return () => {
-      isMounted = false;
-    };
-  }, [ws.employees, selectedEmployeeId]);
+  }, [fetchEmps]);
 
   const selectedLetterType: LetterTypeDefinition = useMemo(() => {
     return LETTER_TYPES.find((t) => t.id === selectedLetterTypeId) || LETTER_TYPES[0];
@@ -119,6 +180,66 @@ export function useLetterGeneration() {
   const selectedEmployee = useMemo(() => {
     return employees.find((e) => e.id === selectedEmployeeId);
   }, [employees, selectedEmployeeId]);
+
+  // Fetch full details for the selected employee (reporting structure, compensation, etc.)
+  useEffect(() => {
+    if (!selectedEmployeeId) return;
+
+    let isCurrent = true;
+    const loadDetails = async () => {
+      setIsLoadingDetails(true);
+      try {
+        const details = await documentsApi.getEmployeeDetails(selectedEmployeeId);
+        if (!isCurrent) return;
+
+        setEmployees((prev) =>
+          prev.map((emp) => (emp.id === selectedEmployeeId ? { ...emp, ...details } : emp))
+        );
+
+        // Safely enrich customFields if missing
+        setCustomFields((prev) => {
+          const updated = { ...prev };
+          if (details.ctc) {
+            const formattedCtc = formatCurrencyForLetter(details.ctc);
+            if (!updated.ctc && selectedLetterType.requiredFields.some((f) => f.key === "ctc")) {
+              updated.ctc = formattedCtc;
+            }
+            if (!updated.annual_ctc && selectedLetterType.requiredFields.some((f) => f.key === "annual_ctc")) {
+              updated.annual_ctc = formattedCtc;
+            }
+            if (!updated.previous_ctc && selectedLetterType.requiredFields.some((f) => f.key === "previous_ctc")) {
+              updated.previous_ctc = formattedCtc;
+            }
+          }
+          if (details.salary) {
+            const formattedSal = formatCurrencyForLetter(details.salary);
+            if (!updated.salary && selectedLetterType.requiredFields.some((f) => f.key === "salary")) {
+              updated.salary = formattedSal;
+            }
+            if (!updated.gross_monthly && selectedLetterType.requiredFields.some((f) => f.key === "gross_monthly")) {
+              updated.gross_monthly = formattedSal;
+            }
+          }
+          if (details.managerName && !updated.reporting_to && selectedLetterType.requiredFields.some((f) => f.key === "reporting_to")) {
+            updated.reporting_to = details.managerName;
+          }
+          if (details.location && !updated.reporting_location && selectedLetterType.requiredFields.some((f) => f.key === "reporting_location")) {
+            updated.reporting_location = details.location;
+          }
+          return updated;
+        });
+      } catch (err) {
+        console.warn("Could not load extended employee details:", err);
+      } finally {
+        if (isCurrent) setIsLoadingDetails(false);
+      }
+    };
+
+    loadDetails();
+    return () => {
+      isCurrent = false;
+    };
+  }, [selectedEmployeeId, selectedLetterType]);
 
   // Build the complete context replacing all required variables
   // CTC precedence: form value wins, else employee record. Cleared field stays empty and blocks generation.
@@ -268,21 +389,34 @@ ${variableContext.company_address}`;
     return { missingFields, placeholderErrors, fieldErrors: fieldValidationErrors };
   }, [selectedLetterType, customFields, previewContent, selectedEmployee?.ctc, selectedEmployee?.salary]);
 
+  // Selection handler for employee: resets dependent fields safely
+  const handleSelectEmployee = useCallback(
+    (newId: string) => {
+      setSelectedEmployeeId(newId);
+      setEditedContent(null);
+      setIsEditingContent(false);
+      setFieldErrors({});
+
+      const target = employees.find((e) => e.id === newId);
+      setCustomFields(getPopulatedFields(selectedLetterType, target));
+    },
+    [employees, selectedLetterType, getPopulatedFields]
+  );
+
   // Reset custom fields when letter type changes
-  const handleSelectLetterType = useCallback((typeId: string) => {
-    setSelectedLetterTypeId(typeId);
-    setEditedContent(null);
-    setIsEditingContent(false);
-    setFieldErrors({});
-    const newType = LETTER_TYPES.find((t) => t.id === typeId);
-    if (newType) {
-      const defaults: Record<string, string> = {};
-      newType.requiredFields.forEach((f) => {
-        if (f.defaultValue) defaults[f.key] = f.defaultValue;
-      });
-      setCustomFields(defaults);
-    }
-  }, []);
+  const handleSelectLetterType = useCallback(
+    (typeId: string) => {
+      setSelectedLetterTypeId(typeId);
+      setEditedContent(null);
+      setIsEditingContent(false);
+      setFieldErrors({});
+      const newType = LETTER_TYPES.find((t) => t.id === typeId);
+      if (newType) {
+        setCustomFields(getPopulatedFields(newType, selectedEmployee));
+      }
+    },
+    [selectedEmployee, getPopulatedFields]
+  );
 
   const handleFieldChange = useCallback((key: string, value: string) => {
     setCustomFields((prev) => ({ ...prev, [key]: value }));
@@ -374,7 +508,7 @@ ${variableContext.company_address}`;
 
       toast.success(`${selectedLetterType.title} generated successfully!`);
       return newRecord;
-    } catch (err) {
+    } catch {
       // Create local valid record on network fallback
       const newRecord: GeneratedLetterRecord = {
         id: `ltr_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
@@ -517,6 +651,9 @@ ${variableContext.company_address}`;
   return {
     employees,
     isLoadingEmployees,
+    employeeError,
+    isLoadingDetails,
+    refetchEmployees: fetchEmps,
     selectedLetterTypeId,
     selectedLetterType,
     selectedEmployeeId,
@@ -534,7 +671,8 @@ ${variableContext.company_address}`;
     placeholderErrors: validationResult.placeholderErrors,
     canGenerate,
     canDownload,
-    setSelectedEmployeeId,
+    setSelectedEmployeeId: handleSelectEmployee,
+    handleSelectEmployee,
     handleSelectLetterType,
     handleFieldChange,
     setEditedContent,
