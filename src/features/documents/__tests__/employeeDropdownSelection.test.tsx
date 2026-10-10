@@ -4,7 +4,6 @@ import React from "react";
 import { HrLettersSection } from "../components/sections/HrLettersSection";
 import { documentsApi } from "../api/documentsApi";
 import { apiInstance } from "@/api";
-import * as rolesModule from "@/lib/roles";
 import * as currentRoleModule from "@/lib/use-current-role";
 
 vi.mock("@/api", () => {
