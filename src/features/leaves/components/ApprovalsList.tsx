@@ -54,12 +54,14 @@ export function ApprovalsList({
       </div>
 
       <div className="grid gap-4">
-        {approvals.map((req) => {
-          const isRowLoading = actionLoadingId === req.id;
-          const isAnyRowLoading = Boolean(actionLoadingId);
-          const initial = getSafeInitial(req.employee_name);
+        {approvals
+          .filter((req) => req.id && req.id.trim() !== "")
+          .map((req) => {
+            const isRowLoading = actionLoadingId === req.id;
+            const isAnyRowLoading = Boolean(actionLoadingId);
+            const initial = getSafeInitial(req.employee_name);
 
-          return (
+            return (
             <Card
               key={req.id}
               className="border border-border bg-card overflow-hidden hover:shadow-md transition-shadow"
@@ -72,7 +74,7 @@ export function ApprovalsList({
                     </div>
                     <div>
                       <div className="font-semibold text-foreground flex items-center gap-2">
-                        <span>{req.employee_name}</span>
+                        <span>{req.employee_name || "Unknown employee"}</span>
                         <Badge variant="outline" className="text-[10px] uppercase font-normal">
                           {req.department}
                         </Badge>

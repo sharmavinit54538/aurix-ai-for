@@ -228,6 +228,7 @@ export function LeavesPage() {
 
   // Approve action confirmed
   const handleApproveConfirm = async (id: string) => {
+    // TODO: Self-approval must be blocked by the backend
     if (actionLoadingId) return; // Prevent double-click
     setActionLoadingId(id);
 
@@ -251,6 +252,7 @@ export function LeavesPage() {
 
   // Reject action confirmed
   const handleRejectConfirm = async (id: string, reason: string) => {
+    // TODO: Self-approval must be blocked by the backend
     if (actionLoadingId) return; // Prevent double-click
     setActionLoadingId(id);
 

@@ -244,9 +244,9 @@ export function AllBalancesPanel() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {empBalances.map((b) => (
+                  {empBalances.map((b, index) => (
                     <div
-                      key={b.leave_type}
+                      key={`${b.leave_type}-${index}`}
                       className="border border-border bg-muted/50 rounded-lg p-3 space-y-1"
                     >
                       <div className="flex justify-between items-center text-xs">

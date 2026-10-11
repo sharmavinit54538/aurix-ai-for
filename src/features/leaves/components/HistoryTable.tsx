@@ -3,7 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Ban, RefreshCw } from "lucide-react";
+import { AlertCircle, Ban, RefreshCw, Loader2 } from "lucide-react";
 import type { LeaveRequest } from "../types";
 import { formatDateStr, isLeaveCancellable, getTodayDateString, statusBadgeClass } from "../mappers";
 import { cn } from "@/lib/utils";
@@ -56,10 +56,16 @@ export function HistoryTable({
 
   return (
     <div>
-      <div className="mb-3">
+      <div className="mb-3 flex items-center justify-between">
         <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
           Leave Applications History
         </h3>
+        {loading && history.length > 0 && (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+            <span>Updating...</span>
+          </div>
+        )}
       </div>
       <Card className="border border-border bg-card overflow-hidden">
         <Table>
@@ -106,7 +112,7 @@ export function HistoryTable({
                   <TableCell className="pr-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                       {rec.status === "rejected" && rec.rejection_reason && (
-                        <div className="text-xs text-destructive flex items-center gap-1.5 justify-end">
+                        <div className="text-xs text-destructive flex items-center gap-1.5 justify-end max-w-[200px] truncate" title={rec.rejection_reason}>
                           <AlertCircle className="h-3.5 w-3.5 shrink-0" /> Reason: {rec.rejection_reason}
                         </div>
                       )}

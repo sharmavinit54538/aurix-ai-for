@@ -68,7 +68,7 @@ export function BalanceCards({
 
   return (
     <div className="grid gap-4 sm:grid-cols-3">
-      {balances.map((b) => {
+      {balances.map((b, index) => {
         const total = Number(b.total_days) || 0;
         const used = Number(b.used_days) || 0;
         const remaining = Number(b.remaining_days) || 0;
@@ -77,7 +77,7 @@ export function BalanceCards({
 
         return (
           <Card
-            key={b.leave_type}
+            key={`${b.leave_type}-${index}`}
             className="border border-border bg-card transition-all duration-300 hover:shadow-md"
           >
             <CardHeader className="pb-2">

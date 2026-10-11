@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import React from "react";
 import {
   mapLeave,
@@ -9,11 +9,15 @@ import {
   calculateEstimatedDays,
   isLeaveCancellable,
   getSafeInitial,
+  normalizeLeaveType,
+  isEmployeeProfileNotFound,
+  unwrapList,
 } from "../mappers";
 import { LeavesPage } from "../pages/LeavesPage";
 import { ApprovalsList } from "../components/ApprovalsList";
 import { HistoryTable } from "../components/HistoryTable";
 import { AllBalancesPanel } from "../components/AllBalancesPanel";
+import { ApplyLeaveDialog } from "../components/ApplyLeaveDialog";
 import { api } from "@/api";
 
 // Mock @/api
@@ -42,6 +46,7 @@ let mockUser: any = { id: "user-1", fullName: "Admin User", role: "hr_admin" };
 
 vi.mock("@/lib/roles", () => ({
   normalizeRole: (r: string) => r,
+  canViewAllBalances: (r: string) => r === "hr_admin",
 }));
 
 vi.mock("@/lib/use-current-role", () => ({
@@ -53,6 +58,10 @@ vi.mock("@/lib/aurix-store", () => ({
     user: mockUser,
     employees: [],
   }),
+}));
+
+vi.mock("@/hooks/usePoller", () => ({
+  usePoller: vi.fn(),
 }));
 
 describe("Leaves Feature Test Suite", () => {
@@ -69,7 +78,9 @@ describe("Leaves Feature Test Suite", () => {
       expect(mapStatus("APPROVED")).toBe("approved");
       expect(mapStatus("REJECTED")).toBe("rejected");
       expect(mapStatus("CANCELLED")).toBe("cancelled");
-      expect(mapStatus("UNKNOWN")).toBe("pending");
+      expect(mapStatus("CANCELED")).toBe("cancelled");
+      expect(mapStatus("WITHDRAWN")).toBe("cancelled");
+      expect(mapStatus("UNKNOWN")).toBe("unknown");
       expect(mapStatus(null)).toBe("pending");
 
       const rawBackendLeave = {
@@ -110,11 +121,11 @@ describe("Leaves Feature Test Suite", () => {
       expect(mapped.remaining_days).toBe(7.5);
     });
 
-    it("handles null / undefined safely with defaults", () => {
+    it("handles null / undefined safely with defaults (empty employee_name)", () => {
       const mapped = mapLeave(null);
       expect(mapped.id).toBe("");
-      expect(mapped.employee_name).toBe("Employee");
-      expect(mapped.department).toBe("Staff");
+      expect(mapped.employee_name).toBe(""); // Changed from "Employee" to ""
+      expect(mapped.department).toBe(""); // Changed from "Staff" to ""
       expect(mapped.status).toBe("pending");
       expect(mapped.total_days).toBe(0);
 
@@ -232,6 +243,14 @@ describe("Leaves Feature Test Suite", () => {
           today
         )
       ).toBe(false);
+
+      // Unknown status is not cancellable
+      expect(
+        isLeaveCancellable(
+          { status: "unknown", start_date: "2026-05-10" },
+          today
+        )
+      ).toBe(false);
     });
   });
 
@@ -266,12 +285,78 @@ describe("Leaves Feature Test Suite", () => {
       expect(screen.getByText("A")).toBeInTheDocument(); // initial
     });
 
+    it("shows 'Unknown employee' when employee_name is missing", () => {
+      const mockApprovals = [
+        {
+          id: "app-1",
+          employee_name: "",
+          department: "Engineering",
+          leave_type: "Sick Leave",
+          start_date: "2026-05-10",
+          end_date: "2026-05-11",
+          total_days: 2,
+          reason: "Medical appointment",
+          status: "pending" as const,
+        },
+      ];
+
+      render(
+        <ApprovalsList
+          approvals={mockApprovals}
+          onRefresh={vi.fn()}
+          onApproveClick={vi.fn()}
+          onRejectClick={vi.fn()}
+        />
+      );
+
+      expect(screen.getByText("Unknown employee")).toBeInTheDocument();
+    });
+
     it("safely generates initial when employee_name is missing or empty", () => {
       expect(getSafeInitial("")).toBe("E");
       expect(getSafeInitial("   ")).toBe("E");
       expect(getSafeInitial(null)).toBe("E");
       expect(getSafeInitial(undefined)).toBe("E");
       expect(getSafeInitial("bob")).toBe("B");
+    });
+
+    it("skips rendering rows with empty id", () => {
+      const mockApprovals = [
+        {
+          id: "",
+          employee_name: "Should Not Render",
+          department: "Engineering",
+          leave_type: "Sick Leave",
+          start_date: "2026-05-10",
+          end_date: "2026-05-11",
+          total_days: 2,
+          reason: "Medical appointment",
+          status: "pending" as const,
+        },
+        {
+          id: "app-2",
+          employee_name: "Should Render",
+          department: "Engineering",
+          leave_type: "Casual Leave",
+          start_date: "2026-05-10",
+          end_date: "2026-05-11",
+          total_days: 2,
+          reason: "Personal",
+          status: "pending" as const,
+        },
+      ];
+
+      render(
+        <ApprovalsList
+          approvals={mockApprovals}
+          onRefresh={vi.fn()}
+          onApproveClick={vi.fn()}
+          onRejectClick={vi.fn()}
+        />
+      );
+
+      expect(screen.queryByText("Should Not Render")).not.toBeInTheDocument();
+      expect(screen.getByText("Should Render")).toBeInTheDocument();
     });
   });
 
@@ -369,6 +454,20 @@ describe("Leaves Feature Test Suite", () => {
         expect(screen.getByText("All Balances")).toBeInTheDocument();
       });
     });
+
+    it("shows only Review Requests tab for manager (not All Balances)", async () => {
+      mockRole = "manager";
+      mockUser = { id: "mgr-1", fullName: "Team Manager", role: "manager" };
+
+      vi.mocked(api.get).mockResolvedValue({ success: true, data: [] });
+
+      render(<LeavesPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Review Requests")).toBeInTheDocument();
+        expect(screen.queryByText("All Balances")).not.toBeInTheDocument();
+      });
+    });
   });
 
   // 7. All Balances uses UUID
@@ -426,6 +525,40 @@ describe("Leaves Feature Test Suite", () => {
       expect(screen.getByText("Viewing balances for Sarah Connor")).toBeInTheDocument();
       expect(screen.getByText("10 remaining")).toBeInTheDocument();
     });
+
+    it("keeps previous employees list visible while new search is loading", async () => {
+      const initialEmployees = [
+        { id: "emp-1", employee_code: "EMP-001", full_name: "John Doe", department: "Engineering", designation: "Developer" },
+        { id: "emp-2", employee_code: "EMP-002", full_name: "Jane Smith", department: "Design", designation: "Designer" },
+      ];
+
+      vi.mocked(api.get).mockImplementation(async (path: string) => {
+        if (path.startsWith("/leaves/employees")) {
+          // Simulate slow response for second search
+          if (path.includes("q=jane")) {
+            await new Promise((resolve) => setTimeout(resolve, 100));
+          }
+          return { success: true, data: initialEmployees };
+        }
+        return { success: true, data: [] };
+      });
+
+      render(<AllBalancesPanel />);
+
+      await waitFor(() => {
+        expect(screen.getByText("John Doe")).toBeInTheDocument();
+        expect(screen.getByText("Jane Smith")).toBeInTheDocument();
+      });
+
+      // Type in search box
+      const searchInput = screen.getByPlaceholderText("Search employees...");
+      fireEvent.change(searchInput, { target: { value: "jane" } });
+
+      // Previous employees should still be visible (dimmed)
+      await waitFor(() => {
+        expect(screen.getByText("John Doe")).toBeInTheDocument();
+      });
+    });
   });
 
   // 8. Visual Consistency & Token Mapping (Rules 4, 5, 6)
@@ -452,6 +585,239 @@ describe("Leaves Feature Test Suite", () => {
       expect(getLeaveTypeDot("Casual Leave")).toBe("bg-emerald-500");
       expect(getLeaveTypeDot("Vacation Leave")).toBe("bg-primary");
       expect(getLeaveTypeDot("Special Leave")).toBe("bg-muted-foreground");
+    });
+  });
+
+  // 9. New helpers: isEmployeeProfileNotFound, normalizeLeaveType, unwrapList
+  describe("9. Helper functions", () => {
+    it("isEmployeeProfileNotFound returns true only for 'employee profile not found' message", () => {
+      const errWithMessage = { data: { message: "Employee profile not found" } };
+      const errWithMessageCase = { data: { message: "EMPLOYEE PROFILE NOT FOUND" } };
+      const errWithNested = { message: "employee profile not found" };
+      const err404NoMessage = { status: 404, data: { message: "Not found" } };
+      const err404NoData = { status: 404 };
+      const errOther = { data: { message: "Something else" } };
+
+      expect(isEmployeeProfileNotFound(errWithMessage)).toBe(true);
+      expect(isEmployeeProfileNotFound(errWithMessageCase)).toBe(true);
+      expect(isEmployeeProfileNotFound(errWithNested)).toBe(true);
+      expect(isEmployeeProfileNotFound(err404NoMessage)).toBe(false);
+      expect(isEmployeeProfileNotFound(err404NoData)).toBe(false);
+      expect(isEmployeeProfileNotFound(errOther)).toBe(false);
+      expect(isEmployeeProfileNotFound(null)).toBe(false);
+      expect(isEmployeeProfileNotFound({})).toBe(false);
+    });
+
+    it("normalizeLeaveType normalizes case, spaces, and underscores", () => {
+      expect(normalizeLeaveType("Sick Leave")).toBe("sickleave");
+      expect(normalizeLeaveType("sick_leave")).toBe("sickleave");
+      expect(normalizeLeaveType("SICK_LEAVE")).toBe("sickleave");
+      expect(normalizeLeaveType("  Sick  Leave  ")).toBe("sickleave");
+      expect(normalizeLeaveType("MaternityLeave")).toBe("maternityleave");
+    });
+
+    it("unwrapList handles various response shapes", () => {
+      // Direct array
+      expect(unwrapList([1, 2, 3])).toEqual([1, 2, 3]);
+
+      // {data: []}
+      expect(unwrapList({ data: [1, 2, 3] })).toEqual([1, 2, 3]);
+
+      // {data: {items: []}}
+      expect(unwrapList({ data: { items: [1, 2, 3] } })).toEqual([1, 2, 3]);
+
+      // {data: {balances: []}}
+      expect(unwrapList({ data: { balances: [1, 2, 3] } })).toEqual([1, 2, 3]);
+
+      // {data: {leaves: []}}
+      expect(unwrapList({ data: { leaves: [1, 2, 3] } })).toEqual([1, 2, 3]);
+
+      // success: false throws
+      expect(() => unwrapList({ success: false, message: "Error" })).toThrow("Error");
+
+      // Unrecognized shape returns empty array and warns
+      const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      expect(unwrapList({ weird: "shape" })).toEqual([]);
+      consoleWarn.mockRestore();
+    });
+  });
+
+  // 10. ApplyLeaveDialog: leave type dropdown from balances, case-insensitive match
+  describe("10. ApplyLeaveDialog leave type dropdown", () => {
+    it("builds dropdown options from balances prop", async () => {
+      const mockBalances = [
+        { leave_type: "Sick Leave", total_days: 10, used_days: 2, remaining_days: 8 },
+        { leave_type: "Casual Leave", total_days: 12, used_days: 1, remaining_days: 11 },
+        { leave_type: "Maternity Leave", total_days: 90, used_days: 0, remaining_days: 90 },
+      ];
+
+      vi.mocked(api.post).mockResolvedValue({ success: true });
+
+      render(
+        <ApplyLeaveDialog
+          open={true}
+          onOpenChange={vi.fn()}
+          balances={mockBalances}
+          isHrAdmin={false}
+          onSuccess={vi.fn()}
+        />
+      );
+
+      // Open the select dropdown
+      const selectTrigger = screen.getByRole("combobox");
+      fireEvent.click(selectTrigger);
+
+      // Should show all three types from balances
+      expect(screen.getByRole("option", { name: "Sick Leave" })).toBeInTheDocument();
+      expect(screen.getByRole("option", { name: "Casual Leave" })).toBeInTheDocument();
+      expect(screen.getByRole("option", { name: "Maternity Leave" })).toBeInTheDocument();
+      // Should NOT show Vacation Leave (not in balances)
+      expect(screen.queryByRole("option", { name: "Vacation Leave" })).not.toBeInTheDocument();
+    });
+
+    it("falls back to LEAVE_TYPES constant when balances is empty", async () => {
+      vi.mocked(api.post).mockResolvedValue({ success: true });
+
+      render(
+        <ApplyLeaveDialog
+          open={true}
+          onOpenChange={vi.fn()}
+          balances={[]}
+          isHrAdmin={false}
+          onSuccess={vi.fn()}
+        />
+      );
+
+      const selectTrigger = screen.getByRole("combobox");
+      fireEvent.click(selectTrigger);
+
+      expect(screen.getByRole("option", { name: "Sick Leave" })).toBeInTheDocument();
+      expect(screen.getByRole("option", { name: "Casual Leave" })).toBeInTheDocument();
+      expect(screen.getByRole("option", { name: "Vacation Leave" })).toBeInTheDocument();
+    });
+
+    it("matches selected balance case-insensitively and ignoring spaces/underscores", async () => {
+      const mockBalances = [
+        { leave_type: "Sick Leave", total_days: 10, used_days: 2, remaining_days: 8 },
+        { leave_type: "Casual_Leave", total_days: 12, used_days: 1, remaining_days: 11 },
+      ];
+
+      vi.mocked(api.post).mockResolvedValue({ success: true });
+
+      render(
+        <ApplyLeaveDialog
+          open={true}
+          onOpenChange={vi.fn()}
+          balances={mockBalances}
+          isHrAdmin={false}
+          onSuccess={vi.fn()}
+        />
+      );
+
+      // Select "Sick Leave" - should match "Sick Leave" balance
+      const selectTrigger = screen.getByRole("combobox");
+      fireEvent.click(selectTrigger);
+      fireEvent.click(screen.getByRole("option", { name: "Sick Leave" }));
+
+      // Should show remaining days from "Sick Leave" balance (8)
+      // Text is split across elements, query the parent span that contains "Remaining:"
+      const remainingLabel = screen.getByText("Remaining:").closest("span");
+      expect(remainingLabel).toHaveTextContent(/8\s*days/);
+
+      // Select "Casual_Leave" - should match "Casual_Leave" balance
+      fireEvent.click(selectTrigger);
+      fireEvent.click(screen.getByRole("option", { name: "Casual_Leave" }));
+
+      const remainingLabel2 = screen.getByText("Remaining:").closest("span");
+      expect(remainingLabel2).toHaveTextContent(/11\s*days/);
+    });
+  });
+
+  // 11. Plain 404 not showing "Employee Profile Not Found" banner
+  describe("11. Error handling - plain 404", () => {
+    it("does not show Employee Profile Not Found banner for bare 404", async () => {
+      mockRole = "employee";
+      mockUser = { id: "emp-1", fullName: "Regular Employee", role: "employee" };
+
+      vi.mocked(api.get)
+        .mockRejectedValueOnce({ status: 404, data: { message: "Not found" } })
+        .mockRejectedValueOnce({ status: 404, data: { message: "Not found" } });
+
+      render(<LeavesPage />);
+
+      await waitFor(() => {
+        expect(api.get).toHaveBeenCalledTimes(2);
+      });
+
+      // Should show error state, not the profile not found banner
+      expect(screen.queryByText("Employee Profile Not Found")).not.toBeInTheDocument();
+      expect(screen.getByText("Failed to load leave balances")).toBeInTheDocument();
+    });
+
+    it("shows Employee Profile Not Found banner when message contains the phrase", async () => {
+      mockRole = "employee";
+      mockUser = { id: "emp-1", fullName: "Regular Employee", role: "employee" };
+
+      vi.mocked(api.get)
+        .mockRejectedValueOnce({ status: 404, data: { message: "Employee profile not found" } })
+        .mockRejectedValueOnce({ status: 404, data: { message: "Employee profile not found" } });
+
+      render(<LeavesPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Employee Profile Not Found")).toBeInTheDocument();
+      });
+    });
+  });
+
+  // 12. Unknown status handling
+  describe("12. Unknown status handling", () => {
+    it("maps unknown status to 'unknown' and warns", () => {
+      const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      expect(mapStatus("WEIRD_STATUS")).toBe("unknown");
+      expect(mapStatus("random")).toBe("unknown");
+      consoleWarn.mockRestore();
+    });
+
+    it("shows muted badge for unknown status in HistoryTable", () => {
+      const mockHistory = [
+        {
+          id: "req-1",
+          employee_name: "Self",
+          department: "Eng",
+          leave_type: "Casual Leave",
+          start_date: "2026-07-01",
+          end_date: "2026-07-02",
+          total_days: 2,
+          reason: "Personal",
+          status: "unknown" as any,
+        },
+      ];
+
+      render(<HistoryTable history={mockHistory} />);
+
+      const badge = screen.getByText("unknown");
+      expect(badge).toHaveClass("bg-muted");
+    });
+  });
+
+  // 13. Super admin does not call /leaves/balances or /leaves/history
+  describe("13. Super admin empty state", () => {
+    it("shows informational empty state for super_admin on my-leaves tab", async () => {
+      mockRole = "super_admin";
+      mockUser = { id: "sa-1", fullName: "Super Admin", role: "super_admin" };
+
+      vi.mocked(api.get).mockResolvedValue({ success: true, data: [] });
+
+      render(<LeavesPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Super admins don't have personal leave balances")).toBeInTheDocument();
+      });
+
+      // Should NOT call /leaves/balances or /leaves/history
+      expect(api.get).not.toHaveBeenCalledWith("/leaves/balances", expect.any(Object));
+      expect(api.get).not.toHaveBeenCalledWith("/leaves/history", expect.any(Object));
     });
   });
 });
