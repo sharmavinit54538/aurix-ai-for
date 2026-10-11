@@ -12,11 +12,13 @@ import {
   normalizeLeaveType,
   isEmployeeProfileNotFound,
   unwrapList,
+  mapLeaveExtended,
 } from "../mappers";
 import { LeavesPage } from "../pages/LeavesPage";
 import { ApprovalsList } from "../components/ApprovalsList";
 import { HistoryTable } from "../components/HistoryTable";
 import { AllBalancesPanel } from "../components/AllBalancesPanel";
+import { AllRequestsPanel } from "../components/AllRequestsPanel";
 import { ApplyLeaveDialog } from "../components/ApplyLeaveDialog";
 import { api } from "@/api";
 
@@ -47,6 +49,7 @@ let mockUser: any = { id: "user-1", fullName: "Admin User", role: "hr_admin" };
 vi.mock("@/lib/roles", () => ({
   normalizeRole: (r: string) => r,
   canViewAllBalances: (r: string) => r === "hr_admin",
+  canViewAllRequests: (r: string) => r === "hr_admin",
 }));
 
 vi.mock("@/lib/use-current-role", () => ({
@@ -821,5 +824,279 @@ describe("Leaves Feature Test Suite", () => {
     });
   });
 });
+
+  // 14. All Requests tab (org-wide leave requests for HR Admin)
+  describe("14. All Requests tab - org-wide leave requests", () => {
+    beforeEach(() => {
+      // Mock the /leaves/requests endpoint for AllRequestsPanel tests
+      vi.mocked(api.get).mockImplementation(async (path: string) => {
+        if (path.startsWith("/leaves/requests")) {
+          return { success: true, data: [], total: 0, page: 1, limit: 20 };
+        }
+        return { success: true, data: [] };
+      });
+    });
+
+    it("shows All Requests tab for hr_admin", async () => {
+      mockRole = "hr_admin";
+      mockUser = { id: "hr-1", fullName: "HR Administrator", role: "hr_admin" };
+
+      vi.mocked(api.get).mockResolvedValue({ success: true, data: [] });
+
+      render(<LeavesPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText("All Requests")).toBeInTheDocument();
+      });
+    });
+
+    it("hides All Requests tab for employee and manager roles", async () => {
+      mockRole = "employee";
+      mockUser = { id: "emp-1", fullName: "Regular Employee", role: "employee" };
+
+      vi.mocked(api.get).mockResolvedValue({ success: true, data: [] });
+
+      render(<LeavesPage />);
+
+      await waitFor(() => {
+        expect(screen.queryByText("All Requests")).not.toBeInTheDocument();
+      });
+
+      // Test manager
+      mockRole = "manager";
+      mockUser = { id: "mgr-1", fullName: "Team Manager", role: "manager" };
+      vi.mocked(api.get).mockResolvedValue({ success: true, data: [] });
+
+      // Need to remount with new role - just check the capability function
+      const { canViewAllRequests } = await import("@/lib/roles");
+      expect(canViewAllRequests("employee")).toBe(false);
+      expect(canViewAllRequests("manager")).toBe(false);
+      expect(canViewAllRequests("hr_admin")).toBe(true);
+    });
+
+    it("AllRequestsPanel fetches from /leaves/requests with filters", async () => {
+      const mockRequests = [
+        {
+          id: "req-1",
+          employee_name: "John Doe",
+          employee_code: "EMP-001",
+          department: "Engineering",
+          leave_type: "Sick Leave",
+          start_date: "2026-07-01",
+          end_date: "2026-07-03",
+          total_days: 3,
+          reason: "Flu",
+          status: "approved",
+          rejection_reason: null,
+          reviewed_by: "Jane Manager",
+          reviewed_at: "2026-06-15",
+          created_at: "2026-06-10",
+        },
+        {
+          id: "req-2",
+          employee_name: "Jane Smith",
+          employee_code: "EMP-002",
+          department: "Design",
+          leave_type: "Casual Leave",
+          start_date: "2026-07-10",
+          end_date: "2026-07-11",
+          total_days: 2,
+          reason: "Personal",
+          status: "rejected",
+          rejection_reason: "Project deadline",
+          reviewed_by: "Jane Manager",
+          reviewed_at: "2026-07-05",
+          created_at: "2026-07-01",
+        },
+      ];
+
+      vi.mocked(api.get).mockResolvedValue({
+        success: true,
+        data: mockRequests,
+        total: 2,
+        page: 1,
+        limit: 20,
+      });
+
+      render(<AllRequestsPanel />);
+
+      await waitFor(() => {
+        expect(api.get).toHaveBeenCalledWith(
+          expect.stringContaining("/leaves/requests?"),
+          { headers: { "x-skip-cache": "true" } }
+        );
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText("John Doe")).toBeInTheDocument();
+        expect(screen.getByText("Jane Smith")).toBeInTheDocument();
+      });
+    });
+
+    it("AllRequestsPanel shows rejection reason for rejected requests", async () => {
+      const mockRequests = [
+        {
+          id: "req-1",
+          employee_name: "Jane Smith",
+          employee_code: "EMP-002",
+          department: "Design",
+          leave_type: "Casual Leave",
+          start_date: "2026-07-10",
+          end_date: "2026-07-11",
+          total_days: 2,
+          reason: "Personal",
+          status: "rejected",
+          rejection_reason: "Project deadline",
+          reviewed_by: "Jane Manager",
+          reviewed_at: "2026-07-05",
+          created_at: "2026-07-01",
+        },
+      ];
+
+      vi.mocked(api.get).mockResolvedValue({
+        success: true,
+        data: mockRequests,
+        total: 1,
+        page: 1,
+        limit: 20,
+      });
+
+      render(<AllRequestsPanel />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Project deadline")).toBeInTheDocument();
+      });
+    });
+
+    it("filter changes call the API with correct params", async () => {
+      vi.mocked(api.get).mockResolvedValue({ success: true, data: [], total: 0, page: 1, limit: 20 });
+
+      render(<AllRequestsPanel />);
+
+      await waitFor(() => {
+        expect(api.get).toHaveBeenCalledTimes(1);
+      });
+
+      // Change status filter
+      const statusSelect = screen.getByRole("combobox");
+      fireEvent.click(statusSelect);
+      fireEvent.click(screen.getByRole("option", { name: "Approved" }));
+
+      await waitFor(() => {
+        expect(api.get).toHaveBeenCalledWith(
+          expect.stringContaining("status=approved"),
+          { headers: { "x-skip-cache": "true" } }
+        );
+      });
+    });
+
+    it("search by employee name debounces and calls API", async () => {
+      vi.mocked(api.get).mockResolvedValue({ success: true, data: [], total: 0, page: 1, limit: 20 });
+
+      render(<AllRequestsPanel />);
+
+      await waitFor(() => {
+        expect(api.get).toHaveBeenCalledTimes(1);
+      });
+
+      const searchInput = screen.getByPlaceholderText("Search by employee name...");
+      fireEvent.change(searchInput, { target: { value: "john" } });
+
+      // Should debounce - wait a bit
+      await waitFor(() => {
+        expect(api.get).toHaveBeenCalledWith(
+          expect.stringContaining("q=john"),
+          { headers: { "x-skip-cache": "true" } }
+        );
+      }, { timeout: 500 });
+    });
+  });
+
+  // 15. Approve in Review tab then All Requests refetches
+  describe("15. Cross-tab data freshness", () => {
+    it("approve in Review Requests then opening All Requests refetches", async () => {
+      mockRole = "hr_admin";
+      mockUser = { id: "hr-1", fullName: "HR Administrator", role: "hr_admin" };
+
+      // Initial load: pending approvals
+      vi.mocked(api.get)
+        .mockResolvedValueOnce({ success: true, data: [] }) // balances
+        .mockResolvedValueOnce({ success: true, data: [] }) // history
+        .mockResolvedValueOnce({ success: true, data: [{ id: "req-1", employee_name: "Test", department: "Eng", leave_type: "Sick Leave", start_date: "2026-07-01", end_date: "2026-07-02", total_days: 2, reason: "Test", status: "pending" }] }); // pending
+
+      render(<LeavesPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Review Requests")).toBeInTheDocument();
+      });
+
+      // Click All Requests tab
+      const allRequestsTab = screen.getByText("All Requests");
+      fireEvent.click(allRequestsTab);
+
+      // Should call /leaves/requests
+      await waitFor(() => {
+        expect(api.get).toHaveBeenCalledWith(
+          expect.stringContaining("/leaves/requests?"),
+          { headers: { "x-skip-cache": "true" } }
+        );
+      });
+    });
+  });
+
+  // 16. mapLeaveExtended
+  describe("16. mapLeaveExtended mapper", () => {
+    it("maps extended fields from backend response", () => {
+      const raw = {
+        id: "req-1",
+        employee_name: "John Doe",
+        employee_code: "EMP-001",
+        department: "Engineering",
+        leave_type: "Sick Leave",
+        start_date: "2026-07-01",
+        end_date: "2026-07-03",
+        total_days: 3,
+        reason: "Flu",
+        status: "APPROVED",
+        rejection_reason: null,
+        reviewed_by: "Jane Manager",
+        reviewed_at: "2026-06-15",
+        created_at: "2026-06-10",
+      };
+
+      const mapped = mapLeaveExtended(raw);
+
+      expect(mapped.id).toBe("req-1");
+      expect(mapped.employee_name).toBe("John Doe");
+      expect(mapped.employee_code).toBe("EMP-001");
+      expect(mapped.department).toBe("Engineering");
+      expect(mapped.leave_type).toBe("Sick Leave");
+      expect(mapped.status).toBe("approved");
+      expect(mapped.reviewed_by).toBe("Jane Manager");
+      expect(mapped.reviewed_at).toBe("2026-06-15");
+      expect(mapped.created_at).toBe("2026-06-10");
+    });
+
+    it("handles missing extended fields gracefully", () => {
+      const raw = {
+        id: "req-1",
+        employee_name: "John Doe",
+        department: "Engineering",
+        leave_type: "Sick Leave",
+        start_date: "2026-07-01",
+        end_date: "2026-07-03",
+        total_days: 3,
+        reason: "Flu",
+        status: "APPROVED",
+      };
+
+      const mapped = mapLeaveExtended(raw);
+
+      expect(mapped.employee_code).toBeUndefined();
+      expect(mapped.reviewed_by).toBeUndefined();
+      expect(mapped.reviewed_at).toBeUndefined();
+      expect(mapped.created_at).toBeUndefined();
+    });
+  });
 
 

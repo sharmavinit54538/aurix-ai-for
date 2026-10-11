@@ -215,3 +215,13 @@ export function canManagePlatform(role?: string | null): boolean {
 export function canManageCompanySettings(role?: string | null): boolean {
   return isHrAdmin(role);
 }
+
+/**
+ * Only HR Admin can view all employees' leave requests (org-wide history).
+ * Managers can only see their team's requests (if backend scopes it).
+ * Super Admin is platform owner, not part of company HR operations.
+ */
+export const canViewAllRequests = (role?: string | null) => {
+  const norm = normalizeRole(role);
+  return norm === "hr_admin";
+};

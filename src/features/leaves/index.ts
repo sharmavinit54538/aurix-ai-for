@@ -5,6 +5,7 @@ export { BalanceCards } from "./components/BalanceCards";
 export { HistoryTable } from "./components/HistoryTable";
 export { ApprovalsList } from "./components/ApprovalsList";
 export { AllBalancesPanel } from "./components/AllBalancesPanel";
+export { AllRequestsPanel } from "./components/AllRequestsPanel";
 export { ApplyLeaveDialog } from "./components/ApplyLeaveDialog";
 export { RejectDialog } from "./components/RejectDialog";
 export { ApproveDialog } from "./components/ApproveDialog";

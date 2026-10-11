@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAurix } from "@/lib/aurix-store";
 import { useCurrentRole } from "@/lib/use-current-role";
-import { canViewAllBalances } from "@/lib/roles";
+import { canViewAllBalances, canViewAllRequests } from "@/lib/roles";
 import { api } from "@/api";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -15,6 +15,7 @@ import { BalanceCards } from "../components/BalanceCards";
 import { HistoryTable } from "../components/HistoryTable";
 import { ApprovalsList } from "../components/ApprovalsList";
 import { AllBalancesPanel } from "../components/AllBalancesPanel";
+import { AllRequestsPanel } from "../components/AllRequestsPanel";
 import { ApplyLeaveDialog } from "../components/ApplyLeaveDialog";
 import { RejectDialog } from "../components/RejectDialog";
 import { ApproveDialog } from "../components/ApproveDialog";
@@ -99,11 +100,13 @@ export function LeavesPage() {
 
     const canReview = isHrAdmin || isManager || (isSuperAdminRole && superAllowed);
     const canViewAllBalancesFlag = canViewAllBalances(currentRole);
+    const canViewAllRequestsFlag = canViewAllRequests(currentRole);
     const canApply = !noEmployeeProfile && !isSuperAdminRole;
 
     return {
       canReview,
       canViewAllBalances: canViewAllBalancesFlag,
+      canViewAllRequests: canViewAllRequestsFlag,
       canApply,
     };
   }, [isHrAdmin, isManager, isSuperAdminRole, ws.user, superAdminReviewAllowed, noEmployeeProfile, currentRole]);
@@ -114,8 +117,10 @@ export function LeavesPage() {
       setActiveTab("my-leaves");
     } else if (activeTab === "employee-balances" && !capabilities.canViewAllBalances) {
       setActiveTab("my-leaves");
+    } else if (activeTab === "all-requests" && !capabilities.canViewAllRequests) {
+      setActiveTab("my-leaves");
     }
-  }, [activeTab, capabilities.canReview, capabilities.canViewAllBalances]);
+  }, [activeTab, capabilities.canReview, capabilities.canViewAllBalances, capabilities.canViewAllRequests]);
 
   // Load balances of logged-in employee
   const loadBalances = useCallback(async () => {
@@ -328,8 +333,8 @@ export function LeavesPage() {
       )}
 
       {/* Tab controls derived from unified capabilities object (Rule 12) */}
-      {(capabilities.canReview || capabilities.canViewAllBalances) && (
-        <div className="mb-6 flex border border-border bg-muted p-1 rounded-xl max-w-md">
+      {(capabilities.canReview || capabilities.canViewAllBalances || capabilities.canViewAllRequests) && (
+        <div className="mb-6 flex border border-border bg-muted p-1 rounded-xl max-w-xl">
           <button
             onClick={() => setActiveTab("my-leaves")}
             className={cn(
@@ -375,6 +380,20 @@ export function LeavesPage() {
               )}
             >
               All Balances
+            </button>
+          )}
+
+          {capabilities.canViewAllRequests && (
+            <button
+              onClick={() => setActiveTab("all-requests")}
+              className={cn(
+                "flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap",
+                activeTab === "all-requests"
+                  ? "bg-background text-foreground shadow"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              All Requests
             </button>
           )}
         </div>
@@ -450,6 +469,20 @@ export function LeavesPage() {
             className="space-y-6"
           >
             <AllBalancesPanel />
+          </motion.div>
+        )}
+
+        {/* Tab 4: All Leave Requests (HR Admin only) */}
+        {activeTab === "all-requests" && capabilities.canViewAllRequests && (
+          <motion.div
+            key="all-requests"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-6"
+          >
+            <AllRequestsPanel />
           </motion.div>
         )}
       </AnimatePresence>

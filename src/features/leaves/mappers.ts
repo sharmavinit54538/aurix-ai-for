@@ -1,4 +1,4 @@
-import type { LeaveBalance, LeaveRequest, LeaveStatus } from "./types";
+import type { LeaveBalance, LeaveRequest, LeaveRequestExtended, LeaveStatus } from "./types";
 
 /**
  * Normalizes any casing ("PENDING", "APPROVED", "REJECTED", "CANCELLED", "CANCELED", "WITHDRAWN") to canonical LeaveStatus.
@@ -106,6 +106,21 @@ export function mapLeave(raw: any): LeaveRequest {
     reason: String(raw.reason ?? "No reason provided"),
     status: mapStatus(raw.status),
     rejection_reason: raw.rejection_reason ? String(raw.rejection_reason) : undefined,
+  };
+}
+
+/**
+ * Normalizes backend leave response into safe LeaveRequestExtended for org-wide view.
+ * Includes employee_code, reviewed_by, reviewed_at, created_at.
+ */
+export function mapLeaveExtended(raw: any): LeaveRequestExtended {
+  const base = mapLeave(raw);
+  return {
+    ...base,
+    employee_code: raw.employee_code ? String(raw.employee_code) : undefined,
+    reviewed_by: raw.reviewed_by ? String(raw.reviewed_by) : undefined,
+    reviewed_at: raw.reviewed_at ? String(raw.reviewed_at) : undefined,
+    created_at: raw.created_at ? String(raw.created_at) : undefined,
   };
 }
 

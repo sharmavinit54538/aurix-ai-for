@@ -20,6 +20,14 @@ export interface LeaveRequest {
   rejection_reason?: string;
 }
 
+/** Extended leave request for org-wide view (All Requests tab) */
+export interface LeaveRequestExtended extends LeaveRequest {
+  employee_code?: string;
+  reviewed_by?: string;
+  reviewed_at?: string;
+  created_at?: string;
+}
+
 export interface LeaveEmployee {
   id: string; // UUID used by /leaves/balances/{id}
   employee_code: string;
@@ -31,6 +39,7 @@ export interface LeaveEmployee {
 export interface LeaveCapabilities {
   canReview: boolean;
   canViewAllBalances: boolean;
+  canViewAllRequests: boolean;
   canApply: boolean;
 }
 
