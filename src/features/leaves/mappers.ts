@@ -1,14 +1,70 @@
 import type { LeaveBalance, LeaveRequest, LeaveStatus } from "./types";
 
 /**
- * Normalizes any casing ("PENDING", "APPROVED", "REJECTED", "CANCELLED") to canonical LeaveStatus.
+ * Normalizes any casing ("PENDING", "APPROVED", "REJECTED", "CANCELLED", "CANCELED", "WITHDRAWN") to canonical LeaveStatus.
+ * Unknown statuses map to "unknown" (not "pending") and warn once.
  */
+let hasWarnedUnknownStatus = false;
+
 export function mapStatus(rawStatus?: string | null): LeaveStatus {
   const s = String(rawStatus || "pending").trim().toLowerCase();
-  if (s === "approved" || s === "rejected" || s === "cancelled") {
-    return s;
+  if (s === "approved") return "approved";
+  if (s === "rejected") return "rejected";
+  if (s === "cancelled" || s === "canceled" || s === "withdrawn") return "cancelled";
+  if (s === "pending") return "pending";
+  if (!hasWarnedUnknownStatus) {
+    hasWarnedUnknownStatus = true;
+    console.warn(`[leaves] Unknown leave status "${rawStatus}", mapping to "unknown"`);
   }
-  return "pending";
+  return "unknown";
+}
+
+/**
+ * Checks if an error indicates "Employee profile not found".
+ * Only true when message/data.message contains "employee profile not found" (case-insensitive).
+ * Does NOT treat bare 404 as profile-not-found.
+ */
+export function isEmployeeProfileNotFound(err: any): boolean {
+  const msg = err?.data?.message ?? err?.message ?? "";
+  return typeof msg === "string" && msg.toLowerCase().includes("employee profile not found");
+}
+
+/**
+ * Normalizes leave type strings for comparison: lowercases, removes spaces and underscores.
+ */
+export function normalizeLeaveType(type: string): string {
+  return type.toLowerCase().replace(/[\s_]+/g, "");
+}
+
+/**
+ * Unwraps list responses from various backend shapes:
+ * - array
+ * - {data: []}
+ * - {data: {items: []}}
+ * - {data: {balances: []}}
+ * - {data: {leaves: []}}
+ * Throws if res.success === false with res.message.
+ * If shape is unrecognized, warns and returns empty array.
+ */
+export function unwrapList(res: any): any[] {
+  if (res?.success === false) {
+    throw new Error(res?.message || "Request failed");
+  }
+
+  // Direct array
+  if (Array.isArray(res)) return res;
+
+  const data = res?.data;
+  if (Array.isArray(data)) return data;
+
+  if (data && typeof data === "object") {
+    if (Array.isArray(data.items)) return data.items;
+    if (Array.isArray(data.balances)) return data.balances;
+    if (Array.isArray(data.leaves)) return data.leaves;
+  }
+
+  console.warn("[leaves] Unrecognized response shape for list, returning empty array:", res);
+  return [];
 }
 
 /**
@@ -18,8 +74,8 @@ export function mapLeave(raw: any): LeaveRequest {
   if (!raw || typeof raw !== "object") {
     return {
       id: "",
-      employee_name: "Employee",
-      department: "Staff",
+      employee_name: "",
+      department: "",
       leave_type: "Leave",
       start_date: "",
       end_date: "",
@@ -41,8 +97,8 @@ export function mapLeave(raw: any): LeaveRequest {
 
   return {
     id: String(raw.id ?? ""),
-    employee_name: rawEmpName && String(rawEmpName).trim() ? String(rawEmpName).trim() : "Employee",
-    department: rawDept && String(rawDept).trim() ? String(rawDept).trim() : "Staff",
+    employee_name: rawEmpName && String(rawEmpName).trim() ? String(rawEmpName).trim() : "",
+    department: rawDept && String(rawDept).trim() ? String(rawDept).trim() : "",
     leave_type: String(raw.leave_type ?? "Leave"),
     start_date: String(raw.start_date ?? ""),
     end_date: String(raw.end_date ?? ""),
@@ -142,11 +198,13 @@ export function getTodayDateString(): string {
 /**
  * Determines whether a leave request can be cancelled by the user.
  * Pending rows or future Approved rows (start_date >= today).
+ * Unknown status returns false.
  */
 export function isLeaveCancellable(
   leave: { status: LeaveStatus; start_date: string },
   todayStr: string = getTodayDateString()
 ): boolean {
+  if (leave.status === "unknown") return false;
   if (leave.status === "pending") return true;
   if (leave.status === "approved" && leave.start_date >= todayStr) return true;
   return false;
@@ -154,7 +212,6 @@ export function isLeaveCancellable(
 
 export { LEAVE_TYPE_DOT, getLeaveTypeDot } from "@/lib/color-maps";
 export { statusBadgeClass } from "@/lib/status-styles";
-
 
 /**
  * Returns safe uppercase single letter avatar initial.

@@ -196,9 +196,14 @@ export function canManagePayroll(role?: string | null): boolean {
   return normalizeRole(role) === "hr_admin";
 }
 
+/**
+ * Only HR Admin can view all employee balances.
+ * Managers can review leave requests but not view organization-wide balances.
+ * Super Admin is platform owner, not part of company HR operations.
+ */
 export const canViewAllBalances = (role?: string | null) => {
   const norm = normalizeRole(role);
-  return norm === "hr_admin" || norm === "manager";
+  return norm === "hr_admin";
 };
 
 /** Checks if the role has platform-level owner permissions (SUPER_ADMIN ONLY). */

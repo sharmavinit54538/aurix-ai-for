@@ -4,12 +4,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAurix } from "@/lib/aurix-store";
 import { useCurrentRole } from "@/lib/use-current-role";
+import { canViewAllBalances } from "@/lib/roles";
 import { api } from "@/api";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
 import type { LeaveBalance, LeaveRequest, LeaveCapabilities } from "../types";
-import { mapLeave, mapBalance, statusBadgeClass } from "../mappers";
+import { mapLeave, mapBalance, statusBadgeClass, isEmployeeProfileNotFound, unwrapList } from "../mappers";
 import { BalanceCards } from "../components/BalanceCards";
 import { HistoryTable } from "../components/HistoryTable";
 import { ApprovalsList } from "../components/ApprovalsList";
@@ -46,7 +47,7 @@ export function LeavesPage() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState(false);
 
-  // Toast tracking refs to ensure toast fires once per error, not on every re-render/poll
+  // Toast tracking refs to ensure toast fires once per error streak, reset on success
   const hasShownBalanceToastRef = useRef(false);
   const hasShownHistoryToastRef = useRef(false);
 
@@ -54,6 +55,7 @@ export function LeavesPage() {
   const [approvals, setApprovals] = useState<LeaveRequest[]>([]);
   const [pendingLoading, setPendingLoading] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  const hasShownPendingToastRef = useRef(false);
 
   // Dialog states
   const [applyOpen, setApplyOpen] = useState(false);
@@ -62,7 +64,7 @@ export function LeavesPage() {
   const [cancelTarget, setCancelTarget] = useState<LeaveRequest | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
 
-  // Check if super_admin has review permissions from backend
+  // Check if super_admin has review permissions from backend (reuses loadPendingApprovals logic)
   useEffect(() => {
     if (!isSuperAdminRole) return;
 
@@ -96,15 +98,15 @@ export function LeavesPage() {
       superAdminReviewAllowed;
 
     const canReview = isHrAdmin || isManager || (isSuperAdminRole && superAllowed);
-    const canViewAllBalances = isHrAdmin;
+    const canViewAllBalancesFlag = canViewAllBalances(currentRole);
     const canApply = !noEmployeeProfile && !isSuperAdminRole;
 
     return {
       canReview,
-      canViewAllBalances,
+      canViewAllBalances: canViewAllBalancesFlag,
       canApply,
     };
-  }, [isHrAdmin, isManager, isSuperAdminRole, ws.user, superAdminReviewAllowed, noEmployeeProfile]);
+  }, [isHrAdmin, isManager, isSuperAdminRole, ws.user, superAdminReviewAllowed, noEmployeeProfile, currentRole]);
 
   // Reset activeTab to "my-leaves" if the current tab is no longer allowed
   useEffect(() => {
@@ -124,22 +126,12 @@ export function LeavesPage() {
       const res = await api.get<any>("/leaves/balances", {
         headers: { "x-skip-cache": "true" },
       });
-      if (res?.success && res.data) {
-        const data = Array.isArray(res.data) ? res.data : [];
-        setBalances(data.map(mapBalance));
-      } else if (Array.isArray(res)) {
-        setBalances(res.map(mapBalance));
-      } else {
-        setBalances([]);
-      }
+      const data = unwrapList(res);
+      setBalances(data.map(mapBalance));
+      hasShownBalanceToastRef.current = false;
     } catch (err: any) {
       console.error("Error loading leave balances", err);
-      const isProfileNotFound =
-        err?.status === 404 ||
-        err?.data?.message?.toLowerCase?.()?.includes("employee profile not found") ||
-        err?.message?.toLowerCase?.()?.includes("employee profile not found");
-
-      if (isProfileNotFound) {
+      if (isEmployeeProfileNotFound(err)) {
         setNoEmployeeProfile(true);
       } else {
         setBalancesError(true);
@@ -162,22 +154,12 @@ export function LeavesPage() {
       const res = await api.get<any>("/leaves/history", {
         headers: { "x-skip-cache": "true" },
       });
-      if (res?.success && res.data) {
-        const data = Array.isArray(res.data) ? res.data : [];
-        setHistory(data.map(mapLeave));
-      } else if (Array.isArray(res)) {
-        setHistory(res.map(mapLeave));
-      } else {
-        setHistory([]);
-      }
+      const data = unwrapList(res);
+      setHistory(data.map(mapLeave));
+      hasShownHistoryToastRef.current = false;
     } catch (err: any) {
       console.error("Error loading leave history", err);
-      const isProfileNotFound =
-        err?.status === 404 ||
-        err?.data?.message?.toLowerCase?.()?.includes("employee profile not found") ||
-        err?.message?.toLowerCase?.()?.includes("employee profile not found");
-
-      if (isProfileNotFound) {
+      if (isEmployeeProfileNotFound(err)) {
         setNoEmployeeProfile(true);
       } else {
         setHistoryError(true);
@@ -191,38 +173,45 @@ export function LeavesPage() {
     }
   }, []);
 
-  // Load pending approvals for reviewers
-  const loadPendingApprovals = useCallback(async () => {
-    setPendingLoading(true);
+  // Load pending approvals for reviewers (for manual refresh / initial load)
+  const loadPendingApprovals = useCallback(async (options?: { isBackgroundPoll?: boolean }) => {
+    const isBackgroundPoll = options?.isBackgroundPoll ?? false;
+    if (!isBackgroundPoll) {
+      setPendingLoading(true);
+    }
     try {
       const res = await api.get<any>("/leaves/pending", {
         headers: { "x-skip-cache": "true" },
       });
-      if (!res?.success && res?.success !== undefined) {
-        throw new Error(res?.message || "Failed to load pending leave requests.");
-      }
-
-      const data = Array.isArray(res?.data)
-        ? res.data
-        : Array.isArray(res)
-        ? res
-        : [];
+      const data = unwrapList(res);
       setApprovals(data.map(mapLeave));
+      hasShownPendingToastRef.current = false;
     } catch (err: any) {
       console.error("Error loading pending leaves", err);
-      toast.error(err?.data?.message || err?.message || "Failed to load pending leave requests.");
+      if (!hasShownPendingToastRef.current) {
+        hasShownPendingToastRef.current = true;
+        toast.error(err?.data?.message || err?.message || "Failed to load pending leave requests.");
+      }
+      throw err;
     } finally {
-      setPendingLoading(false);
+      if (!isBackgroundPoll) {
+        setPendingLoading(false);
+      }
     }
   }, []);
 
+  // Background poll variant that throws on error (for usePoller backoff)
+  const loadPendingApprovalsForPoll = useCallback(async () => {
+    await loadPendingApprovals({ isBackgroundPoll: true });
+  }, [loadPendingApprovals]);
+
   // Self-service data fetch on tab switch or mount
   useEffect(() => {
-    if (activeTab === "my-leaves") {
+    if (activeTab === "my-leaves" && !isSuperAdminRole) {
       void loadBalances();
       void loadHistory();
     }
-  }, [activeTab, loadBalances, loadHistory]);
+  }, [activeTab, loadBalances, loadHistory, isSuperAdminRole]);
 
   // Initial load for reviewers
   useEffect(() => {
@@ -232,15 +221,10 @@ export function LeavesPage() {
   }, [capabilities.canReview, loadPendingApprovals]);
 
   // Review queue 30s self-scheduling polling with backoff & visibility pause
-  usePoller(
-    useCallback(async () => {
-      await loadPendingApprovals();
-    }, [loadPendingApprovals]),
-    {
-      intervalMs: 30_000,
-      enabled: Boolean(capabilities.canReview && activeTab === "approvals"),
-    },
-  );
+  usePoller(loadPendingApprovalsForPoll, {
+    intervalMs: 30_000,
+    enabled: Boolean(capabilities.canReview && activeTab === "approvals"),
+  });
 
   // Approve action confirmed
   const handleApproveConfirm = async (id: string) => {
@@ -405,21 +389,30 @@ export function LeavesPage() {
             transition={{ duration: 0.2 }}
             className="space-y-6"
           >
-            <BalanceCards
-              balances={balances}
-              loading={balancesLoading}
-              error={balancesError}
-              onRetry={loadBalances}
-            />
+            {isSuperAdminRole ? (
+              <div className="rounded-2xl border border-border bg-muted/50 p-8 text-center">
+                <p className="text-sm font-medium text-foreground">Super admins don't have personal leave balances</p>
+                <p className="text-xs text-muted-foreground mt-1">Use the "Review Requests" or "All Balances" tabs to manage organizational leave data.</p>
+              </div>
+            ) : (
+              <>
+                <BalanceCards
+                  balances={balances}
+                  loading={balancesLoading}
+                  error={balancesError}
+                  onRetry={loadBalances}
+                />
 
-            <HistoryTable
-              history={history}
-              loading={historyLoading}
-              error={historyError}
-              onRetry={loadHistory}
-              onCancelRequest={(leave) => setCancelTarget(leave)}
-              cancellingId={cancellingId}
-            />
+                <HistoryTable
+                  history={history}
+                  loading={historyLoading}
+                  error={historyError}
+                  onRetry={loadHistory}
+                  onCancelRequest={(leave) => setCancelTarget(leave)}
+                  cancellingId={cancellingId}
+                />
+              </>
+            )}
           </motion.div>
         )}
 

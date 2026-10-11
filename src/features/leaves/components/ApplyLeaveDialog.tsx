@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -18,11 +18,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, AlertTriangle } from "lucide-react";
+import { Calendar, AlertTriangle, Info } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/api";
 import { LEAVE_TYPES, type LeaveBalance } from "../types";
-import { calculateEstimatedDays, getTodayDateString, statusBadgeClass } from "../mappers";
+import { calculateEstimatedDays, getTodayDateString, statusBadgeClass, normalizeLeaveType } from "../mappers";
 import { cn } from "@/lib/utils";
 
 interface ApplyLeaveDialogProps {
@@ -40,36 +40,84 @@ export function ApplyLeaveDialog({
   isHrAdmin,
   onSuccess,
 }: ApplyLeaveDialogProps) {
-  const [leaveType, setLeaveType] = useState<string>(LEAVE_TYPES[0]);
+  // Build leave type options from balances (unique leave_type values), fallback to LEAVE_TYPES
+  const leaveTypeOptions = useMemo(() => {
+    if (balances.length > 0) {
+      const uniqueTypes = Array.from(new Set(balances.map((b) => b.leave_type.trim())));
+      return uniqueTypes.length > 0 ? uniqueTypes : LEAVE_TYPES;
+    }
+    return LEAVE_TYPES;
+  }, [balances]);
+
+  const [leaveType, setLeaveType] = useState<string>("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
+  const [dateError, setDateError] = useState<string | null>(null);
 
   const todayStr = getTodayDateString();
+
+  // Sync leaveType when balances load or dialog opens
+  useEffect(() => {
+    if (open && leaveTypeOptions.length > 0) {
+      const currentNormalized = normalizeLeaveType(leaveType);
+      const match = leaveTypeOptions.find((t) => normalizeLeaveType(t) === currentNormalized);
+      setLeaveType(match ?? leaveTypeOptions[0]);
+    } else if (!open) {
+      setLeaveType(leaveTypeOptions[0] ?? LEAVE_TYPES[0]);
+    }
+  }, [open, leaveTypeOptions, leaveType]);
 
   // Reset form when dialog closes
   useEffect(() => {
     if (!open) {
-      setLeaveType(LEAVE_TYPES[0]);
       setStartDate("");
       setEndDate("");
       setReason("");
       setLoading(false);
+      setDateError(null);
     }
   }, [open]);
 
   // Estimated days calculation (parsed as local date parts)
   const calculatedDays = calculateEstimatedDays(startDate, endDate);
 
-  // Remaining balance of the selected type
-  const selectedBalance = balances.find((b) => b.leave_type === leaveType);
+  // Remaining balance of the selected type (case-insensitive, ignore spaces/underscores)
+  const selectedBalance = balances.find((b) => normalizeLeaveType(b.leave_type) === normalizeLeaveType(leaveType));
   const remainingDays = selectedBalance ? Number(selectedBalance.remaining_days) || 0 : 0;
   const isExceedingBalance = calculatedDays > 0 && calculatedDays > remainingDays;
 
   // HR Admin can backdate; others cannot select dates earlier than today
   const minStartDate = isHrAdmin ? undefined : todayStr;
   const minEndDate = startDate || (isHrAdmin ? undefined : todayStr);
+
+  // Validate dates: end date must be on or after start date
+  useEffect(() => {
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (end < start) {
+        setDateError("End date must be on or after start date");
+        setEndDate(""); // Clear end date when it's before start date
+      } else {
+        setDateError(null);
+      }
+    } else {
+      setDateError(null);
+    }
+  }, [startDate, endDate]);
+
+  // Clear end date if start date changes and end < start
+  useEffect(() => {
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (end < start) {
+        setEndDate("");
+      }
+    }
+  }, [startDate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,7 +194,7 @@ export function ApplyLeaveDialog({
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
-                {LEAVE_TYPES.map((t) => (
+                {leaveTypeOptions.map((t) => (
                   <SelectItem key={t} value={t}>
                     {t}
                   </SelectItem>
@@ -188,6 +236,12 @@ export function ApplyLeaveDialog({
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
               />
+              {dateError && (
+                <p className="text-xs text-destructive flex items-center gap-1" role="alert">
+                  <AlertTriangle className="h-3 w-3" />
+                  {dateError}
+                </p>
+              )}
             </div>
           </div>
 
@@ -201,12 +255,20 @@ export function ApplyLeaveDialog({
             </div>
           )}
 
+          {/* Estimated days label */}
+          {calculatedDays > 0 && (
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <Info className="h-3 w-3" />
+              Estimated (calendar days). Final days are calculated by the server.
+            </p>
+          )}
+
           {/* Insufficient balance warning (warns, does not block) */}
           {isExceedingBalance && (
             <div className={cn("p-3 rounded-lg flex items-start gap-2.5 text-xs border", statusBadgeClass("warning"))}>
               <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
               <p>
-                <strong>Balance Warning:</strong> Requested {calculatedDays} days exceed your remaining{" "}
+                <strong>Balance Warning (estimated):</strong> Requested {calculatedDays} days exceed your remaining{" "}
                 {remainingDays} days for {leaveType}. You may still submit, but approval is subject to managerial discretion.
               </p>
             </div>

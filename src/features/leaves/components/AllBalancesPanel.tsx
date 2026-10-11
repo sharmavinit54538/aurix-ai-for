@@ -4,11 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, UserCheck, Users, RefreshCw, AlertCircle } from "lucide-react";
+import { Search, UserCheck, Users, RefreshCw, AlertCircle, Loader2 } from "lucide-react";
 import { api } from "@/api";
 import { toast } from "sonner";
 import type { LeaveEmployee, LeaveBalance } from "../types";
-import { mapBalance } from "../mappers";
+import { mapBalance, unwrapList } from "../mappers";
 import { cn } from "@/lib/utils";
 
 export function AllBalancesPanel() {
@@ -37,6 +37,8 @@ export function AllBalancesPanel() {
   // Fetch employees list from GET /leaves/employees?q=
   const fetchEmployees = useCallback(async (query: string) => {
     const seq = ++searchSeqRef.current;
+    // Don't clear employees while loading new search results (keep previous list visible)
+    // Only set loading true, don't clear employees array
     setEmployeesLoading(true);
     setEmployeesError(null);
 
@@ -50,11 +52,7 @@ export function AllBalancesPanel() {
       // Discard if a newer search request has been triggered
       if (seq !== searchSeqRef.current) return;
 
-      const rawList = Array.isArray(res?.data)
-        ? res.data
-        : Array.isArray(res)
-        ? res
-        : [];
+      const rawList = unwrapList(res);
 
       const mappedList: LeaveEmployee[] = rawList.map((e: any) => ({
         id: String(e.id ?? ""),
@@ -132,6 +130,9 @@ export function AllBalancesPanel() {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
           />
+          {employeesLoading && employees.length > 0 && (
+            <Loader2 className="absolute right-3 top-2.5 h-4 w-4 text-primary animate-spin" aria-hidden="true" />
+          )}
         </div>
       </div>
 
@@ -160,7 +161,7 @@ export function AllBalancesPanel() {
                 </TableRow>
               )}
 
-              {employeesError && (
+              {employeesError && employees.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8 text-destructive">
                     <div className="flex flex-col items-center justify-center gap-2">
@@ -180,12 +181,13 @@ export function AllBalancesPanel() {
                 </TableRow>
               )}
 
-              {!employeesLoading && !employeesError && employees.map((emp) => (
+              {employees.map((emp) => (
                 <TableRow
                   key={emp.id}
                   className={cn(
                     "border-b border-border hover:bg-muted/50 transition-colors cursor-pointer",
-                    selectedEmp?.id === emp.id && "bg-muted border-l-2 border-l-primary"
+                    selectedEmp?.id === emp.id && "bg-muted border-l-2 border-l-primary",
+                    employeesLoading && "opacity-50 pointer-events-none"
                   )}
                   onClick={() => handleSelectEmployee(emp)}
                 >

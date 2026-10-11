@@ -1,4 +1,4 @@
-export type LeaveStatus = "pending" | "approved" | "rejected" | "cancelled";
+export type LeaveStatus = "pending" | "approved" | "rejected" | "cancelled" | "unknown";
 
 export interface LeaveBalance {
   leave_type: string;

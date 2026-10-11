@@ -43,7 +43,13 @@ export function usePoller(
     let currentInterval = intervalMs;
     let consecutiveErrors = 0;
 
+    const scheduleNext = () => {
+      if (!isMounted || consecutiveErrors >= maxConsecutiveErrors) return;
+      timerId = setTimeout(runAndSchedule, currentInterval);
+    };
+
     const runAndSchedule = async () => {
+      timerId = null;
       if (!isMounted || consecutiveErrors >= maxConsecutiveErrors) return;
       if (typeof document !== "undefined" && document.hidden) return;
 
@@ -59,7 +65,7 @@ export function usePoller(
       }
 
       if (isMounted && consecutiveErrors < maxConsecutiveErrors) {
-        timerId = setTimeout(runAndSchedule, currentInterval);
+        scheduleNext();
       }
     };
 
@@ -81,7 +87,7 @@ export function usePoller(
       document.addEventListener("visibilitychange", handleVisibilityChange);
     }
 
-    timerId = setTimeout(runAndSchedule, currentInterval);
+    scheduleNext();
 
     return () => {
       isMounted = false;
