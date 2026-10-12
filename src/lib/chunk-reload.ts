@@ -14,6 +14,7 @@ const COOLDOWN_MS = 15000; // 15-second cooldown to strictly prevent infinite re
  */
 export function isChunkLoadError(error: unknown): boolean {
   if (!error) return false;
+  if (import.meta.env.DEV) return false;
 
   const message =
     error instanceof Error

@@ -246,7 +246,7 @@ export function AttendancePage() {
       const criticalErrors = [trendsResult, distributionResult, weeklyResult, rateKPIResult].filter(
         (r) => r.status === "rejected"
       );
-      if (criticalErrors.length > 0) {
+      if (criticalErrors.length === 4) {
         setChartsError("Failed to load some analytics data");
       }
     } catch (err: any) {
@@ -410,14 +410,16 @@ export function AttendancePage() {
           </Card>
 
           {/* Charts Row 1: Daily Attendance Trend + Attendance Distribution */}
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-7">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
             <DailyAttendanceTrend
+              className="lg:col-span-8"
               data={trendsData?.trends || []}
               loading={chartsLoading}
               error={chartsError}
               onRetry={loadAnalyticsCharts}
             />
             <AttendanceDistribution
+              className="lg:col-span-4"
               data={distributionData}
               loading={chartsLoading}
               error={chartsError}
@@ -426,8 +428,9 @@ export function AttendancePage() {
           </div>
 
           {/* Charts Row 2: Weekly Attendance + Attendance Rate KPI */}
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-7">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
             <WeeklyAttendance
+              className="lg:col-span-8"
               data={weeklyData?.weekly || []}
               loading={chartsLoading}
               error={chartsError}
@@ -435,6 +438,7 @@ export function AttendancePage() {
               viewMode={filters.viewMode}
             />
             <AttendanceRateKPI
+              className="lg:col-span-4"
               data={rateKPIData}
               loading={chartsLoading}
               error={chartsError}

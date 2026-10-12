@@ -48,7 +48,7 @@ function NotFoundComponent() {
 
 function ErrorComponent({ error, reset }: { error: unknown; reset: () => void }) {
   const router = useRouter();
-  const isChunkError = isChunkLoadError(error);
+  const isChunkError = isChunkLoadError(error) && !import.meta.env.DEV;
 
   useEffect(() => {
     console.error("Root error boundary caught error:", error);
@@ -118,6 +118,16 @@ function ErrorComponent({ error, reset }: { error: unknown; reset: () => void })
         <p className="mt-2 text-sm text-muted-foreground">
           Something went wrong on our end. You can try refreshing or head back home.
         </p>
+        {import.meta.env.DEV && error && (
+          <details className="mt-4 rounded-md border border-red-300 bg-red-50 p-3 text-left text-xs text-red-800">
+            <summary className="cursor-pointer font-medium">DEV: Error Details</summary>
+            <pre className="mt-2 whitespace-pre-wrap break-all">
+              {error instanceof Error
+                ? `${error.message}\n\n${error.stack}`
+                : JSON.stringify(error, null, 2)}
+            </pre>
+          </details>
+        )}
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {
