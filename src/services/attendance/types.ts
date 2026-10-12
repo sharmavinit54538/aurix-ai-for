@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────
-// Type Definitions for Attendance Service
+// Type Definitions for Attendance Service (Backend Contract v1)
 // ─────────────────────────────────────────────────────────────
 
 export interface TodayAttendanceEmployee {
@@ -47,8 +47,8 @@ export interface CheckInPayload {
   deviceInfo?: string;
   ipAddress?: string;
   notes?: string;
-  file?: Blob | File; // Captured photo if face verification used
-  image_base64?: string; // High-quality Base64 captured snapshot for AI face verification
+  file?: Blob | File;
+  image_base64?: string;
 }
 
 export interface FaceStatusResponse {
@@ -70,7 +70,7 @@ export interface CheckOutPayload {
   ipAddress?: string;
   notes?: string;
   file?: Blob | File;
-  image_base64?: string; // High-quality Base64 captured snapshot for AI face verification checkout
+  image_base64?: string;
 }
 
 export interface BreakPayload {
@@ -133,98 +133,272 @@ export interface GeofenceVerifyResult {
 
 /**
  * Face Attendance status returned by GET /api/v1/attendance/face/me,
- * augmented with inferred enrollment state.
+ * augmented with inferred enrollment state and extended shift summary.
  */
 export interface FaceAttendanceStatus {
-  /** Whether the employee's face is enrolled / recognized by the backend. */
   faceRegistered: boolean;
-  /** Whether the employee is currently checked in today. */
   checkedIn: boolean;
-  /** Whether the employee has already checked out today. */
   checkedOut: boolean;
-  /** ISO timestamp of today's check-in (from backend). */
   checkInTime: string | null;
-  /** ISO timestamp of today's check-out (from backend). */
   checkOutTime: string | null;
-  /** Backend-calculated working hours. */
   workingHours: number | null;
-  /** Backend message string. */
   message: string;
-  /** Raw backend response data for any extra fields. */
   raw: Record<string, unknown>;
-  /** Error code from the backend, if any (e.g. FACE_NOT_ENROLLED). */
   errorCode?: string;
+  shift?: FaceShiftSummary;
+  timezone?: string;
 }
 
+export interface FaceShiftSummary {
+  shift_id: string;
+  shift_name: string;
+  start_time: string;
+  end_time: string;
+  grace_period_mins: number;
+  is_overnight: boolean;
+  is_off: boolean;
+  is_holiday: boolean;
+  holiday_name?: string | null;
+  source: "roster" | "assignment" | "company_default" | "fallback";
+}
+
+/**
+ * Shift as returned by the backend API.
+ * All fields match the contract exactly (snake_case in API, camelCase here).
+ */
 export interface Shift {
   id: string;
   name: string;
   code: string;
-  startTime: string; // e.g. "09:00"
-  endTime: string;   // e.g. "18:00"
-  workHours: number | null; // e.g. 9 or null if not provided
-  gracePeriodMinutes: number; // e.g. 15
-  breakDurationMinutes: number; // e.g. 60
-  nightShift: boolean;
-  nightPremiumPercent: number; // e.g. 15
-  workingDays: string[]; // ["Mon", "Tue", "Wed", "Thu", "Fri"]
-  assignedEmployeesCount?: number;
-  isActive: boolean;
-  color?: string;
-  description?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  start_time: string;
+  end_time: string;
+  is_overnight: boolean;
+  duration_minutes: number;
+  work_hours: number;
+  grace_period_minutes: number;
+  break_duration_minutes: number;
+  night_shift: boolean;
+  night_premium_percent: number;
+  working_days: WeekDay[];
+  is_active: boolean;
+  is_default: boolean;
+  color: string;
+  description: string;
+  assigned_employees_count: number;
+  created_at: string;
+  updated_at: string;
 }
 
+export type WeekDay = "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
+
+export const WEEK_DAYS: WeekDay[] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+/**
+ * Payload for creating a shift (camelCase for client, converted to snake_case in service).
+ */
 export interface ShiftCreatePayload {
   name: string;
   code: string;
-  startTime: string;
-  endTime: string;
-  gracePeriodMinutes: number;
-  breakDurationMinutes: number;
-  nightShift: boolean;
-  nightPremiumPercent: number;
-  workingDays: string[];
+  start_time: string;
+  end_time: string;
+  grace_period_minutes: number;
+  break_duration_minutes: number;
+  night_shift: boolean;
+  night_premium_percent: number;
+  working_days: WeekDay[];
   color?: string;
   description?: string;
-  isActive?: boolean;
+  is_active?: boolean;
+}
+
+/**
+ * Minimal shift option for dropdowns (from /shifts/options).
+ */
+export interface ShiftOption {
+  id: string;
+  name: string;
+  code: string;
+  start_time: string;
+  end_time: string;
+  is_overnight: boolean;
+}
+
+/**
+ * Result of shift assignment (from POST /shifts/{id}/assign).
+ */
+export interface ShiftAssignResult {
+  assigned_count: number;
+  skipped: Array<{ employee_id: string; reason: string }>;
+  effective_date: string;
 }
 
 export interface ShiftAssignPayload {
-  employeeIds: string[];
-  effectiveDate: string;
+  employee_ids: string[];
+  effective_date: string;
   notes?: string;
 }
 
+/**
+ * Shift change request (from /shifts/change-requests).
+ */
+export interface ShiftChangeRequest {
+  id: string;
+  employee_id?: string;
+  employee_name?: string;
+  current_shift_name?: string;
+  requested_shift_id: string;
+  requested_shift_name: string;
+  effective_date: string;
+  reason: string;
+  status: "pending" | "approved" | "rejected" | "cancelled";
+  review_note?: string | null;
+  created_at: string;
+}
+
+export interface CreateChangeRequestPayload {
+  requested_shift_id: string;
+  effective_date: string;
+  reason: string;
+}
+
+export interface ApproveChangeRequestPayload {
+  note?: string;
+}
+
+export interface RejectChangeRequestPayload {
+  note: string;
+}
+
+export interface ListChangeRequestsParams {
+  status?: "pending" | "approved" | "rejected" | "cancelled";
+  page?: number;
+  limit?: number;
+}
+
+/**
+ * Self schedule response (from GET /shifts/me/schedule).
+ */
+export interface MyScheduleData {
+  has_assigned_shift: boolean;
+  timezone: string;
+  employee: {
+    id: string;
+    employee_id: string;
+    full_name: string;
+    department: string;
+    designation: string;
+    branch: string;
+  };
+  current_shift: MyShiftInfo | null;
+  today: MyTodayShift | null;
+  upcoming: MyUpcomingShift[];
+  history: MyShiftHistory[];
+}
+
+export interface MyShiftInfo {
+  id: string;
+  name: string;
+  code: string;
+  start_time: string;
+  end_time: string;
+  is_overnight: boolean;
+  is_off: boolean;
+  is_holiday: boolean;
+  holiday_name?: string | null;
+  source: "roster" | "assignment" | "company_default" | "fallback";
+  grace_period_mins: number;
+  break_duration_mins: number;
+  night_shift: boolean;
+  night_premium_percent: number;
+  working_days: WeekDay[];
+}
+
+export interface MyTodayShift {
+  date: string;
+  day: string;
+  shift_name: string;
+  start_time: string;
+  end_time: string;
+  is_overnight: boolean;
+  is_off: boolean;
+  is_holiday: boolean;
+  holiday_name?: string | null;
+  source: "roster" | "assignment" | "company_default" | "fallback";
+  checked_in: boolean;
+  checked_out: boolean;
+  check_in_time: string | null;
+  check_out_time: string | null;
+  working_hours: number | null;
+  is_late: boolean;
+  late_minutes: number;
+}
+
+export interface MyUpcomingShift {
+  date: string;
+  day: string;
+  shift_name: string;
+  start_time: string;
+  end_time: string;
+  is_overnight: boolean;
+  is_off: boolean;
+  is_holiday: boolean;
+  holiday_name?: string | null;
+  source: "roster" | "assignment" | "company_default" | "fallback";
+  working_hours: number | null;
+}
+
+export interface MyShiftHistory {
+  attendance_id: string;
+  date: string;
+  day: string;
+  shift_name: string;
+  scheduled_start: string;
+  scheduled_end: string;
+  check_in_time: string | null;
+  check_out_time: string | null;
+  working_hours: number | null;
+  overtime_hours: number | null;
+  status: "Present" | "Late" | "Half Day" | "Absent" | "On Leave" | "Off" | "Holiday" | "Auto Closed";
+  is_late: boolean;
+  late_minutes: number;
+  is_early_checkout: boolean;
+  early_minutes: number;
+  auto_closed: boolean;
+}
+
+/**
+ * Roster types (from /rosters).
+ */
 export interface RosterEntryRecord {
   id: string;
-  employeeId: string;
-  employeeName: string;
+  employee_id: string;
+  employee_name: string;
   department: string;
   designation: string;
-  date: string; // YYYY-MM-DD
-  shift: "Morning" | "Evening" | "Night" | "Off Day" | "Leave" | "Holiday" | "Training" | "WFH" | "Overtime";
-  startTime: string;
-  endTime: string;
-  workingHours: number | null;
-  breakTime: string;
+  date: string;
+  shift: string;
+  shift_id?: string;
+  start_time: string;
+  end_time: string;
+  working_hours: number | null;
+  break_time: string;
   location: string;
   manager: string;
   status: "Approved" | "Pending" | "Rejected";
 }
 
 export interface RosterCreatePayload {
-  employeeId: string;
-  employeeName: string;
+  employee_id: string;
+  employee_name: string;
   department: string;
   designation: string;
   date: string;
   shift: string;
-  startTime: string;
-  endTime: string;
-  workingHours?: number | null;
-  breakTime: string;
+  shift_id?: string;
+  start_time: string;
+  end_time: string;
+  working_hours?: number | null;
+  break_time: string;
   location: string;
   manager: string;
   status: "Approved" | "Pending" | "Rejected";
@@ -235,21 +409,21 @@ export interface HolidayRecord {
   id: string;
   name: string;
   description: string;
-  date: string; // YYYY-MM-DD
+  date: string;
   type: "Public" | "Company" | "Regional" | "Optional";
   country: string;
   state: string;
   office: string;
   department: string;
   status: "Active" | "Archived";
-  createdBy: string;
-  createdDate: string;
-  updatedDate: string;
+  created_by: string;
+  created_date: string;
+  updated_date: string;
   notes?: string;
   color?: string;
   recurring: boolean;
-  everyYear: boolean;
-  applyToAll: boolean;
+  every_year: boolean;
+  apply_to_all: boolean;
 }
 
 export interface HolidayCreatePayload {
@@ -263,88 +437,49 @@ export interface HolidayCreatePayload {
   department?: string;
   color?: string;
   recurring?: boolean;
-  everyYear?: boolean;
-  applyToAll?: boolean;
+  every_year?: boolean;
+  apply_to_all?: boolean;
   notes?: string;
 }
 
-export interface EmployeeShiftInfo {
-  shiftName: string;
-  shiftType: "Regular" | "Night" | "Flexible";
-  startTime: string; // e.g. "09:00 AM"
-  endTime: string;   // e.g. "06:00 PM"
-  breakDuration: string; // e.g. "1 Hour"
-  breakWindow: string; // e.g. "01:00 PM – 02:00 PM"
-  totalWorkingHours: number; // e.g. 8
-  gracePeriodMinutes: number;
-  nightPremiumPercent: number;
-  workingDays: string[];
-  description?: string;
+export type ShiftApiErrorCode =
+  | "DUPLICATE_SHIFT_NAME"
+  | "DUPLICATE_SHIFT_CODE"
+  | "SHIFT_IS_DEFAULT"
+  | "SHIFT_HAS_ASSIGNMENTS"
+  | "INVALID_EMPLOYEES"
+  | "ASSIGNMENT_CONFLICT"
+  | "CHANGE_REQUEST_INVALID_STATE"
+  | "INVALID_TIME_FORMAT";
+
+export class ApiContractError extends Error {
+  constructor(
+    message: string,
+    public readonly payload: unknown,
+    public readonly missingFields: string[]
+  ) {
+    super(message);
+    this.name = "ApiContractError";
+  }
 }
 
-export interface UpcomingShiftItem {
-  id: string;
-  date: string; // YYYY-MM-DD
-  day: string;  // e.g. "Friday"
-  shiftName: string;
-  startTime: string;
-  endTime: string;
-  breakDuration: string;
-  workingHours: number;
-  shiftType: "Regular" | "Night" | "Flexible";
-  status: "Scheduled" | "Working" | "Off Day" | "Holiday";
+export interface ShiftListResponse {
+  items: Shift[];
+  total: number;
+  page: number;
+  limit: number;
 }
 
-export interface ShiftHistoryItem {
-  id: string;
-  date: string;
-  day: string;
-  shiftName: string;
-  checkInTime: string | null;
-  checkOutTime: string | null;
-  workingHours: number | null;
-  status: "Completed" | "Present" | "Late" | "Half Day" | "Absent";
-}
-
-export interface EmployeeShiftScheduleData {
-  hasAssignedShift: boolean;
-  employeeId: string;
-  employeeName: string;
-  department: string;
-  designation: string;
-  branch: string;
-  currentShift: EmployeeShiftInfo | null;
-  todayShift: {
-    date: string;
-    day: string;
-    shift: EmployeeShiftInfo;
-    checkedIn: boolean;
-    checkedOut: boolean;
-    checkInTime: string | null;
-    checkOutTime: string | null;
-    activeSeconds?: number;
-    workingHours: number | null;
-    isOffDay: boolean;
-  } | null;
-  upcomingShifts: UpcomingShiftItem[];
-  shiftHistory: ShiftHistoryItem[];
-}
-
-export interface RosterDayItem {
-  id: string;
-  date: string; // YYYY-MM-DD
-  day: string;  // e.g. "Friday"
-  shiftName: string; // e.g. "Morning Shift" or "—"
-  startTime: string; // e.g. "09:00 AM"
-  endTime: string;   // e.g. "06:00 PM"
-  workingHours: number | null;
-  status: "Working" | "Weekly Off" | "Holiday" | "Leave" | "Rest Day";
-  notes?: string;
-}
-
-export interface ScheduleChangeRequestPayload {
-  type: "shift" | "roster";
-  requestedShift: string;
-  effectiveDate: string;
-  reason: string;
+export interface ShiftEmployeesResponse {
+  items: Array<{
+    id: string;
+    employee_id: string;
+    full_name: string;
+    department: string;
+    designation: string;
+    effective_date: string;
+  }>;
+  total: number;
+  page: number;
+  limit: number;
 }

@@ -1,120 +1,145 @@
 import { api } from "@/api";
-import { RosterEntryRecord, RosterCreatePayload } from "./types";
-import { extractListPayload, extractObjectPayload } from "./helpers";
+import type {
+  RosterEntryRecord,
+  RosterCreatePayload,
+} from "./types";
+import { z } from "zod";
+
+const rosterEntrySchema = z.object({
+  id: z.string().uuid(),
+  employee_id: z.string().uuid(),
+  employee_name: z.string().min(1),
+  department: z.string().min(1),
+  designation: z.string().min(1),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  shift: z.string().min(1),
+  shift_id: z.string().uuid().optional(),
+  start_time: z.string().regex(/^\d{2}:\d{2}$/),
+  end_time: z.string().regex(/^\d{2}:\d{2}$/),
+  working_hours: z.number().nullable(),
+  break_time: z.string().min(1),
+  location: z.string().min(1),
+  manager: z.string().min(1),
+  status: z.enum(["Approved", "Pending", "Rejected"]),
+});
+
+const rosterListResponseSchema = z.object({
+  items: z.array(rosterEntrySchema),
+  total: z.number().int().nonnegative(),
+  page: z.number().int().positive(),
+  limit: z.number().int().positive(),
+});
+
+function logParseError(context: string, payload: unknown, error: z.ZodError): never {
+  if (process.env.NODE_ENV !== "production") {
+    console.error(`[rostersApi] ${context} - Contract validation failed:`, {
+      payload,
+      errors: error.flatten(),
+    });
+  }
+  throw new Error(
+    `API contract violation in ${context}: ${error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join("; ")}`
+  );
+}
+
+function mapRosterEntry(item: unknown): RosterEntryRecord {
+  const result = rosterEntrySchema.safeParse(item);
+  if (!result.success) {
+    logParseError("mapRosterEntry", item, result.error);
+  }
+  return result.data;
+}
+
+function mapRosterList(data: unknown) {
+  const result = rosterListResponseSchema.safeParse(data);
+  if (!result.success) {
+    logParseError("mapRosterList", data, result.error);
+  }
+  return result.data;
+}
+
+function toSnakeCase(obj: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value === undefined) continue;
+    const snakeKey = key.replace(/([A-Z])/g, "_$1").toLowerCase();
+    result[snakeKey] = value;
+  }
+  return result;
+}
 
 // ─────────────────────────────────────────────────────────────
-// 4. Rosters Management
+// 4. Rosters Management (Strict Contract Mapping)
 // ─────────────────────────────────────────────────────────────
 
 /**
  * List rotational team roster entries.
+ * Query params: date_from, date_to, department, employee_id
  */
 export async function getRosters(params?: {
-  dateFrom?: string;
-  dateTo?: string;
+  date_from?: string;
+  date_to?: string;
   department?: string;
+  employee_id?: string;
 }): Promise<RosterEntryRecord[]> {
   const query = new URLSearchParams();
-  if (params?.dateFrom) query.set("date_from", params.dateFrom);
-  if (params?.dateTo) query.set("date_to", params.dateTo);
+  if (params?.date_from) query.set("date_from", params.date_from);
+  if (params?.date_to) query.set("date_to", params.date_to);
   if (params?.department) query.set("department", params.department);
+  if (params?.employee_id) query.set("employee_id", params.employee_id);
   const qs = query.toString();
 
   const res = await api.get(`attendance/rosters${qs ? `?${qs}` : ""}`);
-  const list = extractListPayload(res);
-  return list.map((item: any) => ({
-    id: item.id || item._id,
-    employeeId: item.employee_id || item.employeeId,
-    employeeName: item.employee_name || item.employeeName || "Employee",
-    department: item.department || "General",
-    designation: item.designation || "",
-    date: item.date,
-    shift: item.shift || "Morning",
-    startTime: item.start_time || item.startTime || "08:00",
-    endTime: item.end_time || item.endTime || "16:00",
-    workingHours: item.working_hours != null ? Number(item.working_hours) : (item.workingHours != null ? Number(item.workingHours) : null),
-    breakTime: item.break_time || item.breakTime || "45 mins",
-    location: item.location || "Office",
-    manager: item.manager || item.manager_name || "Manager",
-    status: item.status || "Approved",
-  }));
+  const mapped = mapRosterList(res);
+  return mapped.items.map(mapRosterEntry);
 }
 
 /**
  * Create a roster entry.
+ * Only sends fields the client controls; server derives employee_name, department, designation, manager.
  */
 export async function createRoster(data: RosterCreatePayload): Promise<RosterEntryRecord> {
-  const res: any = await api.post("attendance/rosters", {
+  const body = toSnakeCase({
     employee_id: data.employeeId,
-    employee_name: data.employeeName,
-    department: data.department,
-    designation: data.designation,
     date: data.date,
     shift: data.shift,
+    shift_id: data.shiftId,
     start_time: data.startTime,
     end_time: data.endTime,
     working_hours: data.workingHours,
     break_time: data.breakTime,
     location: data.location,
-    manager: data.manager,
     status: data.status,
     recurring: data.recurring,
   });
-  const item = extractObjectPayload<any>(res);
-  return {
-    id: item.id || item._id,
-    employeeId: item.employee_id || data.employeeId,
-    employeeName: item.employee_name || data.employeeName,
-    department: item.department || data.department,
-    designation: item.designation || data.designation,
-    date: item.date || data.date,
-    shift: item.shift || data.shift as any,
-    startTime: item.start_time || data.startTime,
-    endTime: item.end_time || data.endTime,
-    workingHours: item.working_hours != null ? Number(item.working_hours) : (data.workingHours != null ? Number(data.workingHours) : null),
-    breakTime: item.break_time || data.breakTime,
-    location: item.location || data.location,
-    manager: item.manager || data.manager,
-    status: item.status || data.status,
-  };
+
+  const res = await api.post("attendance/rosters", body);
+  return mapRosterEntry((res as { data?: unknown })?.data ?? res);
 }
 
 /**
  * Update a roster entry.
+ * Only sends fields that are provided (partial update).
  */
-export async function updateRoster(id: string, data: Partial<RosterCreatePayload>): Promise<RosterEntryRecord> {
-  const res: any = await api.put(`attendance/rosters/${id}`, {
+export async function updateRoster(
+  id: string,
+  data: Partial<RosterCreatePayload>
+): Promise<RosterEntryRecord> {
+  const body = toSnakeCase({
     employee_id: data.employeeId,
-    employee_name: data.employeeName,
-    department: data.department,
-    designation: data.designation,
     date: data.date,
     shift: data.shift,
+    shift_id: data.shiftId,
     start_time: data.startTime,
     end_time: data.endTime,
     working_hours: data.workingHours,
     break_time: data.breakTime,
     location: data.location,
-    manager: data.manager,
     status: data.status,
   });
-  const item = extractObjectPayload<any>(res);
-  return {
-    id: item.id || id,
-    employeeId: item.employee_id || data.employeeId || "",
-    employeeName: item.employee_name || data.employeeName || "",
-    department: item.department || data.department || "",
-    designation: item.designation || data.designation || "",
-    date: item.date || data.date || "",
-    shift: item.shift || data.shift as any || "Morning",
-    startTime: item.start_time || data.startTime || "",
-    endTime: item.end_time || data.endTime || "",
-    workingHours: item.working_hours != null ? Number(item.working_hours) : (data.workingHours != null ? Number(data.workingHours) : null),
-    breakTime: item.break_time || data.breakTime || "",
-    location: item.location || data.location || "",
-    manager: item.manager || data.manager || "",
-    status: item.status || data.status || "Approved",
-  };
+
+  const res = await api.put(`attendance/rosters/${id}`, body);
+  return mapRosterEntry((res as { data?: unknown })?.data ?? res);
 }
 
 /**

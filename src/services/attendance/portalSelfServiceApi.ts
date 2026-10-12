@@ -10,7 +10,6 @@ import {
   HolidayRecord,
   RosterEntryRecord,
 } from "./types";
-import { parseShiftDefinition, formatTimeStr } from "./helpers";
 import { getRosters } from "./rostersApi";
 import { getHolidays } from "./holidaysApi";
 
@@ -20,6 +19,9 @@ import { getHolidays } from "./holidaysApi";
 
 /**
  * Resolves the authenticated employee profile from the backend database.
+ * Returns null if the employee cannot be identified.
+ * Note: Authorization is enforced server-side. This function only provides
+ * display data; all mutations must go through the API with proper auth.
  */
 export async function resolveCurrentEmployee(): Promise<{
   id: string;
@@ -41,17 +43,19 @@ export async function resolveCurrentEmployee(): Promise<{
     const localMatch = ws.employees?.find(
       (e) => e.email === user.email || e.id === user.id
     );
-    return {
-      id: user.id,
-      employee_id: localMatch?.employeeId || `EMP-${user.id.slice(0, 6).toUpperCase()}`,
-      full_name: user.fullName || "Employee",
-      email: user.email,
-      shift: localMatch?.shift || null,
-      branch: ws.company?.city || null,
-      work_location: "Office",
-      department: localMatch?.department || null,
-      designation: localMatch?.designation || null,
-    };
+    if (localMatch) {
+      return {
+        id: localMatch.id,
+        employee_id: localMatch.employeeId,
+        full_name: localMatch.fullName,
+        email: localMatch.email,
+        shift: localMatch.shift || null,
+        branch: ws.company?.city || null,
+        work_location: "Office",
+        department: localMatch.department || null,
+        designation: localMatch.designation || null,
+      };
+    }
   }
 
   try {
@@ -71,7 +75,7 @@ export async function resolveCurrentEmployee(): Promise<{
     if (match) {
       return {
         id: match.id,
-        employee_id: match.employee_id || `EMP-${match.id.slice(0, 6)}`,
+        employee_id: match.employee_id || match.id,
         full_name: `${match.first_name || ""} ${match.last_name || ""}`.trim() || match.full_name || user.fullName,
         email: match.company_email || match.personal_email || user.email,
         shift: match.shift || null,
@@ -109,136 +113,203 @@ export async function resolveCurrentEmployee(): Promise<{
 /**
  * Fetches the authenticated employee's assigned shifts, today's schedule,
  * upcoming scheduled shifts, and shift history from real backend APIs.
+ * Uses GET /attendance/shifts/me/schedule (the single source of truth).
  */
-export async function getMyShiftSchedule(requestedEmployeeId?: string): Promise<EmployeeShiftScheduleData> {
+export async function getMyShiftSchedule(): Promise<EmployeeShiftScheduleData> {
   const currentEmp = await resolveCurrentEmployee();
   if (!currentEmp) {
     throw new Error("Unable to identify the authenticated employee.");
   }
 
-  // Security check: Employee can only view their own schedule
-  if (requestedEmployeeId && requestedEmployeeId !== currentEmp.id && requestedEmployeeId !== currentEmp.employee_id) {
-    throw new Error("403 Forbidden: You do not have authorization to view shifts of other employees.");
-  }
+  try {
+    // Fetch the complete schedule from the backend
+    const res = await api.get("attendance/shifts/me/schedule");
+    const data = res as { data?: unknown } | unknown;
+    const item = (data as { data?: unknown })?.data ?? data;
 
-  const assignedShiftName = currentEmp.shift;
-  if (!assignedShiftName || !assignedShiftName.trim()) {
-    return {
-      hasAssignedShift: false,
-      employeeId: currentEmp.employee_id,
-      employeeName: currentEmp.full_name,
-      department: currentEmp.department || "General",
-      designation: currentEmp.designation || "Staff",
-      branch: currentEmp.branch || "Headquarters",
-      currentShift: null,
-      todayShift: null,
-      upcomingShifts: [],
-      shiftHistory: [],
+    // Transform the backend response to the existing EmployeeShiftScheduleData shape
+    // for backward compatibility with UI components during migration
+    const schedule = item as {
+      has_assigned_shift: boolean;
+      timezone: string;
+      employee: {
+        id: string;
+        employee_id: string;
+        full_name: string;
+        department: string;
+        designation: string;
+        branch: string;
+      };
+      current_shift: {
+        id: string;
+        name: string;
+        code: string;
+        start_time: string;
+        end_time: string;
+        is_overnight: boolean;
+        is_off: boolean;
+        is_holiday: boolean;
+        holiday_name?: string | null;
+        source: "roster" | "assignment" | "company_default" | "fallback";
+        grace_period_mins: number;
+        break_duration_mins: number;
+        night_shift: boolean;
+        night_premium_percent: number;
+        working_days: string[];
+      } | null;
+      today: {
+        date: string;
+        day: string;
+        shift_name: string;
+        start_time: string;
+        end_time: string;
+        is_overnight: boolean;
+        is_off: boolean;
+        is_holiday: boolean;
+        holiday_name?: string | null;
+        source: "roster" | "assignment" | "company_default" | "fallback";
+        checked_in: boolean;
+        checked_out: boolean;
+        check_in_time: string | null;
+        check_out_time: string | null;
+        working_hours: number | null;
+        is_late: boolean;
+        late_minutes: number;
+      } | null;
+      upcoming: Array<{
+        date: string;
+        day: string;
+        shift_name: string;
+        start_time: string;
+        end_time: string;
+        is_overnight: boolean;
+        is_off: boolean;
+        is_holiday: boolean;
+        holiday_name?: string | null;
+        source: "roster" | "assignment" | "company_default" | "fallback";
+        working_hours: number | null;
+      }>;
+      history: Array<{
+        attendance_id: string;
+        date: string;
+        day: string;
+        shift_name: string;
+        scheduled_start: string;
+        scheduled_end: string;
+        check_in_time: string | null;
+        check_out_time: string | null;
+        working_hours: number | null;
+        overtime_hours: number | null;
+        status: "Present" | "Late" | "Half Day" | "Absent" | "On Leave" | "Off" | "Holiday" | "Auto Closed";
+        is_late: boolean;
+        late_minutes: number;
+        is_early_checkout: boolean;
+        early_minutes: number;
+        auto_closed: boolean;
+      }>;
     };
-  }
 
-  // Map shift definition
-  const shiftDef = parseShiftDefinition(assignedShiftName);
-
-  // Concurrently fetch real punch status and face attendance history
-  const [todayPunchRes, historyRes, holidaysRes] = await Promise.allSettled([
-    api.get<any>("attendance/face/me"),
-    api.get<any>("attendance/face/history?limit=20"),
-    getHolidays({ branch: currentEmp.branch || undefined, year: new Date().getFullYear() }),
-  ]);
-
-  const todayPunch = todayPunchRes.status === "fulfilled" && todayPunchRes.value?.data
-    ? todayPunchRes.value.data
-    : todayPunchRes.status === "fulfilled" && todayPunchRes.value?.checked_in !== undefined
-    ? todayPunchRes.value
-    : null;
-
-  const historyItems = historyRes.status === "fulfilled"
-    ? (historyRes.value?.data?.items || historyRes.value?.items || [])
-    : [];
-
-  const holidayDates = new Set(
-    holidaysRes.status === "fulfilled" ? holidaysRes.value.map((h) => h.date) : []
-  );
-
-  const todayStr = new Date().toISOString().split("T")[0];
-  const todayDateObj = new Date();
-  const dayOfWeek = todayDateObj.getDay();
-  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // Sunday or Saturday
-  const isHoliday = holidayDates.has(todayStr);
-
-  const todayShift = {
-    date: todayStr,
-    day: todayDateObj.toLocaleDateString("en-US", { weekday: "long" }),
-    shift: shiftDef,
-    checkedIn: Boolean(todayPunch?.checked_in),
-    checkedOut: Boolean(todayPunch?.checked_out),
-    checkInTime: todayPunch?.check_in_time ? formatTimeStr(todayPunch.check_in_time) : null,
-    checkOutTime: todayPunch?.check_out_time ? formatTimeStr(todayPunch.check_out_time) : null,
-    workingHours: todayPunch?.working_hours ?? (todayPunch?.checked_in ? shiftDef.totalWorkingHours : null),
-    isOffDay: isWeekend || isHoliday,
-  };
-
-  // Build upcoming shifts for next 14 business days
-  const upcomingShifts: UpcomingShiftItem[] = [];
-  for (let i = 1; i <= 14; i++) {
-    const d = new Date(todayDateObj);
-    d.setDate(todayDateObj.getDate() + i);
-    const dateStr = d.toISOString().split("T")[0];
-    const dOfWeek = d.getDay();
-    const isOff = dOfWeek === 0 || dOfWeek === 6;
-    const isHol = holidayDates.has(dateStr);
-
-    if (!isOff && !isHol) {
-      upcomingShifts.push({
-        id: `upcoming-${dateStr}`,
-        date: dateStr,
-        day: d.toLocaleDateString("en-US", { weekday: "long" }),
-        shiftName: shiftDef.shiftName,
-        startTime: shiftDef.startTime,
-        endTime: shiftDef.endTime,
-        breakDuration: shiftDef.breakDuration,
-        workingHours: shiftDef.totalWorkingHours,
-        shiftType: shiftDef.shiftType,
-        status: "Scheduled",
-      });
+    if (!schedule.has_assigned_shift || !schedule.current_shift) {
+      return {
+        hasAssignedShift: false,
+        employeeId: schedule.employee.employee_id,
+        employeeName: schedule.employee.full_name,
+        department: schedule.employee.department,
+        designation: schedule.employee.designation,
+        branch: schedule.employee.branch,
+        currentShift: null,
+        todayShift: null,
+        upcomingShifts: [],
+        shiftHistory: [],
+      };
     }
-  }
 
-  // Map past history
-  const shiftHistory: ShiftHistoryItem[] = historyItems.map((item: any, idx: number) => {
-    const dStr = item.date ? item.date.split("T")[0] : todayStr;
-    const dObj = new Date(dStr);
+    const shiftDef = schedule.current_shift;
+    const today = schedule.today;
+    const upcoming = schedule.upcoming;
+    const history = schedule.history;
+
     return {
-      id: item.id || `hist-${idx}-${dStr}`,
-      date: dStr,
-      day: dObj.toLocaleDateString("en-US", { weekday: "long" }),
-      shiftName: shiftDef.shiftName,
-      checkInTime: item.check_in_time ? formatTimeStr(item.check_in_time) : null,
-      checkOutTime: item.check_out_time ? formatTimeStr(item.check_out_time) : null,
-      workingHours: item.working_hours ? Number(item.working_hours) : null,
-      status: item.check_in_time ? "Present" : "Absent",
+      hasAssignedShift: true,
+      employeeId: schedule.employee.employee_id,
+      employeeName: schedule.employee.full_name,
+      department: schedule.employee.department,
+      designation: schedule.employee.designation,
+      branch: schedule.employee.branch,
+      currentShift: {
+        shiftName: shiftDef.name,
+        shiftType: shiftDef.night_shift ? "Night" : shiftDef.is_overnight ? "Night" : "Regular",
+        startTime: shiftDef.start_time,
+        endTime: shiftDef.end_time,
+        breakDuration: `${shiftDef.break_duration_mins} min`,
+        breakWindow: "Scheduled break",
+        totalWorkingHours: Math.round((parseTimeToMinutes(shiftDef.end_time) - parseTimeToMinutes(shiftDef.start_time) + (shiftDef.is_overnight ? 1440 : 0) - shiftDef.break_duration_mins) / 60),
+        gracePeriodMinutes: shiftDef.grace_period_mins,
+        nightPremiumPercent: shiftDef.night_premium_percent,
+        workingDays: shiftDef.working_days as any,
+        description: `Source: ${shiftDef.source}`,
+      },
+      todayShift: today
+        ? {
+            date: today.date,
+            day: today.day,
+            shift: {
+              shiftName: today.shift_name,
+              shiftType: shiftDef.night_shift ? "Night" : shiftDef.is_overnight ? "Night" : "Regular",
+              startTime: today.start_time,
+              endTime: today.end_time,
+              breakDuration: `${shiftDef.break_duration_mins} min`,
+              breakWindow: "Scheduled break",
+              totalWorkingHours: Math.round((parseTimeToMinutes(today.end_time) - parseTimeToMinutes(today.start_time) + (today.is_overnight ? 1440 : 0) - shiftDef.break_duration_mins) / 60),
+              gracePeriodMinutes: shiftDef.grace_period_mins,
+              nightPremiumPercent: shiftDef.night_premium_percent,
+              workingDays: shiftDef.working_days as any,
+            },
+            checkedIn: today.checked_in,
+            checkedOut: today.checked_out,
+            checkInTime: today.check_in_time,
+            checkOutTime: today.check_out_time,
+            workingHours: today.working_hours,
+            isOffDay: today.is_off || today.is_holiday,
+          }
+        : null,
+      upcomingShifts: upcoming.map((u) => ({
+        id: `upcoming-${u.date}`,
+        date: u.date,
+        day: u.day,
+        shiftName: u.shift_name,
+        startTime: u.start_time,
+        endTime: u.end_time,
+        breakDuration: `${shiftDef.break_duration_mins} min`,
+        workingHours: u.working_hours ?? Math.round((parseTimeToMinutes(u.end_time) - parseTimeToMinutes(u.start_time) + (u.is_overnight ? 1440 : 0) - shiftDef.break_duration_mins) / 60),
+        shiftType: shiftDef.night_shift ? "Night" : shiftDef.is_overnight ? "Night" : "Regular",
+        status: u.is_off ? "Off Day" : u.is_holiday ? "Holiday" : "Scheduled",
+      })),
+      shiftHistory: history.map((h) => ({
+        id: h.attendance_id,
+        date: h.date,
+        day: h.day,
+        shiftName: h.shift_name,
+        checkInTime: h.check_in_time,
+        checkOutTime: h.check_out_time,
+        workingHours: h.working_hours,
+        status: h.status === "Auto Closed" ? "Completed" : h.status,
+      })),
     };
-  });
-
-  return {
-    hasAssignedShift: true,
-    employeeId: currentEmp.employee_id,
-    employeeName: currentEmp.full_name,
-    department: currentEmp.department || "General",
-    designation: currentEmp.designation || "Staff",
-    branch: currentEmp.branch || "Headquarters",
-    currentShift: shiftDef,
-    todayShift,
-    upcomingShifts,
-    shiftHistory,
-  };
+  } catch (err) {
+    console.error("Failed to fetch shift schedule from backend:", err);
+    throw new Error("Unable to load shift schedule. Please try again.");
+  }
 }
 
 /**
  * Fetches the employee's planned work schedule / roster entries from the real backend.
+ * Uses GET /rosters with employee_id filter.
  */
-export async function getMyRoster(month?: number, year?: number, requestedEmployeeId?: string): Promise<{
+export async function getMyRoster(
+  month?: number,
+  year?: number
+): Promise<{
   entries: RosterDayItem[];
   hasRoster: boolean;
   employeeName: string;
@@ -249,27 +320,16 @@ export async function getMyRoster(month?: number, year?: number, requestedEmploy
     throw new Error("Unable to identify the authenticated employee.");
   }
 
-  if (requestedEmployeeId && requestedEmployeeId !== currentEmp.id && requestedEmployeeId !== currentEmp.employee_id) {
-    throw new Error("403 Forbidden: You do not have authorization to view the roster of other employees.");
-  }
-
   const targetYear = year ?? new Date().getFullYear();
-  const targetMonth = month ?? (new Date().getMonth() + 1); // 1-indexed
+  const targetMonth = month ?? new Date().getMonth() + 1;
 
-  // Check if employee has an assigned shift
-  const assignedShiftName = currentEmp.shift;
-
-  // Check backend for explicit rosters first
+  // Fetch rosters for this employee from backend
   let backendRosters: RosterEntryRecord[] = [];
   try {
-    backendRosters = await getRosters();
+    backendRosters = await getRosters({ employee_id: currentEmp.id });
   } catch {
     // Backend attendance/rosters may not be populated
   }
-
-  const myBackendRosters = backendRosters.filter(
-    (r) => r.employeeId === currentEmp.id || r.employeeId === currentEmp.employee_id
-  );
 
   // Fetch real holidays
   const holidays = await getHolidays({
@@ -280,7 +340,8 @@ export async function getMyRoster(month?: number, year?: number, requestedEmploy
   const holidayMap = new Map<string, HolidayRecord>();
   holidays.forEach((h) => holidayMap.set(h.date, h));
 
-  if (!assignedShiftName && myBackendRosters.length === 0) {
+  const assignedShiftName = currentEmp.shift;
+  if (!assignedShiftName && backendRosters.length === 0) {
     return {
       entries: [],
       hasRoster: false,
@@ -289,7 +350,18 @@ export async function getMyRoster(month?: number, year?: number, requestedEmploy
     };
   }
 
-  const shiftDef = parseShiftDefinition(assignedShiftName || "Morning");
+  const shiftDef = {
+    shiftName: assignedShiftName || "Morning Shift",
+    startTime: "09:00",
+    endTime: "18:00",
+    workingHours: 8,
+    breakDuration: "1 Hour",
+    breakWindow: "01:00 PM – 02:00 PM",
+    gracePeriodMinutes: 15,
+    nightPremiumPercent: 0,
+    workingDays: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+  };
+
   const daysInMonth = new Date(targetYear, targetMonth, 0).getDate();
   const entries: RosterDayItem[] = [];
 
@@ -301,16 +373,16 @@ export async function getMyRoster(month?: number, year?: number, requestedEmploy
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
     // Check if explicit backend roster exists for this day
-    const explicit = myBackendRosters.find((r) => r.date === dateStr);
+    const explicit = backendRosters.find((r) => r.date === dateStr);
     if (explicit) {
       entries.push({
         id: explicit.id,
         date: dateStr,
         day: dayName,
         shiftName: explicit.shift,
-        startTime: formatTimeStr(explicit.startTime),
-        endTime: formatTimeStr(explicit.endTime),
-        workingHours: explicit.workingHours,
+        startTime: explicit.start_time,
+        endTime: explicit.end_time,
+        workingHours: explicit.working_hours,
         status: explicit.shift === "Off Day" ? "Weekly Off" : explicit.shift === "Holiday" ? "Holiday" : "Working",
         notes: explicit.location,
       });
@@ -357,7 +429,7 @@ export async function getMyRoster(month?: number, year?: number, requestedEmploy
       shiftName: shiftDef.shiftName,
       startTime: shiftDef.startTime,
       endTime: shiftDef.endTime,
-      workingHours: shiftDef.totalWorkingHours,
+      workingHours: shiftDef.workingHours,
       status: "Working",
     });
   }
@@ -371,19 +443,31 @@ export async function getMyRoster(month?: number, year?: number, requestedEmploy
 }
 
 /**
- * Submits an employee request for shift or roster change to the backend support ticket workflow.
+ * Submits an employee request for shift change to the backend.
+ * Uses POST /attendance/shifts/change-requests.
  */
 export async function requestScheduleChange(payload: ScheduleChangeRequestPayload): Promise<{ success: boolean; message: string }> {
-  const res: any = await api.post("/api/v2/employee-support/tickets", {
-    category: "HR",
-    priority: "MEDIUM",
-    title: `${payload.type === "shift" ? "Shift" : "Roster"} Change Request: ${payload.requestedShift}`,
-    description: `Schedule change requested to ${payload.requestedShift}. Effective Date: ${payload.effectiveDate}. Reason: ${payload.reason}`,
-  });
+  try {
+    const res = await api.post("attendance/shifts/change-requests", {
+      requested_shift_id: payload.requestedShift,
+      effective_date: payload.effectiveDate,
+      reason: payload.reason,
+    });
+    const data = res as { data?: unknown } | unknown;
+    return {
+      success: true,
+      message: (data as { message?: string })?.message || "Your shift change request has been submitted for approval.",
+    };
+  } catch (err: any) {
+    const errorCode = err?.response?.data?.detail?.code;
+    if (errorCode === "CHANGE_REQUEST_INVALID_STATE") {
+      throw new Error("You already have a pending shift change request.");
+    }
+    throw err;
+  }
+}
 
-  const isSuccess = res?.success !== false;
-  return {
-    success: isSuccess,
-    message: res?.message || "Your schedule change request has been submitted to HR.",
-  };
+function parseTimeToMinutes(timeStr: string): number {
+  const [h, m] = timeStr.split(":").map(Number);
+  return h * 60 + m;
 }

@@ -1,137 +1,196 @@
 import { api } from "@/api";
-import { Shift, ShiftCreatePayload, ShiftAssignPayload } from "./types";
-import { extractListPayload, extractObjectPayload } from "./helpers";
+import type {
+  Shift,
+  ShiftCreatePayload,
+  ShiftAssignPayload,
+  ShiftOption,
+  ShiftAssignResult,
+  ShiftChangeRequest,
+  MyScheduleData,
+  ShiftListResponse,
+  ShiftEmployeesResponse,
+  ListChangeRequestsParams,
+  CreateChangeRequestPayload,
+  ApproveChangeRequestPayload,
+  RejectChangeRequestPayload,
+  ShiftApiErrorCode,
+} from "./types";
+import {
+  mapShift,
+  mapShiftList,
+  mapShiftOption,
+  mapShiftAssignResult,
+  mapShiftChangeRequest,
+  mapMySchedule,
+  mapShiftEmployees,
+} from "./shiftsMappers";
 
-// ─────────────────────────────────────────────────────────────
-// 3. Shifts Management
-// ─────────────────────────────────────────────────────────────
-
-/**
- * List all configured work shifts.
- */
-export async function getShifts(): Promise<Shift[]> {
-  const res = await api.get("attendance/shifts");
-  const list = extractListPayload(res);
-  return list.map((item: any) => ({
-    id: item.id || item._id,
-    name: item.name || item.shift_name,
-    code: item.code || item.shift_code || "SHIFT",
-    startTime: item.start_time || item.startTime || "09:00",
-    endTime: item.end_time || item.endTime || "18:00",
-    workHours: item.work_hours != null ? Number(item.work_hours) : (item.workHours != null ? Number(item.workHours) : null),
-    gracePeriodMinutes: Number(item.grace_period_minutes ?? item.gracePeriodMinutes ?? 15),
-    breakDurationMinutes: Number(item.break_duration_minutes ?? item.breakDurationMinutes ?? 60),
-    nightShift: Boolean(item.night_shift ?? item.nightShift ?? false),
-    nightPremiumPercent: Number(item.night_premium_percent ?? item.nightPremiumPercent ?? 0),
-    workingDays: Array.isArray(item.working_days) ? item.working_days : (item.workingDays || ["Mon", "Tue", "Wed", "Thu", "Fri"]),
-    assignedEmployeesCount: item.assigned_employees_count ?? item.assignedEmployeesCount ?? 0,
-    isActive: item.is_active ?? item.isActive ?? true,
-    color: item.color || "#6366F1",
-    description: item.description || "",
-    createdAt: item.created_at,
-    updatedAt: item.updated_at,
-  }));
+function toSnakeCase(obj: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value === undefined) continue;
+    const snakeKey = key.replace(/([A-Z])/g, "_$1").toLowerCase();
+    result[snakeKey] = value;
+  }
+  return result;
 }
 
-/**
- * Create a new shift template.
- */
-export async function createShift(data: ShiftCreatePayload): Promise<Shift> {
-  const res: any = await api.post("attendance/shifts", {
-    name: data.name,
-    code: data.code,
-    start_time: data.startTime,
-    end_time: data.endTime,
-    grace_period_minutes: data.gracePeriodMinutes,
-    break_duration_minutes: data.breakDurationMinutes,
-    night_shift: data.nightShift,
-    night_premium_percent: data.nightPremiumPercent,
-    working_days: data.workingDays,
-    color: data.color,
-    description: data.description,
-    is_active: data.isActive ?? true,
-  });
-  const item = extractObjectPayload<any>(res);
-  return {
-    id: item.id || item._id,
-    name: item.name || data.name,
-    code: item.code || data.code,
-    startTime: item.start_time || data.startTime,
-    endTime: item.end_time || data.endTime,
-    workHours: item.work_hours != null ? Number(item.work_hours) : null,
-    gracePeriodMinutes: Number(item.grace_period_minutes || data.gracePeriodMinutes),
-    breakDurationMinutes: Number(item.break_duration_minutes || data.breakDurationMinutes),
-    nightShift: Boolean(item.night_shift ?? data.nightShift),
-    nightPremiumPercent: Number(item.night_premium_percent ?? data.nightPremiumPercent),
-    workingDays: item.working_days || data.workingDays,
-    assignedEmployeesCount: 0,
-    isActive: item.is_active ?? true,
-    color: item.color || data.color,
-    description: item.description || data.description,
-  };
+export async function getShifts(params?: {
+  search?: string;
+  is_active?: boolean;
+  night_shift?: boolean;
+  page?: number;
+  limit?: number;
+}): Promise<ShiftListResponse> {
+  const query = new URLSearchParams();
+  if (params?.search) query.set("search", params.search);
+  if (params?.is_active !== undefined) query.set("is_active", String(params.is_active));
+  if (params?.night_shift !== undefined) query.set("night_shift", String(params.night_shift));
+  if (params?.page) query.set("page", String(params.page));
+  if (params?.limit) query.set("limit", String(params.limit));
+
+  const qs = query.toString();
+  const res = await api.get(`attendance/shifts${qs ? `?${qs}` : ""}`);
+  return mapShiftList(res);
 }
 
-/**
- * Update an existing shift.
- */
-export async function updateShift(id: string, data: Partial<ShiftCreatePayload>): Promise<Shift> {
-  const res: any = await api.put(`attendance/shifts/${id}`, {
-    name: data.name,
-    code: data.code,
-    start_time: data.startTime,
-    end_time: data.endTime,
-    grace_period_minutes: data.gracePeriodMinutes,
-    break_duration_minutes: data.breakDurationMinutes,
-    night_shift: data.nightShift,
-    night_premium_percent: data.nightPremiumPercent,
-    working_days: data.workingDays,
-    color: data.color,
-    description: data.description,
-    is_active: data.isActive,
-  });
-  const item = extractObjectPayload<any>(res);
-  return {
-    id: item.id || id,
-    name: item.name || data.name || "",
-    code: item.code || data.code || "",
-    startTime: item.start_time || data.startTime || "",
-    endTime: item.end_time || data.endTime || "",
-    workHours: item.work_hours != null ? Number(item.work_hours) : null,
-    gracePeriodMinutes: Number(item.grace_period_minutes || data.gracePeriodMinutes || 15),
-    breakDurationMinutes: Number(item.break_duration_minutes || data.breakDurationMinutes || 60),
-    nightShift: Boolean(item.night_shift ?? data.nightShift),
-    nightPremiumPercent: Number(item.night_premium_percent ?? data.nightPremiumPercent ?? 0),
-    workingDays: item.working_days || data.workingDays || [],
-    assignedEmployeesCount: item.assigned_employees_count ?? 0,
-    isActive: item.is_active ?? true,
-    color: item.color || data.color,
-    description: item.description || data.description,
-  };
+export async function getShiftOptions(): Promise<ShiftOption[]> {
+  const res = await api.get("attendance/shifts/options");
+  const data = res as { data?: unknown } | unknown[];
+  const list = Array.isArray(data) ? data : data?.data ?? [];
+  return (list as unknown[]).map(mapShiftOption);
 }
 
-/**
- * Assign shift to one or more employees.
- */
+export async function createShift(payload: ShiftCreatePayload): Promise<Shift> {
+  const body = toSnakeCase(payload as Record<string, unknown>);
+  const res = await api.post("attendance/shifts", body);
+  const data = res as { data?: unknown } | unknown;
+  const item = (data as { data?: unknown })?.data ?? data;
+  return mapShift(item);
+}
+
+export async function updateShift(id: string, payload: Partial<ShiftCreatePayload>): Promise<Shift> {
+  const body = toSnakeCase(payload as Record<string, unknown>);
+  const res = await api.put(`attendance/shifts/${id}`, body);
+  const data = res as { data?: unknown } | unknown;
+  const item = (data as { data?: unknown })?.data ?? data;
+  return mapShift(item);
+}
+
+export async function deleteShift(
+  id: string,
+  options?: { reassignTo?: string }
+): Promise<{ success: boolean; reassigned?: boolean }> {
+  const query = new URLSearchParams();
+  if (options?.reassignTo) query.set("reassign_to", options.reassignTo);
+  const qs = query.toString();
+
+  await api.delete(`attendance/shifts/${id}${qs ? `?${qs}` : ""}`);
+  return { success: true, reassigned: !!options?.reassignTo };
+}
+
 export async function assignShift(
   shiftId: string,
   payload: ShiftAssignPayload
-): Promise<{ success: boolean; assignedCount: number }> {
-  const res: any = await api.post(`attendance/shifts/${shiftId}/assign`, {
-    employee_ids: payload.employeeIds,
-    effective_date: payload.effectiveDate,
-    notes: payload.notes,
-  });
-  const data = extractObjectPayload<any>(res);
+): Promise<ShiftAssignResult> {
+  const body = toSnakeCase(payload as Record<string, unknown>);
+  const res = await api.post(`attendance/shifts/${shiftId}/assign`, body);
+  const data = res as { data?: unknown } | unknown;
+  const item = (data as { data?: unknown })?.data ?? data;
+  return mapShiftAssignResult(item);
+}
+
+export async function getShiftEmployees(
+  shiftId: string,
+  params?: { page?: number; limit?: number }
+): Promise<ShiftEmployeesResponse> {
+  const query = new URLSearchParams();
+  if (params?.page) query.set("page", String(params.page));
+  if (params?.limit) query.set("limit", String(params.limit));
+  const qs = query.toString();
+
+  const res = await api.get(`attendance/shifts/${shiftId}/employees${qs ? `?${qs}` : ""}`);
+  return mapShiftEmployees(res);
+}
+
+export async function getMySchedule(params?: {
+  days_ahead?: number;
+  history_days?: number;
+}): Promise<MyScheduleData> {
+  const query = new URLSearchParams();
+  if (params?.days_ahead) query.set("days_ahead", String(params.days_ahead));
+  if (params?.history_days) query.set("history_days", String(params.history_days));
+  const qs = query.toString();
+
+  const res = await api.get(`attendance/shifts/me/schedule${qs ? `?${qs}` : ""}`);
+  const data = res as { data?: unknown } | unknown;
+  const item = (data as { data?: unknown })?.data ?? data;
+  return mapMySchedule(item);
+}
+
+export async function getMyChangeRequests(): Promise<ShiftChangeRequest[]> {
+  const res = await api.get("attendance/shifts/change-requests/mine");
+  const data = res as { data?: unknown } | unknown[];
+  const list = Array.isArray(data) ? data : (data as { data?: unknown })?.data ?? [];
+  return (list as unknown[]).map(mapShiftChangeRequest);
+}
+
+export async function createChangeRequest(payload: CreateChangeRequestPayload): Promise<ShiftChangeRequest> {
+  const body = toSnakeCase(payload as Record<string, unknown>);
+  const res = await api.post("attendance/shifts/change-requests", body);
+  const data = res as { data?: unknown } | unknown;
+  const item = (data as { data?: unknown })?.data ?? data;
+  return mapShiftChangeRequest(item);
+}
+
+export async function listChangeRequests(params?: ListChangeRequestsParams): Promise<{
+  items: ShiftChangeRequest[];
+  total: number;
+  page: number;
+  limit: number;
+}> {
+  const query = new URLSearchParams();
+  if (params?.status) query.set("status", params.status);
+  if (params?.page) query.set("page", String(params.page));
+  if (params?.limit) query.set("limit", String(params.limit));
+  const qs = query.toString();
+
+  const res = await api.get(`attendance/shifts/change-requests${qs ? `?${qs}` : ""}`);
+  const data = res as { data?: unknown } | unknown;
+  const list = ((data as { data?: unknown })?.data as { items?: unknown[] } | undefined)?.items ?? [];
   return {
-    success: true,
-    assignedCount: data.assigned_count ?? payload.employeeIds.length,
+    items: list.map(mapShiftChangeRequest),
+    total: ((data as { data?: unknown })?.data as { total?: number } | undefined)?.total ?? 0,
+    page: ((data as { data?: unknown })?.data as { page?: number } | undefined)?.page ?? 1,
+    limit: ((data as { data?: unknown })?.data as { limit?: number } | undefined)?.limit ?? 20,
   };
 }
 
-/**
- * Delete a shift.
- */
-export async function deleteShift(id: string): Promise<{ success: boolean }> {
-  await api.delete(`attendance/shifts/${id}`);
-  return { success: true };
+export async function approveChangeRequest(
+  id: string,
+  payload?: ApproveChangeRequestPayload
+): Promise<ShiftChangeRequest> {
+  const body = payload ? toSnakeCase(payload as Record<string, unknown>) : {};
+  const res = await api.post(`attendance/shifts/change-requests/${id}/approve`, body);
+  const data = res as { data?: unknown } | unknown;
+  const item = (data as { data?: unknown })?.data ?? data;
+  return mapShiftChangeRequest(item);
+}
+
+export async function rejectChangeRequest(
+  id: string,
+  payload: RejectChangeRequestPayload
+): Promise<ShiftChangeRequest> {
+  const body = toSnakeCase(payload as Record<string, unknown>);
+  const res = await api.post(`attendance/shifts/change-requests/${id}/reject`, body);
+  const data = res as { data?: unknown } | unknown;
+  const item = (data as { data?: unknown })?.data ?? data;
+  return mapShiftChangeRequest(item);
+}
+
+export async function cancelChangeRequest(id: string): Promise<ShiftChangeRequest> {
+  const res = await api.post(`attendance/shifts/change-requests/${id}/cancel`);
+  const data = res as { data?: unknown } | unknown;
+  const item = (data as { data?: unknown })?.data ?? data;
+  return mapShiftChangeRequest(item);
 }
