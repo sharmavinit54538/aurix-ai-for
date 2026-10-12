@@ -27,6 +27,62 @@ export interface AttendanceAnalyticsSummary {
   checkedOutToday?: number;
 }
 
+export interface AttendanceTrendDataPoint {
+  date: string;
+  present: number;
+  late: number;
+  absent: number;
+  onLeave: number;
+  total: number;
+}
+
+export interface AttendanceTrendsResponse {
+  trends: AttendanceTrendDataPoint[];
+  dateRange: { start: string; end: string };
+}
+
+export interface AttendanceDistributionResponse {
+  present: number;
+  late: number;
+  absent: number;
+  onLeave: number;
+  total: number;
+}
+
+export interface WeeklyAttendanceDataPoint {
+  day: string;
+  date: string;
+  present: number;
+  late: number;
+  absent: number;
+  onLeave: number;
+  total: number;
+}
+
+export interface WeeklyAttendanceResponse {
+  weekly: WeeklyAttendanceDataPoint[];
+  dateRange: { start: string; end: string };
+  viewMode: "week" | "month";
+}
+
+export interface AttendanceRateKPIResponse {
+  currentRate: number;
+  previousRate: number | null;
+  changePercentagePoints: number | null;
+  trend: "up" | "down" | "stable";
+  period: { start: string; end: string };
+  previousPeriod: { start: string; end: string } | null;
+}
+
+export interface AttendanceAnalyticsFilters {
+  startDate?: string;
+  endDate?: string;
+  departmentId?: string;
+  shiftId?: string;
+  locationId?: string;
+  viewMode?: "week" | "month";
+}
+
 export interface TodayPunchStatus {
   checkedIn: boolean;
   checkedOut: boolean;

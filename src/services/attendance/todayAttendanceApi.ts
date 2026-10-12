@@ -1,6 +1,25 @@
 import { api } from "@/api";
-import { TodayAttendanceEmployee, AttendanceAnalyticsSummary } from "./types";
+import {
+  TodayAttendanceEmployee,
+  AttendanceAnalyticsSummary,
+  AttendanceTrendsResponse,
+  AttendanceDistributionResponse,
+  WeeklyAttendanceResponse,
+  AttendanceRateKPIResponse,
+  AttendanceAnalyticsFilters,
+} from "./types";
 import { extractListPayload, extractObjectPayload } from "./helpers";
+
+function buildQueryParams(filters?: AttendanceAnalyticsFilters): string {
+  const params = new URLSearchParams();
+  if (filters?.startDate) params.append("start_date", filters.startDate);
+  if (filters?.endDate) params.append("end_date", filters.endDate);
+  if (filters?.departmentId) params.append("department_id", filters.departmentId);
+  if (filters?.shiftId) params.append("shift_id", filters.shiftId);
+  if (filters?.locationId) params.append("location_id", filters.locationId);
+  if (filters?.viewMode) params.append("view_mode", filters.viewMode);
+  return params.toString() ? `?${params.toString()}` : "";
+}
 
 // ─────────────────────────────────────────────────────────────
 // 1. Attendance Hub & Today's Attendance
@@ -116,5 +135,117 @@ export async function getAttendanceAnalytics(): Promise<AttendanceAnalyticsSumma
       data.checked_out_today ??
       data.checkedOutToday ??
       0,
+  };
+}
+
+/**
+ * Fetch daily attendance trends over a date range.
+ * Calls GET /api/v1/attendance/analytics/trends.
+ */
+export async function getAttendanceTrends(
+  filters?: AttendanceAnalyticsFilters
+): Promise<AttendanceTrendsResponse> {
+  const query = buildQueryParams(filters);
+  const res: any = await api.get(`attendance/analytics/trends${query}`);
+  const data = extractObjectPayload<any>(res);
+  return {
+    trends: (data.trends || data.data || []).map((item: any) => ({
+      date: item.date || item.day,
+      present: item.present ?? item.present_count ?? 0,
+      late: item.late ?? item.late_count ?? 0,
+      absent: item.absent ?? item.absent_count ?? 0,
+      onLeave: item.on_leave ?? item.onLeave ?? item.leave_count ?? 0,
+      total: item.total ?? item.total_employees ?? 0,
+    })),
+    dateRange: {
+      start: data.start_date || data.dateRange?.start || filters?.startDate || "",
+      end: data.end_date || data.dateRange?.end || filters?.endDate || "",
+    },
+  };
+}
+
+/**
+ * Fetch attendance distribution for a period.
+ * Calls GET /api/v1/attendance/analytics/distribution.
+ */
+export async function getAttendanceDistribution(
+  filters?: AttendanceAnalyticsFilters
+): Promise<AttendanceDistributionResponse> {
+  const query = buildQueryParams(filters);
+  const res: any = await api.get(`attendance/analytics/distribution${query}`);
+  const data = extractObjectPayload<any>(res);
+  return {
+    present: data.present ?? data.present_count ?? 0,
+    late: data.late ?? data.late_count ?? 0,
+    absent: data.absent ?? data.absent_count ?? 0,
+    onLeave: data.on_leave ?? data.onLeave ?? data.leave_count ?? 0,
+    total: data.total ?? data.total_employees ?? 0,
+  };
+}
+
+/**
+ * Fetch weekly/monthly attendance comparison.
+ * Calls GET /api/v1/attendance/analytics/weekly.
+ */
+export async function getWeeklyAttendance(
+  filters?: AttendanceAnalyticsFilters
+): Promise<WeeklyAttendanceResponse> {
+  const query = buildQueryParams(filters);
+  const res: any = await api.get(`attendance/analytics/weekly${query}`);
+  const data = extractObjectPayload<any>(res);
+  return {
+    weekly: (data.weekly || data.data || []).map((item: any) => ({
+      day: item.day || item.name,
+      date: item.date,
+      present: item.present ?? item.present_count ?? 0,
+      late: item.late ?? item.late_count ?? 0,
+      absent: item.absent ?? item.absent_count ?? 0,
+      onLeave: item.on_leave ?? item.onLeave ?? item.leave_count ?? 0,
+      total: item.total ?? item.total_employees ?? 0,
+    })),
+    dateRange: {
+      start: data.start_date || data.dateRange?.start || filters?.startDate || "",
+      end: data.end_date || data.dateRange?.end || filters?.endDate || "",
+    },
+    viewMode: data.view_mode || filters?.viewMode || "week",
+  };
+}
+
+/**
+ * Fetch attendance rate KPI with trend comparison.
+ * Calls GET /api/v1/attendance/analytics/rate.
+ */
+export async function getAttendanceRateKPI(
+  filters?: AttendanceAnalyticsFilters
+): Promise<AttendanceRateKPIResponse> {
+  const query = buildQueryParams(filters);
+  const res: any = await api.get(`attendance/analytics/rate${query}`);
+  const data = extractObjectPayload<any>(res);
+  const currentRate = data.current_rate ?? data.attendance_rate ?? data.rate ?? 0;
+  const previousRate = data.previous_rate ?? data.prev_rate ?? null;
+  const change = data.change_percentage_points ?? data.change ?? null;
+  const trend =
+    change === null
+      ? "stable"
+      : change > 0
+        ? "up"
+        : change < 0
+          ? "down"
+          : "stable";
+  return {
+    currentRate,
+    previousRate,
+    changePercentagePoints: change,
+    trend,
+    period: {
+      start: data.period_start || data.period?.start || filters?.startDate || "",
+      end: data.period_end || data.period?.end || filters?.endDate || "",
+    },
+    previousPeriod: data.previous_period
+      ? {
+          start: data.previous_period.start,
+          end: data.previous_period.end,
+        }
+      : null,
   };
 }

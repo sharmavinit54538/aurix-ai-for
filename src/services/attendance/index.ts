@@ -1,4 +1,4 @@
-import { getTodayAttendance, getAttendanceAnalytics } from "./todayAttendanceApi";
+import { getTodayAttendance, getAttendanceAnalytics, getAttendanceTrends, getAttendanceDistribution, getWeeklyAttendance, getAttendanceRateKPI } from "./todayAttendanceApi";
 import {
   getMyTodayStatus,
   checkIn,
@@ -59,6 +59,10 @@ export const attendanceApi = {
   // 1. Attendance Hub & Today's Attendance
   getTodayAttendance,
   getAttendanceAnalytics,
+  getAttendanceTrends,
+  getAttendanceDistribution,
+  getWeeklyAttendance,
+  getAttendanceRateKPI,
 
   // 2. Check In / Check Out / Break / Geofence
   getMyTodayStatus,
