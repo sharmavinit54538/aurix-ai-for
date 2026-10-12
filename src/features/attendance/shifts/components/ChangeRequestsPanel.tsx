@@ -161,7 +161,7 @@ export function ChangeRequestsPanel() {
                     <td className="px-4 py-3 text-muted-foreground max-w-xs truncate" title={req.reason}>{req.reason}</td>
                     <td className="px-4 py-3 text-muted-foreground font-mono text-xs">{formatInstant(req.created_at)}</td>
                     <td className="px-4 py-3">
-                      <Badge variant="outline" className={STATUS_BADGES[req.status] || STATUS_BADGES.pending} className="text-[10px]">
+                      <Badge variant="outline" className={`${STATUS_BADGES[req.status] || STATUS_BADGES.pending} text-[10px]`}>
                         {req.status.charAt(0).toUpperCase() + req.status.slice(1)}
                       </Badge>
                     </td>

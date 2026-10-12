@@ -19,8 +19,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { shiftFormSchema, ShiftFormData, computeShiftDuration, computeWorkHours, isOvernight, formatDurationMinutes, formatHHmmTo12h } from "../schemas/shiftFormSchema";
-import { WEEK_DAYS } from "@/lib/datetime";
+import { shiftFormSchema, ShiftFormData, computeShiftDuration, computeWorkHours, isOvernight, formatDurationMinutes } from "../schemas/shiftFormSchema";
+import { WEEK_DAYS, formatHHmmTo12h } from "@/lib/datetime";
 
 interface ShiftFormDialogProps {
   open: boolean;
@@ -227,7 +227,7 @@ export function ShiftFormDialog({
               </div>
               <Checkbox
                 checked={watchedNightShift}
-                onCheckedChange={(checked) => form.setValue("nightShift", checked)}
+                onCheckedChange={(checked) => form.setValue("nightShift", Boolean(checked))}
                 className="h-4 w-4 rounded cursor-pointer"
               />
             </div>
@@ -299,7 +299,7 @@ export function ShiftFormDialog({
             <Checkbox
               id="shift-active"
               checked={form.watch("isActive")}
-              onCheckedChange={(checked) => form.setValue("isActive", checked)}
+              onCheckedChange={(checked) => form.setValue("isActive", Boolean(checked))}
             />
             <Label htmlFor="shift-active" className="text-xs font-medium cursor-pointer">
               Active Shift (available for scheduling and roster assignment)

@@ -112,3 +112,8 @@ export function formatDateLocal(dateISO: string, timeZone?: string): string {
     day: "numeric",
   }).format(parsed);
 }
+
+export function parseTimeToMinutes(time: string): number {
+  const [h, m] = time.split(":").map(Number);
+  return h * 60 + m;
+}

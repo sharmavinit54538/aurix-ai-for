@@ -1,7 +1,8 @@
 import { z } from "zod";
-import { WEEK_DAYS } from "@/lib/datetime";
 
-export const weekDaySchema = z.enum(WEEK_DAYS as [string, ...string[]]);
+const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
+
+export const weekDaySchema = z.enum(WEEK_DAYS);
 
 export const shiftFormSchema = z
   .object({

@@ -629,18 +629,13 @@ function CheckInPage() {
       shiftM = parseInt(mStr, 10) || 0;
     }
 
-    const shiftStart = new Date(checkInDate);
+const shiftStart = new Date(checkInDate);
     shiftStart.setHours(shiftH, shiftM, 0, 0);
     const diffSec = Math.floor((checkInDate.getTime() - shiftStart.getTime()) / 1000);
     const graceSec = graceMinutes * 60;
     return diffSec > graceSec ? diffSec : 0;
   })();
-
-  function parseTimeToMinutes(time: string): number {
-    const [h, m] = time.split(":").map(Number);
-    return h * 60 + m;
-  }
-
+  
   const initials =
     user?.fullName
       ?.split(" ")
