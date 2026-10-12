@@ -99,7 +99,7 @@ export function ShiftFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit Shift Schedule" : "Create New Shift"}</DialogTitle>
           <DialogDescription>

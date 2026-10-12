@@ -4,6 +4,6 @@ import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
 const ShiftsPage = lazyFeaturePage(() => import("@/features/attendance/pages/ShiftsPage"));
 
 export const Route = createFileRoute("/dashboard/attendance/shifts")({
-  head: () => ({ meta: [{ title: "Shifts Management — OFC360" }] }),
+  head: () => ({ meta: [{ title: "Shift Management — OFC360" }] }),
   component: ShiftsPage,
 });

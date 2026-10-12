@@ -1,3 +1,5 @@
+"use client";
+
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -5,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { employeeOnboardingApi } from "@/services/employeeOnboardingApi";
+import { useShiftOptionsQuery } from "@/features/attendance/shifts/hooks/useShifts";
+import type { ShiftOption } from "@/services/attendance/types";
 
 interface EmploymentDetailsStepProps {
   initialData: any;
@@ -30,6 +34,8 @@ export function EmploymentDetailsStep({ initialData, onNext, onPrev }: Employmen
       employee_category: initialData?.employment?.employee_category || "",
     }
   });
+
+  const { data: shiftOptions, isLoading: shiftsLoading } = useShiftOptionsQuery();
 
   const onSubmit = async (data: any) => {
     try {
@@ -77,7 +83,34 @@ export function EmploymentDetailsStep({ initialData, onNext, onPrev }: Employmen
         </div>
         <div className="space-y-1">
           <Label className="font-bold text-foreground">Shift Timings</Label>
-          <Input {...register("shift")} disabled className="bg-muted" placeholder="Default Shift" />
+          <Select
+            value={watch("shift")}
+            onValueChange={(v) => setValue("shift", v)}
+            disabled={shiftsLoading}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={shiftsLoading ? "Loading shifts..." : "Select shift"} />
+            </SelectTrigger>
+            <SelectContent>
+              {shiftsLoading ? (
+                <SelectItem value="" disabled>
+                  <div className="flex items-center gap-2">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    Loading shifts...
+                  </div>
+                </SelectItem>
+              ) : (
+                <>
+                  <SelectItem value="">None</SelectItem>
+                  {shiftOptions?.map((shift: ShiftOption) => (
+                    <SelectItem key={shift.id} value={shift.id}>
+                      {shift.name} ({shift.code}) - {shift.start_time}–{shift.end_time} {shift.is_overnight ? "(Overnight)" : ""}
+                    </SelectItem>
+                  ))}
+                </>
+              )}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -121,12 +154,8 @@ export function EmploymentDetailsStep({ initialData, onNext, onPrev }: Employmen
       </div>
 
       <div className="flex justify-between pt-4">
-        <Button type="button" variant="outline" onClick={onPrev}>
-          Previous
-        </Button>
-        <Button type="submit">
-          Save & Continue
-        </Button>
+        <Button type="button" variant="outline" onClick={onPrev}>Previous</Button>
+        <Button type="submit">Save & Continue</Button>
       </div>
     </form>
   );

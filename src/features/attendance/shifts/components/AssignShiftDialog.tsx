@@ -143,7 +143,7 @@ export function AssignShiftDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) { setSelectedEmpIds([]); setAssignNotes(""); setSearch(""); setDebouncedSearch(""); } onOpenChange(o); }}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh]">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Assign Shift to Employees</DialogTitle>
           <DialogDescription>

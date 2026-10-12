@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,8 +10,8 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import type { Employee } from "../employeesTypes";
 import { DepartmentSelectContent } from "./DepartmentSelectContent";
 import { resolveDepartmentValue } from "../utils/departmentOptions";
-
-const SHIFT_OPTIONS = ["General", "Morning", "Evening", "Night"] as const;
+import { useShiftOptionsQuery } from "@/features/attendance/shifts/hooks/useShifts";
+import type { ShiftOption } from "@/services/attendance/types";
 
 interface EmployeeFormDialogProps {
   open: boolean;
@@ -28,6 +31,18 @@ export function EmployeeFormDialog({
   onSave,
 }: EmployeeFormDialogProps) {
   const departmentValue = resolveDepartmentValue(draft?.department);
+  const { data: shiftOptions, isLoading: shiftsLoading } = useShiftOptionsQuery();
+
+  // Keep shift in sync with options
+  useEffect(() => {
+    if (draft && shiftOptions && !shiftsLoading) {
+      const validShift = shiftOptions.find((s) => s.id === draft.shift || s.code === draft.shift || s.name === draft.shift);
+      if (!validShift && draft.shift) {
+        // If current shift not in options, keep it but it won't be in dropdown
+        // Could add a "Custom" option or just leave as is
+      }
+    }
+  }, [draft, shiftOptions, shiftsLoading]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -38,16 +53,29 @@ export function EmployeeFormDialog({
         {draft ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FormField label="Shift">
-              <Select value={draft.shift} onValueChange={(v) => onDraftChange({ ...draft, shift: v })}>
+              <Select
+                value={draft.shift || ""}
+                onValueChange={(v) => onDraftChange({ ...draft, shift: v })}
+                disabled={shiftsLoading}
+              >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder={shiftsLoading ? "Loading shifts..." : "Select shift"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {SHIFT_OPTIONS.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {s}
+                  {shiftsLoading ? (
+                    <SelectItem value="" disabled>
+                      <div className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading...</div>
                     </SelectItem>
-                  ))}
+                  ) : (
+                    <>
+                      <SelectItem value="">None</SelectItem>
+                      {shiftOptions?.map((shift: ShiftOption) => (
+                        <SelectItem key={shift.id} value={shift.id}>
+                          {shift.name} ({shift.code}) - {shift.start_time}–{shift.end_time} {shift.is_overnight ? "(Overnight)" : ""}
+                        </SelectItem>
+                      ))}
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </FormField>
@@ -55,49 +83,29 @@ export function EmployeeFormDialog({
               <Input value={draft.fullName} onChange={(e) => onDraftChange({ ...draft, fullName: e.target.value })} />
             </FormField>
             <FormField label="Email">
-              <Input
-                type="email"
-                value={draft.email}
-                onChange={(e) => onDraftChange({ ...draft, email: e.target.value })}
-              />
+              <Input type="email" value={draft.email} onChange={(e) => onDraftChange({ ...draft, email: e.target.value })} />
             </FormField>
             <FormField label="Phone">
               <Input value={draft.phone} onChange={(e) => onDraftChange({ ...draft, phone: e.target.value })} />
             </FormField>
             <FormField label="Department">
-              <Select
-                value={departmentValue}
-                onValueChange={(v) => onDraftChange({ ...draft, department: v })}
-              >
+              <Select value={departmentValue} onValueChange={(v) => onDraftChange({ ...draft, department: v })} >
                 <SelectTrigger>
                   <SelectValue placeholder="Select department" />
                 </SelectTrigger>
-                <DepartmentSelectContent
-                  key={draft.id || "new"}
-                  selectedValue={departmentValue}
-                  extraValues={draft.department ? [draft.department] : []}
-                />
+                <DepartmentSelectContent key={draft.id || "new"} selectedValue={departmentValue} extraValues={draft.department ? [draft.department] : []} />
               </Select>
             </FormField>
             <FormField label="Designation">
-              <Input
-                value={draft.designation}
-                onChange={(e) => onDraftChange({ ...draft, designation: e.target.value })}
-              />
+              <Input value={draft.designation} onChange={(e) => onDraftChange({ ...draft, designation: e.target.value })} />
             </FormField>
             <FormField label="Joining date">
-              <Input
-                type="date"
-                value={draft.joiningDate}
-                onChange={(e) => onDraftChange({ ...draft, joiningDate: e.target.value })}
-              />
+              <Input type="date" value={draft.joiningDate} onChange={(e) => onDraftChange({ ...draft, joiningDate: e.target.value })} />
             </FormField>
           </div>
         ) : null}
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={onSave} disabled={submitting}>
             {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Save

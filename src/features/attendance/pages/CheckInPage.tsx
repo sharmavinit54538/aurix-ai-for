@@ -26,9 +26,11 @@ import {
   TimelineEventItem,
   AttendanceHistoryItem,
   HolidayRecord,
-  EmployeeShiftScheduleData,
   AttendancePunchResult,
+  FaceAttendanceStatus,
+  FaceShiftSummary,
 } from "@/services/attendanceApi";
+import { formatHHmmTo12h, parseTimeToMinutes } from "@/lib/datetime";
 import { FaceAttendanceDialog, type FaceAttendanceMode } from "../components/FaceAttendanceDialog";
 
 // ── Types ─────────────────────────────────────────────────────
@@ -310,7 +312,7 @@ function CheckInPage() {
   // ── Backend Data ─────────────────────────────────────────────
   const [timeline, setTimeline] = useState<TimelineEventItem[]>([]);
   const [historyList, setHistoryList] = useState<AttendanceHistoryItem[]>([]);
-  const [assignedShift, setAssignedShift] = useState<EmployeeShiftScheduleData | null>(null);
+  const [faceAttendanceStatus, setFaceAttendanceStatus] = useState<FaceAttendanceStatus | null>(null);
   const [holidays, setHolidays] = useState<HolidayRecord[]>([]);
   const [employeeDetails, setEmployeeDetails] = useState<{
     id: string;
@@ -430,79 +432,25 @@ function CheckInPage() {
   const loadAttendanceState = useCallback(async () => {
     setApiError(null);
     try {
-      const [punchRes, timelineRes, historyRes, shiftRes, holidaysRes, empRes, faceStatusRes] =
+      const [punchRes, timelineRes, historyRes, faceStatusRes, holidaysRes, empRes] =
         await Promise.allSettled([
           attendanceApi.getMyTodayStatus(),
           attendanceApi.getTimeline(),
           attendanceApi.getMyAttendanceHistory(1, 20),
-          attendanceApi.getMyShiftSchedule(),
+          attendanceApi.getFaceAttendanceStatus(),
           attendanceApi.getHolidays({ year: new Date().getFullYear() }),
           attendanceApi.resolveCurrentEmployee(),
-          attendanceApi.getFaceStatus(),
         ]);
 
-      // 1. Process Face Status Check (Mandatory condition check)
+      // 1. Process Face Attendance Status (includes shift summary)
       if (faceStatusRes.status === "fulfilled") {
         const fs = faceStatusRes.value;
-        setIsFaceEnrolled(Boolean(fs.is_enrolled));
+        setFaceAttendanceStatus(fs);
+        setIsFaceEnrolled(Boolean(fs.faceRegistered));
         setEnrolledAt(fs.enrolled_at || null);
       } else {
+        setFaceAttendanceStatus(null);
         setIsFaceEnrolled(false);
-      }
-
-      // NOTE: Zero background camera auto-start here. Camera is only activated on user action.
-
-      // 2. Process Punch State
-      if (punchRes.status === "fulfilled") {
-        const p = punchRes.value;
-        if (p.checkedOut) {
-          setStatus("checked-out");
-        } else if (p.onBreak) {
-          setStatus("on-break");
-        } else if (p.checkedIn) {
-          setStatus("checked-in");
-        } else {
-          setStatus("not-checked-in");
-        }
-
-        if (p.checkInTime) {
-          const inDate = new Date(p.checkInTime);
-          checkInTimeRef.current = inDate;
-          if (p.checkedOut && p.workingHours) {
-            setWorkSec(Math.round(p.workingHours * 3600));
-          } else {
-            const elapsed = Math.max(0, Math.floor((Date.now() - inDate.getTime()) / 1000));
-            setWorkSec(elapsed);
-          }
-        }
-        if (p.breakDurationMinutes) {
-          setBreakSec(p.breakDurationMinutes * 60);
-        }
-      }
-
-      // 3. Process Timeline
-      if (timelineRes.status === "fulfilled") {
-        setTimeline(timelineRes.value || []);
-      }
-
-      // 4. Process Attendance History
-      if (historyRes.status === "fulfilled") {
-        setHistoryList(historyRes.value?.items || []);
-      }
-
-      // 5. Process Shift Info
-      if (shiftRes.status === "fulfilled") {
-        setAssignedShift(shiftRes.value);
-      }
-
-      // 6. Process Holidays
-      if (holidaysRes.status === "fulfilled") {
-        setHolidays(holidaysRes.value || []);
-      }
-
-      // 7. Process Employee Details
-      if (empRes.status === "fulfilled" && empRes.value) {
-        setEmployeeDetails(empRes.value);
       }
     } catch (err: any) {
       console.error("Error loading attendance state:", err);
@@ -651,11 +599,14 @@ function CheckInPage() {
   }
 
   // ── Overtime & Late calculation based on real backend data ────
-  const expectedHours = assignedShift?.currentShift?.totalWorkingHours ?? null;
+  const shiftSummary = faceAttendanceStatus?.shift;
+  const expectedHours = shiftSummary?.grace_period_mins != null 
+    ? Math.round((parseTimeToMinutes(shiftSummary.end_time) - parseTimeToMinutes(shiftSummary.start_time) + (shiftSummary.is_overnight ? 1440 : 0) - shiftSummary.grace_period_mins) / 60)
+    : null;
   const overtimeSec = expectedHours != null ? Math.max(0, workSec - expectedHours * 3600) : 0;
 
-  const shiftStartStr = assignedShift?.currentShift?.startTime;
-  const graceMinutes = assignedShift?.currentShift?.gracePeriodMinutes ?? 0;
+  const shiftStartStr = shiftSummary?.start_time;
+  const graceMinutes = shiftSummary?.grace_period_mins ?? 0;
 
   const lateBy = (() => {
     if (!checkInTimeRef.current || !shiftStartStr) return 0;
@@ -684,6 +635,11 @@ function CheckInPage() {
     const graceSec = graceMinutes * 60;
     return diffSec > graceSec ? diffSec : 0;
   })();
+
+  function parseTimeToMinutes(time: string): number {
+    const [h, m] = time.split(":").map(Number);
+    return h * 60 + m;
+  }
 
   const initials =
     user?.fullName
@@ -945,14 +901,14 @@ status === "checked-in" ? "bg-primary animate-pulse" : status === "on-break" ? "
               <StatCard
                 label="Working Hours"
                 value={fmtHM(workSec)}
-                hint={assignedShift?.currentShift?.totalWorkingHours ? `Expected: ${assignedShift.currentShift.totalWorkingHours}h` : "Flexible"}
+                hint={faceAttendanceStatus?.shift?.grace_period_mins != null ? `Expected: ${Math.round((parseTimeToMinutes(faceAttendanceStatus.shift.end_time) - parseTimeToMinutes(faceAttendanceStatus.shift.start_time) + (faceAttendanceStatus.shift.is_overnight ? 1440 : 0) - faceAttendanceStatus.shift.grace_period_mins) / 60)}h` : "Flexible"}
                 icon={Clock}
                 accent="brand"
               />
               <StatCard
                 label="Break Duration"
                 value={fmtHM(breakSec)}
-                hint={assignedShift?.currentShift?.breakDuration ? `Standard: ${assignedShift.currentShift.breakDuration}` : "Recorded time"}
+                hint={faceAttendanceStatus?.shift?.break_duration_mins ? `Standard: ${faceAttendanceStatus.shift.break_duration_mins} min` : "Recorded time"}
                 icon={Coffee}
                 accent="warning"
               />
@@ -966,7 +922,7 @@ status === "checked-in" ? "bg-primary animate-pulse" : status === "on-break" ? "
               <StatCard
                 label="Late By"
                 value={lateBy > 0 ? fmtHM(lateBy) : "On Time"}
-                hint={assignedShift?.currentShift?.gracePeriodMinutes ? `Grace: ${assignedShift.currentShift.gracePeriodMinutes}m` : "Standard timing"}
+                hint={faceAttendanceStatus?.shift?.grace_period_mins ? `Grace: ${faceAttendanceStatus.shift.grace_period_mins}m` : "Standard timing"}
                 icon={AlertCircle}
                 accent={lateBy > 0 ? "danger" : "success"}
               />
@@ -1011,45 +967,58 @@ status === "checked-in" ? "bg-primary animate-pulse" : status === "on-break" ? "
             <GlassCard>
               <SectionHeader title="Shift Information" icon={Briefcase} />
               <div className="space-y-2.5 text-sm">
-                {[
-                  {
-                    label: "Shift Name",
-                    value: assignedShift?.currentShift?.shiftName || "Not Assigned",
-                  },
-                  {
-                    label: "Timing",
-                    value:
-                      assignedShift?.currentShift?.startTime && assignedShift?.currentShift?.endTime
-                        ? `${assignedShift.currentShift.startTime} – ${assignedShift.currentShift.endTime}`
-                        : "Flexible Schedule",
-                  },
-                  {
-                    label: "Working Days",
-                    value: assignedShift?.currentShift?.workingDays?.join(", ") || "Flexible",
-                  },
-                  {
-                    label: "Expected Hours",
-                    value: assignedShift?.currentShift?.totalWorkingHours
-                      ? `${assignedShift.currentShift.totalWorkingHours}h 00m`
-                      : "—",
-                  },
-                  {
-                    label: "Grace Time",
-                    value:
-                      assignedShift?.currentShift?.gracePeriodMinutes != null
-                        ? `${assignedShift.currentShift.gracePeriodMinutes} minutes`
-                        : "—",
-                  },
-                  {
-                    label: "Break Duration",
-                    value: assignedShift?.currentShift?.breakDuration || "—",
-                  },
-                ].map((row) => (
-                  <div key={row.label} className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-muted/40 transition-colors">
-                    <span className="text-muted-foreground text-xs">{row.label}</span>
-                    <span className="font-medium text-xs">{row.value}</span>
+                {faceAttendanceStatus?.shift ? (
+                  <>
+                    <div className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-muted/40 transition-colors">
+                      <span className="text-muted-foreground text-xs">Shift Name</span>
+                      <span className="font-medium text-xs">{faceAttendanceStatus.shift.shift_name}</span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-muted/40 transition-colors">
+                      <span className="text-muted-foreground text-xs">Timing</span>
+                      <span className="font-medium text-xs">
+                        {formatHHmmTo12h(faceAttendanceStatus.shift.start_time)} – {formatHHmmTo12h(faceAttendanceStatus.shift.end_time)}
+                        {faceAttendanceStatus.shift.is_overnight && <span className="ml-2 text-xs text-purple-400">(Overnight)</span>}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-muted/40 transition-colors">
+                      <span className="text-muted-foreground text-xs">Source</span>
+                      <span className="font-medium text-xs capitalize">{faceAttendanceStatus.shift.source.replace("_", " ")}</span>
+                    </div>
+                    {faceAttendanceStatus.shift.is_off && (
+                      <div className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-muted/40 transition-colors">
+                        <span className="text-muted-foreground text-xs">Today</span>
+                        <Badge variant="outline" className="text-amber-400 border-amber-500/30">Weekly Off</Badge>
+                      </div>
+                    )}
+                    {faceAttendanceStatus.shift.is_holiday && (
+                      <div className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-muted/40 transition-colors">
+                        <span className="text-muted-foreground text-xs">Today</span>
+                        <Badge variant="outline" className="text-purple-400 border-purple-500/30">Holiday: {faceAttendanceStatus.shift.holiday_name}</Badge>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-muted/40 transition-colors">
+                      <span className="text-muted-foreground text-xs">Expected Hours</span>
+                      <span className="font-medium text-xs">
+                        {faceAttendanceStatus.shift.grace_period_mins != null
+                          ? Math.round((parseTimeToMinutes(faceAttendanceStatus.shift.end_time) - parseTimeToMinutes(faceAttendanceStatus.shift.start_time) + (faceAttendanceStatus.shift.is_overnight ? 1440 : 0) - faceAttendanceStatus.shift.grace_period_mins) / 60)
+                          : "—"
+                        }h
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-muted/40 transition-colors">
+                      <span className="text-muted-foreground text-xs">Grace Time</span>
+                      <span className="font-medium text-xs">{faceAttendanceStatus.shift.grace_period_mins} minutes</span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-muted/40 transition-colors">
+                      <span className="text-muted-foreground text-xs">Night Premium</span>
+                      <span className="font-medium text-xs">{faceAttendanceStatus.shift.night_premium_percent > 0 ? `+${faceAttendanceStatus.shift.night_premium_percent}%` : "Standard"}</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center py-4 text-muted-foreground">
+                    No shift assigned for today
                   </div>
-                ))}
+                )}
               </div>
             </GlassCard>
           </div>

@@ -147,6 +147,7 @@ export interface FaceAttendanceStatus {
   errorCode?: string;
   shift?: FaceShiftSummary;
   timezone?: string;
+  enrolled_at?: string | null;
 }
 
 export interface FaceShiftSummary {
@@ -155,11 +156,14 @@ export interface FaceShiftSummary {
   start_time: string;
   end_time: string;
   grace_period_mins: number;
+  break_duration_mins: number;
   is_overnight: boolean;
   is_off: boolean;
   is_holiday: boolean;
   holiday_name?: string | null;
   source: "roster" | "assignment" | "company_default" | "fallback";
+  night_shift: boolean;
+  night_premium_percent: number;
 }
 
 /**
