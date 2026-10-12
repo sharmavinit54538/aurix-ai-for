@@ -28,7 +28,7 @@ import { AssignShiftDialog } from "./components/AssignShiftDialog";
 import { DeleteShiftDialog } from "./components/DeleteShiftDialog";
 import { ChangeRequestsPanel } from "./components/ChangeRequestsPanel";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import type { Shift, ShiftCreatePayload, ShiftListResponse } from "@/services/attendance/types";
+import type { Shift, ShiftCreatePayload, ShiftListResponse, ShiftAssignPayload } from "@/services/attendance/types";
 import { WEEK_DAYS } from "@/lib/datetime";
 
 export function ShiftsPage() {
@@ -126,11 +126,37 @@ export function ShiftsPage() {
     setIsFormOpen(true);
   }, []);
 
-  const handleFormSubmit = useCallback(async (data: ShiftCreatePayload) => {
+  const handleFormSubmit = useCallback(async (data: {
+    name: string;
+    code: string;
+    startTime: string;
+    endTime: string;
+    gracePeriodMinutes: number;
+    breakDurationMinutes: number;
+    nightShift: boolean;
+    nightPremiumPercent: number;
+    workingDays: string[];
+    description?: string;
+    isActive: boolean;
+  }) => {
+    // Convert to snake_case for API
+    const apiData: ShiftCreatePayload = {
+      name: data.name,
+      code: data.code,
+      start_time: data.startTime,
+      end_time: data.endTime,
+      grace_period_minutes: data.gracePeriodMinutes,
+      break_duration_minutes: data.breakDurationMinutes,
+      night_shift: data.nightShift,
+      night_premium_percent: data.nightPremiumPercent,
+      working_days: data.workingDays,
+      description: data.description,
+      is_active: data.isActive,
+    };
     if (editingShift) {
-      await updateMutation.mutateAsync({ id: editingShift.id, data });
+      await updateMutation.mutateAsync({ id: editingShift.id, data: apiData });
     } else {
-      await createMutation.mutateAsync(data);
+      await createMutation.mutateAsync(apiData);
     }
     setEditingShift(null);
   }, [editingShift, createMutation, updateMutation]);
@@ -142,7 +168,13 @@ export function ShiftsPage() {
 
   const handleAssign = useCallback(async (payload: { employeeIds: string[]; effectiveDate: string; notes?: string }) => {
     if (!assignShift) return;
-    await assignMutation.mutateAsync({ shiftId: assignShift.id, payload });
+    // Convert to snake_case for the API
+    const apiPayload: ShiftAssignPayload = {
+      employee_ids: payload.employeeIds,
+      effective_date: payload.effectiveDate,
+      notes: payload.notes,
+    };
+    await assignMutation.mutateAsync({ shiftId: assignShift.id, payload: apiPayload });
   }, [assignShift, assignMutation]);
 
   const openDeleteDialog = useCallback((shift: Shift) => {
@@ -189,7 +221,7 @@ export function ShiftsPage() {
       />
 
       {/* ── Tabs ── */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <Tabs value={activeTab} onValueChange={(v: "shifts" | "change-requests") => setActiveTab(v)} className="space-y-4">
         <TabsList className="bg-card/60 border border-border p-1">
           <TabsTrigger value="shifts" className="gap-1.5 text-xs">
             <Clock className="h-3.5 w-3.5" /> Shifts ({total})

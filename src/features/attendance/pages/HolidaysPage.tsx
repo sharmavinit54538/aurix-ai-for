@@ -7,6 +7,7 @@ import { EmployeeHolidaysView } from "@/features/portal/employee/components/Empl
 import {
   Palmtree,
   Plus,
+  Check,
   Download,
   Upload,
   Trash2,
@@ -1032,7 +1033,7 @@ export default function HolidaysPage() {
 
       {/* Add / Edit / Duplicate Modal */}
       <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-        <DialogContent className="max-w-lg border border-border bg-card p-6 shadow-2xl backdrop-blur-xl sm:rounded-2xl">
+        <DialogContent className="max-w-lg border border-border bg-card p-6 shadow-2xl backdrop-blur-xl sm:rounded-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display text-lg font-semibold tracking-tight text-foreground">
               {modalMode === "add" ? "Add New Holiday" : modalMode === "edit" ? "Edit Holiday Details" : "Duplicate Holiday"}
@@ -1100,13 +1101,53 @@ export default function HolidaysPage() {
                   <option value="HR">HR & Ops</option>
                 </select>
               </div>
-              <div className="col-span-2 space-y-1.5">
-                <label className="font-semibold text-muted-foreground">Calendar Color Theme</label>
-                <div className="flex flex-wrap items-center gap-2">
-                  {PRESET_COLORS.map((c) => (
-                    <button key={c.value} type="button" onClick={() => setFormColor(c.value)} style={{ backgroundColor: c.value }} className={`h-6 w-6 rounded-full border transition-all ${formColor === c.value ? "ring-2 ring-white ring-offset-2 scale-110 border-white" : "border-transparent opacity-85 hover:opacity-100"}`} title={c.label} />
-                  ))}
-                  <input type="color" value={formColor} onChange={(e) => setFormColor(e.target.value)} className="h-6 w-8 rounded bg-transparent border-0 cursor-pointer" />
+              <div className="col-span-2 space-y-2 pt-1">
+                <label className="text-xs font-semibold text-muted-foreground block">Calendar Color Theme</label>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  {PRESET_COLORS.map((c) => {
+                    const isSelected = formColor.toLowerCase() === c.value.toLowerCase();
+                    return (
+                      <button
+                        key={c.value}
+                        type="button"
+                        onClick={() => setFormColor(c.value)}
+                        style={{ backgroundColor: c.value }}
+                        className={`h-7 w-7 rounded-full transition-all flex items-center justify-center cursor-pointer ${
+                          isSelected
+                            ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110 shadow-sm"
+                            : "opacity-80 hover:opacity-100 hover:scale-105 border border-white/10"
+                        }`}
+                        title={c.label}
+                      >
+                        {isSelected && <Check className="h-3.5 w-3.5 text-white drop-shadow-sm" />}
+                      </button>
+                    );
+                  })}
+                  <label
+                    className={`relative flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border transition-all ${
+                      !PRESET_COLORS.some((c) => c.value.toLowerCase() === formColor.toLowerCase())
+                        ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110 border-white/30 shadow-sm"
+                        : "border-border/80 bg-muted/40 hover:bg-muted hover:scale-105 text-muted-foreground hover:text-foreground"
+                    }`}
+                    style={{
+                      backgroundColor: !PRESET_COLORS.some((c) => c.value.toLowerCase() === formColor.toLowerCase())
+                        ? formColor
+                        : undefined,
+                    }}
+                    title="Choose custom color"
+                  >
+                    <input
+                      type="color"
+                      value={formColor}
+                      onChange={(e) => setFormColor(e.target.value)}
+                      className="sr-only"
+                    />
+                    {!PRESET_COLORS.some((c) => c.value.toLowerCase() === formColor.toLowerCase()) ? (
+                      <Check className="h-3.5 w-3.5 text-white drop-shadow-sm" />
+                    ) : (
+                      <Plus className="h-3.5 w-3.5" />
+                    )}
+                  </label>
                 </div>
               </div>
               <div className="col-span-2 grid grid-cols-2 gap-3 py-1 bg-muted/10 rounded-xl px-3 border border-border">
@@ -1148,7 +1189,7 @@ export default function HolidaysPage() {
 
       {/* Import Modal */}
       <Dialog open={isImportModalOpen} onOpenChange={setIsImportModalOpen}>
-        <DialogContent className="max-w-xl border border-border bg-card p-6 shadow-2xl backdrop-blur-xl sm:rounded-2xl">
+        <DialogContent className="max-w-xl border border-border bg-card p-6 shadow-2xl backdrop-blur-xl sm:rounded-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display text-lg font-semibold tracking-tight text-foreground">Import Holidays from CSV/Excel</DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">Bulk upload public and custom regional holidays instantly.</DialogDescription>
