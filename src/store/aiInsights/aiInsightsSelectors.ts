@@ -127,7 +127,7 @@ export const selectAIInsightsPayrollAlerts = createSelector(
 export const selectAIInsightsPayrollTrend = createSelector(
   [selectAIInsightsState],
   (state) => (Array.isArray(state?.charts?.payrollTrend) ? state.charts.payrollTrend : []),
-) as () => PayrollTrendItem[];
+) as (state: RootState) => PayrollTrendItem[];
 
 export const selectAIInsightsHasDataFlag = createSelector(
   [selectAIInsightsState],

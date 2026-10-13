@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { motion, useId } from "framer-motion";
+import { motion } from "framer-motion";
+import { useId } from "react";
 import { ArrowUpRight, ArrowDownRight, ChevronLeft, type LucideIcon } from "lucide-react";
 import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, Line, LineChart,
