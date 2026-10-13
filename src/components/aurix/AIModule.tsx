@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { motion } from "framer-motion";
+import { motion, useId } from "framer-motion";
 import { ArrowUpRight, ArrowDownRight, ChevronLeft, type LucideIcon } from "lucide-react";
 import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, Line, LineChart,
@@ -26,7 +26,7 @@ export type AIFeature = {
   tone?: "ok" | "warn" | "crit" | "info";
 };
 
-export type AIRow = Record<string, string | number>;
+export type AIRow = Record<string, string | number | null>;
 
 export type AIChart = {
   type: "area" | "bar" | "line";
@@ -99,7 +99,8 @@ export function KpiGrid({ items }: { items: AIKpi[] }) {
     <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {items.map((k, i) => {
         const Icon = k.icon;
-        const up = (k.trend ?? 0) >= 0;
+        const trend = k.trend ?? 0;
+        const up = trend >= 0;
         const positive = k.invert ? !up : up;
         return (
           <motion.div
@@ -113,10 +114,10 @@ export function KpiGrid({ items }: { items: AIKpi[] }) {
               <div className="grid h-9 w-9 place-items-center rounded-lg bg-accent text-foreground">
                 <Icon className="h-4 w-4" />
               </div>
-              {k.trend !== undefined ? (
+              {trend !== 0 ? (
                 <span className={`inline-flex items-center gap-0.5 text-xs font-medium ${positive ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>
                   {up ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-                  {Math.abs(k.trend)}%
+                  {Math.abs(trend)}%
                 </span>
               ) : null}
             </div>
@@ -132,6 +133,7 @@ export function KpiGrid({ items }: { items: AIKpi[] }) {
 
 export function ChartCard({ chart }: { chart: AIChart }) {
   const { type, title, description, data, xKey, series } = chart;
+  const uid = useId().replace(/:/g, "");
   return (
     <div className="rounded-2xl border border-border bg-card/60 p-5 backdrop-blur-xl">
       <div className="mb-4">
@@ -144,7 +146,7 @@ export function ChartCard({ chart }: { chart: AIChart }) {
             <AreaChart data={data} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
               <defs>
                 {series.map((s, i) => (
-                  <linearGradient key={s.key} id={`g-${title}-${s.key}`} x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient key={s.key} id={`${uid}-${s.key}`} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor={s.color ?? COLORS[i % COLORS.length]} stopOpacity={0.5} />
                     <stop offset="100%" stopColor={s.color ?? COLORS[i % COLORS.length]} stopOpacity={0} />
                   </linearGradient>
@@ -156,7 +158,7 @@ export function ChartCard({ chart }: { chart: AIChart }) {
               <Tooltip contentStyle={{ background: "var(--color-popover)", border: "1px solid var(--color-border)", borderRadius: 8, fontSize: 12 }} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
               {series.map((s, i) => (
-                <Area key={s.key} type="monotone" dataKey={s.key} name={s.label} stroke={s.color ?? COLORS[i % COLORS.length]} fill={`url(#g-${title}-${s.key})`} strokeWidth={2} />
+                <Area key={s.key} type="monotone" dataKey={s.key} name={s.label} stroke={s.color ?? COLORS[i % COLORS.length]} fill={`url(#${uid}-${s.key})`} strokeWidth={2} />
               ))}
             </AreaChart>
           ) : type === "bar" ? (

@@ -80,6 +80,11 @@ export interface SatisfactionTrendItem {
   s: number;
 }
 
+export interface PayrollTrendItem {
+  m: string;
+  cost: number;
+}
+
 export interface AlertItem {
   id?: string;
   title: string;
@@ -113,7 +118,7 @@ export interface AIInsightsCharts {
   headcountForecast: HeadcountForecastItem[];
   hiringDemand: HiringDemandItem[];
   satisfactionTrend: SatisfactionTrendItem[];
-  payrollTrend?: unknown[];
+  payrollTrend?: PayrollTrendItem[];
 }
 
 export interface RecruitmentData {

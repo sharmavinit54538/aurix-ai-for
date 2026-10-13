@@ -1,5 +1,6 @@
 import { createSelector } from "@reduxjs/toolkit";
 import type { RootState } from "@/redux/store";
+import type { PayrollTrendItem } from "./aiInsightsTypes";
 
 export const selectAIInsightsState = (state: RootState) => state.aiInsights;
 
@@ -126,7 +127,7 @@ export const selectAIInsightsPayrollAlerts = createSelector(
 export const selectAIInsightsPayrollTrend = createSelector(
   [selectAIInsightsState],
   (state) => (Array.isArray(state?.charts?.payrollTrend) ? state.charts.payrollTrend : []),
-);
+) as () => PayrollTrendItem[];
 
 export const selectAIInsightsHasDataFlag = createSelector(
   [selectAIInsightsState],

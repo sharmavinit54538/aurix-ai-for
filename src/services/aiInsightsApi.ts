@@ -6,6 +6,7 @@ import type {
   AttritionItem,
   BurnoutItem,
   KpiItem,
+  PayrollTrendItem,
   PerformanceData,
   RecruitmentData,
 } from "@/store/aiInsights/aiInsightsTypes";
@@ -24,6 +25,8 @@ export function normalizeDashboardData(data: Partial<AIInsightsDashboardData> | 
       alerts: [],
       recommendations: [],
       documents: [],
+      payroll: undefined,
+      payrollAlerts: [],
     };
   }
 
@@ -57,11 +60,14 @@ export function normalizeDashboardData(data: Partial<AIInsightsDashboardData> | 
           headcountForecast: Array.isArray(data.charts.headcountForecast) ? data.charts.headcountForecast : [],
           hiringDemand: Array.isArray(data.charts.hiringDemand) ? data.charts.hiringDemand : [],
           satisfactionTrend: Array.isArray(data.charts.satisfactionTrend) ? data.charts.satisfactionTrend : [],
+          payrollTrend: Array.isArray(data.charts.payrollTrend) ? data.charts.payrollTrend : [],
         }
       : undefined,
     alerts: Array.isArray(data.alerts) ? data.alerts : [],
     recommendations: Array.isArray(data.recommendations) ? data.recommendations : [],
     documents: Array.isArray(data.documents) ? data.documents : [],
+    payroll: data.payroll ?? undefined,
+    payrollAlerts: Array.isArray(data.payrollAlerts) ? data.payrollAlerts : [],
   };
 }
 
@@ -125,6 +131,7 @@ export const aiInsightsApi = {
       headcountForecast: Array.isArray(data.headcountForecast) ? data.headcountForecast : [],
       hiringDemand: Array.isArray(data.hiringDemand) ? data.hiringDemand : [],
       satisfactionTrend: Array.isArray(data.satisfactionTrend) ? data.satisfactionTrend : [],
+      payrollTrend: Array.isArray(data.payrollTrend) ? data.payrollTrend : [],
     };
   },
 

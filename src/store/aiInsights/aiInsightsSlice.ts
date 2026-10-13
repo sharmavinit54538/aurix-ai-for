@@ -16,6 +16,9 @@ const initialState: AIInsightsState = {
   loading: false,
   error: null,
   lastUpdated: null,
+  hasDataFlag: undefined,
+  partial: false,
+  partialErrors: null,
   dashboard: null,
   kpi: [],
   attrition: [],
@@ -27,6 +30,8 @@ const initialState: AIInsightsState = {
   alerts: [],
   recommendations: [],
   documents: [],
+  payroll: undefined,
+  payrollAlerts: [],
 };
 
 export const aiInsightsSlice = createSlice({
@@ -80,8 +85,11 @@ export const aiInsightsSlice = createSlice({
             headcountForecast: Array.isArray(data.charts.headcountForecast) ? data.charts.headcountForecast : [],
             hiringDemand: Array.isArray(data.charts.hiringDemand) ? data.charts.hiringDemand : [],
             satisfactionTrend: Array.isArray(data.charts.satisfactionTrend) ? data.charts.satisfactionTrend : [],
+            payrollTrend: Array.isArray(data.charts.payrollTrend) ? data.charts.payrollTrend : [],
           };
         }
+        if (data.payroll) state.payroll = data.payroll;
+        if (Array.isArray(data.payrollAlerts)) state.payrollAlerts = data.payrollAlerts;
         if (Array.isArray(data.alerts)) state.alerts = data.alerts;
         if (Array.isArray(data.recommendations)) state.recommendations = data.recommendations;
         if (Array.isArray(data.documents)) state.documents = data.documents;
@@ -136,6 +144,7 @@ export const aiInsightsSlice = createSlice({
           headcountForecast: Array.isArray(action.payload.headcountForecast) ? action.payload.headcountForecast : [],
           hiringDemand: Array.isArray(action.payload.hiringDemand) ? action.payload.hiringDemand : [],
           satisfactionTrend: Array.isArray(action.payload.satisfactionTrend) ? action.payload.satisfactionTrend : [],
+          payrollTrend: Array.isArray(action.payload.payrollTrend) ? action.payload.payrollTrend : [],
         };
       }
     });

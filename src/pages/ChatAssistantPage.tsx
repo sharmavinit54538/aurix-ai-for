@@ -12,13 +12,10 @@ import {
   Check,
   Loader2,
   Plus,
-  Trash2,
   ThumbsUp,
   ThumbsDown,
   BarChart3,
-  History,
 } from "lucide-react";
-import { AIHero } from "@/components/aurix/AIModule";
 import { AgentToolCallCard } from "@/features/autopilot/components/AgentToolCallCard";
 import { autopilotApi } from "@/features/autopilot/services/autopilotApi";
 import { Button } from "@/components/ui/button";
@@ -555,128 +552,30 @@ export default function ChatAssistantPage() {
   const conversations = chatAssistantSection?.data?.conversations || [];
 
   return (
-    <div className="space-y-6">
-      <AIHero
-        icon={MessageSquare}
-        eyebrow="Central People AI Agent"
-        title="Command your entire workforce with natural language"
-        description="Search candidates, shortlist applicants, draft offer letters, trigger onboardings, and inspect payroll through an intelligent central conversational interface backed by live LLM inference."
-        lastAnalysis="Active & Connected"
-      />
-
-      {/* Suggested Quick Commands */}
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
-          <Sparkles className="h-3.5 w-3.5 text-indigo-400" /> Quick Commands:
-        </span>
-        {suggestions.map((item, idx) => (
-          <Button
-            key={idx}
-            variant="outline"
-            size="sm"
-            className="h-7 text-xs bg-background/60 hover:bg-accent/80 border-border/60 transition-colors"
-            onClick={() => handleExecuteCommand(item.cmd)}
-            disabled={isSending}
-          >
-            {item.label}
-          </Button>
-        ))}
-      </div>
-
-      {/* Mobile Conversation Switcher */}
-      <div className="flex md:hidden items-center justify-between gap-2 p-2 rounded-xl border border-border bg-card/60">
-        <div className="flex items-center gap-1.5 text-xs font-medium text-foreground">
-          <History className="h-3.5 w-3.5 text-indigo-400" />
-          <span className="truncate max-w-[200px]">
-            {conversations.find((c) => c.id === currentConversationId)?.title || "Current Chat"}
-          </span>
-        </div>
-        <div className="flex items-center gap-1.5">
+    <div className="h-[calc(100vh-140px)] min-h-[600px] flex flex-col">
+      {/* Main Chat Window */}
+      <div className="flex flex-1 flex-col rounded-2xl border border-border bg-card/60 backdrop-blur-xl shadow-sm overflow-hidden">
+        {/* Chat Window Header */}
+        <div className="flex items-center justify-between px-5 py-3 border-b border-border/60 bg-card/80 backdrop-blur shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+              <MessageSquare className="h-4 w-4" />
+            </div>
+            <div className="text-sm font-semibold text-foreground">
+              Aurix People AI
+            </div>
+          </div>
           <Button
             size="sm"
             variant="outline"
-            className="h-7 text-xs gap-1"
+            className="h-8 text-xs gap-1.5 bg-background/60 hover:bg-accent border-border/60 cursor-pointer"
             onClick={handleNewChat}
           >
-            <Plus className="h-3 w-3" /> New
+            <Plus className="h-3.5 w-3.5" /> New Chat
           </Button>
         </div>
-      </div>
 
-      {/* Responsive Chat Layout (History Sidebar + Chat Window) */}
-      <div className="flex flex-col md:flex-row gap-4 h-[calc(100vh-270px)] min-h-[520px] max-h-[750px]">
-        {/* Desktop Sidebar: Past Conversations */}
-        <div className="hidden md:flex w-64 shrink-0 flex-col rounded-2xl border border-border bg-card/60 backdrop-blur-xl p-3 shadow-sm">
-          <div className="flex items-center justify-between pb-3 border-b border-border/60">
-            <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-              <History className="h-3.5 w-3.5 text-indigo-400" /> Chat History
-            </span>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 text-xs gap-1 bg-background/50 hover:bg-accent cursor-pointer"
-              onClick={handleNewChat}
-            >
-              <Plus className="h-3 w-3" /> New
-            </Button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto space-y-1 pt-2 pr-1">
-            {conversations.length === 0 ? (
-              <div className="text-center py-8 text-[11px] text-muted-foreground">
-                No past conversations
-              </div>
-            ) : (
-              conversations.map((conv) => {
-                const isActive = conv.id === currentConversationId;
-                return (
-                  <div
-                    key={conv.id}
-                    onClick={() => handleSelectConversation(conv.id)}
-                    className={`group flex items-center justify-between rounded-lg px-2.5 py-2 text-xs transition-colors cursor-pointer ${
-                      isActive
-                        ? "bg-primary/10 text-primary font-medium border border-primary/20"
-                        : "text-muted-foreground hover:bg-accent/60 hover:text-foreground border border-transparent"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 min-w-0 flex-1 mr-1">
-                      <MessageSquare className="h-3.5 w-3.5 shrink-0" />
-                      <span className="truncate">{conv.title || "Chat Conversation"}</span>
-                    </div>
-                    <button
-                      type="button"
-                      aria-label="Delete conversation"
-                      onClick={(e) => handleDeleteConversation(conv.id, e)}
-                      className="opacity-0 group-hover:opacity-100 p-1 hover:text-destructive transition-opacity cursor-pointer rounded"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </button>
-                  </div>
-                );
-              })
-            )}
-          </div>
-
-          {/* Activity History Log */}
-          {activityHistory.length > 0 && (
-            <div className="mt-2 pt-2 border-t border-border/60">
-              <div className="text-[10px] font-semibold uppercase text-muted-foreground mb-1.5 flex items-center gap-1">
-                <Sparkles className="h-3 w-3 text-indigo-400" /> Recent Actions
-              </div>
-              <div className="space-y-1 max-h-24 overflow-y-auto pr-1">
-                {activityHistory.slice(0, 4).map((act, aIdx) => (
-                  <div key={aIdx} className="text-[10px] text-muted-foreground truncate" title={act}>
-                    • {act}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Main Chat Window */}
-        <div className="flex flex-1 flex-col rounded-2xl border border-border bg-card/60 backdrop-blur-xl shadow-sm overflow-hidden">
-          {/* Messages Feed */}
+        {/* Messages Feed */}
           <div className="flex-1 space-y-4 overflow-y-auto p-5 text-xs">
             {msgs.map((m) => {
               const isUser = m.role === "user" || m.sender === "user";
@@ -1172,7 +1071,6 @@ export default function ChatAssistantPage() {
             </Button>
           </form>
         </div>
-      </div>
 
       {/* Action Confirmation Modal */}
       {confirmModal && (
