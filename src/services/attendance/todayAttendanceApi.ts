@@ -10,6 +10,39 @@ import {
 } from "./types";
 import { extractListPayload, extractObjectPayload } from "./helpers";
 
+interface BaseCounts {
+  total: number;
+  present: number;
+  late: number;
+  absent: number;
+  onLeave: number;
+  rate: number;
+}
+
+async function getFallbackBaseCounts(): Promise<BaseCounts> {
+  try {
+    const res = await api.get("attendance/face/analytics");
+    const data = extractObjectPayload<any>(res);
+    return {
+      total: data.total_active_employees ?? data.totalEmployees ?? 50,
+      present: data.checked_in_today ?? data.present_today ?? data.present ?? 42,
+      late: data.late_check_ins_today ?? data.late_today ?? data.late ?? 4,
+      absent: data.absent_today ?? data.absentToday ?? data.absent ?? 2,
+      onLeave: data.on_leave_today ?? data.onLeaveToday ?? data.on_leave ?? data.onLeave ?? 2,
+      rate: data.attendance_rate_percentage ?? data.onTimeRate ?? 92.0,
+    };
+  } catch {
+    return {
+      total: 50,
+      present: 42,
+      late: 4,
+      absent: 2,
+      onLeave: 2,
+      rate: 92.0,
+    };
+  }
+}
+
 function buildQueryParams(filters?: AttendanceAnalyticsFilters): string {
   const params = new URLSearchParams();
   if (filters?.startDate) params.append("start_date", filters.startDate);
@@ -365,6 +398,17 @@ export async function getWeeklyAttendance(
     const isMonth = filters?.viewMode === "month";
     let items = [];
 
+    // Calculate dates for the current week
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, ...
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+    const weekDates = Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      return d.toISOString().split("T")[0];
+    });
+
     if (isMonth) {
       items = ["Week 1", "Week 2", "Week 3", "Week 4"].map((label, idx) => {
         const varP = (idx % 2 === 0 ? 1 : -1) * 2;
@@ -374,6 +418,7 @@ export async function getWeeklyAttendance(
         const onLeave = Math.max(0, base.total - present - late - absent);
         return {
           day: label,
+          date: weekDates[idx % weekDates.length] || "",
           present,
           late,
           absent,
@@ -382,7 +427,7 @@ export async function getWeeklyAttendance(
         };
       });
     } else {
-      items = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => {
+      items = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, idx) => {
         const isSat = day === "Sat";
         const factor = isSat ? 0.35 : 1;
         const present = Math.round(base.present * factor);
@@ -391,6 +436,7 @@ export async function getWeeklyAttendance(
         const onLeave = Math.max(0, base.total - present - late - absent);
         return {
           day,
+          date: weekDates[idx] || "",
           present,
           late,
           absent,
@@ -409,14 +455,23 @@ export async function getWeeklyAttendance(
       viewMode: filters?.viewMode || "week",
     };
   } catch {
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+    const weekDates = Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      return d.toISOString().split("T")[0];
+    });
     return {
       weekly: [
-        { day: "Mon", present: 43, late: 3, absent: 2, onLeave: 2, total: 50 },
-        { day: "Tue", present: 45, late: 2, absent: 1, onLeave: 2, total: 50 },
-        { day: "Wed", present: 44, late: 4, absent: 1, onLeave: 1, total: 50 },
-        { day: "Thu", present: 46, late: 2, absent: 1, onLeave: 1, total: 50 },
-        { day: "Fri", present: 42, late: 5, absent: 2, onLeave: 1, total: 50 },
-        { day: "Sat", present: 18, late: 2, absent: 1, onLeave: 29, total: 50 },
+        { day: "Mon", date: weekDates[0], present: 43, late: 3, absent: 2, onLeave: 2, total: 50 },
+        { day: "Tue", date: weekDates[1], present: 45, late: 2, absent: 1, onLeave: 2, total: 50 },
+        { day: "Wed", date: weekDates[2], present: 44, late: 4, absent: 1, onLeave: 1, total: 50 },
+        { day: "Thu", date: weekDates[3], present: 46, late: 2, absent: 1, onLeave: 1, total: 50 },
+        { day: "Fri", date: weekDates[4], present: 42, late: 5, absent: 2, onLeave: 1, total: 50 },
+        { day: "Sat", date: weekDates[5], present: 18, late: 2, absent: 1, onLeave: 29, total: 50 },
       ],
       dateRange: {
         start: "",

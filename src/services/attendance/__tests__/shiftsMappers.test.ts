@@ -13,7 +13,7 @@ import {
   mapShiftEmployees,
   shiftCreatePayloadSchema,
   shiftUpdatePayloadSchema,
-} from "./shiftsMappers";
+} from "../shiftsMappers";
 
 describe("shiftsMappers", () => {
   describe("mapShift", () => {

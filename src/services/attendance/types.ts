@@ -371,6 +371,7 @@ export interface MyShiftInfo {
   night_shift: boolean;
   night_premium_percent: number;
   working_days: WeekDay[];
+  shiftType?: string;
 }
 
 export interface MyTodayShift {
@@ -428,41 +429,53 @@ export interface MyShiftHistory {
 
 /**
  * Roster types (from /rosters).
+ * Properties use camelCase to match runtime API contract and UI consumption.
  */
 export interface RosterEntryRecord {
   id: string;
-  employee_id: string;
-  employee_name: string;
+  employeeId: string;
+  employeeName: string;
   department: string;
   designation: string;
   date: string;
   shift: string;
-  shift_id?: string;
-  start_time: string;
-  end_time: string;
-  working_hours: number | null;
-  break_time: string;
+  shiftId?: string;
+  startTime: string;
+  endTime: string;
+  workingHours: number | null;
+  breakTime: string;
   location: string;
   manager: string;
   status: "Approved" | "Pending" | "Rejected";
+  // snake_case fallbacks for backward compatibility with API responses
+  employee_id?: string;
+  employee_name?: string;
+  shift_id?: string;
+  start_time?: string;
+  end_time?: string;
+  working_hours?: number | null;
+  break_time?: string;
 }
 
 export interface RosterCreatePayload {
-  employee_id: string;
-  employee_name: string;
-  department: string;
-  designation: string;
+  employeeId: string;
   date: string;
   shift: string;
-  shift_id?: string;
-  start_time: string;
-  end_time: string;
-  working_hours?: number | null;
-  break_time: string;
+  shiftId?: string;
+  startTime: string;
+  endTime: string;
+  workingHours?: number | null;
+  breakTime: string;
   location: string;
-  manager: string;
   status: "Approved" | "Pending" | "Rejected";
   recurring?: boolean;
+  // snake_case fallbacks
+  employee_id?: string;
+  shift_id?: string;
+  start_time?: string;
+  end_time?: string;
+  working_hours?: number | null;
+  break_time?: string;
 }
 
 export interface HolidayRecord {
@@ -476,14 +489,20 @@ export interface HolidayRecord {
   office: string;
   department: string;
   status: "Active" | "Archived";
-  created_by: string;
-  created_date: string;
-  updated_date: string;
+  createdBy: string;
+  createdDate: string;
+  updatedDate: string;
   notes?: string;
   color?: string;
   recurring: boolean;
-  every_year: boolean;
-  apply_to_all: boolean;
+  everyYear: boolean;
+  applyToAll: boolean;
+  // snake_case fallbacks for backward compatibility
+  created_by?: string;
+  created_date?: string;
+  updated_date?: string;
+  every_year?: boolean;
+  apply_to_all?: boolean;
 }
 
 export interface HolidayCreatePayload {
@@ -497,9 +516,12 @@ export interface HolidayCreatePayload {
   department?: string;
   color?: string;
   recurring?: boolean;
+  everyYear?: boolean;
+  applyToAll?: boolean;
+  notes?: string;
+  // snake_case fallbacks
   every_year?: boolean;
   apply_to_all?: boolean;
-  notes?: string;
 }
 
 export type ShiftApiErrorCode =
@@ -542,4 +564,83 @@ export interface ShiftEmployeesResponse {
   total: number;
   page: number;
   limit: number;
+}
+
+/**
+ * Backwards-compatible type aliases for portal self-service types
+ */
+export type EmployeeShiftInfo = MyShiftInfo;
+export type UpcomingShiftItem = MyUpcomingShift;
+export type ShiftHistoryItem = MyShiftHistory;
+export type ScheduleChangeRequestPayload = CreateChangeRequestPayload;
+
+/**
+ * EmployeeShiftScheduleData - matches the return shape from portalSelfServiceApi.ts getMyShiftSchedule()
+ */
+export interface EmployeeShiftScheduleData {
+  hasAssignedShift: boolean;
+  employeeId: string;
+  employeeName: string;
+  department: string;
+  designation: string;
+  branch: string;
+  currentShift: EmployeeShiftInfo | null;
+  todayShift: {
+    date: string;
+    day: string;
+    shift: EmployeeShiftInfo & {
+      shiftName: string;
+      startTime: string;
+      endTime: string;
+      breakDuration: string;
+      breakWindow: string;
+      totalWorkingHours: number;
+      gracePeriodMinutes: number;
+      nightPremiumPercent: number;
+      workingDays: WeekDay[];
+    };
+    checkedIn: boolean;
+    checkedOut: boolean;
+    checkInTime: string | null;
+    checkOutTime: string | null;
+    workingHours: number | null;
+    isOffDay: boolean;
+  } | null;
+  upcomingShifts: Array<{
+    id: string;
+    date: string;
+    day: string;
+    shiftName: string;
+    startTime: string;
+    endTime: string;
+    breakDuration: string;
+    workingHours: number | null;
+    shiftType: string;
+    status: "Scheduled" | "Off Day" | "Holiday";
+  }>;
+  shiftHistory: Array<{
+    id: string;
+    date: string;
+    day: string;
+    shiftName: string;
+    checkInTime: string | null;
+    checkOutTime: string | null;
+    workingHours: number | null;
+    status: string;
+  }>;
+}
+
+/**
+ * RosterDayItem - matches the shape used in EmployeeRostersView.tsx and portalSelfServiceApi.ts
+ */
+export interface RosterDayItem {
+  id: string;
+  date: string;
+  day: string;
+  shiftName: string;
+  startTime: string;
+  endTime: string;
+  workingHours: number | null;
+  status: "Working" | "Weekly Off" | "Holiday" | "Leave" | "Rest Day";
+  notes?: string;
 }

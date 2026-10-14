@@ -185,7 +185,8 @@ apiInstance.request = async function <T = any, R = any, D = any>(config: any): P
   // On any mutating method, clear cached GET data to ensure freshness
   if (method === "post" || method === "put" || method === "patch" || method === "delete") {
     clearApiCache();
-    return rawRequest(config);
+    const response = await rawRequest(config);
+    return response.data as R;
   }
 
   // Deduplicate and cache GET requests
@@ -204,11 +205,11 @@ apiInstance.request = async function <T = any, R = any, D = any>(config: any): P
         return Promise.resolve({
           ...cached.response,
           data: cloneResponseData(cached.response.data),
-        });
+        }).then((res) => res.data as R);
       }
 
       if (inFlightRequests.has(key)) {
-        return inFlightRequests.get(key)!;
+        return inFlightRequests.get(key)!.then((res) => res.data as R);
       }
     }
 
@@ -230,10 +231,11 @@ apiInstance.request = async function <T = any, R = any, D = any>(config: any): P
       inFlightRequests.set(key, promise);
     }
 
-    return promise;
+    return promise.then((res) => res.data as R);
   }
 
-  return rawRequest(config);
+  const response = await rawRequest(config);
+  return response.data as R;
 };
 
 export default apiInstance;

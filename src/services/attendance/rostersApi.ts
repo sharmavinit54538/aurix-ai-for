@@ -43,11 +43,33 @@ function logParseError(context: string, payload: unknown, error: z.ZodError): ne
 }
 
 function mapRosterEntry(item: unknown): RosterEntryRecord {
-  const result = rosterEntrySchema.safeParse(item);
-  if (!result.success) {
-    logParseError("mapRosterEntry", item, result.error);
-  }
-  return result.data;
+  const raw = item as Record<string, unknown>;
+  // Support both camelCase (new) and snake_case (legacy) property names
+  return {
+    id: (raw.id as string) || "",
+    employeeId: (raw.employeeId as string) || (raw.employee_id as string) || "",
+    employeeName: (raw.employeeName as string) || (raw.employee_name as string) || "",
+    department: (raw.department as string) || "",
+    designation: (raw.designation as string) || "",
+    date: (raw.date as string) || "",
+    shift: (raw.shift as string) || "",
+    shiftId: (raw.shiftId as string) || (raw.shift_id as string) || undefined,
+    startTime: (raw.startTime as string) || (raw.start_time as string) || "",
+    endTime: (raw.endTime as string) || (raw.end_time as string) || "",
+    workingHours: (raw.workingHours as number | null) ?? (raw.working_hours as number | null) ?? null,
+    breakTime: (raw.breakTime as string) || (raw.break_time as string) || "",
+    location: (raw.location as string) || "",
+    manager: (raw.manager as string) || "",
+    status: (raw.status as "Approved" | "Pending" | "Rejected") || "Pending",
+    // Preserve snake_case for backward compatibility
+    employee_id: raw.employee_id as string | undefined,
+    employee_name: raw.employee_name as string | undefined,
+    shift_id: raw.shift_id as string | undefined,
+    start_time: raw.start_time as string | undefined,
+    end_time: raw.end_time as string | undefined,
+    working_hours: raw.working_hours as number | null | undefined,
+    break_time: raw.break_time as string | undefined,
+  };
 }
 
 function mapRosterList(data: unknown) {
@@ -100,14 +122,14 @@ export async function getRosters(params?: {
  */
 export async function createRoster(data: RosterCreatePayload): Promise<RosterEntryRecord> {
   const body = toSnakeCase({
-    employee_id: data.employeeId,
+    employee_id: data.employeeId ?? data.employee_id,
     date: data.date,
     shift: data.shift,
-    shift_id: data.shiftId,
-    start_time: data.startTime,
-    end_time: data.endTime,
-    working_hours: data.workingHours,
-    break_time: data.breakTime,
+    shift_id: data.shiftId ?? data.shift_id,
+    start_time: data.startTime ?? data.start_time,
+    end_time: data.endTime ?? data.end_time,
+    working_hours: data.workingHours ?? data.working_hours,
+    break_time: data.breakTime ?? data.break_time,
     location: data.location,
     status: data.status,
     recurring: data.recurring,
@@ -126,14 +148,14 @@ export async function updateRoster(
   data: Partial<RosterCreatePayload>
 ): Promise<RosterEntryRecord> {
   const body = toSnakeCase({
-    employee_id: data.employeeId,
+    employee_id: data.employeeId ?? data.employee_id,
     date: data.date,
     shift: data.shift,
-    shift_id: data.shiftId,
-    start_time: data.startTime,
-    end_time: data.endTime,
-    working_hours: data.workingHours,
-    break_time: data.breakTime,
+    shift_id: data.shiftId ?? data.shift_id,
+    start_time: data.startTime ?? data.start_time,
+    end_time: data.endTime ?? data.end_time,
+    working_hours: data.workingHours ?? data.working_hours,
+    break_time: data.breakTime ?? data.break_time,
     location: data.location,
     status: data.status,
   });

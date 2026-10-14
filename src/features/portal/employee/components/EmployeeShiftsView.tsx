@@ -22,6 +22,7 @@ import {
   RefreshCw,
   ChevronDown,
   ChevronRight,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +38,13 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { useMyScheduleQuery, useShiftOptionsQuery, useCreateChangeRequest, useMyChangeRequestsQuery, useReviewChangeRequest } from "@/features/attendance/shifts/hooks/useShifts";
 import { formatInstant, formatHHmmTo12h, weekdayShort } from "@/lib/datetime";

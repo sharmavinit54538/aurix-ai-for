@@ -13,8 +13,8 @@ import type {
   ShiftEmployeesResponse,
   WeekDay,
   ShiftApiErrorCode,
-  ApiContractError,
 } from "./types";
+import { ApiContractError } from "./types";
 
 const weekDaySchema = z.enum(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]);
 

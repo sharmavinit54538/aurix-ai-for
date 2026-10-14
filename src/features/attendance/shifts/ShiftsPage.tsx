@@ -149,7 +149,7 @@ export function ShiftsPage() {
       break_duration_minutes: data.breakDurationMinutes,
       night_shift: data.nightShift,
       night_premium_percent: data.nightPremiumPercent,
-      working_days: data.workingDays,
+      working_days: data.workingDays as WeekDay[],
       description: data.description,
       is_active: data.isActive,
     };

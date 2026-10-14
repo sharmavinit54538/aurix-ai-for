@@ -62,7 +62,7 @@ export async function getShiftOptions(): Promise<ShiftOption[]> {
 }
 
 export async function createShift(payload: ShiftCreatePayload): Promise<Shift> {
-  const body = toSnakeCase(payload as Record<string, unknown>);
+  const body = toSnakeCase(payload as unknown as Record<string, unknown>);
   const res = await api.post("attendance/shifts", body);
   const data = res as { data?: unknown } | unknown;
   const item = (data as { data?: unknown })?.data ?? data;
@@ -70,7 +70,7 @@ export async function createShift(payload: ShiftCreatePayload): Promise<Shift> {
 }
 
 export async function updateShift(id: string, payload: Partial<ShiftCreatePayload>): Promise<Shift> {
-  const body = toSnakeCase(payload as Record<string, unknown>);
+  const body = toSnakeCase(payload as unknown as Record<string, unknown>);
   const res = await api.put(`attendance/shifts/${id}`, body);
   const data = res as { data?: unknown } | unknown;
   const item = (data as { data?: unknown })?.data ?? data;
@@ -136,7 +136,7 @@ export async function getMyChangeRequests(): Promise<ShiftChangeRequest[]> {
 }
 
 export async function createChangeRequest(payload: CreateChangeRequestPayload): Promise<ShiftChangeRequest> {
-  const body = toSnakeCase(payload as Record<string, unknown>);
+  const body = toSnakeCase(payload as unknown as Record<string, unknown>);
   const res = await api.post("attendance/shifts/change-requests", body);
   const data = res as { data?: unknown } | unknown;
   const item = (data as { data?: unknown })?.data ?? data;
@@ -181,7 +181,7 @@ export async function rejectChangeRequest(
   id: string,
   payload: RejectChangeRequestPayload
 ): Promise<ShiftChangeRequest> {
-  const body = toSnakeCase(payload as Record<string, unknown>);
+  const body = toSnakeCase(payload as unknown as Record<string, unknown>);
   const res = await api.post(`attendance/shifts/change-requests/${id}/reject`, body);
   const data = res as { data?: unknown } | unknown;
   const item = (data as { data?: unknown })?.data ?? data;
