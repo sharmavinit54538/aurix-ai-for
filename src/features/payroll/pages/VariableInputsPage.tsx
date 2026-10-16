@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   AlertCircle,
   Banknote,
+  Calendar,
   CheckCircle2,
   Clock,
   Download,
@@ -34,12 +35,14 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { formatINR, formatCount, formatDate } from "@/lib/format";
 import { variableInputsApi } from "../api/variableInputsApi";
+import { payrollApi } from "@/services/payrollApi";
 import { toPaise } from "../utils/money";
 import type {
   VariablePayrollInput,
   VariableInputType,
   BulkVariableInputPreviewResult,
 } from "../types/variableInputs";
+import type { PayrollPeriod } from "@/services/payroll/types";
 import { toast } from "sonner";
 
 export default function VariableInputsPage() {
@@ -50,6 +53,11 @@ export default function VariableInputsPage() {
   const [page, setPage] = useState(1);
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Period selection
+  const [periods, setPeriods] = useState<PayrollPeriod[]>([]);
+  const [selectedPeriodId, setSelectedPeriodId] = useState<string>("");
+  const [loadingPeriods, setLoadingPeriods] = useState(true);
 
   // Create Modal
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -66,11 +74,40 @@ export default function VariableInputsPage() {
   const [parsingBulk, setParsingBulk] = useState(false);
   const [applyingBulk, setApplyingBulk] = useState(false);
 
-  const loadInputs = async () => {
+  // Load periods from API
+  const fetchPeriods = useCallback(async () => {
+    setLoadingPeriods(true);
+    try {
+      const data = await payrollApi.getPeriods();
+      setPeriods(data);
+      if (data.length > 0) {
+        const current = data.find((p) => p.isCurrent) || data[0];
+        setSelectedPeriodId(current.id);
+      }
+    } catch (err: any) {
+      if (err?.response?.status === 404 || err?.response?.status === 501) {
+        setBackendUnavailable(true);
+      }
+    } finally {
+      setLoadingPeriods(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPeriods();
+  }, [fetchPeriods]);
+
+  const loadInputs = useCallback(async () => {
+    if (!selectedPeriodId) {
+      setInputs([]);
+      setTotalCount(0);
+      return;
+    }
     setLoading(true);
     setBackendUnavailable(false);
     try {
       const res = await variableInputsApi.getVariableInputs({
+        periodId: selectedPeriodId,
         page,
         limit: 20,
         type: typeFilter !== "all" ? typeFilter : undefined,
@@ -87,13 +124,17 @@ export default function VariableInputsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedPeriodId, page, typeFilter, searchQuery]);
 
   useEffect(() => {
     loadInputs();
-  }, [page, typeFilter]);
+  }, [loadInputs]);
 
   const handleCreateInput = async () => {
+    if (!selectedPeriodId) {
+      toast.error("Please select a payroll period first.");
+      return;
+    }
     if (!empId.trim() || !amountRupees || !description.trim()) {
       toast.error("Please fill in all mandatory fields.");
       return;
@@ -108,7 +149,7 @@ export default function VariableInputsPage() {
     try {
       await variableInputsApi.createVariableInput({
         employeeId: empId.trim(),
-        periodId: "current-active-period",
+        periodId: selectedPeriodId,
         type: inputType,
         amountPaise: paise,
         units: units ? parseFloat(units) : undefined,
@@ -206,36 +247,61 @@ export default function VariableInputsPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={loadInputs}
-            disabled={loading}
-            className="h-8 gap-1.5 text-xs rounded-xl"
-          >
-            <RefreshCw className={loading ? "h-3.5 w-3.5 animate-spin" : "h-3.5 w-3.5"} />
-            <span>Refresh</span>
-          </Button>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
+          {/* Period Selector */}
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+            <select
+              value={selectedPeriodId}
+              onChange={(e) => setSelectedPeriodId(e.target.value)}
+              disabled={loadingPeriods}
+              className="rounded-lg border border-input bg-background/80 px-2 py-1.5 text-xs font-mono min-w-[200px]"
+            >
+              <option value="">Select a payroll period</option>
+              {periods.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name} ({formatDate(p.startDate)} – {formatDate(p.endDate)})
+                </option>
+              ))}
+            </select>
+            {loadingPeriods && (
+              <RefreshCw className="h-3.5 w-3.5 animate-spin text-primary" />
+            )}
+          </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setBulkModalOpen(true)}
-            className="h-8 gap-1.5 text-xs rounded-xl"
-          >
-            <Upload className="h-3.5 w-3.5" />
-            <span>Bulk CSV Import</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadInputs}
+              disabled={loading || !selectedPeriodId}
+              className="h-8 gap-1.5 text-xs rounded-xl"
+            >
+              <RefreshCw className={loading ? "h-3.5 w-3.5 animate-spin" : "h-3.5 w-3.5"} />
+              <span>Refresh</span>
+            </Button>
 
-          <Button
-            size="sm"
-            onClick={() => setCreateModalOpen(true)}
-            className="h-8 gap-1.5 text-xs rounded-xl"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            <span>New Input</span>
-          </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setBulkModalOpen(true)}
+              disabled={!selectedPeriodId}
+              className="h-8 gap-1.5 text-xs rounded-xl"
+            >
+              <Upload className="h-3.5 w-3.5" />
+              <span>Bulk CSV Import</span>
+            </Button>
+
+            <Button
+              size="sm"
+              onClick={() => setCreateModalOpen(true)}
+              disabled={!selectedPeriodId}
+              className="h-8 gap-1.5 text-xs rounded-xl"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>New Input</span>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -355,7 +421,9 @@ export default function VariableInputsPage() {
                     <Banknote className="h-8 w-8 mx-auto mb-2 text-muted-foreground/60" />
                     <p className="font-semibold text-foreground text-sm">No Variable Inputs Found</p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {backendUnavailable
+                      {!selectedPeriodId
+                        ? "Select a payroll period above to view and create variable inputs."
+                        : backendUnavailable
                         ? "Variable inputs API pending backend deployment."
                         : "Click 'New Input' to record overtime, bonuses, or adjustments for this cycle."}
                     </p>
@@ -428,7 +496,7 @@ export default function VariableInputsPage() {
           <DialogHeader>
             <DialogTitle className="text-base font-semibold">New Variable Payroll Input</DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
-              Add a one-time adjustment, overtime hours, bonus, or reimbursement to the current payroll run.
+              Add a one-time adjustment, overtime hours, bonus, or reimbursement to the selected payroll period.
             </DialogDescription>
           </DialogHeader>
 

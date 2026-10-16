@@ -125,3 +125,11 @@ export interface RunPayrollResponse {
   runId?: string;
   [key: string]: unknown;
 }
+
+export interface RunPayrollResult {
+  runId: string;
+  jobId?: string | null;
+  status: string;
+  success: boolean;
+  message?: string;
+}

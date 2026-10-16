@@ -105,7 +105,11 @@ export function PayrollDashboardPage() {
   const fetchDashboardData = useCallback(async (periodId?: string) => {
     setLoadingDashboard(true);
     try {
-      const data = await payrollApi.getDashboard(periodId);
+      // Extract month/year from selected period
+      const period = periods.find((p) => p.id === periodId);
+      const month = period?.periodMonth;
+      const year = period?.periodYear;
+      const data = await payrollApi.getDashboard(month, year);
       setDashboardData(data);
     } catch (err: any) {
       setDashboardData(null);
@@ -119,7 +123,7 @@ export function PayrollDashboardPage() {
     } finally {
       setLoadingDashboard(false);
     }
-  }, []);
+  }, [periods]);
 
   const handleRefresh = useCallback(() => {
     fetchPeriods();
@@ -153,34 +157,17 @@ export function PayrollDashboardPage() {
     setIsRunningPayroll(true);
     try {
       const result = await payrollApi.runPayroll(selectedPeriodId);
-      if (result && result.success) {
-        toast.success(
-          result.message || "Provisional payroll processing initiated successfully."
-        );
-        setConfirmModalOpen(false);
+      // HTTP 2xx means success (axios throws on error)
+      toast.success(
+        result.message || "Provisional payroll processing initiated successfully."
+      );
+      setConfirmModalOpen(false);
 
-        const runId =
-          result.runId ||
-          (result as any).run_id ||
-          (result as any).id ||
-          (result as any).cycleId ||
-          (result as any).cycle_id ||
-          (result as any).data?.runId ||
-          (result as any).data?.run_id ||
-          (result as any).data?.id;
-
-        if (runId) {
-          navigate({
-            to: `/dashboard/payroll/runs/${runId}/processing` as any,
-          });
-        } else {
-          await fetchDashboardData(selectedPeriodId);
-        }
+      if (result.runId) {
+        navigate({
+          to: `/dashboard/payroll/runs/${result.runId}/processing` as any,
+        });
       } else {
-        toast.warning(
-          result?.message || "Payroll processing responded with an unexpected status."
-        );
-        setConfirmModalOpen(false);
         await fetchDashboardData(selectedPeriodId);
       }
     } catch (err: any) {

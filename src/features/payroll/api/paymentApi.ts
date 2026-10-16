@@ -10,6 +10,7 @@
 
 import apiInstance from "@/api/apiInstance";
 import { generateIdempotencyKey } from "../utils/idempotency";
+import { getDownloadFilename, parseContentType } from "@/services/payroll/utils";
 import type {
   PaymentBatch,
   PaymentBatchItem,
@@ -260,9 +261,9 @@ export const paymentApi = {
   },
 
   /**
-   * Download the generated bank file as a Blob.
+   * Download the generated bank file as a Blob with filename.
    */
-  async downloadBankFile(batchId: string): Promise<Blob> {
+  async downloadBankFile(batchId: string): Promise<{ blob: Blob; filename: string; mimeType: string }> {
     const res = await apiInstance.get(
       `/api/v2/payroll/payment-batches/${batchId}/bank-file/download`,
       {
@@ -270,7 +271,11 @@ export const paymentApi = {
         headers: { "Cache-Control": "no-store" },
       }
     );
-    return res.data as Blob;
+    const contentDisposition = res.headers["content-disposition"];
+    const contentType = res.headers["content-type"];
+    const filename = getDownloadFilename(contentDisposition, contentType, `bank-file-${batchId}`);
+    const mimeType = parseContentType(contentType)?.mimeType || "application/octet-stream";
+    return { blob: res.data as Blob, filename, mimeType };
   },
 
   /**

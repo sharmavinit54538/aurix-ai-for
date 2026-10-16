@@ -5,6 +5,7 @@ import { extractData, requestWithFallback } from "./utils";
 import { normalizePayrollRunStatus } from "./normalizers";
 import type {
   RunPayrollResponse,
+  RunPayrollResult,
   PayrollRunStatus,
   PayrollRunValidationIssue,
   CancelRunResponse,
@@ -16,7 +17,7 @@ import type {
  * POST /api/v1/payroll/run
  * Note: Running payroll produces provisional results and does NOT finalize payroll or initiate payments.
  */
-export async function runPayroll(periodId: string): Promise<RunPayrollResponse> {
+export async function runPayroll(periodId: string): Promise<RunPayrollResult> {
   const res = await apiInstance.post(
     "/payroll/run",
     { periodId },
@@ -27,7 +28,24 @@ export async function runPayroll(periodId: string): Promise<RunPayrollResponse> 
       },
     }
   );
-  return extractData<RunPayrollResponse>(res);
+  
+  // extractData unwraps the response, so we get the data directly
+  const data = extractData<Record<string, unknown>>(res);
+  
+  // Read runId from various possible field names in the unwrapped data
+  const runId = String(data?.runId ?? data?.run_id ?? data?.id ?? data?.cycleId ?? data?.cycle_id ?? "");
+  const jobId = data?.jobId ?? data?.job_id ?? data?.id ?? null;
+  const status = String(data?.status ?? data?.run_status ?? data?.state ?? "Processing");
+  const message = String(data?.message ?? "Provisional payroll processing initiated successfully.");
+  
+  // HTTP 2xx = success (axios throws on non-2xx, so if we're here, it's success)
+  return {
+    runId,
+    jobId,
+    status,
+    success: true,
+    message,
+  };
 }
 
 /**

@@ -4,6 +4,7 @@
  */
 
 import apiInstance from "@/api/apiInstance";
+import { getDownloadFilename, parseContentType } from "@/services/payroll/utils";
 import type { EmployeeSelfServiceData, ProvisionSlipRecord } from "../types/ess";
 
 export interface MyPayslipItem {
@@ -64,7 +65,7 @@ export const essApi = {
   /**
    * Download own payslip PDF.
    */
-  async downloadMyPayslip(runId: string): Promise<Blob> {
+  async downloadMyPayslip(runId: string): Promise<{ blob: Blob; filename: string; mimeType: string }> {
     const res = await apiInstance.get(
       `/api/v2/payroll/my-payslips/${runId}/download`,
       {
@@ -72,6 +73,10 @@ export const essApi = {
         headers: { "Cache-Control": "no-store" },
       }
     );
-    return res.data as Blob;
+    const contentDisposition = res.headers["content-disposition"];
+    const contentType = res.headers["content-type"];
+    const filename = getDownloadFilename(contentDisposition, contentType, `payslip-${runId}`);
+    const mimeType = parseContentType(contentType)?.mimeType || "application/octet-stream";
+    return { blob: res.data as Blob, filename, mimeType };
   },
 };

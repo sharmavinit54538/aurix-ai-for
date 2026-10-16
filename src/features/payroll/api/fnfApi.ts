@@ -5,6 +5,7 @@
 
 import apiInstance from "@/api/apiInstance";
 import { generateIdempotencyKey } from "../utils/idempotency";
+import { getDownloadFilename, parseContentType } from "@/services/payroll/utils";
 import type { FnfRecord, FnfExitDetails } from "../types/fnf";
 
 export interface InitiateFnfPayload {
@@ -108,7 +109,7 @@ export const fnfApi = {
     return res.data.data;
   },
 
-  async downloadFnfStatement(fnfId: string): Promise<Blob> {
+  async downloadFnfStatement(fnfId: string): Promise<{ blob: Blob; filename: string; mimeType: string }> {
     const res = await apiInstance.get(
       `/api/v2/payroll/full-and-final/${fnfId}/statement/download`,
       {
@@ -116,6 +117,10 @@ export const fnfApi = {
         headers: { "Cache-Control": "no-store" },
       }
     );
-    return res.data as Blob;
+    const contentDisposition = res.headers["content-disposition"];
+    const contentType = res.headers["content-type"];
+    const filename = getDownloadFilename(contentDisposition, contentType, `fnf-statement-${fnfId}`);
+    const mimeType = parseContentType(contentType)?.mimeType || "application/octet-stream";
+    return { blob: res.data as Blob, filename, mimeType };
   },
 };
