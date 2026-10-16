@@ -5,12 +5,14 @@ import type {
   PayrollEmployeeAttendance,
 } from "../types";
 
+const isDev = process.env.NODE_ENV === "development";
+
 export function normalizePayrollEmployee(item: unknown): PayrollPreviewEmployee {
   if (!item || typeof item !== "object") {
     return {
       id: "",
       employeeId: "",
-      name: "Unknown Employee",
+      name: isDev ? "[Name missing from API]" : "",
       grossEarnings: null,
       totalDeductions: null,
       netPay: null,
@@ -22,12 +24,23 @@ export function normalizePayrollEmployee(item: unknown): PayrollPreviewEmployee 
   const employeeId = String(
     it.employeeId || it.employee_id || it.emp_id || it.employee_code || it.code || id,
   );
-  const name =
-    (it.name ||
-      it.employee_name ||
-      it.employeeName ||
-      (it.first_name ? `${it.first_name} ${it.last_name || ""}`.trim() : "") ||
-      "Unnamed Employee") as string;
+
+  // Try to get name from various fields
+  const rawName =
+    it.name ||
+    it.employee_name ||
+    it.employeeName ||
+    (it.first_name ? `${it.first_name} ${it.last_name || ""}`.trim() : "");
+
+  let name: string;
+  if (rawName) {
+    name = String(rawName);
+  } else if (employeeId) {
+    // Fall back to employee code/id if name is missing
+    name = isDev ? `[Name missing from API - ${employeeId}]` : employeeId;
+  } else {
+    name = isDev ? "[Name missing from API]" : "Unknown Employee";
+  }
   const email = (it.email || it.work_email || undefined) as string | undefined;
   const designation = (it.designation || it.job_title || it.role || undefined) as string | undefined;
   const department = (it.department || it.dept || it.department_name || undefined) as string | undefined;

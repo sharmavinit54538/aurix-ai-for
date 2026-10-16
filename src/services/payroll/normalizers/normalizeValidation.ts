@@ -3,6 +3,12 @@ import type {
   PayrollValidationIssue,
 } from "../types";
 
+/**
+ * Normalizes validation issues from various backend shapes:
+ * - Legacy: {issues: [...]}
+ * - Per-employee: [{employee_id, name, issues: ["msg1", "msg2"], ...}, ...]
+ * - New canonical: [{id, employee_id, employee_name, department, severity, blocking, code, message}, ...]
+ */
 export function normalizePayrollValidationSummary(
   runId: string,
   raw: unknown,
@@ -22,10 +28,59 @@ export function normalizePayrollValidationSummary(
 
   const rawObj = raw as Record<string, unknown>;
   let rawList: Record<string, unknown>[] = [];
+
+  // Handle per-employee array shape: [{employee_id, name, issues: ["..."]}, ...]
   if (Array.isArray(raw)) {
-    rawList = raw.filter((x): x is Record<string, unknown> => Boolean(x && typeof x === "object"));
+    // Check if it's per-employee shape (has employee_id/name and issues array)
+    const first = raw[0] as Record<string, unknown> | undefined;
+    if (first && (first.employee_id || first.employeeId || first.name) && Array.isArray(first.issues)) {
+      // Flatten per-employee issues
+      rawList = raw.flatMap((emp: unknown, empIdx: number) => {
+        const e = emp as Record<string, unknown>;
+        const employeeId = String(e.employee_id || e.employeeId || e.emp_id || "");
+        const employeeName = String(e.name || e.employee_name || e.employeeName || "");
+        const department = String(e.department || e.dept || e.department_name || "");
+        const issues = Array.isArray(e.issues) ? e.issues : [];
+        return issues.map((msg: unknown, idx: number) => ({
+          id: `${employeeId}-${empIdx}-${idx}`,
+          message: String(msg),
+          employeeId,
+          employeeName,
+          department,
+          severity: "warning",
+          blocking: false,
+          category: "Employee Validation",
+        }));
+      });
+    } else {
+      // Regular array of issue objects
+      rawList = raw.filter((x): x is Record<string, unknown> => Boolean(x && typeof x === "object"));
+    }
   } else if (Array.isArray(rawObj.issues)) {
-    rawList = (rawObj.issues as unknown[]).filter((x): x is Record<string, unknown> => Boolean(x && typeof x === "object"));
+    // Check if issues array contains per-employee objects with nested issues
+    const first = rawObj.issues[0] as Record<string, unknown> | undefined;
+    if (first && (first.employee_id || first.employeeId || first.name) && Array.isArray(first.issues)) {
+      // Flatten per-employee issues from issues array
+      rawList = (rawObj.issues as unknown[]).flatMap((emp: unknown, empIdx: number) => {
+        const e = emp as Record<string, unknown>;
+        const employeeId = String(e.employee_id || e.employeeId || e.emp_id || "");
+        const employeeName = String(e.name || e.employee_name || e.employeeName || "");
+        const department = String(e.department || e.dept || e.department_name || "");
+        const issues = Array.isArray(e.issues) ? e.issues : [];
+        return issues.map((msg: unknown, idx: number) => ({
+          id: `${employeeId}-${empIdx}-${idx}`,
+          message: String(msg),
+          employeeId,
+          employeeName,
+          department,
+          severity: "warning",
+          blocking: false,
+          category: "Employee Validation",
+        }));
+      });
+    } else {
+      rawList = (rawObj.issues as unknown[]).filter((x): x is Record<string, unknown> => Boolean(x && typeof x === "object"));
+    }
   } else if (Array.isArray(rawObj.items)) {
     rawList = (rawObj.items as unknown[]).filter((x): x is Record<string, unknown> => Boolean(x && typeof x === "object"));
   } else if (Array.isArray(rawObj.validation_issues)) {
@@ -53,6 +108,7 @@ export function normalizePayrollValidationSummary(
 
   const issues: PayrollValidationIssue[] = rawList.map((item, idx) => {
     // Preserve backend-provided severity without guessing from text
+    // If missing, default to "warning" as per spec
     const rawSev =
       item.severity || item.level || item.type || (item.blocking ? "error" : "warning");
     const sev = String(rawSev).toLowerCase();
@@ -65,15 +121,24 @@ export function normalizePayrollValidationSummary(
           ? Boolean(item.is_blocking)
           : undefined;
 
+    // Support new canonical shape: {id, employee_id, employee_name, department, severity, blocking, code, message}
+    // Also support: {employeeId, employeeName, department}
+    const employeeId = (item.employeeId || item.employee_id || item.emp_id || undefined) as string | undefined;
+    const employeeName = (item.employeeName || item.employee_name || item.name || undefined) as string | undefined;
+    const department = (item.department || item.dept || item.department_name || undefined) as string | undefined;
+
+    // Use real message from backend - never fall back to "Validation issue detected"
+    const message = String(item.message || item.description || item.detail || item.error || "");
+
     return {
-      id: String(item.id || item.issue_id || `issue-${idx}`),
+      id: String(item.id || item.issue_id || item.rule_id || item.ruleCode || `issue-${idx}`),
       severity: sev,
       category: (item.category || item.type || item.module || "General") as string,
       code: (item.code || item.error_code || item.rule_id || item.ruleCode || undefined) as string | undefined,
-      message: String(item.message || item.description || item.detail || "Validation issue detected"),
-      employeeId: (item.employeeId || item.employee_id || item.emp_id || undefined) as string | undefined,
-      employeeName: (item.employeeName || item.employee_name || item.name || undefined) as string | undefined,
-      department: (item.department || item.dept || item.department_name || undefined) as string | undefined,
+      message: message || "Validation issue",
+      employeeId,
+      employeeName,
+      department,
       component: (item.component || item.field || item.salary_component || undefined) as string | undefined,
       blocking,
       status: String(item.status || (item.resolved ? "resolved" : "open")),

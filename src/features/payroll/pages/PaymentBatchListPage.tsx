@@ -142,18 +142,22 @@ export default function PaymentBatchListPage() {
   const getStatusBadge = (status?: PaymentBatchStatus | string) => {
     if (!status) return <Badge variant="outline">Unknown</Badge>;
     switch (status) {
+      case "draft":
+        return <Badge className="bg-slate-500/15 text-slate-600 dark:text-slate-400 border-slate-500/30">Draft</Badge>;
+      case "validated":
+        return <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30">Validated</Badge>;
       case "approved":
         return <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30">Approved</Badge>;
       case "submitted":
         return <Badge className="bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30">Submitted to Bank</Badge>;
+      case "partial":
+        return <Badge className="bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30">Partial</Badge>;
       case "reconciled":
       case "closed":
         return <Badge className="bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30">Reconciled</Badge>;
       case "validation_failed":
       case "rejected":
         return <Badge variant="destructive">Validation Failed</Badge>;
-      case "validated":
-        return <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30">Validated</Badge>;
       default:
         return <Badge variant="outline">{status.replace(/_/g, " ")}</Badge>;
     }

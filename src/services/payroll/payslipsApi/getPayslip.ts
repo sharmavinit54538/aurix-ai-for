@@ -1,5 +1,4 @@
 import apiInstance from "@/api/apiInstance";
-import axios from "axios";
 import { extractData } from "../utils";
 import { normalizePayrollPayslipData } from "../normalizers";
 import type {
@@ -33,28 +32,17 @@ export async function getPayslip(runId: string, employeeId: string): Promise<Pay
       return normalizePayrollPayslipData(runId, employeeId, data);
     }
   } catch (err: unknown) {
-    if (!axios.isAxiosError(err) || err.response?.status !== 404) {
+    if (err && typeof err === "object" && "response" in err) {
+      const axiosErr = err as { response?: { status?: number } };
+      if (axiosErr.response?.status !== 404) {
+        throw err;
+      }
+    } else {
       throw err;
     }
   }
 
-  // Fallback 1: GET /api/v2/payroll/payslips/{runId}/{employeeId}
-  try {
-    const res1 = await apiInstance.get(
-      `/api/v2/payroll/payslips/${runId}/${employeeId}`,
-      requestConfig,
-    );
-    const data1 = extractData(res1);
-    if (data1 && typeof data1 === "object") {
-      return normalizePayrollPayslipData(runId, employeeId, data1);
-    }
-  } catch (err: unknown) {
-    if (!axios.isAxiosError(err) || err.response?.status !== 404) {
-      throw err;
-    }
-  }
-
-  // Fallback 2: Retrieve employee detail and run finalization status from backend
+  // Fallback: Retrieve employee detail and run finalization status from backend
   const [empData, finalData] = await Promise.all([
     getRunEmployeeDetail(runId, employeeId),
     getPayrollFinalization(runId).catch(() => null),

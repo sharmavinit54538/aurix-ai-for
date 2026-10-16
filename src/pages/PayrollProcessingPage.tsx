@@ -168,8 +168,9 @@ function getStepStatusTone(status: string): {
 }
 
 export function PayrollProcessingPage() {
-  const params = useParams({ strict: false }) as { runId?: string };
+  const params = useParams({ strict: false }) as { runId?: string; jobId?: string };
   const runId = params?.runId?.trim() || "";
+  const initialJobId = params?.jobId?.trim() || "";
   const navigate = useNavigate();
 
   const ws = useAurix();
@@ -195,6 +196,7 @@ export function PayrollProcessingPage() {
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [isUnavailable, setIsUnavailable] = useState<boolean>(false);
+  const [jobId, setJobId] = useState<string>(initialJobId);
 
   // Cancellation Modal State
   const [cancelModalOpen, setCancelModalOpen] = useState<boolean>(false);
@@ -206,8 +208,6 @@ export function PayrollProcessingPage() {
 
   // In-flight guard ref to prevent duplicate overlapping network requests
   const inFlightRef = useRef<boolean>(false);
-  // Keep track of polling interval
-  const pollingTimerRef = useRef<number | null>(null);
 
   // ── Fetch Status Handler ────────────────────────────────────────────
   const fetchStatus = useCallback(
@@ -222,7 +222,11 @@ export function PayrollProcessingPage() {
       }
 
       try {
-        const status = await payrollApi.getPayrollRunStatus(runId);
+        const status = await payrollApi.getPayrollRunStatus(runId, jobId || undefined);
+        // Update jobId if returned by backend
+        if (status.jobId && status.jobId !== jobId) {
+          setJobId(status.jobId);
+        }
         setRunData(status);
         setIsUnavailable(false);
         setApiError(null);
@@ -249,10 +253,14 @@ export function PayrollProcessingPage() {
         setIsRefreshing(false);
       }
     },
-    [runId]
+    [runId, jobId]
   );
 
-  // ── Polling Lifecycle ───────────────────────────────────────────────
+  // ── Polling Lifecycle with Exponential Backoff ──────────────────────
+  const [pollInterval, setPollInterval] = useState(3000);
+  const MAX_POLL_INTERVAL = 30000;
+  const pollAttemptRef = useRef(0);
+
   useEffect(() => {
     if (!runId) {
       setLoadingInitial(false);
@@ -261,23 +269,52 @@ export function PayrollProcessingPage() {
     void fetchStatus(false);
   }, [runId, fetchStatus]);
 
-  usePoller(
-    useCallback(async () => {
-      if (runData && isTerminalStatus(runData.status)) return;
-      await fetchStatus(true);
-    }, [runData, fetchStatus]),
-    {
-      intervalMs: 4000,
-      maxIntervalMs: 15000,
-      enabled: Boolean(runId && (!runData || !isTerminalStatus(runData.status))),
-    },
-  );
+  // Custom polling with exponential backoff
+  useEffect(() => {
+    if (!runId || !runData || isTerminalStatus(runData.status)) {
+      if (pollingTimerRef.current) {
+        clearTimeout(pollingTimerRef.current);
+        pollingTimerRef.current = null;
+      }
+      return;
+    }
 
-  // ── Cancel Run Handler ──────────────────────────────────────────────
+    const scheduleNextPoll = () => {
+      if (pollingTimerRef.current) {
+        clearTimeout(pollingTimerRef.current);
+      }
+      
+      // Exponential backoff: start at 3s, max 30s
+      const interval = Math.min(3000 * Math.pow(1.5, pollAttemptRef.current), MAX_POLL_INTERVAL);
+      setPollInterval(interval);
+      
+      pollingTimerRef.current = window.setTimeout(async () => {
+        pollAttemptRef.current += 1;
+        await fetchStatus(true);
+        // Reschedule after fetch completes
+        if (runData && !isTerminalStatus(runData.status)) {
+          scheduleNextPoll();
+        }
+      }, interval);
+    };
+
+    pollAttemptRef.current = 0;
+    scheduleNextPoll();
+
+    return () => {
+      if (pollingTimerRef.current) {
+        clearTimeout(pollingTimerRef.current);
+        pollingTimerRef.current = null;
+      }
+    };
+  }, [runId, runData?.status, fetchStatus]);
+
+  // ── Cancel Run Handler (POST /api/v2/payroll/runs/{runId}/cancel) ────
   const handleConfirmCancel = async () => {
     if (!runId) return;
     setIsCancelling(true);
     try {
+      // Call the new POST cancel endpoint
       const res = await payrollApi.cancelPayrollRun(runId);
       toast.success(res?.message || "Payroll run cancellation request sent.");
       setCancelModalOpen(false);
@@ -384,7 +421,8 @@ export function PayrollProcessingPage() {
   const isRetryable =
     Boolean(
       runData &&
-        runData.status?.toLowerCase().includes("fail") &&
+        (runData.status?.toLowerCase().includes("fail") ||
+          runData.status?.toLowerCase() === "draft") &&
         canRunPayroll
     );
 
@@ -946,14 +984,24 @@ export function PayrollProcessingPage() {
           </DialogHeader>
 
           <div className="space-y-3 py-2 text-xs">
-            <p className="text-muted-foreground">
-              Cancelling will abort active calculation workers and mark this run as cancelled.
-              Any partial calculations generated will be discarded.
-            </p>
+            <Alert className="border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="font-medium">This action will:</AlertDescription>
+            </Alert>
+            <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+              <li>Abort all active calculation workers on the backend</li>
+              <li>Mark this payroll run as "Cancelled"</li>
+              <li>Discard any partial calculations generated so far</li>
+              <li>Release any locked resources for this period</li>
+            </ul>
             <div className="rounded-xl border border-border bg-muted/40 p-3">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Run Identifier:</span>
                 <span className="font-mono font-semibold text-foreground">{runId}</span>
+              </div>
+              <div className="flex justify-between mt-1">
+                <span className="text-muted-foreground">Period:</span>
+                <span className="font-semibold text-foreground">{runData?.periodName || "—"}</span>
               </div>
             </div>
           </div>
