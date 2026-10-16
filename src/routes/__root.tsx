@@ -6,7 +6,6 @@ import {
   Outlet,
   Link,
   createRootRouteWithContext,
-  useRouter,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -14,8 +13,6 @@ import { useEffect, Suspense, type ReactNode } from "react";
 import { bootstrapAuth } from "../lib/auth-bootstrap";
 import { PageSkeleton } from "../components/common/PageSkeleton";
 import {
-  isChunkLoadError,
-  safeReloadOnChunkFailure,
   setupGlobalChunkErrorListeners,
   clearChunkReloadFlag,
   unregisterLegacyServiceWorkers,
@@ -46,103 +43,58 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: unknown; reset: () => void }) {
-  const router = useRouter();
-  const isChunkError = isChunkLoadError(error) && !import.meta.env.DEV;
-
+function ErrorComponent({ error }: { error: unknown; reset: () => void }) {
   useEffect(() => {
     console.error("Root error boundary caught error:", error);
   }, [error]);
 
-  if (isChunkError) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background px-4">
-        <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 text-center shadow-lg">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <svg
-              className="h-6 w-6 animate-spin"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8v8H4z"
-              />
-            </svg>
-          </div>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">
-            App Update Available
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            A new version of OFC360 has been deployed. Please refresh to load the latest features and updates.
-          </p>
-          <div className="mt-6 flex flex-col gap-2">
-            <button
-              onClick={() => {
-                const url = new URL(window.location.href);
-                url.searchParams.set("_v", String(Date.now()));
-                window.location.replace(url.toString());
-              }}
-              className="inline-flex w-full items-center justify-center rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-            >
-              Update & Refresh Now
-            </button>
-            <a
-              href="/"
-              className="inline-flex w-full items-center justify-center rounded-md border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-            >
-              Back to Home
-            </a>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
+      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 text-center shadow-lg">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <svg
+            className="h-6 w-6 animate-spin"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8v8H4z"
+            />
+          </svg>
+        </div>
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
+          App Update Available
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+          A new version of OFC360 has been deployed. Please refresh to load the latest features and updates.
         </p>
-        {import.meta.env.DEV && error && (
-          <details className="mt-4 rounded-md border border-red-300 bg-red-50 p-3 text-left text-xs text-red-800">
-            <summary className="cursor-pointer font-medium">DEV: Error Details</summary>
-            <pre className="mt-2 whitespace-pre-wrap break-all">
-              {error instanceof Error
-                ? `${error.message}\n\n${error.stack}`
-                : JSON.stringify(error, null, 2)}
-            </pre>
-          </details>
-        )}
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
+        <div className="mt-6 flex flex-col gap-2">
           <button
             onClick={() => {
-              router.invalidate();
-              reset();
+              const url = new URL(window.location.href);
+              url.searchParams.set("_v", String(Date.now()));
+              window.location.replace(url.toString());
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex w-full items-center justify-center rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
           >
-            Try again
+            Update & Refresh Now
           </button>
           <a
             href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            className="inline-flex w-full items-center justify-center rounded-md border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
-            Go home
+            Back to Home
           </a>
         </div>
       </div>

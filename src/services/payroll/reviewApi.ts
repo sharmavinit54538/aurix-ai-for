@@ -1,5 +1,4 @@
 import apiInstance from "@/api/apiInstance";
-import axios from "axios";
 import { extractData } from "./utils";
 import { normalizePayrollReviewData } from "./normalizers";
 import type {
@@ -17,11 +16,10 @@ import { getPayrollPreview } from "./previewApi";
 import { getPayrollValidation } from "./validationApi";
 import { getPayrollRunStatus } from "./runsApi";
 import { generateIdempotencyKey } from "@/features/payroll/utils/idempotency";
-import { requestWithFallback } from "./utils";
 
 /**
  * Fetch comprehensive payroll review & approval data for a completed/provision run.
- * GET /api/v2/payroll/runs/{runId}/approval or fallback to aggregating preview and validation.
+ * GET /api/v2/payroll/runs/{runId}/approval
  * ZERO MOCK DATA: throws if backend cannot be reached so UI displays authentic error state.
  */
 export async function getPayrollReview(runId: string): Promise<PayrollReviewData> {
@@ -41,23 +39,34 @@ export async function getPayrollReview(runId: string): Promise<PayrollReviewData
       return normalizePayrollReviewData(runId, data);
     }
   } catch (err: unknown) {
-    if (axios.isAxiosError(err) && err.response?.status !== 404) {
+    if (err && typeof err === "object" && "response" in err) {
+      const axiosErr = err as { response?: { status?: number } };
+      if (axiosErr.response?.status !== 404) {
+        throw err;
+      }
+    } else {
       throw err;
     }
-    // If 404, check alternative /review endpoint
-    try {
-      const reviewRes = await apiInstance.get(
-        `/api/v2/payroll/runs/${runId}/review`,
-        requestConfig,
-      );
-      const reviewData = extractData(reviewRes);
-      if (reviewData && typeof reviewData === "object") {
-        return normalizePayrollReviewData(runId, reviewData);
-      }
-    } catch (reviewErr: unknown) {
-      if (axios.isAxiosError(reviewErr) && reviewErr.response?.status !== 404) {
+  }
+
+  // Alternative: /api/v2/payroll/runs/{runId}/review
+  try {
+    const reviewRes = await apiInstance.get(
+      `/api/v2/payroll/runs/${runId}/review`,
+      requestConfig,
+    );
+    const reviewData = extractData(reviewRes);
+    if (reviewData && typeof reviewData === "object") {
+      return normalizePayrollReviewData(runId, reviewData);
+    }
+  } catch (reviewErr: unknown) {
+    if (reviewErr && typeof reviewErr === "object" && "response" in reviewErr) {
+      const axiosErr = reviewErr as { response?: { status?: number } };
+      if (axiosErr.response?.status !== 404) {
         throw reviewErr;
       }
+    } else {
+      throw reviewErr;
     }
   }
 
@@ -101,30 +110,15 @@ export async function approvePayroll(
     "Cache-Control": "no-cache",
   };
 
-  return requestWithFallback(
-    async () => {
-      const res = await apiInstance.post(`/api/v2/payroll/runs/${runId}/approve`, body, { headers });
-      const data = extractData<Record<string, unknown>>(res);
-      return {
-        success: Boolean(data?.success ?? false),
-        message: typeof data?.message === "string" ? data.message : "Payroll run approved successfully.",
-        status: (typeof data?.status === "string" ? data.status : (data?.success ? "Approved" : "—")) as PayrollStatus,
-        approval: (data?.approval as PayrollReviewData["approval"]) || undefined,
-        ...data,
-      };
-    },
-    async () => {
-      const fbRes = await apiInstance.post(`/payroll/runs/${runId}/approve`, body, { headers });
-      const fbData = extractData<Record<string, unknown>>(fbRes);
-      return {
-        success: Boolean(fbData?.success ?? false),
-        message: typeof fbData?.message === "string" ? fbData.message : "Payroll run approved successfully.",
-        status: (typeof fbData?.status === "string" ? fbData.status : (fbData?.success ? "Approved" : "—")) as PayrollStatus,
-        approval: (fbData?.approval as PayrollReviewData["approval"]) || undefined,
-        ...fbData,
-      };
-    }
-  );
+  const res = await apiInstance.post(`/api/v2/payroll/runs/${runId}/approve`, body, { headers });
+  const data = extractData<Record<string, unknown>>(res);
+  return {
+    success: Boolean(data?.success ?? false),
+    message: typeof data?.message === "string" ? data.message : "Payroll run approved successfully.",
+    status: (typeof data?.status === "string" ? data.status : (data?.success ? "Approved" : "—")) as PayrollStatus,
+    approval: (data?.approval as PayrollReviewData["approval"]) || undefined,
+    ...data,
+  };
 }
 
 /**
@@ -144,37 +138,12 @@ export async function rejectPayroll(
     "Cache-Control": "no-cache",
   };
 
-  return requestWithFallback(
-    async () => {
-      const res = await apiInstance.post(`/api/v2/payroll/runs/${runId}/reject`, body, { headers });
-      const data = extractData<Record<string, unknown>>(res);
-      return {
-        success: Boolean(data?.success ?? false),
-        message: typeof data?.message === "string" ? data.message : "Payroll run returned for correction.",
-        status: (typeof data?.status === "string" ? data.status : (data?.success ? "Rejected" : "—")) as PayrollStatus,
-        ...data,
-      };
-    },
-    async () => {
-      try {
-        const fbRes = await apiInstance.post(`/api/v2/payroll/runs/${runId}/send-back`, body, { headers });
-        const fbData = extractData<Record<string, unknown>>(fbRes);
-        return {
-          success: Boolean(fbData?.success ?? false),
-          message: typeof fbData?.message === "string" ? fbData.message : "Payroll run returned for correction.",
-          status: (typeof fbData?.status === "string" ? fbData.status : (fbData?.success ? "Rejected" : "—")) as PayrollStatus,
-          ...fbData,
-        };
-      } catch {
-        const fbRes2 = await apiInstance.post(`/payroll/runs/${runId}/reject`, body, { headers });
-        const fbData2 = extractData<Record<string, unknown>>(fbRes2);
-        return {
-          success: Boolean(fbData2?.success ?? false),
-          message: typeof fbData2?.message === "string" ? fbData2.message : "Payroll run returned for correction.",
-          status: (typeof fbData2?.status === "string" ? fbData2.status : (fbData2?.success ? "Rejected" : "—")) as PayrollStatus,
-          ...fbData2,
-        };
-      }
-    }
-  );
+  const res = await apiInstance.post(`/api/v2/payroll/runs/${runId}/reject`, body, { headers });
+  const data = extractData<Record<string, unknown>>(res);
+  return {
+    success: Boolean(data?.success ?? false),
+    message: typeof data?.message === "string" ? data.message : "Payroll run returned for correction.",
+    status: (typeof data?.status === "string" ? data.status : (data?.success ? "Rejected" : "—")) as PayrollStatus,
+    ...data,
+  };
 }

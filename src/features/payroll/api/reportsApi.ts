@@ -6,6 +6,7 @@
  */
 
 import apiInstance from "@/api/apiInstance";
+import { getDownloadFilename, parseContentType } from "@/services/payroll/utils";
 import type {
   ReportKey,
   ExportFormat,
@@ -55,9 +56,9 @@ export const reportsApi = {
   },
 
   /**
-   * Download the generated report export file as Blob.
+   * Download the generated report export file as Blob with filename.
    */
-  async downloadReportExport(exportId: string): Promise<Blob> {
+  async downloadReportExport(exportId: string): Promise<{ blob: Blob; filename: string; mimeType: string }> {
     const res = await apiInstance.get(
       `/api/v2/payroll/reports/exports/${exportId}/download`,
       {
@@ -65,7 +66,11 @@ export const reportsApi = {
         headers: { "Cache-Control": "no-store" },
       }
     );
-    return res.data as Blob;
+    const contentDisposition = res.headers["content-disposition"];
+    const contentType = res.headers["content-type"];
+    const filename = getDownloadFilename(contentDisposition, contentType, `report-export-${exportId}`);
+    const mimeType = parseContentType(contentType)?.mimeType || "application/octet-stream";
+    return { blob: res.data as Blob, filename, mimeType };
   },
 
   /**
