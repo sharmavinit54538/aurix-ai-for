@@ -38,14 +38,23 @@ const MONTH_NAMES = [
 export { MONTH_NAMES };
 
 /**
+ * Normalizes header value to string (handles string | string[] | undefined).
+ */
+function normalizeHeader(value: string | string[] | undefined): string | undefined {
+  if (!value) return undefined;
+  return Array.isArray(value) ? value[0] : value;
+}
+
+/**
  * Parses Content-Disposition header to extract filename.
  * Returns the filename without path, or null if not found.
  */
-export function parseContentDisposition(contentDisposition?: string): string | null {
-  if (!contentDisposition) return null;
+export function parseContentDisposition(contentDisposition?: string | string[]): string | null {
+  const normalized = normalizeHeader(contentDisposition);
+  if (!normalized) return null;
   
   // RFC 5987: filename*=UTF-8''filename.txt
-  const rfc5987Match = contentDisposition.match(/filename\*=([^']*)'([^']*)'(.+)/);
+  const rfc5987Match = normalized.match(/filename\*=([^']*)'([^']*)'(.+)/);
   if (rfc5987Match) {
     try {
       return decodeURIComponent(rfc5987Match[3]);
@@ -55,7 +64,7 @@ export function parseContentDisposition(contentDisposition?: string): string | n
   }
   
   // Standard: filename="filename.txt"
-  const standardMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+  const standardMatch = normalized.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
   if (standardMatch) {
     let filename = standardMatch[1].trim();
     // Remove surrounding quotes
@@ -72,10 +81,11 @@ export function parseContentDisposition(contentDisposition?: string): string | n
 /**
  * Parses Content-Type header to extract MIME type and extension hint.
  */
-export function parseContentType(contentType?: string): { mimeType: string; extension?: string } | null {
-  if (!contentType) return null;
+export function parseContentType(contentType?: string | string[]): { mimeType: string; extension?: string } | null {
+  const normalized = normalizeHeader(contentType);
+  if (!normalized) return null;
   
-  const mimeType = contentType.split(";")[0].trim().toLowerCase();
+  const mimeType = normalized.split(";")[0].trim().toLowerCase();
   
   // Map common MIME types to extensions
   const mimeToExt: Record<string, string> = {
@@ -99,8 +109,8 @@ export function parseContentType(contentType?: string): { mimeType: string; exte
  * Falls back to a default if neither provides a usable filename.
  */
 export function getDownloadFilename(
-  contentDisposition?: string,
-  contentType?: string,
+  contentDisposition?: string | string[],
+  contentType?: string | string[],
   defaultName = "download"
 ): string {
   // Try Content-Disposition first

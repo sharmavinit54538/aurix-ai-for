@@ -95,12 +95,12 @@ export default function PayrollReportsPage() {
         department: department || undefined,
       });
 
-      // Download file blob
-      const blob = await reportsApi.downloadReportExport(exportMeta.exportId);
-      const url = window.URL.createObjectURL(blob);
+      // Download file blob with proper filename and MIME type
+      const { blob, filename, mimeType } = await reportsApi.downloadReportExport(exportMeta.exportId);
+      const url = window.URL.createObjectURL(blob, { type: mimeType });
       const a = document.createElement("a");
       a.href = url;
-      a.download = exportMeta.fileName || `${selectedReportKey}_${financialYear}.${format}`;
+      a.download = filename || exportMeta.fileName || `${selectedReportKey}_${financialYear}.${format}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

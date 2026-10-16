@@ -198,6 +198,9 @@ export function PayrollProcessingPage() {
   const [isUnavailable, setIsUnavailable] = useState<boolean>(false);
   const [jobId, setJobId] = useState<string>(initialJobId);
 
+  // Polling timer ref for exponential backoff
+  const pollingTimerRef = useRef<number | null>(null);
+
   // Cancellation Modal State
   const [cancelModalOpen, setCancelModalOpen] = useState<boolean>(false);
   const [isCancelling, setIsCancelling] = useState<boolean>(false);

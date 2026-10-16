@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   ArrowRight,
   CheckCircle2,
+  CheckCircle as ApproveIcon,
   Download,
   FileSpreadsheet,
   History,
@@ -16,6 +17,7 @@ import {
   Upload,
   UserCheck,
   Users,
+  XCircle as RejectIcon,
 } from "lucide-react";
 import { GlassCard, StatCard } from "@/components/hrms/Shared";
 import { Button } from "@/components/ui/button";
@@ -59,6 +61,15 @@ export default function EmployeeCompensationPage() {
 
   // History Slide-over / Modal
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [selectedRevision, setSelectedRevision] = useState<CompensationRevisionRecord | null>(null);
+
+  // Approve/Reject Revision Modals
+  const [approveRevisionModalOpen, setApproveRevisionModalOpen] = useState(false);
+  const [approvalRemarks, setApprovalRemarks] = useState("");
+  const [rejectRevisionModalOpen, setRejectRevisionModalOpen] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [approvingRevision, setApprovingRevision] = useState(false);
+  const [rejectingRevision, setRejectingRevision] = useState(false);
 
   // Bulk Import State
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
@@ -168,6 +179,46 @@ export default function EmployeeCompensationPage() {
       toast.error(err?.response?.data?.message || "Failed to apply bulk compensation updates");
     } finally {
       setApplyingBulk(false);
+    }
+  };
+
+  // ── Approve Compensation Revision ──────────────────────────────────
+  const handleApproveRevision = async () => {
+    if (!selectedRevision || !approvalRemarks.trim()) {
+      toast.error("Approval remarks are required");
+      return;
+    }
+    setApprovingRevision(true);
+    try {
+      await compensationApi.approveCompensationRevision(selectedRevision.id, approvalRemarks.trim());
+      toast.success("Compensation revision approved.");
+      setApproveRevisionModalOpen(false);
+      setApprovalRemarks("");
+      loadCompensations();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to approve compensation revision");
+    } finally {
+      setApprovingRevision(false);
+    }
+  };
+
+  // ── Reject Compensation Revision ───────────────────────────────────
+  const handleRejectRevision = async () => {
+    if (!selectedRevision || !rejectionReason.trim()) {
+      toast.error("Rejection reason is required");
+      return;
+    }
+    setRejectingRevision(true);
+    try {
+      await compensationApi.rejectCompensationRevision(selectedRevision.id, rejectionReason.trim());
+      toast.warning("Compensation revision rejected.");
+      setRejectRevisionModalOpen(false);
+      setRejectionReason("");
+      loadCompensations();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to reject compensation revision");
+    } finally {
+      setRejectingRevision(false);
     }
   };
 
@@ -486,8 +537,8 @@ export default function EmployeeCompensationPage() {
                     <span className="font-semibold text-foreground">
                       Revision #{rev.revisionNumber} • {formatDate(rev.effectiveDate)}
                     </span>
-                    <Badge variant={rev.status === "approved" ? "default" : "secondary"}>
-                      {rev.status}
+                    <Badge variant={rev.status === "approved" ? "default" : rev.status === "rejected" ? "destructive" : "secondary"}>
+                      {rev.status.replace(/_/g, " ")}
                     </Badge>
                   </div>
                   <div className="text-xs">
@@ -501,6 +552,35 @@ export default function EmployeeCompensationPage() {
                     Proposed by: {rev.maker.name} •{" "}
                     {rev.checker ? `Approved by: ${rev.checker.name}` : "Pending Approval"}
                   </div>
+
+                  {/* Approve/Reject buttons for pending revisions */}
+                  {rev.status === "pending_approval" && (
+                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/40">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedRevision(rev);
+                          setRejectRevisionModalOpen(true);
+                        }}
+                        className="h-7 text-xs text-rose-600 hover:text-rose-700"
+                      >
+                        <RejectIcon className="h-3 w-3 mr-1" />
+                        Reject
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setSelectedRevision(rev);
+                          setApproveRevisionModalOpen(true);
+                        }}
+                        className="h-7 text-xs"
+                      >
+                        <ApproveIcon className="h-3 w-3 mr-1" />
+                        Approve
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ))
             )}
@@ -603,6 +683,143 @@ export default function EmployeeCompensationPage() {
               className="rounded-xl text-xs"
             >
               {applyingBulk ? "Applying..." : `Apply ${bulkPreview?.validRows || 0} Records`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Approve Revision Modal ───────────────────────────────────── */}
+      <Dialog open={approveRevisionModalOpen} onOpenChange={setApproveRevisionModalOpen}>
+        <DialogContent className="sm:max-w-md rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 font-display text-base">
+              <ApproveIcon className="h-4 w-4 text-primary" />
+              Approve Compensation Revision
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Review and approve the proposed compensation revision.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2 text-xs">
+            <div className="rounded-xl border border-border/50 p-3">
+              <p className="font-medium text-foreground">
+                Employee: {selectedRevision?.maker?.name || "—"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Revision #{selectedRevision?.revisionNumber} • {formatDate(selectedRevision?.effectiveDate || "")}
+              </p>
+              <p className="text-xs mt-1">
+                <span className="text-muted-foreground">Previous: </span>
+                <span className="font-mono">{selectedRevision?.previousCtcFormatted}</span>
+                <span className="mx-2 text-muted-foreground">→</span>
+                <span className="font-mono font-bold text-foreground">{selectedRevision?.newCtcFormatted}</span>
+              </p>
+              <p className="text-xs mt-1 text-muted-foreground">"{selectedRevision?.reason}"</p>
+            </div>
+
+            <div>
+              <label className="font-semibold text-foreground">Approval Remarks *</label>
+              <Textarea
+                id="approve-revision-remarks"
+                placeholder="e.g. Approved per annual appraisal cycle. Effective from next payroll."
+                value={approvalRemarks}
+                onChange={(e) => setApprovalRemarks(e.target.value)}
+                rows={3}
+                className="mt-1 rounded-lg text-xs"
+              />
+              <span className="text-[10px] text-muted-foreground">Minimum 5 characters required.</span>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setApproveRevisionModalOpen(false);
+                setApprovalRemarks("");
+              }}
+              className="rounded-xl text-xs"
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              disabled={approvingRevision}
+              onClick={handleApproveRevision}
+              className="rounded-xl text-xs"
+            >
+              {approvingRevision ? "Approving..." : "Approve Revision"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Reject Revision Modal ────────────────────────────────────── */}
+      <Dialog open={rejectRevisionModalOpen} onOpenChange={setRejectRevisionModalOpen}>
+        <DialogContent className="sm:max-w-md rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 font-display text-base text-destructive">
+              <RejectIcon className="h-4 w-4" />
+              Reject Compensation Revision
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Reject the proposed compensation revision with a mandatory reason.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2 text-xs">
+            <div className="rounded-xl border border-border/50 p-3">
+              <p className="font-medium text-foreground">
+                Employee: {selectedRevision?.maker?.name || "—"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Revision #{selectedRevision?.revisionNumber} • {formatDate(selectedRevision?.effectiveDate || "")}
+              </p>
+              <p className="text-xs mt-1">
+                <span className="text-muted-foreground">Previous: </span>
+                <span className="font-mono">{selectedRevision?.previousCtcFormatted}</span>
+                <span className="mx-2 text-muted-foreground">→</span>
+                <span className="font-mono font-bold text-foreground">{selectedRevision?.newCtcFormatted}</span>
+              </p>
+              <p className="text-xs mt-1 text-muted-foreground">"{selectedRevision?.reason}"</p>
+            </div>
+
+            <div>
+              <label className="font-semibold text-foreground">Rejection Reason *</label>
+              <Textarea
+                id="reject-revision-reason"
+                placeholder="e.g. CTC increase exceeds budget allocation for this quarter"
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                rows={3}
+                className="mt-1 rounded-lg text-xs"
+              />
+              <span className="text-[10px] text-muted-foreground">Minimum 5 characters required.</span>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setRejectRevisionModalOpen(false);
+                setRejectionReason("");
+              }}
+              className="rounded-xl text-xs"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              disabled={rejectingRevision}
+              onClick={handleRejectRevision}
+              className="rounded-xl text-xs"
+            >
+              {rejectingRevision ? "Rejecting..." : "Confirm Reject"}
             </Button>
           </DialogFooter>
         </DialogContent>

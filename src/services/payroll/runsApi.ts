@@ -2,6 +2,7 @@ import apiInstance from "@/api/apiInstance";
 import { generateIdempotencyKey } from "@/features/payroll/utils/idempotency";
 import { extractData } from "./utils";
 import { normalizePayrollRunStatus } from "./normalizers";
+import { isConflictError } from "./errors";
 import type {
   RunPayrollResponse,
   RunPayrollResult,
@@ -17,34 +18,43 @@ import type {
  * Note: Running payroll produces provisional results and does NOT finalize payroll or initiate payments.
  */
 export async function runPayroll(periodId: string): Promise<RunPayrollResult> {
-  const res = await apiInstance.post(
-    "/payroll/run",
-    { periodId },
-    {
-      headers: {
-        "Idempotency-Key": generateIdempotencyKey(),
-        "Cache-Control": "no-cache",
-      },
+  try {
+    const res = await apiInstance.post(
+      "/payroll/run",
+      { periodId },
+      {
+        headers: {
+          "Idempotency-Key": generateIdempotencyKey(),
+          "Cache-Control": "no-cache",
+        },
+      }
+    );
+    
+    // extractData unwraps the response, so we get the data directly
+    const data = extractData<Record<string, unknown>>(res);
+    
+    // Read runId from various possible field names in the unwrapped data
+    const runId = String(data?.runId ?? data?.run_id ?? data?.id ?? data?.cycleId ?? data?.cycle_id ?? "");
+    const jobId = data?.jobId ?? data?.job_id ?? data?.id ?? null;
+    const status = String(data?.status ?? data?.run_status ?? data?.state ?? "Processing");
+    const message = String(data?.message ?? "Provisional payroll processing initiated successfully.");
+    
+    // HTTP 2xx = success (axios throws on non-2xx, so if we're here, it's success)
+    return {
+      runId,
+      jobId,
+      status,
+      success: true,
+      message,
+    };
+  } catch (err: unknown) {
+    if (isConflictError(err)) {
+      // Surface server message for 409 (e.g., duplicate run for the month)
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      throw new Error(axiosErr.response?.data?.message || "Payroll run already exists for this period.");
     }
-  );
-  
-  // extractData unwraps the response, so we get the data directly
-  const data = extractData<Record<string, unknown>>(res);
-  
-  // Read runId from various possible field names in the unwrapped data
-  const runId = String(data?.runId ?? data?.run_id ?? data?.id ?? data?.cycleId ?? data?.cycle_id ?? "");
-  const jobId = data?.jobId ?? data?.job_id ?? data?.id ?? null;
-  const status = String(data?.status ?? data?.run_status ?? data?.state ?? "Processing");
-  const message = String(data?.message ?? "Provisional payroll processing initiated successfully.");
-  
-  // HTTP 2xx = success (axios throws on non-2xx, so if we're here, it's success)
-  return {
-    runId,
-    jobId,
-    status,
-    success: true,
-    message,
-  };
+    throw err;
+  }
 }
 
 /**

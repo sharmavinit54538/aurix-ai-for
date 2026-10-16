@@ -18,6 +18,7 @@ import {
   UserX,
   Users,
   XCircle,
+  XCircle as RejectIcon,
 } from "lucide-react";
 import { GlassCard, StatCard } from "@/components/hrms/Shared";
 import { Button } from "@/components/ui/button";
@@ -65,6 +66,9 @@ export default function FullAndFinalPage() {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [approvalRemarks, setApprovalRemarks] = useState("");
   const [finalizing, setFinalizing] = useState(false);
+
+  // Reject Modal
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
 
   const loadRecords = async () => {
     setLoading(true);
@@ -160,11 +164,11 @@ export default function FullAndFinalPage() {
 
   const handleDownloadStatement = async (fnfId: string) => {
     try {
-      const blob = await fnfApi.downloadFnfStatement(fnfId);
-      const url = window.URL.createObjectURL(blob);
+      const { blob, filename, mimeType } = await fnfApi.downloadFnfStatement(fnfId);
+      const url = window.URL.createObjectURL(blob, { type: mimeType });
       const a = document.createElement("a");
       a.href = url;
-      a.download = `FNF_STATEMENT_${fnfId}.pdf`;
+      a.download = filename || `FNF_STATEMENT_${fnfId}.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -173,6 +177,37 @@ export default function FullAndFinalPage() {
       toast.success("F&F statement downloaded.");
     } catch {
       toast.error("Failed to download settlement statement");
+    }
+  };
+
+  // ── View Detail Handler (uses getFnfDetail) ─────────────────────────
+  const handleViewDetail = async (fnfId: string) => {
+    try {
+      const detail = await fnfApi.getFnfDetail(fnfId);
+      setSelectedRecord(detail);
+      setDetailModalOpen(true);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to load F&F details");
+    }
+  };
+
+  // ── Reject Handler (uses rejectFnf) ────────────────────────────────
+  const handleRejectFnf = async () => {
+    if (!selectedRecord || !approvalRemarks.trim()) {
+      toast.error("Rejection reason is required");
+      return;
+    }
+    setFinalizing(true);
+    try {
+      await fnfApi.rejectFnf(selectedRecord.id, approvalRemarks.trim());
+      toast.warning("F&F settlement rejected and sent back.");
+      setDetailModalOpen(false);
+      setApprovalRemarks("");
+      loadRecords();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to reject F&F");
+    } finally {
+      setFinalizing(false);
     }
   };
 
@@ -578,13 +613,26 @@ export default function FullAndFinalPage() {
             </Button>
 
             {selectedRecord?.status === "calculated" && (
-              <Button
-                size="sm"
-                onClick={handleApprove}
-                className="rounded-xl text-xs"
-              >
-                Approve Settlement
-              </Button>
+              <>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => {
+                    setApprovalRemarks("");
+                    setRejectModalOpen(true);
+                  }}
+                  className="rounded-xl text-xs"
+                >
+                  Reject Settlement
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleApprove}
+                  className="rounded-xl text-xs"
+                >
+                  Approve Settlement
+                </Button>
+              </>
             )}
 
             {selectedRecord?.status === "approved" && (
@@ -597,6 +645,59 @@ export default function FullAndFinalPage() {
                 {finalizing ? "Finalizing..." : "Finalize & Seal F&F"}
               </Button>
             )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Reject F&F Settlement Modal ────────────────────────────── */}
+      <Dialog open={rejectModalOpen} onOpenChange={setRejectModalOpen}>
+        <DialogContent className="sm:max-w-md rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 font-display text-base text-destructive">
+              <RejectIcon className="h-4 w-4" />
+              Reject F&F Settlement
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Send this settlement back to the initiator with a mandatory reason.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2 text-xs">
+            <div>
+              <label className="font-semibold text-foreground">Rejection Reason *</label>
+              <Textarea
+                id="reject-reason-input"
+                placeholder="e.g. Incorrect leave balance calculation, needs recalculation"
+                value={approvalRemarks}
+                onChange={(e) => setApprovalRemarks(e.target.value)}
+                rows={3}
+                className="mt-1 rounded-lg text-xs"
+              />
+              <span className="text-[10px] text-muted-foreground">Minimum 5 characters required.</span>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setRejectModalOpen(false);
+                setApprovalRemarks("");
+              }}
+              className="rounded-xl text-xs"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              disabled={finalizing}
+              onClick={handleRejectFnf}
+              className="rounded-xl text-xs"
+            >
+              {finalizing ? "Rejecting..." : "Confirm Reject"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
