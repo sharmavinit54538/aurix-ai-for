@@ -267,7 +267,7 @@ export default function PaymentBatchListPage() {
         </div>
 
         <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto scrollbar-none">
-          {["all", "draft", "validated", "approved", "submitted", "reconciled"].map((st) => (
+          {["all", "draft", "validated", "approved", "submitted", "partial", "reconciled"].map((st) => (
             <Button
               key={st}
               size="sm"

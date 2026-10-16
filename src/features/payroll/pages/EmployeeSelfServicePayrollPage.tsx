@@ -69,7 +69,13 @@ export default function EmployeeSelfServicePayrollPage() {
       setPayslips(res.items || []);
       setPayslipsTotal(res.total || 0);
     } catch (err: any) {
-      toast.error(err?.message || "Failed to load historical payslips.");
+      if (err?.response?.status === 404) {
+        // No payslips yet - this is normal for new employees
+        setPayslips([]);
+        setPayslipsTotal(0);
+      } else {
+        toast.error(err?.message || "Failed to load historical payslips.");
+      }
     } finally {
       setPayslipsLoading(false);
     }
@@ -99,18 +105,18 @@ export default function EmployeeSelfServicePayrollPage() {
   const handleDownloadPayslip = async (runId: string, periodName: string) => {
     setDownloadingRunId(runId);
     try {
-      const blob = await essApi.downloadMyPayslip(runId);
-      const url = window.URL.createObjectURL(blob);
+      const { blob, filename, mimeType } = await essApi.downloadMyPayslip(runId);
+      const url = window.URL.createObjectURL(blob, { type: mimeType });
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `Payslip_${periodName.replace(/\s+/g, "_")}.pdf`);
+      link.setAttribute("download", filename || `Payslip_${periodName.replace(/\s+/g, "_")}.pdf`);
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
       toast.success("Payslip downloaded successfully");
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Failed to download payslip PDF");
+      toast.error(err?.response?.data?.message || "Failed to download payslip");
     } finally {
       setDownloadingRunId(null);
     }
@@ -338,7 +344,7 @@ export default function EmployeeSelfServicePayrollPage() {
                   ) : payslips.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="py-8 text-center text-muted-foreground">
-                        No historical payslips found for your account.
+                        No payslips yet.
                       </td>
                     </tr>
                   ) : (

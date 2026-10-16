@@ -276,11 +276,11 @@ export default function PaymentBatchDetailPage() {
   const handleDownloadBankFile = async () => {
     if (!batch) return;
     try {
-      const blob = await paymentApi.downloadBankFile(batch.id);
-      const url = window.URL.createObjectURL(blob);
+      const { blob, filename, mimeType } = await paymentApi.downloadBankFile(batch.id);
+      const url = window.URL.createObjectURL(blob, { type: mimeType });
       const a = document.createElement("a");
       a.href = url;
-      a.download = bankFile?.fileName || `SALARY_${batch.batchNumber}.csv`;
+      a.download = filename || bankFile?.fileName || `SALARY_${batch.batchNumber}.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
