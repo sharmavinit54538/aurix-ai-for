@@ -51,6 +51,14 @@ export interface Employee {
   branch?: string;
   uanNumber?: string;
   esiNumber?: string;
+  aboutMe?: string;
+  bio?: string;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  linkedinUrl?: string;
+  twitterUrl?: string;
+  facebookUrl?: string;
   raw?: Record<string, unknown>;
 }
 

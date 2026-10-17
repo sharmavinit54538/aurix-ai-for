@@ -90,6 +90,14 @@ function mapEmployee(emp: Record<string, unknown>): Employee {
     branch: emp.branch ? String(emp.branch) : undefined,
     uanNumber: emp.uan_number || emp.uan ? String(emp.uan_number || emp.uan) : undefined,
     esiNumber: emp.esi_number || emp.esi ? String(emp.esi_number || emp.esi) : undefined,
+    aboutMe: emp.about_me || emp.bio || emp.about ? String(emp.about_me || emp.bio || emp.about) : undefined,
+    bio: emp.bio || emp.about_me ? String(emp.bio || emp.about_me) : undefined,
+    notes: emp.notes ? String(emp.notes) : undefined,
+    createdAt: emp.created_at ? String(emp.created_at).split("T")[0] : undefined,
+    updatedAt: emp.updated_at ? String(emp.updated_at).split("T")[0] : undefined,
+    linkedinUrl: emp.linkedin_url || emp.linkedin ? String(emp.linkedin_url || emp.linkedin) : undefined,
+    twitterUrl: emp.twitter_url || emp.twitter ? String(emp.twitter_url || emp.twitter) : undefined,
+    facebookUrl: emp.facebook_url || emp.facebook ? String(emp.facebook_url || emp.facebook) : undefined,
     raw: emp,
   };
 }
