@@ -1,11 +1,15 @@
 import * as fs from "node:fs";
 
-const content = fs.readFileSync("src/routeTree.gen.ts", "utf-8");
-const lines = content.split("\n");
-
-for (let i = 0; i < lines.length; i++) {
-  const line = lines[i];
-  if (line.toLowerCase().includes("hroperations") || line.toLowerCase().includes("hr-operations") || line.toLowerCase().includes("hr_operations")) {
-    console.log(`L${i + 1}: ${line}`);
+function printContext(filePath: string) {
+  const content = fs.readFileSync(filePath, "utf-8");
+  let idx = 0;
+  while ((idx = content.indexOf(".component", idx)) !== -1) {
+    const start = Math.max(0, idx - 150);
+    const end = Math.min(content.length, idx + 150);
+    console.log(`--- Match in ${filePath} at ${idx} ---`);
+    console.log(content.slice(start, end));
+    idx += 10;
   }
 }
+
+printContext(".output/public/assets/index-pyIQBtzp.js");
