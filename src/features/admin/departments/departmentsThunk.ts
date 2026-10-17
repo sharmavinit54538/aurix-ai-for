@@ -164,6 +164,10 @@ export const fetchDepartments = createAsyncThunk<
   "departments/fetchDepartments",
   async (params, { rejectWithValue }) => {
     try {
+      const requestedLimit = params && params.limit ? Number(params.limit) : 100;
+      // Backend contract strictly enforces 1 <= limit <= 100. Always clamp backend requests to max 100.
+      const backendLimit = Math.min(Math.max(requestedLimit, 1), 100);
+
       const queryParams: Record<string, unknown> = {};
       if (params) {
         if (params.search) queryParams.search = params.search;
@@ -171,8 +175,8 @@ export const fetchDepartments = createAsyncThunk<
           queryParams.status = params.status.toUpperCase();
         }
         if (params.page) queryParams.page = params.page;
-        if (params.limit) queryParams.limit = params.limit;
       }
+      queryParams.limit = backendLimit;
 
       const response = await apiInstance.get("/departments", { params: queryParams });
       const data = response.data?.data;
@@ -187,18 +191,25 @@ export const fetchDepartments = createAsyncThunk<
       const limit = Number(data.limit ?? 20);
       const pages = Number(data.pages ?? (limit > 0 ? Math.ceil(total / limit) : 1));
 
-      // If backend total exceeds fetched page 1 items and limit >= 500 (e.g. reloadDepartments)
-      // fetch remaining pages so client list is never silently truncated
-      if (total > mappedItems.length && pages > 1 && (!params || (params.limit && params.limit >= 500))) {
+      // If backend total exceeds page 1 items and caller needs all departments or multiple pages,
+      // page through with backendLimit so UI is never truncated or causes 422
+      if (total > mappedItems.length && pages > 1 && requestedLimit > backendLimit) {
+        const seenIds = new Set(mappedItems.map((d) => d.id));
         const pagePromises = [];
         for (let p = 2; p <= pages; p++) {
-          pagePromises.push(apiInstance.get("/departments", { params: { ...queryParams, page: p, limit } }));
+          pagePromises.push(apiInstance.get("/departments", { params: { ...queryParams, page: p, limit: backendLimit } }));
         }
         const extraResponses = await Promise.all(pagePromises);
         for (const resp of extraResponses) {
           const extraItems = resp.data?.data?.items;
           if (Array.isArray(extraItems)) {
-            mappedItems = mappedItems.concat(extraItems.map((item: unknown) => mapBackendToFrontend(item)));
+            for (const item of extraItems) {
+              const mapped = mapBackendToFrontend(item);
+              if (!seenIds.has(mapped.id)) {
+                seenIds.add(mapped.id);
+                mappedItems.push(mapped);
+              }
+            }
           }
         }
       }

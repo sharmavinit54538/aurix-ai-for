@@ -75,7 +75,7 @@ export function useDepartmentsPage() {
   const reloadDepartments = useCallback(() => {
     fetchDepartments({
       page: 1,
-      limit: 500,
+      limit: 100,
     });
     fetchDepartmentsSummary();
   }, [fetchDepartments, fetchDepartmentsSummary]);
