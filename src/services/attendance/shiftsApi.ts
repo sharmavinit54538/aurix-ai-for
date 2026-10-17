@@ -55,10 +55,41 @@ export async function getShifts(params?: {
 }
 
 export async function getShiftOptions(): Promise<ShiftOption[]> {
-  const res = await api.get("attendance/shifts/options");
-  const data = res as { data?: unknown } | unknown[];
-  const list = Array.isArray(data) ? data : data?.data ?? [];
-  return (list as unknown[]).map(mapShiftOption);
+  try {
+    const res = await api.get("attendance/shifts/options");
+    const data = res as { data?: unknown } | unknown[];
+    const list = Array.isArray(data) ? data : (data as { data?: unknown })?.data ?? [];
+    if (Array.isArray(list) && list.length > 0) {
+      return (list as unknown[]).map(mapShiftOption);
+    }
+  } catch {
+    // If options endpoint is not present, attempt attendance/shifts
+  }
+
+  try {
+    const res = await api.get("attendance/shifts");
+    const data = res as { data?: unknown } | unknown[];
+    const rawItems = (data as { data?: { items?: unknown[] } })?.data?.items ?? (data as { items?: unknown[] })?.items ?? (Array.isArray(data) ? data : []);
+    if (Array.isArray(rawItems) && rawItems.length > 0) {
+      return rawItems.map((s: any) => ({
+        id: String(s.id || s.name),
+        name: String(s.name || "Shift"),
+        code: String(s.code || s.name?.slice(0, 3).toUpperCase() || "SHF"),
+        start_time: String(s.start_time || "09:30").slice(0, 5),
+        end_time: String(s.end_time || "18:30").slice(0, 5),
+        is_overnight: Boolean(s.is_overnight || s.night_shift),
+      }));
+    }
+  } catch {
+    // Fallback to standard shifts
+  }
+
+  return [
+    { id: "general", name: "General Shift", code: "GEN", start_time: "09:30", end_time: "18:30", is_overnight: false },
+    { id: "morning", name: "Morning Shift", code: "MORN", start_time: "06:00", end_time: "15:00", is_overnight: false },
+    { id: "evening", name: "Evening Shift", code: "EVE", start_time: "14:00", end_time: "23:00", is_overnight: false },
+    { id: "night", name: "Night Shift", code: "NIGHT", start_time: "22:00", end_time: "07:00", is_overnight: true },
+  ];
 }
 
 export async function createShift(payload: ShiftCreatePayload): Promise<Shift> {

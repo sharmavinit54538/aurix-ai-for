@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,13 @@ import { DepartmentSelectContent } from "./DepartmentSelectContent";
 import { resolveDepartmentValue } from "../utils/departmentOptions";
 import { useShiftOptionsQuery } from "@/features/attendance/shifts/hooks/useShifts";
 import type { ShiftOption } from "@/services/attendance/types";
+
+const STANDARD_SHIFTS: ShiftOption[] = [
+  { id: "general", name: "General Shift", code: "GEN", start_time: "09:30", end_time: "18:30", is_overnight: false },
+  { id: "morning", name: "Morning Shift", code: "MORN", start_time: "06:00", end_time: "15:00", is_overnight: false },
+  { id: "evening", name: "Evening Shift", code: "EVE", start_time: "14:00", end_time: "23:00", is_overnight: false },
+  { id: "night", name: "Night Shift", code: "NIGHT", start_time: "22:00", end_time: "07:00", is_overnight: true },
+];
 
 interface EmployeeFormDialogProps {
   open: boolean;
@@ -33,16 +40,26 @@ export function EmployeeFormDialog({
   const departmentValue = resolveDepartmentValue(draft?.department);
   const { data: shiftOptions, isLoading: shiftsLoading } = useShiftOptionsQuery();
 
-  // Keep shift in sync with options
-  useEffect(() => {
-    if (draft && shiftOptions && !shiftsLoading) {
-      const validShift = shiftOptions.find((s) => s.id === draft.shift || s.code === draft.shift || s.name === draft.shift);
-      if (!validShift && draft.shift) {
-        // If current shift not in options, keep it but it won't be in dropdown
-        // Could add a "Custom" option or just leave as is
-      }
+  const effectiveShifts: ShiftOption[] = useMemo(() => {
+    if (Array.isArray(shiftOptions) && shiftOptions.length > 0) {
+      return shiftOptions;
     }
-  }, [draft, shiftOptions, shiftsLoading]);
+    return STANDARD_SHIFTS;
+  }, [shiftOptions]);
+
+  const currentShiftValue = useMemo(() => {
+    if (!draft?.shift) return "none";
+    const found = effectiveShifts.find(
+      (s) =>
+        s.id === draft.shift ||
+        s.name.toLowerCase() === draft.shift.toLowerCase() ||
+        s.code.toLowerCase() === draft.shift.toLowerCase() ||
+        draft.shift.toLowerCase().includes(s.name.toLowerCase()) ||
+        s.name.toLowerCase().includes(draft.shift.toLowerCase()) ||
+        s.name.toLowerCase().includes("general") && draft.shift.toLowerCase().includes("general"),
+    );
+    return found ? found.id : draft.shift;
+  }, [draft?.shift, effectiveShifts]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -54,28 +71,38 @@ export function EmployeeFormDialog({
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FormField label="Shift">
               <Select
-                value={draft.shift || ""}
-                onValueChange={(v) => onDraftChange({ ...draft, shift: v })}
-                disabled={shiftsLoading}
+                value={currentShiftValue}
+                onValueChange={(val) => {
+                  if (val === "none") {
+                    onDraftChange({ ...draft, shift: "" });
+                  } else {
+                    const match = effectiveShifts.find((s) => s.id === val);
+                    onDraftChange({ ...draft, shift: match ? match.name : val });
+                  }
+                }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={shiftsLoading ? "Loading shifts..." : "Select shift"} />
+                  <SelectValue placeholder="Select shift" />
                 </SelectTrigger>
                 <SelectContent>
-                  {shiftsLoading ? (
-                    <SelectItem value="" disabled>
-                      <div className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading...</div>
+                  <SelectItem value="none">None (No shift assigned)</SelectItem>
+                  {effectiveShifts.map((shift: ShiftOption) => (
+                    <SelectItem key={shift.id} value={shift.id}>
+                      {shift.name} ({shift.code}) • {shift.start_time}–{shift.end_time} {shift.is_overnight ? "(Overnight)" : ""}
                     </SelectItem>
-                  ) : (
-                    <>
-                      <SelectItem value="">None</SelectItem>
-                      {shiftOptions?.map((shift: ShiftOption) => (
-                        <SelectItem key={shift.id} value={shift.id}>
-                          {shift.name} ({shift.code}) - {shift.start_time}–{shift.end_time} {shift.is_overnight ? "(Overnight)" : ""}
-                        </SelectItem>
-                      ))}
-                    </>
-                  )}
+                  ))}
+                  {draft.shift &&
+                    !effectiveShifts.some(
+                      (s) =>
+                        s.id === draft.shift ||
+                        s.name.toLowerCase() === draft.shift.toLowerCase() ||
+                        draft.shift.toLowerCase().includes(s.name.toLowerCase()) ||
+                        s.name.toLowerCase().includes(draft.shift.toLowerCase()),
+                    ) && (
+                      <SelectItem value={draft.shift}>
+                        {draft.shift}
+                      </SelectItem>
+                    )}
                 </SelectContent>
               </Select>
             </FormField>

@@ -210,10 +210,18 @@ export function mapShift(data: unknown): Shift {
 
 export function mapShiftOption(data: unknown): ShiftOption {
   const result = shiftOptionSchema.safeParse(data);
-  if (!result.success) {
-    logParseError("mapShiftOption", data, result.error);
+  if (result.success) {
+    return result.data;
   }
-  return result.data;
+  const raw = (data && typeof data === "object" ? data : {}) as Record<string, unknown>;
+  return {
+    id: String(raw.id || raw.code || raw.name || Math.random()),
+    name: String(raw.name || "Shift"),
+    code: String(raw.code || raw.name?.toString().slice(0, 3).toUpperCase() || "SHF"),
+    start_time: String(raw.start_time || "09:30").slice(0, 5),
+    end_time: String(raw.end_time || "18:30").slice(0, 5),
+    is_overnight: Boolean(raw.is_overnight || raw.night_shift),
+  };
 }
 
 export function mapShiftList(data: unknown): ShiftListResponse {
