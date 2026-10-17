@@ -9,6 +9,7 @@ interface EmployeesListContentProps {
   employees: Employee[];
   onRetry: () => void;
   onAdd: () => void;
+  onView: (employee: Employee) => void;
   onEdit: (employee: Employee) => void;
   onResendInvite: (id: string) => void;
   onResetPassword: (id: string) => void;
@@ -23,6 +24,7 @@ export function EmployeesListContent({
   employees,
   onRetry,
   onAdd,
+  onView,
   onEdit,
   onResendInvite,
   onResetPassword,
@@ -77,6 +79,7 @@ export function EmployeesListContent({
   return (
     <EmployeesTable
       employees={employees}
+      onView={onView}
       onEdit={onEdit}
       onResendInvite={onResendInvite}
       onResetPassword={onResetPassword}

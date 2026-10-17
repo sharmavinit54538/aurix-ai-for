@@ -7,6 +7,7 @@ import {
   Key,
   Eye,
   Trash2,
+  Edit3,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +24,7 @@ import { getEmployeeStatusDetails } from "../utils/employeeStatus";
 
 interface EmployeesTableProps {
   employees: Employee[];
+  onView: (employee: Employee) => void;
   onEdit: (employee: Employee) => void;
   onResendInvite: (id: string) => void;
   onResetPassword: (id: string) => void;
@@ -33,6 +35,7 @@ interface EmployeesTableProps {
 
 export function EmployeesTable({
   employees,
+  onView,
   onEdit,
   onResendInvite,
   onResetPassword,
@@ -59,6 +62,7 @@ export function EmployeesTable({
             <EmployeeRow
               key={employee.id}
               employee={employee}
+              onView={onView}
               onEdit={onEdit}
               onResendInvite={onResendInvite}
               onResetPassword={onResetPassword}
@@ -75,6 +79,7 @@ export function EmployeesTable({
 
 function EmployeeRow({
   employee,
+  onView,
   onEdit,
   onResendInvite,
   onResetPassword,
@@ -83,6 +88,7 @@ function EmployeeRow({
   onDelete,
 }: {
   employee: Employee;
+  onView: (employee: Employee) => void;
   onEdit: (employee: Employee) => void;
   onResendInvite: (id: string) => void;
   onResetPassword: (id: string) => void;
@@ -101,20 +107,45 @@ function EmployeeRow({
     toast.success("Invitation link copied to clipboard");
   }
 
+  const initials = employee.fullName
+    .split(" ")
+    .map((n) => n[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase() || "EM";
+
   return (
-    <tr className="border-t border-border transition-colors hover:bg-accent/30">
+    <tr className="border-t border-border transition-colors hover:bg-accent/30 group">
       <td className="px-4 py-3">
-        <div className="flex items-center gap-3">
-          <div className="grid h-9 w-9 place-items-center rounded-full bg-foreground text-xs font-semibold text-background">
-            {employee.fullName
-              .split(" ")
-              .map((n) => n[0])
-              .slice(0, 2)
-              .join("")}
-          </div>
+        <div
+          className="flex items-center gap-3 cursor-pointer"
+          onClick={() => onView(employee)}
+        >
+          {employee.profilePhotoUrl || employee.avatarUrl ? (
+            <img
+              src={employee.profilePhotoUrl || employee.avatarUrl}
+              alt={employee.fullName}
+              className="h-9 w-9 rounded-full object-cover border border-border"
+            />
+          ) : (
+            <div className="grid h-9 w-9 place-items-center rounded-full bg-foreground text-xs font-semibold text-background group-hover:ring-2 group-hover:ring-primary/40 transition-all">
+              {initials}
+            </div>
+          )}
           <div>
-            <div className="font-medium">{employee.fullName}</div>
-            <div className="text-xs text-muted-foreground">{employee.email}</div>
+            <div className="font-medium text-foreground group-hover:text-primary transition-colors flex items-center gap-1.5">
+              <span>{employee.fullName}</span>
+            </div>
+            <div className="text-xs text-muted-foreground flex items-center gap-1.5">
+              <span>{employee.email}</span>
+              {employee.employeeId && (
+                <>
+                  <span>•</span>
+                  <span className="font-mono text-[11px] text-muted-foreground/80">{employee.employeeId}</span>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </td>
@@ -134,10 +165,15 @@ function EmployeeRow({
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 bg-card border border-border">
+          <DropdownMenuContent align="end" className="w-52 bg-card border border-border shadow-lg">
+            <DropdownMenuItem onClick={() => onView(employee)} className="cursor-pointer gap-2 font-medium">
+              <Eye className="h-4 w-4 text-primary" />
+              <span>View Full Profile</span>
+            </DropdownMenuItem>
+
             <DropdownMenuItem onClick={() => onEdit(employee)} className="cursor-pointer gap-2">
-              <Eye className="h-4 w-4 text-muted-foreground" />
-              <span>View / Edit Profile</span>
+              <Edit3 className="h-4 w-4 text-muted-foreground" />
+              <span>Edit Employee</span>
             </DropdownMenuItem>
 
             {isInvited && (

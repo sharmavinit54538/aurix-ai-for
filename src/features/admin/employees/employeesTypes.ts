@@ -13,6 +13,45 @@ export interface Employee {
   role?: string;
   activationToken?: string;
   activationTokenExpiresAt?: string;
+
+  // Complete Employee Information fields
+  firstName?: string;
+  lastName?: string;
+  personalEmail?: string;
+  companyEmail?: string;
+  employmentType?: string;
+  employmentStatus?: string;
+  workLocation?: string;
+  workMode?: string;
+  officeLocation?: string;
+  gender?: string;
+  dateOfBirth?: string;
+  bloodGroup?: string;
+  maritalStatus?: string;
+  nationality?: string;
+  preferredLanguage?: string;
+  emergencyContactName?: string;
+  emergencyContactRelation?: string;
+  emergencyContactPhone?: string;
+  currentAddress?: string;
+  permanentAddress?: string;
+  reportingManagerId?: string;
+  reportingManagerName?: string;
+  reportingChain?: Array<{ id?: string; name: string; designation?: string; department?: string }>;
+  probationPeriodMonths?: number;
+  profilePhotoUrl?: string;
+  avatarUrl?: string;
+  salary?: string | number;
+  ctc?: string | number;
+  panNumber?: string;
+  aadhaarNumber?: string;
+  bankName?: string;
+  bankAccountNumber?: string;
+  ifscCode?: string;
+  branch?: string;
+  uanNumber?: string;
+  esiNumber?: string;
+  raw?: Record<string, unknown>;
 }
 
 export interface EmployeesState {

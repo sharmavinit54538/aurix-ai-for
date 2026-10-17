@@ -16,6 +16,7 @@ interface EmployeesSearch {
   status?: string;
   sort?: string;
   order?: "asc" | "desc";
+  employeeId?: string;
 }
 
 export const Route = createFileRoute("/dashboard/employees")({
@@ -30,6 +31,7 @@ export const Route = createFileRoute("/dashboard/employees")({
       status: search.status ? String(search.status) : undefined,
       sort: search.sort ? String(search.sort) : undefined,
       order: (search.order === "asc" || search.order === "desc") ? search.order : undefined,
+      employeeId: search.employeeId ? String(search.employeeId) : undefined,
     };
   },
   head: () => ({ meta: [{ title: "Employees — OFC360" }] }),

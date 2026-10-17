@@ -9,21 +9,88 @@ import type {
 } from "./employeesTypes";
 
 function mapEmployee(emp: Record<string, unknown>): Employee {
+  const firstName = String(emp.first_name ?? "");
+  const lastName = String(emp.last_name ?? "");
+  const fullNameCalculated = `${firstName} ${lastName}`.trim();
+  const fullName = fullNameCalculated || String(emp.full_name ?? emp.name ?? "Employee");
+
+  const manager =
+    emp.reporting_manager_name ||
+    emp.manager_name ||
+    (typeof emp.manager === "object" && emp.manager
+      ? (emp.manager as Record<string, unknown>).name || (emp.manager as Record<string, unknown>).full_name
+      : emp.manager) ||
+    "";
+
+  const rawJoiningDate = emp.joining_date || emp.created_at;
+  const joiningDate = rawJoiningDate ? String(rawJoiningDate).split("T")[0] : "";
+
+  const location = String(
+    emp.work_location ||
+      emp.office_location ||
+      emp.branch ||
+      emp.location ||
+      emp.city ||
+      "",
+  );
+
   return {
     id: String(emp.id ?? ""),
-    employeeId: String(emp.employee_id ?? ""),
-    fullName: `${emp.first_name ?? ""} ${emp.last_name ?? ""}`.trim(),
-    email: String(emp.personal_email ?? emp.company_email ?? ""),
-    phone: String(emp.phone ?? ""),
+    employeeId: String(emp.employee_id ?? emp.employee_code ?? emp.id ?? ""),
+    fullName,
+    email: String(emp.personal_email ?? emp.company_email ?? emp.work_email ?? emp.email ?? ""),
+    phone: String(emp.phone ?? emp.phone_number ?? ""),
     department: String(emp.department ?? ""),
-    designation: String(emp.designation ?? ""),
-    joiningDate: String(emp.joining_date ?? ""),
-    managerName: "",
+    designation: String(emp.designation ?? emp.title ?? emp.role ?? ""),
+    joiningDate,
+    managerName: String(manager || ""),
     shift: String(emp.shift ?? "General"),
     status: String(emp.status ?? "INVITED"),
     role: String(emp.role ?? "employee"),
     activationToken: emp.activation_token as string | undefined,
     activationTokenExpiresAt: emp.activation_token_expires_at as string | undefined,
+
+    // Comprehensive employee details
+    firstName,
+    lastName,
+    personalEmail: emp.personal_email ? String(emp.personal_email) : undefined,
+    companyEmail: emp.company_email ? String(emp.company_email) : undefined,
+    employmentType: emp.employment_type ? String(emp.employment_type) : undefined,
+    employmentStatus: emp.employment_status ? String(emp.employment_status) : undefined,
+    workLocation: location || undefined,
+    workMode: emp.work_mode ? String(emp.work_mode) : undefined,
+    officeLocation: emp.office_location ? String(emp.office_location) : undefined,
+    gender: emp.gender ? String(emp.gender) : undefined,
+    dateOfBirth: emp.date_of_birth || emp.dob ? String(emp.date_of_birth || emp.dob).split("T")[0] : undefined,
+    bloodGroup: emp.blood_group ? String(emp.blood_group) : undefined,
+    maritalStatus: emp.marital_status ? String(emp.marital_status) : undefined,
+    nationality: emp.nationality ? String(emp.nationality) : undefined,
+    preferredLanguage: emp.preferred_language ? String(emp.preferred_language) : undefined,
+    emergencyContactName: emp.emergency_contact_name ? String(emp.emergency_contact_name) : undefined,
+    emergencyContactRelation: emp.emergency_contact_relation ? String(emp.emergency_contact_relation) : undefined,
+    emergencyContactPhone: emp.emergency_contact_phone ? String(emp.emergency_contact_phone) : undefined,
+    currentAddress: emp.current_address_line1
+      ? [emp.current_address_line1, emp.current_address_line2, emp.current_city, emp.current_state, emp.current_pincode].filter(Boolean).join(", ")
+      : emp.address ? String(emp.address) : undefined,
+    permanentAddress: emp.permanent_address_line1
+      ? [emp.permanent_address_line1, emp.permanent_address_line2, emp.permanent_city, emp.permanent_state, emp.permanent_pincode].filter(Boolean).join(", ")
+      : undefined,
+    reportingManagerId: emp.reporting_manager_id ? String(emp.reporting_manager_id) : undefined,
+    reportingManagerName: String(manager || ""),
+    probationPeriodMonths: emp.probation_period_months ? Number(emp.probation_period_months) : undefined,
+    profilePhotoUrl: (emp.profile_photo_url || emp.avatar_url || emp.avatar) ? String(emp.profile_photo_url || emp.avatar_url || emp.avatar) : undefined,
+    avatarUrl: (emp.avatar_url || emp.profile_photo_url || emp.avatar) ? String(emp.avatar_url || emp.profile_photo_url || emp.avatar) : undefined,
+    salary: emp.salary ? String(emp.salary) : undefined,
+    ctc: emp.ctc ? String(emp.ctc) : emp.ctc_annual ? String(emp.ctc_annual) : undefined,
+    panNumber: emp.pan_number ? String(emp.pan_number) : undefined,
+    aadhaarNumber: emp.aadhaar_number ? String(emp.aadhaar_number) : undefined,
+    bankName: emp.bank_name ? String(emp.bank_name) : undefined,
+    bankAccountNumber: emp.bank_account_number || emp.account_number ? String(emp.bank_account_number || emp.account_number) : undefined,
+    ifscCode: emp.ifsc_code ? String(emp.ifsc_code) : undefined,
+    branch: emp.branch ? String(emp.branch) : undefined,
+    uanNumber: emp.uan_number || emp.uan ? String(emp.uan_number || emp.uan) : undefined,
+    esiNumber: emp.esi_number || emp.esi ? String(emp.esi_number || emp.esi) : undefined,
+    raw: emp,
   };
 }
 

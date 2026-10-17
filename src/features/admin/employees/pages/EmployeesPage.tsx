@@ -37,7 +37,11 @@ import { EmployeesListContent } from "../components/EmployeesListContent";
 
 import { EmployeeFormDialog } from "../components/EmployeeFormDialog";
 
+import { useNavigate, useSearch } from "@tanstack/react-router";
+
 import { EmployeesConfirmDialogs } from "../components/EmployeesConfirmDialogs";
+
+import { EmployeeDetailPage } from "../components/EmployeeDetailPage";
 
 import { useEmployeeConfirmDialogs } from "../hooks/useEmployeeConfirmDialogs";
 
@@ -48,6 +52,10 @@ import { createEmptyEmployee, exportEmployeesCsv } from "../utils/employeeStatus
 export function EmployeesPage() {
 
   const dispatch = useAppDispatch();
+
+  const navigate = useNavigate();
+
+  const searchParams = useSearch({ strict: false }) as { employeeId?: string };
 
   const { employees, loading, submitting, error } = useAppSelector((state) => state.employees);
 
@@ -60,6 +68,8 @@ export function EmployeesPage() {
 
   const [draft, setDraft] = useState<Employee | null>(null);
 
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+
 
 
   useEffect(() => {
@@ -67,6 +77,20 @@ export function EmployeesPage() {
     dispatch(fetchEmployees({ search: debouncedQ, department: dept }));
 
   }, [dispatch, debouncedQ, dept]);
+
+
+
+  // If employeeId is passed via URL search parameters, sync full page view
+  useEffect(() => {
+    if (searchParams?.employeeId && employees.length > 0) {
+      const match = employees.find(
+        (e) => e.id === searchParams.employeeId || e.employeeId === searchParams.employeeId,
+      );
+      if (match) {
+        setSelectedEmployee(match);
+      }
+    }
+  }, [searchParams?.employeeId, employees]);
 
 
 
@@ -169,6 +193,26 @@ export function EmployeesPage() {
   }
 
 
+
+  function openView(employee: Employee) {
+    setSelectedEmployee(employee);
+    navigate({
+      search: (prev: Record<string, unknown>) => ({ ...prev, employeeId: employee.id || employee.employeeId }),
+      replace: true,
+    });
+  }
+
+  function handleBack() {
+    setSelectedEmployee(null);
+    navigate({
+      search: (prev: Record<string, unknown>) => {
+        const next = { ...prev };
+        delete next.employeeId;
+        return next;
+      },
+      replace: true,
+    });
+  }
 
   function openEdit(employee: Employee) {
 
@@ -298,6 +342,39 @@ export function EmployeesPage() {
 
   }
 
+  if (selectedEmployee) {
+    return (
+      <div className="w-full">
+        <EmployeeDetailPage
+          employee={selectedEmployee}
+          onBack={handleBack}
+          onEdit={(emp) => openEdit(emp)}
+          onResendInvite={resendInvite}
+          onResetPassword={resetPassword}
+          onDeactivate={deactivateConfirm.onRequest}
+          onActivate={activateEmployeeAction}
+        />
+        <EmployeeFormDialog
+          open={open}
+          onOpenChange={setOpen}
+          draft={draft}
+          onDraftChange={setDraft}
+          submitting={submitting}
+          onSave={async () => {
+            await save();
+            if (draft) {
+              setSelectedEmployee((prev) => (prev ? { ...prev, ...draft } : null));
+            }
+          }}
+        />
+        <EmployeesConfirmDialogs
+          deleteConfirm={deleteConfirm}
+          deactivateConfirm={deactivateConfirm}
+        />
+      </div>
+    );
+  }
+
   return (
     <>
       <PageHeader
@@ -316,40 +393,24 @@ export function EmployeesPage() {
       />
       <div className="rounded-2xl border border-border bg-card/60 backdrop-blur-xl">
         <EmployeesFilters
-
           search={q}
-
           department={dept}
-
           onSearchChange={setQ}
-
           onDepartmentChange={setDept}
-
         />
         <EmployeesListContent
-
           loading={loading}
-
           error={error}
-
           employees={employees}
-
           onRetry={refetch}
-
           onAdd={openNew}
-
+          onView={openView}
           onEdit={openEdit}
-
           onResendInvite={resendInvite}
-
           onResetPassword={resetPassword}
-
           onDeactivate={deactivateConfirm.onRequest}
-
           onActivate={activateEmployeeAction}
-
           onDelete={deleteConfirm.onRequest}
-
         />
       </div>
       <EmployeeFormDialog
