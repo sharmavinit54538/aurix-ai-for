@@ -197,7 +197,7 @@ export function EmployeesPage() {
   function openView(employee: Employee) {
     setSelectedEmployee(employee);
     navigate({
-      search: (prev: Record<string, unknown>) => ({ ...prev, employeeId: employee.id || employee.employeeId }),
+      search: ((prev: Record<string, unknown>) => ({ ...prev, employeeId: employee.id || employee.employeeId })) as any,
       replace: true,
     });
   }
@@ -205,11 +205,11 @@ export function EmployeesPage() {
   function handleBack() {
     setSelectedEmployee(null);
     navigate({
-      search: (prev: Record<string, unknown>) => {
+      search: ((prev: Record<string, unknown>) => {
         const next = { ...prev };
         delete next.employeeId;
         return next;
-      },
+      }) as any,
       replace: true,
     });
   }

@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { Upload, UserPlus } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
@@ -10,10 +12,98 @@ import { ManagersToolbar } from "../components/ManagersToolbar";
 import { ManagersAdvancedFilters } from "../components/ManagersAdvancedFilters";
 import { ManagersPagination } from "../components/ManagersPagination";
 import { ManagersDeleteDialogs } from "../components/ManagersDeleteDialogs";
+import { ManagerDetailPage } from "../components/ManagerDetailPage";
 import { useManagersPage } from "../hooks/useManagersPage";
+import type { Manager } from "../types";
 
 export function ManagersPage() {
   const page = useManagersPage();
+  const navigate = useNavigate();
+  const searchParams = useSearch({ strict: false }) as { managerId?: string };
+  const [selectedManager, setSelectedManager] = useState<Manager | null>(null);
+
+  // If managerId is passed via URL search parameters, sync full page view
+  useEffect(() => {
+    if (searchParams?.managerId && page.managers.length > 0) {
+      const match = page.managers.find(
+        (m) =>
+          m.id === searchParams.managerId ||
+          m.managerId === searchParams.managerId ||
+          m.employeeId === searchParams.managerId,
+      );
+      if (match) {
+        setSelectedManager(match);
+      }
+    }
+  }, [searchParams?.managerId, page.managers]);
+
+  function openView(manager: Manager) {
+    setSelectedManager(manager);
+    navigate({
+      search: ((prev: Record<string, unknown>) => ({
+        ...prev,
+        managerId: manager.id || manager.managerId || manager.employeeId,
+      })) as any,
+      replace: true,
+    });
+  }
+
+  function handleBack() {
+    setSelectedManager(null);
+    navigate({
+      search: ((prev: Record<string, unknown>) => {
+        const next = { ...prev };
+        delete next.managerId;
+        return next;
+      }) as any,
+      replace: true,
+    });
+  }
+
+  if (selectedManager) {
+    return (
+      <div className="w-full">
+        <ManagerDetailPage
+          manager={selectedManager}
+          onBack={handleBack}
+          onEdit={(mgr) => page.handleEditClick(mgr)}
+          onDelete={(mgr) => page.handleDeleteClick(mgr)}
+        />
+        <ManagerFormDialog
+          open={page.formOpen}
+          onOpenChange={page.handleFormOpenChange}
+          isEdit={page.isEditMode}
+          manager={page.selectedManager || selectedManager}
+          detailLoading={page.selectedManagerLoading}
+          detailError={page.selectedManagerError}
+          existingManagers={page.managers}
+          onSubmit={async () => {
+            const res = await page.handleSaveManager();
+            if (res.success) {
+              if (page.selectedManager) {
+                setSelectedManager(page.selectedManager);
+              }
+              page.refetch();
+            }
+            return res;
+          }}
+        />
+        <ManagersDeleteDialogs
+          deleteOpen={page.deleteAlertOpen}
+          managerToDelete={page.managerToDelete}
+          bulkDeleteOpen={page.bulkDeleteAlertOpen}
+          selectedCount={page.selectedIds.length}
+          onDeleteOpenChange={page.setDeleteAlertOpen}
+          onBulkDeleteOpenChange={page.setBulkDeleteAlertOpen}
+          onConfirmDelete={async () => {
+            await page.handleConfirmDelete();
+            handleBack();
+          }}
+          onConfirmBulkDelete={page.handleConfirmBulkDelete}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-w-0 max-w-full overflow-x-hidden">
@@ -68,7 +158,7 @@ export function ManagersPage() {
           onClearFilters={page.handleClearFilters}
           onSelectAll={page.handleSelectAll}
           onSelectRow={page.handleSelectRow}
-          onView={page.handleViewClick}
+          onView={openView}
           onEdit={page.handleEditClick}
           onDelete={page.handleDeleteClick}
           onSort={page.handleSort}
