@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useDebounce } from "@/hooks/useDebounce";
 import {
   Download,
@@ -16,6 +17,7 @@ import {
   Mail,
   RotateCcw,
   Sparkles,
+  Eye,
 } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
@@ -54,6 +56,7 @@ import {
   fetchEmployees,
   createEmployee,
   updateEmployee,
+  deleteEmployee,
   resendEmployeeInvite,
   resetEmployeePassword,
   activateEmployee,
@@ -61,10 +64,15 @@ import {
 import type { Employee } from "@/features/admin/employees/employeesTypes";
 import { getRejectMessage } from "@/api/utils";
 import { exportEmployeesCsv } from "@/features/admin/employees/utils/employeeStatus";
+import { ItAdminDetailPage } from "../components/ItAdminDetailPage";
 
 export function ItAdminPage() {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const searchParams = useSearch({ strict: false }) as { itAdminId?: string; adminId?: string };
   const { employees, loading, submitting } = useAppSelector((state) => state.employees);
+
+  const [selectedAdmin, setSelectedAdmin] = useState<Employee | null>(null);
 
   const [q, setQ] = useState("");
   const debouncedQ = useDebounce(q, 300);
@@ -133,6 +141,63 @@ export function ItAdminPage() {
       return true;
     });
   }, [employees, debouncedQ, selectedDept, selectedStatus]);
+
+  // Sync selectedAdmin if itAdminId or adminId is in search params
+  useEffect(() => {
+    const targetId = searchParams?.itAdminId || searchParams?.adminId;
+    if (targetId && itAdmins.length > 0) {
+      const match = itAdmins.find(
+        (a) => a.id === targetId || a.employeeId === targetId
+      );
+      if (match) {
+        setSelectedAdmin(match);
+      }
+    }
+  }, [searchParams?.itAdminId, searchParams?.adminId, itAdmins]);
+
+  function openView(admin: Employee) {
+    setSelectedAdmin(admin);
+    try {
+      navigate({
+        search: ((prev: Record<string, unknown>) => ({
+          ...prev,
+          itAdminId: admin.id || admin.employeeId,
+        })) as any,
+        replace: true,
+      });
+    } catch {
+      // safe fallback
+    }
+  }
+
+  function handleBack() {
+    setSelectedAdmin(null);
+    try {
+      navigate({
+        search: ((prev: Record<string, unknown>) => {
+          const next = { ...prev };
+          delete next.itAdminId;
+          delete next.adminId;
+          return next;
+        }) as any,
+        replace: true,
+      });
+    } catch {
+      // safe fallback
+    }
+  }
+
+  async function handleDeleteAdmin(admin: Employee) {
+    if (!confirm(`Are you sure you want to delete administrator "${admin.fullName}"?`)) return;
+    const res = await dispatch(deleteEmployee(admin.id));
+    if (deleteEmployee.fulfilled.match(res)) {
+      toast.success("IT Administrator removed successfully");
+      handleBack();
+      dispatch(fetchEmployees());
+    } else {
+      toast.error(getRejectMessage(res.payload, "Failed to delete IT administrator"));
+    }
+  }
 
   const departments = useMemo(() => {
     const set = new Set<string>();
@@ -210,6 +275,18 @@ export function ItAdminPage() {
       if (updateEmployee.fulfilled.match(result)) {
         toast.success("IT Administrator updated successfully");
         setDialogOpen(false);
+        if (selectedAdmin && editingAdmin && editingAdmin.id === selectedAdmin.id) {
+          setSelectedAdmin({
+            ...selectedAdmin,
+            fullName: formData.fullName,
+            email: formData.email,
+            phone: formData.phone,
+            department: formData.department,
+            designation: formData.designation,
+            joiningDate: formData.joiningDate,
+            shift: formData.shift,
+          });
+        }
         dispatch(fetchEmployees());
       } else {
         toast.error(getRejectMessage(result.payload, "Failed to update IT administrator"));
@@ -269,6 +346,141 @@ export function ItAdminPage() {
     } else {
       toast.error(getRejectMessage(res.payload, "Failed to activate"));
     }
+  }
+
+  // If viewing a single IT Administrator, render the detail page
+  if (selectedAdmin) {
+    return (
+      <div className="w-full">
+        <ItAdminDetailPage
+          admin={selectedAdmin}
+          onBack={handleBack}
+          onEdit={(admin) => openEdit(admin)}
+          onDelete={handleDeleteAdmin}
+          onResendInvite={handleResendInvite}
+          onResetPassword={handleResetPassword}
+          onActivate={handleActivate}
+        />
+
+        {/* Create / Edit Dialog accessible from detail page view */}
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogContent className="max-w-md text-left">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Laptop className="h-4 w-4 text-cyan-400" />
+                {editingAdmin ? "Edit IT Administrator" : "Add IT Administrator"}
+              </DialogTitle>
+              <DialogDescription className="text-xs">
+                Configure technical credentials and system administration access for this staff member.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3.5 py-2 text-xs">
+              <div>
+                <Label className="text-[11px] font-semibold text-muted-foreground">Full Name *</Label>
+                <Input
+                  value={formData.fullName}
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  placeholder="e.g. Alex Morgan"
+                  className="mt-1 h-8 text-xs"
+                />
+              </div>
+
+              <div>
+                <Label className="text-[11px] font-semibold text-muted-foreground">Email Address *</Label>
+                <Input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="e.g. alex.morgan@company.com"
+                  className="mt-1 h-8 text-xs"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-[11px] font-semibold text-muted-foreground">Phone</Label>
+                  <Input
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    placeholder="+1 555-0192"
+                    className="mt-1 h-8 text-xs"
+                  />
+                </div>
+                <div>
+                  <Label className="text-[11px] font-semibold text-muted-foreground">Employee ID</Label>
+                  <Input
+                    value={formData.employeeId}
+                    onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
+                    placeholder="IT-102934"
+                    className="mt-1 h-8 text-xs font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-[11px] font-semibold text-muted-foreground">Department</Label>
+                  <Input
+                    value={formData.department}
+                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                    placeholder="Information Technology"
+                    className="mt-1 h-8 text-xs"
+                  />
+                </div>
+                <div>
+                  <Label className="text-[11px] font-semibold text-muted-foreground">Designation</Label>
+                  <Input
+                    value={formData.designation}
+                    onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
+                    placeholder="Senior Systems Administrator"
+                    className="mt-1 h-8 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-[11px] font-semibold text-muted-foreground">Joining Date</Label>
+                  <Input
+                    type="date"
+                    value={formData.joiningDate}
+                    onChange={(e) => setFormData({ ...formData, joiningDate: e.target.value })}
+                    className="mt-1 h-8 text-xs"
+                  />
+                </div>
+                <div>
+                  <Label className="text-[11px] font-semibold text-muted-foreground">Work Shift</Label>
+                  <select
+                    value={formData.shift}
+                    onChange={(e) => setFormData({ ...formData, shift: e.target.value })}
+                    className="mt-1 w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-foreground cursor-pointer"
+                  >
+                    <option value="General">General (9AM - 6PM)</option>
+                    <option value="Morning">Morning Shift</option>
+                    <option value="Night">Night On-Call</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" size="sm" onClick={() => setDialogOpen(false)} className="text-xs cursor-pointer">
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                disabled={submitting}
+                onClick={handleSave}
+                className="text-xs bg-cyan-600 hover:bg-cyan-500 text-white cursor-pointer"
+              >
+                {submitting ? "Saving..." : editingAdmin ? "Update Administrator" : "Create & Send Invite"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
   }
 
   return (
@@ -418,14 +630,20 @@ export function ItAdminPage() {
               </thead>
               <tbody className="divide-y divide-border/40">
                 {itAdmins.map((admin) => (
-                  <tr key={admin.id} className="hover:bg-accent/30 transition-colors">
+                  <tr
+                    key={admin.id}
+                    onClick={() => openView(admin)}
+                    className="hover:bg-accent/30 transition-colors group cursor-pointer"
+                  >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-500/20 text-cyan-300 font-bold border border-cyan-500/30">
+                        <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-500/20 text-cyan-300 font-bold border border-cyan-500/30 group-hover:scale-105 transition-transform">
                           {admin.fullName.slice(0, 2).toUpperCase()}
                         </div>
                         <div>
-                          <p className="font-semibold text-foreground">{admin.fullName}</p>
+                          <p className="font-semibold text-foreground group-hover:text-cyan-400 transition-colors">
+                            {admin.fullName}
+                          </p>
                           <p className="text-[11px] text-muted-foreground">{admin.email}</p>
                         </div>
                       </div>
@@ -454,28 +672,70 @@ export function ItAdminPage() {
                         {admin.status || "INVITED"}
                       </Badge>
                     </td>
-                    <td className="px-4 py-3 text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 cursor-pointer">
-                            <MoreVertical className="h-3.5 w-3.5" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="text-xs">
-                          <DropdownMenuItem onClick={() => openEdit(admin)} className="gap-2 cursor-pointer">
-                            <Edit2 className="h-3.5 w-3.5" /> Edit Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleResendInvite(admin.id)} className="gap-2 cursor-pointer">
-                            <Mail className="h-3.5 w-3.5" /> Resend Invitation
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleResetPassword(admin.id)} className="gap-2 cursor-pointer">
-                            <RotateCcw className="h-3.5 w-3.5" /> Reset Password
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleActivate(admin.id)} className="gap-2 cursor-pointer">
-                            <UserCheck className="h-3.5 w-3.5" /> Activate Account
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                    <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openView(admin)}
+                          className="h-7 w-7 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 cursor-pointer"
+                          title="View Profile"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 cursor-pointer">
+                              <MoreVertical className="h-3.5 w-3.5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="text-xs">
+                            <DropdownMenuItem
+                              onSelect={() => openView(admin)}
+                              onClick={() => openView(admin)}
+                              className="gap-2 cursor-pointer font-medium text-cyan-400 focus:text-cyan-300"
+                            >
+                              <Eye className="h-3.5 w-3.5" /> View Profile
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onSelect={() => openEdit(admin)}
+                              onClick={() => openEdit(admin)}
+                              className="gap-2 cursor-pointer"
+                            >
+                              <Edit2 className="h-3.5 w-3.5" /> Edit Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onSelect={() => handleResendInvite(admin.id)}
+                              onClick={() => handleResendInvite(admin.id)}
+                              className="gap-2 cursor-pointer"
+                            >
+                              <Mail className="h-3.5 w-3.5" /> Resend Invitation
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onSelect={() => handleResetPassword(admin.id)}
+                              onClick={() => handleResetPassword(admin.id)}
+                              className="gap-2 cursor-pointer"
+                            >
+                              <RotateCcw className="h-3.5 w-3.5" /> Reset Password
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onSelect={() => handleActivate(admin.id)}
+                              onClick={() => handleActivate(admin.id)}
+                              className="gap-2 cursor-pointer"
+                            >
+                              <UserCheck className="h-3.5 w-3.5" /> Activate Account
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onSelect={() => handleDeleteAdmin(admin)}
+                              onClick={() => handleDeleteAdmin(admin)}
+                              className="gap-2 cursor-pointer text-rose-500 focus:text-rose-500"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" /> Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </td>
                   </tr>
                 ))}
