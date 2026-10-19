@@ -569,7 +569,19 @@ export interface ShiftEmployeesResponse {
 /**
  * Backwards-compatible type aliases for portal self-service types
  */
-export type EmployeeShiftInfo = MyShiftInfo;
+export type EmployeeShiftInfo = MyShiftInfo | {
+  shiftName: string;
+  shiftType: string;
+  startTime: string;
+  endTime: string;
+  breakDuration: string;
+  breakWindow: string;
+  totalWorkingHours: number;
+  gracePeriodMinutes: number;
+  nightPremiumPercent: number;
+  workingDays: string[] | WeekDay[];
+  description: string;
+};
 export type UpcomingShiftItem = MyUpcomingShift;
 export type ShiftHistoryItem = MyShiftHistory;
 export type ScheduleChangeRequestPayload = CreateChangeRequestPayload;
