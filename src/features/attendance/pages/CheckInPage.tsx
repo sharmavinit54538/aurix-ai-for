@@ -1468,8 +1468,8 @@ status === "checked-in" ? "bg-primary animate-pulse" : status === "on-break" ? "
           setShowEnrollModal(open);
         }}
       >
-        <DialogContent className="max-w-md p-6 sm:rounded-2xl border-border bg-card">
-          <DialogHeader>
+        <DialogContent className="max-w-md p-6 sm:rounded-2xl border-border bg-card" closeClassName="top-5 right-5">
+          <DialogHeader className="pr-10">
             <div className="flex items-center gap-2 text-primary font-semibold text-xs tracking-wider uppercase">
               <Sparkles className="h-3.5 w-3.5" /> Biometric Registration
             </div>

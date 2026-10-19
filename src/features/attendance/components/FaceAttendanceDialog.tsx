@@ -467,21 +467,23 @@ export function FaceAttendanceDialog({
         onOpenChange(val);
       }}
     >
-      <DialogContent className="max-w-md p-6 sm:rounded-2xl border-border bg-card/95 backdrop-blur-xl">
-        <DialogHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-primary font-semibold text-xs tracking-wider uppercase">
-              <ScanFace className="h-4 w-4" />
-              {mode === "check-in"
-                ? "Biometric Check-In"
-                : mode === "check-out"
-                ? "Biometric Check-Out"
-                : mode === "break-in"
-                ? "Biometric Break In"
-                : "Biometric Break Out"}
+      <DialogContent className="max-w-md p-6 sm:rounded-2xl border-border bg-card/95 backdrop-blur-xl" closeClassName="top-5 right-5">
+        <DialogHeader className="pr-12">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-primary font-semibold text-xs tracking-wider uppercase truncate">
+              <ScanFace className="h-4 w-4 shrink-0" />
+              <span className="truncate">
+                {mode === "check-in"
+                  ? "Biometric Check-In"
+                  : mode === "check-out"
+                  ? "Biometric Check-Out"
+                  : mode === "break-in"
+                  ? "Biometric Break In"
+                  : "Biometric Break Out"}
+              </span>
             </div>
             <span
-              className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${
+              className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 shrink-0 ${
                 stage === "success"
                   ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
                   : stage === "error"
