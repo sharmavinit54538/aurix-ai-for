@@ -1,4 +1,4 @@
-import { EmployeeShiftInfo } from "./types";
+import { EmployeeShiftInfo, TodayPunchStatus } from "./types";
 
 // ─────────────────────────────────────────────────────────────
 // Helper Extractors & Time Formatter
@@ -33,6 +33,158 @@ export function extractObjectPayload<T = Record<string, unknown>>(res: unknown):
     return root.data as T;
   }
   return root as unknown as T;
+}
+
+/**
+ * Robustly parse today's attendance punch status from backend responses.
+ * Detects active open sessions, timestamps, booleans, and status strings.
+ */
+export function parseTodayPunchData(res: unknown): TodayPunchStatus {
+  const root = extractObjectPayload<any>(res) || {};
+  const session =
+    (root.active_session && typeof root.active_session === "object" ? root.active_session : null) ||
+    (root.session && typeof root.session === "object" ? root.session : null) ||
+    (root.attendance && typeof root.attendance === "object" ? root.attendance : null) ||
+    (root.record && typeof root.record === "object" ? root.record : null) ||
+    (root.today && typeof root.today === "object" ? root.today : null) ||
+    {};
+
+  const data = { ...session, ...root };
+
+  const checkInTime: string | null =
+    data.check_in_time ||
+    data.checkInTime ||
+    data.punch_in ||
+    data.punch_in_time ||
+    data.punchIn ||
+    data.in_time ||
+    data.inTime ||
+    data.time ||
+    null;
+
+  const checkOutTime: string | null =
+    data.check_out_time ||
+    data.checkOutTime ||
+    data.punch_out ||
+    data.punch_out_time ||
+    data.punchOut ||
+    data.out_time ||
+    data.outTime ||
+    null;
+
+  const rawStatus = (
+    data.status ||
+    data.attendance_status ||
+    data.current_status ||
+    data.state ||
+    ""
+  )
+    .toString()
+    .toLowerCase()
+    .trim();
+
+  const hasActiveSession = Boolean(
+    data.is_active ??
+    data.isActive ??
+    data.active ??
+    data.has_active_session ??
+    data.hasActiveSession
+  );
+
+  const isCheckedInFlag = Boolean(
+    data.checked_in ??
+    data.checkedIn ??
+    data.is_checked_in ??
+    data.isCheckedIn
+  );
+
+  const isCheckedOutFlag = Boolean(
+    data.checked_out ??
+    data.checkedOut ??
+    data.is_checked_out ??
+    data.isCheckedOut
+  );
+
+  const isOnBreakFlag = Boolean(
+    data.on_break ??
+    data.onBreak ??
+    data.is_on_break ??
+    data.isOnBreak
+  );
+
+  const statusMatchesCheckedOut =
+    rawStatus === "checked-out" ||
+    rawStatus === "checked_out" ||
+    rawStatus === "completed" ||
+    rawStatus === "out" ||
+    rawStatus === "signed-out";
+
+  const statusMatchesBreak =
+    rawStatus === "on-break" ||
+    rawStatus === "on_break" ||
+    rawStatus === "break" ||
+    rawStatus === "break-in" ||
+    rawStatus === "break_in";
+
+  const statusMatchesCheckedIn =
+    rawStatus === "checked-in" ||
+    rawStatus === "checked_in" ||
+    rawStatus === "present" ||
+    rawStatus === "active" ||
+    rawStatus === "working" ||
+    rawStatus === "in" ||
+    rawStatus === "signed-in";
+
+  const checkedOut =
+    isCheckedOutFlag ||
+    statusMatchesCheckedOut ||
+    Boolean(checkOutTime && checkInTime);
+
+  const onBreak = !checkedOut && (isOnBreakFlag || statusMatchesBreak);
+
+  const checkedIn =
+    !checkedOut &&
+    (
+      isCheckedInFlag ||
+      hasActiveSession ||
+      statusMatchesCheckedIn ||
+      onBreak ||
+      Boolean(checkInTime && !checkOutTime)
+    );
+
+  const workingHours =
+    typeof data.working_hours === "number"
+      ? data.working_hours
+      : typeof data.workingHours === "number"
+      ? data.workingHours
+      : data.working_hours
+      ? Number(data.working_hours)
+      : null;
+
+  const breakDurationMinutes =
+    data.break_duration_minutes ??
+    data.breakDurationMinutes ??
+    data.break_duration_mins ??
+    (typeof data.break_duration === "number" ? Math.round(data.break_duration / 60) : undefined);
+
+  const activeSeconds =
+    data.active_seconds ??
+    data.activeSeconds ??
+    (typeof data.active_time === "number" ? data.active_time : undefined);
+
+  return {
+    checkedIn,
+    checkedOut,
+    onBreak,
+    checkInTime,
+    checkOutTime,
+    workingHours,
+    breakDurationMinutes,
+    activeSeconds,
+    message: data.message,
+    attendanceId: data.attendance_id || data.id,
+    raw: data,
+  };
 }
 
 /**

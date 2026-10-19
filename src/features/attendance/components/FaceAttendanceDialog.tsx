@@ -293,6 +293,30 @@ export function FaceAttendanceDialog({
         setLastErrorCode(code || null);
         const userMsg = extractFaceApiError(err);
         setErrorMessage(userMsg);
+
+        // If the backend indicates an active session already exists for check-in, sync status gracefully
+        const isAlreadyCheckedIn =
+          code === "ALREADY_CHECKED_IN" ||
+          userMsg.toLowerCase().includes("already checked in") ||
+          String(err?.message || "").toLowerCase().includes("already checked in") ||
+          String(err?.response?.data?.message || "").toLowerCase().includes("already checked in") ||
+          String(err?.response?.data?.detail || "").toLowerCase().includes("already checked in");
+
+        if (isAlreadyCheckedIn && modeRef.current === "check-in") {
+          const syncResult: AttendancePunchResult = {
+            id: err?.response?.data?.id || err?.response?.data?.attendance_id || "",
+            status: "checked-in",
+            time: err?.response?.data?.check_in_time || new Date().toISOString(),
+            checkInTime: err?.response?.data?.check_in_time || new Date().toISOString(),
+            success: true,
+            message: "Active check-in session detected. Synced successfully!",
+          };
+          setPunchResult(syncResult);
+          setStage("success");
+          onSuccessRef.current(syncResult);
+          return;
+        }
+
         setStage("error");
       } finally {
         isCapturingRef.current = false;

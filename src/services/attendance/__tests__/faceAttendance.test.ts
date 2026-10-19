@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { getFaceAttendanceStatus, getFaceStatus, enrollFace } from "../faceBiometricsApi";
-import { extractFaceApiError, extractErrorCode } from "../helpers";
-import { checkOut } from "../punchGeofenceApi";
+import { extractFaceApiError, extractErrorCode, parseTodayPunchData } from "../helpers";
+import { checkOut, getMyTodayStatus } from "../punchGeofenceApi";
 import { api } from "@/api";
 import apiInstance from "@/api/apiInstance";
 
@@ -383,13 +383,26 @@ describe("Face Attendance Flow", () => {
   });
 
   describe("TASK 4: enrollFace allowReEnroll parameter", () => {
-    it("sends allow_re_enroll: false by default", async () => {
+    it("sends allow_re_enroll: true by default", async () => {
+      vi.mocked(api.post).mockResolvedValueOnce({
+        success: true,
+        message: "Face profile updated successfully!",
+      });
+
+      await enrollFace("base64-data");
+      expect(api.post).toHaveBeenCalledWith("attendance/face-enroll", {
+        image_base64: "base64-data",
+        allow_re_enroll: true,
+      });
+    });
+
+    it("sends allow_re_enroll: false when allowReEnroll = false is passed", async () => {
       vi.mocked(api.post).mockResolvedValueOnce({
         success: true,
         message: "Face successfully registered!",
       });
 
-      await enrollFace("base64-data");
+      await enrollFace("base64-data", false);
       expect(api.post).toHaveBeenCalledWith("attendance/face-enroll", {
         image_base64: "base64-data",
         allow_re_enroll: false,
@@ -454,6 +467,80 @@ describe("Face Attendance Flow", () => {
       expect((formData as FormData).get("notes")).toBe("Leaving early for dental appointment");
       expect((formData as FormData).get("latitude")).toBe("12.9716");
       expect((formData as FormData).get("longitude")).toBe("77.5946");
+    });
+  });
+
+  describe("TASK 6: Active session detection & state synchronization", () => {
+    it("detects active session when is_active: true and status is checked-in", () => {
+      const parsed = parseTodayPunchData({
+        status: "checked-in",
+        is_active: true,
+        check_in_time: "2026-10-19T09:15:00Z",
+        check_out_time: null,
+      });
+
+      expect(parsed.checkedIn).toBe(true);
+      expect(parsed.checkedOut).toBe(false);
+      expect(parsed.onBreak).toBe(false);
+      expect(parsed.checkInTime).toBe("2026-10-19T09:15:00Z");
+    });
+
+    it("detects active session from nested active_session object", () => {
+      const parsed = parseTodayPunchData({
+        success: true,
+        data: {
+          active_session: {
+            check_in_time: "2026-10-19T09:30:00Z",
+            is_active: true,
+          },
+          status: "present",
+        },
+      });
+
+      expect(parsed.checkedIn).toBe(true);
+      expect(parsed.checkedOut).toBe(false);
+      expect(parsed.checkInTime).toBe("2026-10-19T09:30:00Z");
+    });
+
+    it("detects open check_in_time without check_out_time as checkedIn: true", () => {
+      const parsed = parseTodayPunchData({
+        check_in_time: "2026-10-19T08:45:00Z",
+        check_out_time: null,
+      });
+
+      expect(parsed.checkedIn).toBe(true);
+      expect(parsed.checkedOut).toBe(false);
+    });
+
+    it("detects checkedOut when check_out_time is present", () => {
+      const parsed = parseTodayPunchData({
+        check_in_time: "2026-10-19T09:00:00Z",
+        check_out_time: "2026-10-19T18:00:00Z",
+        status: "checked-out",
+        working_hours: 9,
+      });
+
+      expect(parsed.checkedIn).toBe(false);
+      expect(parsed.checkedOut).toBe(true);
+      expect(parsed.workingHours).toBe(9);
+    });
+
+    it("getMyTodayStatus returns active session correctly", async () => {
+      vi.mocked(api.get).mockResolvedValueOnce({
+        success: true,
+        data: {
+          is_active: true,
+          status: "checked-in",
+          check_in_time: "2026-10-19T09:00:00Z",
+          break_duration_minutes: 15,
+        },
+      });
+
+      const res = await getMyTodayStatus();
+      expect(res.checkedIn).toBe(true);
+      expect(res.checkedOut).toBe(false);
+      expect(res.checkInTime).toBe("2026-10-19T09:00:00Z");
+      expect(res.breakDurationMinutes).toBe(15);
     });
   });
 });

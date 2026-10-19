@@ -1,6 +1,11 @@
 import { api } from "@/api";
 import { FaceAttendanceStatus, FaceStatusResponse, FaceEnrollResponse } from "./types";
-import { extractObjectPayload, extractErrorCode, extractFaceApiError } from "./helpers";
+import {
+  extractObjectPayload,
+  extractErrorCode,
+  extractFaceApiError,
+  parseTodayPunchData,
+} from "./helpers";
 
 // ─────────────────────────────────────────────────────────────
 // Face Biometrics & Registration API
@@ -61,13 +66,15 @@ export async function getFaceAttendanceStatus(): Promise<FaceAttendanceStatus> {
       }
     }
 
+    const punchStatus = parseTodayPunchData(res);
+
     return {
       faceRegistered: Boolean(faceRegistered),
-      checkedIn: Boolean(data.checked_in ?? data.checkedIn),
-      checkedOut: Boolean(data.checked_out ?? data.checkedOut),
-      checkInTime: data.check_in_time || data.checkInTime || null,
-      checkOutTime: data.check_out_time || data.checkOutTime || null,
-      workingHours: data.working_hours ?? data.workingHours ?? null,
+      checkedIn: punchStatus.checkedIn,
+      checkedOut: punchStatus.checkedOut,
+      checkInTime: punchStatus.checkInTime,
+      checkOutTime: punchStatus.checkOutTime,
+      workingHours: punchStatus.workingHours,
       message: data.message || "",
       raw: data,
       enrolled_at: enrolledAt,

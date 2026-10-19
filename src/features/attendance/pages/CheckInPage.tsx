@@ -508,17 +508,32 @@ function CheckInPage() {
 
   // ── Live Working Clock Ticker ────────────────────────────────
   useEffect(() => {
+    if (status !== "checked-in" && status !== "on-break") return;
+
     const t = setInterval(() => {
-      if (status === "checked-in") {
-        setWorkSec((s) => s + 1);
-        setActiveSec((s) => s + 1);
-      } else if (status === "on-break") {
-        setWorkSec((s) => s + 1);
-        setBreakSec((s) => s + 1);
+      if (checkInTimeRef.current) {
+        const nowMs = Date.now();
+        const inMs = checkInTimeRef.current.getTime();
+        const elapsed = Math.max(0, Math.floor((nowMs - inMs) / 1000));
+        setWorkSec(elapsed);
+
+        if (status === "checked-in") {
+          setActiveSec(Math.max(0, elapsed - breakSec));
+        } else if (status === "on-break") {
+          setBreakSec((b) => b + 1);
+        }
+      } else {
+        if (status === "checked-in") {
+          setWorkSec((s) => s + 1);
+          setActiveSec((s) => s + 1);
+        } else if (status === "on-break") {
+          setWorkSec((s) => s + 1);
+          setBreakSec((s) => s + 1);
+        }
       }
     }, 1000);
     return () => clearInterval(t);
-  }, [status]);
+  }, [status, breakSec]);
 
   // ── Load Real Attendance State & Face Status from Backend ─────
   const loadAttendanceState = useCallback(async () => {
@@ -543,6 +558,78 @@ function CheckInPage() {
       } else {
         setFaceAttendanceStatus(null);
         setIsFaceEnrolled(false);
+      }
+
+      // 2. Process Today's Punch & Session State
+      const punchData = punchRes.status === "fulfilled" ? punchRes.value : null;
+      const faceData = faceStatusRes.status === "fulfilled" ? faceStatusRes.value : null;
+
+      const isCheckedOut = Boolean(punchData?.checkedOut || faceData?.checkedOut);
+      const isOnBreak = Boolean(punchData?.onBreak);
+      const isCheckedIn = Boolean(punchData?.checkedIn || faceData?.checkedIn || isOnBreak);
+
+      let currentStatus: AttendanceStatus = "not-checked-in";
+      if (isCheckedOut) {
+        currentStatus = "checked-out";
+      } else if (isOnBreak) {
+        currentStatus = "on-break";
+      } else if (isCheckedIn) {
+        currentStatus = "checked-in";
+      } else {
+        currentStatus = "not-checked-in";
+      }
+      setStatus(currentStatus);
+
+      // 3. Process Timers and Start Time
+      const effectiveCheckInTime = punchData?.checkInTime || faceData?.checkInTime;
+      const breakDurationMins = punchData?.breakDurationMinutes ?? 0;
+      const breakDurationSec = Math.max(0, Math.round(breakDurationMins * 60));
+      setBreakSec(breakDurationSec);
+
+      if (effectiveCheckInTime) {
+        const inDate = new Date(effectiveCheckInTime);
+        if (!isNaN(inDate.getTime())) {
+          checkInTimeRef.current = inDate;
+          const elapsedSec = Math.max(0, Math.floor((Date.now() - inDate.getTime()) / 1000));
+
+          if (currentStatus === "checked-in" || currentStatus === "on-break") {
+            setWorkSec(elapsedSec);
+            const computedActive = Math.max(0, elapsedSec - breakDurationSec);
+            setActiveSec(punchData?.activeSeconds != null ? punchData.activeSeconds : computedActive);
+          } else if (currentStatus === "checked-out") {
+            const effectiveWorkHours = punchData?.workingHours ?? faceData?.workingHours;
+            if (typeof effectiveWorkHours === "number" && effectiveWorkHours > 0) {
+              const totalSec = Math.round(effectiveWorkHours * 3600);
+              setWorkSec(totalSec);
+              setActiveSec(Math.max(0, totalSec - breakDurationSec));
+            } else {
+              const outTime = punchData?.checkOutTime || faceData?.checkOutTime;
+              if (outTime) {
+                const outDate = new Date(outTime);
+                const totalSec = Math.max(0, Math.floor((outDate.getTime() - inDate.getTime()) / 1000));
+                setWorkSec(totalSec);
+                setActiveSec(Math.max(0, totalSec - breakDurationSec));
+              } else {
+                setWorkSec(elapsedSec);
+                setActiveSec(Math.max(0, elapsedSec - breakDurationSec));
+              }
+            }
+          }
+        }
+      }
+
+      // 4. Populate Timeline, History, Holidays, and Employee Details
+      if (timelineRes.status === "fulfilled" && Array.isArray(timelineRes.value)) {
+        setTimeline(timelineRes.value);
+      }
+      if (historyRes.status === "fulfilled" && historyRes.value?.items) {
+        setHistoryList(historyRes.value.items);
+      }
+      if (holidaysRes.status === "fulfilled" && Array.isArray(holidaysRes.value)) {
+        setHolidays(holidaysRes.value);
+      }
+      if (empRes.status === "fulfilled" && empRes.value) {
+        setEmployeeDetails(empRes.value);
       }
     } catch (err: any) {
       console.error("Error loading attendance state:", err);
@@ -651,12 +738,23 @@ function CheckInPage() {
       let defaultMsg = "Attendance verified successfully!";
       if (faceModalMode === "check-in") {
         defaultMsg = "Attendance verified & check-in marked successfully!";
+        setStatus("checked-in");
+        const punchTime = result.checkInTime || result.time;
+        const inDate = punchTime ? new Date(punchTime) : new Date();
+        const validDate = !isNaN(inDate.getTime()) ? inDate : new Date();
+        checkInTimeRef.current = validDate;
+        const elapsedSec = Math.max(0, Math.floor((Date.now() - validDate.getTime()) / 1000));
+        setWorkSec(elapsedSec);
+        setActiveSec(elapsedSec);
       } else if (faceModalMode === "check-out") {
         defaultMsg = "Attendance verified & check-out marked successfully!";
+        setStatus("checked-out");
       } else if (faceModalMode === "break-in") {
         defaultMsg = "Break started. Face verified.";
+        setStatus("on-break");
       } else if (faceModalMode === "break-out") {
         defaultMsg = "Break ended. Welcome back!";
+        setStatus("checked-in");
       }
       const msg = result.message || defaultMsg;
       showToast(msg, "success");

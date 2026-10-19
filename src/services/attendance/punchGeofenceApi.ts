@@ -17,6 +17,7 @@ import {
   base64ToBlob,
   extractErrorCode,
   extractFaceApiError,
+  parseTodayPunchData,
 } from "./helpers";
 
 // ─────────────────────────────────────────────────────────────
@@ -26,40 +27,17 @@ import {
 /**
  * Get current authenticated employee's punch status for today.
  * Calls GET /api/v1/attendance/face/me (or /api/v1/attendance/today/me).
+ * Parses active sessions, status strings, timestamps, and open check-in state.
  */
 export async function getMyTodayStatus(): Promise<TodayPunchStatus> {
   try {
     const res: any = await api.get("attendance/face/me");
-    const data = extractObjectPayload<any>(res);
-    const checkedIn = Boolean(data.checked_in ?? data.checkedIn);
-    const checkedOut = Boolean(data.checked_out ?? data.checkedOut);
-    const onBreak = Boolean(data.on_break ?? data.onBreak);
-
-    return {
-      checkedIn,
-      checkedOut,
-      onBreak,
-      checkInTime: data.check_in_time || data.checkInTime || null,
-      checkOutTime: data.check_out_time || data.checkOutTime || null,
-      workingHours: data.working_hours ?? data.workingHours ?? null,
-      breakDurationMinutes: data.break_duration_minutes ?? data.breakDurationMinutes,
-      message: data.message,
-      attendanceId: data.attendance_id || data.id,
-    };
+    return parseTodayPunchData(res);
   } catch (err: any) {
     if (err?.status === 404) {
       // Try alternate endpoint if face/me is unavailable
       const res: any = await api.get("attendance/today/me");
-      const data = extractObjectPayload<any>(res);
-      return {
-        checkedIn: Boolean(data.checked_in ?? data.checkedIn),
-        checkedOut: Boolean(data.checked_out ?? data.checkedOut),
-        onBreak: Boolean(data.on_break ?? data.onBreak),
-        checkInTime: data.check_in_time || data.checkInTime || null,
-        checkOutTime: data.check_out_time || data.checkOutTime || null,
-        workingHours: data.working_hours ?? data.workingHours ?? null,
-        message: data.message,
-      };
+      return parseTodayPunchData(res);
     }
     throw err;
   }
