@@ -6,7 +6,7 @@ import {
   Fingerprint, HelpCircle, History, Laptop, LogIn, LogOut,
   MapPin, MessageSquare, Monitor, Play, RefreshCw, Send,
   ShieldCheck, Timer, BarChart3, Wifi, X, Zap,
-  CameraOff, Video, User, ScanFace, Sparkles, ShieldAlert,
+  CameraOff, Video, User, ScanFace, Sparkles, ShieldAlert, Upload,
 } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
 import { useAurix } from "@/lib/aurix-store";
@@ -339,9 +339,12 @@ function CheckInPage() {
 
   // Modal Camera Refs & State for Face Registration
   const [modalCameraActive, setModalCameraActive] = useState(false);
+  const [isCameraStarting, setIsCameraStarting] = useState(false);
   const [modalCameraError, setModalCameraError] = useState<string | null>(null);
+  const [uploadedPhotoBase64, setUploadedPhotoBase64] = useState<string | null>(null);
   const modalVideoRef = useRef<HTMLVideoElement | null>(null);
   const modalStreamRef = useRef<MediaStream | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // ── Toast Helper ─────────────────────────────────────────────
   function showToast(msg: string, type: "success" | "error" | "info" = "success") {
@@ -350,29 +353,6 @@ function CheckInPage() {
   }
 
   // Modal camera handlers for registration
-  const startModalCamera = useCallback(async () => {
-    setModalCameraError(null);
-    try {
-      if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
-        throw new Error("Camera API is not supported in this browser.");
-      }
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
-        audio: false,
-      });
-      modalStreamRef.current = stream;
-      if (modalVideoRef.current) {
-        modalVideoRef.current.srcObject = stream;
-        modalVideoRef.current.play().catch(() => {});
-      }
-      setModalCameraActive(true);
-    } catch (err: any) {
-      console.warn("Modal camera could not be started:", err);
-      setModalCameraError(err?.message || "Could not access camera. Please allow camera permissions.");
-      setModalCameraActive(false);
-    }
-  }, []);
-
   const stopModalCamera = useCallback(() => {
     if (modalStreamRef.current) {
       modalStreamRef.current.getTracks().forEach((track) => track.stop());
@@ -382,7 +362,113 @@ function CheckInPage() {
       modalVideoRef.current.srcObject = null;
     }
     setModalCameraActive(false);
+    setIsCameraStarting(false);
   }, []);
+
+  const startModalCamera = useCallback(async () => {
+    setModalCameraError(null);
+    setIsCameraStarting(true);
+    setUploadedPhotoBase64(null);
+
+    try {
+      if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+        throw new Error("Webcam access is not supported in this browser or requires a secure HTTPS connection.");
+      }
+
+      if (modalStreamRef.current) {
+        modalStreamRef.current.getTracks().forEach((t) => t.stop());
+        modalStreamRef.current = null;
+      }
+
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
+          audio: false,
+        });
+      } catch {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
+      }
+
+      modalStreamRef.current = stream;
+      if (modalVideoRef.current) {
+        modalVideoRef.current.srcObject = stream;
+        try {
+          await modalVideoRef.current.play();
+        } catch {
+          // Ignore autoplay restriction errors if any
+        }
+      }
+      setModalCameraActive(true);
+      setModalCameraError(null);
+    } catch (err: any) {
+      console.warn("Modal camera could not be started:", err);
+      let errMsg = "Could not access camera. Please allow camera permissions.";
+      if (err?.name === "NotAllowedError" || err?.name === "PermissionDeniedError") {
+        errMsg = "Camera permission was denied. Please allow camera access in your browser settings (look for the lock/camera icon in your address bar), then click Enable Webcam.";
+      } else if (err?.name === "NotFoundError" || err?.name === "DevicesNotFoundError") {
+        errMsg = "No camera found on your device. You can upload a face photo instead.";
+      } else if (err?.name === "NotReadableError" || err?.name === "TrackStartError") {
+        errMsg = "Camera is currently used by another program or browser tab. Please close other camera apps and retry.";
+      } else if (err?.message) {
+        errMsg = err.message;
+      }
+      setModalCameraError(errMsg);
+      setModalCameraActive(false);
+    } finally {
+      setIsCameraStarting(false);
+    }
+  }, []);
+
+  // Callback ref so stream binds immediately when <video> mounts
+  const setModalVideoRef = useCallback((node: HTMLVideoElement | null) => {
+    modalVideoRef.current = node;
+    if (node && modalStreamRef.current) {
+      node.srcObject = modalStreamRef.current;
+      node.play().catch(() => {});
+    }
+  }, []);
+
+  // Auto-start camera when modal opens, and cleanly stop when closed
+  useEffect(() => {
+    if (showEnrollModal) {
+      setEnrollError(null);
+      setUploadedPhotoBase64(null);
+      startModalCamera();
+    } else {
+      stopModalCamera();
+      setUploadedPhotoBase64(null);
+      setEnrollError(null);
+    }
+  }, [showEnrollModal, startModalCamera, stopModalCamera]);
+
+  // Handle photo upload fallback
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setEnrollError("Please select a valid image file (JPEG, PNG, WEBP).");
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      setEnrollError("Image file size should be less than 8MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      if (result) {
+        setUploadedPhotoBase64(result);
+        stopModalCamera();
+        setEnrollError(null);
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
 
   // High-quality Base64 capture from modal registration video
   const captureModalBase64 = useCallback((): string | null => {
@@ -401,7 +487,7 @@ function CheckInPage() {
     }
   }, []);
 
-  // Registration modal unmount and visibility cleanup
+  // Registration modal unmount and visibility cleanup/resume
   useEffect(() => {
     return () => {
       stopModalCamera();
@@ -412,11 +498,13 @@ function CheckInPage() {
     const handleVisibilityChange = () => {
       if (document.hidden) {
         stopModalCamera();
+      } else if (showEnrollModal && !uploadedPhotoBase64) {
+        startModalCamera();
       }
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [stopModalCamera]);
+  }, [stopModalCamera, startModalCamera, showEnrollModal, uploadedPhotoBase64]);
 
   // ── Live Working Clock Ticker ────────────────────────────────
   useEffect(() => {
@@ -510,9 +598,9 @@ function CheckInPage() {
 
   async function handleCaptureAndRegisterFace() {
     setEnrollError(null);
-    const base64 = captureModalBase64();
+    const base64 = uploadedPhotoBase64 || captureModalBase64();
     if (!base64) {
-      const msg = "Could not capture image from camera. Please make sure your camera is active and permissions are granted.";
+      const msg = "Could not capture image from camera. Please ensure camera is active or upload a face photo.";
       setEnrollError(msg);
       showToast(msg, "error");
       return;
@@ -1378,12 +1466,6 @@ status === "checked-in" ? "bg-primary animate-pulse" : status === "on-break" ? "
         open={showEnrollModal}
         onOpenChange={(open) => {
           setShowEnrollModal(open);
-          if (open) {
-            setEnrollError(null);
-            startModalCamera();
-          } else {
-            stopModalCamera();
-          }
         }}
       >
         <DialogContent className="max-w-md p-6 sm:rounded-2xl border-border bg-card">
@@ -1397,29 +1479,88 @@ status === "checked-in" ? "bg-primary animate-pulse" : status === "on-break" ? "
             </DialogDescription>
           </DialogHeader>
 
-          {/* Webcam Viewport with Centered Oval Guide */}
-          <div className="relative aspect-[4/3] w-full rounded-2xl bg-black/95 overflow-hidden border border-border flex items-center justify-center">
-            <video
-              ref={modalVideoRef}
-              autoPlay
-              playsInline
-              muted
-              className={`h-full w-full object-cover ${modalCameraActive ? "block" : "hidden"}`}
-            />
+          {/* Hidden file input for photo upload fallback */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileUpload}
+          />
 
-            {!modalCameraActive && (
-              <div className="flex flex-col items-center gap-2.5 p-6 text-center text-muted-foreground">
-                <CameraOff className="h-10 w-10 text-muted-foreground/40" />
-                <span className="text-xs font-medium text-foreground">Webcam Inactive</span>
-                {modalCameraError && <span className="text-[11px] text-destructive max-w-xs">{modalCameraError}</span>}
-                <Button size="sm" variant="outline" className="mt-1 gap-1.5 text-xs" onClick={startModalCamera}>
-                  <Video className="h-3.5 w-3.5" /> Enable Webcam
+          {/* Webcam / Upload Viewport with Centered Oval Guide */}
+          <div className="relative aspect-[4/3] w-full rounded-2xl bg-black/95 overflow-hidden border border-border flex items-center justify-center">
+            {uploadedPhotoBase64 ? (
+              <div className="relative h-full w-full flex items-center justify-center">
+                <img
+                  src={uploadedPhotoBase64}
+                  alt="Uploaded face preview"
+                  className="h-full w-full object-cover"
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    setUploadedPhotoBase64(null);
+                    startModalCamera();
+                  }}
+                  className="absolute bottom-2.5 right-2.5 text-[11px] h-7 gap-1 bg-black/75 text-white hover:bg-black/90 backdrop-blur-md"
+                >
+                  <Video className="h-3 w-3" /> Switch to Webcam
                 </Button>
               </div>
+            ) : (
+              <>
+                <video
+                  ref={setModalVideoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className={`h-full w-full object-cover ${modalCameraActive ? "block" : "hidden"}`}
+                />
+
+                {isCameraStarting && (
+                  <div className="flex flex-col items-center gap-3 p-6 text-center text-muted-foreground">
+                    <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+                    <span className="text-xs font-semibold text-foreground">Starting Webcam...</span>
+                    <span className="text-[11px] text-muted-foreground">
+                      Please allow camera permissions in your browser if prompted
+                    </span>
+                  </div>
+                )}
+
+                {!modalCameraActive && !isCameraStarting && (
+                  <div className="flex flex-col items-center gap-2.5 p-6 text-center text-muted-foreground">
+                    <CameraOff className="h-10 w-10 text-muted-foreground/40" />
+                    <span className="text-xs font-medium text-foreground">Webcam Inactive</span>
+                    {modalCameraError ? (
+                      <span className="text-[11px] text-destructive max-w-xs leading-relaxed">{modalCameraError}</span>
+                    ) : (
+                      <span className="text-[11px] text-muted-foreground max-w-xs">
+                        Webcam was not started. Click below to enable camera or upload a face photo directly.
+                      </span>
+                    )}
+                    <div className="flex flex-wrap items-center justify-center gap-2 mt-1">
+                      <Button size="sm" variant="default" className="gap-1.5 text-xs" onClick={startModalCamera}>
+                        <Video className="h-3.5 w-3.5" /> Enable Webcam
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5 text-xs"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <Upload className="h-3.5 w-3.5" /> Upload Photo
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
 
             {/* Centered Circular/Oval Face Guide Overlay */}
-            {modalCameraActive && (
+            {(modalCameraActive || uploadedPhotoBase64) && (
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center p-3">
                 <div className="relative w-44 h-56 sm:w-48 sm:h-60 rounded-[50%] border-2 border-primary shadow-sm">
                   {/* Viewfinder reticle brackets */}
@@ -1430,10 +1571,26 @@ status === "checked-in" ? "bg-primary animate-pulse" : status === "on-break" ? "
                 </div>
 
                 <div className="mt-3 rounded-full bg-black/75 backdrop-blur-md px-3 py-1 text-[10px] text-white border border-white/10 flex items-center gap-1.5">
-                  <ScanFace className="h-3 w-3 text-primary" /> Keep face centered inside the frame
+                  <ScanFace className="h-3 w-3 text-primary" />
+                  {uploadedPhotoBase64 ? "Face centered in oval guide" : "Keep face centered inside the frame"}
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Fallback Option */}
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground px-0.5">
+            <span>Cannot use webcam?</span>
+            <Button
+              type="button"
+              variant="link"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              className="h-auto p-0 text-primary text-[11px] font-semibold gap-1"
+            >
+              <Upload className="h-3 w-3 inline" />
+              Upload Face Photo Instead
+            </Button>
           </div>
 
           {/* Quick Best Practice Guidelines */}
@@ -1467,7 +1624,6 @@ status === "checked-in" ? "bg-primary animate-pulse" : status === "on-break" ? "
               size="sm"
               onClick={() => {
                 setShowEnrollModal(false);
-                stopModalCamera();
               }}
               disabled={isEnrolling}
               className="text-xs"
@@ -1477,11 +1633,15 @@ status === "checked-in" ? "bg-primary animate-pulse" : status === "on-break" ? "
             <Button
               size="sm"
               onClick={handleCaptureAndRegisterFace}
-              disabled={!modalCameraActive || isEnrolling}
+              disabled={(!modalCameraActive && !uploadedPhotoBase64) || isEnrolling}
               className="gap-2 text-xs"
             >
               {isEnrolling ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <ScanFace className="h-3.5 w-3.5" />}
-              {isEnrolling ? "Registering Face Profile..." : "Capture & Register Face"}
+              {isEnrolling
+                ? "Registering Face Profile..."
+                : uploadedPhotoBase64
+                ? "Register Uploaded Photo"
+                : "Capture & Register Face"}
             </Button>
           </div>
         </DialogContent>
