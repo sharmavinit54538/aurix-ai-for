@@ -26,6 +26,7 @@ export interface Employee {
   officeLocation?: string;
   gender?: string;
   dateOfBirth?: string;
+  dob?: string;
   bloodGroup?: string;
   maritalStatus?: string;
   nationality?: string;
@@ -38,6 +39,8 @@ export interface Employee {
   reportingManagerId?: string;
   reportingManagerName?: string;
   reportingChain?: Array<{ id?: string; name: string; designation?: string; department?: string }>;
+  orgLevel?: number;
+  directReportsCount?: number;
   probationPeriodMonths?: number;
   profilePhotoUrl?: string;
   avatarUrl?: string;

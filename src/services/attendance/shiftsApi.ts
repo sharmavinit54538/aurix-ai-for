@@ -25,7 +25,7 @@ import {
   mapShiftEmployees,
 } from "./shiftsMappers";
 
-function toSnakeCase(obj: Record<string, unknown>): Record<string, unknown> {
+function toSnakeCase(obj: Record<string, unknown> | object): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(obj)) {
     if (value === undefined) continue;
@@ -124,7 +124,7 @@ export async function assignShift(
   shiftId: string,
   payload: ShiftAssignPayload
 ): Promise<ShiftAssignResult> {
-  const body = toSnakeCase(payload as Record<string, unknown>);
+  const body = toSnakeCase(payload as unknown as Record<string, unknown>);
   const res = await api.post(`attendance/shifts/${shiftId}/assign`, body);
   const data = res as { data?: unknown } | unknown;
   const item = (data as { data?: unknown })?.data ?? data;
@@ -201,7 +201,7 @@ export async function approveChangeRequest(
   id: string,
   payload?: ApproveChangeRequestPayload
 ): Promise<ShiftChangeRequest> {
-  const body = payload ? toSnakeCase(payload as Record<string, unknown>) : {};
+  const body = payload ? toSnakeCase(payload as unknown as Record<string, unknown>) : {};
   const res = await api.post(`attendance/shifts/change-requests/${id}/approve`, body);
   const data = res as { data?: unknown } | unknown;
   const item = (data as { data?: unknown })?.data ?? data;

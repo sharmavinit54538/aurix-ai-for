@@ -107,6 +107,7 @@ interface ExtendedAdminProfile {
   personalEmail?: string;
   companyEmail?: string;
   alternatePhone?: string;
+  dob?: string;
   workMode?: string;
   workLocation?: string;
   probationPeriodMonths?: number;
@@ -122,7 +123,7 @@ interface ExtendedAdminProfile {
   ifscCode?: string;
   panNumber?: string;
   aadhaarNumber?: string;
-  ctc?: string;
+  ctc?: string | number;
   salary?: string | number;
   basicSalary?: number;
   hra?: number;

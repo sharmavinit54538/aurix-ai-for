@@ -49,16 +49,30 @@ export function EmployeeFormDialog({
 
   const currentShiftValue = useMemo(() => {
     if (!draft?.shift) return "none";
+    const shiftVal = draft.shift;
     const found = effectiveShifts.find(
       (s) =>
-        s.id === draft.shift ||
-        s.name.toLowerCase() === draft.shift.toLowerCase() ||
-        s.code.toLowerCase() === draft.shift.toLowerCase() ||
-        draft.shift.toLowerCase().includes(s.name.toLowerCase()) ||
-        s.name.toLowerCase().includes(draft.shift.toLowerCase()) ||
-        s.name.toLowerCase().includes("general") && draft.shift.toLowerCase().includes("general"),
+        s.id === shiftVal ||
+        s.name.toLowerCase() === shiftVal.toLowerCase() ||
+        s.code.toLowerCase() === shiftVal.toLowerCase() ||
+        shiftVal.toLowerCase().includes(s.name.toLowerCase()) ||
+        s.name.toLowerCase().includes(shiftVal.toLowerCase()) ||
+        (s.name.toLowerCase().includes("general") && shiftVal.toLowerCase().includes("general")),
     );
-    return found ? found.id : draft.shift;
+    return found ? found.id : shiftVal;
+  }, [draft?.shift, effectiveShifts]);
+
+  const customShift = useMemo(() => {
+    if (!draft?.shift) return null;
+    const shiftVal = draft.shift;
+    const exists = effectiveShifts.some(
+      (s) =>
+        s.id === shiftVal ||
+        s.name.toLowerCase() === shiftVal.toLowerCase() ||
+        shiftVal.toLowerCase().includes(s.name.toLowerCase()) ||
+        s.name.toLowerCase().includes(shiftVal.toLowerCase()),
+    );
+    return exists ? null : shiftVal;
   }, [draft?.shift, effectiveShifts]);
 
   return (
@@ -91,18 +105,11 @@ export function EmployeeFormDialog({
                       {shift.name} ({shift.code}) • {shift.start_time}–{shift.end_time} {shift.is_overnight ? "(Overnight)" : ""}
                     </SelectItem>
                   ))}
-                  {draft.shift &&
-                    !effectiveShifts.some(
-                      (s) =>
-                        s.id === draft.shift ||
-                        s.name.toLowerCase() === draft.shift.toLowerCase() ||
-                        draft.shift.toLowerCase().includes(s.name.toLowerCase()) ||
-                        s.name.toLowerCase().includes(draft.shift.toLowerCase()),
-                    ) && (
-                      <SelectItem value={draft.shift}>
-                        {draft.shift}
-                      </SelectItem>
-                    )}
+                  {customShift && (
+                    <SelectItem value={customShift}>
+                      {customShift}
+                    </SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </FormField>
