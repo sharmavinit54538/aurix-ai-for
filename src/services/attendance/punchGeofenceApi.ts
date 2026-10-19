@@ -187,6 +187,7 @@ export async function checkOut(payload: CheckOutPayload): Promise<AttendancePunc
   if (payload.accuracy != null) formData.append("accuracy", payload.accuracy.toString());
   formData.append("device_info", payload.deviceInfo || (typeof navigator !== "undefined" ? navigator.userAgent : "Web"));
   if (payload.ipAddress) formData.append("ip_address", payload.ipAddress);
+  if (payload.notes) formData.append("notes", payload.notes);
 
   try {
     const res: any = await apiInstance.post("/attendance/face/check-out", formData, {

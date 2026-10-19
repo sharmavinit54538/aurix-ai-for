@@ -19,9 +19,12 @@ export async function getFaceAttendanceStatus(): Promise<FaceAttendanceStatus> {
     const res: any = await api.get("attendance/face/me");
     const data = extractObjectPayload<any>(res);
 
-    // Inspect live backend response for explicit enrollment status fields
-    let faceRegistered = true;
-    if (typeof data.face_registered === "boolean") faceRegistered = data.face_registered;
+    // Inspect live backend response for explicit enrollment status fields.
+    // Read is_face_enrolled first (and camelCase isFaceEnrolled).
+    let faceRegistered: boolean | undefined = undefined;
+    if (typeof data.is_face_enrolled === "boolean") faceRegistered = data.is_face_enrolled;
+    else if (typeof data.isFaceEnrolled === "boolean") faceRegistered = data.isFaceEnrolled;
+    else if (typeof data.face_registered === "boolean") faceRegistered = data.face_registered;
     else if (typeof data.faceRegistered === "boolean") faceRegistered = data.faceRegistered;
     else if (typeof data.is_registered === "boolean") faceRegistered = data.is_registered;
     else if (typeof data.isRegistered === "boolean") faceRegistered = data.isRegistered;
@@ -35,9 +38,31 @@ export async function getFaceAttendanceStatus(): Promise<FaceAttendanceStatus> {
     else if (typeof data.has_face === "boolean") faceRegistered = data.has_face;
     else if (typeof data.hasFace === "boolean") faceRegistered = data.hasFace;
     else if (data.enrollment_status === "not_enrolled" || data.enrollmentStatus === "not_enrolled") faceRegistered = false;
+    else if (data.enrollment_status === "enrolled" || data.enrollmentStatus === "enrolled") faceRegistered = true;
+
+    let enrolledAt =
+      data.face_enrolled_at ||
+      data.faceEnrolledAt ||
+      data.enrolled_at ||
+      data.enrolledAt ||
+      null;
+
+    // Remove the unsafe default of true. If no known flag is present, call getFaceStatus()
+    // (/attendance/face-status) as the authoritative source; if that also fails, return faceRegistered = false (not true).
+    if (faceRegistered === undefined) {
+      try {
+        const statusRes = await getFaceStatus();
+        faceRegistered = Boolean(statusRes.is_enrolled ?? statusRes.faceRegistered ?? false);
+        if (!enrolledAt && statusRes.enrolled_at) {
+          enrolledAt = statusRes.enrolled_at;
+        }
+      } catch {
+        faceRegistered = false;
+      }
+    }
 
     return {
-      faceRegistered,
+      faceRegistered: Boolean(faceRegistered),
       checkedIn: Boolean(data.checked_in ?? data.checkedIn),
       checkedOut: Boolean(data.checked_out ?? data.checkedOut),
       checkInTime: data.check_in_time || data.checkInTime || null,
@@ -45,6 +70,9 @@ export async function getFaceAttendanceStatus(): Promise<FaceAttendanceStatus> {
       workingHours: data.working_hours ?? data.workingHours ?? null,
       message: data.message || "",
       raw: data,
+      enrolled_at: enrolledAt,
+      shift: data.shift,
+      timezone: data.timezone,
     };
   } catch (err: any) {
     const errorCode = extractErrorCode(err);
@@ -75,6 +103,7 @@ export async function getFaceAttendanceStatus(): Promise<FaceAttendanceStatus> {
         message: errorMsg,
         raw: {},
         errorCode: errorCode || "FACE_NOT_ENROLLED",
+        enrolled_at: null,
       };
     }
 
@@ -96,6 +125,7 @@ export async function getFaceAttendanceStatus(): Promise<FaceAttendanceStatus> {
         workingHours: null,
         message: errorMsg || "No attendance record for today.",
         raw: {},
+        enrolled_at: null,
       };
     }
 
@@ -116,6 +146,7 @@ export async function getFaceStatus(): Promise<FaceStatusResponse> {
       data.is_enrolled ??
       data.isEnrolled ??
       data.is_face_enrolled ??
+      data.isFaceEnrolled ??
       data.face_registered ??
       data.faceRegistered ??
       (res && typeof res === "object" && (res.is_enrolled ?? res.isEnrolled)) ??
@@ -123,7 +154,7 @@ export async function getFaceStatus(): Promise<FaceStatusResponse> {
     );
     return {
       is_enrolled: isEnrolled,
-      enrolled_at: data.enrolled_at || data.enrolledAt || null,
+      enrolled_at: data.enrolled_at || data.enrolledAt || data.face_enrolled_at || null,
       faceRegistered: isEnrolled,
     };
   } catch (err: any) {
@@ -136,11 +167,16 @@ export async function getFaceStatus(): Promise<FaceStatusResponse> {
       const fallbackRes: any = await api.get("attendance/face/me");
       const fbData = extractObjectPayload<any>(fallbackRes);
       const isEnrolled = Boolean(
-        fbData.face_registered ?? fbData.is_registered ?? fbData.is_enrolled ?? false
+        fbData.is_face_enrolled ??
+        fbData.isFaceEnrolled ??
+        fbData.face_registered ??
+        fbData.is_registered ??
+        fbData.is_enrolled ??
+        false
       );
       return {
         is_enrolled: isEnrolled,
-        enrolled_at: fbData.face_enrolled_at || null,
+        enrolled_at: fbData.face_enrolled_at || fbData.enrolled_at || null,
         faceRegistered: isEnrolled,
       };
     } catch {
@@ -152,22 +188,28 @@ export async function getFaceStatus(): Promise<FaceStatusResponse> {
 /**
  * Enroll / register the authenticated employee's face via Base64 snapshot.
  * Calls POST /attendance/face-enroll (normalized to /api/v1/attendance/face-enroll).
+ * Supports optional allowReEnroll = false (sends allow_re_enroll to backend).
  */
-export async function enrollFace(imageBase64: string): Promise<FaceEnrollResponse> {
+export async function enrollFace(
+  imageBase64: string,
+  allowReEnroll: boolean = false
+): Promise<FaceEnrollResponse> {
   try {
     const res: any = await api.post("attendance/face-enroll", {
       image_base64: imageBase64,
+      allow_re_enroll: allowReEnroll,
     });
     const data = extractObjectPayload<any>(res);
     return {
       success: res.success ?? true,
-      message: res.message || data.message || "Face successfully registered!",
+      message: res.message || data.message || (allowReEnroll ? "Face profile updated successfully!" : "Face successfully registered!"),
     };
   } catch (err: any) {
     const errorCode = extractErrorCode(err);
     const errorMsg = extractFaceApiError(err);
     const enrichedError: any = new Error(errorMsg);
     enrichedError.errorCode = errorCode;
+    enrichedError.status = err?.response?.status || err?.status;
     enrichedError.response = err?.response;
     throw enrichedError;
   }

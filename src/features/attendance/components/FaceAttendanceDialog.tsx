@@ -21,6 +21,7 @@ import {
   attendanceApi,
   AttendancePunchResult,
   extractFaceApiError,
+  extractErrorCode,
 } from "@/services/attendanceApi";
 import { logger } from "@/lib/logger";
 
@@ -145,8 +146,12 @@ export function FaceAttendanceDialog({
   const [countdown, setCountdown] = useState<number>(2);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [lastErrorCode, setLastErrorCode] = useState<string | null>(null);
   const [punchResult, setPunchResult] = useState<AttendancePunchResult | null>(null);
   const [coords, setCoords] = useState<{ lat: number; lng: number; accuracy?: number } | null>(null);
+  const coordsRef = useRef<{ lat: number; lng: number; accuracy?: number } | null>(null);
+  const [isLocating, setIsLocating] = useState<boolean>(false);
+  const isLocatingRef = useRef<boolean>(false);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -185,6 +190,25 @@ export function FaceAttendanceDialog({
     }
   }, []);
 
+  // Request high-accuracy geolocation
+  const requestLocation = useCallback(async () => {
+    setIsLocating(true);
+    isLocatingRef.current = true;
+    try {
+      const loc = await getGeolocation();
+      setCoords(loc);
+      coordsRef.current = loc;
+      return loc;
+    } catch {
+      setCoords(null);
+      coordsRef.current = null;
+      return null;
+    } finally {
+      setIsLocating(false);
+      isLocatingRef.current = false;
+    }
+  }, []);
+
   // Capture frame from video to Base64 JPEG
   const captureFrameBase64 = useCallback((): string | null => {
     const video = videoRef.current;
@@ -204,13 +228,19 @@ export function FaceAttendanceDialog({
 
   // Submit to real backend endpoint
   const verifyAndSubmit = useCallback(
-    async (base64Image: string) => {
+    async (
+      base64Image: string,
+      forcedCoords?: { lat: number; lng: number; accuracy?: number } | null
+    ) => {
       if (isCapturingRef.current) return;
       isCapturingRef.current = true;
       setStage("verifying");
 
       try {
-        const currentCoords = coords || (await getGeolocation());
+        const currentCoords =
+          forcedCoords !== undefined
+            ? forcedCoords
+            : (coordsRef.current || coords);
         const deviceInfo = typeof navigator !== "undefined" ? navigator.userAgent : "Browser";
 
         let result: AttendancePunchResult;
@@ -259,6 +289,8 @@ export function FaceAttendanceDialog({
       } catch (err: any) {
         // Verification failed: stop camera, do NOT mark attendance, display real backend error
         stopCamera();
+        const code = extractErrorCode(err) || err?.errorCode;
+        setLastErrorCode(code || null);
         const userMsg = extractFaceApiError(err);
         setErrorMessage(userMsg);
         setStage("error");
@@ -275,6 +307,7 @@ export function FaceAttendanceDialog({
     isCapturingRef.current = false;
     setCameraError(null);
     setErrorMessage(null);
+    setLastErrorCode(null);
     setPunchResult(null);
     setStage("initializing");
     setCountdown(2);
@@ -284,8 +317,8 @@ export function FaceAttendanceDialog({
         throw new Error("Camera API is not supported in this browser.");
       }
 
-      // Fetch accurate GPS coordinates in background
-      getGeolocation().then((c) => setCoords(c)).catch(() => {});
+      // Fetch accurate GPS coordinates
+      requestLocation();
 
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -312,6 +345,13 @@ export function FaceAttendanceDialog({
         if (count <= 0) {
           clearInterval(interval);
           autoCaptureTimerRef.current = null;
+
+          // Before submitting: if location is null and not fetching, do not auto-submit blindly.
+          // Allow inline warning and Retry location button to show.
+          if (!coordsRef.current && !isLocatingRef.current) {
+            return;
+          }
+
           const frame = captureFrameBase64();
           if (frame) {
             verifyAndSubmit(frame);
@@ -344,7 +384,36 @@ export function FaceAttendanceDialog({
       setErrorMessage(msg);
       setStage("error");
     }
-  }, [captureFrameBase64, stopCamera, verifyAndSubmit]);
+  }, [captureFrameBase64, requestLocation, stopCamera, verifyAndSubmit]);
+
+  const handleRetryLocation = useCallback(async () => {
+    const loc = await requestLocation();
+    if (loc && stage === "detecting") {
+      const frame = captureFrameBase64();
+      if (frame) {
+        verifyAndSubmit(frame, loc);
+      }
+    }
+  }, [captureFrameBase64, requestLocation, stage, verifyAndSubmit]);
+
+  const handleManualSubmitWithoutLocation = useCallback(() => {
+    const frame = captureFrameBase64();
+    if (frame) {
+      verifyAndSubmit(frame, null);
+    }
+  }, [captureFrameBase64, verifyAndSubmit]);
+
+  const isLocationError =
+    lastErrorCode === "LOCATION_REQUIRED" ||
+    lastErrorCode === "OUTSIDE_GEOFENCE" ||
+    lastErrorCode === "SUSPICIOUS_LOCATION" ||
+    errorMessage?.toLowerCase().includes("location") ||
+    errorMessage?.toLowerCase().includes("geofence");
+
+  const handleRetryWithLocation = useCallback(async () => {
+    await requestLocation();
+    startCamera();
+  }, [requestLocation, startCamera]);
 
   // Lifecycle when dialog open state changes
   useEffect(() => {
@@ -468,6 +537,40 @@ export function FaceAttendanceDialog({
           </DialogDescription>
         </DialogHeader>
 
+        {/* Inline Location Warning Banner when location is null before submitting */}
+        {coords === null && !isLocating && stage !== "success" && stage !== "error" && (
+          <div className="flex items-center justify-between gap-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-600 dark:text-amber-400 animate-in fade-in duration-200">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 shrink-0 text-amber-500" />
+              <span className="font-medium">Location unavailable, allow location access</span>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={handleRetryLocation}
+                disabled={isLocating}
+                className="h-7 gap-1 px-2.5 text-[11px] font-semibold border-amber-500/40 text-amber-600 hover:bg-amber-500/20 dark:text-amber-300"
+              >
+                <RefreshCw className={`h-3 w-3 ${isLocating ? "animate-spin" : ""}`} />
+                Retry location
+              </Button>
+              {countdown <= 0 && stage === "detecting" && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleManualSubmitWithoutLocation}
+                  className="h-7 px-2 text-[10px] text-muted-foreground hover:text-foreground"
+                >
+                  Submit anyway
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Viewport Area for Live Camera / Verification / Error */}
         {stage !== "success" ? (
           <div className="relative aspect-[4/3] w-full rounded-2xl bg-black/95 overflow-hidden border border-border flex items-center justify-center shadow-inner">
@@ -541,16 +644,35 @@ export function FaceAttendanceDialog({
             {/* Error Screen Overlay */}
             {stage === "error" && (
               <div className="absolute inset-0 bg-background/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center animate-in fade-in zoom-in-95 duration-200">
-                <div className="h-14 w-14 rounded-2xl bg-rose-500/20 border border-rose-500 flex items-center justify-center text-rose-500 shadow-[0_0_25px_rgba(244,63,94,0.35)] mb-3">
-                  <AlertCircle className="h-8 w-8" />
+                <div
+                  className={`h-14 w-14 rounded-2xl flex items-center justify-center mb-3 shadow-[0_0_25px] ${
+                    isLocationError
+                      ? "bg-amber-500/20 border border-amber-500 text-amber-500 shadow-amber-500/35"
+                      : "bg-rose-500/20 border border-rose-500 text-rose-500 shadow-rose-500/35"
+                  }`}
+                >
+                  {isLocationError ? <MapPin className="h-8 w-8" /> : <AlertCircle className="h-8 w-8" />}
                 </div>
-                <h3 className="font-display text-sm font-bold text-foreground">Verification Failed</h3>
-                <p className="mt-2 text-xs text-rose-600 dark:text-rose-400 max-w-sm leading-relaxed">
+                <h3 className="font-display text-sm font-bold text-foreground">
+                  {isLocationError ? "Location Verification Failed" : "Verification Failed"}
+                </h3>
+                <p className="mt-2 text-xs text-rose-600 dark:text-rose-400 max-w-sm leading-relaxed font-medium">
                   {errorMessage || cameraError || "Could not verify employee face with backend."}
                 </p>
                 <p className="mt-1 text-[11px] text-muted-foreground">
-                  Attendance was not marked. Please try again with clear lighting and steady positioning.
+                  {isLocationError
+                    ? "Please check that location permissions are granted and you are within the authorized office area."
+                    : "Attendance was not marked. Please try again with clear lighting and steady positioning."}
                 </p>
+                {isLocationError && (
+                  <Button
+                    size="sm"
+                    onClick={handleRetryWithLocation}
+                    className="mt-4 gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold text-xs rounded-xl shadow-md cursor-pointer"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" /> Re-acquire Location & Retry
+                  </Button>
+                )}
               </div>
             )}
           </div>
@@ -693,13 +815,23 @@ export function FaceAttendanceDialog({
               >
                 Close
               </Button>
-              <Button
-                size="sm"
-                onClick={startCamera}
-                className="gap-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white font-semibold shadow-md shadow-violet-500/25 text-xs rounded-xl cursor-pointer"
-              >
-                <RefreshCw className="h-3.5 w-3.5" /> Try Again
-              </Button>
+              {isLocationError ? (
+                <Button
+                  size="sm"
+                  onClick={handleRetryWithLocation}
+                  className="gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold shadow-md shadow-amber-500/25 text-xs rounded-xl cursor-pointer"
+                >
+                  <MapPin className="h-3.5 w-3.5" /> Retry with Location
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  onClick={startCamera}
+                  className="gap-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white font-semibold shadow-md shadow-violet-500/25 text-xs rounded-xl cursor-pointer"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" /> Try Again
+                </Button>
+              )}
             </div>
           ) : (
             <div className="flex items-center justify-end w-full">

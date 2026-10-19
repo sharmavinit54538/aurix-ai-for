@@ -55,9 +55,11 @@ export function base64ToBlob(base64: string, contentType = "image/jpeg"): Blob {
  */
 export function extractFaceApiError(err: any): string {
   const status = err?.response?.status || err?.status;
-  const resp = err?.response?.data || err?.data;
-  const code = extractErrorCode(err);
+  const resp = err?.response?.data || err?.data || (err?.detail ? err : undefined);
+  const rawCode = extractErrorCode(err) || "";
+  const code = rawCode.toUpperCase();
   let rawMsg = "";
+  let detailMsg = "";
 
   if (resp) {
     if (typeof resp === "string") {
@@ -65,18 +67,41 @@ export function extractFaceApiError(err: any): string {
     } else if (resp.detail) {
       if (typeof resp.detail === "string") {
         rawMsg = resp.detail;
-      } else if (typeof resp.detail === "object") {
-        if (typeof resp.detail.message === "string") rawMsg = resp.detail.message;
-        else if (typeof resp.detail.msg === "string") rawMsg = resp.detail.msg;
+        detailMsg = resp.detail.trim();
+      } else if (typeof resp.detail === "object" && resp.detail !== null) {
+        if (typeof resp.detail.message === "string") {
+          rawMsg = resp.detail.message;
+          detailMsg = resp.detail.message.trim();
+        } else if (typeof resp.detail.msg === "string") {
+          rawMsg = resp.detail.msg;
+          detailMsg = resp.detail.msg.trim();
+        }
       } else if (Array.isArray(resp.detail)) {
         rawMsg = resp.detail.map((d: any) => d.msg || d.message || JSON.stringify(d)).join("; ");
+        detailMsg = rawMsg;
       }
     } else if (resp.message && typeof resp.message === "string") {
       rawMsg = resp.message;
+      detailMsg = resp.message.trim();
     }
   }
 
-  // Biometric specific mappings
+  // Biometric & Liveness / Quality mappings:
+  // For FACE_QUALITY_LOW and LIVENESS_FAILED, prefer detail.message from the backend when present;
+  // fall back to the generic text only if it's empty.
+  if (code === "LIVENESS_FAILED" || rawMsg.toLowerCase().includes("liveness")) {
+    if (detailMsg && detailMsg.toUpperCase() !== "LIVENESS_FAILED") {
+      return detailMsg;
+    }
+    return "Liveness check failed. Please present your real face to the camera.";
+  }
+  if (code === "FACE_QUALITY_LOW" || rawMsg.toLowerCase().includes("blur") || rawMsg.toLowerCase().includes("quality")) {
+    if (detailMsg && detailMsg.toUpperCase() !== "FACE_QUALITY_LOW") {
+      return detailMsg;
+    }
+    return "Image quality too low or blurred. Please hold steady in good ambient light.";
+  }
+
   if (code === "FACE_NOT_ENROLLED" || rawMsg.toLowerCase().includes("face not enrolled") || rawMsg.toLowerCase().includes("not enrolled")) {
     return "Face not enrolled. Please complete biometric face registration first.";
   }
@@ -89,14 +114,30 @@ export function extractFaceApiError(err: any): string {
   if (code === "MULTIPLE_FACES" || rawMsg.toLowerCase().includes("multiple faces")) {
     return "Multiple faces detected. Exactly one person must be visible in the camera preview.";
   }
-  if (code === "LIVENESS_FAILED" || rawMsg.toLowerCase().includes("liveness")) {
-    return "Liveness check failed. Please present your real face to the camera.";
-  }
-  if (code === "FACE_QUALITY_LOW" || rawMsg.toLowerCase().includes("blur") || rawMsg.toLowerCase().includes("quality")) {
-    return "Image quality too low or blurred. Please hold steady in good ambient light.";
+
+  // Location & Geofence mappings
+  if (code === "LOCATION_REQUIRED" || rawMsg.toLowerCase().includes("location required") || rawMsg.toLowerCase().includes("location is required")) {
+    return "Location access is required to verify attendance. Please enable location services and allow permission.";
   }
   if (code === "OUTSIDE_GEOFENCE" || rawMsg.toLowerCase().includes("geofence") || rawMsg.toLowerCase().includes("outside")) {
     return "Outside office radius. Attendance verification must be completed inside the authorized office location.";
+  }
+  if (code === "SUSPICIOUS_LOCATION" || rawMsg.toLowerCase().includes("suspicious location") || rawMsg.toLowerCase().includes("mock location")) {
+    return "Suspicious or mock location detected. Please disable GPS spoofing and try again.";
+  }
+
+  // Attendance state mappings
+  if (code === "ALREADY_CHECKED_IN" || rawMsg.toLowerCase().includes("already checked in")) {
+    return "You are already checked in for today.";
+  }
+  if (code === "ALREADY_ENROLLED" || rawMsg.toLowerCase().includes("already enrolled") || rawMsg.toLowerCase().includes("already registered")) {
+    return "Face profile is already registered. You can replace your existing profile if needed.";
+  }
+  if (code === "EMPLOYEE_NOT_FOUND" || rawMsg.toLowerCase().includes("employee not found")) {
+    return "Employee profile not found. Please contact your HR administrator.";
+  }
+  if (code === "TENANT_MISMATCH" || rawMsg.toLowerCase().includes("tenant mismatch")) {
+    return "Organization mismatch. Please log in with your valid organization account.";
   }
   if (code === "NO_ACTIVE_CHECKIN" || rawMsg.toLowerCase().includes("no active checkin") || rawMsg.toLowerCase().includes("not checked in")) {
     return "No active check-in found. You must check in before starting a break.";
@@ -143,14 +184,14 @@ export function extractFaceApiError(err: any): string {
  * Extracts a machine-readable error code from backend response if available.
  */
 export function extractErrorCode(err: any): string | undefined {
-  const resp = err?.response?.data || err?.data;
+  const resp = err?.response?.data || err?.data || (err?.detail ? err : undefined);
   if (resp && typeof resp === "object") {
     if (resp.detail && typeof resp.detail === "object" && resp.detail.code) {
       return resp.detail.code;
     }
     return resp.error_code || resp.code || resp.errorCode || undefined;
   }
-  return undefined;
+  return err?.errorCode || undefined;
 }
 
 export function parseShiftDefinition(raw: string): EmployeeShiftInfo {

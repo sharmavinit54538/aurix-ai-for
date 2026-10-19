@@ -29,7 +29,9 @@ import {
   AttendancePunchResult,
   FaceAttendanceStatus,
   FaceShiftSummary,
+  extractErrorCode,
 } from "@/services/attendanceApi";
+import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog";
 import { formatHHmmTo12h, parseTimeToMinutes } from "@/lib/datetime";
 import { FaceAttendanceDialog, type FaceAttendanceMode } from "../components/FaceAttendanceDialog";
 
@@ -330,6 +332,8 @@ function CheckInPage() {
   const [isFaceEnrolled, setIsFaceEnrolled] = useState<boolean | null>(null);
   const [enrolledAt, setEnrolledAt] = useState<string | null>(null);
   const [showEnrollModal, setShowEnrollModal] = useState(false);
+  const [showReEnrollConfirm, setShowReEnrollConfirm] = useState(false);
+  const [pendingEnrollBase64, setPendingEnrollBase64] = useState<string | null>(null);
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [enrollError, setEnrollError] = useState<string | null>(null);
 
@@ -464,26 +468,37 @@ function CheckInPage() {
     loadAttendanceState();
   }, [loadAttendanceState]);
 
-  // ── Capture & Register Face (Condition A) ────────────────────
-  async function handleCaptureAndRegisterFace() {
+  // ── Capture & Register Face (Condition A & Task 4 Re-Enroll) ─
+  async function executeEnrollFace(base64: string, allowReEnroll = false) {
     setEnrollError(null);
     setIsEnrolling(true);
     try {
-      const base64 = captureModalBase64();
-      if (!base64) {
-        throw new Error("Could not capture image from camera. Please make sure your camera is active and permissions are granted.");
-      }
-
-      const res = await attendanceApi.enrollFace(base64);
-      const successMsg = res.message || "Face successfully registered!";
+      const res = await attendanceApi.enrollFace(base64, allowReEnroll);
+      const successMsg = res.message || (allowReEnroll ? "Face profile updated successfully!" : "Face successfully registered!");
       showToast(successMsg, "success");
       sonnerToast.success(successMsg);
 
       setIsFaceEnrolled(true);
       setShowEnrollModal(false);
+      setShowReEnrollConfirm(false);
+      setPendingEnrollBase64(null);
       stopModalCamera();
       await loadAttendanceState();
     } catch (err: any) {
+      const errorCode = extractErrorCode(err) || err?.errorCode;
+      const isAlreadyEnrolled =
+        errorCode === "ALREADY_ENROLLED" ||
+        err?.status === 409 ||
+        err?.response?.status === 409 ||
+        err?.message?.toLowerCase().includes("already enrolled") ||
+        err?.message?.toLowerCase().includes("already registered");
+
+      if (isAlreadyEnrolled && !allowReEnroll) {
+        setPendingEnrollBase64(base64);
+        setShowReEnrollConfirm(true);
+        return;
+      }
+
       const msg = err?.message || "Face registration failed. Please ensure your face is well-lit and fully visible.";
       setEnrollError(msg);
       showToast(msg, "error");
@@ -491,6 +506,18 @@ function CheckInPage() {
     } finally {
       setIsEnrolling(false);
     }
+  }
+
+  async function handleCaptureAndRegisterFace() {
+    setEnrollError(null);
+    const base64 = captureModalBase64();
+    if (!base64) {
+      const msg = "Could not capture image from camera. Please make sure your camera is active and permissions are granted.";
+      setEnrollError(msg);
+      showToast(msg, "error");
+      return;
+    }
+    await executeEnrollFace(base64, false);
   }
 
   // ── Face Check-In Trigger ────────────────────────────────────
@@ -1025,12 +1052,28 @@ status === "checked-in" ? "bg-primary animate-pulse" : status === "on-break" ? "
               <div className="flex items-center justify-between mb-4">
                 <SectionHeader title="Biometric Face Attendance" icon={ScanFace} />
                 {isFaceEnrolled !== null && (
-                  <span
-                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${statusBadgeClass(isFaceEnrolled ? "approved" : "warning")}`}
-                  >
-                    <span className={`h-1.5 w-1.5 rounded-full ${isFaceEnrolled ? "bg-primary" : "bg-muted-foreground animate-pulse"}`} />
-                    {isFaceEnrolled ? "Face Profile Active" : "Registration Required"}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${statusBadgeClass(isFaceEnrolled ? "approved" : "warning")}`}
+                    >
+                      <span className={`h-1.5 w-1.5 rounded-full ${isFaceEnrolled ? "bg-primary" : "bg-muted-foreground animate-pulse"}`} />
+                      {isFaceEnrolled ? "Face Profile Active" : "Registration Required"}
+                    </span>
+                    {isFaceEnrolled && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setShowEnrollModal(true);
+                          startModalCamera();
+                        }}
+                        className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground"
+                      >
+                        Re-enroll
+                      </Button>
+                    )}
+                  </div>
                 )}
               </div>
 
@@ -1443,6 +1486,27 @@ status === "checked-in" ? "bg-primary animate-pulse" : status === "on-break" ? "
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* ── Confirm Re-Enroll Dialog (Task 4) ── */}
+      <ConfirmAlertDialog
+        open={showReEnrollConfirm}
+        onOpenChange={(open) => {
+          setShowReEnrollConfirm(open);
+          if (!open) {
+            setPendingEnrollBase64(null);
+          }
+        }}
+        title="Replace Existing Face Profile?"
+        description="Replace your existing face profile?"
+        confirmLabel="Replace Profile"
+        cancelLabel="Cancel"
+        destructive={false}
+        onConfirm={async () => {
+          if (pendingEnrollBase64) {
+            await executeEnrollFace(pendingEnrollBase64, true);
+          }
+        }}
+      />
     </div>
   );
 }
