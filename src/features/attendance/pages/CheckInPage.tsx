@@ -557,7 +557,7 @@ function CheckInPage() {
   }, [loadAttendanceState]);
 
   // ── Capture & Register Face (Condition A & Task 4 Re-Enroll) ─
-  async function executeEnrollFace(base64: string, allowReEnroll = false) {
+  async function executeEnrollFace(base64: string, allowReEnroll = true) {
     setEnrollError(null);
     setIsEnrolling(true);
     try {
@@ -605,7 +605,7 @@ function CheckInPage() {
       showToast(msg, "error");
       return;
     }
-    await executeEnrollFace(base64, false);
+    await executeEnrollFace(base64, true);
   }
 
   // ── Face Check-In Trigger ────────────────────────────────────

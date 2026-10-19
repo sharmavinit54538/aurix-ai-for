@@ -188,11 +188,11 @@ export async function getFaceStatus(): Promise<FaceStatusResponse> {
 /**
  * Enroll / register the authenticated employee's face via Base64 snapshot.
  * Calls POST /attendance/face-enroll (normalized to /api/v1/attendance/face-enroll).
- * Supports optional allowReEnroll = false (sends allow_re_enroll to backend).
+ * Explicitly sends allow_re_enroll: true to overwrite or register existing face records.
  */
 export async function enrollFace(
   imageBase64: string,
-  allowReEnroll: boolean = false
+  allowReEnroll: boolean = true
 ): Promise<FaceEnrollResponse> {
   try {
     const res: any = await api.post("attendance/face-enroll", {
