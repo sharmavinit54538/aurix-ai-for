@@ -42,16 +42,32 @@ export interface RequestOptions {
   timeout?: number;
 }
 
+function isFormData(val: unknown): val is FormData {
+  return (
+    (typeof FormData !== "undefined" && val instanceof FormData) ||
+    (Boolean(val) &&
+      typeof val === "object" &&
+      typeof (val as any).append === "function" &&
+      (val as any)[Symbol.toStringTag] === "FormData")
+  );
+}
+
 export async function apiRequest<T = unknown>(
   path: string,
   options: RequestOptions & { method?: string } = {},
 ): Promise<T> {
+  const headers = options.headers ? { ...options.headers } : undefined;
+  if (headers && isFormData(options.data)) {
+    delete headers["Content-Type"];
+    delete headers["content-type"];
+  }
+
   try {
     const response = await apiInstance.request<T>({
       method: options.method ?? "GET",
       url: normalizeApiPath(path),
       data: options.data,
-      headers: options.headers,
+      headers,
       timeout: options.timeout,
     });
     return response.data;

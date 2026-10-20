@@ -62,6 +62,25 @@ apiInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     config.headers.Authorization = `Bearer ${tokens.accessToken}`;
   }
 
+  // Whenever the request body is FormData, delete/omit Content-Type so Axios/browser sets multipart/form-data with boundary
+  const isFormData =
+    (typeof FormData !== "undefined" && config.data instanceof FormData) ||
+    (Boolean(config.data) &&
+      typeof config.data === "object" &&
+      typeof (config.data as any).append === "function" &&
+      (config.data as any)[Symbol.toStringTag] === "FormData");
+
+  if (isFormData) {
+    if (config.headers) {
+      delete config.headers["Content-Type"];
+      delete config.headers["content-type"];
+      if (typeof (config.headers as any).delete === "function") {
+        (config.headers as any).delete("Content-Type");
+        (config.headers as any).delete("content-type");
+      }
+    }
+  }
+
   if (config.url) {
     config.url = normalizeApiPath(config.url);
   }

@@ -1,7 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { getFaceAttendanceStatus, getFaceStatus, enrollFace } from "../faceBiometricsApi";
+import {
+  getFaceAttendanceStatus,
+  getFaceStatus,
+  enrollFace,
+  checkIn as faceBiometricsCheckIn,
+  checkOut as faceBiometricsCheckOut,
+} from "../faceBiometricsApi";
 import { extractFaceApiError, extractErrorCode, parseTodayPunchData } from "../helpers";
-import { checkOut, getMyTodayStatus } from "../punchGeofenceApi";
+import { checkIn, checkOut, getMyTodayStatus } from "../punchGeofenceApi";
 import { api } from "@/api";
 import apiInstance from "@/api/apiInstance";
 
@@ -442,31 +448,145 @@ describe("Face Attendance Flow", () => {
     });
   });
 
-  describe("TASK 5: checkOut appends notes", () => {
-    it("appends notes when present in CheckOutPayload", async () => {
-      vi.mocked(apiInstance.post).mockResolvedValueOnce({
+  describe("TASK 5: checkOut request format and alignment with checkIn", () => {
+    it("sends JSON payload to /attendance/checkout when image_base64 is provided", async () => {
+      vi.mocked(api.post).mockResolvedValueOnce({
+        success: true,
         data: {
           id: "att-123",
           status: "checked-out",
-          message: "Checked out successfully",
+          message: "Attendance Verified & Marked Successfully!",
+          check_out_time: "2026-10-20T17:30:00Z",
         },
       });
 
-      await checkOut({
-        image_base64: "data:image/jpeg;base64,abc123",
+      const res = await checkOut({
+        image_base64: "data:image/jpeg;base64,abc123checkout",
         latitude: 12.9716,
         longitude: 77.5946,
         accuracy: 10,
         notes: "Leaving early for dental appointment",
       });
 
+      expect(api.post).toHaveBeenCalledTimes(1);
+      const [path, body] = vi.mocked(api.post).mock.calls[0];
+      expect(path).toBe("attendance/checkout");
+      expect(body).toMatchObject({
+        image_base64: "data:image/jpeg;base64,abc123checkout",
+        notes: "Leaving early for dental appointment",
+        latitude: 12.9716,
+        longitude: 77.5946,
+        accuracy: 10,
+        location: {
+          latitude: 12.9716,
+          longitude: 77.5946,
+          accuracy: 10,
+        },
+      });
+      expect(res.status).toBe("checked-out");
+      expect(res.checkOutTime).toBe("2026-10-20T17:30:00Z");
+    });
+
+    it("falls back to alternate endpoints when /attendance/checkout returns 404", async () => {
+      const notFoundErr: any = new Error("Not Found");
+      notFoundErr.status = 404;
+      notFoundErr.response = { status: 404 };
+
+      vi.mocked(api.post).mockRejectedValueOnce(notFoundErr); // attendance/checkout fails with 404
+      vi.mocked(api.post).mockResolvedValueOnce({
+        success: true,
+        data: {
+          id: "att-fallback",
+          status: "checked-out",
+          message: "Checked out successfully",
+        },
+      });
+
+      const res = await checkOut({
+        image_base64: "data:image/jpeg;base64,fallback",
+        latitude: 12.9716,
+        longitude: 77.5946,
+      });
+
+      expect(api.post).toHaveBeenCalledTimes(2);
+      expect(vi.mocked(api.post).mock.calls[0][0]).toBe("attendance/checkout");
+      expect(vi.mocked(api.post).mock.calls[1][0]).toBe("attendance/face/checkout");
+      expect(res.status).toBe("checked-out");
+    });
+
+    it("sends FormData to /attendance/face/check-out when only file is provided (fallback path)", async () => {
+      vi.mocked(apiInstance.post).mockResolvedValueOnce({
+        data: {
+          id: "att-file-123",
+          status: "checked-out",
+          message: "Checked out successfully",
+        },
+      });
+
+      const dummyFile = new Blob(["test-image-content"], { type: "image/jpeg" });
+
+      await checkOut({
+        file: dummyFile,
+        latitude: 12.9716,
+        longitude: 77.5946,
+        accuracy: 10,
+        notes: "Leaving for the day via file upload",
+      });
+
       expect(apiInstance.post).toHaveBeenCalledTimes(1);
       const [url, formData] = vi.mocked(apiInstance.post).mock.calls[0];
       expect(url).toBe("/attendance/face/check-out");
       expect(formData instanceof FormData).toBe(true);
-      expect((formData as FormData).get("notes")).toBe("Leaving early for dental appointment");
+      expect((formData as FormData).get("notes")).toBe("Leaving for the day via file upload");
       expect((formData as FormData).get("latitude")).toBe("12.9716");
       expect((formData as FormData).get("longitude")).toBe("77.5946");
+    });
+
+    it("ensures contract parity between checkIn and checkOut JSON payloads", async () => {
+      vi.mocked(api.post).mockResolvedValue({
+        success: true,
+        data: { id: "punch-1", status: "ok" },
+      });
+
+      const checkInPayload = {
+        image_base64: "data:image/jpeg;base64,parity123",
+        latitude: 13.0827,
+        longitude: 80.2707,
+        accuracy: 5,
+        notes: "Parity check notes",
+      };
+
+      await checkIn(checkInPayload);
+      const [, inBody] = vi.mocked(api.post).mock.calls[0];
+
+      await checkOut(checkInPayload);
+      const [, outBody] = vi.mocked(api.post).mock.calls[1];
+
+      expect(Object.keys(inBody).sort()).toEqual(Object.keys(outBody).sort());
+      expect(outBody.image_base64).toBe(inBody.image_base64);
+      expect(outBody.notes).toBe(inBody.notes);
+      expect(outBody.latitude).toBe(inBody.latitude);
+      expect(outBody.longitude).toBe(inBody.longitude);
+      expect(outBody.accuracy).toBe(inBody.accuracy);
+      expect(outBody.location).toEqual(inBody.location);
+    });
+
+    it("verifies checkIn and checkOut re-exported from faceBiometricsApi function identically", async () => {
+      vi.mocked(api.post).mockResolvedValue({
+        success: true,
+        data: { id: "fb-att-1", status: "checked-out" },
+      });
+
+      const res = await faceBiometricsCheckOut({
+        image_base64: "data:image/jpeg;base64,fb-checkout",
+        notes: "Export verification",
+      });
+
+      expect(api.post).toHaveBeenCalledWith("attendance/checkout", expect.objectContaining({
+        image_base64: "data:image/jpeg;base64,fb-checkout",
+        notes: "Export verification",
+      }));
+      expect(res.status).toBe("checked-out");
     });
   });
 

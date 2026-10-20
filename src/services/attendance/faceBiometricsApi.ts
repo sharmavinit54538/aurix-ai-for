@@ -221,3 +221,8 @@ export async function enrollFace(
     throw enrichedError;
   }
 }
+
+// ─────────────────────────────────────────────────────────────
+// Re-export Check-In & Check-Out for unified face attendance access
+// ─────────────────────────────────────────────────────────────
+export { checkIn, checkOut } from "./punchGeofenceApi";

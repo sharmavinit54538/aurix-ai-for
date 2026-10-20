@@ -94,6 +94,7 @@ export interface TodayPunchStatus {
   activeSeconds?: number;
   message?: string;
   attendanceId?: string;
+  raw?: Record<string, unknown>;
 }
 
 export interface CheckInPayload {

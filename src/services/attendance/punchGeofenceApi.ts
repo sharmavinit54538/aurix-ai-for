@@ -77,7 +77,24 @@ export async function checkIn(payload: CheckInPayload): Promise<AttendancePunchR
         body.ip_address = payload.ipAddress;
       }
 
-      const res: any = await api.post("attendance/checkin", body);
+      let res: any;
+      try {
+        res = await api.post("attendance/checkin", body);
+      } catch (checkinErr: any) {
+        if ((checkinErr?.response?.status || checkinErr?.status) === 404) {
+          try {
+            res = await api.post("attendance/face/checkin", body);
+          } catch (fbErr: any) {
+            if ((fbErr?.response?.status || fbErr?.status) === 404) {
+              res = await api.post("attendance/face/check-in", body);
+            } else {
+              throw fbErr;
+            }
+          }
+        } else {
+          throw checkinErr;
+        }
+      }
       const data = extractObjectPayload<any>(res);
       return {
         id: data.id || data.attendance_id || "",
@@ -114,10 +131,8 @@ export async function checkIn(payload: CheckInPayload): Promise<AttendancePunchR
   if (payload.ipAddress) formData.append("ip_address", payload.ipAddress);
 
   try {
-    const res: any = await apiInstance.post("/attendance/face/check-in", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-    const data = extractObjectPayload<any>(res.data);
+    const res: any = await apiInstance.post("/attendance/face/check-in", formData);
+    const data = extractObjectPayload<any>(res.data || res);
     return {
       id: data.id || data.attendance_id || "",
       employeeId: data.employee_id || data.employeeId,
@@ -145,21 +160,91 @@ export async function checkIn(payload: CheckInPayload): Promise<AttendancePunchR
 
 /**
  * Perform attendance check-out.
- * Sends coordinates, device info, and photo proof to backend /api/v1/attendance/face/check-out.
- * Supports both multipart file and Base64 captured snapshot.
+ * If image_base64 is provided, sends JSON payload to POST /attendance/checkout (matching checkIn).
+ * Otherwise falls back to multipart POST /attendance/face/check-out.
  */
 export async function checkOut(payload: CheckOutPayload): Promise<AttendancePunchResult> {
+  if (!payload.image_base64 && !payload.file) {
+    throw new Error("A face photo is required for check-out. Please enable your camera and capture your face.");
+  }
+
+  // 1. Primary path: Base64 face verification check-out (aligned with checkIn)
+  if (payload.image_base64) {
+    try {
+      const body: Record<string, any> = {
+        image_base64: payload.image_base64,
+        device_info: payload.deviceInfo || (typeof navigator !== "undefined" ? navigator.userAgent : "Web"),
+      };
+      if (payload.latitude != null || payload.longitude != null) {
+        body.location = {
+          latitude: payload.latitude,
+          longitude: payload.longitude,
+          accuracy: payload.accuracy,
+        };
+        body.latitude = payload.latitude;
+        body.longitude = payload.longitude;
+        body.accuracy = payload.accuracy;
+      }
+      if (payload.notes) {
+        body.notes = payload.notes;
+      }
+      if (payload.ipAddress) {
+        body.ip_address = payload.ipAddress;
+      }
+
+      let res: any;
+      try {
+        res = await api.post("attendance/checkout", body);
+      } catch (checkoutErr: any) {
+        if ((checkoutErr?.response?.status || checkoutErr?.status) === 404) {
+          try {
+            res = await api.post("attendance/face/checkout", body);
+          } catch (fbErr: any) {
+            if ((fbErr?.response?.status || fbErr?.status) === 404) {
+              res = await api.post("attendance/face/check-out", body);
+            } else {
+              throw fbErr;
+            }
+          }
+        } else {
+          throw checkoutErr;
+        }
+      }
+
+      const data = extractObjectPayload<any>(res);
+      return {
+        id: data.id || data.attendance_id || "",
+        employeeId: data.employee_id || data.employeeId,
+        employeeName: data.employee_name || data.employeeName,
+        time: data.check_out_time || data.time || new Date().toISOString(),
+        checkOutTime: data.check_out_time || data.time || new Date().toISOString(),
+        status: data.status || "checked-out",
+        workingHours: data.working_hours ?? data.workingHours ?? null,
+        success: true,
+        message: res.message || data.message || "Attendance Verified & Marked Successfully!",
+        isInsideGeofence: data.is_inside_geofence ?? data.isInsideGeofence,
+      };
+    } catch (err: any) {
+      const errorCode = extractErrorCode(err);
+      const errorMsg = extractFaceApiError(err);
+      const httpStatus = err?.response?.status || err?.status;
+
+      const enrichedError: any = new Error(errorMsg);
+      enrichedError.status = httpStatus;
+      enrichedError.errorCode = errorCode;
+      enrichedError.response = err?.response;
+      throw enrichedError;
+    }
+  }
+
+  // 2. Fallback path: Multipart upload
   let fileBlob = payload.file;
   if (!fileBlob && payload.image_base64) {
     fileBlob = base64ToBlob(payload.image_base64, "image/jpeg");
   }
 
-  if (!fileBlob) {
-    throw new Error("A face photo is required for check-out. Please enable your camera and capture your face.");
-  }
-
   const formData = new FormData();
-  formData.append("file", fileBlob, "checkout-proof.jpg");
+  formData.append("file", fileBlob!, "checkout-proof.jpg");
   if (payload.latitude != null) formData.append("latitude", payload.latitude.toString());
   if (payload.longitude != null) formData.append("longitude", payload.longitude.toString());
   if (payload.accuracy != null) formData.append("accuracy", payload.accuracy.toString());
@@ -168,10 +253,8 @@ export async function checkOut(payload: CheckOutPayload): Promise<AttendancePunc
   if (payload.notes) formData.append("notes", payload.notes);
 
   try {
-    const res: any = await apiInstance.post("/attendance/face/check-out", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-    const data = extractObjectPayload<any>(res.data);
+    const res: any = await apiInstance.post("/attendance/face/check-out", formData);
+    const data = extractObjectPayload<any>(res.data || res);
     return {
       id: data.id || data.attendance_id || "",
       employeeId: data.employee_id || data.employeeId,
