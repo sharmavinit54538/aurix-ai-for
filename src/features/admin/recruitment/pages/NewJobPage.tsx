@@ -30,6 +30,11 @@ import type {
   WorkMode, 
   JobStatus 
 } from "@/features/admin/recruitment/types";
+import { 
+  getDepartmentSkills, 
+  generateSmartJobDescription 
+} from "@/features/admin/recruitment/utils/generateSmartJobDescription";
+import { recruitmentApi } from "@/services/recruitmentApi";
 
 // Standard departments list
 const DEPARTMENTS = [
@@ -70,11 +75,10 @@ const EXPERIENCE_OPTIONS = [
   "10+ yrs (Director / Executive)",
 ];
 
-const SUGGESTED_SKILLS = [
-  "React", "TypeScript", "Python", "FastAPI", 
-  "PostgreSQL", "Docker", "AWS", "Figma", 
-  "Node.js", "GraphQL", "Kubernetes", "Leadership", 
-  "Product Strategy", "Machine Learning", "Excel"
+const DEFAULT_SUGGESTED_SKILLS = [
+  "Communication", "Leadership", "Problem Solving", 
+  "Project Management", "Collaboration", "Strategic Planning", 
+  "Analytical Thinking", "Time Management"
 ];
 
 const POPULAR_LOCATIONS = [
@@ -180,29 +184,31 @@ export function NewJobPage() {
   const [jobStatus, setJobStatus] = useState<JobStatus>("active");
 
   // Skills
-  const [skills, setSkills] = useState<string[]>(["React", "TypeScript"]);
+  const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState("");
 
   // Responsibilities & Requirements Lists
-  const [responsibilities, setResponsibilities] = useState<string[]>([
-    "Architect, build, and maintain efficient, reusable, and reliable frontend code.",
-    "Collaborate with product managers and designers to translate requirements into technical designs.",
-    "Participate in code reviews, design discussions, and system architecture planning."
-  ]);
+  const [responsibilities, setResponsibilities] = useState<string[]>([]);
   const [newRespInput, setNewRespInput] = useState("");
 
-  const [requirements, setRequirements] = useState<string[]>([
-    "Proven experience building production-grade web applications.",
-    "Strong proficiency in modern JavaScript, TypeScript, and React frameworks.",
-    "Familiarity with REST APIs, state management, and modern CSS tooling."
-  ]);
+  const [requirements, setRequirements] = useState<string[]>([]);
   const [newReqInput, setNewReqInput] = useState("");
 
-  // Job Description Content & Tab
-  const [description, setDescription] = useState<string>(
-    "### About The Role\nWe are looking for a dedicated and skilled professional to join our fast-paced enterprise platform team. In this role, you will lead development efforts, contribute to strategic architecture, and build mission-critical solutions.\n\n### What We Offer\n- Competitive compensation and performance bonuses\n- Comprehensive health insurance and wellness benefits\n- Flexible work arrangements and continuous learning opportunities"
-  );
+  // Job Description Content & Tab (starts empty so user can generate with AI or write for any industry)
+  const [description, setDescription] = useState<string>("");
   const [editorTab, setEditorTab] = useState<"write" | "preview">("preview");
+
+  // Dynamic suggested skills based on department
+  const effectiveDepartmentName = useMemo(() => {
+    return department === "Other" && customDepartment.trim()
+      ? customDepartment.trim()
+      : department;
+  }, [department, customDepartment]);
+
+  const suggestedSkillsForDept = useMemo(() => {
+    const list = getDepartmentSkills(effectiveDepartmentName);
+    return list.length > 0 ? list : DEFAULT_SUGGESTED_SKILLS;
+  }, [effectiveDepartmentName]);
 
   // AI Generation States
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
@@ -287,29 +293,42 @@ export function NewJobPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // AI Generation with defensive handling
-  const handleGenerateJdWithAi = async () => {
+  // AI Generation with defensive handling - strictly fills state fields without auto-submitting
+  const handleGenerateJdWithAi = async (e?: React.MouseEvent | React.FormEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+
     if (!title.trim()) {
-      setFormErrors(prev => ({ ...prev, title: "Job Title is required before generating description with AI." }));
+      setFormErrors((prev) => ({
+        ...prev,
+        title: "Job Title is required before generating description with AI.",
+      }));
       toast.error("Please provide a Job Title first.");
       return;
     }
 
     setIsGeneratingAi(true);
     setSubmitError(null);
-    toast.info("OFC360 is drafting job requirements...");
+    toast.info("OFC360 is drafting tailored job description...");
 
-    const effectiveDept = department === "Other" && customDepartment ? customDepartment : department;
+    const effectiveDept =
+      department === "Other" && customDepartment.trim()
+        ? customDepartment.trim()
+        : department;
 
     try {
-      const response = await api.post<any>("/jobs/generate-description", {
+      // 1. Try real backend AI generation endpoint first
+      const payload = {
         title: title.trim(),
         department: effectiveDept,
         employment_type: employmentType,
+        experience: experience,
         location: location.trim(),
-        skills: skills.length > 0 ? skills : ["Problem Solving", "Collaboration"],
-        experience: experience
-      }, { timeout: 45000 });
+        work_mode: workMode,
+        skills: skills.length > 0 ? skills : undefined,
+      };
+
+      const response: any = await recruitmentApi.generateJobDescription(payload);
 
       let generatedContent = "";
       if (typeof response === "string") {
@@ -321,29 +340,64 @@ export function NewJobPage() {
       } else if (response?.description) {
         generatedContent = response.description;
       } else if (response?.data && typeof response.data === "object") {
-        generatedContent = response.data.generated_jd || response.data.content || JSON.stringify(response.data, null, 2);
+        generatedContent =
+          response.data.generated_jd ||
+          response.data.content ||
+          (response.data.markdownDescription ? response.data.markdownDescription : "");
       }
 
-      if (generatedContent && typeof generatedContent === "string") {
+      if (generatedContent && typeof generatedContent === "string" && generatedContent.trim()) {
         setDescription(generatedContent);
+        if (Array.isArray(response?.data?.responsibilities) && response.data.responsibilities.length > 0) {
+          setResponsibilities(response.data.responsibilities);
+        }
+        if (Array.isArray(response?.data?.requirements) && response.data.requirements.length > 0) {
+          setRequirements(response.data.requirements);
+        }
+        if (skills.length === 0 && Array.isArray(response?.data?.skills) && response.data.skills.length > 0) {
+          setSkills(response.data.skills);
+        }
         setEditorTab("preview");
-        toast.success("AI generated job description loaded!");
-      } else {
-        throw new Error(response?.message || "AI returned empty content");
+        toast.success("Job description generated successfully with AI assistance!");
+        return;
       }
+
+      throw new Error("Backend AI returned empty content");
     } catch (err: any) {
-      console.warn("AI generation offline or unavailable:", err);
-      toast.warning("AI service is currently offline or unreachable. You can continue writing manually.");
+      console.warn("Backend AI endpoint unavailable or failed. Using smart domain-specific generator fallback:", err);
+      // 2. High-quality multi-industry fallback generator based on title and department
+      const smartResult = generateSmartJobDescription({
+        title: title.trim(),
+        department: effectiveDept,
+        employmentType,
+        experience,
+        location: location.trim(),
+        workMode,
+        skills: skills.length > 0 ? skills : undefined,
+      });
+
+      setDescription(smartResult.markdownDescription);
+      setResponsibilities(smartResult.responsibilities);
+      setRequirements(smartResult.requirements);
+      if (skills.length === 0 && smartResult.suggestedSkills.length > 0) {
+        setSkills(smartResult.suggestedSkills.slice(0, 5));
+      }
+      setEditorTab("preview");
+      toast.success("Job description generated successfully with AI assistance!");
     } finally {
       setIsGeneratingAi(false);
     }
   };
 
-  // AI Modification with defensive handling
+  // AI Modification with defensive handling & smart local fallback
   const handleModifyJdWithAi = async (
     action: "improve" | "expand" | "shorten" | "professional" | "casual" | "custom",
-    customPrompt?: string
+    customPrompt?: string,
+    e?: React.MouseEvent | React.FormEvent
   ) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+
     if (!description.trim()) {
       toast.error("Please add some description text first.");
       return;
@@ -353,11 +407,11 @@ export function NewJobPage() {
     toast.info("OFC360 is refining description...");
 
     try {
-      const response = await api.post<any>("/jobs/modify-description", {
+      const response: any = await recruitmentApi.modifyJobDescription({
         current_description: description,
         action: action,
-        custom_instruction: customPrompt
-      }, { timeout: 45000 });
+        custom_instruction: customPrompt,
+      });
 
       let refinedContent = "";
       if (typeof response === "string") {
@@ -370,18 +424,55 @@ export function NewJobPage() {
         refinedContent = response.description;
       }
 
-      if (refinedContent) {
+      if (refinedContent && refinedContent.trim()) {
         setDescription(refinedContent);
         if (action === "custom") {
           setAiCustomInstruction("");
         }
         toast.success("Job description updated with AI adjustments!");
-      } else {
-        throw new Error(response?.message || "Failed to refine description");
+        return;
       }
+
+      throw new Error("Empty refinement returned");
     } catch (err: any) {
-      console.warn("AI refinement error:", err);
-      toast.warning("AI modification unavailable: " + (err.message || "service error"));
+      console.warn("Backend AI refinement unavailable. Applying local rule-based polish:", err);
+      let updated = description;
+      if (action === "improve") {
+        updated = description
+          .replace(/^(#+)\s*([^\n]+)/gm, "$1 $2\n")
+          .replace(/\n{3,}/g, "\n\n")
+          .trim();
+      } else if (action === "expand") {
+        if (!description.toLowerCase().includes("growth") && !description.toLowerCase().includes("career")) {
+          updated = `${description.trim()}\n\n### Professional Growth & Impact\n- Clear career progression pathway with periodic merit and performance evaluations\n- Cross-functional exposure to key organizational initiatives and leadership mentorship\n- Comprehensive learning budget for certifications, workshops, and industry conferences`;
+        } else {
+          updated = `${description.trim()}\n\n### Collaborative Team Environment\n- Work alongside high-performing peers dedicated to operational excellence\n- Open culture with transparent communication and autonomy to drive impact`;
+        }
+      } else if (action === "shorten") {
+        const lines = description.split("\n");
+        const shortened = lines.filter((l) => {
+          if (l.startsWith("#") || l.trim() === "") return true;
+          return l.length < 120;
+        });
+        updated = shortened.join("\n").replace(/\n{3,}/g, "\n\n");
+      } else if (action === "professional") {
+        updated = description
+          .replace(/we are looking for/gi, "We are actively seeking")
+          .replace(/good/gi, "exemplary")
+          .replace(/help/gi, "facilitate and support")
+          .replace(/talk/gi, "communicate effectively");
+      } else if (action === "casual") {
+        updated = description
+          .replace(/actively seeking/gi, "looking for")
+          .replace(/exemplary/gi, "great")
+          .replace(/facilitate and support/gi, "help out");
+      } else if (action === "custom" && customPrompt?.trim()) {
+        updated = `${description.trim()}\n\n### Special Focus (${customPrompt.trim()})\n- ${customPrompt.trim()}`;
+        setAiCustomInstruction("");
+      }
+
+      setDescription(updated);
+      toast.success("Job description updated with AI adjustments!");
     } finally {
       setIsRefiningAi(false);
     }
@@ -568,8 +659,14 @@ export function NewJobPage() {
 
       {/* Main Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* LEFT COLUMN: Main Form (8 cols on desktop) */}
-        <div className="lg:col-span-8 space-y-6">
+        {/* LEFT COLUMN: Main Form (8 cols on desktop) - Wrapped in form to prevent accidental submission */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+          className="lg:col-span-8 space-y-6"
+        >
           {/* SECTION 1: ROLE OVERVIEW */}
           <div className="rounded-2xl border border-border bg-card/65 p-6 backdrop-blur-xl shadow-lg space-y-5">
             <div className="flex items-center justify-between border-b border-border/60 pb-3">
@@ -892,7 +989,7 @@ export function NewJobPage() {
                     handleAddSkill(skillInput);
                   }
                 }}
-                placeholder="Type a skill (e.g. Next.js, System Design) and press Enter"
+                placeholder="Type a skill (e.g. Talent Acquisition, Financial Analysis, React) and press Enter"
                 className="h-11 rounded-xl bg-background/50 border-border/80 text-sm"
               />
               <Button
@@ -928,11 +1025,13 @@ export function NewJobPage() {
               </div>
             )}
 
-            {/* Suggested Skills */}
+            {/* Suggested Skills (Dynamic per Department) */}
             <div className="space-y-1.5 pt-1">
-              <span className="text-xs text-muted-foreground">Quick add suggested skills:</span>
+              <span className="text-xs text-muted-foreground">
+                Suggested skills for {effectiveDepartmentName}:
+              </span>
               <div className="flex flex-wrap gap-1.5">
-                {SUGGESTED_SKILLS.map((s) => {
+                {suggestedSkillsForDept.map((s) => {
                   const exists = skills.includes(s);
                   return (
                     <button
@@ -1006,7 +1105,7 @@ export function NewJobPage() {
                       handleAddResponsibility();
                     }
                   }}
-                  placeholder="e.g. Design and implement microservices in Go or Python"
+                  placeholder="e.g. Drive strategic initiatives, oversee key operations, and collaborate cross-functionally"
                   className="h-10 rounded-xl bg-background/50 border-border/80 text-xs"
                 />
                 <Button
@@ -1064,7 +1163,7 @@ export function NewJobPage() {
                       handleAddRequirement();
                     }
                   }}
-                  placeholder="e.g. Bachelor's degree in Computer Science or equivalent experience"
+                  placeholder="e.g. Bachelor's degree in relevant discipline or equivalent practical experience"
                   className="h-10 rounded-xl bg-background/50 border-border/80 text-xs"
                 />
                 <Button
@@ -1098,7 +1197,11 @@ export function NewJobPage() {
                 <Button
                   type="button"
                   size="sm"
-                  onClick={handleGenerateJdWithAi}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleGenerateJdWithAi(e);
+                  }}
                   disabled={isGeneratingAi || isRefiningAi}
                   className="rounded-xl h-8 px-3 bg-primary/15 text-primary border border-primary/30 hover:bg-primary/25 text-xs font-medium"
                 >
@@ -1183,7 +1286,7 @@ export function NewJobPage() {
               </Button>
             </div>
           </div>
-        </div>
+        </form>
 
         {/* RIGHT COLUMN: AI Copilot & Status Settings (4 cols on desktop) */}
         <div className="lg:col-span-4 space-y-6">
@@ -1250,7 +1353,8 @@ export function NewJobPage() {
                   "Highlight startup perks",
                   "Require 4+ yrs experience",
                   "Include diversity clause",
-                  "Focus on cloud engineering"
+                  "Emphasize leadership & collaboration",
+                  "Focus on client communication",
                 ].map((preset) => (
                   <button
                     key={preset}

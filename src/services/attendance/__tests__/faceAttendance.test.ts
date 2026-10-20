@@ -557,6 +557,7 @@ describe("Face Attendance Flow", () => {
       };
 
       await checkIn(checkInPayload);
+      await checkOut(checkInPayload);
       const [, rawInBody] = vi.mocked(api.post).mock.calls[0];
       const [, rawOutBody] = vi.mocked(api.post).mock.calls[1];
       const inBody = rawInBody as Record<string, any>;

@@ -92,6 +92,80 @@ function tryParseJSON(raw: string): Record<string, unknown> | null {
   return null;
 }
 
+function parseMarkdownJd(raw: string): Partial<NormalizedJobDescription> | null {
+  if (!raw || !raw.includes("#")) return null;
+
+  const lines = raw.split("\n");
+  let currentSection = "";
+  const sections: Record<string, string[]> = {};
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith("#")) {
+      const headerTitle = trimmed.replace(/^#+\s*/, "").toLowerCase();
+      if (
+        headerTitle.includes("about") ||
+        headerTitle.includes("overview") ||
+        headerTitle.includes("summary")
+      ) {
+        currentSection = "about";
+      } else if (
+        headerTitle.includes("responsibilit") ||
+        headerTitle.includes("duties") ||
+        headerTitle.includes("what you will do")
+      ) {
+        currentSection = "responsibilities";
+      } else if (
+        headerTitle.includes("qualificat") ||
+        headerTitle.includes("requirement") ||
+        headerTitle.includes("who you are")
+      ) {
+        currentSection = "qualifications";
+      } else if (
+        headerTitle.includes("benefit") ||
+        headerTitle.includes("what we offer") ||
+        headerTitle.includes("perks")
+      ) {
+        currentSection = "benefits";
+      } else if (headerTitle.includes("skill")) {
+        currentSection = "skills";
+      } else {
+        currentSection = "other";
+      }
+      if (!sections[currentSection]) sections[currentSection] = [];
+    } else if (currentSection && trimmed) {
+      sections[currentSection].push(trimmed);
+    }
+  }
+
+  const cleanBullets = (items?: string[]): string[] | undefined => {
+    if (!items || items.length === 0) return undefined;
+    const cleaned = items
+      .map((item) => item.replace(/^[-*•\d+.]\s*/, "").trim())
+      .filter((item) => item.length > 0);
+    return cleaned.length > 0 ? cleaned : undefined;
+  };
+
+  const aboutText = sections["about"]?.join("\n").trim() || undefined;
+  const responsibilities = cleanBullets(sections["responsibilities"]);
+  const qualifications = cleanBullets(sections["qualifications"]);
+  const benefits = cleanBullets(sections["benefits"]);
+  const requiredSkills = cleanBullets(sections["skills"]);
+
+  if (!aboutText && !responsibilities && !qualifications && !benefits) {
+    return null;
+  }
+
+  return {
+    summary: aboutText,
+    aboutRole: aboutText,
+    responsibilities,
+    qualifications,
+    benefits,
+    requiredSkills,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Main normalizer
 // ---------------------------------------------------------------------------
@@ -105,6 +179,14 @@ export function normalizeJobDescription(
   if (typeof raw === "string") {
     obj = tryParseJSON(raw);
     if (!obj) {
+      const parsedMd = parseMarkdownJd(raw);
+      if (parsedMd) {
+        return {
+          isStructured: true,
+          plainText: raw,
+          ...parsedMd,
+        };
+      }
       // It's just plain text – not structured
       return {
         isStructured: false,

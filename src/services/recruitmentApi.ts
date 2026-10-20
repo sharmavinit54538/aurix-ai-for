@@ -58,6 +58,32 @@ export const recruitmentApi = {
     return res.data;
   },
 
+  generateJobDescription: async (payload: Record<string, unknown>) => {
+    try {
+      const res = await apiInstance.post("/recruitment/jobs/generate-description", payload);
+      return res.data;
+    } catch (err: any) {
+      if (err?.response?.status === 404) {
+        const res = await apiInstance.post("/jobs/generate-description", payload);
+        return res.data;
+      }
+      throw err;
+    }
+  },
+
+  modifyJobDescription: async (payload: Record<string, unknown>) => {
+    try {
+      const res = await apiInstance.post("/recruitment/jobs/modify-description", payload);
+      return res.data;
+    } catch (err: any) {
+      if (err?.response?.status === 404) {
+        const res = await apiInstance.post("/jobs/modify-description", payload);
+        return res.data;
+      }
+      throw err;
+    }
+  },
+
   // Candidates
   getCandidates: async (params?: Record<string, string | number>) => {
     const res = await apiInstance.get("/candidates", { params });

@@ -133,7 +133,12 @@ export const upsertJob = createAsyncThunk<unknown, Job, { rejectValue: string }>
           : job.requirements,
         benefits: Array.isArray(job.benefits) ? job.benefits.join("\n") : job.benefits,
         status: job.status === "active" ? "PUBLISHED" : job.status.toUpperCase(),
-        rounds: ["Screening", "Technical", "Manager", "HR"],
+        rounds:
+          job.department?.toLowerCase().includes("engineer") ||
+          job.department?.toLowerCase().includes("tech") ||
+          job.department?.toLowerCase().includes("data")
+            ? ["Screening", "Technical", "Manager", "HR"]
+            : ["Screening", "Domain Assessment", "Manager", "HR"],
         skills: job.skills || [],
       };
 
