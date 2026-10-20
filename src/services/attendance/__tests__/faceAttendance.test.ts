@@ -557,10 +557,10 @@ describe("Face Attendance Flow", () => {
       };
 
       await checkIn(checkInPayload);
-      const [, inBody] = vi.mocked(api.post).mock.calls[0];
-
-      await checkOut(checkInPayload);
-      const [, outBody] = vi.mocked(api.post).mock.calls[1];
+      const [, rawInBody] = vi.mocked(api.post).mock.calls[0];
+      const [, rawOutBody] = vi.mocked(api.post).mock.calls[1];
+      const inBody = rawInBody as Record<string, any>;
+      const outBody = rawOutBody as Record<string, any>;
 
       expect(Object.keys(inBody).sort()).toEqual(Object.keys(outBody).sort());
       expect(outBody.image_base64).toBe(inBody.image_base64);
