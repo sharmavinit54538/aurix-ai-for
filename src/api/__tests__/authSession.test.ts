@@ -159,4 +159,67 @@ describe("F-01: Auth and Session Management", () => {
     expect(safeStorage.getItem(SESSION_HINT_KEY)).toBeNull();
     expect(safeStorage.getItem("aurix:refresh_token")).toBeNull();
   });
+
+  it("parseLoginResponse parses standard login response with access_token", async () => {
+    const { parseLoginResponse } = await import("@/features/auth/utils/parseLoginResponse");
+
+    const mockResponse = {
+      data: {
+        access_token: "jwt-access-token",
+        refresh_token: "jwt-refresh-token",
+        user: {
+          id: "u-101",
+          email: "hr@ofc360.com",
+          name: "HR Admin",
+          role: "hr_admin",
+        },
+      },
+    };
+
+    const result = parseLoginResponse(mockResponse);
+    expect(result).not.toBeNull();
+    expect(result?.status).toBe("authenticated");
+    if (result?.status === "authenticated") {
+      expect(result.accessToken).toBe("jwt-access-token");
+      expect(result.refreshToken).toBe("jwt-refresh-token");
+      expect(result.user.email).toBe("hr@ofc360.com");
+    }
+  });
+
+  it("parseLoginResponse parses 200 OK verification_required challenge without throwing errors", async () => {
+    const { parseLoginResponse } = await import("@/features/auth/utils/parseLoginResponse");
+
+    // Case 1: Backend returns requires_verification flag
+    const challengeRes1 = {
+      requires_verification: true,
+      message: "Verify your OFC360 login",
+      data: {
+        email: "unverified@company.com",
+        user_id: "u-202",
+      },
+    };
+
+    const result1 = parseLoginResponse(challengeRes1);
+    expect(result1).not.toBeNull();
+    expect(result1?.status).toBe("verification_required");
+    if (result1?.status === "verification_required") {
+      expect(result1.email).toBe("unverified@company.com");
+      expect(result1.userId).toBe("u-202");
+    }
+
+    // Case 2: Backend returns status: "verification_required" with message
+    const challengeRes2 = {
+      status: "verification_required",
+      detail: "Login requires email verification",
+      email: "staff@company.com",
+    };
+
+    const result2 = parseLoginResponse(challengeRes2);
+    expect(result2).not.toBeNull();
+    expect(result2?.status).toBe("verification_required");
+    if (result2?.status === "verification_required") {
+      expect(result2.email).toBe("staff@company.com");
+      expect(result2.message).toBe("Login requires email verification");
+    }
+  });
 });

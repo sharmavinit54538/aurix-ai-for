@@ -49,7 +49,7 @@ export function GoogleAuthButton({ action = "login" }: GoogleAuthButtonProps) {
       });
 
       const login = parseLoginResponse(res);
-      if (login) {
+      if (login?.status === "authenticated") {
         const { accessToken, refreshToken, user } = login;
 
         // Double check user role on frontend as extra security

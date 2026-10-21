@@ -22,10 +22,13 @@ export interface RegisterPayload {
 export interface VerifyEmailPayload {
   email: string;
   otp: string;
+  code?: string;
+  [key: string]: unknown;
 }
 
 export interface ResendOtpPayload {
   email: string;
+  [key: string]: unknown;
 }
 
 export interface ForgotPasswordPayload {
@@ -103,16 +106,41 @@ export const authService = {
 
   /**
    * Verifies the email address with a 6-digit OTP.
+   * Sends both 'otp' and 'code' keys to support various backend schema variants.
    */
   async verifyEmail(payload: VerifyEmailPayload): Promise<ApiResponse> {
-    return api.post<ApiResponse>(AUTH_ENDPOINTS.verifyEmail, payload);
+    const body = {
+      email: payload.email,
+      otp: payload.otp || payload.code || "",
+      code: payload.code || payload.otp || "",
+      ...payload,
+    };
+    try {
+      return await api.post<ApiResponse>(AUTH_ENDPOINTS.verifyEmail, body);
+    } catch (err: any) {
+      if (err?.status === 404) {
+        return await api.post<ApiResponse>("/api/v1/auth/verify-email-otp", body);
+      }
+      throw err;
+    }
   },
 
   /**
    * Resends verification OTP to the user's email.
    */
   async resendOtp(payload: ResendOtpPayload): Promise<ApiResponse> {
-    return api.post<ApiResponse>(AUTH_ENDPOINTS.resendOtp, payload);
+    const body = {
+      email: payload.email,
+      ...payload,
+    };
+    try {
+      return await api.post<ApiResponse>(AUTH_ENDPOINTS.resendOtp, body);
+    } catch (err: any) {
+      if (err?.status === 404) {
+        return await api.post<ApiResponse>("/api/v1/auth/resend-email-otp", body);
+      }
+      throw err;
+    }
   },
 
   /**

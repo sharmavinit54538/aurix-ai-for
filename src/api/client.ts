@@ -68,7 +68,7 @@ export async function apiRequest<T = unknown>(
       url: normalizeApiPath(path),
       data: options.data,
       headers,
-      timeout: options.timeout,
+      timeout: options.timeout ?? 60000,
     });
     const resp = response as any;
     if (resp && typeof resp === "object" && "status" in resp && "data" in resp) {

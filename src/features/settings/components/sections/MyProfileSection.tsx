@@ -213,7 +213,7 @@ export function MyProfileSection({ canEdit = true, onDirtyChange }: MyProfileSec
             password: passwordData.newPassword,
           });
           const loginData = parseLoginResponse(loginRes);
-          if (loginData?.accessToken) {
+          if (loginData?.status === "authenticated") {
             persistAuthSession(loginData.user, {
               accessToken: loginData.accessToken,
               refreshToken: loginData.refreshToken,

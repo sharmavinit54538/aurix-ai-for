@@ -74,8 +74,8 @@ export function LoginPage() {
         identifier: email,
         password,
       });
-      const login = parseLoginResponse(res);
-      if (login) {
+      const login = parseLoginResponse(res, email);
+      if (login?.status === "authenticated") {
         const { accessToken, refreshToken, user } = login;
         persistAuthSession(user, { accessToken, refreshToken });
         toast.success(`Welcome back, ${user.name}!`);
@@ -84,6 +84,52 @@ export function LoginPage() {
         const redirectParam = params.get("redirect") || params.get("callbackUrl");
         const destination = getSafeRedirectUrl(redirectParam, user);
         navigate({ to: destination as any });
+        return;
+      }
+
+      if (login?.status === "verification_required") {
+        const targetEmail = login.email || email;
+        const msg = login.message || "Verification code sent to your email. Please verify to continue.";
+        toast.info(msg);
+
+        try {
+          if (typeof window !== "undefined" && window.sessionStorage) {
+            window.sessionStorage.setItem("ofc360_pending_verification_email", targetEmail);
+            if (login.userId) {
+              window.sessionStorage.setItem("ofc360_pending_verification_user_id", String(login.userId));
+            }
+            if (login.tempToken) {
+              window.sessionStorage.setItem("ofc360_pending_verification_temp_token", login.tempToken);
+            }
+          }
+        } catch {
+          // ignore sessionStorage write errors
+        }
+
+        aurix.set({
+          user: {
+            id: login.userId || "",
+            fullName: "",
+            email: targetEmail,
+            role: "employee",
+            emailVerified: false,
+            onboardingComplete: false,
+          } as any,
+        });
+
+        const params = new URLSearchParams(window.location.search);
+        const redirectParam = params.get("redirect") || params.get("callbackUrl");
+
+        const searchParams = new URLSearchParams();
+        searchParams.set("email", targetEmail);
+        searchParams.set("mode", "login");
+        if (login.userId) searchParams.set("userId", String(login.userId));
+        if (redirectParam) searchParams.set("redirect", redirectParam);
+
+        navigate({
+          to: (`/verify-email?${searchParams.toString()}`) as any,
+          search: { email: targetEmail, mode: "login", ...(redirectParam ? { redirect: redirectParam } : {}) } as any,
+        });
         return;
       }
 

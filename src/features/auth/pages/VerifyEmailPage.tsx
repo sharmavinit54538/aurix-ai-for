@@ -1,4 +1,4 @@
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { AuthShell } from "@/features/auth/components/AuthShell";
@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { aurix, useAurix } from "@/lib/aurix-store";
 import { authService } from "@/api";
+import { persistAuthSession } from "@/lib/auth-bootstrap";
+import { getSafeRedirectUrl } from "@/lib/role-routing";
+import { parseLoginResponse } from "@/features/auth/utils/parseLoginResponse";
 import { toast } from "sonner";
-import type { ApiResponse } from "@/api/types";
 
 export function VerifyEmailPage() {
   const navigate = useNavigate();
@@ -20,15 +22,36 @@ export function VerifyEmailPage() {
   const [resending, setResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Resolve effective email from URL search params, sessionStorage, or active user state
+  const searchParams =
+    typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
+  const queryEmail = searchParams.get("email");
+  const sessionEmail =
+    typeof window !== "undefined" && window.sessionStorage
+      ? window.sessionStorage.getItem("ofc360_pending_verification_email")
+      : null;
+  const effectiveEmail = (queryEmail || sessionEmail || ws.user?.email || "").trim();
+
+  const queryMode = searchParams.get("mode");
+  const sessionMode =
+    typeof window !== "undefined" && window.sessionStorage
+      ? window.sessionStorage.getItem("ofc360_pending_verification_mode")
+      : null;
+  const isLoginMode = queryMode === "login" || sessionMode === "login";
+
   useEffect(() => {
     if (ws.isRestoring) return;
 
+    // If an email exists to verify, allow the user to remain on this page
+    if (effectiveEmail) return;
+
+    // Only redirect if there's no email to verify
     if (!ws.user) {
-      navigate({ to: "/register" });
+      navigate({ to: "/login" });
     } else if (ws.user.emailVerified) {
       navigate({ to: "/onboarding" });
     }
-  }, [ws.user, ws.isRestoring, navigate]);
+  }, [ws.user, ws.isRestoring, effectiveEmail, navigate]);
 
   useEffect(() => {
     if (secondsLeft <= 0) return;
@@ -47,22 +70,81 @@ export function VerifyEmailPage() {
     setLoading(true);
 
     try {
-      const email = ws.user?.email || "";
       const response = (await authService.verifyEmail({
-        email,
+        email: effectiveEmail,
         otp: code,
+        code: code,
       })) as any;
 
-      const isSuccess = Boolean(response?.data?.success ?? response?.success);
+      const isSuccess = Boolean(
+        response?.data?.success ??
+          response?.success ??
+          response?.access_token ??
+          response?.data?.access_token ??
+          (response && !response?.error && response?.status !== "error"),
+      );
       const message = response?.data?.message || response?.message;
 
       if (isSuccess) {
+        // 1. Check if the backend verification endpoint returned tokens + user
+        const loginResult = parseLoginResponse(response, effectiveEmail);
+        if (loginResult?.status === "authenticated") {
+          persistAuthSession(loginResult.user, {
+            accessToken: loginResult.accessToken,
+            refreshToken: loginResult.refreshToken,
+          });
+          setSuccess(true);
+          toast.success(message || "Email verified successfully!");
+
+          try {
+            sessionStorage.removeItem("ofc360_pending_verification_email");
+            sessionStorage.removeItem("ofc360_pending_verification_user_id");
+            sessionStorage.removeItem("ofc360_pending_verification_temp_token");
+            sessionStorage.removeItem("ofc360_pending_verification_mode");
+          } catch {
+            /* ignore */
+          }
+
+          const params = new URLSearchParams(window.location.search);
+          const redirectParam = params.get("redirect") || params.get("callbackUrl");
+          const destination = getSafeRedirectUrl(redirectParam, loginResult.user);
+          setTimeout(() => navigate({ to: destination as any }), 1000);
+          return;
+        }
+
+        // 2. If no tokens returned directly, update verified flag and route based on mode
+        setSuccess(true);
+        toast.success(message || "Email verified successfully!");
+
         if (ws.user) {
           aurix.set({ user: { ...ws.user, emailVerified: true } });
         }
-        setSuccess(true);
-        toast.success(message || "Email verified successfully!");
-        setTimeout(() => navigate({ to: "/onboarding" }), 1100);
+
+        try {
+          sessionStorage.removeItem("ofc360_pending_verification_email");
+          sessionStorage.removeItem("ofc360_pending_verification_user_id");
+          sessionStorage.removeItem("ofc360_pending_verification_temp_token");
+          sessionStorage.removeItem("ofc360_pending_verification_mode");
+        } catch {
+          /* ignore */
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const redirectParam = params.get("redirect") || params.get("callbackUrl");
+
+        if (isLoginMode) {
+          setTimeout(() => {
+            navigate({
+              to: "/login" as any,
+              search: {
+                email: effectiveEmail,
+                ...(redirectParam ? { redirect: redirectParam } : {}),
+              } as any,
+            });
+          }, 1100);
+        } else {
+          setTimeout(() => navigate({ to: "/onboarding" as any }), 1100);
+        }
       } else {
         setError(message || "Verification failed");
       }
@@ -75,12 +157,14 @@ export function VerifyEmailPage() {
   }
 
   async function resend() {
-    const email = ws.user?.email || "";
-    const payload = { email };
+    if (!effectiveEmail) {
+      toast.error("Email address missing. Please return to login.");
+      return;
+    }
     setResending(true);
     try {
-      const response = (await authService.resendOtp(payload)) as any;
-      const isSuccess = Boolean(response?.data?.success ?? response?.success);
+      const response = (await authService.resendOtp({ email: effectiveEmail })) as any;
+      const isSuccess = Boolean(response?.data?.success ?? response?.success ?? true);
       const message = response?.data?.message || response?.message;
       if (isSuccess) {
         setSecondsLeft(30);
@@ -98,12 +182,14 @@ export function VerifyEmailPage() {
 
   if (success) {
     return (
-      <AuthShell title="Email verified" subtitle="Redirecting to onboarding…">
+      <AuthShell title="Email verified" subtitle="Redirecting…">
         <div className="flex flex-col items-center gap-3 py-6">
           <div className="grid h-14 w-14 place-items-center rounded-full bg-emerald-500/15 text-emerald-500">
             <CheckCircle2 className="h-8 w-8" />
           </div>
-          <p className="text-sm text-muted-foreground">All set, {ws.user?.fullName?.split(" ")[0]}.</p>
+          <p className="text-sm text-muted-foreground">
+            All set{effectiveEmail ? ` for ${effectiveEmail}` : ""}.
+          </p>
         </div>
       </AuthShell>
     );
@@ -111,9 +197,17 @@ export function VerifyEmailPage() {
 
   return (
     <AuthShell
-      title="Verify your email"
+      title={isLoginMode ? "Verify your login" : "Verify your email"}
       subtitle={
-        ws.user ? `We sent a 6-digit code to ${ws.user.email}` : "We sent you a 6-digit code"
+        effectiveEmail ? `We sent a 6-digit code to ${effectiveEmail}` : "We sent you a 6-digit code"
+      }
+      footer={
+        <div className="text-center text-sm">
+          Want to use a different account?{" "}
+          <Link to="/login" className="font-medium text-foreground underline-offset-4 hover:underline">
+            Sign in
+          </Link>
+        </div>
       }
     >
       <form onSubmit={onSubmit} className="space-y-5" noValidate>
@@ -130,7 +224,7 @@ export function VerifyEmailPage() {
 
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-          Verify email
+          Verify and continue
         </Button>
 
         <div className="flex items-center justify-between text-xs text-muted-foreground">
