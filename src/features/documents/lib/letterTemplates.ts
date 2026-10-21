@@ -132,7 +132,21 @@ export function checkRequiredFieldsAndPlaceholders(
     }
   }
 
-  const unresolved = getUnresolvedPlaceholders(content);
+  // Known contextual placeholders that have safe automatic fallbacks
+  // should never cause blocking validation errors
+  const safeContextPlaceholders = new Set([
+    "location",
+    "manager_name",
+    "company_address",
+    "reporting_to",
+    "reporting_location",
+  ]);
+
+  const unresolved = getUnresolvedPlaceholders(content).filter((p) => {
+    const normalized = p.replace(/^[{[]+|[}\]]+$/g, "").trim().toLowerCase();
+    return !safeContextPlaceholders.has(normalized);
+  });
+
   if (unresolved.length > 0) {
     placeholderErrors.push(...unresolved.map((p) => `Unresolved placeholder: ${p}`));
   }
@@ -920,19 +934,54 @@ Human Resources & Governance
 };
 
 /**
- * Replaces all {{key}} occurrences in template content with real context values.
+ * Replaces all {{key}} and [key] occurrences in template content with real context values.
+ * If a variable is missing and strict=false, falls back to sensible defaults or empty string
+ * instead of leaving raw [key] tokens that block generation.
  */
 export function replaceTemplateVariables(
   templateContent: string,
-  context: Record<string, string | number | undefined | null>
+  context: Record<string, string | number | undefined | null>,
+  strict = false
 ): string {
   let result = templateContent;
 
-  for (const [key, rawValue] of Object.entries(context)) {
+  const defaultFallbacks: Record<string, string> = {
+    location: "Corporate Office",
+    manager_name: "Management",
+    company_address: context.company_name ? `${context.company_name} Registered Office` : "Registered Corporate Office",
+    today: new Date().toISOString().split("T")[0],
+    effective_date: new Date().toISOString().split("T")[0],
+  };
+
+  const mergedContext = { ...defaultFallbacks, ...context };
+
+  for (const [key, rawValue] of Object.entries(mergedContext)) {
     const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const val = rawValue !== undefined && rawValue !== null && rawValue !== "" ? String(rawValue) : `[${key}]`;
-    const regex = new RegExp(`{{\\s*${escapedKey}\\s*}}`, "g");
-    result = result.replace(regex, val);
+    const hasValue = rawValue !== undefined && rawValue !== null && String(rawValue).trim() !== "";
+    const val = hasValue
+      ? String(rawValue)
+      : defaultFallbacks[key] !== undefined
+      ? defaultFallbacks[key]
+      : strict
+      ? `[${key}]`
+      : "";
+
+    // Replace {{key}}
+    const curlyRegex = new RegExp(`{{\\s*${escapedKey}\\s*}}`, "gi");
+    result = result.replace(curlyRegex, val);
+
+    // Replace [key]
+    const bracketRegex = new RegExp(`\\[\\s*${escapedKey}\\s*\\]`, "gi");
+    result = result.replace(bracketRegex, val);
+  }
+
+  // If not strict, ensure any leftover [location], [manager_name], [company_address] are resolved
+  if (!strict) {
+    for (const [fallbackKey, fallbackVal] of Object.entries(defaultFallbacks)) {
+      const escaped = fallbackKey.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      result = result.replace(new RegExp(`\\[\\s*${escaped}\\s*\\]`, "gi"), fallbackVal);
+      result = result.replace(new RegExp(`{{\\s*${escaped}\\s*}}`, "gi"), fallbackVal);
+    }
   }
 
   return result;
@@ -947,9 +996,14 @@ export function getUnresolvedPlaceholders(content: string): string[] {
   if (curlyMatches) {
     curlyMatches.forEach((m) => matches.add(m));
   }
-  const bracketMatches = content.match(/\[[\w.-]+\]/g);
+  const bracketMatches = content.match(/\[([a-zA-Z0-9_]{3,})\](?!\()/g);
   if (bracketMatches) {
-    bracketMatches.forEach((m) => matches.add(m));
+    bracketMatches.forEach((m) => {
+      const inner = m.slice(1, -1).toLowerCase();
+      if (!["ref", "doc", "date", "dept"].includes(inner)) {
+        matches.add(m);
+      }
+    });
   }
   return Array.from(matches);
 }

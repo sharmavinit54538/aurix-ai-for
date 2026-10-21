@@ -240,11 +240,11 @@ export function useLetterGeneration() {
               updated.gross_monthly = formattedSal;
             }
           }
-          if (details.managerName && !updated.reporting_to && selectedLetterType.requiredFields.some((f) => f.key === "reporting_to")) {
-            updated.reporting_to = details.managerName;
+          if (!updated.reporting_to && selectedLetterType.requiredFields.some((f) => f.key === "reporting_to")) {
+            updated.reporting_to = details.managerName || "Management";
           }
-          if (details.location && !updated.reporting_location && selectedLetterType.requiredFields.some((f) => f.key === "reporting_location")) {
-            updated.reporting_location = details.location;
+          if (!updated.reporting_location && selectedLetterType.requiredFields.some((f) => f.key === "reporting_location")) {
+            updated.reporting_location = details.location || "Headquarters";
           }
           return updated;
         });
@@ -265,10 +265,10 @@ export function useLetterGeneration() {
   // CTC precedence: form value wins, else employee record. Cleared field stays empty and blocks generation.
   const variableContext = useMemo(() => {
     const today = new Date().toISOString().split("T")[0];
-    const companyName = company?.name || "";
+    const companyName = company?.name || "The Company";
     const companyAddress = company?.address
       ? [company.address, company.city, company.state, company.country].filter(Boolean).join(", ")
-      : "";
+      : (company as any)?.registered_address || (company as any)?.office_address || "Corporate Office";
 
     // Get CTC with precedence: customFields.ctc (form) > employee.ctc
     let ctcValue = "";
@@ -321,14 +321,14 @@ export function useLetterGeneration() {
       department: selectedEmployee?.department || "",
       joining_date: selectedEmployee?.joiningDate || today,
       confirmation_date: today,
-      manager_name: selectedEmployee?.managerName || "",
+      manager_name: selectedEmployee?.managerName || "Management",
       company_name: companyName,
       company_address: companyAddress,
       salary: salaryValue,
       ctc: ctcValue,
       effective_date: customFields.effective_date || today,
       last_working_date: customFields.last_working_date || today,
-      location: selectedEmployee?.location || "",
+      location: selectedEmployee?.location || "Headquarters",
       email: selectedEmployee?.email || "",
       phone: selectedEmployee?.phone || "",
       // Currency fields with precedence and formatting
