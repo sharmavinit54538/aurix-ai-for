@@ -32,18 +32,28 @@ let isSessionExpiredHandled = false;
 function hydrateTokensFromStorage(): void {
   if (typeof window === "undefined") return;
   if (!inMemoryAccessToken) {
-    const storedAccess = safeStorage.getItem(ACCESS_TOKEN_KEY);
+    const storedAccess =
+      safeStorage.getItem(ACCESS_TOKEN_KEY) ||
+      safeStorage.getItem("access_token") ||
+      safeStorage.getItem("token") ||
+      (typeof window !== "undefined"
+        ? window.sessionStorage?.getItem(ACCESS_TOKEN_KEY) ||
+          window.sessionStorage?.getItem("access_token") ||
+          window.sessionStorage?.getItem("token")
+        : null);
     if (storedAccess) {
       inMemoryAccessToken = storedAccess;
     } else {
-      const storedTokens = safeStorage.getItem(TOKENS_KEY);
+      const storedTokens =
+        safeStorage.getItem(TOKENS_KEY) ||
+        (typeof window !== "undefined" ? window.sessionStorage?.getItem(TOKENS_KEY) : null);
       if (storedTokens) {
         try {
           const parsed = JSON.parse(storedTokens);
-          if (parsed?.accessToken) {
-            inMemoryAccessToken = parsed.accessToken;
-            if (!inMemoryRefreshToken && parsed?.refreshToken) {
-              inMemoryRefreshToken = parsed.refreshToken;
+          if (parsed?.accessToken || parsed?.access_token) {
+            inMemoryAccessToken = parsed.accessToken || parsed.access_token;
+            if (!inMemoryRefreshToken && (parsed?.refreshToken || parsed?.refresh_token)) {
+              inMemoryRefreshToken = parsed.refreshToken || parsed.refresh_token;
             }
           }
         } catch {
@@ -53,7 +63,13 @@ function hydrateTokensFromStorage(): void {
     }
   }
   if (!inMemoryRefreshToken) {
-    const storedRefresh = safeStorage.getItem(REFRESH_TOKEN_KEY);
+    const storedRefresh =
+      safeStorage.getItem(REFRESH_TOKEN_KEY) ||
+      safeStorage.getItem("refresh_token") ||
+      (typeof window !== "undefined"
+        ? window.sessionStorage?.getItem(REFRESH_TOKEN_KEY) ||
+          window.sessionStorage?.getItem("refresh_token")
+        : null);
     if (storedRefresh) {
       inMemoryRefreshToken = storedRefresh;
     }
@@ -102,8 +118,10 @@ export function setTokens(tokens: { accessToken?: string; refreshToken?: string 
     setSessionHint();
     if (typeof window !== "undefined") {
       safeStorage.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
+      safeStorage.setItem("access_token", tokens.accessToken);
       if (tokens.refreshToken) {
         safeStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
+        safeStorage.setItem("refresh_token", tokens.refreshToken);
       }
       safeStorage.setItem(
         TOKENS_KEY,
@@ -122,7 +140,9 @@ export function setTokens(tokens: { accessToken?: string; refreshToken?: string 
     clearSessionHint();
     if (typeof window !== "undefined") {
       safeStorage.removeItem(ACCESS_TOKEN_KEY);
+      safeStorage.removeItem("access_token");
       safeStorage.removeItem(REFRESH_TOKEN_KEY);
+      safeStorage.removeItem("refresh_token");
       safeStorage.removeItem(TOKENS_KEY);
     }
   }
@@ -141,10 +161,12 @@ export function setAccessToken(token: string | null) {
     setSessionHint();
     if (typeof window !== "undefined") {
       safeStorage.setItem(ACCESS_TOKEN_KEY, token);
+      safeStorage.setItem("access_token", token);
     }
   } else {
     if (typeof window !== "undefined") {
       safeStorage.removeItem(ACCESS_TOKEN_KEY);
+      safeStorage.removeItem("access_token");
     }
   }
 }
@@ -161,10 +183,12 @@ export function setRefreshToken(token: string | null) {
   if (token) {
     if (typeof window !== "undefined") {
       safeStorage.setItem(REFRESH_TOKEN_KEY, token);
+      safeStorage.setItem("refresh_token", token);
     }
   } else {
     if (typeof window !== "undefined") {
       safeStorage.removeItem(REFRESH_TOKEN_KEY);
+      safeStorage.removeItem("refresh_token");
     }
   }
 }
@@ -175,7 +199,9 @@ export function clearTokens() {
   clearSessionHint();
   if (typeof window !== "undefined") {
     safeStorage.removeItem(ACCESS_TOKEN_KEY);
+    safeStorage.removeItem("access_token");
     safeStorage.removeItem(REFRESH_TOKEN_KEY);
+    safeStorage.removeItem("refresh_token");
     safeStorage.removeItem(TOKENS_KEY);
   }
 }
@@ -316,10 +342,17 @@ export async function refreshAccessToken(options?: { silent?: boolean }): Promis
           }
 
           if (status === 401) {
-            clearSessionHint();
-            clearTokens();
-            if (!options?.silent) {
-              handleSessionExpired();
+            const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
+            const isOnboardingOrVerification =
+              currentPath.startsWith("/onboarding") ||
+              currentPath.startsWith("/employee-onboarding") ||
+              currentPath.startsWith("/verify-email");
+            if (!isOnboardingOrVerification) {
+              clearSessionHint();
+              clearTokens();
+              if (!options?.silent) {
+                handleSessionExpired();
+              }
             }
             throw new Error("Failed to refresh session");
           }
@@ -331,10 +364,17 @@ export async function refreshAccessToken(options?: { silent?: boolean }): Promis
         const accessToken = tokenData?.access_token || tokenData?.accessToken || tokenData?.token;
 
         if (!accessToken) {
-          clearSessionHint();
-          clearTokens();
-          if (!options?.silent) {
-            handleSessionExpired();
+          const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
+          const isOnboardingOrVerification =
+            currentPath.startsWith("/onboarding") ||
+            currentPath.startsWith("/employee-onboarding") ||
+            currentPath.startsWith("/verify-email");
+          if (!isOnboardingOrVerification) {
+            clearSessionHint();
+            clearTokens();
+            if (!options?.silent) {
+              handleSessionExpired();
+            }
           }
           throw new Error("Invalid session refresh response: missing access token");
         }

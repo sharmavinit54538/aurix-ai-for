@@ -163,13 +163,25 @@ export function OnboardingPage() {
   }, [token]);
 
   const [resuming, setResuming] = useState(true);
+  const [safetyTimedOut, setSafetyTimedOut] = useState(false);
   const statusFetchedRef = useRef(false);
   const authReady = useAuthReady();
   const hasAccessToken = Boolean(getAccessToken());
 
   useEffect(() => {
+    const safetyTimer = setTimeout(() => {
+      setResuming(false);
+      setSafetyTimedOut(true);
+      if (aurix.get().isRestoring) {
+        aurix.set({ isRestoring: false });
+      }
+    }, 5000);
+    return () => clearTimeout(safetyTimer);
+  }, []);
+
+  useEffect(() => {
     if (token) { setResuming(false); return; } // skip for employee onboarding
-    if (ws.isRestoring || !authReady) return;
+    if (!safetyTimedOut && (ws.isRestoring || !authReady)) return;
 
     // Check if verification was marked in storage
     const storedVerifiedEmail =
@@ -178,10 +190,67 @@ export function OnboardingPage() {
           window.localStorage?.getItem("ofc360_email_verified")
         : null;
 
+    const activeToken = getAccessToken();
+
     if (!ws.user) {
-      if (hasAccessToken) {
-        // Access token exists in storage; wait for /auth/me bootstrap to resolve
+      if (activeToken) {
+        // Access token exists in storage; bootstrap auth in background
         void bootstrapAuth({ force: true });
+
+        // Also check if we can populate a provisional user so the UI isn't blocked
+        let fallbackEmail =
+          storedVerifiedEmail ||
+          (typeof window !== "undefined"
+            ? window.sessionStorage?.getItem("ofc360_pending_verification_email")
+            : null);
+
+        if (!fallbackEmail && typeof window !== "undefined") {
+          try {
+            const authStr = window.sessionStorage?.getItem("aurix_pending_auth");
+            if (authStr) {
+              const parsed = JSON.parse(authStr);
+              if (parsed.email) fallbackEmail = parsed.email;
+            }
+          } catch {
+            /* ignore */
+          }
+        }
+
+        if (!fallbackEmail && activeToken) {
+          try {
+            const parts = activeToken.split(".");
+            if (parts.length === 3) {
+              const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+              const payload = JSON.parse(atob(b64));
+              if (payload?.email) fallbackEmail = payload.email;
+              else if (payload?.sub && typeof payload.sub === "string" && payload.sub.includes("@")) {
+                fallbackEmail = payload.sub;
+              }
+            }
+          } catch {
+            /* ignore */
+          }
+        }
+
+        if (fallbackEmail) {
+          aurix.set({
+            user: {
+              id:
+                (typeof window !== "undefined" &&
+                  window.sessionStorage?.getItem("ofc360_pending_verification_user_id")) ||
+                "",
+              fullName: "",
+              email: fallbackEmail,
+              phone: "",
+              role: "hr_admin",
+              companyId: "workspace",
+              emailVerified: true,
+              onboardingComplete: false,
+              createdAt: new Date().toISOString(),
+            },
+          });
+          return;
+        }
         return;
       }
 
@@ -210,12 +279,12 @@ export function OnboardingPage() {
         });
         return;
       }
-      navigate({ to: "/register" });
+      navigate({ to: "/login" as any });
       return;
     }
 
     if (!ws.user.emailVerified) {
-      if (hasAccessToken || (storedVerifiedEmail && storedVerifiedEmail.toLowerCase() === ws.user.email.toLowerCase())) {
+      if (activeToken || (storedVerifiedEmail && storedVerifiedEmail.toLowerCase() === ws.user.email.toLowerCase())) {
         aurix.set({ user: { ...ws.user, emailVerified: true } });
         return;
       }
@@ -231,65 +300,70 @@ export function OnboardingPage() {
     if (statusFetchedRef.current) return;
     statusFetchedRef.current = true;
 
-    // Resume where the admin left off, using the backend as the source of
-    // truth (not localStorage) — this is what makes "close tab, log back in"
-    // land on the right step instead of re-asking for Company details.
-    let cancelled = false;
+    // Resume where the admin left off, using the backend as the source of truth.
+    // If status/progress returns 404, 204, or fails (brand new user), initialize at Step 1.
     (async () => {
       try {
-        const statusRes: any = await api.get("onboarding/status");
-        const backendStep = statusRes?.current_step ?? statusRes?.data?.current_step ?? 1;
-        const onboardingCompleted = statusRes?.onboarding_completed ?? statusRes?.data?.onboarding_completed ?? false;
+        let backendStep = 1;
+        try {
+          const statusRes: any = await api.get("onboarding/status");
+          backendStep = statusRes?.current_step ?? statusRes?.data?.current_step ?? 1;
+          const onboardingCompleted = statusRes?.onboarding_completed ?? statusRes?.data?.onboarding_completed ?? false;
 
-        if (onboardingCompleted || backendStep >= 7) {
-          if (ws.user) {
-            aurix.set({ user: { ...ws.user, onboardingComplete: true } });
+          if (onboardingCompleted || backendStep >= 7) {
+            if (ws.user) {
+              aurix.set({ user: { ...ws.user, onboardingComplete: true } });
+            }
+            navigate({ to: "/dashboard", replace: true });
+            return;
           }
-          navigate({ to: "/dashboard", replace: true });
-          return;
+        } catch {
+          // If 404, 204, or empty, start at Step 1 without treating as auth failure
+          backendStep = 1;
         }
 
-        const progressRes: any = await api.get("onboarding/progress");
-        const progress = progressRes?.data ?? progressRes;
-        if (progress && !cancelled) {
-          const profile = progress.company_profile;
-          const companyName =
-            profile?.company_name ??
-            progress.organization?.company_name ??
-            ws.company?.name ??
-            "";
+        try {
+          const progressRes: any = await api.get("onboarding/progress");
+          const progress = progressRes?.data ?? progressRes;
+          if (progress) {
+            const profile = progress.company_profile;
+            const companyName =
+              profile?.company_name ??
+              progress.organization?.company_name ??
+              ws.company?.name ??
+              "";
 
-          aurix.set({
-            company: {
-              id: ws.company?.id ?? uid("co"),
-              name: companyName,
-              logoDataUrl: profile?.company_logo ?? ws.company?.logoDataUrl ?? undefined,
-              industry: profile?.industry ?? ws.company?.industry ?? "",
-              size: profile?.company_size ?? ws.company?.size ?? "",
-              website: profile?.website ?? ws.company?.website ?? "",
-              email: profile?.email ?? ws.company?.email ?? "",
-              phone: profile?.phone ?? ws.company?.phone ?? "",
-              address: profile?.address ?? ws.company?.address ?? "",
-              country: profile?.country ?? ws.company?.country ?? "",
-              state: profile?.state ?? ws.company?.state ?? "",
-              city: profile?.city ?? ws.company?.city ?? "",
-              timezone: profile?.timezone ?? ws.company?.timezone ?? "UTC",
-            } as any,
-          });
+            aurix.set({
+              company: {
+                id: ws.company?.id ?? uid("co"),
+                name: companyName,
+                logoDataUrl: profile?.company_logo ?? ws.company?.logoDataUrl ?? undefined,
+                industry: profile?.industry ?? ws.company?.industry ?? "",
+                size: profile?.company_size ?? ws.company?.size ?? "",
+                website: profile?.website ?? ws.company?.website ?? "",
+                email: profile?.email ?? ws.company?.email ?? "",
+                phone: profile?.phone ?? ws.company?.phone ?? "",
+                address: profile?.address ?? ws.company?.address ?? "",
+                country: profile?.country ?? ws.company?.country ?? "",
+                state: profile?.state ?? ws.company?.state ?? "",
+                city: profile?.city ?? ws.company?.city ?? "",
+                timezone: profile?.timezone ?? ws.company?.timezone ?? "UTC",
+              } as any,
+            });
+          }
+        } catch {
+          // Progress fetch failed or 404 (brand new company) - start with default empty profile
         }
 
-        if (!cancelled) setStep(backendStepToUiIndex(backendStep));
+        setStep(backendStepToUiIndex(backendStep));
       } catch (err) {
-        // If status/progress can't be fetched, fall back to starting at
-        // Company rather than blocking the admin from onboarding at all.
-        if (!cancelled) setStep(0);
+        // Fall back to Step 1 Company
+        setStep(0);
       } finally {
-        if (!cancelled) setResuming(false);
+        setResuming(false);
       }
     })();
-
-    return () => { cancelled = true; };
-  }, [ws.user, ws.isRestoring, navigate, token]);
+  }, [ws.user, ws.isRestoring, navigate, token, safetyTimedOut, authReady]);
 
   function next() { setStep((s) => Math.min(STEPS.length - 1, s + 1)); }
   function back() { setStep((s) => Math.max(0, s - 1)); }
@@ -311,7 +385,7 @@ export function OnboardingPage() {
     }
   }
 
-  if (ws.isRestoring || (hasAccessToken && (!authReady || !ws.user))) {
+  if (!safetyTimedOut && (ws.isRestoring || (hasAccessToken && (!authReady || !ws.user)))) {
     return <AuthLoadingScreen />;
   }
 

@@ -101,6 +101,10 @@ export function RegisterPage() {
             window.sessionStorage?.setItem("ofc360_pending_verification_email", form.email);
             window.sessionStorage?.setItem("ofc360_pending_verification_password", form.password);
             window.sessionStorage?.setItem("ofc360_pending_verification_mode", "register");
+            window.sessionStorage?.setItem(
+              "aurix_pending_auth",
+              JSON.stringify({ email: form.email, password: form.password }),
+            );
             const regUserId = response?.data?.user?.id ?? response?.user?.id;
             if (regUserId) {
               window.sessionStorage?.setItem("ofc360_pending_verification_user_id", String(regUserId));

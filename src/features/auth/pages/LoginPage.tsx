@@ -100,6 +100,10 @@ export function LoginPage() {
             window.sessionStorage?.setItem("ofc360_pending_verification_email", targetEmail);
             window.sessionStorage?.setItem("ofc360_pending_verification_password", password);
             window.sessionStorage?.setItem("ofc360_pending_verification_mode", "login");
+            window.sessionStorage?.setItem(
+              "aurix_pending_auth",
+              JSON.stringify({ email: targetEmail, password }),
+            );
             if (login.userId) {
               window.sessionStorage?.setItem("ofc360_pending_verification_user_id", String(login.userId));
             }

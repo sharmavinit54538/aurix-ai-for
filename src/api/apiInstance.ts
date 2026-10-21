@@ -1,6 +1,7 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import {
   getTokens,
+  getAccessToken,
   getRefreshToken,
   hasSessionHint,
   refreshAccessToken,
@@ -57,9 +58,9 @@ const apiInstance = axios.create({
 
 
 apiInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const tokens = getTokens();
-  if (tokens?.accessToken) {
-    config.headers.Authorization = `Bearer ${tokens.accessToken}`;
+  const token = getAccessToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
 
   // Whenever the request body is FormData, delete/omit Content-Type so Axios/browser sets multipart/form-data with boundary
@@ -125,16 +126,25 @@ apiInstance.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // Never trigger session expiration on non-401 errors (e.g. 403 Forbidden or 404 Not Found)
-    if (error.response?.status === 403 || error.response?.status === 404) {
-      return Promise.reject(error);
-    }
 
     const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
     const isOnboardingOrVerificationRoute =
       currentPath.startsWith("/onboarding") ||
       currentPath.startsWith("/employee-onboarding") ||
       currentPath.startsWith("/verify-email");
+
+    const isOnboardingProgressEndpoint =
+      originalRequest.url?.includes("onboarding/status") ||
+      originalRequest.url?.includes("onboarding/progress") ||
+      originalRequest.url?.includes("onboarding/profile") ||
+      originalRequest.url?.includes("onboarding/departments") ||
+      originalRequest.url?.includes("onboarding/designations");
+
+    // If a secondary onboarding progress endpoint returns 401, 403, or 404 while on /onboarding,
+    // do NOT wipe tokens or force window.location.href = '/login' as long as a valid access_token exists.
+    if (isOnboardingOrVerificationRoute && isOnboardingProgressEndpoint) {
+      return Promise.reject(error);
+    }
 
     const isAuthEndpoint =
       originalRequest.url?.includes("/auth/me") ||

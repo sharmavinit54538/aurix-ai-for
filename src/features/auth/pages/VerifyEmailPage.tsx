@@ -42,6 +42,7 @@ export function VerifyEmailPage() {
         window.sessionStorage?.removeItem("ofc360_pending_verification_temp_token");
         window.sessionStorage?.removeItem("ofc360_pending_verification_id");
         window.sessionStorage?.removeItem("ofc360_pending_verification_mode");
+        window.sessionStorage?.removeItem("aurix_pending_auth");
       }
     } catch {
       /* ignore */
@@ -268,12 +269,6 @@ export function VerifyEmailPage() {
             refreshToken: loginResult.refreshToken,
           });
 
-          try {
-            await bootstrapAuth({ force: true });
-          } catch {
-            /* ignore */
-          }
-
           setSuccess(true);
           toast.success(message || "Email verified successfully!");
           clearVerificationStorage();
@@ -285,19 +280,30 @@ export function VerifyEmailPage() {
         }
 
         // 2. Case B: Verification succeeded without tokens (e.g. registration email verification)
-        // Check for temporary pending password to automatically authenticate the user
-        const pendingPassword =
-          typeof window !== "undefined"
-            ? window.sessionStorage?.getItem("ofc360_pending_verification_password")
-            : null;
+        // Check for temporary pending auth credentials to automatically authenticate the user
+        let pendingAuthEmail = effectiveEmail;
+        let pendingAuthPassword = "";
+        try {
+          const authStr = typeof window !== "undefined" ? window.sessionStorage?.getItem("aurix_pending_auth") : null;
+          if (authStr) {
+            const parsed = JSON.parse(authStr);
+            if (parsed.email) pendingAuthEmail = parsed.email;
+            if (parsed.password) pendingAuthPassword = parsed.password;
+          }
+        } catch {
+          /* ignore */
+        }
+        if (!pendingAuthPassword && typeof window !== "undefined") {
+          pendingAuthPassword = window.sessionStorage?.getItem("ofc360_pending_verification_password") || "";
+        }
 
-        if (effectiveEmail && pendingPassword) {
+        if (pendingAuthEmail && pendingAuthPassword) {
           try {
             const loginRes = await authService.login({
-              identifier: effectiveEmail,
-              password: pendingPassword,
+              identifier: pendingAuthEmail,
+              password: pendingAuthPassword,
             });
-            const autoLoginResult = parseLoginResponse(loginRes, effectiveEmail);
+            const autoLoginResult = parseLoginResponse(loginRes, pendingAuthEmail);
             if (autoLoginResult?.status === "authenticated") {
               setAccessToken(autoLoginResult.accessToken);
               if (autoLoginResult.refreshToken) {
@@ -312,12 +318,6 @@ export function VerifyEmailPage() {
                 accessToken: autoLoginResult.accessToken,
                 refreshToken: autoLoginResult.refreshToken,
               });
-
-              try {
-                await bootstrapAuth({ force: true });
-              } catch {
-                /* ignore */
-              }
 
               setSuccess(true);
               toast.success(message || "Email verified and signed in!");
