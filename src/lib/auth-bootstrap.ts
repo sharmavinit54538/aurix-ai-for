@@ -41,6 +41,20 @@ function mapAuthUser(data: AuthUserPayload) {
   const ws = aurix.get();
   const companyId = data.company_id ? String(data.company_id) : ws.user?.companyId || "workspace";
 
+  const savedCompanyName =
+    (typeof window !== "undefined"
+      ? window.sessionStorage?.getItem("ofc360_registered_company_name") ||
+        window.localStorage?.getItem("ofc360_registered_company_name")
+      : null) || "";
+
+  const resolvedCompanyName =
+    (data.company_name && data.company_name !== "Workspace" ? data.company_name : "") ||
+    (ws.company?.name && ws.company.name !== "Workspace" ? ws.company.name : "") ||
+    savedCompanyName ||
+    data.company_name ||
+    ws.company?.name ||
+    "Workspace";
+
   return {
     user: {
       id: String(data.id),
@@ -55,7 +69,7 @@ function mapAuthUser(data: AuthUserPayload) {
     },
     company: {
       id: companyId,
-      name: data.company_name || ws.company?.name || "Workspace",
+      name: resolvedCompanyName,
     },
   };
 }

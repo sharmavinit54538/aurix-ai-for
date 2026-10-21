@@ -322,15 +322,35 @@ export function OnboardingPage() {
           backendStep = 1;
         }
 
+        let savedCompanyName = "";
+        try {
+          if (typeof window !== "undefined") {
+            savedCompanyName =
+              window.sessionStorage?.getItem("ofc360_registered_company_name") ||
+              window.localStorage?.getItem("ofc360_registered_company_name") ||
+              "";
+            if (!savedCompanyName) {
+              const pendingAuth = window.sessionStorage?.getItem("aurix_pending_auth");
+              if (pendingAuth) {
+                const parsed = JSON.parse(pendingAuth);
+                if (parsed.companyName) savedCompanyName = parsed.companyName;
+              }
+            }
+          }
+        } catch {
+          /* ignore */
+        }
+
         try {
           const progressRes: any = await api.get("onboarding/progress");
           const progress = progressRes?.data ?? progressRes;
           if (progress) {
             const profile = progress.company_profile;
             const companyName =
-              profile?.company_name ??
-              progress.organization?.company_name ??
-              ws.company?.name ??
+              profile?.company_name ||
+              progress.organization?.company_name ||
+              (ws.company?.name && ws.company.name !== "Workspace" ? ws.company.name : "") ||
+              savedCompanyName ||
               "";
 
             aurix.set({
@@ -341,7 +361,7 @@ export function OnboardingPage() {
                 industry: profile?.industry ?? ws.company?.industry ?? "",
                 size: profile?.company_size ?? ws.company?.size ?? "",
                 website: profile?.website ?? ws.company?.website ?? "",
-                email: profile?.email ?? ws.company?.email ?? "",
+                email: profile?.email ?? ws.company?.email ?? ws.user?.email ?? "",
                 phone: profile?.phone ?? ws.company?.phone ?? "",
                 address: profile?.address ?? ws.company?.address ?? "",
                 country: profile?.country ?? ws.company?.country ?? "",
@@ -352,7 +372,16 @@ export function OnboardingPage() {
             });
           }
         } catch {
-          // Progress fetch failed or 404 (brand new company) - start with default empty profile
+          // Progress fetch failed or 404 (brand new company) - start with default empty profile and registered company name
+          if (savedCompanyName && (!ws.company?.name || ws.company.name === "Workspace")) {
+            aurix.set({
+              company: {
+                ...(ws.company ?? { id: uid("co") }),
+                name: savedCompanyName,
+                email: ws.company?.email || ws.user?.email || "",
+              } as any,
+            });
+          }
         }
 
         setStep(backendStepToUiIndex(backendStep));
@@ -698,52 +727,93 @@ function StepCard({ title, description, icon: Icon, children, footer }: {
   );
 }
 
-/* ---------------- Step 1: Company ---------------- */
+function getStoredCompanyName(): string {
+  if (typeof window === "undefined") return "";
+  try {
+    const direct =
+      window.sessionStorage?.getItem("ofc360_registered_company_name") ||
+      window.localStorage?.getItem("ofc360_registered_company_name") ||
+      "";
+    if (direct) return direct;
+    const pendingAuth = window.sessionStorage?.getItem("aurix_pending_auth");
+    if (pendingAuth) {
+      const parsed = JSON.parse(pendingAuth);
+      if (parsed.companyName) return parsed.companyName;
+    }
+  } catch {
+    /* ignore */
+  }
+  return "";
+}
 
 function CompanyStep({ onNext }: { onNext: () => void }) {
   const ws = useAurix();
-  const [c, setC] = useState(ws.company ?? { id: uid("co"), name: "" });
+  const registeredName = getStoredCompanyName();
+  const initialName =
+    (ws.company?.name && ws.company.name !== "Workspace" ? ws.company.name : "") ||
+    registeredName ||
+    "";
+  const initialEmail = ws.company?.email || ws.user?.email || "";
+
+  const [c, setC] = useState({
+    ...(ws.company ?? { id: uid("co") }),
+    name: initialName,
+    email: initialEmail,
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const editedFields = useRef<Set<string>>(new Set());
 
   const wsCompany = ws.company;
   useEffect(() => {
-    if (!wsCompany) return;
+    const effectiveName =
+      (wsCompany?.name && wsCompany.name !== "Workspace" ? wsCompany.name : "") ||
+      getStoredCompanyName() ||
+      "";
+    const effectiveEmail = wsCompany?.email || ws.user?.email || "";
+
     setC((prev) => {
       let changed = false;
       const next = { ...prev };
-      const fields: (keyof Company)[] = [
-        "name",
-        "logoDataUrl",
-        "stampDataUrl",
-        "industry",
-        "size",
-        "website",
-        "email",
-        "phone",
-        "address",
-        "city",
-        "state",
-        "country",
-        "timezone",
-      ];
-      for (const field of fields) {
-        if (!editedFields.current.has(field)) {
-          const val = wsCompany[field];
-          if (val !== undefined && val !== null && val !== "" && next[field] !== val) {
-            (next as any)[field] = val;
-            changed = true;
+      if (!editedFields.current.has("name") && effectiveName && next.name !== effectiveName) {
+        next.name = effectiveName;
+        changed = true;
+      }
+      if (!editedFields.current.has("email") && effectiveEmail && !next.email) {
+        next.email = effectiveEmail;
+        changed = true;
+      }
+      if (wsCompany) {
+        const fields: (keyof Company)[] = [
+          "logoDataUrl",
+          "stampDataUrl",
+          "industry",
+          "size",
+          "website",
+          "phone",
+          "address",
+          "city",
+          "state",
+          "country",
+          "timezone",
+        ];
+        for (const field of fields) {
+          if (!editedFields.current.has(field)) {
+            const val = wsCompany[field];
+            if (val !== undefined && val !== null && val !== "" && next[field] !== val) {
+              (next as any)[field] = val;
+              changed = true;
+            }
           }
         }
-      }
-      if (wsCompany.id && next.id !== wsCompany.id) {
-        next.id = wsCompany.id;
-        changed = true;
+        if (wsCompany.id && next.id !== wsCompany.id) {
+          next.id = wsCompany.id;
+          changed = true;
+        }
       }
       return changed ? next : prev;
     });
-  }, [wsCompany]);
+  }, [wsCompany, ws.user?.email]);
 
   function set<K extends keyof typeof c>(k: K, v: any) {
     editedFields.current.add(k as string);
