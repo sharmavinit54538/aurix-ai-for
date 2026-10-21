@@ -6,7 +6,7 @@ import { AuthLoadingScreen } from "@/features/auth/components/AuthLoadingScreen"
 import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { aurix, useAurix } from "@/lib/aurix-store";
-import { authService } from "@/api";
+import { authService, hasValidAccessToken } from "@/api";
 import { persistAuthSession } from "@/lib/auth-bootstrap";
 import { getSafeRedirectUrl } from "@/lib/role-routing";
 import { parseLoginResponse } from "@/features/auth/utils/parseLoginResponse";
@@ -52,6 +52,7 @@ export function VerifyEmailPage() {
 
   const isAlreadyVerifiedStorage =
     typeof window !== "undefined" &&
+    !isLoginMode &&
     Boolean(effectiveEmail) &&
     (window.sessionStorage?.getItem("ofc360_email_verified") === effectiveEmail ||
       window.localStorage?.getItem("ofc360_email_verified") === effectiveEmail);
@@ -93,7 +94,17 @@ export function VerifyEmailPage() {
   useEffect(() => {
     if (ws.isRestoring) return;
 
-    // 1. If email is already verified (in store or storage), move forward to onboarding/dashboard!
+    // In login challenge mode, user MUST enter the 6-digit OTP to receive their auth tokens,
+    // unless they already hold a valid access token in memory.
+    if (isLoginMode) {
+      if (hasValidAccessToken()) {
+        const dest = ws.user?.onboardingComplete ? "/dashboard" : "/onboarding";
+        navigate({ to: dest as any, replace: true });
+      }
+      return;
+    }
+
+    // In registration mode, if email is already verified, proceed forward
     if (ws.user?.emailVerified || isAlreadyVerifiedStorage) {
       if (!ws.user?.emailVerified && ws.user) {
         aurix.set({ user: { ...ws.user, emailVerified: true } });
@@ -103,14 +114,14 @@ export function VerifyEmailPage() {
       return;
     }
 
-    // 2. If an email exists to verify, allow the user to remain on this page
+    // If an email exists to verify, allow the user to remain on this page
     if (effectiveEmail) return;
 
-    // 3. Only redirect if there's no email to verify
+    // Only redirect if there's no email to verify
     if (!ws.user) {
       navigate({ to: "/login" });
     }
-  }, [ws.user, ws.isRestoring, effectiveEmail, isAlreadyVerifiedStorage, navigate]);
+  }, [ws.user, ws.isRestoring, effectiveEmail, isLoginMode, isAlreadyVerifiedStorage, navigate]);
 
   useEffect(() => {
     if (expiryTime <= 0) return;

@@ -93,13 +93,16 @@ export function LoginPage() {
         toast.info(msg);
 
         try {
-          if (typeof window !== "undefined" && window.sessionStorage) {
-            window.sessionStorage.setItem("ofc360_pending_verification_email", targetEmail);
+          if (typeof window !== "undefined") {
+            window.sessionStorage?.removeItem("ofc360_email_verified");
+            window.localStorage?.removeItem("ofc360_email_verified");
+            window.sessionStorage?.setItem("ofc360_pending_verification_email", targetEmail);
+            window.sessionStorage?.setItem("ofc360_pending_verification_mode", "login");
             if (login.userId) {
-              window.sessionStorage.setItem("ofc360_pending_verification_user_id", String(login.userId));
+              window.sessionStorage?.setItem("ofc360_pending_verification_user_id", String(login.userId));
             }
             if (login.tempToken) {
-              window.sessionStorage.setItem("ofc360_pending_verification_temp_token", login.tempToken);
+              window.sessionStorage?.setItem("ofc360_pending_verification_temp_token", login.tempToken);
             }
           }
         } catch {

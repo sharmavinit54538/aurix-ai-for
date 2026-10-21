@@ -16,6 +16,7 @@ import {
   setupGlobalChunkErrorListeners,
   clearChunkReloadFlag,
   unregisterLegacyServiceWorkers,
+  isChunkLoadError,
 } from "../lib/chunk-reload";
 
 import appCss from "../styles.css?url";
@@ -43,52 +44,102 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error }: { error: unknown; reset: () => void }) {
+function ErrorComponent({ error, reset }: { error: unknown; reset: () => void }) {
   useEffect(() => {
     console.error("Root error boundary caught error:", error);
   }, [error]);
 
+  const isChunk = isChunkLoadError(error);
+
+  if (isChunk) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 text-center shadow-lg">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <svg
+              className="h-6 w-6 animate-spin"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v8H4z"
+              />
+            </svg>
+          </div>
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">
+            App Update Available
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            A new version of OFC360 has been deployed. Please refresh to load the latest features and updates.
+          </p>
+          <div className="mt-6 flex flex-col gap-2">
+            <button
+              onClick={() => {
+                const url = new URL(window.location.href);
+                url.searchParams.set("_v", String(Date.now()));
+                window.location.replace(url.toString());
+              }}
+              className="inline-flex w-full items-center justify-center rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            >
+              Update & Refresh Now
+            </button>
+            <a
+              href="/"
+              className="inline-flex w-full items-center justify-center rounded-md border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            >
+              Back to Home
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const errorMessage =
+    error instanceof Error ? error.message : typeof error === "string" ? error : "An unexpected error occurred.";
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 text-center shadow-lg">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+      <div className="w-full max-w-md rounded-2xl border border-destructive/20 bg-card p-6 text-center shadow-lg">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
           <svg
-            className="h-6 w-6 animate-spin"
+            className="h-6 w-6"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
+            stroke="currentColor"
           >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
             <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8v8H4z"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
             />
           </svg>
         </div>
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          App Update Available
+          Something went wrong
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          A new version of OFC360 has been deployed. Please refresh to load the latest features and updates.
+        <p className="mt-2 text-sm text-muted-foreground break-words">
+          {errorMessage}
         </p>
         <div className="mt-6 flex flex-col gap-2">
           <button
-            onClick={() => {
-              const url = new URL(window.location.href);
-              url.searchParams.set("_v", String(Date.now()));
-              window.location.replace(url.toString());
-            }}
+            onClick={() => reset()}
             className="inline-flex w-full items-center justify-center rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
           >
-            Update & Refresh Now
+            Try Again
           </button>
           <a
             href="/"
