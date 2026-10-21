@@ -76,7 +76,7 @@ export function getPostLoginRoute(user: AuthUserPayload): string {
   return getDefaultDashboardPath(user);
 }
 
-export async function bootstrapAuth(): Promise<void> {
+export async function bootstrapAuth(options?: { force?: boolean }): Promise<void> {
   if (typeof window === "undefined") return;
   // F-07.3: Clean up stale browser-only HRMS localStorage store
   try {
@@ -85,7 +85,12 @@ export async function bootstrapAuth(): Promise<void> {
     /* ignore */
   }
 
-  if (authBootstrapState.bootstrapPromise) return authBootstrapState.bootstrapPromise;
+  if (options?.force) {
+    authBootstrapState.bootstrapPromise = null;
+    setStatus("loading");
+  } else if (authBootstrapState.bootstrapPromise) {
+    return authBootstrapState.bootstrapPromise;
+  }
 
   authBootstrapState.bootstrapPromise = (async () => {
     const finish = () => {
@@ -98,7 +103,7 @@ export async function bootstrapAuth(): Promise<void> {
 
     // 1. If we already have a valid access token in memory:
     if (tokens?.accessToken && !isAccessTokenExpired(tokens.accessToken)) {
-      if (!ws.user) {
+      if (!ws.user || options?.force) {
         try {
           const res = (await authService.getMe()) as any;
           const isSuccess = Boolean(res?.data?.success ?? res?.success);
@@ -135,14 +140,20 @@ export async function bootstrapAuth(): Promise<void> {
         aurix.set(mapAuthUser(userData));
         setSessionHint();
       } else {
-        clearTokens();
-        clearSessionHint();
-        aurix.set({ user: null, company: null });
+        const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
+        const isOnboarding = currentPath.startsWith("/onboarding") || currentPath.startsWith("/employee-onboarding");
+        if (!isOnboarding) {
+          clearTokens();
+          clearSessionHint();
+          aurix.set({ user: null, company: null });
+        }
       }
     } catch (err: any) {
       const status = err?.status ?? err?.response?.status;
-      // Only clear tokens if the refresh token was explicitly rejected with 401
-      if (status === 401 || err?.message === "Failed to refresh session") {
+      const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
+      const isOnboarding = currentPath.startsWith("/onboarding") || currentPath.startsWith("/employee-onboarding");
+      // Only clear tokens if the refresh token was explicitly rejected with 401 and not on onboarding
+      if ((status === 401 || err?.message === "Failed to refresh session") && !isOnboarding) {
         clearTokens();
         clearSessionHint();
         if (!ws.user || ws.user.onboardingComplete) {

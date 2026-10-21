@@ -6,10 +6,20 @@ import { AuthLoadingScreen } from "@/features/auth/components/AuthLoadingScreen"
 import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { aurix, useAurix } from "@/lib/aurix-store";
-import { authService, hasValidAccessToken } from "@/api";
-import { persistAuthSession } from "@/lib/auth-bootstrap";
+import {
+  authService,
+  hasValidAccessToken,
+  getAccessToken,
+  setAccessToken,
+  setRefreshToken,
+  setTokens,
+  setSessionHint,
+} from "@/api";
+import { bootstrapAuth, persistAuthSession } from "@/lib/auth-bootstrap";
 import { getSafeRedirectUrl } from "@/lib/role-routing";
+import { normalizeRole } from "@/lib/roles";
 import { parseLoginResponse } from "@/features/auth/utils/parseLoginResponse";
+import { logger } from "@/lib/logger";
 import { toast } from "sonner";
 
 export function VerifyEmailPage() {
@@ -22,6 +32,38 @@ export function VerifyEmailPage() {
   const [resendCooldown, setResendCooldown] = useState(30);
   const [resending, setResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const clearVerificationStorage = () => {
+    try {
+      if (typeof window !== "undefined") {
+        window.sessionStorage?.removeItem("ofc360_pending_verification_email");
+        window.sessionStorage?.removeItem("ofc360_pending_verification_password");
+        window.sessionStorage?.removeItem("ofc360_pending_verification_user_id");
+        window.sessionStorage?.removeItem("ofc360_pending_verification_temp_token");
+        window.sessionStorage?.removeItem("ofc360_pending_verification_id");
+        window.sessionStorage?.removeItem("ofc360_pending_verification_mode");
+      }
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const resolveTargetRoute = (user: any, redirectParam?: string | null): string => {
+    const isOnboardingComplete = Boolean(
+      user?.onboarding_completed ||
+        user?.onboardingComplete ||
+        user?.is_onboarded ||
+        ws.user?.onboardingComplete,
+    );
+    const role = normalizeRole(user?.role);
+    if (!isOnboardingComplete) {
+      if (role === "employee" || role === "manager") {
+        return "/employee-onboarding";
+      }
+      return "/onboarding";
+    }
+    return getSafeRedirectUrl(redirectParam, user);
+  };
 
   // Resolve effective email from URL search params, sessionStorage, or active user state
   const searchParams =
@@ -44,11 +86,25 @@ export function VerifyEmailPage() {
     searchParams.get("verification_id") || searchParams.get("verificationId");
   const sessionVerificationId =
     typeof window !== "undefined" && window.sessionStorage
-      ? window.sessionStorage.getItem("ofc360_pending_verification_temp_token")
+      ? window.sessionStorage.getItem("ofc360_pending_verification_id") ||
+        window.sessionStorage.getItem("ofc360_pending_verification_temp_token")
       : null;
   const [verificationId, setVerificationId] = useState<string | null>(
     queryVerificationId || sessionVerificationId || null,
   );
+
+  useEffect(() => {
+    const vid =
+      searchParams.get("verification_id") ||
+      searchParams.get("verificationId") ||
+      (typeof window !== "undefined"
+        ? window.sessionStorage?.getItem("ofc360_pending_verification_id") ||
+          window.sessionStorage?.getItem("ofc360_pending_verification_temp_token")
+        : null);
+    if (vid && vid !== verificationId) {
+      setVerificationId(vid);
+    }
+  }, [searchParams, verificationId]);
 
   const isAlreadyVerifiedStorage =
     typeof window !== "undefined" &&
@@ -87,8 +143,10 @@ export function VerifyEmailPage() {
       });
     }
     const currentUser = aurix.get().user;
-    const dest = currentUser?.onboardingComplete ? "/dashboard" : "/onboarding";
-    navigate({ to: dest as any, replace: true });
+    const params = new URLSearchParams(window.location.search);
+    const redirectParam = params.get("redirect") || params.get("callbackUrl");
+    const dest = resolveTargetRoute(currentUser, redirectParam);
+    navigate({ to: dest as any });
   };
 
   useEffect(() => {
@@ -152,13 +210,21 @@ export function VerifyEmailPage() {
     setLoading(true);
 
     try {
+      const vid =
+        verificationId ||
+        (typeof window !== "undefined"
+          ? window.sessionStorage?.getItem("ofc360_pending_verification_id") ||
+            window.sessionStorage?.getItem("ofc360_pending_verification_temp_token")
+          : null);
+
       const payload: any = {
         email: effectiveEmail,
         otp: code,
         code: code,
       };
-      if (verificationId) {
-        payload.verification_id = verificationId;
+      if (vid) {
+        payload.verification_id = vid;
+        payload.verificationId = vid;
       }
 
       const response = (await authService.verifyEmail(payload)) as any;
@@ -182,43 +248,108 @@ export function VerifyEmailPage() {
           /* ignore */
         }
 
-        // 1. Check if the backend verification endpoint returned tokens + user
+        const params = new URLSearchParams(window.location.search);
+        const redirectParam = params.get("redirect") || params.get("callbackUrl");
+
+        // 1. Case A: Check if the backend verification endpoint returned tokens + user directly
         const loginResult = parseLoginResponse(response, effectiveEmail);
         if (loginResult?.status === "authenticated") {
+          setAccessToken(loginResult.accessToken);
+          if (loginResult.refreshToken) {
+            setRefreshToken(loginResult.refreshToken);
+          }
+          setTokens({
+            accessToken: loginResult.accessToken,
+            refreshToken: loginResult.refreshToken,
+          });
+          setSessionHint();
           persistAuthSession(loginResult.user, {
             accessToken: loginResult.accessToken,
             refreshToken: loginResult.refreshToken,
           });
-          setSuccess(true);
-          toast.success(message || "Email verified successfully!");
 
           try {
-            sessionStorage.removeItem("ofc360_pending_verification_email");
-            sessionStorage.removeItem("ofc360_pending_verification_user_id");
-            sessionStorage.removeItem("ofc360_pending_verification_temp_token");
-            sessionStorage.removeItem("ofc360_pending_verification_mode");
+            await bootstrapAuth({ force: true });
           } catch {
             /* ignore */
           }
 
-          const params = new URLSearchParams(window.location.search);
-          const redirectParam = params.get("redirect") || params.get("callbackUrl");
+          setSuccess(true);
+          toast.success(message || "Email verified successfully!");
+          clearVerificationStorage();
 
-          const isOnboardingComplete = Boolean(
-            loginResult.user.onboarding_completed ||
-              (loginResult.user as any).onboardingComplete ||
-              ws.user?.onboardingComplete,
-          );
-
-          // Once verified, send to /onboarding if not finished yet, or directly to dashboard
-          const destination = isOnboardingComplete
-            ? getSafeRedirectUrl(redirectParam, loginResult.user)
-            : "/onboarding";
-          setTimeout(() => navigate({ to: destination as any }), 600);
+          const currentUser = aurix.get().user || loginResult.user;
+          const destination = resolveTargetRoute(currentUser, redirectParam);
+          navigate({ to: destination as any });
           return;
         }
 
-        // 2. If no tokens returned directly, update verified flag and route to onboarding then dashboard
+        // 2. Case B: Verification succeeded without tokens (e.g. registration email verification)
+        // Check for temporary pending password to automatically authenticate the user
+        const pendingPassword =
+          typeof window !== "undefined"
+            ? window.sessionStorage?.getItem("ofc360_pending_verification_password")
+            : null;
+
+        if (effectiveEmail && pendingPassword) {
+          try {
+            const loginRes = await authService.login({
+              identifier: effectiveEmail,
+              password: pendingPassword,
+            });
+            const autoLoginResult = parseLoginResponse(loginRes, effectiveEmail);
+            if (autoLoginResult?.status === "authenticated") {
+              setAccessToken(autoLoginResult.accessToken);
+              if (autoLoginResult.refreshToken) {
+                setRefreshToken(autoLoginResult.refreshToken);
+              }
+              setTokens({
+                accessToken: autoLoginResult.accessToken,
+                refreshToken: autoLoginResult.refreshToken,
+              });
+              setSessionHint();
+              persistAuthSession(autoLoginResult.user, {
+                accessToken: autoLoginResult.accessToken,
+                refreshToken: autoLoginResult.refreshToken,
+              });
+
+              try {
+                await bootstrapAuth({ force: true });
+              } catch {
+                /* ignore */
+              }
+
+              setSuccess(true);
+              toast.success(message || "Email verified and signed in!");
+              clearVerificationStorage();
+
+              const currentUser = aurix.get().user || autoLoginResult.user;
+              const destination = resolveTargetRoute(currentUser, redirectParam);
+              navigate({ to: destination as any });
+              return;
+            }
+          } catch (autoLoginErr) {
+            logger.warn("Auto-login after OTP verification failed", { error: autoLoginErr });
+          }
+        }
+
+        // 3. Fallback: If an access token already exists in memory/storage
+        if (hasValidAccessToken() || getAccessToken()) {
+          try {
+            await bootstrapAuth({ force: true });
+          } catch {
+            /* ignore */
+          }
+          setSuccess(true);
+          toast.success(message || "Email verified successfully!");
+          clearVerificationStorage();
+          const currentUser = aurix.get().user;
+          const destination = resolveTargetRoute(currentUser, redirectParam);
+          navigate({ to: destination as any });
+          return;
+        }
+
+        // 4. Fallback when no tokens could be retrieved
         setSuccess(true);
         toast.success(message || "Email verified successfully!");
 
@@ -243,26 +374,10 @@ export function VerifyEmailPage() {
           });
         }
 
-        try {
-          sessionStorage.removeItem("ofc360_pending_verification_email");
-          sessionStorage.removeItem("ofc360_pending_verification_user_id");
-          sessionStorage.removeItem("ofc360_pending_verification_temp_token");
-          sessionStorage.removeItem("ofc360_pending_verification_mode");
-        } catch {
-          /* ignore */
-        }
-
-        const params = new URLSearchParams(window.location.search);
-        const redirectParam = params.get("redirect") || params.get("callbackUrl");
-
+        clearVerificationStorage();
         const currentUser = aurix.get().user;
-        const isOnboardingComplete = Boolean(currentUser?.onboardingComplete);
-
-        const destination = isOnboardingComplete
-          ? getSafeRedirectUrl(redirectParam, currentUser)
-          : "/onboarding";
-
-        setTimeout(() => navigate({ to: destination as any }), 600);
+        const destination = resolveTargetRoute(currentUser, redirectParam);
+        navigate({ to: destination as any });
       } else {
         setError(message || "Verification failed");
       }
@@ -276,6 +391,52 @@ export function VerifyEmailPage() {
 
       if (isAlreadyVerified) {
         toast.success("Email is already verified! Moving forward to onboarding...");
+        const pendingPassword =
+          typeof window !== "undefined"
+            ? window.sessionStorage?.getItem("ofc360_pending_verification_password")
+            : null;
+
+        if (effectiveEmail && pendingPassword) {
+          try {
+            const loginRes = await authService.login({
+              identifier: effectiveEmail,
+              password: pendingPassword,
+            });
+            const autoLoginResult = parseLoginResponse(loginRes, effectiveEmail);
+            if (autoLoginResult?.status === "authenticated") {
+              setAccessToken(autoLoginResult.accessToken);
+              if (autoLoginResult.refreshToken) {
+                setRefreshToken(autoLoginResult.refreshToken);
+              }
+              setTokens({
+                accessToken: autoLoginResult.accessToken,
+                refreshToken: autoLoginResult.refreshToken,
+              });
+              setSessionHint();
+              persistAuthSession(autoLoginResult.user, {
+                accessToken: autoLoginResult.accessToken,
+                refreshToken: autoLoginResult.refreshToken,
+              });
+
+              try {
+                await bootstrapAuth({ force: true });
+              } catch {
+                /* ignore */
+              }
+
+              clearVerificationStorage();
+              const currentUser = aurix.get().user || autoLoginResult.user;
+              const params = new URLSearchParams(window.location.search);
+              const redirectParam = params.get("redirect") || params.get("callbackUrl");
+              const destination = resolveTargetRoute(currentUser, redirectParam);
+              navigate({ to: destination as any });
+              return;
+            }
+          } catch {
+            /* ignore */
+          }
+        }
+
         proceedToNextStep();
         return;
       }
@@ -293,9 +454,16 @@ export function VerifyEmailPage() {
     }
     setResending(true);
     try {
+      const vid =
+        verificationId ||
+        (typeof window !== "undefined"
+          ? window.sessionStorage?.getItem("ofc360_pending_verification_id") ||
+            window.sessionStorage?.getItem("ofc360_pending_verification_temp_token")
+          : null);
       const payload: any = { email: effectiveEmail };
-      if (verificationId) {
-        payload.verification_id = verificationId;
+      if (vid) {
+        payload.verification_id = vid;
+        payload.verificationId = vid;
       }
       const response = (await authService.resendOtp(payload)) as any;
       const isSuccess = Boolean(response?.data?.success ?? response?.success ?? true);
@@ -306,6 +474,7 @@ export function VerifyEmailPage() {
           setVerificationId(newVid);
           try {
             sessionStorage.setItem("ofc360_pending_verification_temp_token", newVid);
+            sessionStorage.setItem("ofc360_pending_verification_id", newVid);
           } catch {
             /* ignore */
           }

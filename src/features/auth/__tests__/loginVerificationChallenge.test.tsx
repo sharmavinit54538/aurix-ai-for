@@ -29,6 +29,16 @@ vi.mock("@/api", async (importOriginal) => {
       login: vi.fn(),
       verifyEmail: vi.fn(),
       resendOtp: vi.fn(),
+      getMe: vi.fn().mockResolvedValue({
+        success: true,
+        data: {
+          id: "u-99",
+          email: "unverified@ofc360.com",
+          name: "Verified User",
+          role: "hr_admin",
+          onboarding_completed: false,
+        },
+      }),
     },
     hasValidAccessToken: vi.fn(() => false),
   };

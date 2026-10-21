@@ -23,11 +23,15 @@ export interface VerifyEmailPayload {
   email: string;
   otp: string;
   code?: string;
+  verification_id?: string;
+  verificationId?: string;
   [key: string]: unknown;
 }
 
 export interface ResendOtpPayload {
   email: string;
+  verification_id?: string;
+  verificationId?: string;
   [key: string]: unknown;
 }
 
@@ -111,16 +115,18 @@ export const authService = {
    */
   async verifyEmail(payload: VerifyEmailPayload): Promise<ApiResponse> {
     const { email, otp, code, ...rest } = payload;
-    const body = {
+    const effectiveVid = payload.verification_id || payload.verificationId;
+    const body: Record<string, unknown> = {
       ...rest,
       email,
       otp: otp || code || "",
       code: code || otp || "",
+      ...(effectiveVid ? { verification_id: effectiveVid, verificationId: effectiveVid } : {}),
     };
-    if (payload.verification_id) {
+    if (effectiveVid) {
       try {
         return await api.post<ApiResponse>(AUTH_ENDPOINTS.verifyEmailOtp, {
-          verification_id: payload.verification_id,
+          verification_id: effectiveVid,
           otp: payload.otp || payload.code || "",
           email: payload.email,
         });
@@ -146,14 +152,16 @@ export const authService = {
    */
   async resendOtp(payload: ResendOtpPayload): Promise<ApiResponse> {
     const { email, ...rest } = payload;
-    const body = {
+    const effectiveVid = payload.verification_id || payload.verificationId;
+    const body: Record<string, unknown> = {
       ...rest,
       email,
+      ...(effectiveVid ? { verification_id: effectiveVid, verificationId: effectiveVid } : {}),
     };
-    if (payload.verification_id) {
+    if (effectiveVid) {
       try {
         return await api.post<ApiResponse>(AUTH_ENDPOINTS.resendEmailOtp, {
-          verification_id: payload.verification_id,
+          verification_id: effectiveVid,
           email: payload.email,
         });
       } catch (err: any) {

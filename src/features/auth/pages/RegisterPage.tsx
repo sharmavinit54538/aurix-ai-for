@@ -94,6 +94,22 @@ export function RegisterPage() {
         (isSuccess ? "Registration successful!" : "Registration failed");
 
       if (isSuccess) {
+        try {
+          if (typeof window !== "undefined") {
+            window.sessionStorage?.removeItem("ofc360_email_verified");
+            window.localStorage?.removeItem("ofc360_email_verified");
+            window.sessionStorage?.setItem("ofc360_pending_verification_email", form.email);
+            window.sessionStorage?.setItem("ofc360_pending_verification_password", form.password);
+            window.sessionStorage?.setItem("ofc360_pending_verification_mode", "register");
+            const regUserId = response?.data?.user?.id ?? response?.user?.id;
+            if (regUserId) {
+              window.sessionStorage?.setItem("ofc360_pending_verification_user_id", String(regUserId));
+            }
+          }
+        } catch {
+          // ignore sessionStorage write errors
+        }
+
         aurix.set({
           user: {
             id: response?.data?.user?.id ?? response?.user?.id ?? "",

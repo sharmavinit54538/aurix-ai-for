@@ -181,6 +181,18 @@ export function clearTokens() {
 }
 
 export function handleSessionExpired() {
+  if (typeof window !== "undefined") {
+    const pathname = window.location.pathname;
+    if (
+      pathname.startsWith("/onboarding") ||
+      pathname.startsWith("/employee-onboarding") ||
+      pathname.startsWith("/verify-email")
+    ) {
+      logger.warn("handleSessionExpired bypassed: user is on onboarding or verification route", { pathname });
+      return;
+    }
+  }
+
   clearTokens();
   clearSessionHint();
   aurix.set({ isRestoring: false, user: null, company: null });

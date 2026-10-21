@@ -14,6 +14,7 @@ export interface VerificationRequiredLoginResult {
   userId?: string;
   message?: string;
   tempToken?: string;
+  verificationId?: string;
   mode?: string;
 }
 
@@ -207,6 +208,10 @@ export function parseLoginResponse(res: unknown, fallbackEmail?: string): Parsed
     undefined;
 
   const tempTokenCandidate =
+    (typeof nested?.verification_id === "string" ? nested.verification_id : null) ??
+    (typeof nested?.verificationId === "string" ? nested.verificationId : null) ??
+    (typeof body.verification_id === "string" ? body.verification_id : null) ??
+    (typeof body.verificationId === "string" ? body.verificationId : null) ??
     (typeof nested?.temp_token === "string" ? nested.temp_token : null) ??
     (typeof nested?.tempToken === "string" ? nested.tempToken : null) ??
     (typeof body.temp_token === "string" ? body.temp_token : null) ??
@@ -220,6 +225,7 @@ export function parseLoginResponse(res: unknown, fallbackEmail?: string): Parsed
       userId: userIdCandidate,
       message: messageCandidate || "Verification code sent to your email. Please verify to continue.",
       tempToken: tempTokenCandidate,
+      verificationId: tempTokenCandidate,
     };
   }
 

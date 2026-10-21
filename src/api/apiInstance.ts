@@ -125,12 +125,29 @@ apiInstance.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    // Never trigger session expiration on non-401 errors (e.g. 403 Forbidden or 404 Not Found)
+    if (error.response?.status === 403 || error.response?.status === 404) {
+      return Promise.reject(error);
+    }
+
+    const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
+    const isOnboardingOrVerificationRoute =
+      currentPath.startsWith("/onboarding") ||
+      currentPath.startsWith("/employee-onboarding") ||
+      currentPath.startsWith("/verify-email");
+
+    const isAuthEndpoint =
+      originalRequest.url?.includes("/auth/me") ||
+      originalRequest.url?.includes("/auth/refresh");
+
     const currentRefreshToken = getRefreshToken();
     const tokens = getTokens();
     const hasHint = hasSessionHint();
 
     if (!tokens?.accessToken && !currentRefreshToken && !hasHint) {
-      handleSessionExpired();
+      if (!isOnboardingOrVerificationRoute && isAuthEndpoint) {
+        handleSessionExpired();
+      }
       return Promise.reject(error);
     }
 
@@ -142,8 +159,12 @@ apiInstance.interceptors.response.use(
       return apiInstance(originalRequest);
     } catch (refreshError: any) {
       const status = refreshError?.response?.status ?? refreshError?.status;
-      if (status === 401 || refreshError?.message === "Failed to refresh session") {
-        handleSessionExpired();
+      const isExplicit401 = status === 401 || refreshError?.message === "Failed to refresh session";
+      if (isExplicit401 && (!isOnboardingOrVerificationRoute || isAuthEndpoint)) {
+        // If the refresh token is truly expired or invalid, handle expiration only if not actively on onboarding
+        if (!isOnboardingOrVerificationRoute) {
+          handleSessionExpired();
+        }
       }
       return Promise.reject(refreshError);
     }

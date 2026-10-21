@@ -92,17 +92,20 @@ export function LoginPage() {
         const msg = login.message || "Verification code sent to your email. Please verify to continue.";
         toast.info(msg);
 
+        const vid = login.verificationId || login.tempToken;
         try {
           if (typeof window !== "undefined") {
             window.sessionStorage?.removeItem("ofc360_email_verified");
             window.localStorage?.removeItem("ofc360_email_verified");
             window.sessionStorage?.setItem("ofc360_pending_verification_email", targetEmail);
+            window.sessionStorage?.setItem("ofc360_pending_verification_password", password);
             window.sessionStorage?.setItem("ofc360_pending_verification_mode", "login");
             if (login.userId) {
               window.sessionStorage?.setItem("ofc360_pending_verification_user_id", String(login.userId));
             }
-            if (login.tempToken) {
-              window.sessionStorage?.setItem("ofc360_pending_verification_temp_token", login.tempToken);
+            if (vid) {
+              window.sessionStorage?.setItem("ofc360_pending_verification_temp_token", vid);
+              window.sessionStorage?.setItem("ofc360_pending_verification_id", vid);
             }
           }
         } catch {
@@ -131,7 +134,7 @@ export function LoginPage() {
         searchParams.set("email", targetEmail);
         searchParams.set("mode", "login");
         if (login.userId) searchParams.set("userId", String(login.userId));
-        if (login.tempToken) searchParams.set("verification_id", login.tempToken);
+        if (vid) searchParams.set("verification_id", vid);
         if (redirectParam) searchParams.set("redirect", redirectParam);
 
         navigate({
@@ -139,7 +142,7 @@ export function LoginPage() {
           search: {
             email: targetEmail,
             mode: "login",
-            ...(login.tempToken ? { verification_id: login.tempToken } : {}),
+            ...(vid ? { verification_id: vid } : {}),
             ...(redirectParam ? { redirect: redirectParam } : {}),
           } as any,
         });

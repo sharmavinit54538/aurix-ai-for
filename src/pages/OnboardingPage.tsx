@@ -18,7 +18,8 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Stepper } from "@/components/aurix/Stepper";
 import { aurix, useAurix, uid, type Company, type Employee, type HR, type Manager } from "@/lib/aurix-store";
-import { api, setTokens } from "@/api";
+import { api, setTokens, getAccessToken } from "@/api";
+import { useAuthReady, bootstrapAuth } from "@/lib/auth-bootstrap";
 import { toast } from "sonner";
 
 import { AuthLoadingScreen } from "@/features/auth/components/AuthLoadingScreen";
@@ -163,10 +164,12 @@ export function OnboardingPage() {
 
   const [resuming, setResuming] = useState(true);
   const statusFetchedRef = useRef(false);
+  const authReady = useAuthReady();
+  const hasAccessToken = Boolean(getAccessToken());
 
   useEffect(() => {
     if (token) { setResuming(false); return; } // skip for employee onboarding
-    if (ws.isRestoring) return;
+    if (ws.isRestoring || !authReady) return;
 
     // Check if verification was marked in storage
     const storedVerifiedEmail =
@@ -176,6 +179,12 @@ export function OnboardingPage() {
         : null;
 
     if (!ws.user) {
+      if (hasAccessToken) {
+        // Access token exists in storage; wait for /auth/me bootstrap to resolve
+        void bootstrapAuth({ force: true });
+        return;
+      }
+
       const pendingEmail =
         storedVerifiedEmail ||
         (typeof window !== "undefined"
@@ -206,7 +215,7 @@ export function OnboardingPage() {
     }
 
     if (!ws.user.emailVerified) {
-      if (storedVerifiedEmail && storedVerifiedEmail.toLowerCase() === ws.user.email.toLowerCase()) {
+      if (hasAccessToken || (storedVerifiedEmail && storedVerifiedEmail.toLowerCase() === ws.user.email.toLowerCase())) {
         aurix.set({ user: { ...ws.user, emailVerified: true } });
         return;
       }
@@ -302,7 +311,7 @@ export function OnboardingPage() {
     }
   }
 
-  if (ws.isRestoring) {
+  if (ws.isRestoring || (hasAccessToken && (!authReady || !ws.user))) {
     return <AuthLoadingScreen />;
   }
 

@@ -55,6 +55,10 @@ export function getDefaultDashboardPath(target?: RoleOrUser): string {
       return "/onboarding";
     }
 
+    if ((role === "employee" || role === "manager") && !onboardingCompleted) {
+      return "/employee-onboarding";
+    }
+
     return getRoleDashboard(role);
   }
 

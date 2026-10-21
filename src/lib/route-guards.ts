@@ -3,7 +3,7 @@
  * Enforces clean separation between platform owner (SUPER_ADMIN)
  * and normal organization roles (HR_ADMIN, MANAGER, EMPLOYEE, IT_ADMIN, EXECUTIVE).
  */
-import { hasValidAccessToken } from "@/api";
+import { hasValidAccessToken, getAccessToken } from "@/api";
 import { aurix } from "@/lib/aurix-store";
 import { normalizeRole, isSuperAdmin, type AppRole } from "@/lib/roles";
 
@@ -134,7 +134,7 @@ export function getRoleDefaultHome(role?: string | null): string {
 
 export function isUserAuthenticated(): boolean {
   if (typeof window === "undefined") return true;
-  return Boolean(aurix.get().user) && hasValidAccessToken();
+  return hasValidAccessToken() || (Boolean(aurix.get().user) && Boolean(getAccessToken()));
 }
 
 export interface RouteAccessResult {
