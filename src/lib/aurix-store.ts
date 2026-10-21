@@ -71,6 +71,8 @@ export interface AurixUser {
   phone: string;
   role: Role;
   companyId: string;
+  company_name?: string;
+  companyName?: string;
   emailVerified: boolean;
   onboardingComplete: boolean;
   createdAt: string;

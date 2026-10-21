@@ -103,9 +103,11 @@ export function RegisterPage() {
             window.sessionStorage?.setItem("ofc360_pending_verification_mode", "register");
             window.sessionStorage?.setItem("ofc360_registered_company_name", form.companyName);
             window.localStorage?.setItem("ofc360_registered_company_name", form.companyName);
+            window.sessionStorage?.setItem("company_name", form.companyName);
+            window.localStorage?.setItem("company_name", form.companyName);
             window.sessionStorage?.setItem(
               "aurix_pending_auth",
-              JSON.stringify({ email: form.email, password: form.password, companyName: form.companyName }),
+              JSON.stringify({ email: form.email, password: form.password, companyName: form.companyName, company_name: form.companyName }),
             );
             const regUserId = response?.data?.user?.id ?? response?.user?.id;
             if (regUserId) {
@@ -124,6 +126,8 @@ export function RegisterPage() {
             phone: form.phone,
             role: "hr_admin",
             companyId: "workspace",
+            company_name: form.companyName,
+            companyName: form.companyName,
             emailVerified: false,
             onboardingComplete: false,
             createdAt: new Date().toISOString(),

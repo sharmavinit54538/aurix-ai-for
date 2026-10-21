@@ -41,19 +41,63 @@ function mapAuthUser(data: AuthUserPayload) {
   const ws = aurix.get();
   const companyId = data.company_id ? String(data.company_id) : ws.user?.companyId || "workspace";
 
-  const savedCompanyName =
-    (typeof window !== "undefined"
-      ? window.sessionStorage?.getItem("ofc360_registered_company_name") ||
-        window.localStorage?.getItem("ofc360_registered_company_name")
-      : null) || "";
+  const dataCompany =
+    (typeof data.company_name === "string" && data.company_name !== "Workspace" ? data.company_name : "") ||
+    (typeof (data as any).companyName === "string" && (data as any).companyName !== "Workspace" ? (data as any).companyName : "") ||
+    (typeof (data as any).company?.name === "string" && (data as any).company.name !== "Workspace" ? (data as any).company.name : "") ||
+    (typeof (data as any).company?.company_name === "string" && (data as any).company.company_name !== "Workspace" ? (data as any).company.company_name : "") ||
+    (typeof (data as any).organization?.name === "string" && (data as any).organization.name !== "Workspace" ? (data as any).organization.name : "") ||
+    (typeof (data as any).organization?.company_name === "string" && (data as any).organization.company_name !== "Workspace" ? (data as any).organization.company_name : "") ||
+    (typeof (data as any).organization_name === "string" && (data as any).organization_name !== "Workspace" ? (data as any).organization_name : "") ||
+    (typeof (data as any).org_name === "string" && (data as any).org_name !== "Workspace" ? (data as any).org_name : "");
+
+  let savedCompanyName = "";
+  if (typeof window !== "undefined") {
+    try {
+      savedCompanyName =
+        window.sessionStorage?.getItem("ofc360_registered_company_name") ||
+        window.localStorage?.getItem("ofc360_registered_company_name") ||
+        window.sessionStorage?.getItem("company_name") ||
+        window.localStorage?.getItem("company_name") ||
+        "";
+      if (!savedCompanyName) {
+        const pendingAuth = window.sessionStorage?.getItem("aurix_pending_auth");
+        if (pendingAuth) {
+          const parsed = JSON.parse(pendingAuth);
+          if (parsed.companyName && parsed.companyName !== "Workspace") savedCompanyName = parsed.companyName;
+          else if (parsed.company_name && parsed.company_name !== "Workspace") savedCompanyName = parsed.company_name;
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  const wsUserCoName =
+    ((ws.user as any)?.company_name && (ws.user as any).company_name !== "Workspace" ? (ws.user as any).company_name : "") ||
+    ((ws.user as any)?.companyName && (ws.user as any).companyName !== "Workspace" ? (ws.user as any).companyName : "");
+
+  const wsCoName = ws.company?.name && ws.company.name !== "Workspace" ? ws.company.name : "";
 
   const resolvedCompanyName =
-    (data.company_name && data.company_name !== "Workspace" ? data.company_name : "") ||
-    (ws.company?.name && ws.company.name !== "Workspace" ? ws.company.name : "") ||
+    dataCompany ||
+    wsUserCoName ||
+    wsCoName ||
     savedCompanyName ||
     data.company_name ||
     ws.company?.name ||
     "Workspace";
+
+  if (typeof window !== "undefined" && resolvedCompanyName && resolvedCompanyName !== "Workspace") {
+    try {
+      window.sessionStorage?.setItem("ofc360_registered_company_name", resolvedCompanyName);
+      window.localStorage?.setItem("ofc360_registered_company_name", resolvedCompanyName);
+      window.sessionStorage?.setItem("company_name", resolvedCompanyName);
+      window.localStorage?.setItem("company_name", resolvedCompanyName);
+    } catch {
+      /* ignore */
+    }
+  }
 
   return {
     user: {
@@ -63,6 +107,8 @@ function mapAuthUser(data: AuthUserPayload) {
       phone: data.phone || "",
       role: normalizeRole(data.role) ?? "employee",
       companyId,
+      company_name: resolvedCompanyName,
+      companyName: resolvedCompanyName,
       emailVerified: data.is_verified,
       onboardingComplete: Boolean(data.onboarding_completed),
       createdAt: data.created_at ?? new Date().toISOString(),
@@ -121,7 +167,10 @@ export async function bootstrapAuth(options?: { force?: boolean }): Promise<void
         try {
           const res = (await authService.getMe()) as any;
           const isSuccess = Boolean(res?.data?.success ?? res?.success);
-          const userData = res?.data?.data ?? res?.data;
+          const rawData = res?.data?.data ?? res?.data;
+          const userData = rawData && typeof rawData === "object" && "user" in rawData && (rawData as any).user
+            ? { ...(rawData as any).user, ...rawData }
+            : rawData;
           if (isSuccess && userData) {
             aurix.set(mapAuthUser(userData));
             setSessionHint();
@@ -149,7 +198,10 @@ export async function bootstrapAuth(options?: { force?: boolean }): Promise<void
       await authService.refresh({ silent: true });
       const res = (await authService.getMe()) as any;
       const isSuccess = Boolean(res?.data?.success ?? res?.success);
-      const userData = res?.data?.data ?? res?.data;
+      const rawData = res?.data?.data ?? res?.data;
+      const userData = rawData && typeof rawData === "object" && "user" in rawData && (rawData as any).user
+        ? { ...(rawData as any).user, ...rawData }
+        : rawData;
       if (isSuccess && userData) {
         aurix.set(mapAuthUser(userData));
         setSessionHint();

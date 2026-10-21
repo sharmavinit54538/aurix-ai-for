@@ -123,8 +123,26 @@ export function VerifyEmailPage() {
     } catch {
       /* ignore */
     }
+    const savedCo =
+      (typeof window !== "undefined"
+        ? window.sessionStorage?.getItem("ofc360_registered_company_name") ||
+          window.localStorage?.getItem("ofc360_registered_company_name") ||
+          window.sessionStorage?.getItem("company_name") ||
+          window.localStorage?.getItem("company_name")
+        : null) || "";
+
     if (ws.user) {
-      aurix.set({ user: { ...ws.user, emailVerified: true } });
+      aurix.set({
+        user: {
+          ...ws.user,
+          company_name: ws.user.company_name || savedCo || undefined,
+          companyName: ws.user.companyName || savedCo || undefined,
+          emailVerified: true,
+        },
+        ...(savedCo && (!ws.company?.name || ws.company.name === "Workspace")
+          ? { company: { ...(ws.company ?? { id: "workspace" }), name: savedCo } }
+          : {}),
+      });
     } else if (effectiveEmail) {
       aurix.set({
         user: {
@@ -137,10 +155,15 @@ export function VerifyEmailPage() {
           phone: "",
           role: "hr_admin",
           companyId: "workspace",
+          company_name: savedCo || undefined,
+          companyName: savedCo || undefined,
           emailVerified: true,
           onboardingComplete: false,
           createdAt: new Date().toISOString(),
         },
+        ...(savedCo && (!ws.company?.name || ws.company.name === "Workspace")
+          ? { company: { ...(ws.company ?? { id: "workspace" }), name: savedCo } }
+          : {}),
       });
     }
     const currentUser = aurix.get().user;
@@ -353,8 +376,26 @@ export function VerifyEmailPage() {
         setSuccess(true);
         toast.success(message || "Email verified successfully!");
 
+        const savedCo =
+          (typeof window !== "undefined"
+            ? window.sessionStorage?.getItem("ofc360_registered_company_name") ||
+              window.localStorage?.getItem("ofc360_registered_company_name") ||
+              window.sessionStorage?.getItem("company_name") ||
+              window.localStorage?.getItem("company_name")
+            : null) || "";
+
         if (ws.user) {
-          aurix.set({ user: { ...ws.user, emailVerified: true } });
+          aurix.set({
+            user: {
+              ...ws.user,
+              company_name: ws.user.company_name || savedCo || undefined,
+              companyName: ws.user.companyName || savedCo || undefined,
+              emailVerified: true,
+            },
+            ...(savedCo && (!ws.company?.name || ws.company.name === "Workspace")
+              ? { company: { ...(ws.company ?? { id: "workspace" }), name: savedCo } }
+              : {}),
+          });
         } else if (effectiveEmail) {
           aurix.set({
             user: {
@@ -367,10 +408,15 @@ export function VerifyEmailPage() {
               phone: "",
               role: "hr_admin",
               companyId: "workspace",
+              company_name: savedCo || undefined,
+              companyName: savedCo || undefined,
               emailVerified: true,
               onboardingComplete: false,
               createdAt: new Date().toISOString(),
             },
+            ...(savedCo && (!ws.company?.name || ws.company.name === "Workspace")
+              ? { company: { ...(ws.company ?? { id: "workspace" }), name: savedCo } }
+              : {}),
           });
         }
 

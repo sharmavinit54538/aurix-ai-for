@@ -57,6 +57,33 @@ function parseJwtRole(token: string): string | null {
   }
 }
 
+function parseJwtCompany(token: string): string | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const payload = JSON.parse(atob(base64));
+    if (payload && typeof payload === "object") {
+      const val =
+        payload.company_name ||
+        payload.companyName ||
+        payload.org_name ||
+        payload.organization_name ||
+        payload.company ||
+        payload.organization;
+      if (typeof val === "string" && val.trim() && val !== "Workspace") {
+        return val.trim();
+      }
+      if (typeof val === "object" && val && typeof (val as any).name === "string" && (val as any).name.trim() && (val as any).name !== "Workspace") {
+        return (val as any).name.trim();
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 function normalizeUser(raw: unknown, tokenRole?: string | null): AuthUserPayload | null {
   const user = asRecord(raw);
   if (!user || typeof user.email !== "string") return null;
@@ -70,6 +97,25 @@ function normalizeUser(raw: unknown, tokenRole?: string | null): AuthUserPayload
     (typeof user.role_name === "string" ? user.role_name : null) ??
     tokenRole ??
     null;
+
+  const rawCompanyName =
+    (typeof user.company_name === "string" ? user.company_name : null) ??
+    (typeof user.companyName === "string" ? user.companyName : null) ??
+    (asRecord(user.company) && typeof asRecord(user.company)?.name === "string"
+      ? (asRecord(user.company)!.name as string)
+      : null) ??
+    (asRecord(user.company) && typeof asRecord(user.company)?.company_name === "string"
+      ? (asRecord(user.company)!.company_name as string)
+      : null) ??
+    (asRecord(user.organization) && typeof asRecord(user.organization)?.name === "string"
+      ? (asRecord(user.organization)!.name as string)
+      : null) ??
+    (asRecord(user.organization) && typeof asRecord(user.organization)?.company_name === "string"
+      ? (asRecord(user.organization)!.company_name as string)
+      : null) ??
+    (typeof user.organization_name === "string" ? user.organization_name : null) ??
+    (typeof user.org_name === "string" ? user.org_name : null) ??
+    undefined;
 
   return {
     id: typeof user.id === "string" || typeof user.id === "number" ? user.id : "",
@@ -86,12 +132,8 @@ function normalizeUser(raw: unknown, tokenRole?: string | null): AuthUserPayload
         : typeof user.companyId === "string" || typeof user.companyId === "number"
           ? user.companyId
           : undefined,
-    company_name:
-      typeof user.company_name === "string"
-        ? user.company_name
-        : typeof user.companyName === "string"
-          ? user.companyName
-          : undefined,
+    company_name: rawCompanyName,
+    companyName: rawCompanyName,
   };
 }
 
@@ -170,6 +212,33 @@ export function parseLoginResponse(res: unknown, fallbackEmail?: string): Parsed
 
   const tokenRole = typeof accessToken === "string" ? parseJwtRole(accessToken) : null;
   const user = normalizeUser(userCandidate, tokenRole);
+
+  if (user) {
+    if (!user.company_name || user.company_name === "Workspace") {
+      const fallbackCompany =
+        (typeof nested?.company_name === "string" && nested.company_name !== "Workspace" ? nested.company_name : null) ??
+        (typeof nested?.companyName === "string" && nested.companyName !== "Workspace" ? nested.companyName : null) ??
+        (asRecord(nested?.company) && typeof asRecord(nested?.company)?.name === "string" && asRecord(nested?.company)!.name !== "Workspace" ? (asRecord(nested?.company)!.name as string) : null) ??
+        (asRecord(nested?.organization) && typeof asRecord(nested?.organization)?.name === "string" && asRecord(nested?.organization)!.name !== "Workspace" ? (asRecord(nested?.organization)!.name as string) : null) ??
+        (typeof nested?.organization_name === "string" && nested.organization_name !== "Workspace" ? nested.organization_name : null) ??
+        (typeof body.company_name === "string" && body.company_name !== "Workspace" ? body.company_name : null) ??
+        (typeof body.companyName === "string" && body.companyName !== "Workspace" ? body.companyName : null) ??
+        (asRecord(body.company) && typeof asRecord(body.company)?.name === "string" && asRecord(body.company)!.name !== "Workspace" ? (asRecord(body.company)!.name as string) : null) ??
+        (typeof accessToken === "string" ? parseJwtCompany(accessToken) : null) ??
+        (typeof window !== "undefined"
+          ? window.sessionStorage?.getItem("ofc360_registered_company_name") ||
+            window.localStorage?.getItem("ofc360_registered_company_name") ||
+            window.sessionStorage?.getItem("company_name") ||
+            window.localStorage?.getItem("company_name")
+          : null) ??
+        undefined;
+
+      if (fallbackCompany) {
+        user.company_name = fallbackCompany;
+        user.companyName = fallbackCompany;
+      }
+    }
+  }
 
   if (typeof accessToken === "string" && typeof refreshToken === "string" && user) {
     return {

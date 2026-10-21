@@ -232,6 +232,8 @@ export function OnboardingPage() {
           }
         }
 
+        const provCompanyName = getStoredCompanyName();
+
         if (fallbackEmail) {
           aurix.set({
             user: {
@@ -244,10 +246,15 @@ export function OnboardingPage() {
               phone: "",
               role: "hr_admin",
               companyId: "workspace",
+              company_name: provCompanyName || undefined,
+              companyName: provCompanyName || undefined,
               emailVerified: true,
               onboardingComplete: false,
               createdAt: new Date().toISOString(),
             },
+            ...(provCompanyName && (!ws.company?.name || ws.company.name === "Workspace")
+              ? { company: { ...(ws.company ?? { id: uid("co") }), name: provCompanyName } }
+              : {}),
           });
           return;
         }
@@ -261,6 +268,7 @@ export function OnboardingPage() {
           : null);
 
       if (pendingEmail) {
+        const provCompanyName = getStoredCompanyName();
         aurix.set({
           user: {
             id:
@@ -272,10 +280,15 @@ export function OnboardingPage() {
             phone: "",
             role: "hr_admin",
             companyId: "workspace",
+            company_name: provCompanyName || undefined,
+            companyName: provCompanyName || undefined,
             emailVerified: true,
             onboardingComplete: false,
             createdAt: new Date().toISOString(),
           },
+          ...(provCompanyName && (!ws.company?.name || ws.company.name === "Workspace")
+            ? { company: { ...(ws.company ?? { id: uid("co") }), name: provCompanyName } }
+            : {}),
         });
         return;
       }
@@ -322,24 +335,7 @@ export function OnboardingPage() {
           backendStep = 1;
         }
 
-        let savedCompanyName = "";
-        try {
-          if (typeof window !== "undefined") {
-            savedCompanyName =
-              window.sessionStorage?.getItem("ofc360_registered_company_name") ||
-              window.localStorage?.getItem("ofc360_registered_company_name") ||
-              "";
-            if (!savedCompanyName) {
-              const pendingAuth = window.sessionStorage?.getItem("aurix_pending_auth");
-              if (pendingAuth) {
-                const parsed = JSON.parse(pendingAuth);
-                if (parsed.companyName) savedCompanyName = parsed.companyName;
-              }
-            }
-          }
-        } catch {
-          /* ignore */
-        }
+        const savedCompanyName = getStoredCompanyName();
 
         try {
           const progressRes: any = await api.get("onboarding/progress");
@@ -348,12 +344,40 @@ export function OnboardingPage() {
             const profile = progress.company_profile;
             const companyName =
               profile?.company_name ||
+              profile?.companyName ||
+              profile?.name ||
               progress.organization?.company_name ||
+              progress.organization?.name ||
+              progress.organization_name ||
+              progress.company?.company_name ||
+              progress.company?.name ||
+              progress.company_name ||
+              progress.companyName ||
+              (ws.user as any)?.company_name ||
+              (ws.user as any)?.companyName ||
               (ws.company?.name && ws.company.name !== "Workspace" ? ws.company.name : "") ||
               savedCompanyName ||
               "";
 
+            if (companyName && companyName !== "Workspace" && typeof window !== "undefined") {
+              try {
+                window.sessionStorage?.setItem("ofc360_registered_company_name", companyName);
+                window.localStorage?.setItem("ofc360_registered_company_name", companyName);
+                window.sessionStorage?.setItem("company_name", companyName);
+                window.localStorage?.setItem("company_name", companyName);
+              } catch {
+                /* ignore */
+              }
+            }
+
             aurix.set({
+              user: ws.user
+                ? {
+                    ...ws.user,
+                    company_name: companyName || ws.user.company_name,
+                    companyName: companyName || ws.user.companyName,
+                  }
+                : null,
               company: {
                 id: ws.company?.id ?? uid("co"),
                 name: companyName,
@@ -373,11 +397,25 @@ export function OnboardingPage() {
           }
         } catch {
           // Progress fetch failed or 404 (brand new company) - start with default empty profile and registered company name
-          if (savedCompanyName && (!ws.company?.name || ws.company.name === "Workspace")) {
+          const fallbackCoName =
+            (ws.user as any)?.company_name ||
+            (ws.user as any)?.companyName ||
+            (ws.company?.name && ws.company.name !== "Workspace" ? ws.company.name : "") ||
+            savedCompanyName ||
+            "";
+
+          if (fallbackCoName && (!ws.company?.name || ws.company.name === "Workspace")) {
             aurix.set({
+              user: ws.user
+                ? {
+                    ...ws.user,
+                    company_name: fallbackCoName || ws.user.company_name,
+                    companyName: fallbackCoName || ws.user.companyName,
+                  }
+                : null,
               company: {
                 ...(ws.company ?? { id: uid("co") }),
-                name: savedCompanyName,
+                name: fallbackCoName,
                 email: ws.company?.email || ws.user?.email || "",
               } as any,
             });
@@ -727,18 +765,53 @@ function StepCard({ title, description, icon: Icon, children, footer }: {
   );
 }
 
-function getStoredCompanyName(): string {
+export function getStoredCompanyName(): string {
   if (typeof window === "undefined") return "";
   try {
     const direct =
       window.sessionStorage?.getItem("ofc360_registered_company_name") ||
       window.localStorage?.getItem("ofc360_registered_company_name") ||
+      window.sessionStorage?.getItem("company_name") ||
+      window.localStorage?.getItem("company_name") ||
       "";
-    if (direct) return direct;
+    if (direct && direct !== "Workspace") return direct;
+
     const pendingAuth = window.sessionStorage?.getItem("aurix_pending_auth");
     if (pendingAuth) {
       const parsed = JSON.parse(pendingAuth);
-      if (parsed.companyName) return parsed.companyName;
+      if (parsed.companyName && parsed.companyName !== "Workspace") return parsed.companyName;
+      if (parsed.company_name && parsed.company_name !== "Workspace") return parsed.company_name;
+    }
+
+    const ws = aurix.get();
+    const wsUserCo = (ws.user as any)?.company_name || (ws.user as any)?.companyName;
+    if (wsUserCo && wsUserCo !== "Workspace") return wsUserCo;
+    if (ws.company?.name && ws.company.name !== "Workspace") return ws.company.name;
+
+    const activeToken = getAccessToken();
+    if (activeToken) {
+      try {
+        const parts = activeToken.split(".");
+        if (parts.length === 3) {
+          const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+          const payload = JSON.parse(atob(b64));
+          const jwtOrg =
+            payload?.company_name ||
+            payload?.companyName ||
+            payload?.org_name ||
+            payload?.organization_name ||
+            payload?.company ||
+            payload?.organization;
+          if (typeof jwtOrg === "string" && jwtOrg.trim() && jwtOrg !== "Workspace") {
+            return jwtOrg.trim();
+          }
+          if (typeof jwtOrg === "object" && jwtOrg?.name && typeof jwtOrg.name === "string" && jwtOrg.name !== "Workspace") {
+            return jwtOrg.name.trim();
+          }
+        }
+      } catch {
+        /* ignore */
+      }
     }
   } catch {
     /* ignore */
@@ -749,10 +822,9 @@ function getStoredCompanyName(): string {
 function CompanyStep({ onNext }: { onNext: () => void }) {
   const ws = useAurix();
   const registeredName = getStoredCompanyName();
-  const initialName =
-    (ws.company?.name && ws.company.name !== "Workspace" ? ws.company.name : "") ||
-    registeredName ||
-    "";
+  const userCompanyName = (ws.user as any)?.company_name || (ws.user as any)?.companyName || "";
+  const companyStoreName = ws.company?.name && ws.company.name !== "Workspace" ? ws.company.name : "";
+  const initialName = companyStoreName || userCompanyName || registeredName || "";
   const initialEmail = ws.company?.email || ws.user?.email || "";
 
   const [c, setC] = useState({
@@ -765,17 +837,27 @@ function CompanyStep({ onNext }: { onNext: () => void }) {
   const editedFields = useRef<Set<string>>(new Set());
 
   const wsCompany = ws.company;
+  const wsUser = ws.user;
+
   useEffect(() => {
+    const userCoName = (wsUser as any)?.company_name || (wsUser as any)?.companyName || "";
+    const storeCoName = wsCompany?.name && wsCompany.name !== "Workspace" ? wsCompany.name : "";
     const effectiveName =
-      (wsCompany?.name && wsCompany.name !== "Workspace" ? wsCompany.name : "") ||
+      storeCoName ||
+      userCoName ||
       getStoredCompanyName() ||
       "";
-    const effectiveEmail = wsCompany?.email || ws.user?.email || "";
+    const effectiveEmail = wsCompany?.email || wsUser?.email || "";
 
     setC((prev) => {
       let changed = false;
       const next = { ...prev };
-      if (!editedFields.current.has("name") && effectiveName && next.name !== effectiveName) {
+      const canUpdateName =
+        (!next.name || next.name === "Workspace" || !editedFields.current.has("name")) &&
+        effectiveName &&
+        next.name !== effectiveName;
+
+      if (canUpdateName) {
         next.name = effectiveName;
         changed = true;
       }
@@ -813,7 +895,7 @@ function CompanyStep({ onNext }: { onNext: () => void }) {
       }
       return changed ? next : prev;
     });
-  }, [wsCompany, ws.user?.email]);
+  }, [wsCompany, wsUser]);
 
   function set<K extends keyof typeof c>(k: K, v: any) {
     editedFields.current.add(k as string);

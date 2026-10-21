@@ -77,6 +77,16 @@ export function LoginPage() {
       const login = parseLoginResponse(res, email);
       if (login?.status === "authenticated") {
         const { accessToken, refreshToken, user } = login;
+        if (user.company_name && user.company_name !== "Workspace") {
+          try {
+            window.sessionStorage?.setItem("ofc360_registered_company_name", user.company_name);
+            window.localStorage?.setItem("ofc360_registered_company_name", user.company_name);
+            window.sessionStorage?.setItem("company_name", user.company_name);
+            window.localStorage?.setItem("company_name", user.company_name);
+          } catch {
+            /* ignore */
+          }
+        }
         persistAuthSession(user, { accessToken, refreshToken });
         toast.success(`Welcome back, ${user.name}!`);
 

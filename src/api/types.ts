@@ -17,6 +17,9 @@ export interface AuthUserPayload {
   created_at?: string;
   company_id?: string | number;
   company_name?: string;
+  companyName?: string;
+  company?: { id?: string | number; name?: string; company_name?: string };
+  organization?: { id?: string | number; name?: string; company_name?: string };
 }
 
 export interface LoginData {
