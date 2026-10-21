@@ -50,20 +50,67 @@ export function VerifyEmailPage() {
     queryVerificationId || sessionVerificationId || null,
   );
 
+  const isAlreadyVerifiedStorage =
+    typeof window !== "undefined" &&
+    Boolean(effectiveEmail) &&
+    (window.sessionStorage?.getItem("ofc360_email_verified") === effectiveEmail ||
+      window.localStorage?.getItem("ofc360_email_verified") === effectiveEmail);
+
+  const proceedToNextStep = () => {
+    try {
+      if (typeof window !== "undefined" && effectiveEmail) {
+        window.sessionStorage?.setItem("ofc360_email_verified", effectiveEmail);
+        window.localStorage?.setItem("ofc360_email_verified", effectiveEmail);
+      }
+    } catch {
+      /* ignore */
+    }
+    if (ws.user) {
+      aurix.set({ user: { ...ws.user, emailVerified: true } });
+    } else if (effectiveEmail) {
+      aurix.set({
+        user: {
+          id:
+            (typeof window !== "undefined" &&
+              window.sessionStorage?.getItem("ofc360_pending_verification_user_id")) ||
+            "",
+          fullName: "",
+          email: effectiveEmail,
+          phone: "",
+          role: "hr_admin",
+          companyId: "workspace",
+          emailVerified: true,
+          onboardingComplete: false,
+          createdAt: new Date().toISOString(),
+        },
+      });
+    }
+    const currentUser = aurix.get().user;
+    const dest = currentUser?.onboardingComplete ? "/dashboard" : "/onboarding";
+    navigate({ to: dest as any, replace: true });
+  };
+
   useEffect(() => {
     if (ws.isRestoring) return;
 
-    // If an email exists to verify, allow the user to remain on this page
+    // 1. If email is already verified (in store or storage), move forward to onboarding/dashboard!
+    if (ws.user?.emailVerified || isAlreadyVerifiedStorage) {
+      if (!ws.user?.emailVerified && ws.user) {
+        aurix.set({ user: { ...ws.user, emailVerified: true } });
+      }
+      const dest = ws.user?.onboardingComplete ? "/dashboard" : "/onboarding";
+      navigate({ to: dest as any, replace: true });
+      return;
+    }
+
+    // 2. If an email exists to verify, allow the user to remain on this page
     if (effectiveEmail) return;
 
-    // Only redirect if there's no email to verify
+    // 3. Only redirect if there's no email to verify
     if (!ws.user) {
       navigate({ to: "/login" });
-    } else if (ws.user.emailVerified) {
-      const dest = ws.user.onboardingComplete ? "/dashboard" : "/onboarding";
-      navigate({ to: dest as any });
     }
-  }, [ws.user, ws.isRestoring, effectiveEmail, navigate]);
+  }, [ws.user, ws.isRestoring, effectiveEmail, isAlreadyVerifiedStorage, navigate]);
 
   useEffect(() => {
     if (expiryTime <= 0) return;
@@ -115,6 +162,15 @@ export function VerifyEmailPage() {
       const message = response?.data?.message || response?.message;
 
       if (isSuccess) {
+        try {
+          if (typeof window !== "undefined" && effectiveEmail) {
+            window.sessionStorage?.setItem("ofc360_email_verified", effectiveEmail);
+            window.localStorage?.setItem("ofc360_email_verified", effectiveEmail);
+          }
+        } catch {
+          /* ignore */
+        }
+
         // 1. Check if the backend verification endpoint returned tokens + user
         const loginResult = parseLoginResponse(response, effectiveEmail);
         if (loginResult?.status === "authenticated") {
@@ -147,7 +203,7 @@ export function VerifyEmailPage() {
           const destination = isOnboardingComplete
             ? getSafeRedirectUrl(redirectParam, loginResult.user)
             : "/onboarding";
-          setTimeout(() => navigate({ to: destination as any }), 1000);
+          setTimeout(() => navigate({ to: destination as any }), 600);
           return;
         }
 
@@ -195,12 +251,24 @@ export function VerifyEmailPage() {
           ? getSafeRedirectUrl(redirectParam, currentUser)
           : "/onboarding";
 
-        setTimeout(() => navigate({ to: destination as any }), 1100);
+        setTimeout(() => navigate({ to: destination as any }), 600);
       } else {
         setError(message || "Verification failed");
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Incorrect or expired code";
+      const isAlreadyVerified =
+        typeof message === "string" &&
+        (message.toLowerCase().includes("already verified") ||
+          message.toLowerCase().includes("already active") ||
+          message.toLowerCase().includes("already completed"));
+
+      if (isAlreadyVerified) {
+        toast.success("Email is already verified! Moving forward to onboarding...");
+        proceedToNextStep();
+        return;
+      }
+
       setError(message);
     } finally {
       setLoading(false);
@@ -291,6 +359,15 @@ export function VerifyEmailPage() {
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           Verify and continue
+        </Button>
+
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full text-xs"
+          onClick={proceedToNextStep}
+        >
+          Already verified? Continue to onboarding →
         </Button>
 
         <div className="flex items-center justify-between text-xs text-muted-foreground">

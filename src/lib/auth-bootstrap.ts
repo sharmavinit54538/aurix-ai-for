@@ -118,7 +118,9 @@ export async function bootstrapAuth(): Promise<void> {
     // 2. Determine if we should attempt a session refresh:
     // Call refresh ONLY if ofc_session_hint exists to avoid pre-login 401
     if (!hasSessionHint()) {
-      aurix.set({ user: null, company: null });
+      if (!ws.user || ws.user.onboardingComplete) {
+        aurix.set({ user: null, company: null });
+      }
       finish();
       return;
     }

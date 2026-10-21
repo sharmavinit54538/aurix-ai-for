@@ -167,14 +167,53 @@ export function OnboardingPage() {
   useEffect(() => {
     if (token) { setResuming(false); return; } // skip for employee onboarding
     if (ws.isRestoring) return;
+
+    // Check if verification was marked in storage
+    const storedVerifiedEmail =
+      typeof window !== "undefined"
+        ? window.sessionStorage?.getItem("ofc360_email_verified") ||
+          window.localStorage?.getItem("ofc360_email_verified")
+        : null;
+
     if (!ws.user) {
+      const pendingEmail =
+        storedVerifiedEmail ||
+        (typeof window !== "undefined"
+          ? window.sessionStorage?.getItem("ofc360_pending_verification_email")
+          : null);
+
+      if (pendingEmail) {
+        aurix.set({
+          user: {
+            id:
+              (typeof window !== "undefined" &&
+                window.sessionStorage?.getItem("ofc360_pending_verification_user_id")) ||
+              "",
+            fullName: "",
+            email: pendingEmail,
+            phone: "",
+            role: "hr_admin",
+            companyId: "workspace",
+            emailVerified: true,
+            onboardingComplete: false,
+            createdAt: new Date().toISOString(),
+          },
+        });
+        return;
+      }
       navigate({ to: "/register" });
       return;
     }
+
     if (!ws.user.emailVerified) {
+      if (storedVerifiedEmail && storedVerifiedEmail.toLowerCase() === ws.user.email.toLowerCase()) {
+        aurix.set({ user: { ...ws.user, emailVerified: true } });
+        return;
+      }
       navigate({ to: "/verify-email" as any });
       return;
     }
+
     if (ws.user.onboardingComplete) {
       navigate({ to: "/dashboard" });
       return;
