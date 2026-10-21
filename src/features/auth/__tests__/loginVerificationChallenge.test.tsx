@@ -51,9 +51,11 @@ describe("Login and Email Verification Challenge Flow", () => {
         refresh_token: "mock-valid-refresh-token",
         user: {
           id: "u-1",
-          email: "employee@ofc360.com",
+          email: "admin@ofc360.com",
           name: "John Doe",
-          role: "employee",
+          role: "hr_admin",
+          is_verified: true,
+          onboarding_completed: true,
         },
       },
     });
@@ -61,9 +63,9 @@ describe("Login and Email Verification Challenge Flow", () => {
     render(<LoginPage />);
 
     fireEvent.change(screen.getByLabelText(/work email/i), {
-      target: { value: "employee@ofc360.com" },
+      target: { value: "admin@ofc360.com" },
     });
-    fireEvent.change(screen.getByLabelText(/password/i), {
+    fireEvent.change(screen.getByLabelText(/^password$/i), {
       target: { value: "SecurePass123!" },
     });
 
@@ -93,7 +95,7 @@ describe("Login and Email Verification Challenge Flow", () => {
     fireEvent.change(screen.getByLabelText(/work email/i), {
       target: { value: "unverified@ofc360.com" },
     });
-    fireEvent.change(screen.getByLabelText(/password/i), {
+    fireEvent.change(screen.getByLabelText(/^password$/i), {
       target: { value: "SecurePass123!" },
     });
 
@@ -123,7 +125,7 @@ describe("Login and Email Verification Challenge Flow", () => {
     });
   });
 
-  it("VerifyEmailPage reads email from URL params/sessionStorage, submits OTP, and handles response with tokens", async () => {
+  it("VerifyEmailPage routes user to /onboarding when onboarding is pending, then to dashboard once complete", async () => {
     window.history.pushState({}, "Verify", "/verify-email?email=unverified%40ofc360.com&mode=login");
     window.sessionStorage.setItem("ofc360_pending_verification_email", "unverified@ofc360.com");
 
@@ -137,7 +139,8 @@ describe("Login and Email Verification Challenge Flow", () => {
           id: "u-99",
           email: "unverified@ofc360.com",
           name: "Verified User",
-          role: "employee",
+          role: "hr_admin",
+          onboarding_completed: false,
         },
       },
     });
@@ -157,15 +160,100 @@ describe("Login and Email Verification Challenge Flow", () => {
     const verifyBtn = screen.getByRole("button", { name: /verify/i });
     fireEvent.click(verifyBtn);
 
-    await waitFor(() => {
-      expect(authService.verifyEmail).toHaveBeenCalledWith(
-        expect.objectContaining({
-          email: "unverified@ofc360.com",
-          otp: "123456",
-          code: "123456",
-        }),
-      );
-      expect(toast.success).toHaveBeenCalledWith("Email verified successfully!");
+    await waitFor(
+      () => {
+        expect(authService.verifyEmail).toHaveBeenCalledWith(
+          expect.objectContaining({
+            email: "unverified@ofc360.com",
+            otp: "123456",
+            code: "123456",
+          }),
+        );
+        expect(toast.success).toHaveBeenCalledWith("Email verified successfully!");
+        // Since onboarding_completed is false, destination must be /onboarding
+        expect(mockNavigate).toHaveBeenCalledWith({ to: "/onboarding" });
+      },
+      { timeout: 3000 },
+    );
+  });
+
+  it("VerifyEmailPage routes user directly to dashboard when onboarding is already completed", async () => {
+    window.history.pushState({}, "Verify", "/verify-email?email=onboarded%40ofc360.com&mode=login");
+    window.sessionStorage.setItem("ofc360_pending_verification_email", "onboarded@ofc360.com");
+
+    vi.mocked(authService.verifyEmail).mockResolvedValueOnce({
+      success: true,
+      message: "Email verified successfully!",
+      data: {
+        access_token: "token-abc",
+        refresh_token: "token-refresh",
+        user: {
+          id: "u-101",
+          email: "onboarded@ofc360.com",
+          name: "Onboarded Admin",
+          role: "hr_admin",
+          is_verified: true,
+          onboarding_completed: true,
+        },
+      },
     });
+
+    render(<VerifyEmailPage />);
+
+    const otpInput = screen.getByRole("textbox");
+    fireEvent.change(otpInput, { target: { value: "654321" } });
+
+    const verifyBtn = screen.getByRole("button", { name: /verify/i });
+    fireEvent.click(verifyBtn);
+
+    await waitFor(
+      () => {
+        expect(toast.success).toHaveBeenCalledWith("Email verified successfully!");
+        expect(mockNavigate).toHaveBeenCalledWith({ to: "/dashboard" });
+      },
+      { timeout: 3000 },
+    );
+  });
+
+  it("VerifyEmailPage routes user to /onboarding when verify-email succeeds without tokens (standard registration flow)", async () => {
+    window.history.pushState({}, "Verify", "/verify-email?email=newuser%40ofc360.com");
+    window.sessionStorage.setItem("ofc360_pending_verification_email", "newuser@ofc360.com");
+
+    aurix.set({
+      user: {
+        id: "u-new",
+        fullName: "New Admin",
+        email: "newuser@ofc360.com",
+        phone: "",
+        role: "hr_admin",
+        companyId: "workspace",
+        emailVerified: false,
+        onboardingComplete: false,
+        createdAt: new Date().toISOString(),
+      },
+    });
+
+    vi.mocked(authService.verifyEmail).mockResolvedValueOnce({
+      success: true,
+      message: "Email verified successfully.",
+      data: null,
+    });
+
+    render(<VerifyEmailPage />);
+
+    const otpInput = screen.getByRole("textbox");
+    fireEvent.change(otpInput, { target: { value: "112233" } });
+
+    const verifyBtn = screen.getByRole("button", { name: /verify/i });
+    fireEvent.click(verifyBtn);
+
+    await waitFor(
+      () => {
+        expect(toast.success).toHaveBeenCalledWith("Email verified successfully.");
+        expect(mockNavigate).toHaveBeenCalledWith({ to: "/onboarding" });
+        expect(aurix.get().user?.emailVerified).toBe(true);
+      },
+      { timeout: 3000 },
+    );
   });
 });

@@ -40,6 +40,16 @@ export function VerifyEmailPage() {
       : null;
   const isLoginMode = queryMode === "login" || sessionMode === "login";
 
+  const queryVerificationId =
+    searchParams.get("verification_id") || searchParams.get("verificationId");
+  const sessionVerificationId =
+    typeof window !== "undefined" && window.sessionStorage
+      ? window.sessionStorage.getItem("ofc360_pending_verification_temp_token")
+      : null;
+  const [verificationId, setVerificationId] = useState<string | null>(
+    queryVerificationId || sessionVerificationId || null,
+  );
+
   useEffect(() => {
     if (ws.isRestoring) return;
 
@@ -50,7 +60,8 @@ export function VerifyEmailPage() {
     if (!ws.user) {
       navigate({ to: "/login" });
     } else if (ws.user.emailVerified) {
-      navigate({ to: "/onboarding" });
+      const dest = ws.user.onboardingComplete ? "/dashboard" : "/onboarding";
+      navigate({ to: dest as any });
     }
   }, [ws.user, ws.isRestoring, effectiveEmail, navigate]);
 
@@ -83,11 +94,16 @@ export function VerifyEmailPage() {
     setLoading(true);
 
     try {
-      const response = (await authService.verifyEmail({
+      const payload: any = {
         email: effectiveEmail,
         otp: code,
         code: code,
-      })) as any;
+      };
+      if (verificationId) {
+        payload.verification_id = verificationId;
+      }
+
+      const response = (await authService.verifyEmail(payload)) as any;
 
       const isSuccess = Boolean(
         response?.data?.success ??
@@ -120,17 +136,44 @@ export function VerifyEmailPage() {
 
           const params = new URLSearchParams(window.location.search);
           const redirectParam = params.get("redirect") || params.get("callbackUrl");
-          const destination = getSafeRedirectUrl(redirectParam, loginResult.user);
+
+          const isOnboardingComplete = Boolean(
+            loginResult.user.onboarding_completed ||
+              (loginResult.user as any).onboardingComplete ||
+              ws.user?.onboardingComplete,
+          );
+
+          // Once verified, send to /onboarding if not finished yet, or directly to dashboard
+          const destination = isOnboardingComplete
+            ? getSafeRedirectUrl(redirectParam, loginResult.user)
+            : "/onboarding";
           setTimeout(() => navigate({ to: destination as any }), 1000);
           return;
         }
 
-        // 2. If no tokens returned directly, update verified flag and route based on mode
+        // 2. If no tokens returned directly, update verified flag and route to onboarding then dashboard
         setSuccess(true);
         toast.success(message || "Email verified successfully!");
 
         if (ws.user) {
           aurix.set({ user: { ...ws.user, emailVerified: true } });
+        } else if (effectiveEmail) {
+          aurix.set({
+            user: {
+              id:
+                (typeof window !== "undefined" &&
+                  window.sessionStorage?.getItem("ofc360_pending_verification_user_id")) ||
+                "",
+              fullName: "",
+              email: effectiveEmail,
+              phone: "",
+              role: "hr_admin",
+              companyId: "workspace",
+              emailVerified: true,
+              onboardingComplete: false,
+              createdAt: new Date().toISOString(),
+            },
+          });
         }
 
         try {
@@ -145,19 +188,14 @@ export function VerifyEmailPage() {
         const params = new URLSearchParams(window.location.search);
         const redirectParam = params.get("redirect") || params.get("callbackUrl");
 
-        if (isLoginMode) {
-          setTimeout(() => {
-            navigate({
-              to: "/login" as any,
-              search: {
-                email: effectiveEmail,
-                ...(redirectParam ? { redirect: redirectParam } : {}),
-              } as any,
-            });
-          }, 1100);
-        } else {
-          setTimeout(() => navigate({ to: "/onboarding" as any }), 1100);
-        }
+        const currentUser = aurix.get().user;
+        const isOnboardingComplete = Boolean(currentUser?.onboardingComplete);
+
+        const destination = isOnboardingComplete
+          ? getSafeRedirectUrl(redirectParam, currentUser)
+          : "/onboarding";
+
+        setTimeout(() => navigate({ to: destination as any }), 1100);
       } else {
         setError(message || "Verification failed");
       }
@@ -176,10 +214,23 @@ export function VerifyEmailPage() {
     }
     setResending(true);
     try {
-      const response = (await authService.resendOtp({ email: effectiveEmail })) as any;
+      const payload: any = { email: effectiveEmail };
+      if (verificationId) {
+        payload.verification_id = verificationId;
+      }
+      const response = (await authService.resendOtp(payload)) as any;
       const isSuccess = Boolean(response?.data?.success ?? response?.success ?? true);
       const message = response?.data?.message || response?.message;
       if (isSuccess) {
+        const newVid = response?.data?.verification_id ?? response?.verification_id;
+        if (newVid) {
+          setVerificationId(newVid);
+          try {
+            sessionStorage.setItem("ofc360_pending_verification_temp_token", newVid);
+          } catch {
+            /* ignore */
+          }
+        }
         setExpiryTime(600); // 10 minutes OTP expiration
         setResendCooldown(30);
         setCode("");
@@ -217,12 +268,12 @@ export function VerifyEmailPage() {
         effectiveEmail ? `We sent a 6-digit code to ${effectiveEmail}` : "We sent you a 6-digit code"
       }
       footer={
-        <div className="text-center text-sm">
+        <>
           Want to use a different account?{" "}
           <Link to="/login" className="font-medium text-foreground underline-offset-4 hover:underline">
             Sign in
           </Link>
-        </div>
+        </>
       }
     >
       <form onSubmit={onSubmit} className="space-y-5" noValidate>

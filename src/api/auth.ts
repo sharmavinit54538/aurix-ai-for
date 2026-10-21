@@ -107,6 +107,7 @@ export const authService = {
   /**
    * Verifies the email address with a 6-digit OTP.
    * Sends both 'otp' and 'code' keys to support various backend schema variants.
+   * If verification_id is provided, utilizes the login verification endpoint /api/v1/auth/verify-email-otp.
    */
   async verifyEmail(payload: VerifyEmailPayload): Promise<ApiResponse> {
     const body = {
@@ -115,11 +116,24 @@ export const authService = {
       code: payload.code || payload.otp || "",
       ...payload,
     };
+    if (payload.verification_id) {
+      try {
+        return await api.post<ApiResponse>(AUTH_ENDPOINTS.verifyEmailOtp, {
+          verification_id: payload.verification_id,
+          otp: payload.otp || payload.code || "",
+          email: payload.email,
+        });
+      } catch (err: any) {
+        if (err?.status !== 404 && err?.status !== 405) {
+          throw err;
+        }
+      }
+    }
     try {
       return await api.post<ApiResponse>(AUTH_ENDPOINTS.verifyEmail, body);
     } catch (err: any) {
       if (err?.status === 404) {
-        return await api.post<ApiResponse>("/api/v1/auth/verify-email-otp", body);
+        return await api.post<ApiResponse>(AUTH_ENDPOINTS.verifyEmailOtp, body);
       }
       throw err;
     }
@@ -127,17 +141,30 @@ export const authService = {
 
   /**
    * Resends verification OTP to the user's email.
+   * If verification_id is provided, utilizes the login resend endpoint /api/v1/auth/resend-email-otp.
    */
   async resendOtp(payload: ResendOtpPayload): Promise<ApiResponse> {
     const body = {
       email: payload.email,
       ...payload,
     };
+    if (payload.verification_id) {
+      try {
+        return await api.post<ApiResponse>(AUTH_ENDPOINTS.resendEmailOtp, {
+          verification_id: payload.verification_id,
+          email: payload.email,
+        });
+      } catch (err: any) {
+        if (err?.status !== 404 && err?.status !== 405) {
+          throw err;
+        }
+      }
+    }
     try {
       return await api.post<ApiResponse>(AUTH_ENDPOINTS.resendOtp, body);
     } catch (err: any) {
       if (err?.status === 404) {
-        return await api.post<ApiResponse>("/api/v1/auth/resend-email-otp", body);
+        return await api.post<ApiResponse>(AUTH_ENDPOINTS.resendEmailOtp, body);
       }
       throw err;
     }

@@ -106,15 +106,19 @@ export function LoginPage() {
           // ignore sessionStorage write errors
         }
 
+        const existingUser = aurix.get().user;
         aurix.set({
           user: {
-            id: login.userId || "",
-            fullName: "",
+            id: login.userId || existingUser?.id || "",
+            fullName: existingUser?.fullName || "",
             email: targetEmail,
-            role: "employee",
+            phone: existingUser?.phone || "",
+            role: existingUser?.role || "hr_admin",
+            companyId: existingUser?.companyId || "workspace",
             emailVerified: false,
-            onboardingComplete: false,
-          } as any,
+            onboardingComplete: existingUser?.onboardingComplete ?? false,
+            createdAt: existingUser?.createdAt || new Date().toISOString(),
+          },
         });
 
         const params = new URLSearchParams(window.location.search);
@@ -124,11 +128,17 @@ export function LoginPage() {
         searchParams.set("email", targetEmail);
         searchParams.set("mode", "login");
         if (login.userId) searchParams.set("userId", String(login.userId));
+        if (login.tempToken) searchParams.set("verification_id", login.tempToken);
         if (redirectParam) searchParams.set("redirect", redirectParam);
 
         navigate({
           to: (`/verify-email?${searchParams.toString()}`) as any,
-          search: { email: targetEmail, mode: "login", ...(redirectParam ? { redirect: redirectParam } : {}) } as any,
+          search: {
+            email: targetEmail,
+            mode: "login",
+            ...(login.tempToken ? { verification_id: login.tempToken } : {}),
+            ...(redirectParam ? { redirect: redirectParam } : {}),
+          } as any,
         });
         return;
       }
