@@ -48,20 +48,23 @@ export function VerifyEmailPage() {
 
     try {
       const email = ws.user?.email || "";
-      const res = await authService.verifyEmail({
+      const response = (await authService.verifyEmail({
         email,
         otp: code,
-      });
+      })) as any;
 
-      if (res.success) {
+      const isSuccess = Boolean(response?.data?.success ?? response?.success);
+      const message = response?.data?.message || response?.message;
+
+      if (isSuccess) {
         if (ws.user) {
           aurix.set({ user: { ...ws.user, emailVerified: true } });
         }
         setSuccess(true);
-        toast.success(res.message || "Email verified successfully!");
+        toast.success(message || "Email verified successfully!");
         setTimeout(() => navigate({ to: "/onboarding" }), 1100);
       } else {
-        setError(res.message || "Verification failed");
+        setError(message || "Verification failed");
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Incorrect or expired code";
@@ -76,12 +79,14 @@ export function VerifyEmailPage() {
     const payload = { email };
     setResending(true);
     try {
-      const res = await authService.resendOtp(payload);
-      if (res.success) {
+      const response = (await authService.resendOtp(payload)) as any;
+      const isSuccess = Boolean(response?.data?.success ?? response?.success);
+      const message = response?.data?.message || response?.message;
+      if (isSuccess) {
         setSecondsLeft(30);
-        toast.success(res.message || "OTP sent successfully.");
+        toast.success(message || "OTP sent successfully.");
       } else {
-        toast.error(res.message || "Failed to resend code");
+        toast.error(message || "Failed to resend code");
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Too many attempts, please try again later.";

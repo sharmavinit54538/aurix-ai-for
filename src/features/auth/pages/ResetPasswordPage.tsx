@@ -69,19 +69,22 @@ export function ResetPasswordPage() {
     setLoading(true);
 
     try {
-      const res = (await authService.resetPassword({
+      const response = (await authService.resetPassword({
         token: resetToken,
         password: password,
         confirm_password: confirmPassword,
       })) as any;
 
-      if (res.success) {
-        toast.success("Password updated successfully.");
+      const isSuccess = Boolean(response?.data?.success ?? response?.success);
+      const message = response?.data?.message || response?.message;
+
+      if (isSuccess) {
+        toast.success(message || "Password updated successfully.");
         setTimeout(() => {
           navigate({ to: "/login" });
         }, 2000);
       } else {
-        toast.error(res.message || "Failed to reset password.");
+        toast.error(message || "Failed to reset password.");
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to reset password.";

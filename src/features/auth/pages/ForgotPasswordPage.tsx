@@ -25,16 +25,18 @@ export function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      const res = (await authService.forgotPassword({ email })) as any;
-      if (res.success) {
-        toast.success(res.message || "OTP sent successfully.");
+      const response = (await authService.forgotPassword({ email })) as any;
+      const isSuccess = Boolean(response?.data?.success ?? response?.success);
+      const message = response?.data?.message || response?.message;
+      if (isSuccess) {
+        toast.success(message || "OTP sent successfully.");
         navigate({
           to: "/verify-reset-otp" as any,
           search: { email } as any,
           state: { email } as Record<string, string>,
         });
       } else {
-        toast.error(res.message || "Failed to send OTP.");
+        toast.error(message || "Failed to send OTP.");
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "User not found or connection error";

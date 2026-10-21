@@ -100,9 +100,11 @@ export async function bootstrapAuth(): Promise<void> {
     if (tokens?.accessToken && !isAccessTokenExpired(tokens.accessToken)) {
       if (!ws.user) {
         try {
-          const res = await authService.getMe();
-          if (res.success && res.data) {
-            aurix.set(mapAuthUser(res.data));
+          const res = (await authService.getMe()) as any;
+          const isSuccess = Boolean(res?.data?.success ?? res?.success);
+          const userData = res?.data?.data ?? res?.data;
+          if (isSuccess && userData) {
+            aurix.set(mapAuthUser(userData));
             setSessionHint();
           }
         } catch {
@@ -124,9 +126,11 @@ export async function bootstrapAuth(): Promise<void> {
     // 3. Attempt silent session refresh via HttpOnly cookie:
     try {
       await authService.refresh({ silent: true });
-      const res = await authService.getMe();
-      if (res.success && res.data) {
-        aurix.set(mapAuthUser(res.data));
+      const res = (await authService.getMe()) as any;
+      const isSuccess = Boolean(res?.data?.success ?? res?.success);
+      const userData = res?.data?.data ?? res?.data;
+      if (isSuccess && userData) {
+        aurix.set(mapAuthUser(userData));
         setSessionHint();
       } else {
         clearTokens();

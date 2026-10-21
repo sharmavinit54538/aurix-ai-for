@@ -86,11 +86,17 @@ export function RegisterPage() {
         password: form.password,
         company_name: form.companyName,
       };
-      const res = (await authService.register(payload)) as any;
-      if (res.success) {
+      const response = (await authService.register(payload)) as any;
+      const isSuccess = Boolean(response?.data?.success ?? response?.success);
+      const message =
+        response?.data?.message ||
+        response?.message ||
+        (isSuccess ? "Registration successful!" : "Registration failed");
+
+      if (isSuccess) {
         aurix.set({
           user: {
-            id: "",
+            id: response?.data?.user?.id ?? response?.user?.id ?? "",
             fullName: form.fullName,
             email: form.email,
             phone: form.phone,
@@ -106,13 +112,13 @@ export function RegisterPage() {
           },
         });
 
-        toast.success(res.message || "Registration successful!");
+        toast.success(message);
         navigate({ to: "/verify-email" as any });
       } else {
-        toast.error(res.message || "Registration failed");
+        toast.error(message);
       }
     } catch (err: unknown) {
-      const apiErr = err as { data?: { errors?: Array<{ field?: string | null; message: string }> }; message?: string };
+      const apiErr = err as { data?: { errors?: Array<{ field?: string | null; message: string }> }; message?: string } | null | undefined;
       const apiErrors = apiErr?.data?.errors ?? [];
       if (apiErrors.length > 0) {
         const fieldMap: Record<string, string> = {
@@ -127,9 +133,9 @@ export function RegisterPage() {
           }
         });
         if (Object.keys(fe).length > 0) setErrors(fe);
-        toast.error(apiErrors[0]?.message ?? apiErr.message ?? "Validation failed");
+        toast.error(apiErrors[0]?.message ?? apiErr?.message ?? "Validation failed");
       } else {
-        toast.error(apiErr.message || "Registration failed. Please check your details.");
+        toast.error(apiErr?.message || "Registration failed. Please check your details.");
       }
     } finally {
       setLoading(false);

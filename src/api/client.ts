@@ -70,7 +70,11 @@ export async function apiRequest<T = unknown>(
       headers,
       timeout: options.timeout,
     });
-    return response.data;
+    const resp = response as any;
+    if (resp && typeof resp === "object" && "status" in resp && "data" in resp) {
+      return resp.data;
+    }
+    return (resp?.data !== undefined && resp.data !== null ? resp.data : (resp ?? null)) as T;
   } catch (error) {
     if (axios.isAxiosError(error) && error.message === "Failed to refresh session") {
       throw new ApiError("Session expired. Please log in again.", 401, null);

@@ -57,22 +57,26 @@ export function VerifyResetOtpPage() {
     setLoading(true);
 
     try {
-      const res = await authService.verifyResetOtp({
+      const response = (await authService.verifyResetOtp({
         email,
         otp: code,
-      });
+      })) as any;
 
-      if (res.success && res.data) {
-        toast.success(res.message || "OTP verified successfully!");
-        const { resetToken } = res.data as { resetToken: string };
+      const isSuccess = Boolean(response?.data?.success ?? response?.success);
+      const message = response?.data?.message || response?.message;
+      const dataPayload = response?.data?.data ?? response?.data;
+
+      if (isSuccess && dataPayload) {
+        toast.success(message || "OTP verified successfully!");
+        const { resetToken } = dataPayload as { resetToken: string };
         navigate({
           to: "/reset-password",
           search: { email, resetToken },
           state: { email, resetToken } as Record<string, string>,
         });
       } else {
-        setError(res.message || "Verification failed");
-        toast.error(res.message || "Verification failed");
+        setError(message || "Verification failed");
+        toast.error(message || "Verification failed");
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Incorrect or expired code";
@@ -88,14 +92,16 @@ export function VerifyResetOtpPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await authService.forgotPassword({ email });
-      if (res.success) {
+      const response = (await authService.forgotPassword({ email })) as any;
+      const isSuccess = Boolean(response?.data?.success ?? response?.success);
+      const message = response?.data?.message || response?.message;
+      if (isSuccess) {
         setExpiryTime(300);
         setResendCooldown(30);
         setCode("");
-        toast.success(res.message || "New OTP sent successfully!");
+        toast.success(message || "New OTP sent successfully!");
       } else {
-        toast.error(res.message || "Failed to resend OTP");
+        toast.error(message || "Failed to resend OTP");
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to resend OTP";
