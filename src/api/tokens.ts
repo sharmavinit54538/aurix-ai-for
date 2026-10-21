@@ -20,22 +20,52 @@ import { API_BASE_URL } from "./baseUrl";
 import { logger } from "@/lib/logger";
 
 export const SESSION_HINT_KEY = "ofc_session_hint";
+export const ACCESS_TOKEN_KEY = "aurix:access_token";
 export const REFRESH_TOKEN_KEY = "aurix:refresh_token";
-const LEGACY_TOKENS_KEY = "aurix:tokens";
+export const TOKENS_KEY = "aurix:tokens";
 
 let inMemoryAccessToken: string | null = null;
 let inMemoryRefreshToken: string | null = null;
 let isSessionExpiredHandled = false;
 
-// Initial migration: Clean up any legacy persisted tokens from previous versions
-if (typeof window !== "undefined") {
-  safeStorage.removeItem(LEGACY_TOKENS_KEY);
-  safeStorage.removeItem(REFRESH_TOKEN_KEY);
+// Initialize in-memory cache from safeStorage if available on boot
+function hydrateTokensFromStorage(): void {
+  if (typeof window === "undefined") return;
+  if (!inMemoryAccessToken) {
+    const storedAccess = safeStorage.getItem(ACCESS_TOKEN_KEY);
+    if (storedAccess) {
+      inMemoryAccessToken = storedAccess;
+    } else {
+      const storedTokens = safeStorage.getItem(TOKENS_KEY);
+      if (storedTokens) {
+        try {
+          const parsed = JSON.parse(storedTokens);
+          if (parsed?.accessToken) {
+            inMemoryAccessToken = parsed.accessToken;
+            if (!inMemoryRefreshToken && parsed?.refreshToken) {
+              inMemoryRefreshToken = parsed.refreshToken;
+            }
+          }
+        } catch {
+          /* ignore */
+        }
+      }
+    }
+  }
+  if (!inMemoryRefreshToken) {
+    const storedRefresh = safeStorage.getItem(REFRESH_TOKEN_KEY);
+    if (storedRefresh) {
+      inMemoryRefreshToken = storedRefresh;
+    }
+  }
 }
+
+// Hydrate immediately on module load
+hydrateTokensFromStorage();
 
 export function hasSessionHint(): boolean {
   if (typeof window === "undefined") return false;
-  return safeStorage.getItem(SESSION_HINT_KEY) === "1";
+  return safeStorage.getItem(SESSION_HINT_KEY) === "1" || Boolean(safeStorage.getItem(ACCESS_TOKEN_KEY)) || Boolean(safeStorage.getItem(TOKENS_KEY));
 }
 
 export function setSessionHint(): void {
@@ -54,6 +84,9 @@ export interface Tokens {
 }
 
 export function getTokens(): Tokens | null {
+  if (!inMemoryAccessToken) {
+    hydrateTokensFromStorage();
+  }
   if (!inMemoryAccessToken) return null;
   return {
     accessToken: inMemoryAccessToken,
@@ -63,10 +96,23 @@ export function getTokens(): Tokens | null {
 
 export function setTokens(tokens: { accessToken?: string; refreshToken?: string } | null) {
   inMemoryAccessToken = tokens?.accessToken || null;
-  inMemoryRefreshToken = tokens?.refreshToken || null;
+  inMemoryRefreshToken = tokens?.refreshToken || inMemoryRefreshToken || null;
 
   if (tokens?.accessToken) {
     setSessionHint();
+    if (typeof window !== "undefined") {
+      safeStorage.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
+      if (tokens.refreshToken) {
+        safeStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
+      }
+      safeStorage.setItem(
+        TOKENS_KEY,
+        JSON.stringify({
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken || inMemoryRefreshToken,
+        }),
+      );
+    }
   }
 
   // When clearing all tokens (null)
@@ -74,16 +120,18 @@ export function setTokens(tokens: { accessToken?: string; refreshToken?: string 
     inMemoryAccessToken = null;
     inMemoryRefreshToken = null;
     clearSessionHint();
-  }
-
-  // Ensure no residual tokens exist in storage
-  if (typeof window !== "undefined") {
-    safeStorage.removeItem(REFRESH_TOKEN_KEY);
-    safeStorage.removeItem(LEGACY_TOKENS_KEY);
+    if (typeof window !== "undefined") {
+      safeStorage.removeItem(ACCESS_TOKEN_KEY);
+      safeStorage.removeItem(REFRESH_TOKEN_KEY);
+      safeStorage.removeItem(TOKENS_KEY);
+    }
   }
 }
 
 export function getAccessToken(): string | null {
+  if (!inMemoryAccessToken) {
+    hydrateTokensFromStorage();
+  }
   return inMemoryAccessToken;
 }
 
@@ -91,15 +139,34 @@ export function setAccessToken(token: string | null) {
   inMemoryAccessToken = token;
   if (token) {
     setSessionHint();
+    if (typeof window !== "undefined") {
+      safeStorage.setItem(ACCESS_TOKEN_KEY, token);
+    }
+  } else {
+    if (typeof window !== "undefined") {
+      safeStorage.removeItem(ACCESS_TOKEN_KEY);
+    }
   }
 }
 
 export function getRefreshToken(): string | null {
+  if (!inMemoryRefreshToken) {
+    hydrateTokensFromStorage();
+  }
   return inMemoryRefreshToken;
 }
 
 export function setRefreshToken(token: string | null) {
   inMemoryRefreshToken = token;
+  if (token) {
+    if (typeof window !== "undefined") {
+      safeStorage.setItem(REFRESH_TOKEN_KEY, token);
+    }
+  } else {
+    if (typeof window !== "undefined") {
+      safeStorage.removeItem(REFRESH_TOKEN_KEY);
+    }
+  }
 }
 
 export function clearTokens() {
@@ -107,8 +174,9 @@ export function clearTokens() {
   inMemoryRefreshToken = null;
   clearSessionHint();
   if (typeof window !== "undefined") {
+    safeStorage.removeItem(ACCESS_TOKEN_KEY);
     safeStorage.removeItem(REFRESH_TOKEN_KEY);
-    safeStorage.removeItem(LEGACY_TOKENS_KEY);
+    safeStorage.removeItem(TOKENS_KEY);
   }
 }
 

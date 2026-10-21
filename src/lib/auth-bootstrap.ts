@@ -139,11 +139,16 @@ export async function bootstrapAuth(): Promise<void> {
         clearSessionHint();
         aurix.set({ user: null, company: null });
       }
-    } catch {
-      // Boot-time 401 is silent: no toast, no console error, clears hint and shows login
-      clearTokens();
-      clearSessionHint();
-      aurix.set({ user: null, company: null });
+    } catch (err: any) {
+      const status = err?.status ?? err?.response?.status;
+      // Only clear tokens if the refresh token was explicitly rejected with 401
+      if (status === 401 || err?.message === "Failed to refresh session") {
+        clearTokens();
+        clearSessionHint();
+        if (!ws.user || ws.user.onboardingComplete) {
+          aurix.set({ user: null, company: null });
+        }
+      }
     } finally {
       finish();
     }

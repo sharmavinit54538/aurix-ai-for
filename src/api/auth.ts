@@ -110,11 +110,12 @@ export const authService = {
    * If verification_id is provided, utilizes the login verification endpoint /api/v1/auth/verify-email-otp.
    */
   async verifyEmail(payload: VerifyEmailPayload): Promise<ApiResponse> {
+    const { email, otp, code, ...rest } = payload;
     const body = {
-      email: payload.email,
-      otp: payload.otp || payload.code || "",
-      code: payload.code || payload.otp || "",
-      ...payload,
+      ...rest,
+      email,
+      otp: otp || code || "",
+      code: code || otp || "",
     };
     if (payload.verification_id) {
       try {
@@ -144,9 +145,10 @@ export const authService = {
    * If verification_id is provided, utilizes the login resend endpoint /api/v1/auth/resend-email-otp.
    */
   async resendOtp(payload: ResendOtpPayload): Promise<ApiResponse> {
+    const { email, ...rest } = payload;
     const body = {
-      email: payload.email,
-      ...payload,
+      ...rest,
+      email,
     };
     if (payload.verification_id) {
       try {
