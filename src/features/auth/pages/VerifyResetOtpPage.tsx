@@ -20,7 +20,7 @@ export function VerifyResetOtpPage() {
 
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
-  const [expiryTime, setExpiryTime] = useState(300);
+  const [expiryTime, setExpiryTime] = useState(600); // 10 minutes OTP expiration
   const [resendCooldown, setResendCooldown] = useState(30);
   const [error, setError] = useState<string | null>(null);
 
@@ -96,7 +96,7 @@ export function VerifyResetOtpPage() {
       const isSuccess = Boolean(response?.data?.success ?? response?.success);
       const message = response?.data?.message || response?.message;
       if (isSuccess) {
-        setExpiryTime(300);
+        setExpiryTime(600); // 10 minutes OTP expiration
         setResendCooldown(30);
         setCode("");
         toast.success(message || "New OTP sent successfully!");

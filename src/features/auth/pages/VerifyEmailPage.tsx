@@ -18,7 +18,8 @@ export function VerifyEmailPage() {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(30);
+  const [expiryTime, setExpiryTime] = useState(600); // 10 minutes OTP expiration
+  const [resendCooldown, setResendCooldown] = useState(30);
   const [resending, setResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,10 +55,22 @@ export function VerifyEmailPage() {
   }, [ws.user, ws.isRestoring, effectiveEmail, navigate]);
 
   useEffect(() => {
-    if (secondsLeft <= 0) return;
-    const t = setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
+    if (expiryTime <= 0) return;
+    const t = setTimeout(() => setExpiryTime((s) => s - 1), 1000);
     return () => clearTimeout(t);
-  }, [secondsLeft]);
+  }, [expiryTime]);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setTimeout(() => setResendCooldown((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendCooldown]);
+
+  const formatTime = (sec: number) => {
+    const mins = Math.floor(sec / 60);
+    const secs = sec % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
 
   if (ws.isRestoring) {
     return <AuthLoadingScreen />;
@@ -167,8 +180,10 @@ export function VerifyEmailPage() {
       const isSuccess = Boolean(response?.data?.success ?? response?.success ?? true);
       const message = response?.data?.message || response?.message;
       if (isSuccess) {
-        setSecondsLeft(30);
-        toast.success(message || "OTP sent successfully.");
+        setExpiryTime(600); // 10 minutes OTP expiration
+        setResendCooldown(30);
+        setCode("");
+        toast.success(message || "New OTP sent successfully.");
       } else {
         toast.error(message || "Failed to resend code");
       }
@@ -229,16 +244,16 @@ export function VerifyEmailPage() {
 
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>
-            {secondsLeft > 0 ? `Code expires in ${secondsLeft}s` : "Code expired"}
+            {expiryTime > 0 ? `Code expires in ${formatTime(expiryTime)}` : "Code expired"}
           </span>
           <button
             type="button"
             onClick={resend}
-            disabled={secondsLeft > 0 || resending}
+            disabled={resendCooldown > 0 || resending}
             className="inline-flex items-center gap-1 font-medium text-foreground underline-offset-4 hover:underline disabled:cursor-not-allowed disabled:text-muted-foreground disabled:no-underline"
           >
             {resending ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-            Resend code
+            {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend code"}
           </button>
         </div>
       </form>

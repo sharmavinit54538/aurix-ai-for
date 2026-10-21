@@ -20,17 +20,19 @@ vi.mock("sonner", () => ({
   },
 }));
 
-vi.mock("@/api", () => ({
-  authService: {
-    login: vi.fn(),
-    verifyEmail: vi.fn(),
-    resendOtp: vi.fn(),
-  },
-  hasValidAccessToken: vi.fn(() => false),
-  setTokens: vi.fn(),
-  getTokens: vi.fn(() => null),
-  setSessionHint: vi.fn(),
-}));
+vi.mock("@/api", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/api")>();
+  return {
+    ...actual,
+    authService: {
+      ...actual.authService,
+      login: vi.fn(),
+      verifyEmail: vi.fn(),
+      resendOtp: vi.fn(),
+    },
+    hasValidAccessToken: vi.fn(() => false),
+  };
+});
 
 describe("Login and Email Verification Challenge Flow", () => {
   beforeEach(() => {
@@ -144,6 +146,9 @@ describe("Login and Email Verification Challenge Flow", () => {
 
     // Subtitle displays the target email
     expect(screen.getByText(/unverified@ofc360\.com/i)).toBeInTheDocument();
+
+    // Timer displays 10 minutes (10:00) expiration
+    expect(screen.getByText(/Code expires in 10:00/i)).toBeInTheDocument();
 
     // Fill 6-digit OTP
     const otpInput = screen.getByRole("textbox");
