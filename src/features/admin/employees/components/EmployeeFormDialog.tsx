@@ -83,13 +83,6 @@ const SYSTEM_ROLES = [
   { label: "IT-Admin", value: "it_admin" },
 ];
 
-const DEFAULT_MANAGERS = [
-  "Alex Vance (VP of Engineering)",
-  "Sarah Chen (Head of Product)",
-  "Elena Rostova (People Operations Lead)",
-  "Marcus Sterling (Principal AI Scientist)",
-];
-
 interface EmployeeFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -112,7 +105,7 @@ export function EmployeeFormDialog({
   const isEdit = Boolean(draft && draft.id !== "");
 
   const managerOptions = useMemo(() => {
-    const names = new Set<string>(DEFAULT_MANAGERS);
+    const names = new Set<string>();
     existingEmployees.forEach((emp) => {
       if (emp.fullName) {
         const label = emp.designation
@@ -352,7 +345,7 @@ export function EmployeeFormDialog({
 
               <FormField label="Reporting Manager">
                 <Select
-                  value={draft.managerName || "Alex Vance (VP of Engineering)"}
+                  value={draft.managerName || "none"}
                   onValueChange={(val) =>
                     onDraftChange({
                       ...draft,

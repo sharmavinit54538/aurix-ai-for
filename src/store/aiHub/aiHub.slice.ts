@@ -8,29 +8,14 @@ import {
 } from "./aiHub.thunks";
 
 const initialState: AIHubState = {
-  messages: [
-    {
-      id: "init-1",
-      role: "assistant",
-      content: "Welcome to AURIX AI Assistant! How can I help you manage your workforce today?",
-      timestamp: new Date().toISOString(),
-    },
-  ],
+  messages: [],
   conversations: [],
   activeConversationId: null,
   loading: false,
   error: null,
   operationLoading: false,
   operationError: null,
-  workforcePlanning: {
-    summary: {
-      headcountTarget: 280,
-      hiringPipelineCount: 18,
-      budgetCapacity: "92%",
-    },
-    recommendations: [],
-    kpis: [],
-  },
+  workforcePlanning: null as any,
 };
 
 export const aiHubSlice = createSlice({
@@ -73,10 +58,13 @@ export const aiHubSlice = createSlice({
       })
       .addCase(sendChatMessage.rejected, (state, action) => {
         state.operationLoading = false;
-        state.operationError = action.error.message || "Failed to send message";
+        state.operationError =
+          action.error.message || "Failed to send message";
       })
       .addCase(deleteChatConversation.fulfilled, (state, action) => {
-        state.conversations = state.conversations.filter((c) => c.id !== action.payload);
+        state.conversations = state.conversations.filter(
+          (c) => c.id !== action.payload,
+        );
         if (state.activeConversationId === action.payload) {
           state.activeConversationId = state.conversations[0]?.id || null;
         }
@@ -84,5 +72,10 @@ export const aiHubSlice = createSlice({
   },
 });
 
-export const { addMessage, setActiveConversation, clearOperationStatus, clearMessages } = aiHubSlice.actions;
+export const {
+  addMessage,
+  setActiveConversation,
+  clearOperationStatus,
+  clearMessages,
+} = aiHubSlice.actions;
 export default aiHubSlice.reducer;

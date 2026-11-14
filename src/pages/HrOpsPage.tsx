@@ -25,14 +25,18 @@ export function HrOpsPage() {
     setError(null);
     setServerUnavailable(false);
     try {
-      // The /api/v2/hr-ops/overview endpoint is not yet available on the backend.
-      // Show "not available yet" state instead of calling the missing endpoint.
-      setServerUnavailable(true);
-      setData(null);
+      const res = await hrOpsApi.getOverview();
+      setData(res);
     } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || "Failed to load HR Operations overview";
-      setError(msg);
-      toast.error(msg);
+      const status = err?.status ?? err?.response?.status;
+      if (status === 404 || status === 501) {
+        setServerUnavailable(true);
+        setData(null);
+      } else {
+        const msg = err?.response?.data?.message || err?.message || "Failed to load HR Operations overview";
+        setError(msg);
+        toast.error(msg);
+      }
     } finally {
       setLoading(false);
     }

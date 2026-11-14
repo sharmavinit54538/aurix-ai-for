@@ -1,3 +1,5 @@
+import apiInstance from "@/api/apiInstance";
+
 export interface HeadcountMetric {
   month: string;
   headcount: number;
@@ -45,41 +47,40 @@ export interface ReportsFilterParams {
 }
 
 export const reportsAnalyticsApi = {
-  getSummary: async (_params?: ReportsFilterParams) => ({
-    headcount: 48,
-    attrition_rate: 4.2,
-    avg_tenure_years: 2.8,
-    payroll_cost: 425000,
-    departments: [
-      { department: "Engineering", headcount: 22, budget: 210000, utilization: 94 },
-      { department: "Product", headcount: 10, budget: 95000, utilization: 91 },
-      { department: "Operations", headcount: 16, budget: 120000, utilization: 89 },
-    ] as DepartmentMetric[],
-    headcount_trend: [
-      { month: "Sep", headcount: 44, hires: 3, exits: 1 },
-      { month: "Oct", headcount: 46, hires: 2, exits: 0 },
-      { month: "Nov", headcount: 48, hires: 2, exits: 0 },
-    ] as HeadcountMetric[],
-    tenure_distribution: [
-      { range: "< 1 Year", count: 12 },
-      { range: "1-3 Years", count: 24 },
-      { range: "3+ Years", count: 12 },
-    ] as TenureMetric[],
-    turnover_trend: [
-      { month: "Sep", rate: 4.5, voluntary: 1, involuntary: 0 },
-      { month: "Oct", rate: 4.3, voluntary: 0, involuntary: 0 },
-      { month: "Nov", rate: 4.2, voluntary: 0, involuntary: 0 },
-    ] as TurnoverMetric[],
-    payroll_costs: [
-      { month: "Sep", gross: 405000, net: 340000, tax: 65000 },
-      { month: "Oct", gross: 415000, net: 348000, tax: 67000 },
-      { month: "Nov", gross: 425000, net: 357000, tax: 68000 },
-    ] as PayrollCostMetric[],
-    compliance_metrics: [
-      { category: "Statutory Filings", score: 98, status: "Compliant" },
-      { category: "Document Verification", score: 95, status: "Compliant" },
-    ] as ComplianceMetric[],
-  }),
-  exportReport: async (_type: string) => ({ success: true }),
+  getSummary: async (params?: ReportsFilterParams) => {
+    const res = await apiInstance.get("/reports/summary", { params });
+    const d = res.data?.data ?? res.data ?? {};
+    return {
+      headcount: Number(d.headcount ?? 0),
+      attrition_rate: Number(d.attrition_rate ?? 0),
+      avg_tenure_years: Number(d.avg_tenure_years ?? 0),
+      payroll_cost: Number(d.payroll_cost ?? 0),
+      departments: (Array.isArray(d.departments)
+        ? d.departments
+        : []) as DepartmentMetric[],
+      headcount_trend: (Array.isArray(d.headcount_trend)
+        ? d.headcount_trend
+        : []) as HeadcountMetric[],
+      tenure_distribution: (Array.isArray(d.tenure_distribution)
+        ? d.tenure_distribution
+        : []) as TenureMetric[],
+      turnover_trend: (Array.isArray(d.turnover_trend)
+        ? d.turnover_trend
+        : []) as TurnoverMetric[],
+      payroll_costs: (Array.isArray(d.payroll_costs)
+        ? d.payroll_costs
+        : []) as PayrollCostMetric[],
+      compliance_metrics: (Array.isArray(d.compliance_metrics)
+        ? d.compliance_metrics
+        : []) as ComplianceMetric[],
+    };
+  },
+  exportReport: async (type: string, params?: ReportsFilterParams) => {
+    const res = await apiInstance.get("/reports/export", {
+      params: { type, ...params },
+    });
+    return res.data?.data ?? res.data ?? { success: true };
+  },
 };
+
 export default reportsAnalyticsApi;

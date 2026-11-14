@@ -1,3 +1,5 @@
+import apiInstance from "@/api/apiInstance";
+
 export interface AnnouncementItem {
   id: string;
   title: string;
@@ -29,44 +31,66 @@ export interface AnnouncementsListResult {
   limit?: number;
 }
 
-export function extractValidationErrors(_err: unknown): Record<string, string> {
-  return {};
+export function extractValidationErrors(err: unknown): Record<string, string> {
+  const data = (err as any)?.response?.data;
+  const fieldErrors: Record<string, string> = {};
+  if (data?.errors && typeof data.errors === "object") {
+    for (const [k, v] of Object.entries(data.errors)) {
+      fieldErrors[k] = Array.isArray(v) ? String(v[0]) : String(v);
+    }
+  }
+  return fieldErrors;
 }
 
-const MOCK_ANNOUNCEMENTS: AnnouncementItem[] = [
-  {
-    id: "ann-1",
-    title: "Q4 Strategic Townhall & Product Roadmap",
-    content: "Join us this Friday for our quarterly company-wide townhall covering AI product milestones and team recognitions.",
-    category: "Company News",
-    priority: "high",
-    author_name: "Alex Vance",
-    created_at: new Date().toISOString(),
-    is_pinned: true,
-    acknowledged: true,
-  },
-];
+export const getAnnouncements = async (
+  params?: Record<string, unknown>,
+): Promise<AnnouncementsListResult> => {
+  const res = await apiInstance.get("/announcements", { params });
+  const payload = res.data?.data ?? res.data;
+  const items: AnnouncementItem[] = Array.isArray(payload)
+    ? payload
+    : Array.isArray(payload?.items)
+      ? payload.items
+      : [];
+  return {
+    items,
+    total: Number(payload?.total ?? items.length),
+    page: payload?.page,
+    limit: payload?.limit,
+  };
+};
 
-export const getAnnouncements = async (): Promise<AnnouncementsListResult> => ({
-  items: MOCK_ANNOUNCEMENTS,
-  total: 1,
-});
-export const getAnnouncementById = async (id: string): Promise<AnnouncementItem> => ({
-  ...MOCK_ANNOUNCEMENTS[0],
-  id,
-});
-export const createAnnouncement = async (data: Partial<AnnouncementItem>): Promise<AnnouncementItem> => ({
-  ...MOCK_ANNOUNCEMENTS[0],
-  ...data,
-  id: `ann-${Date.now()}`,
-});
-export const updateAnnouncement = async (id: string, data: Partial<AnnouncementItem>): Promise<AnnouncementItem> => ({
-  ...MOCK_ANNOUNCEMENTS[0],
-  ...data,
-  id,
-});
-export const deleteAnnouncement = async (_id: string) => ({ success: true });
-export const acknowledgeAnnouncement = async (_id: string) => ({ success: true });
+export const getAnnouncementById = async (
+  id: string,
+): Promise<AnnouncementItem> => {
+  const res = await apiInstance.get(`/announcements/${id}`);
+  return res.data?.data ?? res.data;
+};
+
+export const createAnnouncement = async (
+  data: Partial<AnnouncementItem> | CreateAnnouncementInput,
+): Promise<AnnouncementItem> => {
+  const res = await apiInstance.post("/announcements", data);
+  return res.data?.data ?? res.data;
+};
+
+export const updateAnnouncement = async (
+  id: string,
+  data: Partial<AnnouncementItem> | UpdateAnnouncementInput,
+): Promise<AnnouncementItem> => {
+  const res = await apiInstance.put(`/announcements/${id}`, data);
+  return res.data?.data ?? res.data;
+};
+
+export const deleteAnnouncement = async (id: string) => {
+  const res = await apiInstance.delete(`/announcements/${id}`);
+  return res.data?.data ?? res.data ?? { success: true };
+};
+
+export const acknowledgeAnnouncement = async (id: string) => {
+  const res = await apiInstance.post(`/announcements/${id}/acknowledge`, {});
+  return res.data?.data ?? res.data ?? { success: true };
+};
 
 export const announcementsApi = {
   getAnnouncements,

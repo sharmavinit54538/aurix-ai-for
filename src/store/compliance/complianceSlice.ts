@@ -10,17 +10,7 @@ export interface ComplianceState {
 const initialState: ComplianceState = {
   loading: false,
   error: null,
-  data: {
-    kpis: [
-      { label: "Overall Compliance", value: "98.4%", trend: "up" },
-      { label: "Pending Audit Items", value: 3, trend: "down" },
-      { label: "Risk Score", value: "Low", trend: "neutral" },
-    ],
-    summary: { totalAudits: 14, passed: 13, pending: 1 },
-    trend: [],
-    risksByCategory: [],
-    lastUpdated: new Date().toISOString(),
-  },
+  data: null,
 };
 
 export const complianceSlice = createSlice({
@@ -31,6 +21,7 @@ export const complianceSlice = createSlice({
     builder
       .addCase(fetchComplianceDashboard.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(fetchComplianceDashboard.fulfilled, (state, action) => {
         state.loading = false;

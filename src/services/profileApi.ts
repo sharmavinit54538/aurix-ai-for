@@ -1,50 +1,37 @@
-import { api } from "@/api/client";
-
-let currentUserState = {
-  id: "usr-1",
-  name: "Alex Vance",
-  fullName: "Alex Vance",
-  email: "alex.vance@aurix.ai",
-  phone: "+91 98201 10001",
-  role: "super_admin",
-  designation: "VP of Engineering",
-  department: "Engineering",
-  avatarUrl: "",
-};
+import apiInstance from "@/api/apiInstance";
 
 export const profileApi = {
   getProfile: async () => {
-    try {
-      return await api.get("/profile");
-    } catch {
-      return { ...currentUserState };
-    }
+    const res = await apiInstance.get("/profile");
+    return res.data?.data ?? res.data;
   },
   getCurrentUser: async () => {
-    return { ...currentUserState };
+    const res = await apiInstance.get("/auth/me");
+    return res.data?.data ?? res.data;
   },
-  updateProfile: async (data: any) => {
-    currentUserState = { ...currentUserState, ...data };
-    return { ...currentUserState };
+  updateProfile: async (data: Record<string, unknown>) => {
+    const res = await apiInstance.put("/profile", data);
+    return res.data?.data ?? res.data;
   },
-  updateCurrentUser: async (data: any) => {
-    currentUserState = {
-      ...currentUserState,
-      ...data,
-      name: data.fullName || data.name || currentUserState.name,
-      fullName: data.fullName || data.name || currentUserState.fullName,
-    };
-    return { ...currentUserState };
+  updateCurrentUser: async (data: Record<string, unknown>) => {
+    const res = await apiInstance.put("/profile", data);
+    return res.data?.data ?? res.data;
   },
-  uploadAvatar: async (_file: File) => {
-    return { avatarUrl: currentUserState.avatarUrl || "" };
+  uploadAvatar: async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await apiInstance.post("/profile/avatar", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data?.data ?? res.data;
   },
-  changePassword: async (_payload: {
+  changePassword: async (payload: {
     currentPassword?: string;
     newPassword: string;
     confirmPassword: string;
   }) => {
-    return { success: true, message: "Password updated successfully" };
+    const res = await apiInstance.post("/profile/change-password", payload);
+    return res.data?.data ?? res.data;
   },
 };
 

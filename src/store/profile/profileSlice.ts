@@ -2,14 +2,7 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { ProfileState, UserProfile } from "./profileTypes";
 
 const initialState: ProfileState = {
-  profile: {
-    id: "usr-1",
-    name: "Alex Vance",
-    email: "alex.vance@aurix.ai",
-    role: "super_admin",
-    department: "Executive",
-    avatar: "https://picsum.photos/seed/alex/200/200",
-  },
+  profile: null,
   loading: false,
   error: null,
 };

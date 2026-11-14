@@ -1,24 +1,14 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import { fetchEmployeeHierarchy, fetchOrganizationalGraph } from "./employeeHierarchyThunk";
+import {
+  fetchEmployeeHierarchy,
+  fetchOrganizationalGraph,
+} from "./employeeHierarchyThunk";
 
 const initialState = {
   data: null as any,
   trees: [] as any[],
   flatList: [] as any[],
-  analytics: {
-    totalEmployees: 42,
-    totalDepartments: 6,
-    totalManagers: 8,
-    maxDepth: 4,
-    avgSpanOfControl: 5.2,
-    vacantPositions: 3,
-    departmentDistribution: [
-      { department: "Engineering", count: 18 },
-      { department: "Product", count: 8 },
-      { department: "Operations", count: 9 },
-      { department: "HR", count: 7 },
-    ],
-  } as any,
+  analytics: null as any,
   loading: false,
   error: null as string | null,
   searchKeyword: "",
@@ -31,27 +21,26 @@ const initialState = {
     managerId: "all",
   },
   selectedEmployee: null as any,
-  expandedNodeIds: ["emp-1", "emp-2"] as string[],
+  expandedNodeIds: [] as string[],
   zoomLevel: 1,
   isFullscreen: false,
   connectorStyle: "curved" as "curved" | "orthogonal" | "straight",
   showAiInsights: false,
   viewMode: "tree" as "tree" | "graph" | "list",
   graphData: {
-    nodes: [
-      { id: "org-1", type: "company", label: "AURIX AI Enterprise", category: "organization", metrics: { headcount: 42 } },
-      { id: "dept-1", type: "department", label: "Engineering", category: "department", parentId: "org-1", metrics: { headcount: 18 } },
-      { id: "emp-1", type: "employee", label: "Alex Vance", role: "VP of Engineering", category: "leadership", parentId: "dept-1" },
-    ],
-    edges: [
-      { id: "e1", source: "org-1", target: "dept-1", relation: "has_department" },
-      { id: "e2", source: "dept-1", target: "emp-1", relation: "led_by" },
-    ],
+    nodes: [],
+    edges: [],
     insights: [],
   } as any,
   graphLoading: false,
   graphSearchQuery: "",
-  graphActiveCategories: ["organization", "department", "leadership", "employee", "team"] as string[],
+  graphActiveCategories: [
+    "organization",
+    "department",
+    "leadership",
+    "employee",
+    "team",
+  ] as string[],
   focusedNodeId: null as string | null,
   focusedNode: null as any,
   isGraphDetailOpen: false,
@@ -87,7 +76,9 @@ const employeeHierarchySlice = createSlice({
       }
     },
     expandAllNodes(state) {
-      state.expandedNodeIds = ["emp-1", "emp-2", "emp-3", "emp-4"];
+      state.expandedNodeIds = state.flatList
+        .map((n: any) => String(n.id || ""))
+        .filter(Boolean);
     },
     collapseAllNodes(state) {
       state.expandedNodeIds = [];
@@ -107,7 +98,10 @@ const employeeHierarchySlice = createSlice({
     setLayout(state, action: PayloadAction<string>) {
       (state as any).layout = action.payload;
     },
-    setConnectorStyle(state, action: PayloadAction<"curved" | "orthogonal" | "straight">) {
+    setConnectorStyle(
+      state,
+      action: PayloadAction<"curved" | "orthogonal" | "straight">,
+    ) {
       state.connectorStyle = action.payload;
     },
     toggleAiInsights(state) {
@@ -122,7 +116,9 @@ const employeeHierarchySlice = createSlice({
     toggleGraphFilterCategory(state, action: PayloadAction<string>) {
       const cat = action.payload;
       if (state.graphActiveCategories.includes(cat)) {
-        state.graphActiveCategories = state.graphActiveCategories.filter((c) => c !== cat);
+        state.graphActiveCategories = state.graphActiveCategories.filter(
+          (c) => c !== cat,
+        );
       } else {
         state.graphActiveCategories.push(cat);
       }
@@ -130,7 +126,9 @@ const employeeHierarchySlice = createSlice({
     setFocusedNode(state, action: PayloadAction<any>) {
       if (typeof action.payload === "string" || action.payload === null) {
         state.focusedNodeId = action.payload;
-        state.focusedNode = state.graphData?.nodes?.find((n: any) => n.id === action.payload) || null;
+        state.focusedNode =
+          state.graphData?.nodes?.find((n: any) => n.id === action.payload) ||
+          null;
       } else {
         state.focusedNode = action.payload;
         state.focusedNodeId = action.payload?.id || null;
@@ -161,13 +159,40 @@ const employeeHierarchySlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(fetchEmployeeHierarchy.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(fetchEmployeeHierarchy.fulfilled, (state, action) => {
-        state.data = action.payload;
-        if (action.payload?.roots) state.trees = action.payload.roots;
+        const payload = action.payload as any;
+        state.data = payload;
+        if (Array.isArray(payload)) {
+          state.trees = payload;
+        } else if (Array.isArray(payload?.roots)) {
+          state.trees = payload.roots;
+        } else {
+          state.trees = [];
+        }
+        if (Array.isArray(payload?.flatList)) {
+          state.flatList = payload.flatList;
+        }
+        if (payload?.analytics) {
+          state.analytics = payload.analytics;
+        }
         state.loading = false;
+      })
+      .addCase(fetchEmployeeHierarchy.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error?.message || "Failed to load hierarchy";
+      })
+      .addCase(fetchOrganizationalGraph.pending, (state) => {
+        state.graphLoading = true;
       })
       .addCase(fetchOrganizationalGraph.fulfilled, (state, action) => {
         if (action.payload) state.graphData = action.payload;
+        state.graphLoading = false;
+      })
+      .addCase(fetchOrganizationalGraph.rejected, (state) => {
         state.graphLoading = false;
       });
   },

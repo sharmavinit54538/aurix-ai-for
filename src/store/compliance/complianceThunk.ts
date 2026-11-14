@@ -1,26 +1,19 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
+import { api } from "@/api/client";
 
 export const fetchComplianceDashboard = createAsyncThunk(
   "compliance/fetchDashboard",
   async () => {
+    const res = await api.get<any>("/compliance/dashboard");
+    const d = res?.data ?? res ?? {};
     return {
-      kpis: [
-        { label: "Overall Compliance", value: "98.4%", trend: "up" },
-        { label: "Pending Audit Items", value: 3, trend: "down" },
-        { label: "Risk Score", value: "Low", trend: "neutral" },
-      ],
-      summary: { totalAudits: 14, passed: 13, pending: 1 },
-      trend: [
-        { month: "Jan", score: 96 },
-        { month: "Feb", score: 98 },
-        { month: "Mar", score: 98.4 },
-      ],
-      risksByCategory: [
-        { category: "Data Privacy", riskLevel: "Low" },
-        { category: "Labor Laws", riskLevel: "Low" },
-        { category: "Tax Filing", riskLevel: "None" },
-      ],
-      lastUpdated: new Date().toISOString(),
+      kpis: Array.isArray(d.kpis) ? d.kpis : [],
+      summary: d.summary ?? { totalAudits: 0, passed: 0, pending: 0 },
+      trend: Array.isArray(d.trend) ? d.trend : [],
+      risksByCategory: Array.isArray(d.risksByCategory)
+        ? d.risksByCategory
+        : [],
+      lastUpdated: d.lastUpdated || new Date().toISOString(),
     };
-  }
+  },
 );

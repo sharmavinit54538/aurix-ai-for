@@ -1,21 +1,16 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
+import { api } from "@/api/client";
 
 export const fetchPerformanceCoachDashboard = createAsyncThunk(
   "performanceCoach/fetchDashboard",
   async () => {
+    const res = await api.get<any>("/ai/performance-coach");
+    const d = res?.data ?? res ?? {};
     return {
-      kpis: [
-        { label: "Coaching Sessions Completed", value: 38, trend: "up" },
-        { label: "Goal Progress Score", value: "91%", trend: "up" },
-        { label: "Skill Mastery Index", value: "8.6 / 10", trend: "up" },
-      ],
-      summary: { activeCoaches: 6, topSkillTarget: "Distributed Architecture" },
-      progressTrend: [
-        { month: "Jan", progress: 78 },
-        { month: "Feb", progress: 85 },
-        { month: "Mar", progress: 91 },
-      ],
-      lastUpdated: new Date().toISOString(),
+      kpis: Array.isArray(d.kpis) ? d.kpis : [],
+      summary: d.summary ?? { activeCoaches: 0, topSkillTarget: "" },
+      progressTrend: Array.isArray(d.progressTrend) ? d.progressTrend : [],
+      lastUpdated: d.lastUpdated || new Date().toISOString(),
     };
-  }
+  },
 );

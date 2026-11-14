@@ -10,16 +10,7 @@ export interface PerformanceCoachState {
 const initialState: PerformanceCoachState = {
   loading: false,
   error: null,
-  data: {
-    kpis: [
-      { label: "Coaching Sessions Completed", value: 38, trend: "up" },
-      { label: "Goal Progress Score", value: "91%", trend: "up" },
-      { label: "Skill Mastery Index", value: "8.6 / 10", trend: "up" },
-    ],
-    summary: { activeCoaches: 6, topSkillTarget: "Distributed Architecture" },
-    progressTrend: [],
-    lastUpdated: new Date().toISOString(),
-  },
+  data: null,
 };
 
 export const performanceCoachSlice = createSlice({
@@ -30,6 +21,7 @@ export const performanceCoachSlice = createSlice({
     builder
       .addCase(fetchPerformanceCoachDashboard.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(fetchPerformanceCoachDashboard.fulfilled, (state, action) => {
         state.loading = false;
@@ -37,7 +29,8 @@ export const performanceCoachSlice = createSlice({
       })
       .addCase(fetchPerformanceCoachDashboard.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || "Failed to fetch performance coach data";
+        state.error =
+          action.error.message || "Failed to fetch performance coach data";
       });
   },
 });

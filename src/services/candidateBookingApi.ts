@@ -1,3 +1,5 @@
+import apiInstance from "@/api/apiInstance";
+
 export interface BookingSlot {
   id?: string;
   start_time: string;
@@ -23,36 +25,35 @@ export interface BookingDetails {
 }
 
 export const candidateBookingApi = {
-  getBookingDetails: async (token: string): Promise<BookingDetails> => ({
-    token,
-    candidate_name: "Jordan Taylor",
-    job_title: "Senior Full-Stack Engineer",
-    company_name: "OFC360 Enterprise",
-    round_name: "Technical Architecture Round",
-    interviewer_name: "Alex Vance",
-    duration_minutes: 45,
-    mode: "ONLINE",
-    status: "PENDING",
-    available_slots: [
-      {
-        id: "slot-1",
-        start_time: new Date(Date.now() + 86400000).toISOString(),
-        end_time: new Date(Date.now() + 86400000 + 2700000).toISOString(),
-        timezone: "UTC",
-      },
-    ],
-    booked_slot: null,
-  }),
-  confirmBooking: async (_token: string, payload: { start_time: string; timezone?: string }) => ({
-    success: true,
-    booked_slot: {
-      start_time: payload.start_time,
-      end_time: new Date(new Date(payload.start_time).getTime() + 2700000).toISOString(),
-      timezone: payload.timezone || "UTC",
-      meeting_url: "https://meet.ofc360.local/interview",
-    },
-  }),
-  getBookingInfo: async (_token: string) => ({ valid: true, slots: [] }),
-  bookSlot: async (_token: string, _slotId: string) => ({ success: true }),
+  getBookingDetails: async (token: string): Promise<BookingDetails> => {
+    const res = await apiInstance.get(
+      `/recruitment/interview-booking/${encodeURIComponent(token)}`,
+    );
+    return res.data?.data ?? res.data;
+  },
+  confirmBooking: async (
+    token: string,
+    payload: { start_time: string; timezone?: string },
+  ) => {
+    const res = await apiInstance.post(
+      `/recruitment/interview-booking/${encodeURIComponent(token)}/confirm`,
+      payload,
+    );
+    return res.data?.data ?? res.data;
+  },
+  getBookingInfo: async (token: string) => {
+    const res = await apiInstance.get(
+      `/recruitment/interview-booking/${encodeURIComponent(token)}`,
+    );
+    return res.data?.data ?? res.data;
+  },
+  bookSlot: async (token: string, slotId: string) => {
+    const res = await apiInstance.post(
+      `/recruitment/interview-booking/${encodeURIComponent(token)}/book`,
+      { slot_id: slotId },
+    );
+    return res.data?.data ?? res.data;
+  },
 };
+
 export default candidateBookingApi;

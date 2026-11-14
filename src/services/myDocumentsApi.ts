@@ -1,4 +1,12 @@
-export type DocumentCategory = "Identity" | "Education" | "Employment" | "Tax & Compliance" | "Other" | string;
+import apiInstance from "@/api/apiInstance";
+
+export type DocumentCategory =
+  | "Identity"
+  | "Education"
+  | "Employment"
+  | "Tax & Compliance"
+  | "Other"
+  | string;
 
 export interface EmployeeDocument {
   id: string;
@@ -25,22 +33,33 @@ export interface ProvisionSlip {
 }
 
 export const myDocumentsApi = {
-  getDocuments: async (): Promise<EmployeeDocument[]> => [
-    {
-      id: "doc-1",
-      name: "Employment_Contract_Signed.pdf",
-      title: "Employment Contract",
-      category: "Employment",
-      file_type: "pdf",
-      file_size: "420 KB",
-      status: "verified",
-      uploaded_at: new Date().toISOString(),
-    },
-  ],
-  getSalarySlips: async (): Promise<any[]> => [],
-  getProvisionSlips: async (): Promise<ProvisionSlip[]> => [],
-  uploadDocument: async (_payload: unknown) => ({ id: `doc-${Date.now()}`, status: "pending" }),
-  reuploadDocument: async (_id: string, _payload: unknown) => ({ success: true }),
-  deleteDocument: async (_id: string) => ({ success: true }),
+  getDocuments: async (): Promise<EmployeeDocument[]> => {
+    const res = await apiInstance.get("/documents/my");
+    const d = res.data?.data ?? res.data;
+    return Array.isArray(d) ? d : Array.isArray(d?.items) ? d.items : [];
+  },
+  getSalarySlips: async (): Promise<any[]> => {
+    const res = await apiInstance.get("/documents/my/salary-slips");
+    const d = res.data?.data ?? res.data;
+    return Array.isArray(d) ? d : Array.isArray(d?.items) ? d.items : [];
+  },
+  getProvisionSlips: async (): Promise<ProvisionSlip[]> => {
+    const res = await apiInstance.get("/documents/my/provision-slips");
+    const d = res.data?.data ?? res.data;
+    return Array.isArray(d) ? d : Array.isArray(d?.items) ? d.items : [];
+  },
+  uploadDocument: async (payload: unknown) => {
+    const res = await apiInstance.post("/documents/my", payload);
+    return res.data?.data ?? res.data;
+  },
+  reuploadDocument: async (id: string, payload: unknown) => {
+    const res = await apiInstance.put(`/documents/my/${id}`, payload);
+    return res.data?.data ?? res.data;
+  },
+  deleteDocument: async (id: string) => {
+    const res = await apiInstance.delete(`/documents/my/${id}`);
+    return res.data?.data ?? res.data ?? { success: true };
+  },
 };
+
 export default myDocumentsApi;

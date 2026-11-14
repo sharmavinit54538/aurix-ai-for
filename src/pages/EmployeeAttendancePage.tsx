@@ -202,7 +202,7 @@ export function EmployeeAttendancePage() {
       if (empRes.status === "fulfilled" && empRes.value) {
         setEmpMeta({
           id: empRes.value.id,
-          employeeId: empRes.value.employeeId || empRes.value.employee_id || "EMP-3655",
+          employeeId: empRes.value.employeeId || empRes.value.employee_id || "",
           fullName: empRes.value.fullName || empRes.value.full_name || user?.fullName || "Employee",
           department: empRes.value.department,
           designation: empRes.value.designation,
@@ -297,7 +297,7 @@ export function EmployeeAttendancePage() {
   const activeSec = Math.max(0, workSec - breakSec);
   const shiftInfo = faceStatus?.shift;
   const displayName = empMeta?.fullName || user?.fullName || "Employee";
-  const displayEmpId = empMeta?.employeeId || "EMP-3655";
+  const displayEmpId = empMeta?.employeeId || "—";
   const initials = displayName
     .split(" ")
     .map((p) => p[0])
@@ -787,7 +787,7 @@ export function EmployeeAttendancePage() {
           await loadPersonalAttendance();
         }}
         employeeDetails={{
-          id: empMeta?.id || "emp-kabir",
+          id: empMeta?.id || user?.id || "",
           employee_id: displayEmpId,
           full_name: displayName,
           department: empMeta?.department,

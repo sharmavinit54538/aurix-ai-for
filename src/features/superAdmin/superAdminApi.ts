@@ -408,33 +408,14 @@ function publicUrl(path: string): string {
 }
 
 async function fetchPublicJson(path: string): Promise<{ status: number; body: unknown }> {
-  if (path.includes("/health/ready")) {
-    return {
-      status: 200,
-      body: {
-        ready: true,
-        database: "connected",
-        llm: {
-          healthy: true,
-          healthy_count: 2,
-          total_count: 2,
-          providers: {
-            "OFC360 Neural Engine": true,
-            "Enterprise Copilot Runtime": true,
-          },
-        },
-      },
-    };
-  }
+  const res = await fetch(publicUrl(path), {
+    method: "GET",
+    headers: { Accept: "application/json" },
+  });
+  const body = await res.json().catch(() => null);
   return {
-    status: 200,
-    body: {
-      status: "healthy",
-      database: "connected",
-      app: "OFC360 Enterprise HR OS",
-      version: "2.4.0",
-      environment: "production",
-    },
+    status: res.status,
+    body,
   };
 }
 

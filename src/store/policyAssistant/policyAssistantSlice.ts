@@ -1,5 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchPolicyAssistantDashboard } from "./policyAssistantThunk";
+import {
+  askPolicyQuestion,
+  fetchPolicyAssistantDashboard,
+} from "./policyAssistantThunk";
 
 export interface PolicyAssistantState {
   asking: boolean;
@@ -13,10 +16,8 @@ const initialState: PolicyAssistantState = {
   asking: false,
   loading: false,
   error: null,
-  messages: [
-    { id: "1", sender: "assistant", text: "Hello! How can I assist you with company policies, leave rules, or benefits today?" },
-  ],
-  summary: { totalQueriesResolved: 154, topTopic: "Remote Work & Expenses" },
+  messages: [],
+  summary: null,
 };
 
 export const policyAssistantSlice = createSlice({
@@ -31,17 +32,31 @@ export const policyAssistantSlice = createSlice({
     builder
       .addCase(fetchPolicyAssistantDashboard.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(fetchPolicyAssistantDashboard.fulfilled, (state, action) => {
         state.loading = false;
-        if (action.payload.messages) {
+        if (Array.isArray(action.payload?.messages)) {
           state.messages = action.payload.messages;
         }
-        state.summary = action.payload.summary;
+        state.summary = action.payload?.summary ?? null;
       })
       .addCase(fetchPolicyAssistantDashboard.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || "Failed to load policy assistant";
+        state.error =
+          action.error.message || "Failed to load policy assistant";
+      })
+      .addCase(askPolicyQuestion.pending, (state) => {
+        state.asking = true;
+      })
+      .addCase(askPolicyQuestion.fulfilled, (state, action) => {
+        state.asking = false;
+        if (action.payload) {
+          state.messages.push(action.payload);
+        }
+      })
+      .addCase(askPolicyQuestion.rejected, (state) => {
+        state.asking = false;
       });
   },
 });

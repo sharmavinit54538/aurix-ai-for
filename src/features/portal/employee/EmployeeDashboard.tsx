@@ -1,8 +1,4 @@
 import { statusBadgeClass } from "@/lib/status-styles";
-// ============================================================
-// OFC360 — Employee Dashboard Component
-// Self-service portal for individual employees.
-// ============================================================
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -21,7 +17,6 @@ import {
   Info,
   Package,
   Sparkles,
-  Target,
   TrendingDown,
   TrendingUp,
   X,
@@ -45,122 +40,16 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import type { EmpKpi } from "./types";
 
-// ── Employee Self-Service Portal Data ─────────────────────────
-const EMP_KPI: EmpKpi[] = [
-  {
-    id: "att",
-    label: "Attendance Rate",
-    value: "96.4%",
-    change: "+1.2% this month",
-    changeType: "up",
-    accent: "text-emerald-400",
-    bgAccent: "bg-emerald-500/10",
-    spark: [{ v: 92 }, { v: 94 }, { v: 95 }, { v: 94 }, { v: 96 }, { v: 96.4 }],
-  },
-  {
-    id: "leave",
-    label: "Leave Balance",
-    value: "14 Days",
-    change: "6 used of 20",
-    changeType: "neutral",
-    accent: "text-blue-400",
-    bgAccent: "bg-blue-500/10",
-    spark: [{ v: 20 }, { v: 18 }, { v: 17 }, { v: 16 }, { v: 14 }, { v: 14 }],
-  },
-  {
-    id: "hours",
-    label: "Avg Daily Hours",
-    value: "8h 24m",
-    change: "On target",
-    changeType: "up",
-    accent: "text-violet-400",
-    bgAccent: "bg-violet-500/10",
-    spark: [{ v: 8.1 }, { v: 8.3 }, { v: 8.2 }, { v: 8.5 }, { v: 8.4 }, { v: 8.4 }],
-  },
-  {
-    id: "goals",
-    label: "Q4 OKR Progress",
-    value: "87%",
-    change: "+5 pts vs Q3",
-    changeType: "up",
-    accent: "text-amber-400",
-    bgAccent: "bg-amber-500/10",
-    spark: [{ v: 65 }, { v: 72 }, { v: 78 }, { v: 82 }, { v: 85 }, { v: 87 }],
-  },
-  {
-    id: "pay",
-    label: "Net Monthly Pay",
-    value: "₹1,42,500",
-    change: "Disbursed 1st Nov",
-    changeType: "up",
-    accent: "text-cyan-400",
-    bgAccent: "bg-cyan-500/10",
-    spark: [{ v: 138 }, { v: 138 }, { v: 142.5 }, { v: 142.5 }, { v: 142.5 }, { v: 142.5 }],
-  },
-  {
-    id: "assets",
-    label: "Assigned Assets",
-    value: "2 Items",
-    change: "All verified",
-    changeType: "neutral",
-    accent: "text-pink-400",
-    bgAccent: "bg-pink-500/10",
-    spark: [{ v: 2 }, { v: 2 }, { v: 2 }, { v: 2 }, { v: 2 }, { v: 2 }],
-  },
-];
+const EMP_KPI: EmpKpi[] = [];
+const MY_ATTENDANCE_TREND: any[] = [];
+const MY_ATTENDANCE: any[] = [];
+const MY_LEAVES: any[] = [];
+const LEAVE_QUOTA: any[] = [];
+const MY_GOALS: any[] = [];
+const MY_PAYSLIPS: any[] = [];
+const MY_DOCUMENTS: any[] = [];
+const COMPANY_EVENTS: any[] = [];
 
-const MY_ATTENDANCE_TREND: any[] = [
-  { week: "Wk 1", days: 5 },
-  { week: "Wk 2", days: 5 },
-  { week: "Wk 3", days: 4 },
-  { week: "Wk 4", days: 5 },
-];
-
-const MY_ATTENDANCE: any[] = [
-  { date: "2026-11-11", status: "present", checkIn: "09:12 AM", checkOut: "06:04 PM", hours: "8h 52m" },
-  { date: "2026-11-10", status: "present", checkIn: "09:05 AM", checkOut: "05:48 PM", hours: "8h 43m" },
-  { date: "2026-11-09", status: "wfh", checkIn: "09:20 AM", checkOut: "06:15 PM", hours: "8h 55m" },
-  { date: "2026-11-08", status: "present", checkIn: "09:18 AM", checkOut: "05:50 PM", hours: "8h 32m" },
-];
-
-const MY_LEAVES: any[] = [
-  { id: "lv-101", type: "Annual Leave", status: "approved", from: "20 Nov 2026", to: "22 Nov 2026", days: 3, appliedOn: "05 Nov", approvedBy: "Sarah Chen" },
-  { id: "lv-102", type: "Sick Leave", status: "approved", from: "14 Oct 2026", to: "14 Oct 2026", days: 1, appliedOn: "14 Oct", approvedBy: "Sarah Chen" },
-];
-
-const LEAVE_QUOTA: any[] = [
-  { type: "Annual Privilege Leave", remaining: 14, total: 20 },
-  { type: "Medical / Sick Leave", remaining: 10, total: 12 },
-  { type: "Casual / Personal Leave", remaining: 6, total: 8 },
-];
-
-const MY_GOALS: any[] = [
-  { goal: "Ship Multi-Agent Inference Pipeline v2.4", due: "30 Nov", progress: 92 },
-  { goal: "Reduce Model Latency Below 15ms P95", due: "15 Dec", progress: 85 },
-  { goal: "Complete Security & SOC2 Compliance Training", due: "20 Nov", progress: 100 },
-];
-
-const MY_PAYSLIPS: any[] = [
-  { month: "October 2026", gross: "₹1,62,500", net: "₹1,42,500", date: "01 Nov 2026" },
-  { month: "September 2026", gross: "₹1,62,500", net: "₹1,42,500", date: "01 Oct 2026" },
-  { month: "August 2026", gross: "₹1,62,500", net: "₹1,42,500", date: "01 Sep 2026" },
-];
-
-const MY_DOCUMENTS: any[] = [
-  { name: "Employment Contract & NDA.pdf", dueDate: "Verified on 01 Jun 2025", status: "verified" },
-  { name: "PAN & Tax Declaration FY26-27.pdf", dueDate: "Verified on 15 Apr 2026", status: "verified" },
-  { name: "Degree & Background Verification.pdf", dueDate: "Verified on 10 Jun 2025", status: "verified" },
-];
-
-const MY_ASSETS: any[] = [];
-
-const COMPANY_EVENTS: any[] = [
-  { title: "Q4 All-Hands & AI Product Demo", date: "2026-11-18", time: "04:00 PM IST", type: "meeting" },
-  { title: "Annual Performance Review Submission", date: "2026-11-25", time: "All Day", type: "event" },
-  { title: "Year-End Company Holiday", date: "2026-12-25", time: "Public Holiday", type: "holiday" },
-];
-
-// ── Animation helpers ─────────────────────────────────────────
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
@@ -173,10 +62,17 @@ const stagger = (i: number) => ({
   transition: { duration: 0.35, ease: "easeOut" as const, delay: i * 0.06 },
 });
 
-// ── Shared card ───────────────────────────────────────────────
-function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+function Card({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <div className={`rounded-2xl border border-border bg-card shadow-sm p-5 ${className}`}>
+    <div
+      className={`rounded-2xl border border-border bg-card shadow-sm p-5 ${className}`}
+    >
       {children}
     </div>
   );
@@ -196,8 +92,12 @@ function SectionHeader({
   return (
     <div className="mb-4 flex items-start justify-between gap-3">
       <div>
-        <h2 className="font-display text-lg font-semibold tracking-tight">{title}</h2>
-        {subtitle && <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>}
+        <h2 className="font-display text-lg font-semibold tracking-tight">
+          {title}
+        </h2>
+        {subtitle && (
+          <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>
+        )}
       </div>
       {link && (
         <Link
@@ -211,7 +111,6 @@ function SectionHeader({
   );
 }
 
-// ── Status helpers ────────────────────────────────────────────
 const ATTENDANCE_STATUS: Record<string, string> = {
   present: statusBadgeClass("approved"),
   late: statusBadgeClass("warning"),
@@ -220,13 +119,13 @@ const ATTENDANCE_STATUS: Record<string, string> = {
   absent: statusBadgeClass("critical"),
 };
 
-const NOTIF_ICON: Record<string, React.ElementType> = {
+export const NOTIF_ICON: Record<string, React.ElementType> = {
   success: CheckCircle2,
   warn: AlertTriangle,
   info: Info,
 };
 
-const NOTIF_COLOR: Record<string, string> = {
+export const NOTIF_COLOR: Record<string, string> = {
   success: "bg-primary/10 text-primary",
   warn: "bg-muted text-foreground",
   info: "bg-primary/10 text-primary",
@@ -238,7 +137,6 @@ const EVENT_COLOR: Record<string, string> = {
   event: statusBadgeClass("warning"),
 };
 
-// ── Quick Actions ─────────────────────────────────────────────
 const EMP_QUICK_ACTIONS = [
   { label: "Apply Leave", icon: FileText, link: "/dashboard/leaves" },
   { label: "View Payslip", icon: Download, link: "/dashboard/payroll/payslips" },
@@ -248,8 +146,10 @@ const EMP_QUICK_ACTIONS = [
   { label: "AI Assistant", icon: Bot, link: "/ai/chat-assistant" },
 ];
 
-// ── 1. Employee Header ────────────────────────────────────────
-function EmployeeHeader({ firstName: _firstName, companyName: _companyName }: { firstName?: string; companyName?: string } = {}) {
+function EmployeeHeader({
+  firstName: _firstName,
+  companyName: _companyName,
+}: { firstName?: string; companyName?: string } = {}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: -16 }}
@@ -266,7 +166,6 @@ function EmployeeHeader({ firstName: _firstName, companyName: _companyName }: { 
         </Link>
       </div>
 
-      {/* Quick Actions */}
       <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
         {EMP_QUICK_ACTIONS.map((a, i) => {
           const Icon = a.icon;
@@ -291,29 +190,57 @@ function EmployeeHeader({ firstName: _firstName, companyName: _companyName }: { 
   );
 }
 
-// ── 2. KPI Cards ──────────────────────────────────────────────
 function EmployeeKpiCards() {
+  const { data } = useQuery({
+    queryKey: ["employee-portal-kpis"],
+    queryFn: () => api.get<any>("/employees/me/kpis"),
+  });
+
+  const kpis: EmpKpi[] = Array.isArray(data?.data)
+    ? data.data
+    : Array.isArray(data?.items)
+      ? data.items
+      : EMP_KPI;
+
+  if (kpis.length === 0) {
+    return null;
+  }
+
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-      {EMP_KPI.map((kpi, i) => (
+      {kpis.map((kpi, i) => (
         <motion.div key={kpi.id} {...stagger(i)}>
           <Card className="cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-md">
-            <div className={`mb-3 inline-flex items-center rounded-lg p-2 ${kpi.bgAccent}`}>
+            <div
+              className={`mb-3 inline-flex items-center rounded-lg p-2 ${kpi.bgAccent}`}
+            >
               <Zap className={`h-3.5 w-3.5 ${kpi.accent}`} />
             </div>
-            <div className="font-display text-xl font-bold tracking-tight">{kpi.value}</div>
-            <div className="mt-0.5 text-[11px] text-muted-foreground">{kpi.label}</div>
+            <div className="font-display text-xl font-bold tracking-tight">
+              {kpi.value}
+            </div>
+            <div className="mt-0.5 text-[11px] text-muted-foreground">
+              {kpi.label}
+            </div>
             <div
               className={`mt-1.5 flex items-center gap-1 text-[11px] font-medium ${
-                kpi.changeType === "up" ? "text-foreground" : kpi.changeType === "down" ? "text-destructive" : "text-muted-foreground"
+                kpi.changeType === "up"
+                  ? "text-foreground"
+                  : kpi.changeType === "down"
+                    ? "text-destructive"
+                    : "text-muted-foreground"
               }`}
             >
-              {kpi.changeType === "up" ? <TrendingUp className="h-3 w-3" /> : kpi.changeType === "down" ? <TrendingDown className="h-3 w-3" /> : null}
+              {kpi.changeType === "up" ? (
+                <TrendingUp className="h-3 w-3" />
+              ) : kpi.changeType === "down" ? (
+                <TrendingDown className="h-3 w-3" />
+              ) : null}
               {kpi.change}
             </div>
             <div className="mt-2 h-8 w-full opacity-60">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={kpi.spark}>
+                <LineChart data={kpi.spark || []}>
                   <Line
                     type="monotone"
                     dataKey="v"
@@ -331,66 +258,158 @@ function EmployeeKpiCards() {
   );
 }
 
-// ── 3. My Attendance ──────────────────────────────────────────
 function MyAttendance() {
+  const { data: attData, isLoading } = useQuery({
+    queryKey: ["employee-dashboard-attendance"],
+    queryFn: () => api.get<any>("/attendance/my-history?limit=5"),
+  });
+
+  const records: any[] = Array.isArray(attData?.data?.items)
+    ? attData.data.items
+    : Array.isArray(attData?.items)
+      ? attData.items
+      : MY_ATTENDANCE;
+
+  const trend: any[] = Array.isArray(attData?.data?.trend)
+    ? attData.data.trend
+    : MY_ATTENDANCE_TREND;
+
   return (
     <motion.div {...fadeUp}>
       <Card>
-        <SectionHeader title="My Attendance" subtitle="Recent check-in / check-out log" link="/dashboard/attendance" />
+        <SectionHeader
+          title="My Attendance"
+          subtitle="Recent check-in / check-out log"
+          link="/dashboard/attendance"
+        />
 
-        {/* Trend chart */}
-        <div className="mb-4 h-36">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={MY_ATTENDANCE_TREND} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
-              <CartesianGrid stroke="oklch(0.5 0.02 264 / 0.1)" vertical={false} />
-              <XAxis dataKey="week" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} domain={[0, 5]} />
-              <Tooltip
-                contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }}
-                formatter={(v) => [`${v} days`, "Days Present"]}
-              />
-              <Bar dataKey="days" radius={[4, 4, 0, 0]} fill="var(--primary)" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        {trend.length > 0 && (
+          <div className="mb-4 h-36">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={trend}
+                margin={{ top: 4, right: 8, left: -20, bottom: 0 }}
+              >
+                <CartesianGrid
+                  stroke="oklch(0.5 0.02 264 / 0.1)"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="week"
+                  tick={{ fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={false}
+                  domain={[0, 5]}
+                />
+                <Tooltip
+                  contentStyle={{
+                    background: "var(--card)",
+                    border: "1px solid var(--border)",
+                    borderRadius: 8,
+                    fontSize: 12,
+                  }}
+                  formatter={(v) => [`${v} days`, "Days Present"]}
+                />
+                <Bar
+                  dataKey="days"
+                  radius={[4, 4, 0, 0]}
+                  fill="var(--primary)"
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
 
-        {/* Log */}
         <div className="space-y-2">
-          {MY_ATTENDANCE.map((a) => (
-            <div key={a.date} className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-2">
-              <div className="w-20 shrink-0 text-xs text-muted-foreground">
-                {new Date(a.date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
-              </div>
-              <span className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-medium capitalize ${ATTENDANCE_STATUS[a.status]}`}>
-                {a.status === "wfh" ? "WFH" : a.status}
-              </span>
-              <div className="flex-1 text-xs text-muted-foreground">
-                {a.checkIn ? `${a.checkIn} → ${a.checkOut || "–"}` : "Not recorded"}
-              </div>
-              <div className="shrink-0 text-xs font-medium">{a.hours}</div>
-            </div>
-          ))}
+          {isLoading ? (
+            <p className="py-6 text-center text-xs text-muted-foreground">
+              Loading attendance records...
+            </p>
+          ) : records.length === 0 ? (
+            <p className="py-6 text-center text-xs text-muted-foreground">
+              No attendance records found.
+            </p>
+          ) : (
+            records.map((a, idx) => {
+              const statusKey = String(a.status || "present").toLowerCase();
+              return (
+                <div
+                  key={a.id || a.date || idx}
+                  className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-2"
+                >
+                  <div className="w-20 shrink-0 text-xs text-muted-foreground">
+                    {a.date
+                      ? new Date(a.date).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                        })
+                      : "—"}
+                  </div>
+                  <span
+                    className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-medium capitalize ${
+                      ATTENDANCE_STATUS[statusKey] || statusBadgeClass("info")
+                    }`}
+                  >
+                    {statusKey === "wfh" ? "WFH" : a.status || "Present"}
+                  </span>
+                  <div className="flex-1 text-xs text-muted-foreground">
+                    {a.checkIn || a.checkInTime
+                      ? `${a.checkIn || a.checkInTime} → ${a.checkOut || a.checkOutTime || "–"}`
+                      : "Not recorded"}
+                  </div>
+                  <div className="shrink-0 text-xs font-medium">
+                    {a.hours ?? (a.workingHours ? `${a.workingHours}h` : "—")}
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </Card>
     </motion.div>
   );
 }
 
-// ── 4. My Leaves ──────────────────────────────────────────────
 function MyLeaves() {
   const [tab, setTab] = useState<"history" | "balance">("history");
+
+  const { data: leaveData, isLoading } = useQuery({
+    queryKey: ["employee-dashboard-leaves"],
+    queryFn: () => api.get<any>("/leaves/my"),
+  });
+
+  const leaves: any[] = Array.isArray(leaveData?.data?.items)
+    ? leaveData.data.items
+    : Array.isArray(leaveData?.items)
+      ? leaveData.items
+      : MY_LEAVES;
+
+  const quota: any[] = Array.isArray(leaveData?.data?.quota)
+    ? leaveData.data.quota
+    : LEAVE_QUOTA;
 
   return (
     <motion.div {...fadeUp}>
       <Card>
-        <SectionHeader title="My Leaves" subtitle="Leave history and balance" link="/dashboard/leaves" />
+        <SectionHeader
+          title="My Leaves"
+          subtitle="Leave history and balance"
+          link="/dashboard/leaves"
+        />
         <div className="mb-4 flex gap-2">
           {(["history", "balance"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className={`rounded-lg px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
-                tab === t ? "bg-foreground text-background" : "border border-border text-muted-foreground hover:text-foreground"
+                tab === t
+                  ? "bg-foreground text-background"
+                  : "border border-border text-muted-foreground hover:text-foreground"
               }`}
             >
               {t}
@@ -400,46 +419,97 @@ function MyLeaves() {
 
         <AnimatePresence mode="wait">
           {tab === "history" && (
-            <motion.div key="history" initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.18 }} className="space-y-2">
-              {MY_LEAVES.map((l) => (
-                <div key={l.id} className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-2.5">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium">{l.type}</span>
-                      <Badge
-                        variant={l.status === "approved" ? "default" : l.status === "pending" ? "secondary" : "destructive"}
-                        className="text-[10px] capitalize"
-                      >
-                        {l.status}
-                      </Badge>
+            <motion.div
+              key="history"
+              initial={{ opacity: 0, x: 8 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -8 }}
+              transition={{ duration: 0.18 }}
+              className="space-y-2"
+            >
+              {isLoading ? (
+                <p className="py-6 text-center text-xs text-muted-foreground">
+                  Loading leave history...
+                </p>
+              ) : leaves.length === 0 ? (
+                <p className="py-6 text-center text-xs text-muted-foreground">
+                  No leave history found.
+                </p>
+              ) : (
+                leaves.map((l) => (
+                  <div
+                    key={l.id}
+                    className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-2.5"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">
+                          {l.type || l.leave_type}
+                        </span>
+                        <Badge
+                          variant={
+                            l.status === "approved"
+                              ? "default"
+                              : l.status === "pending"
+                                ? "secondary"
+                                : "destructive"
+                          }
+                          className="text-[10px] capitalize"
+                        >
+                          {l.status}
+                        </Badge>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {l.from || l.start_date} → {l.to || l.end_date} ·{" "}
+                        {l.days ?? 1} day{(l.days ?? 1) !== 1 ? "s" : ""}
+                      </div>
+                      {l.approvedBy && (
+                        <div className="text-xs text-muted-foreground">
+                          Approved by {l.approvedBy}
+                        </div>
+                      )}
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      {l.from} → {l.to} · {l.days} day{l.days !== 1 ? "s" : ""} · Applied {l.appliedOn}
-                    </div>
-                    {l.approvedBy && <div className="text-xs text-muted-foreground">Approved by {l.approvedBy}</div>}
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </motion.div>
           )}
           {tab === "balance" && (
-            <motion.div key="balance" initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.18 }} className="space-y-3">
-              {LEAVE_QUOTA.map((q) => (
-                <div key={q.type}>
-                  <div className="mb-1 flex items-center justify-between text-xs">
-                    <span className="font-medium">{q.type}</span>
-                    <span className="text-muted-foreground">
-                      <span className="font-semibold text-foreground">{q.remaining}</span>/{q.total} remaining
-                    </span>
+            <motion.div
+              key="balance"
+              initial={{ opacity: 0, x: 8 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -8 }}
+              transition={{ duration: 0.18 }}
+              className="space-y-3"
+            >
+              {quota.length === 0 ? (
+                <p className="py-6 text-center text-xs text-muted-foreground">
+                  No leave balance data available.
+                </p>
+              ) : (
+                quota.map((q) => (
+                  <div key={q.type}>
+                    <div className="mb-1 flex items-center justify-between text-xs">
+                      <span className="font-medium">{q.type}</span>
+                      <span className="text-muted-foreground">
+                        <span className="font-semibold text-foreground">
+                          {q.remaining}
+                        </span>
+                        /{q.total} remaining
+                      </span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-primary transition-all duration-700"
+                        style={{
+                          width: `${q.total ? (q.remaining / q.total) * 100 : 0}%`,
+                        }}
+                      />
+                    </div>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-muted">
-                    <div
-                      className="h-full rounded-full bg-primary transition-all duration-700"
-                      style={{ width: `${(q.remaining / q.total) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </motion.div>
           )}
         </AnimatePresence>
@@ -455,72 +525,77 @@ function MyLeaves() {
   );
 }
 
-// ── 5. Performance & Goals ────────────────────────────────────
 function MyPerformance() {
-  return (
-    <motion.div {...fadeUp}>
-      <Card>
-        <SectionHeader title="My Performance" subtitle="Goals and self-assessment" link="/dashboard/performance" />
-        <div className="mb-4 flex items-center gap-4 rounded-xl border border-border bg-background/50 px-4 py-3">
-          <div className="text-center">
-            <div className="font-display text-3xl font-bold text-foreground">87</div>
-            <div className="text-xs text-muted-foreground">Score</div>
-          </div>
-          <div className="flex-1">
-            <div className="mb-1 flex justify-between text-xs">
-              <span className="text-muted-foreground">Performance Rating</span>
-              <span className="font-semibold text-foreground">87/100</span>
-            </div>
-            <Progress value={87} className="h-2" />
-            <p className="mt-1 text-[11px] text-muted-foreground">+5pts from last quarter · Excellent trajectory</p>
-          </div>
-        </div>
-        <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">My Goals</p>
-        <div className="space-y-3">
-          {MY_GOALS.map((g) => (
-            <div key={g.goal}>
-              <div className="mb-1 flex items-center justify-between text-xs">
-                <span className="font-medium">{g.goal}</span>
-                <span className="text-muted-foreground">Due {g.due} · <span className="font-semibold text-foreground">{g.progress}%</span></span>
-              </div>
-              <div className="h-2 overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full bg-primary transition-all duration-700"
-                  style={{ width: `${g.progress}%` }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
-    </motion.div>
-  );
-}
+  const { data: perfData, isLoading } = useQuery({
+    queryKey: ["employee-dashboard-performance"],
+    queryFn: () => api.get<any>("/performance/my"),
+  });
 
-// ── 6. Payslips ───────────────────────────────────────────────
-function MyPayslips() {
+  const goals: any[] = Array.isArray(perfData?.data?.goals)
+    ? perfData.data.goals
+    : Array.isArray(perfData?.goals)
+      ? perfData.goals
+      : MY_GOALS;
+  const score = perfData?.data?.score ?? perfData?.score ?? null;
+
   return (
     <motion.div {...fadeUp}>
       <Card>
-        <SectionHeader title="My Payslips" subtitle="Salary statements" link="/dashboard/payroll/payslips" />
-        <div className="space-y-2">
-          {MY_PAYSLIPS.length === 0 ? (
-            <p className="text-xs text-muted-foreground py-3 text-center">
-              No finalized payslips available yet.
+        <SectionHeader
+          title="My Performance"
+          subtitle="Goals and self-assessment"
+          link="/dashboard/performance"
+        />
+        {score !== null && (
+          <div className="mb-4 flex items-center gap-4 rounded-xl border border-border bg-background/50 px-4 py-3">
+            <div className="text-center">
+              <div className="font-display text-3xl font-bold text-foreground">
+                {score}
+              </div>
+              <div className="text-xs text-muted-foreground">Score</div>
+            </div>
+            <div className="flex-1">
+              <div className="mb-1 flex justify-between text-xs">
+                <span className="text-muted-foreground">
+                  Performance Rating
+                </span>
+                <span className="font-semibold text-foreground">
+                  {score}/100
+                </span>
+              </div>
+              <Progress value={Number(score)} className="h-2" />
+            </div>
+          </div>
+        )}
+        <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          My Goals
+        </p>
+        <div className="space-y-3">
+          {isLoading ? (
+            <p className="py-4 text-center text-xs text-muted-foreground">
+              Loading goals...
+            </p>
+          ) : goals.length === 0 ? (
+            <p className="py-4 text-center text-xs text-muted-foreground">
+              No active goals assigned yet.
             </p>
           ) : (
-            MY_PAYSLIPS.map((p) => (
-              <div key={p.month} className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-3">
-                <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
-                  <Download className="h-4 w-4" />
+            goals.map((g, idx) => (
+              <div key={g.id || g.goal || idx}>
+                <div className="mb-1 flex items-center justify-between text-xs">
+                  <span className="font-medium">{g.goal || g.title}</span>
+                  <span className="text-muted-foreground">
+                    {g.due ? `Due ${g.due} · ` : ""}
+                    <span className="font-semibold text-foreground">
+                      {g.progress ?? 0}%
+                    </span>
+                  </span>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-medium">{p.month}</div>
-                  <div className="text-xs text-muted-foreground">Gross: {p.gross} · Paid on {p.date}</div>
-                </div>
-                <div className="text-right">
-                  <div className="font-semibold text-foreground">{p.net}</div>
-                  <Badge variant="default" className="text-[10px]">Paid</Badge>
+                <div className="h-2 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-primary transition-all duration-700"
+                    style={{ width: `${g.progress ?? 0}%` }}
+                  />
                 </div>
               </div>
             ))
@@ -531,7 +606,72 @@ function MyPayslips() {
   );
 }
 
-// ── 7. My Documents ───────────────────────────────────────────
+function MyPayslips() {
+  const { data: slipData, isLoading } = useQuery({
+    queryKey: ["employee-dashboard-payslips"],
+    queryFn: () => api.get<any>("/payroll/payslips"),
+  });
+
+  const payslips: any[] = Array.isArray(slipData?.data?.items)
+    ? slipData.data.items
+    : Array.isArray(slipData?.items)
+      ? slipData.items
+      : Array.isArray(slipData)
+        ? slipData
+        : MY_PAYSLIPS;
+
+  return (
+    <motion.div {...fadeUp}>
+      <Card>
+        <SectionHeader
+          title="My Payslips"
+          subtitle="Salary statements"
+          link="/dashboard/payroll/payslips"
+        />
+        <div className="space-y-2">
+          {isLoading ? (
+            <p className="text-xs text-muted-foreground py-3 text-center">
+              Loading payslips...
+            </p>
+          ) : payslips.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-3 text-center">
+              No finalized payslips available yet.
+            </p>
+          ) : (
+            payslips.map((p, idx) => (
+              <div
+                key={p.id || p.month || idx}
+                className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-3"
+              >
+                <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
+                  <Download className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-medium">
+                    {p.month || p.period_name}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Gross: {p.gross ?? p.gross_pay ?? "—"}
+                    {p.date ? ` · Paid on ${p.date}` : ""}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="font-semibold text-foreground">
+                    {p.net ?? p.net_pay ?? "—"}
+                  </div>
+                  <Badge variant="default" className="text-[10px]">
+                    Paid
+                  </Badge>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </Card>
+    </motion.div>
+  );
+}
+
 function MyDocuments() {
   const DOC_STATUS_STYLE: Record<string, string> = {
     verified: statusBadgeClass("approved"),
@@ -539,30 +679,72 @@ function MyDocuments() {
     rejected: statusBadgeClass("critical"),
   };
 
+  const { data: docData, isLoading } = useQuery({
+    queryKey: ["employee-dashboard-documents"],
+    queryFn: () => api.get<any>("/documents/my"),
+  });
+
+  const documents: any[] = Array.isArray(docData?.data?.items)
+    ? docData.data.items
+    : Array.isArray(docData?.items)
+      ? docData.items
+      : Array.isArray(docData)
+        ? docData
+        : MY_DOCUMENTS;
+
   return (
     <motion.div {...fadeUp}>
       <Card>
-        <SectionHeader title="My Documents" subtitle="Document verification status" link="/dashboard/documents" />
+        <SectionHeader
+          title="My Documents"
+          subtitle="Document verification status"
+          link="/dashboard/documents"
+        />
         <div className="space-y-2">
-          {MY_DOCUMENTS.map((d) => (
-            <div key={d.name} className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-2.5">
-              <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <div className="min-w-0 flex-1">
-                <div className="text-sm font-medium">{d.name}</div>
-                {d.dueDate && <div className="text-xs text-muted-foreground">{d.dueDate}</div>}
-              </div>
-              <span className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-medium capitalize ${DOC_STATUS_STYLE[d.status]}`}>
-                {d.status}
-              </span>
-            </div>
-          ))}
+          {isLoading ? (
+            <p className="py-6 text-center text-xs text-muted-foreground">
+              Loading documents...
+            </p>
+          ) : documents.length === 0 ? (
+            <p className="py-6 text-center text-xs text-muted-foreground">
+              No documents uploaded yet.
+            </p>
+          ) : (
+            documents.map((d, idx) => {
+              const statusKey = String(d.status || "pending").toLowerCase();
+              return (
+                <div
+                  key={d.id || d.name || idx}
+                  className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-2.5"
+                >
+                  <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-medium">
+                      {d.name || d.title}
+                    </div>
+                    {d.dueDate && (
+                      <div className="text-xs text-muted-foreground">
+                        {d.dueDate}
+                      </div>
+                    )}
+                  </div>
+                  <span
+                    className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-medium capitalize ${
+                      DOC_STATUS_STYLE[statusKey] || statusBadgeClass("pending")
+                    }`}
+                  >
+                    {d.status || "Pending"}
+                  </span>
+                </div>
+              );
+            })
+          )}
         </div>
       </Card>
     </motion.div>
   );
 }
 
-// ── 8. My Assets ─────────────────────────────────────────────
 function MyAssets() {
   const ws = useAurix();
   const userName = (ws.user?.fullName || "").trim().toLowerCase();
@@ -573,12 +755,39 @@ function MyAssets() {
     queryFn: () => api.get<any>("assets?limit=100"),
   });
 
-  const raw = listData?.data?.items ?? listData?.data ?? listData?.items ?? (Array.isArray(listData) ? listData : []);
+  const raw =
+    listData?.data?.items ??
+    listData?.data ??
+    listData?.items ??
+    (Array.isArray(listData) ? listData : []);
   const allItems: any[] = Array.isArray(raw) ? raw : [];
   const assignedAssets = allItems.filter((a: any) => {
-    const assigned = (a.assignedTo || a.assigned_to || a.assigned_to_name || a.assigned_employee_name || "").toString().trim().toLowerCase();
-    const assignedId = String(a.assignedToId || a.assigned_to_id || a.employeeId || a.employee_id || a.userId || a.user_id || "").toLowerCase();
-    if (userName && (assigned === userName || assigned.includes(userName) || userName.includes(assigned))) return true;
+    const assigned = (
+      a.assignedTo ||
+      a.assigned_to ||
+      a.assigned_to_name ||
+      a.assigned_employee_name ||
+      ""
+    )
+      .toString()
+      .trim()
+      .toLowerCase();
+    const assignedId = String(
+      a.assignedToId ||
+        a.assigned_to_id ||
+        a.employeeId ||
+        a.employee_id ||
+        a.userId ||
+        a.user_id ||
+        "",
+    ).toLowerCase();
+    if (
+      userName &&
+      (assigned === userName ||
+        assigned.includes(userName) ||
+        userName.includes(assigned))
+    )
+      return true;
     if (userId && (assigned === userId || assignedId === userId)) return true;
     return false;
   });
@@ -586,23 +795,39 @@ function MyAssets() {
   return (
     <motion.div {...fadeUp}>
       <Card>
-        <SectionHeader title="My Assets" subtitle="Assigned company equipment" link="/dashboard/assets" />
+        <SectionHeader
+          title="My Assets"
+          subtitle="Assigned company equipment"
+          link="/dashboard/assets"
+        />
         <div className="space-y-2">
           {isLoading ? (
-            <div className="py-6 text-center text-xs text-muted-foreground">Loading assigned equipment...</div>
+            <div className="py-6 text-center text-xs text-muted-foreground">
+              Loading assigned equipment...
+            </div>
           ) : assignedAssets.length === 0 ? (
             <div className="py-6 text-center text-xs text-muted-foreground">
               No company equipment currently assigned.
             </div>
           ) : (
             assignedAssets.slice(0, 4).map((a: any) => (
-              <div key={a.id || a.tag} className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-2.5">
+              <div
+                key={a.id || a.tag}
+                className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-2.5"
+              >
                 <Package className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <div className="min-w-0 flex-1">
-                  <div className="text-sm font-medium">{a.name || a.asset_name}</div>
-                  <div className="text-xs text-muted-foreground">Tag: {a.tag || a.asset_tag || "AST"} · {a.brand || "Hardware"}</div>
+                  <div className="text-sm font-medium">
+                    {a.name || a.asset_name}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Tag: {a.tag || a.asset_tag || "AST"} ·{" "}
+                    {a.brand || "Hardware"}
+                  </div>
                 </div>
-                <Badge variant="secondary" className="text-[10px] capitalize">{a.status || "active"}</Badge>
+                <Badge variant="secondary" className="text-[10px] capitalize">
+                  {a.status || "active"}
+                </Badge>
               </div>
             ))
           )}
@@ -612,33 +837,76 @@ function MyAssets() {
   );
 }
 
-// ── 9. Company Calendar ───────────────────────────────────────
 function EmployeeCalendar() {
+  const { data: holData, isLoading } = useQuery({
+    queryKey: ["employee-dashboard-holidays"],
+    queryFn: () => api.get<any>("/holidays"),
+  });
+
+  const events: any[] = Array.isArray(holData?.data?.items)
+    ? holData.data.items
+    : Array.isArray(holData?.items)
+      ? holData.items
+      : Array.isArray(holData)
+        ? holData
+        : COMPANY_EVENTS;
+
   return (
     <motion.div {...fadeUp}>
       <Card>
-        <SectionHeader title="Company Calendar" subtitle="Upcoming events and holidays" link="/dashboard/attendance/holidays" />
+        <SectionHeader
+          title="Company Calendar"
+          subtitle="Upcoming events and holidays"
+          link="/dashboard/attendance/holidays"
+        />
         <div className="space-y-2">
-          {COMPANY_EVENTS.map((ev, i) => (
-            <div key={i} className={`flex items-start gap-3 rounded-xl border px-3 py-2.5 ${EVENT_COLOR[ev.type] ?? "bg-muted/40 border-border"}`}>
-              <CalendarDays className="mt-0.5 h-4 w-4 shrink-0" />
-              <div className="min-w-0 flex-1">
-                <div className="text-sm font-medium">{ev.title}</div>
-                <div className="text-xs opacity-70">
-                  {new Date(ev.date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
-                  {ev.time ? ` · ${ev.time}` : ""}
+          {isLoading ? (
+            <p className="py-6 text-center text-xs text-muted-foreground">
+              Loading calendar events...
+            </p>
+          ) : events.length === 0 ? (
+            <p className="py-6 text-center text-xs text-muted-foreground">
+              No upcoming events or holidays found.
+            </p>
+          ) : (
+            events.slice(0, 5).map((ev, i) => (
+              <div
+                key={ev.id || i}
+                className={`flex items-start gap-3 rounded-xl border px-3 py-2.5 ${
+                  EVENT_COLOR[String(ev.type || "holiday").toLowerCase()] ??
+                  "bg-muted/40 border-border"
+                }`}
+              >
+                <CalendarDays className="mt-0.5 h-4 w-4 shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-medium">
+                    {ev.title || ev.name}
+                  </div>
+                  <div className="text-xs opacity-70">
+                    {ev.date
+                      ? new Date(ev.date).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                        })
+                      : ""}
+                    {ev.time ? ` · ${ev.time}` : ""}
+                  </div>
                 </div>
+                <Badge
+                  variant="outline"
+                  className="shrink-0 capitalize text-[10px] border-current"
+                >
+                  {ev.type || "holiday"}
+                </Badge>
               </div>
-              <Badge variant="outline" className="shrink-0 capitalize text-[10px] border-current">{ev.type}</Badge>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </Card>
     </motion.div>
   );
 }
 
-// ── 10. Notifications ─────────────────────────────────────────
 function EmployeeNotifications() {
   const { items } = useNotifications({ limit: 5 });
   const archiveMutation = useArchive();
@@ -649,7 +917,8 @@ function EmployeeNotifications() {
         <SectionHeader title="Notifications" link="/dashboard/notifications" />
         <div className="space-y-2">
           {items.map((n) => {
-            const isUrgent = n.priority === "critical" || n.priority === "high";
+            const isUrgent =
+              n.priority === "critical" || n.priority === "high";
             return (
               <div
                 key={n.id}
@@ -657,7 +926,9 @@ function EmployeeNotifications() {
               >
                 <div
                   className={`mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg ${
-                    isUrgent ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"
+                    isUrgent
+                      ? "bg-destructive/10 text-destructive"
+                      : "bg-primary/10 text-primary"
                   }`}
                 >
                   <Bell className="h-3.5 w-3.5" />
@@ -666,15 +937,23 @@ function EmployeeNotifications() {
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">{n.title}</span>
                     {isUrgent && (
-                      <Badge variant="destructive" className="h-4 px-1.5 text-[10px] uppercase font-bold">
+                      <Badge
+                        variant="destructive"
+                        className="h-4 px-1.5 text-[10px] uppercase font-bold"
+                      >
                         {n.priority}
                       </Badge>
                     )}
-                    <Badge variant="outline" className="h-4 px-1 text-[9px] capitalize">
+                    <Badge
+                      variant="outline"
+                      className="h-4 px-1 text-[9px] capitalize"
+                    >
                       {n.category.replace(/_/g, " ")}
                     </Badge>
                   </div>
-                  <div className="text-xs text-muted-foreground mt-0.5">{n.body}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    {n.body}
+                  </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <span className="text-xs text-muted-foreground font-mono">
@@ -704,7 +983,6 @@ function EmployeeNotifications() {
   );
 }
 
-// ── Main Employee Dashboard ───────────────────────────────────
 export function EmployeeDashboard() {
   const ws = useAurix();
   const firstName = ws.user?.fullName?.split(" ")[0] ?? "there";
@@ -712,30 +990,20 @@ export function EmployeeDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <EmployeeHeader firstName={firstName} companyName={companyName} />
-
-      {/* KPI Cards */}
       <EmployeeKpiCards />
-
-      {/* Attendance + Leaves */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <MyAttendance />
         <MyLeaves />
       </div>
-      {/* Performance + Payslips */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <MyPerformance />
         <MyPayslips />
       </div>
-
-      {/* Documents + Assets */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <MyDocuments />
         <MyAssets />
       </div>
-
-      {/* Calendar + Notifications */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <EmployeeCalendar />
         <EmployeeNotifications />

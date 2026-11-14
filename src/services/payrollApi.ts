@@ -1,3 +1,4 @@
+import apiInstance from "@/api/apiInstance";
 import type {
   PayrollPeriod,
   PayrollRun,
@@ -18,9 +19,24 @@ export type {
   SalaryComponent,
 };
 
-export type PayrollStatus = "draft" | "processing" | "validated" | "approved" | "finalized" | "paid" | string;
+export type PayrollStatus =
+  | "draft"
+  | "processing"
+  | "validated"
+  | "approved"
+  | "finalized"
+  | "paid"
+  | string;
 export type PayrollRunStatus = PayrollStatus;
-export type PayrollRunStep = "processing" | "validation" | "preview" | "review" | "approval" | "finalize" | "payment" | string;
+export type PayrollRunStep =
+  | "processing"
+  | "validation"
+  | "preview"
+  | "review"
+  | "approval"
+  | "finalize"
+  | "payment"
+  | string;
 
 export interface PayrollPreviewEmployee extends PayrollEmployeeRecord {
   basic?: number;
@@ -53,138 +69,136 @@ export interface PayrollPayslipData extends PayslipItem {
   pan?: string;
 }
 
-const MOCK_RUN: PayrollRun = {
-  id: "run-2026-11",
-  period_id: "per-2026-11",
-  period_name: "November 2026",
-  month: 11,
-  year: 2026,
-  status: "validated",
-  total_employees: 48,
-  total_gross: 425000,
-  total_deductions: 68000,
-  total_net: 357000,
-  created_at: new Date().toISOString(),
+export const getPayrollDashboard = async () => {
+  const res = await apiInstance.get("/payroll/dashboard");
+  const d = res.data?.data ?? res.data ?? {};
+  return {
+    active_run: d.active_run ?? null,
+    recent_runs: Array.isArray(d.recent_runs) ? d.recent_runs : [],
+    summary: {
+      total_payroll_cost: Number(d.summary?.total_payroll_cost ?? 0),
+      total_net_pay: Number(d.summary?.total_net_pay ?? 0),
+      total_deductions: Number(d.summary?.total_deductions ?? 0),
+      headcount: Number(d.summary?.headcount ?? 0),
+    },
+  };
 };
 
-const MOCK_EMPLOYEES: PayrollPreviewEmployee[] = [
-  {
-    id: "pe-1",
-    employee_id: "EMP-001",
-    employee_name: "Alex Vance",
-    department: "Engineering",
-    designation: "VP Engineering",
-    gross_pay: 15000,
-    deductions: 2800,
-    net_pay: 12200,
-    basic: 7500,
-    hra: 3750,
-    allowances: 3750,
-    pf: 900,
-    tax: 1900,
-    days_worked: 22,
-    lop_days: 0,
-    status: "valid",
-  },
-];
+export const getPayrollPeriods = async (): Promise<PayrollPeriod[]> => {
+  const res = await apiInstance.get("/payroll/periods");
+  const d = res.data?.data ?? res.data;
+  return Array.isArray(d) ? d : Array.isArray(d?.items) ? d.items : [];
+};
 
-export const getPayrollDashboard = async () => ({
-  active_run: MOCK_RUN,
-  recent_runs: [MOCK_RUN],
-  summary: {
-    total_payroll_cost: 425000,
-    total_net_pay: 357000,
-    total_deductions: 68000,
-    headcount: 48,
-  },
-});
+export const getPayrollRun = async (runId: string): Promise<PayrollRun> => {
+  const res = await apiInstance.get(`/payroll/runs/${runId}`);
+  return res.data?.data ?? res.data;
+};
 
-export const getPayrollPeriods = async (): Promise<PayrollPeriod[]> => [
-  {
-    id: "per-2026-11",
-    name: "November 2026",
-    month: 11,
-    year: 2026,
-    start_date: "2026-11-01",
-    end_date: "2026-11-30",
-    status: "open",
-    run_id: "run-2026-11",
-  },
-];
+export const getPayrollRunEmployees = async (
+  runId: string,
+): Promise<PayrollPreviewEmployee[]> => {
+  const res = await apiInstance.get(`/payroll/runs/${runId}/employees`);
+  const d = res.data?.data ?? res.data;
+  return Array.isArray(d) ? d : Array.isArray(d?.items) ? d.items : [];
+};
 
-export const getPayrollRun = async (runId: string): Promise<PayrollRun> => ({ ...MOCK_RUN, id: runId || MOCK_RUN.id });
-export const getPayrollRunEmployees = async (_runId: string): Promise<PayrollPreviewEmployee[]> => MOCK_EMPLOYEES;
-export const getPayrollValidationIssues = async (_runId: string): Promise<PayrollValidationIssue[]> => [];
-export const getPayslips = async (): Promise<PayslipItem[]> => [
-  {
-    id: "ps-1",
-    run_id: "run-2026-11",
-    employee_id: "EMP-001",
-    employee_name: "Alex Vance",
-    department: "Engineering",
-    period_name: "November 2026",
-    month: 11,
-    year: 2026,
-    gross_pay: 15000,
-    deductions: 2800,
-    net_pay: 12200,
-    status: "published",
-    generated_at: new Date().toISOString(),
-  },
-];
-export const getPaymentBatches = async (): Promise<PaymentBatch[]> => [
-  {
-    id: "batch-1",
-    run_id: "run-2026-11",
-    batch_number: "BATCH-2026-11-01",
-    total_amount: 357000,
-    employee_count: 48,
-    status: "approved",
-    created_at: new Date().toISOString(),
-  },
-];
+export const getPayrollValidationIssues = async (
+  runId: string,
+): Promise<PayrollValidationIssue[]> => {
+  const res = await apiInstance.get(`/payroll/runs/${runId}/validation-issues`);
+  const d = res.data?.data ?? res.data;
+  return Array.isArray(d) ? d : Array.isArray(d?.items) ? d.items : [];
+};
+
+export const getPayslips = async (
+  params?: Record<string, unknown>,
+): Promise<PayslipItem[]> => {
+  const res = await apiInstance.get("/payroll/payslips", { params });
+  const d = res.data?.data ?? res.data;
+  return Array.isArray(d) ? d : Array.isArray(d?.items) ? d.items : [];
+};
+
+export const getPaymentBatches = async (): Promise<PaymentBatch[]> => {
+  const res = await apiInstance.get("/payroll/payment-batches");
+  const d = res.data?.data ?? res.data;
+  return Array.isArray(d) ? d : Array.isArray(d?.items) ? d.items : [];
+};
 
 export const payrollApi = {
   getPayrollDashboard,
   getDashboard: getPayrollDashboard,
   getPayrollPeriods,
   getPeriods: getPayrollPeriods,
-  createPeriod: async (data: Partial<PayrollPeriod>) => ({ id: `per-${Date.now()}`, ...data }),
+  createPeriod: async (data: Partial<PayrollPeriod>) => {
+    const res = await apiInstance.post("/payroll/periods", data);
+    return res.data?.data ?? res.data;
+  },
   getPayrollRun,
   getRun: getPayrollRun,
-  getReviewData: async (runId: string): Promise<PayrollReviewData> => ({
-    run: { ...MOCK_RUN, id: runId },
-    employees: MOCK_EMPLOYEES,
-    summary: { total_employees: 48, total_gross: 425000, total_deductions: 68000, total_net: 357000 },
-  }),
+  getReviewData: async (runId: string): Promise<PayrollReviewData> => {
+    const res = await apiInstance.get(`/payroll/runs/${runId}/review`);
+    return res.data?.data ?? res.data;
+  },
   getPayrollRunEmployees,
   getRunEmployees: getPayrollRunEmployees,
   getPayrollValidationIssues,
   getValidationIssues: getPayrollValidationIssues,
-  startRun: async (_periodId: string) => MOCK_RUN,
-  recalculateRun: async (runId: string) => ({ ...MOCK_RUN, id: runId }),
-  revalidateRun: async (runId: string) => ({ ...MOCK_RUN, id: runId }),
-  approveRun: async (runId: string) => ({ ...MOCK_RUN, id: runId, status: "approved" }),
-  finalizeRun: async (runId: string) => ({ ...MOCK_RUN, id: runId, status: "finalized" }),
+  startRun: async (periodId: string) => {
+    const res = await apiInstance.post("/payroll/runs", {
+      period_id: periodId,
+    });
+    return res.data?.data ?? res.data;
+  },
+  recalculateRun: async (runId: string) => {
+    const res = await apiInstance.post(
+      `/payroll/runs/${runId}/recalculate`,
+      {},
+    );
+    return res.data?.data ?? res.data;
+  },
+  revalidateRun: async (runId: string) => {
+    const res = await apiInstance.post(`/payroll/runs/${runId}/revalidate`, {});
+    return res.data?.data ?? res.data;
+  },
+  approveRun: async (runId: string) => {
+    const res = await apiInstance.post(`/payroll/runs/${runId}/approve`, {});
+    return res.data?.data ?? res.data;
+  },
+  finalizeRun: async (runId: string) => {
+    const res = await apiInstance.post(`/payroll/runs/${runId}/finalize`, {});
+    return res.data?.data ?? res.data;
+  },
   getPayslips,
-  getPayslipById: async (id: string): Promise<PayrollPayslipData> => ({
-    ...(await getPayslips())[0],
-    id,
-    earnings: [
-      { name: "Basic Salary", amount: 7500 },
-      { name: "House Rent Allowance", amount: 3750 },
-      { name: "Special Allowance", amount: 3750 },
-    ],
-    deductions_list: [
-      { name: "Provident Fund", amount: 900 },
-      { name: "Income Tax (TDS)", amount: 1900 },
-    ],
-  }),
+  getPayslipById: async (id: string): Promise<PayrollPayslipData> => {
+    const res = await apiInstance.get(`/payroll/payslips/${id}`);
+    return res.data?.data ?? res.data;
+  },
   getPaymentBatches,
-  getPaymentBatchById: async (batchId: string) => ({ ...(await getPaymentBatches())[0], id: batchId }),
-  createPaymentBatch: async (_runId: string) => (await getPaymentBatches())[0],
-  approvePaymentBatch: async (batchId: string) => ({ ...(await getPaymentBatches())[0], id: batchId, status: "approved" }),
-  processPaymentBatch: async (batchId: string) => ({ ...(await getPaymentBatches())[0], id: batchId, status: "paid" }),
+  getPaymentBatchById: async (batchId: string) => {
+    const res = await apiInstance.get(`/payroll/payment-batches/${batchId}`);
+    return res.data?.data ?? res.data;
+  },
+  createPaymentBatch: async (runId: string) => {
+    const res = await apiInstance.post("/payroll/payment-batches", {
+      run_id: runId,
+    });
+    return res.data?.data ?? res.data;
+  },
+  approvePaymentBatch: async (batchId: string) => {
+    const res = await apiInstance.post(
+      `/payroll/payment-batches/${batchId}/approve`,
+      {},
+    );
+    return res.data?.data ?? res.data;
+  },
+  processPaymentBatch: async (batchId: string) => {
+    const res = await apiInstance.post(
+      `/payroll/payment-batches/${batchId}/process`,
+      {},
+    );
+    return res.data?.data ?? res.data;
+  },
 };
 
 export default payrollApi;

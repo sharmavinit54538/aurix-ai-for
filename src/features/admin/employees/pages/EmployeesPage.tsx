@@ -245,7 +245,7 @@ export function EmployeesPage() {
           employee_id: draft.employeeId || generateEmployeeCode(),
           department: draft.department || "Engineering",
           designation: draft.designation || "Senior Software Engineer",
-          reporting_manager_name: draft.managerName || draft.reportingManagerName || "Alex Vance",
+          reporting_manager_name: draft.managerName || draft.reportingManagerName || "",
           joining_date: draft.joiningDate || new Date().toISOString().split("T")[0],
           employment_type: draft.employmentType || "Full-time",
           employment_status:

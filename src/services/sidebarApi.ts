@@ -6,15 +6,16 @@ export interface SidebarPermissionsResponse {
 }
 
 export const sidebarApi = {
-  getPermissions: async (userRole?: string): Promise<SidebarPermissionsResponse> => {
-    try {
-      return await api.get<SidebarPermissionsResponse>(`/sidebar/permissions?role=${userRole || "super_admin"}`);
-    } catch {
-      return {
-        role: userRole || "super_admin",
-        permissions: ["*"],
-      };
-    }
+  getPermissions: async (
+    userRole?: string,
+  ): Promise<SidebarPermissionsResponse> => {
+    const roleParam = userRole ? `?role=${encodeURIComponent(userRole)}` : "";
+    const res = await api.get<any>(`/sidebar/permissions${roleParam}`);
+    const d = res?.data ?? res ?? {};
+    return {
+      role: String(d.role || userRole || ""),
+      permissions: Array.isArray(d.permissions) ? d.permissions : [],
+    };
   },
 };
 

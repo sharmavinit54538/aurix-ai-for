@@ -1,3 +1,5 @@
+import apiInstance from "@/api/apiInstance";
+
 export interface NotificationItem {
   id: string;
   title: string;
@@ -18,42 +20,82 @@ export interface NotificationListParams {
   type?: string;
 }
 
+let unreadCountCircuitBroken = false;
+
 export function resetUnreadCountCircuitBreaker(): void {
-  // No-op in standalone client mode
+  unreadCountCircuitBroken = false;
 }
 
 export function isUnreadCountCircuitBroken(): boolean {
-  return false;
+  return unreadCountCircuitBroken;
 }
 
-const MOCK_NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: "notif-1",
-    title: "Payroll Cycle Ready",
-    message: "Current month payroll run is validated and ready for review.",
-    type: "info",
-    category: "payroll",
-    is_read: false,
-    read: false,
-    created_at: new Date().toISOString(),
-    action_url: "/dashboard/payroll",
-  },
-];
+export const getNotifications = async (
+  params?: NotificationListParams,
+): Promise<{
+  items: NotificationItem[];
+  unread_count: number;
+  total?: number;
+}> => {
+  const res = await apiInstance.get("/notifications", { params });
+  const payload = res.data?.data ?? res.data;
+  const items: NotificationItem[] = Array.isArray(payload)
+    ? payload
+    : Array.isArray(payload?.items)
+      ? payload.items
+      : [];
+  const unreadCount = Number(
+    payload?.unread_count ??
+      items.filter((i) => !i.is_read && !i.read).length,
+  );
+  return {
+    items,
+    unread_count: unreadCount,
+    total: Number(payload?.total ?? items.length),
+  };
+};
 
-export const getNotifications = async (_params?: NotificationListParams): Promise<{ items: NotificationItem[]; unread_count: number; total?: number }> => ({
-  items: MOCK_NOTIFICATIONS,
-  unread_count: 1,
-  total: 1,
-});
+export const getUnreadCount = async (): Promise<{
+  unread_count: number;
+  count: number;
+}> => {
+  if (unreadCountCircuitBroken) {
+    throw new Error("Unread count endpoint circuit broken");
+  }
+  try {
+    const res = await apiInstance.get("/notifications/unread-count");
+    const payload = res.data?.data ?? res.data ?? {};
+    const count = Number(
+      payload.unread_count ?? payload.totalUnread ?? payload.count ?? 0,
+    );
+    return {
+      unread_count: count,
+      count,
+    };
+  } catch (err: any) {
+    const status = err?.response?.status ?? err?.status;
+    if (status === 404 || status === 501) {
+      unreadCountCircuitBroken = true;
+      throw new Error("Unread count endpoint unavailable (circuit broken)");
+    }
+    throw err;
+  }
+};
 
-export const getUnreadCount = async (): Promise<{ unread_count: number; count: number }> => ({
-  unread_count: 1,
-  count: 1,
-});
+export const markAsRead = async (id: string) => {
+  const res = await apiInstance.post(`/notifications/${id}/read`, {});
+  return res.data?.data ?? res.data ?? { success: true };
+};
 
-export const markAsRead = async (_id: string) => ({ success: true });
-export const markAllAsRead = async () => ({ success: true });
-export const deleteNotification = async (_id: string) => ({ success: true });
+export const markAllAsRead = async () => {
+  const res = await apiInstance.post("/notifications/read-all", {});
+  return res.data?.data ?? res.data ?? { success: true };
+};
+
+export const deleteNotification = async (id: string) => {
+  const res = await apiInstance.delete(`/notifications/${id}`);
+  return res.data?.data ?? res.data ?? { success: true };
+};
 
 export const notificationsApi = {
   getNotifications,

@@ -10,18 +10,7 @@ export interface WorkforceInsightsState {
 const initialState: WorkforceInsightsState = {
   loading: false,
   error: null,
-  data: {
-    kpis: [
-      { label: "Total Headcount", value: 248, trend: "up" },
-      { label: "Retention Rate", value: "95.8%", trend: "up" },
-      { label: "Internal Mobility Rate", value: "14.2%", trend: "up" },
-    ],
-    summary: { totalDepartments: 6, openPositions: 18 },
-    charts: [],
-    headcountTrends: [],
-    departmentComparison: [],
-    lastUpdated: new Date().toISOString(),
-  },
+  data: null,
 };
 
 export const workforceInsightsSlice = createSlice({
@@ -32,6 +21,7 @@ export const workforceInsightsSlice = createSlice({
     builder
       .addCase(fetchWorkforceInsightsDashboard.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(fetchWorkforceInsightsDashboard.fulfilled, (state, action) => {
         state.loading = false;
@@ -39,7 +29,9 @@ export const workforceInsightsSlice = createSlice({
       })
       .addCase(fetchWorkforceInsightsDashboard.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || "Failed to fetch workforce insights dashboard";
+        state.error =
+          action.error.message ||
+          "Failed to fetch workforce insights dashboard";
       });
   },
 });

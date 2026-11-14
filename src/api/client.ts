@@ -1,5 +1,6 @@
+import axios from "axios";
+import apiInstance from "./apiInstance";
 import { normalizeApiPath } from "./normalizeApiPath";
-import { buildMockPayload } from "./apiInstance";
 
 export { normalizeApiPath };
 
@@ -19,6 +20,7 @@ export interface RequestOptions {
   headers?: Record<string, string>;
   data?: unknown;
   timeout?: number;
+  params?: Record<string, unknown>;
 }
 
 export async function apiRequest<T = unknown>(
@@ -28,31 +30,42 @@ export async function apiRequest<T = unknown>(
   const normalized = normalizeApiPath(path);
   const method = (options.method || "GET").toUpperCase();
 
-  if (normalized.includes("/auth/me")) {
-    return {
-      success: true,
-      data: {
-        id: "usr-1",
-        name: "Alex Vance",
-        email: "alex.vance@aurix.ai",
-        role: "hr_admin",
-        company_id: "org-1",
-        company_name: "AURIX AI Enterprise",
-        is_verified: true,
-        onboarding_completed: true,
-      },
-    } as unknown as T;
+  try {
+    const response = await apiInstance.request<T>({
+      url: normalized,
+      method,
+      data: options.data,
+      headers: options.headers,
+      timeout: options.timeout,
+      params: options.params,
+    });
+    return response.data;
+  } catch (err: unknown) {
+    if (axios.isAxiosError(err)) {
+      const status = err.response?.status ?? 500;
+      const resData = err.response?.data;
+      const message =
+        (resData &&
+          typeof resData === "object" &&
+          ("detail" in resData || "message" in resData || "error" in resData) &&
+          String(
+            (resData as Record<string, unknown>).detail ||
+              (resData as Record<string, unknown>).message ||
+              (resData as Record<string, unknown>).error,
+          )) ||
+        err.message ||
+        `Request failed with status ${status}`;
+      throw new ApiError(message, status, resData);
+    }
+    if (err instanceof ApiError) {
+      throw err;
+    }
+    throw new ApiError(
+      err instanceof Error ? err.message : "Network request failed",
+      500,
+      null,
+    );
   }
-
-  const payload = buildMockPayload(normalized, method, options.data);
-  if (Array.isArray(payload)) {
-    return payload as unknown as T;
-  }
-  return {
-    success: true,
-    data: payload,
-    ...(typeof payload === "object" && payload !== null ? payload : {}),
-  } as unknown as T;
 }
 
 export const api = {

@@ -1,25 +1,17 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
+import { api } from "@/api/client";
 
 export const fetchLeaveAssistantDashboard = createAsyncThunk(
   "leaveAssistant/fetchDashboard",
   async () => {
+    const res = await api.get<any>("/ai/leave-assistant");
+    const d = res?.data ?? res ?? {};
     return {
-      kpis: [
-        { label: "Pending Approvals", value: 4, trend: "down" },
-        { label: "Approved Leaves This Month", value: 24, trend: "up" },
-        { label: "Coverage Ratio", value: "96%", trend: "neutral" },
-      ],
-      summary: { totalRequests: 28, autoApprovedCount: 18 },
-      forecast: [
-        { month: "Apr", projectedDays: 32 },
-        { month: "May", projectedDays: 45 },
-      ],
-      distribution: [
-        { type: "Paid Vacation", count: 18 },
-        { type: "Sick Leave", count: 6 },
-        { type: "Parental", count: 4 },
-      ],
-      lastUpdated: new Date().toISOString(),
+      kpis: Array.isArray(d.kpis) ? d.kpis : [],
+      summary: d.summary ?? { totalRequests: 0, autoApprovedCount: 0 },
+      forecast: Array.isArray(d.forecast) ? d.forecast : [],
+      distribution: Array.isArray(d.distribution) ? d.distribution : [],
+      lastUpdated: d.lastUpdated || new Date().toISOString(),
     };
-  }
+  },
 );

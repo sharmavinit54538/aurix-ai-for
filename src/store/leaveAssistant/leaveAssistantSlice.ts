@@ -10,17 +10,7 @@ export interface LeaveAssistantState {
 const initialState: LeaveAssistantState = {
   loading: false,
   error: null,
-  data: {
-    kpis: [
-      { label: "Pending Approvals", value: 4, trend: "down" },
-      { label: "Approved Leaves This Month", value: 24, trend: "up" },
-      { label: "Coverage Ratio", value: "96%", trend: "neutral" },
-    ],
-    summary: { totalRequests: 28, autoApprovedCount: 18 },
-    forecast: [],
-    distribution: [],
-    lastUpdated: new Date().toISOString(),
-  },
+  data: null,
 };
 
 export const leaveAssistantSlice = createSlice({
@@ -31,6 +21,7 @@ export const leaveAssistantSlice = createSlice({
     builder
       .addCase(fetchLeaveAssistantDashboard.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(fetchLeaveAssistantDashboard.fulfilled, (state, action) => {
         state.loading = false;
@@ -38,7 +29,8 @@ export const leaveAssistantSlice = createSlice({
       })
       .addCase(fetchLeaveAssistantDashboard.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || "Failed to fetch leave assistant dashboard";
+        state.error =
+          action.error.message || "Failed to fetch leave assistant dashboard";
       });
   },
 });

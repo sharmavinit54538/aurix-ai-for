@@ -1,3 +1,4 @@
+import apiInstance from "@/api/apiInstance";
 import type { Interviewer } from "@/features/admin/recruitment/types";
 
 export interface InterviewListParams {
@@ -40,100 +41,31 @@ export interface RoundFeedbackPayload {
   notes?: string;
 }
 
-let interviewsState: Record<string, any>[] = [
-  {
-    id: "int-1",
-    interview_id: "int-1",
-    round_id: "rnd-1",
-    schedule_id: "sch-1",
-    application_id: "app-1",
-    candidate_id: "cand-1",
-    candidate: {
-      id: "cand-1",
-      first_name: "Aarav",
-      last_name: "Sharma",
-      name: "Aarav Sharma",
-      email: "aarav.sharma@gmail.com",
-    },
-    job_id: "job-1",
-    job: {
-      id: "job-1",
-      title: "Senior Staff AI Engineer",
-    },
-    round_name: "System Architecture & LLM Round",
-    interviewer: {
-      id: "emp-3",
-      name: "Marcus Sterling",
-      email: "marcus.s@aurix.ai",
-    },
-    scheduled_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-    duration_minutes: 60,
-    timezone: "Asia/Kolkata",
-    mode: "ONLINE",
-    meeting_url: "https://meet.ofc360.com/int-aarav-sharma",
-    status: "SCHEDULED",
-    is_overdue: false,
-    rating: 4.8,
-    recommendation: "PASS",
-    feedback: "Strong understanding of distributed inference and tensor parallelism.",
-  },
-  {
-    id: "int-2",
-    interview_id: "int-2",
-    round_id: "rnd-2",
-    schedule_id: "sch-2",
-    application_id: "app-3",
-    candidate_id: "cand-3",
-    candidate: {
-      id: "cand-3",
-      first_name: "Rohan",
-      last_name: "Deshmukh",
-      name: "Rohan Deshmukh",
-      email: "rohan.design@gmail.com",
-    },
-    job_id: "job-3",
-    job: {
-      id: "job-3",
-      title: "Senior Product Designer",
-    },
-    round_name: "Portfolio & Design Systems Critique",
-    interviewer: {
-      id: "emp-2",
-      name: "Sarah Chen",
-      email: "sarah.chen@aurix.ai",
-    },
-    scheduled_at: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
-    duration_minutes: 45,
-    timezone: "Asia/Kolkata",
-    mode: "ONLINE",
-    meeting_url: "https://meet.ofc360.com/int-rohan-deshmukh",
-    status: "SCHEDULED",
-    is_overdue: false,
-    rating: null,
-    recommendation: null,
-    feedback: null,
-  },
-];
-
-const INITIAL_INTERVIEWERS: Interviewer[] = [
-  { id: "emp-1", name: "Alex Vance", email: "alex.vance@aurix.ai", role: "VP of Engineering" },
-  { id: "emp-2", name: "Sarah Chen", email: "sarah.chen@aurix.ai", role: "Head of Product" },
-  { id: "emp-3", name: "Marcus Sterling", email: "marcus.s@aurix.ai", role: "Principal AI Scientist" },
-  { id: "emp-4", name: "Elena Rostova", email: "elena.r@aurix.ai", role: "People Operations Lead" },
-];
-
 export const interviewApi = {
   getInterviews: async (params?: InterviewListParams) => {
+    const res = await apiInstance.get("/interviews", { params });
+    const payload = res.data?.data ?? res.data;
+    const items = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payload?.items)
+        ? payload.items
+        : [];
     return {
-      items: interviewsState,
-      total: interviewsState.length,
-      page: params?.page || 1,
-      limit: params?.limit || 50,
+      items,
+      total: Number(payload?.total ?? items.length),
+      page: Number(payload?.page ?? params?.page ?? 1),
+      limit: Number(payload?.limit ?? params?.limit ?? 50),
     };
   },
 
   getInterviewers: async (): Promise<Interviewer[]> => {
-    return INITIAL_INTERVIEWERS;
+    const res = await apiInstance.get("/interviews/interviewers");
+    const payload = res.data?.data ?? res.data;
+    return Array.isArray(payload)
+      ? payload
+      : Array.isArray(payload?.items)
+        ? payload.items
+        : [];
   },
 
   scheduleRound: async (
@@ -141,103 +73,49 @@ export const interviewApi = {
     roundId: string,
     payload: ScheduleInterviewPayload,
   ) => {
-    const interviewer =
-      INITIAL_INTERVIEWERS.find((i) => i.id === payload.interviewer_id) ||
-      INITIAL_INTERVIEWERS[0];
-
-    let found = false;
-    interviewsState = interviewsState.map((iv) => {
-      if (iv.interview_id === interviewId || iv.round_id === roundId || iv.id === interviewId) {
-        found = true;
-        return {
-          ...iv,
-          schedule_id: iv.schedule_id || `sch-${Date.now()}`,
-          interviewer,
-          scheduled_at: payload.scheduled_at,
-          duration_minutes: payload.duration_minutes,
-          timezone: payload.timezone || "Asia/Kolkata",
-          mode: payload.mode,
-          meeting_url: payload.meeting_url || "https://meet.ofc360.com/interview-room",
-          office_address: payload.office_address || null,
-          status: "SCHEDULED",
-          notes: payload.notes || iv.notes,
-        };
-      }
-      return iv;
-    });
-
-    if (!found) {
-      const created = {
-        id: interviewId || `int-${Date.now()}`,
-        interview_id: interviewId || `int-${Date.now()}`,
-        round_id: roundId || `rnd-${Date.now()}`,
-        schedule_id: `sch-${Date.now()}`,
-        application_id: "app-1",
-        candidate_id: "cand-1",
-        candidate: {
-          id: "cand-1",
-          name: "Aarav Sharma",
-          email: "aarav.sharma@gmail.com",
-        },
-        job_id: "job-1",
-        job: { id: "job-1", title: "Senior Staff AI Engineer" },
-        round_name: "Technical Round",
-        interviewer,
-        scheduled_at: payload.scheduled_at,
-        duration_minutes: payload.duration_minutes,
-        timezone: payload.timezone || "Asia/Kolkata",
-        mode: payload.mode,
-        meeting_url: payload.meeting_url || "https://meet.ofc360.com/interview-room",
-        office_address: payload.office_address || null,
-        status: "SCHEDULED",
-      };
-      interviewsState = [created, ...interviewsState];
-    }
-
-    return { success: true };
-  },
-
-  rescheduleSchedule: async (scheduleId: string, payload: RescheduleInterviewPayload) => {
-    interviewsState = interviewsState.map((iv) =>
-      iv.schedule_id === scheduleId || iv.id === scheduleId
-        ? {
-            ...iv,
-            scheduled_at: payload.scheduled_at,
-            duration_minutes: payload.duration_minutes ?? iv.duration_minutes,
-            mode: payload.mode ?? iv.mode,
-            meeting_url: payload.meeting_url ?? iv.meeting_url,
-            office_address: payload.office_address ?? iv.office_address,
-            status: "SCHEDULED",
-          }
-        : iv,
+    const res = await apiInstance.post(
+      `/interviews/${interviewId}/rounds/${roundId}/schedule`,
+      payload,
     );
-    return { success: true };
+    return res.data?.data ?? res.data ?? { success: true };
   },
 
-  cancelSchedule: async (scheduleId: string, payload: CancelInterviewPayload) => {
-    interviewsState = interviewsState.map((iv) =>
-      iv.schedule_id === scheduleId || iv.id === scheduleId
-        ? {
-            ...iv,
-            status: "CANCELLED",
-            cancelled_reason: payload.reason,
-          }
-        : iv,
+  rescheduleSchedule: async (
+    scheduleId: string,
+    payload: RescheduleInterviewPayload,
+  ) => {
+    const res = await apiInstance.put(
+      `/interviews/schedules/${scheduleId}/reschedule`,
+      payload,
     );
-    return { success: true };
+    return res.data?.data ?? res.data ?? { success: true };
   },
 
-  sendReminder: async (_scheduleId: string) => {
-    return { success: true, message: "Reminder sent successfully" };
+  cancelSchedule: async (
+    scheduleId: string,
+    payload: CancelInterviewPayload,
+  ) => {
+    const res = await apiInstance.post(
+      `/interviews/schedules/${scheduleId}/cancel`,
+      payload,
+    );
+    return res.data?.data ?? res.data ?? { success: true };
+  },
+
+  sendReminder: async (scheduleId: string) => {
+    const res = await apiInstance.post(
+      `/interviews/schedules/${scheduleId}/reminder`,
+      {},
+    );
+    return res.data?.data ?? res.data ?? { success: true };
   },
 
   markNoShow: async (scheduleId: string) => {
-    interviewsState = interviewsState.map((iv) =>
-      iv.schedule_id === scheduleId || iv.id === scheduleId
-        ? { ...iv, status: "NO_SHOW" }
-        : iv,
+    const res = await apiInstance.post(
+      `/interviews/schedules/${scheduleId}/no-show`,
+      {},
     );
-    return { success: true };
+    return res.data?.data ?? res.data ?? { success: true };
   },
 
   submitRoundFeedback: async (
@@ -245,30 +123,27 @@ export const interviewApi = {
     action: string,
     payload: RoundFeedbackPayload,
   ) => {
-    const rec = action.toUpperCase();
-    interviewsState = interviewsState.map((iv) =>
-      iv.round_id === roundId || iv.id === roundId
-        ? {
-            ...iv,
-            status: "COMPLETED",
-            rating: payload.rating ?? iv.rating ?? 4.5,
-            recommendation:
-              rec === "PASS" || rec === "REJECT" || rec === "HOLD"
-                ? rec
-                : payload.recommendation || "PASS",
-            feedback: payload.feedback || payload.notes || iv.feedback,
-          }
-        : iv,
+    const res = await apiInstance.post(
+      `/interviews/rounds/${roundId}/feedback`,
+      { ...payload, action },
     );
-    return { success: true };
+    return res.data?.data ?? res.data ?? { success: true };
   },
 
-  sendInterviewInvite: async (_applicationId: string, _roundNames?: string) => {
-    return { success: true, message: "Interview invitation dispatched" };
+  sendInterviewInvite: async (applicationId: string, roundNames?: string) => {
+    const res = await apiInstance.post("/interviews/invite", {
+      application_id: applicationId,
+      round_names: roundNames,
+    });
+    return res.data?.data ?? res.data ?? { success: true };
   },
 
-  submitScorecard: async (_interviewId: string, _scorecard: any) => {
-    return { success: true };
+  submitScorecard: async (interviewId: string, scorecard: any) => {
+    const res = await apiInstance.post(
+      `/interviews/${interviewId}/scorecard`,
+      scorecard,
+    );
+    return res.data?.data ?? res.data ?? { success: true };
   },
 };
 

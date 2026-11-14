@@ -10,16 +10,7 @@ export interface RecruiterState {
 const initialState: RecruiterState = {
   loading: false,
   error: null,
-  data: {
-    kpis: [
-      { label: "Screened Resumes", value: 142, trend: "up" },
-      { label: "Avg Match Score", value: "89%", trend: "up" },
-      { label: "Time-to-Shortlist", value: "1.4 days", trend: "down" },
-    ],
-    summary: { activeJobs: 8, pipelineCandidates: 64 },
-    candidates: [],
-    lastUpdated: new Date().toISOString(),
-  },
+  data: null,
 };
 
 export const recruiterSlice = createSlice({
@@ -30,6 +21,7 @@ export const recruiterSlice = createSlice({
     builder
       .addCase(fetchRecruiterDashboard.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(fetchRecruiterDashboard.fulfilled, (state, action) => {
         state.loading = false;
@@ -37,7 +29,8 @@ export const recruiterSlice = createSlice({
       })
       .addCase(fetchRecruiterDashboard.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || "Failed to fetch recruiter dashboard";
+        state.error =
+          action.error.message || "Failed to fetch recruiter dashboard";
       });
   },
 });

@@ -10,17 +10,7 @@ export interface MeetingIntelligenceState {
 const initialState: MeetingIntelligenceState = {
   loading: false,
   error: null,
-  data: {
-    kpis: [
-      { label: "Total Meetings Analyzed", value: 42, trend: "up" },
-      { label: "Avg Meeting Time", value: "24 min", trend: "down" },
-      { label: "Action Item Completion", value: "91%", trend: "up" },
-    ],
-    summary: { totalHoursSaved: 18.5, activeActionItems: 12 },
-    actionItemsByWeek: [],
-    volume: [],
-    lastUpdated: new Date().toISOString(),
-  },
+  data: null,
 };
 
 export const meetingIntelligenceSlice = createSlice({
@@ -31,6 +21,7 @@ export const meetingIntelligenceSlice = createSlice({
     builder
       .addCase(fetchMeetingIntelligenceDashboard.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(fetchMeetingIntelligenceDashboard.fulfilled, (state, action) => {
         state.loading = false;
@@ -38,7 +29,8 @@ export const meetingIntelligenceSlice = createSlice({
       })
       .addCase(fetchMeetingIntelligenceDashboard.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || "Failed to fetch meeting intelligence";
+        state.error =
+          action.error.message || "Failed to fetch meeting intelligence";
       });
   },
 });

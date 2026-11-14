@@ -1,26 +1,17 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
+import { api } from "@/api/client";
 
 export const fetchEmployeeHealthDashboard = createAsyncThunk(
   "employeeHealth/fetchDashboard",
   async () => {
+    const res = await api.get<any>("/ai/employee-health");
+    const d = res?.data ?? res ?? {};
     return {
-      kpis: [
-        { label: "Overall Well-being Index", value: "92%", trend: "up" },
-        { label: "Burnout Risk Level", value: "Low (4.2%)", trend: "down" },
-        { label: "Work-Life Harmony Score", value: "8.8 / 10", trend: "up" },
-      ],
-      summary: { totalMonitored: 248, highBurnoutCount: 2 },
-      burnoutTrend: [
-        { month: "Jan", risk: 6 },
-        { month: "Feb", risk: 5 },
-        { month: "Mar", risk: 4.2 },
-      ],
-      overtimeByTeam: [
-        { team: "Engineering", hours: 14 },
-        { team: "Design", hours: 6 },
-        { team: "Sales", hours: 10 },
-      ],
-      lastUpdated: new Date().toISOString(),
+      kpis: Array.isArray(d.kpis) ? d.kpis : [],
+      summary: d.summary ?? { totalMonitored: 0, highBurnoutCount: 0 },
+      burnoutTrend: Array.isArray(d.burnoutTrend) ? d.burnoutTrend : [],
+      overtimeByTeam: Array.isArray(d.overtimeByTeam) ? d.overtimeByTeam : [],
+      lastUpdated: d.lastUpdated || new Date().toISOString(),
     };
-  }
+  },
 );

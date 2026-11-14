@@ -1,3 +1,5 @@
+import apiInstance from "@/api/apiInstance";
+
 export interface TranscriptItem {
   role: "ai" | "candidate" | string;
   text: string;
@@ -40,36 +42,44 @@ export interface AIInterviewResult {
 }
 
 export const aiInterviewBotApi = {
-  getSession: async (token: string): Promise<BotPublicSession> => ({
-    id: "sess-1",
-    token,
-    candidate_name: "Jordan Taylor",
-    job_title: "Senior Full-Stack Engineer",
-    company_name: "OFC360 Enterprise",
-    status: "pending",
-    questions: [
-      { id: "q1", question: "Tell us about a complex distributed system you architected.", category: "System Design", time_limit_seconds: 120 },
-      { id: "q2", question: "How do you handle state synchronization in large React applications?", category: "Frontend", time_limit_seconds: 120 },
-    ],
-    current_question_index: 0,
-  }),
-  startSession: async (_token: string) => ({ status: "in_progress" }),
-  submitAnswer: async (_token: string, _payload: unknown) => ({ nextQuestion: null, completed: true }),
-  completeSession: async (_token: string) => ({ success: true, score: 88 }),
-  getResults: async (): Promise<AIInterviewResult[]> => [],
-  getResultById: async (id: string): Promise<AIInterviewResult> => ({
-    id,
-    candidate_name: "Jordan Taylor",
-    job_title: "Senior Full-Stack Engineer",
-    overall_score: 88,
-    technical_score: 90,
-    communication_score: 86,
-    cultural_fit_score: 88,
-    recommendation: "Strong Hire",
-    status: "completed",
-    completed_at: new Date().toISOString(),
-    summary: "Strong systems thinking and clear communication.",
-    transcript: [],
-  }),
+  getSession: async (token: string): Promise<BotPublicSession> => {
+    const res = await apiInstance.get(
+      `/ai-interview/sessions/${encodeURIComponent(token)}`,
+    );
+    return res.data?.data ?? res.data;
+  },
+  startSession: async (token: string) => {
+    const res = await apiInstance.post(
+      `/ai-interview/sessions/${encodeURIComponent(token)}/start`,
+      {},
+    );
+    return res.data?.data ?? res.data;
+  },
+  submitAnswer: async (token: string, payload: unknown) => {
+    const res = await apiInstance.post(
+      `/ai-interview/sessions/${encodeURIComponent(token)}/answer`,
+      payload,
+    );
+    return res.data?.data ?? res.data;
+  },
+  completeSession: async (token: string) => {
+    const res = await apiInstance.post(
+      `/ai-interview/sessions/${encodeURIComponent(token)}/complete`,
+      {},
+    );
+    return res.data?.data ?? res.data;
+  },
+  getResults: async (): Promise<AIInterviewResult[]> => {
+    const res = await apiInstance.get("/ai-interview/results");
+    const d = res.data?.data ?? res.data;
+    return Array.isArray(d) ? d : Array.isArray(d?.items) ? d.items : [];
+  },
+  getResultById: async (id: string): Promise<AIInterviewResult> => {
+    const res = await apiInstance.get(
+      `/ai-interview/results/${encodeURIComponent(id)}`,
+    );
+    return res.data?.data ?? res.data;
+  },
 };
+
 export default aiInterviewBotApi;

@@ -196,38 +196,9 @@ export interface Workspace {
 const KEY = "aurix:workspace:v3";
 const REMEMBER_KEY = "aurix:remember";
 
-const defaultUser: AurixUser = {
-  id: "usr-1",
-  fullName: "Alex Vance",
-  email: "alex.vance@aurix.ai",
-  phone: "+1 555-0199",
-  role: "hr_admin",
-  companyId: "comp-1",
-  company_name: "AURIX AI Enterprise",
-  companyName: "AURIX AI Enterprise",
-  emailVerified: true,
-  onboardingComplete: true,
-  createdAt: new Date().toISOString(),
-};
-
-const defaultCompany: Company = {
-  id: "comp-1",
-  name: "AURIX AI Enterprise",
-  industry: "Enterprise AI & Operations",
-  size: "250-500",
-  email: "contact@aurix.ai",
-  phone: "+1 800-555-0199",
-  address: "100 AI Boulevard, Suite 500",
-  city: "San Francisco",
-  state: "CA",
-  country: "United States",
-  timezone: "UTC-8",
-  currency: "USD",
-};
-
 const defaultState: Workspace = {
-  user: defaultUser,
-  company: defaultCompany,
+  user: null,
+  company: null,
   hrs: [],
   employees: [],
   managers: [],
@@ -249,7 +220,9 @@ function load() {
       state = {
         ...defaultState,
         ...parsed,
-        user: parsed.user ? { ...parsed.user, role: normalizeRole(parsed.user.role) || "hr_admin" } : defaultUser,
+        user: parsed.user
+          ? { ...parsed.user, role: normalizeRole(parsed.user.role) || "employee" }
+          : null,
       };
     } catch {
       state = { ...defaultState };

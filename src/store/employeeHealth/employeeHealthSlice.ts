@@ -10,17 +10,7 @@ export interface EmployeeHealthState {
 const initialState: EmployeeHealthState = {
   loading: false,
   error: null,
-  data: {
-    kpis: [
-      { label: "Overall Well-being Index", value: "92%", trend: "up" },
-      { label: "Burnout Risk Level", value: "Low (4.2%)", trend: "down" },
-      { label: "Work-Life Harmony Score", value: "8.8 / 10", trend: "up" },
-    ],
-    summary: { totalMonitored: 248, highBurnoutCount: 2 },
-    burnoutTrend: [],
-    overtimeByTeam: [],
-    lastUpdated: new Date().toISOString(),
-  },
+  data: null,
 };
 
 export const employeeHealthSlice = createSlice({
@@ -31,6 +21,7 @@ export const employeeHealthSlice = createSlice({
     builder
       .addCase(fetchEmployeeHealthDashboard.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(fetchEmployeeHealthDashboard.fulfilled, (state, action) => {
         state.loading = false;
@@ -38,7 +29,8 @@ export const employeeHealthSlice = createSlice({
       })
       .addCase(fetchEmployeeHealthDashboard.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || "Failed to fetch employee health metrics";
+        state.error =
+          action.error.message || "Failed to fetch employee health metrics";
       });
   },
 });
