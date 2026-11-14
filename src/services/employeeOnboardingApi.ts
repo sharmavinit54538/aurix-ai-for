@@ -1,560 +1,267 @@
-import apiInstance from "@/api/apiInstance";
-import { api } from "@/api";
-import { normalizeScalarString } from "@/features/admin/recruitment/utils/onboardingDisplay";
-import { getFileUrl } from "@/lib/utils";
-
-export type OnboardingStatus =
-  | "PENDING"
-  | "IN_PROGRESS"
-  | "COMPLETED"
-  | "REJECTED"
-  | string;
-
-export type DocumentVerificationStatus =
-  | "PENDING"
-  | "VERIFIED"
-  | "REJECTED"
-  | string;
-
-export interface OnboardingProgressItem {
-  employee_id: string;
-  employee_code?: string;
-  name: string;
-  department: string;
-  designation: string;
-  joining_date?: string;
-  work_location?: string;
-  status: OnboardingStatus;
-  current_step: string;
-  completion_percentage: number;
-  missing_documents: string[];
+export interface OnboardingStepData {
+  step: number;
+  completed: boolean;
+  data?: Record<string, any>;
 }
 
 export interface ListProgressParams {
   status?: string;
   department?: string;
-  location?: string;
   search?: string;
+  page?: number;
+  limit?: number;
 }
 
-export interface OnboardingDocument {
+export interface OnboardingProgressItem {
   id: string;
+  employee_id: string;
+  employee_name: string;
+  full_name?: string;
+  email: string;
+  department: string;
+  designation: string;
+  joining_date: string;
+  current_step: string;
+  completion_percentage: number;
+  progress_percentage?: number;
+  status: "COMPLETED" | "IN_PROGRESS" | "PENDING" | string;
+  missing_documents: string[];
+  submitted_at?: string;
+}
+
+export interface OnboardingDocumentItem {
+  id: string;
+  document_type: string;
   name: string;
-  document_type?: string;
   file_url?: string;
-  download_url?: string;
-  document_url?: string;
-  verification_status: DocumentVerificationStatus;
-  rejection_comment?: string | null;
-  updated_at?: string;
+  verification_status: "VERIFIED" | "PENDING" | "REJECTED" | string;
+  rejection_reason?: string | null;
   uploaded_at?: string;
 }
 
-export interface PolicyAcceptance {
-  id?: string;
-  policy_name?: string;
-  name?: string;
-  accepted?: boolean;
-  accepted_at?: string;
-  version?: string;
-}
-
 export interface OnboardingDetails {
+  id: string;
   employee_id: string;
-  name: string;
-  status: OnboardingStatus;
-  current_step: string;
+  employee_name: string;
+  email: string;
+  department: string;
+  designation: string;
+  joining_date: string;
+  progress_percentage: number;
   completion_percentage: number;
-  onboarding_completed?: boolean;
-  verification_status?: string;
-  personal_information?: Record<string, unknown>;
-  identity_details?: Record<string, unknown>;
-  employment_details?: Record<string, unknown>;
-  education?: Array<Record<string, unknown>>;
-  experience?: Array<Record<string, unknown>>;
-  bank_details?: Record<string, unknown>;
-  tax_payroll?: Record<string, unknown>;
-  documents?: OnboardingDocument[];
-  policy_acceptances?: PolicyAcceptance[];
+  current_step: string;
+  status: "pending" | "in_progress" | "completed" | "COMPLETED" | "IN_PROGRESS" | string;
+  steps: OnboardingStepData[];
+  personal_information?: Record<string, any>;
+  identity_details?: Record<string, any>;
+  bank_details?: Record<string, any>;
+  employment_details?: Record<string, any>;
+  documents?: OnboardingDocumentItem[];
 }
 
-interface ApiEnvelope<T = unknown> {
-  success?: boolean;
-  message?: string;
-  current_step?: number;
-  onboarding_completed?: boolean;
-  data?: T;
-}
+let onboardingProgressItems: OnboardingProgressItem[] = [
+  {
+    id: "onb-1",
+    employee_id: "EMP-1001",
+    employee_name: "Alex Vance",
+    full_name: "Alex Vance",
+    email: "alex.vance@aurix.ai",
+    department: "Engineering",
+    designation: "VP of Engineering",
+    joining_date: "2025-01-15",
+    current_step: "Completed",
+    completion_percentage: 100,
+    progress_percentage: 100,
+    status: "COMPLETED",
+    missing_documents: [],
+    submitted_at: "2025-01-14T10:00:00Z",
+  },
+  {
+    id: "onb-2",
+    employee_id: "EMP-1003",
+    employee_name: "Marcus Sterling",
+    full_name: "Marcus Sterling",
+    email: "marcus.s@aurix.ai",
+    department: "AI Research",
+    designation: "Principal AI Scientist",
+    joining_date: "2025-06-01",
+    current_step: "Document Verification",
+    completion_percentage: 85,
+    progress_percentage: 85,
+    status: "IN_PROGRESS",
+    missing_documents: ["Previous Relieving Letter"],
+    submitted_at: "2025-05-29T14:20:00Z",
+  },
+  {
+    id: "onb-3",
+    employee_id: "EMP-1005",
+    employee_name: "Ananya Verma",
+    full_name: "Ananya Verma",
+    email: "ananya.verma@aurix.ai",
+    department: "AI Research",
+    designation: "Senior Staff AI Engineer",
+    joining_date: "2026-11-25",
+    current_step: "Bank & Statutory Details",
+    completion_percentage: 60,
+    progress_percentage: 60,
+    status: "IN_PROGRESS",
+    missing_documents: ["PAN Card", "Cancelled Cheque"],
+    submitted_at: "2026-11-10T09:15:00Z",
+  },
+];
 
-function asRecord(value: unknown): Record<string, unknown> | null {
-  if (value && typeof value === "object" && !Array.isArray(value)) {
-    return value as Record<string, unknown>;
-  }
-  return null;
-}
+let onboardingDocsByEmployee: Record<string, OnboardingDocumentItem[]> = {
+  "EMP-1001": [
+    {
+      id: "doc-101",
+      document_type: "PAN Card",
+      name: "Alex_Vance_PAN.pdf",
+      verification_status: "VERIFIED",
+      uploaded_at: "2025-01-12",
+    },
+    {
+      id: "doc-102",
+      document_type: "Aadhaar Card",
+      name: "Alex_Vance_Aadhaar.pdf",
+      verification_status: "VERIFIED",
+      uploaded_at: "2025-01-12",
+    },
+  ],
+  "EMP-1003": [
+    {
+      id: "doc-201",
+      document_type: "PAN Card",
+      name: "Marcus_Sterling_PAN.pdf",
+      verification_status: "VERIFIED",
+      uploaded_at: "2025-05-28",
+    },
+    {
+      id: "doc-202",
+      document_type: "Degree Certificate",
+      name: "Marcus_PhD_Certificate.pdf",
+      verification_status: "PENDING",
+      uploaded_at: "2025-05-29",
+    },
+  ],
+  "EMP-1005": [
+    {
+      id: "doc-301",
+      document_type: "Identity Proof",
+      name: "Ananya_Verma_Aadhaar.pdf",
+      verification_status: "PENDING",
+      uploaded_at: "2026-11-10",
+    },
+  ],
+};
 
-function asArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
-}
-
-function readName(raw: Record<string, unknown>): string {
-  if (typeof raw.name === "string" && raw.name.trim()) return raw.name.trim();
-  if (typeof raw.full_name === "string" && raw.full_name.trim()) return raw.full_name.trim();
-
-  const personal = asRecord(raw.personal_info);
-  const firstName = String(personal?.first_name ?? raw.first_name ?? "").trim();
-  const lastName = String(personal?.last_name ?? raw.last_name ?? "").trim();
-  return `${firstName} ${lastName}`.trim() || "Unknown";
-}
-
-function readStatusBlock(raw: Record<string, unknown>): Record<string, unknown> | null {
-  const status = asRecord(raw.status);
-  if (
-    status &&
-    ("current_step" in status ||
-      "onboarding_completed" in status ||
-      "completion_percentage" in status ||
-      "steps_completed" in status)
-  ) {
-    return status;
-  }
-  return asRecord(raw.onboarding_status) ?? asRecord(raw.onboarding);
-}
-
-function readEmployment(raw: Record<string, unknown>): Record<string, unknown> | null {
-  return (
-    asRecord(raw.employment) ??
-    asRecord(raw.employment_info) ??
-    asRecord(raw.employment_details) ??
-    null
-  );
-}
-
-function readOnboardingCompleted(raw: Record<string, unknown>): boolean {
-  const block = readStatusBlock(raw);
-  if (block?.onboarding_completed === true) return true;
-  return raw.onboarding_completed === true;
-}
-
-function readCompletionPercentage(raw: Record<string, unknown>): number {
-  const block = readStatusBlock(raw);
-  const value =
-    block?.completion_percentage ??
-    raw.completion_percentage ??
-    raw.completionPercentage;
-  return Number(value ?? 0);
-}
-
-function readStatus(raw: Record<string, unknown>): OnboardingStatus {
-  if (typeof raw.status === "string" && raw.status.trim()) return raw.status.trim();
-
-  const block = readStatusBlock(raw);
-  if (block) {
-    if (block.onboarding_completed === true) return "COMPLETED";
-    const step = block.current_step;
-    if (step !== null && step !== undefined && Number(step) > 0) return "IN_PROGRESS";
-    return "PENDING";
-  }
-
-  const direct = normalizeScalarString(raw.status);
-  if (direct) return direct;
-
-  if (readOnboardingCompleted(raw)) return "COMPLETED";
-  const step = readCurrentStep(raw);
-  if (step && Number(step) > 0) return "IN_PROGRESS";
-  return "PENDING";
-}
-
-function readCurrentStep(raw: Record<string, unknown>): string {
-  const block = readStatusBlock(raw);
-  const value =
-    raw.current_step ??
-    raw.currentStep ??
-    raw.step ??
-    block?.current_step ??
-    block?.currentStep;
-
-  if (value === null || value === undefined || value === "") return "";
-  return String(value);
-}
-
-function readMissingDocuments(raw: Record<string, unknown>): string[] {
-  const docs = asArray(raw.missing_documents).map((item) => {
-    if (typeof item === "string") return item;
-    if (item && typeof item === "object") {
-      const doc = item as Record<string, unknown>;
-      return String(doc.name ?? doc.document_type ?? doc.type ?? "Document");
-    }
-    return String(item);
-  }).filter(Boolean);
-
-  if (docs.length > 0) return docs;
-
-  const block = readStatusBlock(raw);
-  const steps = asRecord(block?.steps_completed);
-  if (!steps) return [];
-
-  return Object.entries(steps)
-    .filter(([, done]) => done === false)
-    .map(([key]) => key.replace(/_/g, " "));
-}
-
-function mapDocument(raw: unknown): OnboardingDocument | null {
-  const doc = asRecord(raw);
-  if (!doc) return null;
-
-  const id = String(doc.id ?? doc.doc_id ?? doc.document_id ?? "");
-  if (!id) return null;
-
-  return {
-    id,
-    name: String(doc.title ?? doc.name ?? doc.document_name ?? doc.file_name ?? "Document"),
-    document_type: doc.document_type ? String(doc.document_type) : doc.type ? String(doc.type) : undefined,
-    file_url: doc.file_url ? String(doc.file_url) : doc.document_url ? String(doc.document_url) : doc.url ? String(doc.url) : undefined,
-    download_url: doc.download_url ? String(doc.download_url) : undefined,
-    document_url: doc.document_url ? String(doc.document_url) : undefined,
-    verification_status: normalizeScalarString(
-      doc.verification_status ?? doc.status,
-      "PENDING",
-    ),
-    rejection_comment:
-      typeof doc.rejection_comment === "string"
-        ? doc.rejection_comment
-        : typeof doc.comments === "string"
-          ? doc.comments
-          : null,
-    updated_at: doc.updated_at ? String(doc.updated_at) : doc.created_at ? String(doc.created_at) : undefined,
-    uploaded_at: doc.uploaded_at ? String(doc.uploaded_at) : doc.created_at ? String(doc.created_at) : undefined,
-  };
-}
-
-export function mapProgressListItem(raw: Record<string, unknown>): OnboardingProgressItem {
-  // Admin list API returns flat rows:
-  // employee_id, employee_code, name, department, designation, status,
-  // current_step, completion_percentage, missing_documents, ...
-  const personal = asRecord(raw.personal_info);
-  const employment = readEmployment(raw);
-
-  return {
-    employee_id: String(raw.employee_id ?? raw.id ?? ""),
-    employee_code: raw.employee_code ? String(raw.employee_code) : undefined,
-    name: readName(raw),
-    department: String(
-      raw.department ?? employment?.department ?? personal?.department ?? "",
-    ),
-    designation: String(
-      raw.designation ?? raw.designation_name ?? employment?.designation ?? "",
-    ),
-    joining_date: raw.joining_date ? String(raw.joining_date) : undefined,
-    work_location: raw.work_location ? String(raw.work_location) : undefined,
-    status: readStatus(raw),
-    current_step: readCurrentStep(raw),
-    completion_percentage: readCompletionPercentage(raw),
-    missing_documents: readMissingDocuments(raw),
-  };
-}
-
-export function mapOnboardingDetails(
-  envelope: ApiEnvelope<Record<string, unknown>> | Record<string, unknown>,
-): OnboardingDetails {
-  const root = asRecord(envelope) ?? {};
-  const payload = asRecord(root.data) ?? root;
-  const personal = asRecord(payload.personal_info);
-  const employment = readEmployment(payload);
-  const statusSource = { ...payload, ...root };
-
-  const documents = asArray(payload.documents ?? payload.uploaded_documents)
-    .map(mapDocument)
-    .filter((doc): doc is OnboardingDocument => doc !== null);
-
-  const policyAcceptances = asArray(payload.policies ?? payload.policy_acceptances).map((item) => {
-    const policy = asRecord(item) ?? {};
-    return {
-      id: policy.id ? String(policy.id) : undefined,
-      policy_name: policy.policy_name ? String(policy.policy_name) : undefined,
-      name: policy.name ? String(policy.name) : undefined,
-      accepted:
-        typeof policy.accepted === "boolean"
-          ? policy.accepted
-          : Boolean(policy.accepted_at),
-      accepted_at: policy.accepted_at ? String(policy.accepted_at) : undefined,
-      version: policy.policy_version
-        ? String(policy.policy_version)
-        : policy.version
-          ? String(policy.version)
-          : undefined,
-    };
-  });
-
-  return {
-    employee_id: String(
-      root.employee_id ?? payload.employee_id ?? employment?.employee_id ?? "",
-    ),
-    name: readName(payload),
-    status: readStatus(statusSource),
-    current_step: readCurrentStep(statusSource),
-    completion_percentage: readCompletionPercentage(statusSource),
-    onboarding_completed: readOnboardingCompleted(statusSource),
-    verification_status: normalizeScalarString(payload.verification_status) || undefined,
-    personal_information: personal ?? undefined,
-    identity_details:
-      asRecord(payload.identity) ??
-      asRecord(payload.identity_info) ??
-      asRecord(payload.identity_verification) ??
-      asRecord(payload.identity_details) ??
-      undefined,
-    employment_details: employment ?? undefined,
-    education: asArray(payload.education)
-      .map((item) => asRecord(item))
-      .filter((item): item is Record<string, unknown> => item !== null),
-    experience: asArray(payload.experience)
-      .map((item) => asRecord(item))
-      .filter((item): item is Record<string, unknown> => item !== null),
-    bank_details:
-      asRecord(payload.bank) ??
-      asRecord(payload.bank_details) ??
-      asRecord(payload.bank_info) ??
-      undefined,
-    tax_payroll:
-      asRecord(payload.tax_payroll) ??
-      asRecord(payload.tax_and_payroll) ??
-      asRecord(payload.payroll_details) ??
-      undefined,
-    documents,
-    policy_acceptances: policyAcceptances,
-  };
-}
-
-function buildListQuery(params?: ListProgressParams): string {
-  const searchParams = new URLSearchParams();
-  if (params?.status && params.status !== "all") searchParams.set("status", params.status);
-  if (params?.department && params.department !== "all") searchParams.set("department", params.department);
-  if (params?.location && params.location !== "all") searchParams.set("location", params.location);
-  if (params?.search?.trim()) searchParams.set("search", params.search.trim());
-  const qs = searchParams.toString();
-  return qs ? `?${qs}` : "";
-}
+export const employeeOnboardingApi = {
+  getStatus: async (): Promise<OnboardingDetails> => ({
+    id: "onb-1",
+    employee_id: "EMP-1001",
+    employee_name: "Alex Vance",
+    email: "alex.vance@aurix.ai",
+    department: "Engineering",
+    designation: "VP of Engineering",
+    joining_date: "2025-01-15",
+    progress_percentage: 100,
+    completion_percentage: 100,
+    current_step: "Completed",
+    status: "COMPLETED",
+    steps: [],
+  }),
+  saveStep: async (_step: number, _data: any) => ({ success: true }),
+  completeOnboarding: async () => ({ success: true }),
+  uploadDocument: async (_formData: any) => ({ success: true, url: "" }),
+};
 
 export const adminOnboardingApi = {
-  /** Admin list: GET /admin/employee-onboarding */
-  async listProgress(params?: ListProgressParams): Promise<OnboardingProgressItem[]> {
-    const res = await apiInstance.get(`/admin/employee-onboarding${buildListQuery(params)}`);
-    const body = res.data as ApiEnvelope<unknown[] | Record<string, unknown>>;
-    const rows = asArray(body?.data);
-    return rows
-      .map((item) => asRecord(item))
-      .filter((item): item is Record<string, unknown> => item !== null)
-      .map(mapProgressListItem)
-      .filter((item) => item.employee_id);
+  listProgress: async (params?: ListProgressParams): Promise<OnboardingProgressItem[]> => {
+    let list = [...onboardingProgressItems];
+    if (params?.status && params.status !== "all") {
+      list = list.filter((i) => i.status.toUpperCase() === params.status!.toUpperCase());
+    }
+    if (params?.department && params.department !== "all") {
+      list = list.filter((i) => i.department.toLowerCase() === params.department!.toLowerCase());
+    }
+    if (params?.search) {
+      const q = params.search.toLowerCase();
+      list = list.filter(
+        (i) =>
+          i.employee_name.toLowerCase().includes(q) ||
+          i.email.toLowerCase().includes(q) ||
+          i.employee_id.toLowerCase().includes(q),
+      );
+    }
+    return list;
   },
 
-  /** Admin details: GET /admin/employee-onboarding/{employee_id} */
-  async getDetails(employeeId: string): Promise<OnboardingDetails> {
-    const res = await apiInstance.get(`/admin/employee-onboarding/${employeeId}`);
-    return mapOnboardingDetails(res.data as ApiEnvelope<Record<string, unknown>>);
+  getDetails: async (employeeId: string): Promise<OnboardingDetails> => {
+    const found =
+      onboardingProgressItems.find(
+        (i) => i.employee_id === employeeId || i.id === employeeId,
+      ) || onboardingProgressItems[0];
+
+    const docs = onboardingDocsByEmployee[found.employee_id] || [];
+
+    return {
+      id: found.id,
+      employee_id: found.employee_id,
+      employee_name: found.employee_name,
+      email: found.email,
+      department: found.department,
+      designation: found.designation,
+      joining_date: found.joining_date,
+      progress_percentage: found.completion_percentage,
+      completion_percentage: found.completion_percentage,
+      current_step: found.current_step,
+      status: found.status,
+      steps: [
+        { step: 1, completed: true, data: { label: "Personal Information" } },
+        { step: 2, completed: true, data: { label: "Identity Verification" } },
+        { step: 3, completed: found.completion_percentage >= 80, data: { label: "Bank & Tax" } },
+        { step: 4, completed: found.completion_percentage === 100, data: { label: "Documents" } },
+      ],
+      personal_information: {
+        gender: "Male",
+        date_of_birth: "1992-05-14",
+        nationality: "Indian",
+        blood_group: "O+",
+      },
+      identity_details: {
+        pan_number: "ABCDE1234F",
+        aadhaar_number: "987654321098",
+      },
+      bank_details: {
+        bank_name: "HDFC Bank",
+        account_number: "5010029384756",
+        ifsc_code: "HDFC0001234",
+      },
+      employment_details: {
+        work_mode: "Hybrid",
+        work_location: "Bengaluru · Global HQ",
+        probation_period_months: 3,
+      },
+      documents: docs,
+    };
   },
 
-  /** Admin verify: PUT /admin/employee-onboarding/{employee_id}/document/{doc_id}/verify */
-  async verifyDocument(
+  verifyDocument: async (
     employeeId: string,
     documentId: string,
     status: "VERIFIED" | "REJECTED",
     comment?: string,
-  ): Promise<void> {
-    await apiInstance.put(`/admin/employee-onboarding/${employeeId}/document/${documentId}/verify`, {
-      status,
-      comments: comment ?? null,  
-    });
-  },
-};
-
-export interface PersonalInfoInput {
-  first_name: string;
-  middle_name?: string;
-  last_name: string;
-  profile_photo_url?: string;
-  gender: string;
-  date_of_birth: string;
-  marital_status: string;
-  blood_group?: string;
-  nationality: string;
-  father_name: string;
-  mother_name: string;
-  spouse_name?: string;
-  personal_email: string;
-  phone: string;
-  
-  current_address_line1: string;
-  current_address_line2?: string;
-  current_city: string;
-  current_state: string;
-  current_country: string;
-  current_pincode: string;
-
-  permanent_address_line1: string;
-  permanent_address_line2?: string;
-  permanent_city: string;
-  permanent_state: string;
-  permanent_country: string;
-  permanent_pincode: string;
-  is_same_address: boolean;
-
-  emergency_contact_name: string;
-  emergency_contact_relation: string;
-  emergency_contact_phone: string;
-  preferred_language: string;
-}
-
-export interface IdentityVerificationInput {
-  aadhaar_number: string;
-  pan_number: string;
-  passport_number?: string;
-  driving_license?: string;
-  voter_id?: string;
-}
-
-export interface EmploymentDetailsInput {
-  employee_id: string;
-  department: string;
-  designation: string;
-  reporting_manager_id?: string;
-  employment_type: string;
-  work_location?: string;
-  joining_date: string;
-  probation_period_months: number;
-  shift?: string;
-  work_mode: string;
-  office_location?: string;
-  business_unit?: string;
-  cost_center_id?: string;
-  employee_category?: string;
-}
-
-export interface EducationItem {
-  degree: string;
-  institution: string;
-  field_of_study?: string;
-  start_year: number;
-  end_year: number;
-  grade?: string;
-  certificate_url?: string;
-}
-
-export interface ExperienceItem {
-  company_name: string;
-  designation: string;
-  employment_type?: string;
-  start_date: string;
-  end_date?: string;
-  is_current: boolean;
-  description?: string;
-  ctc?: number;
-  manager_name?: string;
-  reason_for_leaving?: string;
-  experience_certificate_url?: string;
-  relieving_letter_url?: string;
-  salary_slip_url?: string;
-}
-
-export interface BankDetailsInput {
-  bank_name: string;
-  account_holder_name: string;
-  account_number: string;
-  ifsc_code: string;
-  branch?: string;
-  upi_id?: string;
-  cancelled_cheque_url?: string;
-  passbook_url?: string;
-}
-
-export interface TaxNomineeInput {
-  tax_regime: string;
-  uan_number?: string;
-  pf_number?: string;
-  esic_number?: string;
-  professional_tax?: number;
-  nominee_name: string;
-  nominee_relation: string;
-  nominee_aadhaar?: string;
-  nominee_dob?: string;
-}
-
-export interface PolicyAcceptanceItem {
-  policy_name: string;
-  accepted: boolean;
-  digital_signature: string;
-}
-
-export interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  current_step: number;
-  onboarding_completed: boolean;
-  data: T;
-}
-
-export const employeeOnboardingApi = {
-  getStatus: () =>
-    api.get<ApiResponse<any>>("employee-onboarding/status"),
-
-  getProgress: () =>
-    api.get<ApiResponse<any>>("employee-onboarding/progress"),
-
-  saveStep1: (data: PersonalInfoInput) =>
-    api.put<ApiResponse<any>>("employee-onboarding/step/1", data),
-
-  saveStep2: (data: IdentityVerificationInput) =>
-    api.put<ApiResponse<any>>("employee-onboarding/step/2", data),
-
-  saveStep3: (data: EmploymentDetailsInput) =>
-    api.put<ApiResponse<any>>("employee-onboarding/step/3", data),
-
-  saveStep4: (data: { education_records: EducationItem[] }) =>
-    api.put<ApiResponse<any>>("employee-onboarding/step/4", data),
-
-  saveStep5: (data: { experience_records: ExperienceItem[] }) =>
-    api.put<ApiResponse<any>>("employee-onboarding/step/5", data),
-
-  saveStep6: (data: BankDetailsInput) =>
-    api.put<ApiResponse<any>>("employee-onboarding/step/6", data),
-
-  saveStep7: (data: TaxNomineeInput) =>
-    api.put<ApiResponse<any>>("employee-onboarding/step/7", data),
-
-  saveStep8: () =>
-    api.put<ApiResponse<any>>("employee-onboarding/step/8"),
-
-  saveStep9: (data: { acceptances: PolicyAcceptanceItem[] }) =>
-    api.put<ApiResponse<any>>("employee-onboarding/step/9", data),
-
-  complete: () =>
-    api.post<ApiResponse<any>>("employee-onboarding/complete"),
-
-  saveDraft: (currentStep: number, draftData: any) =>
-    api.post<ApiResponse<any>>("employee-onboarding/draft", {
-      current_step: currentStep,
-      draft_data: draftData,
-    }),
-
-  uploadFile: async (file: File, documentType: string) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("document_type", documentType);
-    const res = await api.post<ApiResponse<any>>("employee-onboarding/step/8/upload", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-    if (res.data?.url && typeof res.data.url === "string") {
-      res.data.url = getFileUrl(res.data.url);
-    }
-    return res;
+  ) => {
+    const list = onboardingDocsByEmployee[employeeId] || [];
+    onboardingDocsByEmployee[employeeId] = list.map((d) =>
+      d.id === documentId
+        ? { ...d, verification_status: status, rejection_reason: comment || null }
+        : d,
+    );
+    return { success: true };
   },
 
-
-
-  deleteFile: (docId: string) =>
-    api.delete<ApiResponse<any>>(`employee-onboarding/step/8/document/${docId}`),
+  sendReminder: async (_id: string) => ({ success: true }),
+  verifyStep: async (_id: string, _step: number) => ({ success: true }),
 };
 
-export default adminOnboardingApi;
+export default employeeOnboardingApi;

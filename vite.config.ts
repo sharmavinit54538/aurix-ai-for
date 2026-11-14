@@ -1,112 +1,85 @@
-import { defineConfig, loadEnv } from "vite";
-import { tanstackStart } from "@tanstack/react-start/plugin/vite";
-import { nitro } from "nitro/vite";
-import viteReact from "@vitejs/plugin-react";
-import tailwindcss from "@tailwindcss/vite";
-import path from "path";
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import tsconfigPaths from 'vite-tsconfig-paths'
+import tailwindcss from '@tailwindcss/vite'
+import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
+import path from 'path'
 
-export default defineConfig(({ mode, isSsrBuild }) => {
-  const env = loadEnv(mode, process.cwd(), "");
-  let targetApi = (env.VITE_API_URL || "https://api.ofc360.com").trim().replace(/\/$/, "");
-  if (!targetApi.startsWith("http://") && !targetApi.startsWith("https://")) {
-    targetApi = `https://${targetApi}`;
-  }
-  targetApi = targetApi.replace(/www\.api\.ofc360\.com/g, "api.ofc360.com");
-
-  return {
-    server: {
-      port: 8080,
-      proxy: {
-        "/uploads": {
-          target: targetApi,
-          changeOrigin: true,
-          secure: false,
-        },
-        "/api": {
-          target: targetApi,
-          changeOrigin: true,
-          secure: false,
-          // Rewrite cookie domains so the browser stores them for localhost.
-          // Without this, Set-Cookie with Domain=api.ofc360.com is silently
-          // dropped because the browser sees the response as coming from localhost.
-          cookieDomainRewrite: {
-            "api.ofc360.com": "",
-            ".ofc360.com": "",
-          },
-        },
-        // Public backend health probes (/health, /health/ready) used by the Super Admin diagnostics.
-        "/health": {
-          target: targetApi,
-          changeOrigin: true,
-          secure: false,
-        },
-      },
+export default defineConfig({
+  plugins: [
+    TanStackRouterVite({
+      autoCodeSplitting: true,
+      routeFileIgnorePattern: '.*\\.test\\.(ts|tsx)$',
+    }),
+    react(),
+    tailwindcss(),
+    tsconfigPaths(),
+  ],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
     },
-    resolve: {
-      tsconfigPaths: true,
-      alias: {
-        "@": path.resolve(__dirname, "./src"),
-      },
-    },
-    build: {
-      target: "esnext",
-      cssCodeSplit: true,
-      chunkSizeWarningLimit: 1200,
-      rollupOptions: !isSsrBuild
-        ? {
-            output: {
-              manualChunks(id: string) {
-                if (id.includes("node_modules")) {
-                  if (
-                    id.includes("react/") ||
-                    id.includes("react-dom") ||
-                    id.includes("react-redux") ||
-                    id.includes("@reduxjs")
-                  ) {
-                    return "react-vendor";
-                  }
-                  if (id.includes("@tanstack")) {
-                    return "tanstack-vendor";
-                  }
-                  if (id.includes("recharts")) {
-                    return "charts-vendor";
-                  }
-                  if (id.includes("framer-motion")) {
-                    return "motion-vendor";
-                  }
-                  if (id.includes("lucide-react")) {
-                    return "icons-vendor";
-                  }
-                  if (id.includes("@radix-ui")) {
-                    return "ui-vendor";
-                  }
-                }
-              },
-            },
-          }
-        : undefined,
-    },
-    plugins: [
-      tailwindcss(),
-      tanstackStart({
-        server: { entry: "server" },
-      }),
-      nitro({
-        preset: process.env.NITRO_PRESET || (process.env.VERCEL ? "vercel" : undefined),
-        routeRules: {
-          "/assets/**": {
-            headers: {
-              "cache-control": "public, max-age=31536000, immutable",
-            },
-          },
-          "/**": {
-            headers: {
-              "cache-control": "no-cache, no-store, must-revalidate",
-            },
-          },
-        },
-      }),
-      viteReact(),
+  },
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'lucide-react',
+      '@tanstack/react-router',
+      '@tanstack/react-query',
+      '@reduxjs/toolkit',
+      'react-redux',
+      'axios',
+      'framer-motion',
+      'recharts',
+      'cmdk',
+      'date-fns',
+      'sonner',
+      'zod',
+      'clsx',
+      'tailwind-merge',
+      'class-variance-authority',
+      '@radix-ui/react-popover',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-scroll-area',
+      '@radix-ui/react-select',
+      '@radix-ui/react-progress',
+      '@radix-ui/react-tabs',
+      '@radix-ui/react-tooltip',
+      '@radix-ui/react-slot',
     ],
-  };
-});
+  },
+  build: {
+    target: 'es2022',
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined
+          if (id.includes('recharts') || id.includes('d3-')) return 'vendor-charts'
+          if (id.includes('framer-motion')) return 'vendor-motion'
+          if (id.includes('@tanstack/')) return 'vendor-tanstack'
+          if (id.includes('@reduxjs/') || id.includes('react-redux') || id.includes('redux')) return 'vendor-redux'
+          if (id.includes('@radix-ui/')) return 'vendor-radix'
+          if (id.includes('lucide-react')) return 'vendor-icons'
+          return undefined
+        },
+      },
+    },
+  },
+  server: {
+    host: '0.0.0.0',
+    port: 3000,
+    allowedHosts: true,
+    warmup: {
+      clientFiles: [
+        './src/main.tsx',
+        './src/router.tsx',
+        './src/routes/__root.tsx',
+        './src/components/aurix/DashboardShell.tsx',
+        './src/features/dashboard/ExecutiveDashboard.tsx',
+        './src/redux/store.ts',
+      ],
+    },
+  },
+})

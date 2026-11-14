@@ -2,7 +2,6 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/resources/asset-management")({
   beforeLoad: () => {
-    throw redirect({ to: "/dashboard/asset-management" });
+    throw redirect({ to: "/dashboard/asset-management" as any });
   },
-  component: () => null,
 });

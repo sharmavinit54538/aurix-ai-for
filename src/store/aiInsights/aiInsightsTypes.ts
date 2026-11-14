@@ -1,184 +1,60 @@
 export interface KpiItem {
-  label: string;
-  score: number;
-  trend: number;
-  hint: string;
-  icon?: string;
-  invert?: boolean;
-}
-
-export interface AttritionItem {
   id?: string;
-  name: string;
-  dept: string;
-  risk: number;
-  reason: string;
-  action: string;
-}
-
-export interface BurnoutItem {
-  id?: string;
-  name: string;
-  overtime: number;
-  leave: number;
-  score: number;
-}
-
-export interface AttendanceInsightItem {
-  id?: string;
-  title: string;
-  count: number;
-  tone: "warn" | "info" | "crit" | string;
-  note: string;
-}
-
-export interface CandidateMatchItem {
-  id?: string;
-  name: string;
-  role: string;
-  match: number;
-  readiness: number;
-}
-
-export interface TopPerformerItem {
-  id?: string;
-  name: string;
-  dept: string;
-  score: number;
-  growth: string;
-}
-
-export interface SupportPerformerItem {
-  id?: string;
-  name: string;
-  dept: string;
-  score: number;
-  coach: string;
-}
-
-export interface SkillGapItem {
-  skill: string;
-  have: number;
-  need: number;
-}
-
-
-export interface HeadcountForecastItem {
-  month: string;
-  current: number;
-  forecast: number;
-}
-
-export interface HiringDemandItem {
-  dept: string;
-  open: number;
-  demand: number;
-}
-
-export interface SatisfactionTrendItem {
-  m: string;
-  s: number;
-}
-
-export interface PayrollTrendItem {
-  m: string;
-  cost: number;
-}
-
-export interface AlertItem {
-  id?: string;
-  title: string;
-  note: string;
-  severity: "Critical" | "Medium" | "Low" | string;
-  icon?: string;
-}
-
-export interface PayrollData {
-  payrollHealth?: number;
-  savingsOpportunities?: string;
-  anomaliesDetected?: number;
-}
-
-export interface PayrollAlertItem {
-  id?: string;
-  title: string;
-  who?: string;
-  delta?: string;
-  severity: "Critical" | "Medium" | "Low" | string;
+  title?: string;
+  label?: string;
+  value: string | number;
+  change?: string;
+  trend?: "up" | "down" | "neutral";
+  subtitle?: string;
+  category?: string;
 }
 
 export interface DocumentItem {
-  id?: string;
-  label: string;
+  id: string;
+  name: string;
   type?: string;
+  status?: string;
+  size?: string;
 }
 
-export interface AIInsightsCharts {
-  skillGap: SkillGapItem[];
-  headcountForecast: HeadcountForecastItem[];
-  hiringDemand: HiringDemandItem[];
-  satisfactionTrend: SatisfactionTrendItem[];
-  payrollTrend?: PayrollTrendItem[];
-}
-
-export interface RecruitmentData {
-  openPositions: number;
-  recommendedCandidatesCount: number;
-  pipelineHealth: string;
-  candidates: CandidateMatchItem[];
-}
-
-export interface PerformanceData {
-  topPerformers: TopPerformerItem[];
-  supportPerformers: SupportPerformerItem[];
-  skillGap: SkillGapItem[];
-}
-
-
-export interface SummaryData {
-  totalInsights: number;
-  actionedCount: number;
-  criticalAlertsCount: number;
-  healthScoreDelta: number;
+export interface PayrollAlertItem {
+  id: string;
+  message: string;
+  severity: "high" | "medium" | "low";
 }
 
 export interface AIInsightsDashboardData {
-  has_data?: boolean;
-  partial?: boolean;
-  errors?: string[] | Record<string, string> | null;
-  summary?: SummaryData;
-  kpi?: KpiItem[];
-  attrition?: AttritionItem[];
-  burnout?: BurnoutItem[];
-  attendance?: AttendanceInsightItem[];
-  recruitment?: RecruitmentData;
-  performance?: PerformanceData;
-  charts?: AIInsightsCharts;
-  alerts?: AlertItem[];
-  recommendations?: string[];
+  summary?: {
+    totalEmployees?: number;
+    healthScore?: number;
+    attritionRisk?: string;
+    overallMood?: string;
+  };
+  kpis?: KpiItem[];
+  alerts?: any[];
+  attendance?: any[];
+  attrition?: any[];
+  burnout?: any[];
+  candidates?: any[];
   documents?: DocumentItem[];
-  payroll?: PayrollData;
+  headcountForecast?: any[];
+  hiringDemand?: any[];
+  payroll?: any[];
   payrollAlerts?: PayrollAlertItem[];
+  payrollTrend?: any[];
+  recruitment?: any[];
+  recommendations?: any[];
+  satisfactionTrend?: any[];
+  skillGap?: any[];
+  supportPerformers?: any[];
+  topPerformers?: any[];
+  hasDataFlag?: boolean;
+  partial?: boolean;
+  partialErrors?: any[];
 }
 
 export interface AIInsightsState {
+  data: AIInsightsDashboardData | null;
   loading: boolean;
   error: string | null;
-  lastUpdated: string | null;
-  hasDataFlag?: boolean;
-  partial?: boolean;
-  partialErrors?: string[] | Record<string, string> | null;
-  dashboard: SummaryData | null;
-  kpi: KpiItem[];
-  attrition: AttritionItem[];
-  burnout: BurnoutItem[];
-  attendance: AttendanceInsightItem[];
-  recruitment: RecruitmentData | null;
-  performance: PerformanceData | null;
-  charts: AIInsightsCharts | null;
-  alerts: AlertItem[];
-  recommendations: string[];
-  documents: DocumentItem[];
-  payroll?: PayrollData;
-  payrollAlerts?: PayrollAlertItem[];
 }

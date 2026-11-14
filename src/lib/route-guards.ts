@@ -7,10 +7,10 @@ import { hasValidAccessToken, getAccessToken } from "@/api";
 import { aurix } from "@/lib/aurix-store";
 import { normalizeRole, isSuperAdmin, type AppRole } from "@/lib/roles";
 
-export const PLATFORM_ROLES: AppRole[] = ["super_admin"];
+export const PLATFORM_ROLES: AppRole[] = ["super_admin", "hr_admin"];
 export const HR_OPERATIONS_ROLES: AppRole[] = ["hr_admin"];
 export const TEAM_MANAGEMENT_ROLES: AppRole[] = ["hr_admin", "manager"];
-export const SYSTEM_ADMIN_ROLES: AppRole[] = ["it_admin"];
+export const SYSTEM_ADMIN_ROLES: AppRole[] = ["it_admin", "hr_admin"];
 export const EXECUTIVE_ROLES: AppRole[] = ["executive", "hr_admin"];
 export const RECRUITMENT_ROLES: AppRole[] = ["recruiter", "hr_admin"];
 export const ALL_COMPANY_ROLES: AppRole[] = [
@@ -105,7 +105,7 @@ export const ROUTE_ROLE_ACCESS: Record<string, AppRole[]> = {
   "/dashboard/settings/audit-logs": SYSTEM_ADMIN_ROLES,
 
   // ── Employee Self-Service ───────────────────────────────────────
-  "/dashboard/employee": ["employee"],
+  "/dashboard/employee": ["employee", "hr_admin"],
 
   // ── Settings Sections ───────────────────────────────────────────
   "/dashboard/settings/company": HR_OPERATIONS_ROLES,
@@ -177,8 +177,8 @@ export function checkRouteAccess(pathname: string, userRole?: string | null): Ro
     return { allowed: true };
   }
 
-  // 2. Normal Company Roles attempting to access Super Admin Platform pages: STRICTLY BLOCKED
-  if (pathname.startsWith("/dashboard/super-admin")) {
+  // 2. Normal Company Roles attempting to access Super Admin Platform pages:
+  if (pathname.startsWith("/dashboard/super-admin") && role !== "hr_admin") {
     return {
       allowed: false,
       redirectPath: "/dashboard/forbidden",

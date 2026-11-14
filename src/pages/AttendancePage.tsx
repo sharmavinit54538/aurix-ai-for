@@ -1,7 +1,11 @@
 import { format } from "date-fns";
 import { Link } from "@tanstack/react-router";
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from "react";
 import { useAurix } from "@/lib/aurix-store";
+import { useCurrentRole } from "@/lib/use-current-role";
+import { isEmployeeAttendanceRole } from "@/lib/hrms/attendance-helpers";
+
+const EmployeeAttendancePage = lazy(() => import("@/pages/EmployeeAttendancePage"));
 import {
   CalendarDays, Check, Clock, X, Fingerprint, ScrollText, Palmtree, ChevronLeft,
   AlertCircle, Loader2, RefreshCw, BarChart2, Users, Activity, TrendingUp
@@ -76,7 +80,8 @@ type ViewMode = "modules" | "analytics";
 
 export function AttendancePage() {
   const ws = useAurix();
-  const isEmployee = (ws.user?.role || "").toLowerCase() === "employee";
+  const currentRole = useCurrentRole();
+  const isEmployee = isEmployeeAttendanceRole(currentRole || ws.user?.role);
   const [viewMode, setViewMode] = useState<ViewMode>("modules");
   const [todayEmployees, setTodayEmployees] = useState<TodayAttendanceEmployee[]>([]);
   const [analytics, setAnalytics] = useState<AttendanceAnalyticsSummary | null>(null);
@@ -258,12 +263,14 @@ export function AttendancePage() {
   }, [filters]);
 
   useEffect(() => {
+    if (isEmployee) return;
     loadData();
-  }, []);
+  }, [isEmployee]);
 
   useEffect(() => {
+    if (isEmployee) return;
     loadAnalyticsCharts();
-  }, [loadAnalyticsCharts]);
+  }, [loadAnalyticsCharts, isEmployee]);
 
   const handleFiltersChange = useCallback((newFilters: Partial<AttendanceAnalyticsFilters>) => {
     setFilters((prev) => ({ ...prev, ...newFilters }));
@@ -303,45 +310,37 @@ export function AttendancePage() {
     { key: "absent", label: "Absent", color: "text-destructive", icon: X },
   ] as const;
 
+  if (isEmployee) {
+    return (
+      <Suspense fallback={<div className="p-8 text-xs text-muted-foreground">Loading attendance...</div>}>
+        <EmployeeAttendancePage />
+      </Suspense>
+    );
+  }
+
   return (
     <div className="space-y-6">
 
 
       {/* HEADER SECTION */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight">Attendance Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Real-time attendance analytics and insights</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center justify-end gap-3">
+        <div className="flex items-center bg-card/65 border border-border/80 p-0.5 rounded-lg">
           <Button
-            variant="outline"
+            variant={viewMode === "modules" ? "secondary" : "ghost"}
             size="sm"
-            onClick={handleRefresh}
-            disabled={loading || chartsLoading}
-            className="gap-2"
+            onClick={() => setViewMode("modules")}
+            className="text-xs h-7 px-3 font-semibold rounded-md cursor-pointer"
           >
-            <RefreshCw className={`h-4 w-4 ${(loading || chartsLoading) ? "animate-spin" : ""}`} />
-            Refresh
+            Attendance Hub
           </Button>
-          <div className="flex items-center bg-card/65 border border-border/80 p-0.5 rounded-lg">
-            <Button
-              variant={viewMode === "modules" ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("modules")}
-              className="text-xs h-7 px-3 font-semibold rounded-md cursor-pointer"
-            >
-              Attendance Hub
-            </Button>
-            <Button
-              variant={viewMode === "analytics" ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("analytics")}
-              className="text-xs h-7 px-3 font-semibold rounded-md cursor-pointer"
-            >
-              Attendance Dashboard
-            </Button>
-          </div>
+          <Button
+            variant={viewMode === "analytics" ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => setViewMode("analytics")}
+            className="text-xs h-7 px-3 font-semibold rounded-md cursor-pointer"
+          >
+            Attendance Dashboard
+          </Button>
         </div>
       </div>
 

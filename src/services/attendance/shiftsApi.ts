@@ -1,227 +1,235 @@
-import { api } from "@/api";
-import type {
-  Shift,
-  ShiftCreatePayload,
-  ShiftAssignPayload,
-  ShiftOption,
-  ShiftAssignResult,
-  ShiftChangeRequest,
-  MyScheduleData,
-  ShiftListResponse,
-  ShiftEmployeesResponse,
-  ListChangeRequestsParams,
-  CreateChangeRequestPayload,
-  ApproveChangeRequestPayload,
-  RejectChangeRequestPayload,
-  ShiftApiErrorCode,
-} from "./types";
-import {
-  mapShift,
-  mapShiftList,
-  mapShiftOption,
-  mapShiftAssignResult,
-  mapShiftChangeRequest,
-  mapMySchedule,
-  mapShiftEmployees,
-} from "./shiftsMappers";
+import type { ShiftItem, ShiftChangeRequest } from "./types";
 
-function toSnakeCase(obj: Record<string, unknown> | object): Record<string, unknown> {
-  const result: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(obj)) {
-    if (value === undefined) continue;
-    const snakeKey = key.replace(/([A-Z])/g, "_$1").toLowerCase();
-    result[snakeKey] = value;
-  }
-  return result;
-}
+const MOCK_SHIFTS: any[] = [
+  {
+    id: "sh-1",
+    name: "General Morning Shift",
+    code: "GMS",
+    start_time: "09:00",
+    end_time: "18:00",
+    grace_period_mins: 15,
+    grace_period_minutes: 15,
+    break_duration_minutes: 60,
+    is_night_shift: false,
+    night_shift: false,
+    night_premium_percent: 0,
+    is_active: true,
+    employee_count: 34,
+    assigned_employees_count: 34,
+    working_days: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+  },
+  {
+    id: "sh-2",
+    name: "UK / EMEA Overlap Shift",
+    code: "EMEA",
+    start_time: "13:00",
+    end_time: "22:00",
+    grace_period_mins: 15,
+    grace_period_minutes: 15,
+    break_duration_minutes: 60,
+    is_night_shift: false,
+    night_shift: false,
+    night_premium_percent: 0,
+    is_active: true,
+    employee_count: 12,
+    assigned_employees_count: 12,
+    working_days: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+  },
+  {
+    id: "sh-3",
+    name: "Night Operations Shift",
+    code: "NOC",
+    start_time: "22:00",
+    end_time: "07:00",
+    grace_period_mins: 15,
+    grace_period_minutes: 15,
+    break_duration_minutes: 60,
+    is_night_shift: true,
+    night_shift: true,
+    night_premium_percent: 15,
+    is_active: true,
+    employee_count: 8,
+    assigned_employees_count: 8,
+    working_days: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+  },
+];
 
-export async function getShifts(params?: {
-  search?: string;
-  is_active?: boolean;
-  night_shift?: boolean;
-  page?: number;
-  limit?: number;
-}): Promise<ShiftListResponse> {
-  const query = new URLSearchParams();
-  if (params?.search) query.set("search", params.search);
-  if (params?.is_active !== undefined) query.set("is_active", String(params.is_active));
-  if (params?.night_shift !== undefined) query.set("night_shift", String(params.night_shift));
-  if (params?.page) query.set("page", String(params.page));
-  if (params?.limit) query.set("limit", String(params.limit));
+let shiftChangeRequests: ShiftChangeRequest[] = [
+  {
+    id: "scr-1",
+    employee_id: "emp-kabir",
+    employee_name: "Kabir Mehta",
+    current_shift_id: "sh-1",
+    current_shift_name: "General Morning Shift",
+    requested_shift_id: "sh-2",
+    requested_shift_name: "UK / EMEA Overlap Shift",
+    effective_date: new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10),
+    reason: "Coordinate sprint overlap with EMEA engineering team",
+    status: "pending",
+    created_at: new Date(Date.now() - 86400000).toISOString(),
+  },
+];
 
-  const qs = query.toString();
-  const res = await api.get(`attendance/shifts${qs ? `?${qs}` : ""}`);
-  return mapShiftList(res);
-}
+export const getShifts = async (_params?: unknown): Promise<any> => ({
+  items: MOCK_SHIFTS,
+  total: MOCK_SHIFTS.length,
+});
+export const getShiftOptions = async (): Promise<ShiftItem[]> => MOCK_SHIFTS;
 
-export async function getShiftOptions(): Promise<ShiftOption[]> {
-  try {
-    const res = await api.get("attendance/shifts/options");
-    const data = res as { data?: unknown } | unknown[];
-    const list = Array.isArray(data) ? data : (data as { data?: unknown })?.data ?? [];
-    if (Array.isArray(list) && list.length > 0) {
-      return (list as unknown[]).map(mapShiftOption);
-    }
-  } catch {
-    // If options endpoint is not present, attempt attendance/shifts
-  }
+export const createShift = async (data: Partial<ShiftItem>): Promise<ShiftItem> => ({
+  id: `sh-${Date.now()}`,
+  name: data.name || "New Shift",
+  start_time: data.start_time || "09:00",
+  end_time: data.end_time || "18:00",
+  ...data,
+});
 
-  try {
-    const res = await api.get("attendance/shifts");
-    const data = res as { data?: unknown } | unknown[];
-    const rawItems = (data as { data?: { items?: unknown[] } })?.data?.items ?? (data as { items?: unknown[] })?.items ?? (Array.isArray(data) ? data : []);
-    if (Array.isArray(rawItems) && rawItems.length > 0) {
-      return rawItems.map((s: any) => ({
-        id: String(s.id || s.name),
-        name: String(s.name || "Shift"),
-        code: String(s.code || s.name?.slice(0, 3).toUpperCase() || "SHF"),
-        start_time: String(s.start_time || "09:30").slice(0, 5),
-        end_time: String(s.end_time || "18:30").slice(0, 5),
-        is_overnight: Boolean(s.is_overnight || s.night_shift),
-      }));
-    }
-  } catch {
-    // Fallback to standard shifts
-  }
+export const updateShift = async (id: string, data: Partial<ShiftItem>): Promise<ShiftItem> => ({
+  id,
+  name: data.name || "Updated Shift",
+  start_time: data.start_time || "09:00",
+  end_time: data.end_time || "18:00",
+  ...data,
+});
 
-  return [
-    { id: "general", name: "General Shift", code: "GEN", start_time: "09:30", end_time: "18:30", is_overnight: false },
-    { id: "morning", name: "Morning Shift", code: "MORN", start_time: "06:00", end_time: "15:00", is_overnight: false },
-    { id: "evening", name: "Evening Shift", code: "EVE", start_time: "14:00", end_time: "23:00", is_overnight: false },
-    { id: "night", name: "Night Shift", code: "NIGHT", start_time: "22:00", end_time: "07:00", is_overnight: true },
-  ];
-}
+export const deleteShift = async (_id: string): Promise<{ success: boolean }> => ({ success: true });
+export const assignShift = async (_payload: unknown) => ({ success: true });
+export const getShiftEmployees = async (_shiftId: string): Promise<any[]> => [];
 
-export async function createShift(payload: ShiftCreatePayload): Promise<Shift> {
-  const body = toSnakeCase(payload as unknown as Record<string, unknown>);
-  const res = await api.post("attendance/shifts", body);
-  const data = res as { data?: unknown } | unknown;
-  const item = (data as { data?: unknown })?.data ?? data;
-  return mapShift(item);
-}
+export const getMySchedule = async (_params?: unknown): Promise<any> => {
+  const now = new Date();
+  const todayIso = now.toISOString().slice(0, 10);
+  const todayDay = now.toLocaleDateString("en-US", { weekday: "long" });
 
-export async function updateShift(id: string, payload: Partial<ShiftCreatePayload>): Promise<Shift> {
-  const body = toSnakeCase(payload as unknown as Record<string, unknown>);
-  const res = await api.put(`attendance/shifts/${id}`, body);
-  const data = res as { data?: unknown } | unknown;
-  const item = (data as { data?: unknown })?.data ?? data;
-  return mapShift(item);
-}
+  const upcoming = Array.from({ length: 5 }, (_, i) => {
+    const d = new Date(now);
+    d.setDate(now.getDate() + i + 1);
+    const dayNum = d.getDay();
+    const isOff = dayNum === 0 || dayNum === 6;
+    return {
+      date: d.toISOString().slice(0, 10),
+      shift_name: isOff ? "Weekly Off" : "General Morning Shift",
+      start_time: "09:00",
+      end_time: "18:00",
+      working_hours: isOff ? 0 : 8,
+      is_off: isOff,
+      is_holiday: false,
+      is_overnight: false,
+      source: "assignment",
+    };
+  });
 
-export async function deleteShift(
-  id: string,
-  options?: { reassignTo?: string }
-): Promise<{ success: boolean; reassigned?: boolean }> {
-  const query = new URLSearchParams();
-  if (options?.reassignTo) query.set("reassign_to", options.reassignTo);
-  const qs = query.toString();
+  const history = Array.from({ length: 4 }, (_, i) => {
+    const d = new Date(now);
+    d.setDate(now.getDate() - (i + 1));
+    const dateStr = d.toISOString().slice(0, 10);
+    return {
+      attendance_id: `att-hist-${i + 1}`,
+      date: dateStr,
+      shift_name: "General Morning Shift",
+      check_in_time: `${dateStr}T03:34:00Z`,
+      check_out_time: `${dateStr}T12:38:00Z`,
+      working_hours: 8.5,
+      overtime_hours: i === 1 ? 0.5 : 0,
+      is_late: false,
+      is_early_checkout: false,
+      auto_closed: false,
+      status: "Present",
+    };
+  });
 
-  await api.delete(`attendance/shifts/${id}${qs ? `?${qs}` : ""}`);
-  return { success: true, reassigned: !!options?.reassignTo };
-}
-
-export async function assignShift(
-  shiftId: string,
-  payload: ShiftAssignPayload
-): Promise<ShiftAssignResult> {
-  const body = toSnakeCase(payload as unknown as Record<string, unknown>);
-  const res = await api.post(`attendance/shifts/${shiftId}/assign`, body);
-  const data = res as { data?: unknown } | unknown;
-  const item = (data as { data?: unknown })?.data ?? data;
-  return mapShiftAssignResult(item);
-}
-
-export async function getShiftEmployees(
-  shiftId: string,
-  params?: { page?: number; limit?: number }
-): Promise<ShiftEmployeesResponse> {
-  const query = new URLSearchParams();
-  if (params?.page) query.set("page", String(params.page));
-  if (params?.limit) query.set("limit", String(params.limit));
-  const qs = query.toString();
-
-  const res = await api.get(`attendance/shifts/${shiftId}/employees${qs ? `?${qs}` : ""}`);
-  return mapShiftEmployees(res);
-}
-
-export async function getMySchedule(params?: {
-  days_ahead?: number;
-  history_days?: number;
-}): Promise<MyScheduleData> {
-  const query = new URLSearchParams();
-  if (params?.days_ahead) query.set("days_ahead", String(params.days_ahead));
-  if (params?.history_days) query.set("history_days", String(params.history_days));
-  const qs = query.toString();
-
-  const res = await api.get(`attendance/shifts/me/schedule${qs ? `?${qs}` : ""}`);
-  const data = res as { data?: unknown } | unknown;
-  const item = (data as { data?: unknown })?.data ?? data;
-  return mapMySchedule(item);
-}
-
-export async function getMyChangeRequests(): Promise<ShiftChangeRequest[]> {
-  const res = await api.get("attendance/shifts/change-requests/mine");
-  const data = res as { data?: unknown } | unknown[];
-  const list = Array.isArray(data) ? data : (data as { data?: unknown })?.data ?? [];
-  return (list as unknown[]).map(mapShiftChangeRequest);
-}
-
-export async function createChangeRequest(payload: CreateChangeRequestPayload): Promise<ShiftChangeRequest> {
-  const body = toSnakeCase(payload as unknown as Record<string, unknown>);
-  const res = await api.post("attendance/shifts/change-requests", body);
-  const data = res as { data?: unknown } | unknown;
-  const item = (data as { data?: unknown })?.data ?? data;
-  return mapShiftChangeRequest(item);
-}
-
-export async function listChangeRequests(params?: ListChangeRequestsParams): Promise<{
-  items: ShiftChangeRequest[];
-  total: number;
-  page: number;
-  limit: number;
-}> {
-  const query = new URLSearchParams();
-  if (params?.status) query.set("status", params.status);
-  if (params?.page) query.set("page", String(params.page));
-  if (params?.limit) query.set("limit", String(params.limit));
-  const qs = query.toString();
-
-  const res = await api.get(`attendance/shifts/change-requests${qs ? `?${qs}` : ""}`);
-  const data = res as { data?: unknown } | unknown;
-  const list = ((data as { data?: unknown })?.data as { items?: unknown[] } | undefined)?.items ?? [];
   return {
-    items: list.map(mapShiftChangeRequest),
-    total: ((data as { data?: unknown })?.data as { total?: number } | undefined)?.total ?? 0,
-    page: ((data as { data?: unknown })?.data as { page?: number } | undefined)?.page ?? 1,
-    limit: ((data as { data?: unknown })?.data as { limit?: number } | undefined)?.limit ?? 20,
+    has_assigned_shift: true,
+    timezone: "Asia/Kolkata",
+    employee: {
+      name: "Kabir Mehta",
+      branch: "Bengaluru · Global HQ",
+    },
+    current_shift: {
+      id: "sh-1",
+      name: "General Morning Shift",
+      shiftType: "Regular",
+      start_time: "09:00",
+      end_time: "18:00",
+      break_duration_mins: 60,
+      grace_period_mins: 15,
+      night_premium_percent: 0,
+      working_days: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+      night_shift: false,
+      is_overnight: false,
+      source: "assignment",
+    },
+    today: {
+      date: todayIso,
+      day: todayDay,
+      is_off: now.getDay() === 0 || now.getDay() === 6,
+      is_holiday: false,
+      holiday_name: null,
+      source: "assignment",
+      checked_in: true,
+      check_in_time: `${todayIso}T03:35:00Z`,
+      checked_out: false,
+      check_out_time: null,
+    },
+    upcoming,
+    history,
   };
-}
+};
 
-export async function approveChangeRequest(
-  id: string,
-  payload?: ApproveChangeRequestPayload
-): Promise<ShiftChangeRequest> {
-  const body = payload ? toSnakeCase(payload as unknown as Record<string, unknown>) : {};
-  const res = await api.post(`attendance/shifts/change-requests/${id}/approve`, body);
-  const data = res as { data?: unknown } | unknown;
-  const item = (data as { data?: unknown })?.data ?? data;
-  return mapShiftChangeRequest(item);
-}
+export const getMyChangeRequests = async (): Promise<ShiftChangeRequest[]> => [...shiftChangeRequests];
 
-export async function rejectChangeRequest(
-  id: string,
-  payload: RejectChangeRequestPayload
-): Promise<ShiftChangeRequest> {
-  const body = toSnakeCase(payload as unknown as Record<string, unknown>);
-  const res = await api.post(`attendance/shifts/change-requests/${id}/reject`, body);
-  const data = res as { data?: unknown } | unknown;
-  const item = (data as { data?: unknown })?.data ?? data;
-  return mapShiftChangeRequest(item);
-}
+export const createChangeRequest = async (
+  payload: Partial<ShiftChangeRequest>,
+): Promise<ShiftChangeRequest> => {
+  const targetShift = MOCK_SHIFTS.find((s) => s.id === payload.requested_shift_id);
+  const created: ShiftChangeRequest = {
+    id: `scr-${Date.now()}`,
+    employee_id: "emp-kabir",
+    employee_name: "Kabir Mehta",
+    current_shift_id: "sh-1",
+    current_shift_name: "General Morning Shift",
+    requested_shift_id: payload.requested_shift_id || "sh-2",
+    requested_shift_name: targetShift?.name || payload.requested_shift_name || "Requested Shift",
+    effective_date: payload.effective_date || new Date(Date.now() + 86400000).toISOString().slice(0, 10),
+    reason: payload.reason || "",
+    status: "pending",
+    created_at: new Date().toISOString(),
+  };
+  shiftChangeRequests = [created, ...shiftChangeRequests];
+  return created;
+};
 
-export async function cancelChangeRequest(id: string): Promise<ShiftChangeRequest> {
-  const res = await api.post(`attendance/shifts/change-requests/${id}/cancel`);
-  const data = res as { data?: unknown } | unknown;
-  const item = (data as { data?: unknown })?.data ?? data;
-  return mapShiftChangeRequest(item);
-}
+export const listChangeRequests = async (): Promise<ShiftChangeRequest[]> => [...shiftChangeRequests];
+
+export const approveChangeRequest = async (id: string, _comment?: string): Promise<{ success: boolean }> => {
+  shiftChangeRequests = shiftChangeRequests.map((r) => (r.id === id ? { ...r, status: "approved" } : r));
+  return { success: true };
+};
+
+export const rejectChangeRequest = async (id: string, _comment?: string): Promise<{ success: boolean }> => {
+  shiftChangeRequests = shiftChangeRequests.map((r) => (r.id === id ? { ...r, status: "rejected" } : r));
+  return { success: true };
+};
+
+export const cancelChangeRequest = async (id: string): Promise<{ success: boolean }> => {
+  shiftChangeRequests = shiftChangeRequests.map((r) => (r.id === id ? { ...r, status: "cancelled" } : r));
+  return { success: true };
+};
+
+export const shiftsApi = {
+  getShifts,
+  getShiftOptions,
+  createShift,
+  updateShift,
+  deleteShift,
+  assignShift,
+  getShiftEmployees,
+  getMySchedule,
+  getMyChangeRequests,
+  createChangeRequest,
+  listChangeRequests,
+  approveChangeRequest,
+  rejectChangeRequest,
+  cancelChangeRequest,
+};
+export default shiftsApi;

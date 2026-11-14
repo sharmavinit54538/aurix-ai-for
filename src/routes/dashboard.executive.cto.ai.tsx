@@ -1,8 +1,9 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
+
+const PageComponent = lazyFeaturePage(() => import("@/features/cto/pages/CtoAiPlatformPage"));
 
 export const Route = createFileRoute("/dashboard/executive/cto/ai")({
-  beforeLoad: () => {
-    throw redirect({ to: "/dashboard/executive/cto" });
-  },
-  component: () => null,
+  head: () => ({ meta: [{ title: "AI & LLM Platform — OFC360" }] }),
+  component: PageComponent,
 });

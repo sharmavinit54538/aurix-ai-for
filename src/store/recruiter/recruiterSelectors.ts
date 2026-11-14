@@ -1,44 +1,19 @@
-import { createSelector } from "@reduxjs/toolkit";
 import type { RootState } from "@/redux/store";
 
-export const selectRecruiterState = (state: RootState) => state.aiRecruiter;
-
-export const selectRecruiterLoading = createSelector(
-  [selectRecruiterState],
-  (state) => state?.loading ?? false,
-);
-
-export const selectRecruiterError = createSelector(
-  [selectRecruiterState],
-  (state) => state?.error ?? null,
-);
-
-export const selectRecruiterLastUpdated = createSelector(
-  [selectRecruiterState],
-  (state) => state?.lastUpdated ?? null,
-);
-
-export const selectRecruiterSummary = createSelector(
-  [selectRecruiterState],
-  (state) => state?.summary ?? null,
-);
-
-export const selectRecruiterKPIs = createSelector(
-  [selectRecruiterState],
-  (state) => (Array.isArray(state?.kpi) ? state.kpi : []),
-);
-
-export const selectRecruiterCharts = createSelector(
-  [selectRecruiterState],
-  (state) => state?.charts ?? null,
-);
-
-export const selectRecruiterCandidateFunnel = createSelector(
-  [selectRecruiterCharts],
-  (charts) => (Array.isArray(charts?.candidateFunnel) ? charts.candidateFunnel : []),
-);
-
-export const selectRecruiterJdMatchDistribution = createSelector(
-  [selectRecruiterCharts],
-  (charts) => (Array.isArray(charts?.jdMatchDistribution) ? charts.jdMatchDistribution : []),
-);
+export const selectRecruiterLoading = (state: RootState) => state.aiRecruiter?.loading ?? false;
+export const selectRecruiterError = (state: RootState) => state.aiRecruiter?.error ?? null;
+export const selectRecruiterKPIs = (state: RootState) => state.aiRecruiter?.data?.kpis ?? [];
+export const selectRecruiterSummary = (state: RootState) => state.aiRecruiter?.data?.summary ?? {};
+export const selectRecruiterCandidates = (state: RootState) => state.aiRecruiter?.data?.candidates ?? [];
+export const selectRecruiterCandidateFunnel = (state: RootState) => state.aiRecruiter?.data?.candidateFunnel ?? [
+  { stage: "Applied", count: 142 },
+  { stage: "Screened", count: 64 },
+  { stage: "Interviewed", count: 28 },
+  { stage: "Offered", count: 8 },
+];
+export const selectRecruiterJdMatchDistribution = (state: RootState) => state.aiRecruiter?.data?.jdMatchDistribution ?? [
+  { range: "90-100%", count: 18 },
+  { range: "80-89%", count: 32 },
+  { range: "70-79%", count: 14 },
+];
+export const selectRecruiterLastUpdated = (state: RootState) => state.aiRecruiter?.data?.lastUpdated ?? null;

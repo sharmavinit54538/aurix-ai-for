@@ -134,6 +134,30 @@ function normalizeUser(raw: unknown, tokenRole?: string | null): AuthUserPayload
           : undefined,
     company_name: rawCompanyName,
     companyName: rawCompanyName,
+    document_verification_status:
+      typeof user.document_verification_status === "string"
+        ? (user.document_verification_status as AuthUserPayload["document_verification_status"])
+        : typeof user.documentVerificationStatus === "string"
+          ? (user.documentVerificationStatus as AuthUserPayload["documentVerificationStatus"])
+          : undefined,
+    documentVerificationStatus:
+      typeof user.documentVerificationStatus === "string"
+        ? (user.documentVerificationStatus as AuthUserPayload["documentVerificationStatus"])
+        : typeof user.document_verification_status === "string"
+          ? (user.document_verification_status as AuthUserPayload["document_verification_status"])
+          : undefined,
+    documents_verified:
+      typeof user.documents_verified === "boolean"
+        ? user.documents_verified
+        : typeof user.documentsVerified === "boolean"
+          ? user.documentsVerified
+          : undefined,
+    documentsVerified:
+      typeof user.documentsVerified === "boolean"
+        ? user.documentsVerified
+        : typeof user.documents_verified === "boolean"
+          ? user.documents_verified
+          : undefined,
   };
 }
 

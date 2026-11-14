@@ -526,57 +526,45 @@ export default function RostersPage() {
   return (
     <div className="space-y-6">
       {/* Header section with top actions */}
-      <PageHeader
-        showBack={true}
-        backText="Back"
-        title="Roster Planner"
-        description="Plan employee shifts, weekly schedules, monthly rosters, and workforce allocation."
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] text-muted-foreground border border-border bg-card rounded-lg px-2.5 py-1.5">
-              <CheckCircle className="h-3 w-3 text-primary" />
-              {autoSaveStatus}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                toast.info("AI roster generation endpoint is not available.");
-              }}
-              className="h-9 border-border text-xs"
-            >
-              <Sparkles className="mr-2 h-3.5 w-3.5 text-primary" />
-              Generate AI Roster
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => toast.info("Please select a file to import schedule data.")}
-              className="h-9 border-border text-xs"
-            >
-              <Upload className="mr-2 h-3.5 w-3.5" />
-              Import Schedule
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => toast.success("Export started")}
-              className="h-9 border-border text-xs"
-            >
-              <Download className="mr-2 h-3.5 w-3.5" />
-              Export
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => setIsCreateModalOpen(true)}
-              className="h-9 text-xs"
-            >
-              <Plus className="mr-1.5 h-3.5 w-3.5" />
-              Create Roster
-            </Button>
-          </div>
-        }
-      />
+      <div className="mb-6 flex flex-wrap items-center justify-end gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            toast.info("AI roster generation endpoint is not available.");
+          }}
+          className="h-9 border-border text-xs"
+        >
+          <Sparkles className="mr-2 h-3.5 w-3.5 text-primary" />
+          Generate AI Roster
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => toast.info("Please select a file to import schedule data.")}
+          className="h-9 border-border text-xs"
+        >
+          <Upload className="mr-2 h-3.5 w-3.5" />
+          Import Schedule
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => toast.success("Export started")}
+          className="h-9 border-border text-xs"
+        >
+          <Download className="mr-2 h-3.5 w-3.5" />
+          Export
+        </Button>
+        <Button
+          size="sm"
+          onClick={() => setIsCreateModalOpen(true)}
+          className="h-9 text-xs"
+        >
+          <Plus className="mr-1.5 h-3.5 w-3.5" />
+          Create Roster
+        </Button>
+      </div>
 
       {/* Dashboard Statistics Cards */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-8">
@@ -757,13 +745,13 @@ export default function RostersPage() {
             /* Interactive Drag-and-Drop Scheduler Grid */
             <div className="overflow-hidden rounded-2xl border border-border bg-card">
               {/* Controls */}
-              <div className="flex items-center justify-between border-b border-border px-5 py-4 bg-muted/20">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4 bg-muted/20">
+                <div className="flex items-center gap-2.5">
                   <h3 className="font-display text-sm font-semibold tracking-tight text-foreground">
                     Weekly Shift Planner
                   </h3>
                   <span className="text-[10px] text-muted-foreground bg-muted border border-border px-2 py-0.5 rounded-md font-mono">
-                    22 Jun 2026 - 28 Jun 2026
+                    {currentWeekDays[0]?.label} - {currentWeekDays[6]?.label}
                   </span>
                 </div>
 
@@ -803,21 +791,22 @@ export default function RostersPage() {
 
               {/* Roster Grid */}
               <div className="overflow-x-auto">
-                <div className="min-w-[800px] divide-y divide-border text-xs">
+                <div className="min-w-[760px] divide-y divide-border text-xs">
                   {/* Grid Header */}
-                  <div className="grid grid-cols-8 bg-muted/10 font-semibold text-muted-foreground py-3 border-b border-border">
-                    <div className="px-4">Employee / Role</div>
+                  <div className="grid grid-cols-[190px_repeat(7,minmax(0,1fr))] bg-muted/15 font-semibold text-muted-foreground border-b border-border">
+                    <div className="px-3.5 py-3 flex items-center">Employee / Role</div>
                     {currentWeekDays.map((d) => {
-                      const isToday = d.dateStr === "2026-06-25";
+                      const todayStr = new Date().toISOString().split("T")[0];
+                      const isToday = d.dateStr === todayStr;
                       return (
                         <div
                           key={d.dateStr}
-                          className={`text-center flex flex-col items-center justify-center ${
-                            isToday ? "text-primary font-bold" : ""
+                          className={`py-2.5 px-1.5 border-l border-border text-center flex flex-col items-center justify-center ${
+                            isToday ? "bg-primary/5 text-primary font-bold" : ""
                           }`}
                         >
                           <span className="text-[10px] uppercase tracking-wider">{d.dayName}</span>
-                          <span className={`text-xs mt-0.5 rounded-full px-1.5 py-0.5 ${isToday ? "bg-primary/10 border border-primary/20 text-primary" : ""}`}>{d.label}</span>
+                          <span className={`text-xs mt-0.5 rounded-full px-2 py-0.5 ${isToday ? "bg-primary/15 border border-primary/25 text-primary" : "text-foreground/90"}`}>{d.label}</span>
                         </div>
                       );
                     })}
@@ -830,88 +819,106 @@ export default function RostersPage() {
                     </div>
                   ) : (
                     employees.map((emp) => {
+                      const initials = emp.name
+                        .split(" ")
+                        .filter(Boolean)
+                        .slice(0, 2)
+                        .map((n) => n.charAt(0))
+                        .join("");
                       return (
-                        <div key={emp.id} className="grid grid-cols-8 hover:bg-muted/5 transition-colors items-center py-2.5">
-                          <div className="px-4 flex items-center gap-2">
-                            <div className="h-7 w-7 rounded-full bg-accent text-[10px] font-bold text-foreground grid place-items-center uppercase">
-                              {emp.name.split(" ").map((n) => n.charAt(0)).join("")}
+                        <div
+                          key={emp.id}
+                          className="grid grid-cols-[190px_repeat(7,minmax(0,1fr))] hover:bg-muted/5 transition-colors items-stretch"
+                        >
+                          <div className="px-3.5 py-3 flex items-center gap-2.5 min-w-0">
+                            <div className="h-8 w-8 shrink-0 rounded-full bg-primary/15 border border-primary/25 text-[11px] font-bold text-primary flex items-center justify-center uppercase">
+                              {initials}
                             </div>
-                            <div className="flex flex-col">
-                              <span className="font-semibold text-foreground leading-snug">{emp.name}</span>
-                              <span className="text-[9px] text-muted-foreground truncate max-w-[100px]">{emp.role}</span>
+                            <div className="flex flex-col min-w-0 flex-1">
+                              <span className="font-semibold text-xs text-foreground leading-snug truncate">
+                                {emp.name}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground truncate mt-0.5">
+                                {emp.role}
+                              </span>
                             </div>
                           </div>
 
-                        {currentWeekDays.map((day) => {
-                          const isToday = day.dateStr === "2026-06-25";
-                          const cellEntries = rosters.filter(
-                            (r) => r.employeeId === emp.code && r.date === day.dateStr
-                          );
-                          const cellConflicts = conflictList.filter(
-                            (c) => c.employeeName === emp.name && c.date === day.dateStr
-                          );
+                          {currentWeekDays.map((day) => {
+                            const todayStr = new Date().toISOString().split("T")[0];
+                            const isToday = day.dateStr === todayStr;
+                            const cellEntries = filteredRosters.filter(
+                              (r) =>
+                                (r.employeeId === emp.code || r.employeeName === emp.name) &&
+                                r.date === day.dateStr
+                            );
+                            const cellConflicts = conflictList.filter(
+                              (c) => c.employeeName === emp.name && c.date === day.dateStr
+                            );
 
-                          return (
-                            <div
-                              key={day.dateStr}
-                              onDragOver={(e) => e.preventDefault()}
-                              onDrop={() => handleDropCell(emp.code, day.dateStr)}
-                              className={`p-1.5 min-h-[74px] h-auto flex flex-col justify-stretch gap-1 border-l border-border relative group/cell ${
-                                isToday ? "bg-primary/5" : ""
-                              }`}
-                            >
-                              {cellEntries.length > 0 ? (
-                                cellEntries.map((entry) => {
-                                  const badgeStyle = getShiftBadgeStyle(entry.shift);
-                                  return (
-                                    <div
-                                      key={entry.id}
-                                      draggable
-                                      onDragStart={() => handleDragStart(entry.id)}
-                                      onClick={() => handleAction("Assign", entry)}
-                                      className={`w-full rounded-md border p-1.5 text-[10px] font-medium leading-tight flex flex-col gap-1 cursor-grab active:cursor-grabbing hover:scale-[1.02] hover:shadow transition-all ${badgeStyle}`}
-                                    >
-                                      <div className="flex items-start justify-between gap-1">
-                                        <span className="font-semibold truncate">{entry.shift}</span>
-                                        {cellConflicts.length > 0 && (
-                                          <span title={cellConflicts[0].type}>
-                                            <AlertTriangle className="h-3 w-3 text-destructive shrink-0 animate-bounce" />
+                            return (
+                              <div
+                                key={day.dateStr}
+                                onDragOver={(e) => e.preventDefault()}
+                                onDrop={() => handleDropCell(emp.code, day.dateStr)}
+                                className={`p-2 min-h-[76px] flex flex-col justify-center gap-1 border-l border-border relative group/cell ${
+                                  isToday ? "bg-primary/5" : ""
+                                }`}
+                              >
+                                {cellEntries.length > 0 ? (
+                                  cellEntries.map((entry) => {
+                                    const badgeStyle = getShiftBadgeStyle(entry.shift);
+                                    return (
+                                      <div
+                                        key={entry.id}
+                                        draggable
+                                        onDragStart={() => handleDragStart(entry.id)}
+                                        onClick={() => handleAction("Assign", entry)}
+                                        className={`w-full rounded-lg border p-2 text-[11px] font-medium leading-tight flex flex-col gap-1 cursor-grab active:cursor-grabbing hover:scale-[1.01] hover:shadow-sm transition-all ${badgeStyle}`}
+                                      >
+                                        <div className="flex items-center justify-between gap-1">
+                                          <span className="font-semibold truncate">{entry.shift}</span>
+                                          {cellConflicts.length > 0 && (
+                                            <span title={cellConflicts[0].type}>
+                                              <AlertTriangle className="h-3 w-3 text-destructive shrink-0 animate-bounce" />
+                                            </span>
+                                          )}
+                                        </div>
+                                        <div className="flex items-center justify-between text-[9px] opacity-80 font-mono whitespace-nowrap">
+                                          <span>
+                                            {entry.startTime === "—" ? "Day Off" : `${entry.startTime}-${entry.endTime}`}
                                           </span>
-                                        )}
+                                          {entry.status === "Pending" && (
+                                            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-ping" />
+                                          )}
+                                        </div>
                                       </div>
-                                      <div className="flex items-center justify-between text-[8px] opacity-75">
-                                        <span>{entry.startTime === "—" ? "" : `${entry.startTime}-${entry.endTime}`}</span>
-                                        {entry.status === "Pending" && (
-                                          <span className="h-1.5 w-1.5 rounded-full bg-primary animate-ping" />
-                                        )}
-                                      </div>
-                                    </div>
-                                  );
-                                })
-                              ) : (
-                                <button
-                                  onClick={() => {
-                                    setFormEmployeeId(emp.code);
-                                    setFormShift("Morning");
-                                    setFormDate(day.dateStr);
-                                    setFormStartTime("08:00");
-                                    setFormEndTime("16:00");
-                                    setFormStatus("Pending");
-                                    setIsAssignModalOpen(true);
-                                  }}
-                                  className="w-full flex-1 min-h-[58px] rounded border border-dashed border-border/50 opacity-0 group-hover/cell:opacity-100 flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition-all text-[10px]"
-                                >
-                                  <Plus className="h-3 w-3 mr-0.5" /> Assign
-                                </button>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })
-                )}
-              </div>
+                                    );
+                                  })
+                                ) : (
+                                  <button
+                                    onClick={() => {
+                                      setFormEmployeeId(emp.code);
+                                      setFormShift("Morning");
+                                      setFormDate(day.dateStr);
+                                      setFormStartTime("08:00");
+                                      setFormEndTime("16:00");
+                                      setFormStatus("Pending");
+                                      setIsAssignModalOpen(true);
+                                    }}
+                                    className="w-full flex-1 min-h-[56px] rounded-lg border border-dashed border-border/60 opacity-40 group-hover/cell:opacity-100 flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary hover:bg-primary/5 transition-all text-[11px]"
+                                  >
+                                    <Plus className="h-3 w-3 mr-1" /> Assign
+                                  </button>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
               </div>
             </div>
           ) : (
@@ -1170,7 +1177,10 @@ export default function RostersPage() {
             </h3>
             {rosters.length > 0 ? (
               <div className="space-y-3 text-xs">
-                {rosters.slice(0, 5).map((shift) => (
+                {(rosters.filter((r) => r.date === new Date().toISOString().split("T")[0]).length > 0
+                  ? rosters.filter((r) => r.date === new Date().toISOString().split("T")[0])
+                  : rosters
+                ).slice(0, 5).map((shift) => (
                   <div key={shift.id} className="flex items-start gap-2.5 pb-2.5 border-b border-border last:border-b-0 last:pb-0">
                     <span className={`h-2 w-2 rounded-full mt-1.5 shrink-0 ${getShiftTypeDot(shift.shift)}`} />
                     <div className="flex-1 min-w-0">
@@ -1178,7 +1188,7 @@ export default function RostersPage() {
                         <span className="truncate">{shift.employeeName}</span>
                         <span className="text-[9px] text-muted-foreground font-mono font-medium">{shift.startTime} - {shift.endTime}</span>
                       </div>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">{shift.shift}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{shift.shift} · {shift.department}</p>
                     </div>
                   </div>
                 ))}

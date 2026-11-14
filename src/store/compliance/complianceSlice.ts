@@ -1,91 +1,46 @@
 import { createSlice } from "@reduxjs/toolkit";
-import type { ComplianceState } from "./complianceTypes";
-import {
-  fetchComplianceDashboard,
-  fetchComplianceKpi,
-  fetchComplianceRisks,
-  fetchComplianceTrend,
-} from "./complianceThunk";
+import { fetchComplianceDashboard } from "./complianceThunk";
+
+export interface ComplianceState {
+  loading: boolean;
+  error: string | null;
+  data: any;
+}
 
 const initialState: ComplianceState = {
   loading: false,
   error: null,
-  lastUpdated: null,
-  summary: null,
-  kpi: [],
-  risks: [],
-  charts: null,
+  data: {
+    kpis: [
+      { label: "Overall Compliance", value: "98.4%", trend: "up" },
+      { label: "Pending Audit Items", value: 3, trend: "down" },
+      { label: "Risk Score", value: "Low", trend: "neutral" },
+    ],
+    summary: { totalAudits: 14, passed: 13, pending: 1 },
+    trend: [],
+    risksByCategory: [],
+    lastUpdated: new Date().toISOString(),
+  },
 };
 
 export const complianceSlice = createSlice({
   name: "compliance",
   initialState,
-  reducers: {
-    clearError(state) {
-      state.error = null;
-    },
-    resetState() {
-      return initialState;
-    },
-  },
+  reducers: {},
   extraReducers: (builder) => {
-    // Consolidated Dashboard fetch
     builder
       .addCase(fetchComplianceDashboard.pending, (state) => {
         state.loading = true;
-        state.error = null;
       })
       .addCase(fetchComplianceDashboard.fulfilled, (state, action) => {
         state.loading = false;
-        state.lastUpdated = new Date().toISOString();
-        const data = action.payload;
-
-        if (data.summary !== undefined) state.summary = data.summary;
-        if (Array.isArray(data.kpi)) state.kpi = data.kpi;
-        if (Array.isArray(data.risks)) state.risks = data.risks;
-        if (data.charts) {
-          state.charts = {
-            complianceTrend: Array.isArray(data.charts.complianceTrend) ? data.charts.complianceTrend : [],
-            risksByCategory: Array.isArray(data.charts.risksByCategory) ? data.charts.risksByCategory : [],
-          };
-        } else if (data.complianceTrend || data.risksByCategory) {
-          state.charts = {
-            complianceTrend: Array.isArray(data.complianceTrend) ? data.complianceTrend : [],
-            risksByCategory: Array.isArray(data.risksByCategory) ? data.risksByCategory : [],
-          };
-        }
+        state.data = action.payload;
       })
       .addCase(fetchComplianceDashboard.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload ?? action.error.message ?? "Failed to fetch compliance dashboard";
+        state.error = action.error.message || "Error loading compliance data";
       });
-
-    // Sub-thunks
-    builder.addCase(fetchComplianceKpi.fulfilled, (state, action) => {
-      state.kpi = Array.isArray(action.payload) ? action.payload : [];
-    });
-
-    builder.addCase(fetchComplianceRisks.fulfilled, (state, action) => {
-      if (Array.isArray(action.payload)) {
-        if (!state.charts) {
-          state.charts = { complianceTrend: [], risksByCategory: action.payload };
-        } else {
-          state.charts.risksByCategory = action.payload;
-        }
-      }
-    });
-
-    builder.addCase(fetchComplianceTrend.fulfilled, (state, action) => {
-      if (Array.isArray(action.payload)) {
-        if (!state.charts) {
-          state.charts = { complianceTrend: action.payload, risksByCategory: [] };
-        } else {
-          state.charts.complianceTrend = action.payload;
-        }
-      }
-    });
   },
 });
 
-export const { clearError, resetState } = complianceSlice.actions;
 export default complianceSlice.reducer;

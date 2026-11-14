@@ -1,111 +1,61 @@
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit";
 import type { SidebarState } from "./sidebarTypes";
-import { fetchSidebarPermissions } from "./sidebarActions";
+import { sidebarApi } from "@/services/sidebarApi";
 
-export { fetchSidebarPermissions };
-
-const STORAGE_KEY = "AURIX_SIDEBAR_EXPANDED";
-
-function loadExpandedState(): Record<string, boolean> {
-  if (typeof window !== "undefined") {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    } catch {
-      // Ignore storage parse errors
-    }
+export const fetchSidebarPermissions = createAsyncThunk(
+  "sidebar/fetchPermissions",
+  async (userRole?: string) => {
+    const data = await sidebarApi.getPermissions(userRole);
+    return data;
   }
-  // Default expanded sections
-  return {
-    workforce: true,
-    talent: true,
-    hrops: true,
-    resources: true,
-    analytics: true,
-    aihub: true,
-    settings: true,
-    help: true,
-  };
-}
-
-function saveExpandedState(expandedState: Record<string, boolean>) {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(expandedState));
-  } catch {
-    // Ignore storage errors
-  }
-}
+);
 
 const initialState: SidebarState = {
-  expandedSections: loadExpandedState(),
-  selectedMenu: null,
-  activeRoute: "/dashboard",
-  userPermissions: [],
-  permissionsLoading: false,
-  permissionsError: null,
-  userRole: null,
+  userPermissions: ["*"],
+  userRole: "super_admin",
+  sidebarOpen: true,
+  expandedSections: {},
+  loading: false,
+  error: null,
 };
 
 export const sidebarSlice = createSlice({
   name: "sidebar",
   initialState,
   reducers: {
-    toggleSectionExpand(state, action: PayloadAction<string>) {
-      const key = action.payload;
-      state.expandedSections[key] = !state.expandedSections[key];
-      saveExpandedState(state.expandedSections);
-    },
-    setSectionExpand(
-      state,
-      action: PayloadAction<{ sectionKey: string; expanded: boolean }>
-    ) {
-      const { sectionKey, expanded } = action.payload;
-      state.expandedSections[sectionKey] = expanded;
-      saveExpandedState(state.expandedSections);
-    },
-    setSelectedMenu(state, action: PayloadAction<string | null>) {
-      state.selectedMenu = action.payload;
-    },
-    setActiveRoute(state, action: PayloadAction<string>) {
-      state.activeRoute = action.payload;
-    },
     setUserPermissions(state, action: PayloadAction<string[]>) {
       state.userPermissions = action.payload;
     },
     setUserRole(state, action: PayloadAction<string | null>) {
       state.userRole = action.payload;
     },
+    toggleSidebar(state) {
+      state.sidebarOpen = !state.sidebarOpen;
+    },
+    setSectionExpand(state, action: PayloadAction<{ sectionTitle: string; expanded: boolean }>) {
+      state.expandedSections[action.payload.sectionTitle] = action.payload.expanded;
+    },
+    toggleSectionExpand(state, action: PayloadAction<string>) {
+      state.expandedSections[action.payload] = !state.expandedSections[action.payload];
+    },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchSidebarPermissions.pending, (state) => {
-        state.permissionsLoading = true;
-        state.permissionsError = null;
-      })
       .addCase(fetchSidebarPermissions.fulfilled, (state, action) => {
-        state.permissionsLoading = false;
         state.userPermissions = action.payload.permissions;
         if (action.payload.role) {
           state.userRole = action.payload.role;
         }
-      })
-      .addCase(fetchSidebarPermissions.rejected, (state, action) => {
-        state.permissionsLoading = false;
-        state.permissionsError = action.payload ?? "Failed to fetch permissions";
       });
   },
 });
 
 export const {
-  toggleSectionExpand,
-  setSectionExpand,
-  setSelectedMenu,
-  setActiveRoute,
   setUserPermissions,
   setUserRole,
+  toggleSidebar,
+  setSectionExpand,
+  toggleSectionExpand,
 } = sidebarSlice.actions;
 
 export default sidebarSlice.reducer;

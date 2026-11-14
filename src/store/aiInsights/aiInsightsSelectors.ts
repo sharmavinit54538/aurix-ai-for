@@ -1,146 +1,28 @@
-import { createSelector } from "@reduxjs/toolkit";
 import type { RootState } from "@/redux/store";
-import type { PayrollTrendItem } from "./aiInsightsTypes";
 
-export const selectAIInsightsState = (state: RootState) => state.aiInsights;
+export const selectAIInsightsLoading = (state: RootState) => state.aiInsights?.loading ?? false;
+export const selectAIInsightsError = (state: RootState) => state.aiInsights?.error ?? null;
 
-export const selectAIInsightsLoading = createSelector(
-  [selectAIInsightsState],
-  (state) => state?.loading ?? false,
-);
-
-export const selectAIInsightsError = createSelector(
-  [selectAIInsightsState],
-  (state) => state?.error ?? null,
-);
-
-export const selectAIInsightsLastUpdated = createSelector(
-  [selectAIInsightsState],
-  (state) => state?.lastUpdated ?? null,
-);
-
-export const selectAIInsightsSummary = createSelector(
-  [selectAIInsightsState],
-  (state) => state?.dashboard ?? null,
-);
-
-export const selectAIInsightsKPIs = createSelector(
-  [selectAIInsightsState],
-  (state) => (Array.isArray(state?.kpi) ? state.kpi : []),
-);
-
-export const selectAIInsightsAttrition = createSelector(
-  [selectAIInsightsState],
-  (state) => (Array.isArray(state?.attrition) ? state.attrition : []),
-);
-
-export const selectAIInsightsBurnout = createSelector(
-  [selectAIInsightsState],
-  (state) => (Array.isArray(state?.burnout) ? state.burnout : []),
-);
-
-export const selectAIInsightsAttendance = createSelector(
-  [selectAIInsightsState],
-  (state) => (Array.isArray(state?.attendance) ? state.attendance : []),
-);
-
-export const selectAIInsightsRecruitment = createSelector(
-  [selectAIInsightsState],
-  (state) => state?.recruitment ?? null,
-);
-
-export const selectAIInsightsCandidates = createSelector(
-  [selectAIInsightsRecruitment],
-  (recruitment) => (Array.isArray(recruitment?.candidates) ? recruitment.candidates : []),
-);
-
-export const selectAIInsightsPerformance = createSelector(
-  [selectAIInsightsState],
-  (state) => state?.performance ?? null,
-);
-
-export const selectAIInsightsTopPerformers = createSelector(
-  [selectAIInsightsPerformance],
-  (performance) => (Array.isArray(performance?.topPerformers) ? performance.topPerformers : []),
-);
-
-export const selectAIInsightsSupportPerformers = createSelector(
-  [selectAIInsightsPerformance],
-  (performance) => (Array.isArray(performance?.supportPerformers) ? performance.supportPerformers : []),
-);
-
-export const selectAIInsightsSkillGap = createSelector(
-  [selectAIInsightsState, selectAIInsightsPerformance],
-  (state, performance) => {
-    if (Array.isArray(state?.charts?.skillGap)) return state.charts.skillGap;
-    if (Array.isArray(performance?.skillGap)) return performance.skillGap;
-    return [];
-  },
-);
-
-
-export const selectAIInsightsCharts = createSelector(
-  [selectAIInsightsState],
-  (state) => state?.charts ?? null,
-);
-
-export const selectAIInsightsHeadcountForecast = createSelector(
-  [selectAIInsightsCharts],
-  (charts) => (Array.isArray(charts?.headcountForecast) ? charts.headcountForecast : []),
-);
-
-export const selectAIInsightsHiringDemand = createSelector(
-  [selectAIInsightsCharts],
-  (charts) => (Array.isArray(charts?.hiringDemand) ? charts.hiringDemand : []),
-);
-
-export const selectAIInsightsSatisfactionTrend = createSelector(
-  [selectAIInsightsCharts],
-  (charts) => (Array.isArray(charts?.satisfactionTrend) ? charts.satisfactionTrend : []),
-);
-
-export const selectAIInsightsAlerts = createSelector(
-  [selectAIInsightsState],
-  (state) => (Array.isArray(state?.alerts) ? state.alerts : []),
-);
-
-export const selectAIInsightsRecommendations = createSelector(
-  [selectAIInsightsState],
-  (state) => (Array.isArray(state?.recommendations) ? state.recommendations : []),
-);
-
-export const selectAIInsightsDocuments = createSelector(
-  [selectAIInsightsState],
-  (state) => (Array.isArray(state?.documents) ? state.documents : []),
-);
-
-export const selectAIInsightsPayroll = createSelector(
-  [selectAIInsightsState],
-  (state) => state?.payroll ?? null,
-);
-
-export const selectAIInsightsPayrollAlerts = createSelector(
-  [selectAIInsightsState],
-  (state) => (Array.isArray(state?.payrollAlerts) ? state.payrollAlerts : []),
-);
-
-export const selectAIInsightsPayrollTrend = createSelector(
-  [selectAIInsightsState],
-  (state) => (Array.isArray(state?.charts?.payrollTrend) ? state.charts.payrollTrend : []),
-) as (state: RootState) => PayrollTrendItem[];
-
-export const selectAIInsightsHasDataFlag = createSelector(
-  [selectAIInsightsState],
-  (state) => state?.hasDataFlag,
-);
-
-export const selectAIInsightsPartial = createSelector(
-  [selectAIInsightsState],
-  (state) => state?.partial ?? false,
-);
-
-export const selectAIInsightsPartialErrors = createSelector(
-  [selectAIInsightsState],
-  (state) => state?.partialErrors ?? null,
-);
-
+export const selectAIInsightsSummary = (state: RootState) => state.aiInsights?.data?.summary ?? {};
+export const selectAIInsightsKPIs = (state: RootState) => state.aiInsights?.data?.kpis ?? [];
+export const selectAIInsightsAlerts = (state: RootState) => state.aiInsights?.data?.alerts ?? [];
+export const selectAIInsightsAttendance = (state: RootState) => state.aiInsights?.data?.attendance ?? [];
+export const selectAIInsightsAttrition = (state: RootState) => state.aiInsights?.data?.attrition ?? [];
+export const selectAIInsightsBurnout = (state: RootState) => state.aiInsights?.data?.burnout ?? [];
+export const selectAIInsightsCandidates = (state: RootState) => state.aiInsights?.data?.candidates ?? [];
+export const selectAIInsightsDocuments = (state: RootState) => state.aiInsights?.data?.documents ?? [];
+export const selectAIInsightsHeadcountForecast = (state: RootState) => state.aiInsights?.data?.headcountForecast ?? [];
+export const selectAIInsightsHiringDemand = (state: RootState) => state.aiInsights?.data?.hiringDemand ?? [];
+export const selectAIInsightsPayroll = (state: RootState) => state.aiInsights?.data?.payroll ?? [];
+export const selectAIInsightsPayrollAlerts = (state: RootState) => state.aiInsights?.data?.payrollAlerts ?? [];
+export const selectAIInsightsPayrollTrend = (state: RootState) => state.aiInsights?.data?.payrollTrend ?? [];
+export const selectAIInsightsRecruitment = (state: RootState) => state.aiInsights?.data?.recruitment ?? [];
+export const selectAIInsightsRecommendations = (state: RootState) => state.aiInsights?.data?.recommendations ?? [];
+export const selectAIInsightsSatisfactionTrend = (state: RootState) => state.aiInsights?.data?.satisfactionTrend ?? [];
+export const selectAIInsightsSkillGap = (state: RootState) => state.aiInsights?.data?.skillGap ?? [];
+export const selectAIInsightsSupportPerformers = (state: RootState) => state.aiInsights?.data?.supportPerformers ?? [];
+export const selectAIInsightsTopPerformers = (state: RootState) => state.aiInsights?.data?.topPerformers ?? [];
+export const selectAIInsightsHasDataFlag = (state: RootState) => state.aiInsights?.data?.hasDataFlag ?? true;
+export const selectAIInsightsPartial = (state: RootState) => state.aiInsights?.data?.partial ?? false;
+export const selectAIInsightsPartialErrors = (state: RootState) => state.aiInsights?.data?.partialErrors ?? [];
+export const selectAIInsightsLastUpdated = (_state: RootState) => new Date().toISOString();

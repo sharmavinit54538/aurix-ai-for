@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Plus, Info } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAurix } from "@/lib/aurix-store";
 import { useCurrentRole } from "@/lib/use-current-role";
@@ -10,7 +9,7 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
 import type { LeaveBalance, LeaveRequest, LeaveCapabilities } from "../types";
-import { mapLeave, mapBalance, statusBadgeClass, isEmployeeProfileNotFound, unwrapList } from "../mappers";
+import { mapLeave, mapBalance, isEmployeeProfileNotFound, unwrapList } from "../mappers";
 import { BalanceCards } from "../components/BalanceCards";
 import { HistoryTable } from "../components/HistoryTable";
 import { ApprovalsList } from "../components/ApprovalsList";
@@ -358,14 +357,6 @@ export function LeavesPage() {
               )}
             >
               Review Requests
-              {approvals.length > 0 && (
-                <Badge
-                  variant="outline"
-                  className={cn("ml-2 border", statusBadgeClass("pending"))}
-                >
-                  {approvals.length}
-                </Badge>
-              )}
             </button>
           )}
 

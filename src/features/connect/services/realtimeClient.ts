@@ -53,7 +53,7 @@ class RealtimeClient {
 
     this.isExplicitlyClosed = false;
     const token = getAccessToken();
-    if (!token) {
+    if (!token || token.startsWith("mock_")) {
       return;
     }
 

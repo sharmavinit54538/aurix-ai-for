@@ -46,6 +46,7 @@ export interface Employee {
   avatarUrl?: string;
   salary?: string | number;
   ctc?: string | number;
+  sendOnboardingInvite?: boolean;
   panNumber?: string;
   aadhaarNumber?: string;
   bankName?: string;
@@ -97,14 +98,23 @@ export interface CreateEmployeePayload {
   personal_email: string;
   company_email: string;
   phone: string;
+  gender?: string;
+  date_of_birth?: string;
   department: string;
   designation: string;
+  reporting_manager_name?: string;
   joining_date: string;
   employee_id: string;
   employment_type: string;
   employment_status: string;
+  work_mode?: string;
+  probation_period_months?: number;
+  office_location?: string;
+  ctc?: string | number;
+  salary?: string | number;
   role: string;
   shift: string;
+  send_onboarding_invite?: boolean;
 }
 
 export interface UpdateEmployeePayload {
@@ -113,8 +123,20 @@ export interface UpdateEmployeePayload {
   personal_email: string;
   company_email?: string;
   phone?: string;
+  gender?: string;
+  date_of_birth?: string;
   department: string;
   designation: string;
+  reporting_manager_name?: string;
   joining_date?: string;
+  employee_id?: string;
+  employment_type?: string;
+  work_mode?: string;
+  probation_period_months?: number;
+  office_location?: string;
+  ctc?: string | number;
+  salary?: string | number;
+  role?: string;
   shift?: string;
+  send_onboarding_invite?: boolean;
 }

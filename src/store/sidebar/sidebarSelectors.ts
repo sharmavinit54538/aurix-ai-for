@@ -1,91 +1,66 @@
 import type { RootState } from "@/redux/store";
-import type { SidebarNavParent, SidebarNavSection } from "./sidebarTypes";
-import { normalizeRole, isSuperAdmin as checkSuperAdmin, isHrAdmin as checkHrAdmin } from "@/lib/roles";
+import type { SidebarNavSection } from "./sidebarTypes";
 
-export const selectSidebarState = (state: RootState) => state.sidebar;
-
-export const selectExpandedSections = (state: RootState) =>
-  state.sidebar?.expandedSections ?? {};
-
-export const selectIsSectionExpanded = (sectionKey: string) => (state: RootState) =>
-  Boolean(state.sidebar?.expandedSections?.[sectionKey]);
-
-export const selectSelectedMenu = (state: RootState) =>
-  state.sidebar?.selectedMenu;
-
-export const selectActiveRoute = (state: RootState) =>
-  state.sidebar?.activeRoute;
+const DEFAULT_PERMISSIONS: string[] = ["*"];
+const EMPTY_SECTIONS: Record<string, boolean> = {};
 
 export const selectUserPermissions = (state: RootState) =>
-  state.sidebar?.userPermissions ?? [];
-
-export const selectIsPermissionsLoading = (state: RootState) =>
-  state.sidebar?.permissionsLoading ?? false;
+  state.sidebar?.userPermissions ?? DEFAULT_PERMISSIONS;
 
 export const selectUserRole = (state: RootState) =>
-  state.sidebar?.userRole;
+  state.sidebar?.userRole ?? "super_admin";
 
-/**
- * Filter navigation sections and items based on role and backend permissions.
- * Strictly separates Super Admin platform navigation from normal company roles.
- */
-export function filterNavTree(
+export const selectSidebarOpen = (state: RootState) =>
+  state.sidebar?.sidebarOpen ?? true;
+
+export const selectExpandedSections = (state: RootState) =>
+  state.sidebar?.expandedSections ?? EMPTY_SECTIONS;
+
+export const hasRoleAccess = (roles?: string[], userRole?: string | null) => {
+  if (!roles || roles.length === 0) return true;
+  if (!userRole) return false;
+  const normalizedRole = userRole.toLowerCase().trim();
+  const isAdmin =
+    normalizedRole === "admin" ||
+    normalizedRole === "super_admin" ||
+    normalizedRole === "superadmin" ||
+    normalizedRole === "hr_admin" ||
+    normalizedRole === "hradmin" ||
+    normalizedRole.includes("admin");
+  return isAdmin || roles.includes(normalizedRole);
+};
+
+export const hasPermission = (perm: string, userPermissions: string[] = []) => {
+  if (userPermissions.length === 0 || userPermissions.includes("*")) return true;
+  return userPermissions.includes(perm);
+};
+
+export const filterNavTree = (
   sections: SidebarNavSection[],
-  role?: string,
-  userPermissions: string[] = []
-): SidebarNavSection[] {
-  const normalizedRole = normalizeRole(role);
-  const isSuperAdmin = checkSuperAdmin(normalizedRole);
-  const isHrAdmin = checkHrAdmin(normalizedRole);
+  userRole?: string | null,
+  _userPermissions: string[] = []
+) => {
+  return sections
+    .map((section) => {
+      if (!hasRoleAccess(section.roles, userRole)) return null;
 
-  const isAllowedByRole = (roles?: string[]) => {
-    if (!roles || roles.length === 0) {
-      // If no explicit roles declared, general items are allowed for company roles,
-      // but platform owner has their own dedicated nav sections.
-      return true;
-    }
-    if (!normalizedRole) return false;
-    return roles.some((r) => {
-      const normR = normalizeRole(r);
-      return normR === normalizedRole;
-    });
-  };
-
-  const isAllowedByPerm = (perm?: string) => {
-    if (!perm) return true;
-    if (userPermissions.includes("*")) return true;
-    if (userPermissions.includes(perm)) return true;
-    // HR Admin has full operational access to HRMS items if permissions not loaded from backend
-    if (isHrAdmin && !perm.startsWith("platform.")) return true;
-    // Super Admin has full platform access to platform items
-    if (isSuperAdmin && perm.startsWith("platform.")) return true;
-    // If userPermissions is empty (permissions not loaded or backend endpoint unavailable),
-    // default to allowing items so navigation does not completely disappear.
-    if (userPermissions.length === 0) return true;
-    return false;
-  };
-
-  const filtered = sections
-    .filter((section) => isAllowedByRole(section.roles))
-    .map((section) => ({
-      ...section,
-      items: section.items
-        .filter((item) => isAllowedByRole(item.roles) && isAllowedByPerm(item.permission))
+      const filteredItems = section.items
         .map((item) => {
           if ("children" in item) {
-            const parent = item as SidebarNavParent;
-            const filteredChildren = parent.children.filter(
-              (child) => isAllowedByRole(child.roles) && isAllowedByPerm(child.permission)
+            const filteredChildren = item.children.filter((child) =>
+              hasRoleAccess(child.roles, userRole)
             );
-            return {
-              ...parent,
-              children: filteredChildren.length > 0 ? filteredChildren : parent.children,
-            };
+            if (filteredChildren.length === 0) return null;
+            return { ...item, children: filteredChildren };
+          } else {
+            if (!hasRoleAccess(item.roles, userRole)) return null;
+            return item;
           }
-          return item;
-        }),
-    }))
-    .filter((section) => section.items.length > 0);
+        })
+        .filter(Boolean) as unknown[];
 
-  return filtered;
-}
+      if (filteredItems.length === 0) return null;
+      return { ...section, items: filteredItems };
+    })
+    .filter(Boolean) as SidebarNavSection[];
+};

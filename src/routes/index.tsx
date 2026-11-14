@@ -1,59 +1,45 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { LayoutDashboard, Sparkles } from "lucide-react";
-import { aurix } from "@/lib/aurix-store";
 import { useAuthReady } from "@/lib/auth-bootstrap";
-import { getSafeRedirectUrl } from "@/lib/role-routing";
+import { useAurix } from "@/lib/aurix-store";
 import { hasValidAccessToken } from "@/api";
+import {
+  isHrOnboardingCompletedInStorage,
+  isInviteTokenActivated,
+  resolveRootEntryDestination,
+} from "@/lib/onboarding-once";
+import { PageSkeleton } from "@/components/common/PageSkeleton";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Dashboard — OFC360" },
-      { name: "description", content: "OFC360 Enterprise Operations & Intelligence Platform" },
-      { property: "og:title", content: "Dashboard — OFC360" },
-      { property: "og:description", content: "OFC360 Enterprise Operations & Intelligence Platform" },
+      { title: "OFC360 — Operations & Intelligence Platform" },
+      { name: "description", content: "Recruitment Insight Engine dashboard for jobs, candidates, pipeline health, and hiring velocity." },
+      { property: "og:description", content: "Recruitment Insight Engine dashboard for jobs, candidates, pipeline health, and hiring velocity." },
     ],
   }),
-  component: Index,
+  component: IndexRouteComponent,
 });
 
-function Index() {
+function IndexRouteComponent() {
   const navigate = useNavigate();
   const authReady = useAuthReady();
+  const ws = useAurix();
 
   useEffect(() => {
-    if (!authReady) return;
+    if (!authReady || ws.isRestoring) return;
+    const dest = resolveRootEntryDestination({
+      user: ws.user,
+      hasAccessToken: hasValidAccessToken(),
+      demoInviteActivated: isInviteTokenActivated("emp_invite_demo"),
+      hrOnboardingCompleted: isHrOnboardingCompletedInStorage(),
+    });
+    navigate({
+      to: dest.to as any,
+      ...(dest.search ? { search: dest.search as any } : {}),
+      replace: true,
+    });
+  }, [authReady, ws.isRestoring, ws.user, navigate]);
 
-    const workspace = aurix.get();
-
-    if (!workspace.user || !hasValidAccessToken()) {
-      navigate({ to: "/login", replace: true });
-    } else {
-      const params = new URLSearchParams(window.location.search);
-      const redirectParam = params.get("redirect") || params.get("callbackUrl");
-      const destination = getSafeRedirectUrl(redirectParam, workspace.user);
-      navigate({ to: destination as any, replace: true });
-    }
-  }, [authReady, navigate]);
-
-  return (
-    <div className="grid min-h-screen place-items-center bg-background text-foreground">
-      <div className="flex items-center gap-3 rounded-2xl border border-border bg-card/70 px-5 py-4 shadow-elegant backdrop-blur-xl">
-        <span
-          className="grid h-10 w-10 place-items-center rounded-xl text-brand-foreground shadow-glow"
-          style={{ background: "var(--gradient-brand)" }}
-        >
-          <LayoutDashboard className="h-5 w-5" />
-        </span>
-        <div>
-          <div className="flex items-center gap-2 font-display text-base font-semibold tracking-tight">
-            Opening OFC360 Workspace
-            <Sparkles className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <p className="text-sm text-muted-foreground">Loading your workspace dashboard…</p>
-        </div>
-      </div>
-    </div>
-  );
+  return <PageSkeleton />;
 }

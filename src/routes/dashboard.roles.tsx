@@ -1,9 +1,7 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { SettingsLayout } from "@/features/settings/components/SettingsLayout";
 
 export const Route = createFileRoute("/dashboard/roles")({
-  component: RolesRedirect,
+  head: () => ({ meta: [{ title: "Roles & Permissions — OFC360" }] }),
+  component: () => <SettingsLayout initialSection="employees" />,
 });
-
-function RolesRedirect() {
-  return <Navigate to="/dashboard/settings/roles-permissions" replace />;
-}

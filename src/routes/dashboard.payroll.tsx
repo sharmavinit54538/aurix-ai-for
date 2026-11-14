@@ -1,10 +1,10 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/payroll")({
-  component: PayrollLayout,
+  head: () => ({ meta: [{ title: "Payroll — OFC360" }] }),
+  component: LayoutComponent,
 });
 
-function PayrollLayout() {
+function LayoutComponent() {
   return <Outlet />;
 }
-

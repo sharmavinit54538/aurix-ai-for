@@ -1,15 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { SuperAdminOrganizationsPage } from "@/features/superAdmin/pages/SuperAdminOrganizationsPage";
+import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
+
+const PageComponent = lazyFeaturePage(() => import("@/features/superAdmin/pages/SuperAdminOrganizationsPage"));
 
 export const Route = createFileRoute("/dashboard/super-admin/organizations")({
-  head: () => ({
-    meta: [
-      { title: "Organizations — OFC360 Super Admin" },
-      {
-        name: "description",
-        content: "Multi-tenant company accounts, usage, and subscription plans.",
-      },
-    ],
-  }),
-  component: SuperAdminOrganizationsPage,
+  head: () => ({ meta: [{ title: "Organizations — OFC360" }] }),
+  component: PageComponent,
 });

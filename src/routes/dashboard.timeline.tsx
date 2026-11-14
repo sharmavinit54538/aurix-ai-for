@@ -2,7 +2,6 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/timeline")({
   beforeLoad: () => {
-    throw redirect({ to: "/dashboard/hr-operations/timeline" });
+    throw redirect({ to: "/dashboard/hr-operations/timeline" as any });
   },
-  component: () => null,
 });

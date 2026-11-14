@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Folder, Laptop, Wrench, Receipt, Plane } from "lucide-react";
+import { Package, FileText, Receipt, Compass, Wrench } from "lucide-react";
 import { ModuleHubView, type ModuleItem } from "@/components/aurix/ModuleHubView";
 
 export const Route = createFileRoute("/dashboard/resources/")({
@@ -9,49 +9,44 @@ export const Route = createFileRoute("/dashboard/resources/")({
 
 const RESOURCES_MODULES: ModuleItem[] = [
   {
-    id: "documents",
-    title: "Document Vault",
-    description: "Central repository for company policies, employee handbooks, contracts, and legal templates.",
-    icon: Folder,
-    to: "/dashboard/resources/documents",
-    color: "from-sky-500/20 to-indigo-500/20 text-sky-400 border-sky-500/30",
-    permission: "resources.documents",
-  },
-  {
-    id: "expenses",
-    title: "Expense Management",
-    description: "Submit, approve, and track employee expense claims with receipts and reimbursement workflows.",
-    icon: Receipt,
-    to: "/dashboard/resources/expenses",
-    color: "from-amber-500/20 to-orange-500/20 text-amber-400 border-amber-500/30",
-    permission: "resources.expenses",
-  },
-  {
-    id: "travel",
-    title: "Travel Management",
-    description: "Manage travel requests, itineraries, approvals, and travel expense reconciliation.",
-    icon: Plane,
-    to: "/dashboard/resources/travel",
-    color: "from-blue-500/20 to-cyan-500/20 text-blue-400 border-blue-500/30",
-    permission: "resources.travel",
-  },
-  {
     id: "assets",
-    title: "Asset Inventory",
-    description: "IT hardware inventory, laptops, monitors, mobile devices, and warranty tracking.",
-    icon: Laptop,
+    title: "IT & Office Assets",
+    description: "Track laptops, hardware inventory, assignments, and maintenance status.",
+    icon: Package,
     to: "/dashboard/assets",
-    color: "from-purple-500/20 to-violet-500/20 text-purple-400 border-purple-500/30",
-    permission: "resources.assets",
+    color: "from-blue-500/20 to-indigo-500/20 text-blue-400 border-blue-500/30",
   },
   {
     id: "asset-management",
-    title: "Asset Management & QR",
-    description: "Manage asset allocations, check-ins, return handovers, maintenance, and QR sticker generation.",
+    title: "Enterprise Asset Lifecycle",
+    description: "Procurement, depreciation, warranty tracking, and vendor management.",
     icon: Wrench,
     to: "/dashboard/asset-management",
+    color: "from-violet-500/20 to-purple-500/20 text-violet-400 border-violet-500/30",
+  },
+  {
+    id: "documents",
+    title: "Company & Employee Documents",
+    description: "Centralized repository for policies, contracts, ID proofs, and compliance files.",
+    icon: FileText,
+    to: "/dashboard/documents",
     color: "from-emerald-500/20 to-teal-500/20 text-emerald-400 border-emerald-500/30",
-    permission: "resources.asset_management",
+  },
+  {
+    id: "expenses",
+    title: "Expense Reimbursements",
+    description: "Submit receipts, review expense claims, and manage reimbursement approvals.",
+    icon: Receipt,
+    to: "/dashboard/expenses",
+    color: "from-amber-500/20 to-orange-500/20 text-amber-400 border-amber-500/30",
+  },
+  {
+    id: "travel",
+    title: "Business Travel Desk",
+    description: "Flight and hotel requests, travel itineraries, and per-diem allowances.",
+    icon: Compass,
+    to: "/dashboard/travel",
+    color: "from-cyan-500/20 to-sky-500/20 text-cyan-400 border-cyan-500/30",
   },
 ];
 

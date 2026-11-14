@@ -1,22 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader } from "@/components/aurix/DashboardShell";
-import { EmployeeHierarchyView } from "@/features/admin/employees/components/EmployeeHierarchyView";
+import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
+
+const PageComponent = lazyFeaturePage(() => import("@/features/admin/employees/components/EmployeeHierarchyView"), "EmployeeHierarchyView");
 
 export const Route = createFileRoute("/dashboard/hierarchy")({
-  head: () => ({ meta: [{ title: "Organizational Graph — OFC360" }] }),
-  component: HierarchyPage,
+  head: () => ({ meta: [{ title: "Organization Hierarchy — OFC360" }] }),
+  component: PageComponent,
 });
-
-function HierarchyPage() {
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Organizational Graph"
-        description="Interactive, relationship-aware organizational intelligence layer with real-time reporting paths, department mapping, skill analysis, and AI-powered insights."
-      />
-
-      <EmployeeHierarchyView />
-    </div>
-  );
-}
-

@@ -2,9 +2,9 @@ import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/resources")({
   head: () => ({ meta: [{ title: "Resources — OFC360" }] }),
-  component: ResourcesLayout,
+  component: LayoutComponent,
 });
 
-function ResourcesLayout() {
+function LayoutComponent() {
   return <Outlet />;
 }

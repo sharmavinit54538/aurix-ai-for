@@ -11,8 +11,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { aurix, rememberStore } from "@/lib/aurix-store";
 import { persistAuthSession, useAuthReady } from "@/lib/auth-bootstrap";
 import { getSafeRedirectUrl } from "@/lib/role-routing";
+import { normalizeRole } from "@/lib/roles";
 import { authService, hasValidAccessToken } from "@/api";
 import { getErrorMessage } from "@/api/utils";
+import {
+  documentVerificationApi,
+  isDigiLockerVerificationEnabled,
+} from "@/services/documentVerificationApi";
+import { syncVerifiedStatusToStore } from "@/hooks/useDocumentVerification";
 import { toast } from "sonner";
 
 const schema = z.object({
@@ -33,18 +39,6 @@ export function LoginPage() {
   const [show, setShow] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-
-  // If already logged in, redirect immediately to role dashboard or allowed destination
-  useEffect(() => {
-    if (!authReady) return;
-    const ws = aurix.get();
-    if (ws.user && hasValidAccessToken()) {
-      const params = new URLSearchParams(window.location.search);
-      const redirectParam = params.get("redirect") || params.get("callbackUrl");
-      const target = getSafeRedirectUrl(redirectParam, ws.user);
-      navigate({ to: target as any, replace: true });
-    }
-  }, [authReady, navigate]);
 
   useEffect(() => {
     const savedEmail = rememberStore.get();
@@ -93,6 +87,62 @@ export function LoginPage() {
         const params = new URLSearchParams(window.location.search);
         const redirectParam = params.get("redirect") || params.get("callbackUrl");
         const destination = getSafeRedirectUrl(redirectParam, user);
+
+        if (isDigiLockerVerificationEnabled() && normalizeRole(user.role) === "employee") {
+          const explicitStatus =
+            user.documentVerificationStatus || user.document_verification_status;
+          const explicitVerifiedBool =
+            typeof user.documentsVerified === "boolean"
+              ? user.documentsVerified
+              : typeof user.documents_verified === "boolean"
+                ? user.documents_verified
+                : undefined;
+
+          if (explicitStatus === "VERIFIED" || explicitVerifiedBool === true) {
+            syncVerifiedStatusToStore(
+              "VERIFIED",
+              user.documentsVerifiedAt || user.documents_verified_at,
+            );
+            navigate({ to: destination as any });
+            return;
+          }
+
+          if (explicitStatus && explicitStatus !== "VERIFIED") {
+            syncVerifiedStatusToStore(explicitStatus);
+            navigate({
+              to: "/verify-documents" as any,
+              search: redirectParam ? ({ redirect: destination } as any) : undefined,
+            });
+            return;
+          }
+
+          if (explicitVerifiedBool === false) {
+            syncVerifiedStatusToStore("NOT_STARTED");
+            navigate({
+              to: "/verify-documents" as any,
+              search: redirectParam ? ({ redirect: destination } as any) : undefined,
+            });
+            return;
+          }
+
+          try {
+            const statusRes = await documentVerificationApi.getStatus();
+            syncVerifiedStatusToStore(statusRes.status, statusRes.verifiedAt);
+            if (statusRes.status === "VERIFIED") {
+              navigate({ to: destination as any });
+              return;
+            }
+          } catch {
+            // If status cannot be confirmed as VERIFIED, route employee to /verify-documents
+          }
+
+          navigate({
+            to: "/verify-documents" as any,
+            search: redirectParam ? ({ redirect: destination } as any) : undefined,
+          });
+          return;
+        }
+
         navigate({ to: destination as any });
         return;
       }
@@ -237,6 +287,48 @@ export function LoginPage() {
           {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           Sign in
         </Button>
+
+        <div className="mt-4 rounded-xl border border-border/70 bg-muted/30 p-3 text-xs space-y-2">
+          <div className="font-semibold text-foreground">Demo Login Credentials (Click to fill):</div>
+          <div className="grid grid-cols-1 gap-1.5">
+            <button
+              type="button"
+              onClick={() => {
+                setEmail("employee@aurix.ai");
+                setPassword("Employee@123");
+                setErrors({});
+              }}
+              className="flex items-center justify-between rounded-lg border border-border/60 bg-background/70 px-2.5 py-1.5 text-left hover:bg-accent transition-colors cursor-pointer"
+            >
+              <span className="font-medium text-foreground">Employee Portal</span>
+              <span className="font-mono text-[11px] text-muted-foreground">employee@aurix.ai / Employee@123</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail("hr@aurix.ai");
+                setPassword("Admin@123");
+                setErrors({});
+              }}
+              className="flex items-center justify-between rounded-lg border border-border/60 bg-background/70 px-2.5 py-1.5 text-left hover:bg-accent transition-colors cursor-pointer"
+            >
+              <span className="font-medium text-foreground">HR Admin</span>
+              <span className="font-mono text-[11px] text-muted-foreground">hr@aurix.ai / Admin@123</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail("manager@aurix.ai");
+                setPassword("Manager@123");
+                setErrors({});
+              }}
+              className="flex items-center justify-between rounded-lg border border-border/60 bg-background/70 px-2.5 py-1.5 text-left hover:bg-accent transition-colors cursor-pointer"
+            >
+              <span className="font-medium text-foreground">Manager Portal</span>
+              <span className="font-mono text-[11px] text-muted-foreground">manager@aurix.ai / Manager@123</span>
+            </button>
+          </div>
+        </div>
       </form>
     </AuthShell>
   );

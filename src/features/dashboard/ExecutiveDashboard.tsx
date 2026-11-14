@@ -1,6 +1,5 @@
 import { Link } from "@tanstack/react-router";
 import React, { useState, useEffect, Component, memo, type ReactNode } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertTriangle,
   Award,
@@ -100,18 +99,6 @@ const WEEKLY_ATTENDANCE: any[] = [];
 const WIDGET_SCORES: any[] = [];
 const WORLD_CLOCKS: any[] = [];
 
-// ── Animation variants ────────────────────────────────────────
-const fadeUp = {
-  initial: { opacity: 0, y: 24 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.4, ease: "easeOut" as const },
-};
-
-const stagger = (i: number) => ({
-  initial: { opacity: 0, y: 24 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.4, ease: "easeOut" as const, delay: i * 0.06 },
-});
 
 // ── Shared chart tooltip style ────────────────────────────────
 const chartTooltipStyle = {
@@ -234,7 +221,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
 
 // ── 2. Quick Actions Strip ────────────────────────────────────
 const QUICK_ACTIONS = [
-  { label: "Add Employee", icon: UserPlus, link: "/dashboard/employees" },
+  { label: "Add Employee", icon: UserPlus, link: "/dashboard/employees?action=add" },
   { label: "Create Job", icon: Briefcase, link: "/dashboard/recruitment/jobs/new" },
   { label: "Run Payroll", icon: CreditCard, link: "/dashboard/payroll" },
   { label: "Start Onboarding", icon: UserCheck, link: "/dashboard/onboarding-checklist" },
@@ -248,10 +235,10 @@ const QuickActions = memo(function QuickActions() {
   return (
     <div className="mb-6">
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
-        {QUICK_ACTIONS.map((a, i) => {
+        {QUICK_ACTIONS.map((a) => {
           const Icon = a.icon;
           return (
-            <motion.div key={a.label} {...stagger(i)}>
+            <div key={a.label}>
               <Link
                 to={a.link as any}
                 className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-3 text-center shadow-sm transition-all hover:bg-muted/50 hover:border-foreground/20 hover:-translate-y-0.5"
@@ -263,7 +250,7 @@ const QuickActions = memo(function QuickActions() {
                   {a.label}
                 </span>
               </Link>
-            </motion.div>
+            </div>
           );
         })}
       </div>
@@ -283,7 +270,7 @@ function ApprovalCenter() {
   const items = APPROVAL_DATA[activeTab] ?? [];
 
   return (
-    <motion.div {...fadeUp}>
+    <div>
       <Card>
         <SectionHeader
           title="HR Operations Center"
@@ -317,59 +304,50 @@ function ApprovalCenter() {
         </div>
 
         {/* Table */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -10 }}
-            transition={{ duration: 0.2 }}
-            className="space-y-2"
-          >
-            {items.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-sm hover:bg-muted/40 transition-colors"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-foreground">{item.name}</span>
-                    {item.urgent && (
-                      <Badge variant="destructive" className="h-4 px-1.5 text-[10px]">
-                        Urgent
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>{item.department}</span>
-                    <span>·</span>
-                    <span>{item.type}</span>
-                    <span>·</span>
-                    <span>{item.detail}</span>
-                  </div>
+        <div key={activeTab} className="space-y-2">
+          {items.map((item) => (
+            <div
+              key={item.id}
+              className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-sm hover:bg-muted/40 transition-colors"
+            >
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-foreground">{item.name}</span>
+                  {item.urgent && (
+                    <Badge variant="destructive" className="h-4 px-1.5 text-[10px]">
+                      Urgent
+                    </Badge>
+                  )}
                 </div>
-                <div className="text-xs text-muted-foreground shrink-0">{item.requestedAt}</div>
-                <div className="flex shrink-0 gap-1.5">
-                  <Button variant="outline" size="sm" className="h-7 text-xs text-emerald-600 dark:text-emerald-400">
-                    <CheckCircle2 className="mr-1 h-3 w-3" /> Approve
-                  </Button>
-                  <Button variant="outline" size="sm" className="h-7 text-xs text-destructive border-destructive/30">
-                    <X className="mr-1 h-3 w-3" /> Reject
-                  </Button>
+                <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>{item.department}</span>
+                  <span>·</span>
+                  <span>{item.type}</span>
+                  <span>·</span>
+                  <span>{item.detail}</span>
                 </div>
               </div>
-            ))}
-          </motion.div>
-        </AnimatePresence>
+              <div className="text-xs text-muted-foreground shrink-0">{item.requestedAt}</div>
+              <div className="flex shrink-0 gap-1.5">
+                <Button variant="outline" size="sm" className="h-7 text-xs text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 className="mr-1 h-3 w-3" /> Approve
+                </Button>
+                <Button variant="outline" size="sm" className="h-7 text-xs text-destructive border-destructive/30">
+                  <X className="mr-1 h-3 w-3" /> Reject
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
       </Card>
-    </motion.div>
+    </div>
   );
 }
 
 // ── 5. Recruitment Dashboard ──────────────────────────────────
 function RecruitmentDashboard() {
   return (
-    <motion.div {...fadeUp}>
+    <div>
       <Card>
         <SectionHeader
           title="Recruitment Dashboard"
@@ -444,14 +422,14 @@ function RecruitmentDashboard() {
           </div>
         </div>
       </Card>
-    </motion.div>
+    </div>
   );
 }
 
 // ── 6. Attendance Analytics ───────────────────────────────────
 const AttendanceAnalytics = memo(function AttendanceAnalytics() {
   return (
-    <motion.div {...fadeUp}>
+    <div>
       <Card>
         <SectionHeader
           title="Attendance Analytics"
@@ -497,7 +475,7 @@ const AttendanceAnalytics = memo(function AttendanceAnalytics() {
           </div>
         </div>
       </Card>
-    </motion.div>
+    </div>
   );
 });
 
@@ -510,7 +488,7 @@ const PayrollOverview = memo(function PayrollOverview({ data }: { data?: ReturnT
     : MONTHLY_PAYROLL;
 
   return (
-    <motion.div {...fadeUp}>
+    <div>
       <Card>
         <SectionHeader title="Payroll Overview" subtitle="Monthly salary cost & status" link="/dashboard/payroll" />
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -557,14 +535,14 @@ const PayrollOverview = memo(function PayrollOverview({ data }: { data?: ReturnT
           </div>
         </div>
       </Card>
-    </motion.div>
+    </div>
   );
 });
 
 // ── 8. Asset Management Overview ─────────────────────────────
 function AssetOverview() {
   return (
-    <motion.div {...fadeUp}>
+    <div>
       <Card>
         <SectionHeader title="Asset Management" subtitle="Company asset inventory at a glance" link="/dashboard/assets" />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
@@ -585,7 +563,7 @@ function AssetOverview() {
           })}
         </div>
       </Card>
-    </motion.div>
+    </div>
   );
 }
 
@@ -593,7 +571,7 @@ function AssetOverview() {
 function OnboardingCenter() {
   const total = ONBOARDING_STAGES.reduce((s, o) => s + o.count, 0);
   return (
-    <motion.div {...fadeUp}>
+    <div>
       <Card>
         <SectionHeader title="Onboarding Center" subtitle="New employee journey tracking" link="/dashboard/onboarding-checklist" />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
@@ -611,14 +589,14 @@ function OnboardingCenter() {
           ))}
         </div>
       </Card>
-    </motion.div>
+    </div>
   );
 }
 
 // ── 10. Exit Management ───────────────────────────────────────
 function ExitManagement() {
   return (
-    <motion.div {...fadeUp}>
+    <div>
       <Card>
         <SectionHeader title="Exit Management" subtitle="Offboarding pipeline status" link="/dashboard/exit" />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
@@ -636,7 +614,7 @@ function ExitManagement() {
           })}
         </div>
       </Card>
-    </motion.div>
+    </div>
   );
 }
 
@@ -655,7 +633,7 @@ function DocumentsCenter() {
   const recent = [...docs].sort((a: HRDocument, b: HRDocument) => (b.uploadDate || "").localeCompare(a.uploadDate || "")).slice(0, 4);
 
   return (
-    <motion.div {...fadeUp}>
+    <div>
       <Card>
         <SectionHeader title="Documents Center" subtitle="Document status and verifications" link="/dashboard/documents" />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-4">
@@ -700,14 +678,14 @@ function DocumentsCenter() {
           )}
         </div>
       </Card>
-    </motion.div>
+    </div>
   );
 }
 
 // ── 12. AI Command Center ─────────────────────────────────────
 function AICommandCenter() {
   return (
-    <motion.div {...fadeUp}>
+    <div>
       <Card>
         <SectionHeader title="AI Command Center" subtitle="Powered by OFC360" link="/ai" />
         {/* Metrics row */}
@@ -753,14 +731,14 @@ function AICommandCenter() {
           ))}
         </div>
       </Card>
-    </motion.div>
+    </div>
   );
 }
 
 // ── 13. Executive Analytics ───────────────────────────────────
 function ExecutiveAnalytics() {
   return (
-    <motion.div {...fadeUp}>
+    <div>
       <Card>
         <SectionHeader title="Executive Analytics" subtitle="Key workforce metrics and trends" link="/dashboard/reports" />
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -861,14 +839,14 @@ function ExecutiveAnalytics() {
           </div>
         </div>
       </Card>
-    </motion.div>
+    </div>
   );
 }
 
 // ── 14. Company Calendar ──────────────────────────────────────
 function CompanyCalendar() {
   return (
-    <motion.div {...fadeUp}>
+    <div>
       <Card>
         <SectionHeader title="Company Calendar" subtitle="Upcoming meetings, holidays & key dates" link="/dashboard/attendance/holidays" />
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -893,24 +871,22 @@ function CompanyCalendar() {
           ))}
         </div>
       </Card>
-    </motion.div>
+    </div>
   );
 }
 
 // ── 15. Live Activity Feed ────────────────────────────────────
 function ActivityFeed() {
   return (
-    <motion.div {...fadeUp}>
+    <div>
       <Card>
         <SectionHeader title="Live Activity Feed" subtitle="Real-time HR system activity" link="/dashboard/hr-operations/timeline" />
         <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
           {ACTIVITY_FEED.map((a) => {
             const Icon = ICON_MAP[a.icon] ?? Zap;
             return (
-              <motion.div
+              <div
                 key={a.id}
-                initial={{ opacity: 0, x: -12 }}
-                animate={{ opacity: 1, x: 0 }}
                 className="flex items-start gap-3 rounded-xl border border-border bg-card px-3 py-2.5 shadow-sm"
               >
                 <div className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
@@ -921,12 +897,12 @@ function ActivityFeed() {
                   <p className="text-xs text-muted-foreground">{a.user}</p>
                 </div>
                 <div className="shrink-0 text-xs text-muted-foreground">{a.time}</div>
-              </motion.div>
+              </div>
             );
           })}
         </div>
       </Card>
-    </motion.div>
+    </div>
   );
 }
 
@@ -936,7 +912,7 @@ function NotificationCenter() {
   const archiveMutation = useArchive();
 
   return (
-    <motion.div {...fadeUp}>
+    <div>
       <Card>
         <SectionHeader
           title="Smart Notification Center"
@@ -982,21 +958,20 @@ function NotificationCenter() {
           )}
         </div>
       </Card>
-    </motion.div>
+    </div>
   );
 }
 
 // ── 17. Department Performance Cards ─────────────────────────
 function DepartmentPerformance() {
   return (
-    <motion.div {...fadeUp}>
+    <div>
       <Card>
         <SectionHeader title="Department Performance" subtitle="Workforce metrics by department" link="/dashboard/departments" />
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {DEPT_PERFORMANCE.map((d, i) => (
-            <motion.div
+          {DEPT_PERFORMANCE.map((d) => (
+            <div
               key={d.name}
-              {...stagger(i)}
               className="rounded-xl border border-border bg-card p-4 shadow-sm"
             >
               <div className="mb-3 flex items-center justify-between">
@@ -1021,11 +996,11 @@ function DepartmentPerformance() {
                   <span className="font-semibold text-foreground">{d.openPositions} open</span>
                 </div>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </Card>
-    </motion.div>
+    </div>
   );
 }
 
@@ -1042,7 +1017,7 @@ const REPORT_CARD_ITEMS = [
 
 function ReportsCenter() {
   return (
-    <motion.div {...fadeUp}>
+    <div>
       <Card>
         <div className="mb-5 flex items-center justify-between gap-3">
           <div>
@@ -1090,7 +1065,7 @@ function ReportsCenter() {
           </div>
         </div>
       </Card>
-    </motion.div>
+    </div>
   );
 }
 
@@ -1098,6 +1073,7 @@ function ReportsCenter() {
 function WorldClock() {
   const [clocks, setClocks] = useState<{ city: string; time: string; flag: string }[]>([]);
   useEffect(() => {
+    if (WORLD_CLOCKS.length === 0) return;
     function update() {
       setClocks(
         WORLD_CLOCKS.map((wc) => ({
@@ -1113,7 +1089,7 @@ function WorldClock() {
       );
     }
     update();
-    const t = setInterval(update, 1000);
+    const t = setInterval(update, 30_000);
     return () => clearInterval(t);
   }, []);
 

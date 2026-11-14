@@ -1,16 +1,9 @@
-import { createFileRoute, Navigate, useParams } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
+
+const PageComponent = lazyFeaturePage(() => import("@/pages/PayrollPreviewPage"));
 
 export const Route = createFileRoute("/dashboard/payroll/runs/$runId/review")({
-  head: () => ({ meta: [{ title: "Payroll Review & Approval — OFC360" }] }),
-  component: PayrollReviewRedirect,
+  head: () => ({ meta: [{ title: "Payroll Review — OFC360" }] }),
+  component: PageComponent,
 });
-
-function PayrollReviewRedirect() {
-  const { runId } = useParams({ strict: false }) as { runId?: string };
-  return (
-    <Navigate
-      to={`/dashboard/payroll/runs/${runId || ""}/approval` as any}
-      replace
-    />
-  );
-}

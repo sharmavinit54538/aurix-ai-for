@@ -1,8 +1,9 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
+
+const PageComponent = lazyFeaturePage(() => import("@/features/cio/pages/CioCloudNetworkPage"));
 
 export const Route = createFileRoute("/dashboard/executive/cio/cloud-network")({
-  beforeLoad: () => {
-    throw redirect({ to: "/dashboard/executive/cio" });
-  },
-  component: () => null,
+  head: () => ({ meta: [{ title: "Cloud & Network — OFC360" }] }),
+  component: PageComponent,
 });

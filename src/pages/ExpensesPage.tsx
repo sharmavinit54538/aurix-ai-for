@@ -62,7 +62,7 @@ export function ExpensesPage() {
     setError(null);
     try {
       const res = await expensesApi.getExpenses();
-      setExpenses(res.items);
+      setExpenses(Array.isArray(res?.items) ? res.items : Array.isArray(res) ? res : []);
     } catch (err: any) {
       const msg = err?.response?.data?.message || err?.message || "Failed to load expenses";
       setError(msg);
@@ -199,16 +199,22 @@ export function ExpensesPage() {
 
       <GlassCard className="mb-6">
         <div className="mb-2 font-medium">Monthly expense volume</div>
-        <div className="h-56">
-          <ResponsiveContainer>
-            <BarChart data={monthly}>
-              <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-              <XAxis dataKey="month" fontSize={12} />
-              <YAxis fontSize={12} />
-              <Tooltip formatter={(v) => `₹${Number(v).toLocaleString()}`} />
-              <Bar dataKey="amount" radius={[6, 6, 0, 0]} fill="#06b6d4" />
-            </BarChart>
-          </ResponsiveContainer>
+        <div className="h-56 w-full min-w-0">
+          {monthly.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={monthly}>
+                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                <XAxis dataKey="month" fontSize={12} />
+                <YAxis fontSize={12} />
+                <Tooltip formatter={(v) => `₹${Number(v).toLocaleString()}`} />
+                <Bar dataKey="amount" maxBarSize={64} radius={[6, 6, 0, 0]} fill="#06b6d4" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+              No monthly expense data available yet.
+            </div>
+          )}
         </div>
       </GlassCard>
 
@@ -264,9 +270,11 @@ export function ExpensesPage() {
                     {e.managerNote ? <div className="mt-1 text-xs text-muted-foreground">Note: {e.managerNote}</div> : null}
                     {e.receiptName ? <div className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground"><Receipt className="h-3 w-3" />{e.receiptName}</div> : null}
                   </td>
-                  <td className="px-4 py-3">₹{e.amount.toLocaleString()}</td>
-                  <td className="px-4 py-3">{new Date(e.date).toLocaleDateString()}</td>
-                  <td className="px-4 py-3"><StatusBadge status={e.status} tone={STATUS_TONE[e.status]} /></td>
+                  <td className="px-4 py-3">₹{Number(e.amount || 0).toLocaleString()}</td>
+                  <td className="px-4 py-3">
+                    {Number.isNaN(new Date(e.date).getTime()) ? e.date : new Date(e.date).toLocaleDateString()}
+                  </td>
+                  <td className="px-4 py-3"><StatusBadge status={e.status} tone={STATUS_TONE[e.status] ?? "muted"} /></td>
                   <td className="px-4 py-3">
                     <div className="flex justify-end gap-1">
                       {(e.status === "pending" || e.status === "changes-requested") && canApprove ? (

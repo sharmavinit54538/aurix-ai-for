@@ -26,17 +26,26 @@ import { AuthLoadingScreen } from "@/features/auth/components/AuthLoadingScreen"
 import { TimezoneSelect } from "@/components/common/TimezoneSelect";
 import { CountrySelect } from "@/components/common/CountrySelect";
 import { getDefaultTimezoneForCountry } from "@/lib/country-timezone-data";
+import { getDefaultDashboardPath } from "@/lib/role-paths";
+import {
+  isHrOnboardingCompletedInStorage,
+  isInviteTokenActivated,
+  isUserOnboardingComplete,
+  markHrOnboardingCompletedInStorage,
+  markInviteTokenActivated,
+  resolveOnboardingGuardRedirect,
+} from "@/lib/onboarding-once";
 
-const STEPS = ["Company", "Admin Profile", "HR Settings", "Departments & Designations", "Invite Employees", "Complete"];
+const STEPS = ["Company", "Admin Profile", "HR Settings", "Departments & Designations", "Complete"];
 const INDUSTRIES = ["Software", "Finance", "Healthcare", "Retail", "Manufacturing", "Education", "Other"];
 const SIZES = ["1–10", "11–50", "51–200", "201–500", "501–1000", "1000+"];
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-// Maps the backend's onboarding_step (1-6) to the index of STEPS.
+// Maps the backend's onboarding_step (1-5) to the index of STEPS.
 // 1 = Company, 2 = Admin profile, 3 = HR settings, 4 = Departments/Designations,
-// 5 = Invite employees, 6 = Complete.
+// 5 = Complete.
 function backendStepToUiIndex(backendStep: number): number {
-  return Math.max(0, Math.min(5, backendStep - 1));
+  return Math.max(0, Math.min(4, backendStep - 1));
 }
 
 // Recomputes departments + designations from whatever HR/Employee/Manager
@@ -129,6 +138,7 @@ export function OnboardingPage() {
   const token = searchParams?.token;
   const [tokenLoading, setTokenLoading] = useState(token ? true : false);
   const [tokenError, setTokenError] = useState<string | null>(null);
+  const [tokenAlreadyCompleted, setTokenAlreadyCompleted] = useState(false);
   const [empData, setEmpData] = useState<any>(null);
 
   // Activation form fields
@@ -141,16 +151,40 @@ export function OnboardingPage() {
   const [acceptPolicies, setAcceptPolicies] = useState(false);
   const [activating, setActivating] = useState(false);
 
+  const justCompletedRef = useRef(false);
+
   useEffect(() => {
     if (!token) return;
+    if (isInviteTokenActivated(token)) {
+      const currentUser = aurix.get().user;
+      if (currentUser && isUserOnboardingComplete(currentUser) && getAccessToken()) {
+        navigate({ to: getDefaultDashboardPath(currentUser) as any, replace: true });
+        return;
+      }
+      setTokenLoading(false);
+      setTokenAlreadyCompleted(true);
+      setTokenError("Onboarding already completed. This invitation link can only be used once.");
+      return;
+    }
     setTokenLoading(true);
     setTokenError(null);
+    setTokenAlreadyCompleted(false);
     api.get(`onboarding/validate?token=${token}`)
       .then((res: any) => {
         if (res.success) {
           setEmpData(res.data);
           setPhone(res.data.phone || "");
         } else {
+          const alreadyDone = Boolean(res.already_activated || res.data?.already_activated || res.onboarding_completed);
+          if (alreadyDone) {
+            markInviteTokenActivated(token);
+            const currentUser = aurix.get().user;
+            if (currentUser && isUserOnboardingComplete(currentUser) && getAccessToken()) {
+              navigate({ to: getDefaultDashboardPath(currentUser) as any, replace: true });
+              return;
+            }
+            setTokenAlreadyCompleted(true);
+          }
           setTokenError(res.message || "Invitation expired. Request new invitation.");
         }
       })
@@ -160,7 +194,7 @@ export function OnboardingPage() {
       .finally(() => {
         setTokenLoading(false);
       });
-  }, [token]);
+  }, [token, navigate]);
 
   const [resuming, setResuming] = useState(true);
   const [safetyTimedOut, setSafetyTimedOut] = useState(false);
@@ -175,11 +209,24 @@ export function OnboardingPage() {
       if (aurix.get().isRestoring) {
         aurix.set({ isRestoring: false });
       }
-    }, 5000);
+    }, 100);
     return () => clearTimeout(safetyTimer);
   }, []);
 
   useEffect(() => {
+    const guardRedirect = resolveOnboardingGuardRedirect({
+      user: ws.user,
+      hasInviteToken: Boolean(token),
+      inviteAlreadyActivated: isInviteTokenActivated(token),
+      justCompleted: justCompletedRef.current,
+      hrOnboardingCompleted: isHrOnboardingCompletedInStorage(),
+    });
+    if (guardRedirect) {
+      setResuming(false);
+      navigate({ to: guardRedirect as any, replace: true });
+      return;
+    }
+
     if (token) { setResuming(false); return; } // skip for employee onboarding
     if (!safetyTimedOut && (ws.isRestoring || !authReady)) return;
 
@@ -249,7 +296,7 @@ export function OnboardingPage() {
               company_name: provCompanyName || undefined,
               companyName: provCompanyName || undefined,
               emailVerified: true,
-              onboardingComplete: false,
+              onboardingComplete: isHrOnboardingCompletedInStorage(),
               createdAt: new Date().toISOString(),
             },
             ...(provCompanyName && (!ws.company?.name || ws.company.name === "Workspace")
@@ -283,7 +330,7 @@ export function OnboardingPage() {
             company_name: provCompanyName || undefined,
             companyName: provCompanyName || undefined,
             emailVerified: true,
-            onboardingComplete: false,
+            onboardingComplete: isHrOnboardingCompletedInStorage(),
             createdAt: new Date().toISOString(),
           },
           ...(provCompanyName && (!ws.company?.name || ws.company.name === "Workspace")
@@ -305,8 +352,9 @@ export function OnboardingPage() {
       return;
     }
 
-    if (ws.user.onboardingComplete) {
-      navigate({ to: "/dashboard" });
+    if (isUserOnboardingComplete(ws.user)) {
+      setResuming(false);
+      navigate({ to: getDefaultDashboardPath(ws.user) as any, replace: true });
       return;
     }
 
@@ -318,21 +366,26 @@ export function OnboardingPage() {
     (async () => {
       try {
         let backendStep = 1;
+        let backendCompleted = false;
         try {
           const statusRes: any = await api.get("onboarding/status");
           backendStep = statusRes?.current_step ?? statusRes?.data?.current_step ?? 1;
-          const onboardingCompleted = statusRes?.onboarding_completed ?? statusRes?.data?.onboarding_completed ?? false;
-
-          if (onboardingCompleted || backendStep >= 7) {
-            if (ws.user) {
-              aurix.set({ user: { ...ws.user, onboardingComplete: true } });
-            }
-            navigate({ to: "/dashboard", replace: true });
-            return;
-          }
+          backendCompleted = Boolean(
+            statusRes?.onboarding_completed || statusRes?.data?.onboarding_completed,
+          );
         } catch {
           // If 404, 204, or empty, start at Step 1 without treating as auth failure
           backendStep = 1;
+        }
+
+        if (backendCompleted) {
+          markHrOnboardingCompletedInStorage(true);
+          const updatedUser = ws.user ? { ...ws.user, onboardingComplete: true } : null;
+          if (updatedUser) {
+            aurix.set({ user: updatedUser });
+          }
+          navigate({ to: getDefaultDashboardPath(updatedUser) as any, replace: true });
+          return;
         }
 
         const savedCompanyName = getStoredCompanyName();
@@ -340,6 +393,15 @@ export function OnboardingPage() {
         try {
           const progressRes: any = await api.get("onboarding/progress");
           const progress = progressRes?.data ?? progressRes;
+          if (progress?.onboarding_completed) {
+            markHrOnboardingCompletedInStorage(true);
+            const updatedUser = ws.user ? { ...ws.user, onboardingComplete: true } : null;
+            if (updatedUser) {
+              aurix.set({ user: updatedUser });
+            }
+            navigate({ to: getDefaultDashboardPath(updatedUser) as any, replace: true });
+            return;
+          }
           if (progress) {
             const profile = progress.company_profile;
             const companyName =
@@ -440,20 +502,18 @@ export function OnboardingPage() {
     setLoading(true);
     try {
       await api.post("onboarding/complete");
+      markHrOnboardingCompletedInStorage(true);
+      justCompletedRef.current = true;
 
       if (ws.user) {
         aurix.set({ user: { ...ws.user, onboardingComplete: true } });
       }
-      setStep(6);
+      setStep(5);
     } catch (err: any) {
       toast.error(err.message || "Failed to complete onboarding. Please try again.");
     } finally {
       setLoading(false);
     }
-  }
-
-  if (!safetyTimedOut && (ws.isRestoring || (hasAccessToken && (!authReady || !ws.user)))) {
-    return <AuthLoadingScreen />;
   }
 
   if (token) {
@@ -474,17 +534,30 @@ export function OnboardingPage() {
         <div className="relative min-h-screen flex items-center justify-center bg-background p-6">
           <div aria-hidden className="pointer-events-none absolute inset-0 -z-10" style={{ background: "var(--gradient-hero)" }} />
           <div className="max-w-md w-full rounded-2xl border border-border bg-card/70 p-8 text-center shadow-elegant backdrop-blur-xl">
-            <div className="mx-auto mb-6 grid h-12 w-12 place-items-center rounded-xl bg-destructive/10 text-destructive">
-              <Sparkles className="h-6 w-6" />
+            <div className={`mx-auto mb-6 grid h-12 w-12 place-items-center rounded-xl ${tokenAlreadyCompleted ? "bg-emerald-500/10 text-emerald-500" : "bg-destructive/10 text-destructive"}`}>
+              {tokenAlreadyCompleted ? <CheckCircle2 className="h-6 w-6" /> : <Sparkles className="h-6 w-6" />}
             </div>
-            <h2 className="font-display text-xl font-semibold tracking-tight text-foreground">Invitation Expired</h2>
+            <h2 className="font-display text-xl font-semibold tracking-tight text-foreground">
+              {tokenAlreadyCompleted ? "Onboarding Already Completed" : "Invitation Expired"}
+            </h2>
             <p className="mt-3 text-sm text-muted-foreground">
-              Invitation expired. Request new invitation.
+              {tokenAlreadyCompleted
+                ? "Your onboarding has already been completed. This setup step can only be done once."
+                : "Invitation expired. Request new invitation."}
             </p>
             <div className="mt-6">
-              <Button onClick={() => navigate({ to: "/login" })} className="w-full">
-                Go to Login
-              </Button>
+              {tokenAlreadyCompleted && ws.user && getAccessToken() ? (
+                <Button
+                  onClick={() => navigate({ to: getDefaultDashboardPath(ws.user) as any, replace: true })}
+                  className="w-full"
+                >
+                  Go to Dashboard
+                </Button>
+              ) : (
+                <Button onClick={() => navigate({ to: "/login", replace: true })} className="w-full">
+                  Go to Login
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -531,10 +604,17 @@ export function OnboardingPage() {
           });
 
           if (res.success) {
+            markInviteTokenActivated(token);
             toast.success("Account activated successfully! Logging you in...");
-            // Save user to aurix store
+            // Save user to aurix store with onboardingComplete enforced true
             if (res.data?.user) {
-              aurix.set({ user: res.data.user });
+              aurix.set({
+                user: {
+                  ...res.data.user,
+                  emailVerified: true,
+                  onboardingComplete: true,
+                },
+              });
             }
             // Save tokens via API client (correct storage key)
             if (res.data?.access_token && res.data?.refresh_token) {
@@ -543,18 +623,21 @@ export function OnboardingPage() {
                 refreshToken: res.data.refresh_token,
               });
             }
-            // Redirect based on role — default to /dashboard/employee for employees
+            // Redirect based on role — default to /verify-documents for employees
             const role = res.data?.user?.role;
-            setTimeout(() => {
-              if (role === "admin" || role === "hr") {
-                navigate({ to: "/dashboard" });
-              } else if (role === "manager") {
-                navigate({ to: "/dashboard/manager" });
-              } else {
-                navigate({ to: "/dashboard/employee" });
-              }
-            }, 1000);
+            if (role === "admin" || role === "hr" || role === "hr_admin") {
+              navigate({ to: "/dashboard", replace: true });
+            } else if (role === "manager") {
+              navigate({ to: "/dashboard/manager", replace: true });
+            } else {
+              navigate({ to: "/verify-documents" as any, replace: true });
+            }
           } else {
+            if (res.already_activated || res.onboarding_completed) {
+              markInviteTokenActivated(token);
+              setTokenAlreadyCompleted(true);
+              setTokenError(res.message || "Onboarding already completed.");
+            }
             toast.error(res.message || "Failed to activate account. Please try again.");
           }
         } catch (err: any) {
@@ -568,7 +651,7 @@ export function OnboardingPage() {
         <div className="relative min-h-screen overflow-hidden bg-background">
           <div aria-hidden className="pointer-events-none absolute inset-0 -z-10" style={{ background: "var(--gradient-hero)" }} />
           <header className="flex items-center justify-between px-6 py-5 sm:px-10">
-            <Link to="/" className="inline-flex items-center gap-2">
+            <Link to="/dashboard" className="inline-flex items-center gap-2">
               <span className="grid h-8 w-8 place-items-center rounded-lg text-brand-foreground shadow-glow" style={{ background: "var(--gradient-brand)" }}>
                 <Sparkles className="h-4 w-4" />
               </span>
@@ -709,18 +792,18 @@ export function OnboardingPage() {
     <div className="relative min-h-screen overflow-hidden bg-background">
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10" style={{ background: "var(--gradient-hero)" }} />
       <header className="flex items-center justify-between px-6 py-5 sm:px-10">
-        <Link to="/" className="inline-flex items-center gap-2">
+        <Link to="/dashboard" className="inline-flex items-center gap-2">
           <span className="grid h-8 w-8 place-items-center rounded-lg text-brand-foreground shadow-glow" style={{ background: "var(--gradient-brand)" }}>
             <Sparkles className="h-4 w-4" />
           </span>
           <span className="font-display text-lg font-semibold tracking-tight">OFC360</span>
         </Link>
-        <span className="text-xs text-muted-foreground">Step {Math.min(step + 1, 6)} of 6</span>
+        <span className="text-xs text-muted-foreground">Step {Math.min(step + 1, 5)} of 5</span>
       </header>
 
       <div className="mx-auto max-w-5xl px-6 pb-16 sm:px-10">
         <div className="mb-8 flex justify-center">
-          <Stepper steps={STEPS} current={Math.min(step, 5)} />
+          <Stepper steps={STEPS} current={Math.min(step, 4)} />
         </div>
 
         <AnimatePresence mode="wait">
@@ -735,9 +818,8 @@ export function OnboardingPage() {
             {step === 1 ? <AdminProfileStep onNext={next} onBack={back} /> : null}
             {step === 2 ? <HRSettingsStep onNext={next} onBack={back} /> : null}
             {step === 3 ? <DepartmentsDesignationsStep onNext={next} onBack={back} /> : null}
-            {step === 4 ? <InviteEmployeesStep onNext={next} onBack={back} /> : null}
-            {step === 5 ? <ReviewStep onBack={back} onFinish={finish} onEdit={goto} loading={loading} /> : null}
-            {step === 6 ? <SuccessStep /> : null}
+            {step === 4 ? <ReviewStep onBack={back} onFinish={finish} onEdit={goto} loading={loading} /> : null}
+            {step === 5 ? <SuccessStep /> : null}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -1884,11 +1966,6 @@ function ReviewStep({ onBack, onFinish, onEdit, loading }: { onBack: () => void;
         <ReviewCard title="Departments & Designations" onEdit={() => onEdit(3)}>
           <ReviewLine label="Setup Done" value="Yes" />
         </ReviewCard>
-        <ReviewCard title="Invite Team" onEdit={() => onEdit(4)}>
-          <ReviewLine label="Employees" value={String(ws.employees.length)} />
-          <ReviewLine label="Managers" value={String(ws.managers.length)} />
-          <ReviewLine label="HR Members" value={String(ws.hrs.length)} />
-        </ReviewCard>
       </div>
     </StepCard>
   );
@@ -1932,8 +2009,8 @@ function SuccessStep() {
       <h2 className="font-display text-2xl font-semibold tracking-tight">Your OFC360 workspace is ready</h2>
       <p className="mt-2 text-sm text-muted-foreground">Everything is set up. Jump into the dashboard or invite the rest of your team.</p>
       <div className="mt-6 flex flex-wrap justify-center gap-2">
-        <Button onClick={() => navigate({ to: "/dashboard" })}>Go to dashboard</Button>
-        <Button variant="outline" onClick={() => navigate({ to: "/dashboard/hr" as any })}>Invite team members</Button>
+        <Button onClick={() => navigate({ to: "/dashboard", replace: true })}>Go to dashboard</Button>
+        <Button variant="outline" onClick={() => navigate({ to: "/dashboard/hr" as any, replace: true })}>Invite team members</Button>
       </div>
     </div>
   );

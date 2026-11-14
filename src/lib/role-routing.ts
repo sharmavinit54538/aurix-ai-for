@@ -29,6 +29,14 @@ const DISALLOWED_REDIRECT_PATHS = new Set([
   "/verify-email/",
   "/verify-reset-otp",
   "/verify-reset-otp/",
+  "/verify-documents",
+  "/verify-documents/",
+  "/verify-documents/callback",
+  "/verify-documents/callback/",
+  "/onboarding",
+  "/onboarding/",
+  "/employee-onboarding",
+  "/employee-onboarding/",
 ]);
 
 /**

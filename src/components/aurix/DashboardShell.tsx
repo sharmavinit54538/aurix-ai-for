@@ -1,5 +1,5 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { memo, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, memo, Suspense, useEffect, useMemo, useState } from "react";
 import { PageSkeleton } from "@/components/common/PageSkeleton";
 import { BackButton } from "@/components/common/BackButton";
 // Executive Dashboards Navigation Enabled
@@ -13,6 +13,7 @@ import {
   Briefcase,
   Building,
   Building2,
+  CalendarCheck,
   CalendarClock,
   CalendarDays,
   ChevronDown,
@@ -33,6 +34,7 @@ import {
   LifeBuoy,
   LineChart as LineChartIcon,
   Lock,
+  LogOut,
   Megaphone,
   Menu,
   MessageSquare,
@@ -42,6 +44,7 @@ import {
   PhoneCall,
   Receipt,
   Rocket,
+  ScrollText,
   Search,
   Send,
   Settings,
@@ -58,7 +61,7 @@ import {
   Video,
   Wrench,
 } from "lucide-react";
-import { useAurix } from "@/lib/aurix-store";
+import { aurix, useAurix } from "@/lib/aurix-store";
 import { useAuthReady } from "@/lib/auth-bootstrap";
 import { getDefaultDashboardPath } from "@/lib/role-routing";
 import { normalizeRole } from "@/lib/roles";
@@ -66,17 +69,13 @@ import { useCurrentRole } from "@/lib/use-current-role";
 import { UserProfileMenu } from "./UserProfileMenu";
 import { NotificationDropdown } from "./NotificationDropdown";
 import { GeminiIcon } from "@/components/icons/GeminiIcon";
-import { hasValidAccessToken } from "@/api";
+import { hasValidAccessToken } from "@/api/token-utils";
 import { AuthLoadingScreen } from "@/features/auth/components/AuthLoadingScreen";
-import { GlobalCallOverlay, RealtimeCallProvider } from "@/features/connect";
-import {
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
+import { DocumentVerificationGuard } from "@/features/document-verification/components/DocumentVerificationGuard";
+import { RealtimeCallProvider } from "@/features/connect/providers/RealtimeCallProvider";
+import { GlobalCallOverlay } from "@/features/connect/components/GlobalCallOverlay";
+
+const QuickSearchDialog = lazy(() => import("./QuickSearchDialog"));
 import { useTheme } from "@/components/site/ThemeProvider";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
@@ -228,6 +227,11 @@ const EMPLOYEE_NAV_SECTIONS: SidebarNavSection[] = [
         icon: Megaphone,
       },
       {
+        to: "/dashboard/attendance",
+        label: "Attendance",
+        icon: CalendarCheck,
+      },
+      {
         to: "/dashboard/timesheets",
         label: "Timesheets",
         icon: Timer,
@@ -251,6 +255,11 @@ const EMPLOYEE_NAV_SECTIONS: SidebarNavSection[] = [
         to: "/dashboard/performance",
         label: "Performance",
         icon: Target,
+      },
+      {
+        to: "/dashboard/exit",
+        label: "Exit & Resignation",
+        icon: LogOut,
       },
       {
         to: "/dashboard/autopilot/agent",
@@ -505,11 +514,12 @@ export function DashboardShell() {
   const [searchOpen, setSearchOpen] = useState(false);
 
 
+  const userId = ws.user?.id;
   useEffect(() => {
-    if (authReady && ws.user) {
+    if (authReady && userId) {
       dispatch(fetchSidebarPermissions(currentRole));
     }
-  }, [dispatch, authReady, ws.user, currentRole]);
+  }, [dispatch, authReady, userId, currentRole]);
 
   // ── Auth & Role guard ────────────────────────────────────────
   useEffect(() => {
@@ -550,6 +560,17 @@ export function DashboardShell() {
 
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSearchOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   const visibleNav = useMemo(() => {
     const isSuperAdminPortalPath = pathname === "/dashboard/super-admin" || pathname.startsWith("/dashboard/super-admin/");
     const isEmployeePortalPath = pathname === "/dashboard/employee" || pathname.startsWith("/dashboard/employee/");
@@ -589,13 +610,14 @@ export function DashboardShell() {
   const homeLink = getDefaultDashboardPath(ws.user);
 
   return (
-    <RealtimeCallProvider>
-      <div className="flex min-h-screen w-full flex-col overflow-x-hidden bg-background text-foreground">
+    <DocumentVerificationGuard>
+      <RealtimeCallProvider>
+        <div className="flex min-h-screen w-full flex-col overflow-x-hidden bg-background text-foreground">
 
       <div className="relative flex min-w-0 flex-1">
         {/* Sidebar — fixed to viewport; main content scrolls independently */}
         <aside
-          className={`fixed left-0 z-40 flex flex-col border-r border-border bg-card/60 backdrop-blur-xl transition-[width,transform] duration-200 ${
+          className={`fixed left-0 z-40 flex flex-col border-r border-border bg-card/95 transition-[width,transform] duration-200 ${
             "inset-y-0"
           } ${collapsed ? "w-[60px]" : "w-[200px]"} ${
             mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
@@ -703,7 +725,7 @@ export function DashboardShell() {
           }`}
         >
           {/* Topbar */}
-          <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/70 px-4 backdrop-blur-xl sm:px-6">
+          <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/90 px-4 backdrop-blur-sm sm:px-6">
             <div className="flex items-center gap-2">
               <button onClick={() => setMobileOpen(true)} className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground lg:hidden cursor-pointer" aria-label="Open menu">
                 <Menu className="h-5 w-5" />
@@ -751,98 +773,14 @@ export function DashboardShell() {
       <GlobalCallOverlay />
 
       {/* ChatGPT-style Quick Search Modal */}
-      <CommandDialog open={searchOpen} onOpenChange={setSearchOpen}>
-        <CommandInput placeholder="Search employees, departments, requests, pages..." />
-        <CommandList className="max-h-[350px] overflow-y-auto p-2">
-          <CommandEmpty>No results found.</CommandEmpty>
-          <CommandGroup heading="Quick Navigation">
-            <CommandItem
-              onSelect={() => {
-                navigate({ to: "/dashboard" });
-                setSearchOpen(false);
-              }}
-              className="cursor-pointer"
-            >
-              <LayoutDashboard className="mr-2 h-4 w-4" />
-              <span>Overview</span>
-            </CommandItem>
-            <CommandItem
-              onSelect={() => {
-                navigate({ to: "/dashboard/people" });
-                setSearchOpen(false);
-              }}
-              className="cursor-pointer"
-            >
-              <Users className="mr-2 h-4 w-4" />
-              <span>Workforce & Employees</span>
-            </CommandItem>
-            <CommandItem
-              onSelect={() => {
-                navigate({ to: "/dashboard/announcements" });
-                setSearchOpen(false);
-              }}
-              className="cursor-pointer"
-            >
-              <Megaphone className="mr-2 h-4 w-4" />
-              <span>Company Announcements</span>
-            </CommandItem>
-            <CommandItem
-              onSelect={() => {
-                navigate({ to: "/dashboard/leaves" });
-                setSearchOpen(false);
-              }}
-              className="cursor-pointer"
-            >
-              <CalendarDays className="mr-2 h-4 w-4" />
-              <span>Leaves & Attendance</span>
-            </CommandItem>
-            <CommandItem
-              onSelect={() => {
-                navigate({ to: "/dashboard/payroll" });
-                setSearchOpen(false);
-              }}
-              className="cursor-pointer"
-            >
-              <Banknote className="mr-2 h-4 w-4" />
-              <span>Payroll Dashboard</span>
-            </CommandItem>
-            <CommandItem
-              onSelect={() => {
-                navigate({ to: "/dashboard/payroll/periods" });
-                setSearchOpen(false);
-              }}
-              className="cursor-pointer"
-            >
-              <CalendarDays className="mr-2 h-4 w-4" />
-              <span>Payroll Periods</span>
-            </CommandItem>
-            <CommandItem
-              value="AI Hub Gemini Assistant Artificial Intelligence"
-              onSelect={() => {
-                navigate({ to: "/dashboard/ai-hub" });
-                setSearchOpen(false);
-              }}
-              className="cursor-pointer group"
-            >
-              <GeminiIcon gradient className="mr-2 h-4 w-4 shrink-0 transition-transform duration-200 group-hover:scale-110" />
-              <span>AI Hub</span>
-            </CommandItem>
-            <CommandItem
-              value="Connect Chat Messages Video Calls Meetings"
-              onSelect={() => {
-                navigate({ to: "/dashboard/connect" });
-                setSearchOpen(false);
-              }}
-              className="cursor-pointer"
-            >
-              <MessageSquare className="mr-2 h-4 w-4" />
-              <span>Connect / Team Chat</span>
-            </CommandItem>
-          </CommandGroup>
-        </CommandList>
-      </CommandDialog>
+      {searchOpen ? (
+        <Suspense fallback={null}>
+          <QuickSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
+        </Suspense>
+      ) : null}
       </div>
     </RealtimeCallProvider>
+    </DocumentVerificationGuard>
   );
 }
 

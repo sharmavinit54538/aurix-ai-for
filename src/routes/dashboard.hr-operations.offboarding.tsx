@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
 
-const OffboardingPage = lazyFeaturePage(() => import("@/pages/OffboardingPage"));
+const PageComponent = lazyFeaturePage(() => import("@/pages/OffboardingPage"));
 
 export const Route = createFileRoute("/dashboard/hr-operations/offboarding")({
   head: () => ({ meta: [{ title: "Offboarding — OFC360" }] }),
-  component: OffboardingPage,
+  component: PageComponent,
 });

@@ -1,22 +1,36 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { aurix, useAurix } from "@/lib/aurix-store";
+import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
+import { useAurix } from "@/lib/aurix-store";
+import { isUserOnboardingComplete } from "@/lib/onboarding-once";
+import { getDefaultDashboardPath } from "@/lib/role-paths";
+import { normalizeRole } from "@/lib/roles";
 
-export const Route = createFileRoute("/employee-onboarding")({
-  head: () => ({ meta: [{ title: "Dashboard — OFC360" }] }),
-  component: EmployeeOnboardingRedirect,
-});
+const PageComponent = lazyFeaturePage(() => import("@/features/admin/recruitment/pages/EnterpriseOnboardingPage"));
 
-function EmployeeOnboardingRedirect() {
+function GuardedEmployeeOnboarding() {
   const ws = useAurix();
+  const navigate = useNavigate();
+  const role = normalizeRole(ws.user?.role);
+  const shouldRedirect =
+    Boolean(ws.user) &&
+    (role === "employee" || role === "manager") &&
+    isUserOnboardingComplete(ws.user);
 
   useEffect(() => {
-    if (ws.user && !ws.user.onboardingComplete) {
-      aurix.set({
-        user: { ...ws.user, onboardingComplete: true },
-      });
+    if (shouldRedirect && ws.user) {
+      navigate({ to: getDefaultDashboardPath(ws.user) as any, replace: true });
     }
-  }, [ws.user]);
+  }, [shouldRedirect, ws.user, navigate]);
 
-  return <Navigate to="/dashboard" replace />;
+  if (shouldRedirect) {
+    return null;
+  }
+
+  return <PageComponent />;
 }
+
+export const Route = createFileRoute("/employee-onboarding")({
+  head: () => ({ meta: [{ title: "Employee Onboarding — OFC360" }] }),
+  component: GuardedEmployeeOnboarding,
+});

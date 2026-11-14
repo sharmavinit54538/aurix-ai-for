@@ -31,9 +31,45 @@ export function getEmployeeStatusDetails(emp: Employee): EmployeeStatusDetails {
 }
 
 export function exportEmployeesCsv(employees: Employee[]) {
-  const headers = ["Employee ID", "Full Name", "Email", "Phone", "Department", "Designation", "Joining Date", "Shift"];
+  const headers = [
+    "Employee Code",
+    "Full Name",
+    "Official Email",
+    "Personal Email",
+    "Phone",
+    "Gender",
+    "DOB",
+    "Department",
+    "Designation",
+    "Reporting Manager",
+    "Joining Date",
+    "Employment Type",
+    "Work Mode",
+    "Shift",
+    "Office Location",
+    "CTC",
+    "Role",
+  ];
   const rows = employees.map((e) =>
-    [e.employeeId, e.fullName, e.email, e.phone, e.department, e.designation, e.joiningDate, e.shift]
+    [
+      e.employeeId,
+      e.fullName,
+      e.companyEmail || e.email,
+      e.personalEmail || "",
+      e.phone,
+      e.gender || "",
+      e.dateOfBirth || "",
+      e.department,
+      e.designation,
+      e.managerName || e.reportingManagerName || "",
+      e.joiningDate,
+      e.employmentType || "",
+      e.workMode || "",
+      e.shift || "",
+      e.officeLocation || e.workLocation || "",
+      e.ctc || e.salary || "",
+      e.role || "employee",
+    ]
       .map((v) => `"${(v ?? "").toString().replace(/"/g, '""')}"`)
       .join(","),
   );
@@ -46,17 +82,35 @@ export function exportEmployeesCsv(employees: Employee[]) {
   URL.revokeObjectURL(url);
 }
 
+export function generateEmployeeCode(): string {
+  return `EMP-${Math.floor(1000 + Math.random() * 9000)}`;
+}
+
 export function createEmptyEmployee(): Employee {
   return {
     id: "",
-    employeeId: "",
+    employeeId: generateEmployeeCode(),
+    firstName: "",
+    lastName: "",
     fullName: "",
     email: "",
+    companyEmail: "",
+    personalEmail: "",
     phone: "",
-    department: "",
+    gender: "Male",
+    dateOfBirth: "",
+    department: "Engineering",
     designation: "",
-    joiningDate: "",
-    managerName: "",
-    shift: "General",
+    managerName: "Alex Vance",
+    reportingManagerName: "Alex Vance",
+    joiningDate: new Date().toISOString().split("T")[0],
+    employmentType: "Full-time",
+    workMode: "Office / On-Site",
+    probationPeriodMonths: 3,
+    shift: "General Shift (09:30 - 18:30)",
+    officeLocation: "Bengaluru · Global HQ",
+    ctc: "",
+    role: "employee",
+    sendOnboardingInvite: true,
   };
 }

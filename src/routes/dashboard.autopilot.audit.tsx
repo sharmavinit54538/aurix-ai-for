@@ -1,16 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
 
-const ActionAuditLogPage = lazyFeaturePage(
-  () => import("@/features/autopilot/pages/ActionAuditLogPage"),
-);
+const PageComponent = lazyFeaturePage(() => import("@/features/autopilot/pages/ActionAuditLogPage"));
 
 export const Route = createFileRoute("/dashboard/autopilot/audit")({
-  head: () => ({
-    meta: [
-      { title: "AI Action Audit Log — OneHR | OFC360" },
-      { name: "description", content: "Inspect verifiable logs, undo actions, and override AI decisions." },
-    ],
-  }),
-  component: ActionAuditLogPage,
+  head: () => ({ meta: [{ title: "Autopilot Audit Log — OFC360" }] }),
+  component: PageComponent,
 });

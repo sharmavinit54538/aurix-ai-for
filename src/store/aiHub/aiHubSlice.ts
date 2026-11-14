@@ -1,3 +1,4 @@
-export * from "./aiHub.slice";
-import aiHubReducer from "./aiHub.slice";
+import aiHubReducer, { aiHubSlice, addMessage, clearMessages } from "./aiHub.slice";
+
+export { aiHubSlice, addMessage, clearMessages };
 export default aiHubReducer;

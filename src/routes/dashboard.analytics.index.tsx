@@ -67,5 +67,3 @@ function AnalyticsHubPage() {
 
   return <ModuleHubView modules={visibleModules} />;
 }
-
-export default AnalyticsHubPage;

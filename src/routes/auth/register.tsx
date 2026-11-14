@@ -1,5 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { RegisterPage } from "@/features/auth/pages/RegisterPage";
+import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
+
+const RegisterPage = lazyFeaturePage(
+  () => import("@/features/auth/pages/RegisterPage"),
+  "RegisterPage",
+);
 
 export const Route = createFileRoute("/auth/register")({
   head: () => ({ meta: [{ title: "Create your workspace — OFC360" }] }),

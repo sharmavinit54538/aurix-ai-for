@@ -20,6 +20,12 @@ export interface AuthUserPayload {
   companyName?: string;
   company?: { id?: string | number; name?: string; company_name?: string };
   organization?: { id?: string | number; name?: string; company_name?: string };
+  document_verification_status?: "NOT_STARTED" | "IN_PROGRESS" | "VERIFIED" | "FAILED";
+  documentVerificationStatus?: "NOT_STARTED" | "IN_PROGRESS" | "VERIFIED" | "FAILED";
+  documents_verified?: boolean;
+  documentsVerified?: boolean;
+  documents_verified_at?: string;
+  documentsVerifiedAt?: string;
 }
 
 export interface LoginData {

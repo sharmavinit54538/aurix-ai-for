@@ -1,95 +1,26 @@
+export type HierarchyLayoutType = "tree" | "graph" | "compact" | "horizontal";
+
 export interface BackendHierarchyNode {
-  id: string; // UUID
-  employee_id: string;
-  first_name: string;
-  last_name: string;
-  designation: string;
-  department: string;
-  profile_photo_url: string | null;
+  id: string;
+  name: string;
   role: string;
-  status: string;
-  branch: string | null; // Work location
-  shift: string | null;
-  employment_type: string | null;
-  employment_status: string | null;
-  joining_date: string | null;
-  date_of_birth: string | null;
-  ctc?: number | null;
-  reporting_to: string | null;
-  reporting_manager_name: string | null;
-  email?: string | null;
-  location?: string | null;
-  children: BackendHierarchyNode[];
-  work_location_type?: "remote" | "hybrid" | "office" | string | null;
-  skills?: string[];
-}
-
-export interface ReportingChainDetails {
-  employee: BackendHierarchyNode;
-  manager: BackendHierarchyNode | null;
-  peers: BackendHierarchyNode[];
-  direct_reports: BackendHierarchyNode[];
-  reporting_chain: BackendHierarchyNode[];
-  organization_level: number;
-}
-
-export interface HierarchyFilterState {
+  title?: string;
   department: string;
-  designation: string;
-  location: string;
-  employmentType: string;
-  reportingManagerId: string;
-  workLocationType?: string;
+  email: string;
+  avatar?: string;
+  managerId?: string | null;
+  directReportsCount?: number;
+  reports?: BackendHierarchyNode[];
+  status?: string;
+  location?: string;
+  joinDate?: string;
 }
-
-export type HierarchyLayoutType = "vertical" | "horizontal" | "radial" | "compact";
-export type ConnectorStyleType = "curved" | "orthogonal" | "straight";
 
 export interface EmployeeHierarchyState {
+  nodes: BackendHierarchyNode[];
+  selectedNode: BackendHierarchyNode | null;
+  layout: HierarchyLayoutType;
   loading: boolean;
   error: string | null;
-  hierarchy: BackendHierarchyNode[] | null;
-  selectedEmployeeId: string | null;
-  selectedEmployeeDetails: ReportingChainDetails | null;
-  loadingDetails: boolean;
-  detailsError: string | null;
-  expandedNodes: Record<string, boolean>;
-  searchKeyword: string;
-  filters: HierarchyFilterState;
-  zoomLevel: number;
-  isFullscreen: boolean;
-  layout: HierarchyLayoutType;
-  connectorStyle: ConnectorStyleType;
-  showAiInsights: boolean;
-  showAnalyticsPanel: boolean;
-
-  // ── Organizational Graph State ──────────────────
-  /** Current view mode: "graph" or "hierarchy" */
-  viewMode: "graph" | "hierarchy";
-  /** Full organizational graph data */
-  graphData: import("./organizationalGraphTypes").OrganizationalGraphData | null;
-  /** Whether graph data is loading */
-  graphLoading: boolean;
-  /** Error from graph data fetch */
-  graphError: string | null;
-  /** Graph filter state */
-  graphFilters: import("./organizationalGraphTypes").OrgGraphFilterState;
-  /** Selected graph node details */
-  selectedGraphNode: import("./organizationalGraphTypes").OrgGraphNodeDetails | null;
-  /** Whether graph detail panel is open */
-  graphDetailPanelOpen: boolean;
-  /** Whether graph AI panel is open */
-  graphAiPanelOpen: boolean;
-  /** AI conversation messages */
-  graphAiMessages: { role: "user" | "assistant"; content: string; timestamp: string }[];
-  /** Whether AI is processing */
-  graphAiProcessing: boolean;
-  /** Organizational health metrics */
-  healthMetrics: import("./organizationalGraphTypes").OrgHealthMetrics | null;
-  /** Whether relationship explorer is active */
-  explorerActive: boolean;
-  /** Highlighted path for relationship traversal */
-  highlightedPath: string[];
-  /** Search results across all entity types */
-  graphSearchResults: import("./organizationalGraphTypes").OrgGraphSearchResult[];
+  reportingDetails: any | null;
 }

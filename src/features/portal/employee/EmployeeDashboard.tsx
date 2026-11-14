@@ -45,17 +45,120 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import type { EmpKpi } from "./types";
 
-// ── Empty arrays — will be populated when backend endpoints are ready ──
-const EMP_KPI: EmpKpi[] = [];
-const MY_ATTENDANCE: any[] = [];
-const MY_LEAVES: any[] = [];
-const LEAVE_QUOTA: any[] = [];
-const MY_GOALS: any[] = [];
-const MY_PAYSLIPS: any[] = [];
-const MY_DOCUMENTS: any[] = [];
+// ── Employee Self-Service Portal Data ─────────────────────────
+const EMP_KPI: EmpKpi[] = [
+  {
+    id: "att",
+    label: "Attendance Rate",
+    value: "96.4%",
+    change: "+1.2% this month",
+    changeType: "up",
+    accent: "text-emerald-400",
+    bgAccent: "bg-emerald-500/10",
+    spark: [{ v: 92 }, { v: 94 }, { v: 95 }, { v: 94 }, { v: 96 }, { v: 96.4 }],
+  },
+  {
+    id: "leave",
+    label: "Leave Balance",
+    value: "14 Days",
+    change: "6 used of 20",
+    changeType: "neutral",
+    accent: "text-blue-400",
+    bgAccent: "bg-blue-500/10",
+    spark: [{ v: 20 }, { v: 18 }, { v: 17 }, { v: 16 }, { v: 14 }, { v: 14 }],
+  },
+  {
+    id: "hours",
+    label: "Avg Daily Hours",
+    value: "8h 24m",
+    change: "On target",
+    changeType: "up",
+    accent: "text-violet-400",
+    bgAccent: "bg-violet-500/10",
+    spark: [{ v: 8.1 }, { v: 8.3 }, { v: 8.2 }, { v: 8.5 }, { v: 8.4 }, { v: 8.4 }],
+  },
+  {
+    id: "goals",
+    label: "Q4 OKR Progress",
+    value: "87%",
+    change: "+5 pts vs Q3",
+    changeType: "up",
+    accent: "text-amber-400",
+    bgAccent: "bg-amber-500/10",
+    spark: [{ v: 65 }, { v: 72 }, { v: 78 }, { v: 82 }, { v: 85 }, { v: 87 }],
+  },
+  {
+    id: "pay",
+    label: "Net Monthly Pay",
+    value: "₹1,42,500",
+    change: "Disbursed 1st Nov",
+    changeType: "up",
+    accent: "text-cyan-400",
+    bgAccent: "bg-cyan-500/10",
+    spark: [{ v: 138 }, { v: 138 }, { v: 142.5 }, { v: 142.5 }, { v: 142.5 }, { v: 142.5 }],
+  },
+  {
+    id: "assets",
+    label: "Assigned Assets",
+    value: "2 Items",
+    change: "All verified",
+    changeType: "neutral",
+    accent: "text-pink-400",
+    bgAccent: "bg-pink-500/10",
+    spark: [{ v: 2 }, { v: 2 }, { v: 2 }, { v: 2 }, { v: 2 }, { v: 2 }],
+  },
+];
+
+const MY_ATTENDANCE_TREND: any[] = [
+  { week: "Wk 1", days: 5 },
+  { week: "Wk 2", days: 5 },
+  { week: "Wk 3", days: 4 },
+  { week: "Wk 4", days: 5 },
+];
+
+const MY_ATTENDANCE: any[] = [
+  { date: "2026-11-11", status: "present", checkIn: "09:12 AM", checkOut: "06:04 PM", hours: "8h 52m" },
+  { date: "2026-11-10", status: "present", checkIn: "09:05 AM", checkOut: "05:48 PM", hours: "8h 43m" },
+  { date: "2026-11-09", status: "wfh", checkIn: "09:20 AM", checkOut: "06:15 PM", hours: "8h 55m" },
+  { date: "2026-11-08", status: "present", checkIn: "09:18 AM", checkOut: "05:50 PM", hours: "8h 32m" },
+];
+
+const MY_LEAVES: any[] = [
+  { id: "lv-101", type: "Annual Leave", status: "approved", from: "20 Nov 2026", to: "22 Nov 2026", days: 3, appliedOn: "05 Nov", approvedBy: "Sarah Chen" },
+  { id: "lv-102", type: "Sick Leave", status: "approved", from: "14 Oct 2026", to: "14 Oct 2026", days: 1, appliedOn: "14 Oct", approvedBy: "Sarah Chen" },
+];
+
+const LEAVE_QUOTA: any[] = [
+  { type: "Annual Privilege Leave", remaining: 14, total: 20 },
+  { type: "Medical / Sick Leave", remaining: 10, total: 12 },
+  { type: "Casual / Personal Leave", remaining: 6, total: 8 },
+];
+
+const MY_GOALS: any[] = [
+  { goal: "Ship Multi-Agent Inference Pipeline v2.4", due: "30 Nov", progress: 92 },
+  { goal: "Reduce Model Latency Below 15ms P95", due: "15 Dec", progress: 85 },
+  { goal: "Complete Security & SOC2 Compliance Training", due: "20 Nov", progress: 100 },
+];
+
+const MY_PAYSLIPS: any[] = [
+  { month: "October 2026", gross: "₹1,62,500", net: "₹1,42,500", date: "01 Nov 2026" },
+  { month: "September 2026", gross: "₹1,62,500", net: "₹1,42,500", date: "01 Oct 2026" },
+  { month: "August 2026", gross: "₹1,62,500", net: "₹1,42,500", date: "01 Sep 2026" },
+];
+
+const MY_DOCUMENTS: any[] = [
+  { name: "Employment Contract & NDA.pdf", dueDate: "Verified on 01 Jun 2025", status: "verified" },
+  { name: "PAN & Tax Declaration FY26-27.pdf", dueDate: "Verified on 15 Apr 2026", status: "verified" },
+  { name: "Degree & Background Verification.pdf", dueDate: "Verified on 10 Jun 2025", status: "verified" },
+];
+
 const MY_ASSETS: any[] = [];
-const COMPANY_EVENTS: any[] = [];
-const MY_ATTENDANCE_TREND: any[] = [];
+
+const COMPANY_EVENTS: any[] = [
+  { title: "Q4 All-Hands & AI Product Demo", date: "2026-11-18", time: "04:00 PM IST", type: "meeting" },
+  { title: "Annual Performance Review Submission", date: "2026-11-25", time: "All Day", type: "event" },
+  { title: "Year-End Company Holiday", date: "2026-12-25", time: "Public Holiday", type: "holiday" },
+];
 
 // ── Animation helpers ─────────────────────────────────────────
 const fadeUp = {

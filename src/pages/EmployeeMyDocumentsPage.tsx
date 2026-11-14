@@ -11,6 +11,7 @@ import {
   Loader2,
   RefreshCw,
   Search,
+  ShieldCheck,
   Trash2,
   Upload,
   XCircle,
@@ -443,9 +444,24 @@ export function EmployeeMyDocumentsPage() {
 
   const isDocumentTab = activeTab !== "salary-slips" && activeTab !== "provision-slips" && activeTab !== "id-card";
 
+  const isDigiLockerVerified =
+    workspace.user?.documentVerificationStatus === "VERIFIED" ||
+    workspace.user?.documentsVerified === true;
+
   return (
     <div className="mx-auto max-w-7xl space-y-6 py-2">
-      <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          {isDigiLockerVerified ? (
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300"
+              title="Identity and statutory documents verified via DigiLocker"
+            >
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" aria-hidden="true" />
+              Verified via DigiLocker
+            </span>
+          ) : null}
+        </div>
         <Button size="sm" onClick={() => setUploadOpen(true)}>
           <Upload className="mr-2 h-4 w-4" /> Upload Document
         </Button>

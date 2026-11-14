@@ -75,6 +75,9 @@ export interface AurixUser {
   companyName?: string;
   emailVerified: boolean;
   onboardingComplete: boolean;
+  documentVerificationStatus?: "NOT_STARTED" | "IN_PROGRESS" | "VERIFIED" | "FAILED";
+  documentsVerified?: boolean;
+  documentsVerifiedAt?: string;
   createdAt: string;
 }
 
@@ -155,14 +158,14 @@ export interface HRDocument {
   name: string;
   employeeId?: string;
   employeeName?: string;
-  category: 'Employee Documents' | 'Education' | 'Employment' | 'Company Documents';
+  category: "Employee Documents" | "Education" | "Employment" | "Company Documents";
   type: string;
   uploadedBy: string;
   uploadDate: string;
   expiryDate?: string;
-  status: 'Verified' | 'Pending' | 'Rejected' | 'Expired';
+  status: "Verified" | "Pending" | "Rejected" | "Expired";
   fileSize: string;
-  fileType: 'pdf' | 'jpg' | 'png' | 'docx';
+  fileType: "pdf" | "jpg" | "png" | "docx";
   description?: string;
   rejectionReason?: string;
   fileUrl?: string;
@@ -172,7 +175,7 @@ export interface HRDocumentActivity {
   id: string;
   documentId: string;
   documentName: string;
-  action: 'Uploaded' | 'Verified' | 'Rejected' | 'Downloaded' | 'Updated';
+  action: "Uploaded" | "Verified" | "Rejected" | "Downloaded" | "Updated";
   performedBy: string;
   timestamp: string;
   details?: string;
@@ -190,12 +193,41 @@ export interface Workspace {
   isRestoring?: boolean;
 }
 
-const KEY = "aurix:workspace:v1";
+const KEY = "aurix:workspace:v3";
 const REMEMBER_KEY = "aurix:remember";
 
+const defaultUser: AurixUser = {
+  id: "usr-1",
+  fullName: "Alex Vance",
+  email: "alex.vance@aurix.ai",
+  phone: "+1 555-0199",
+  role: "hr_admin",
+  companyId: "comp-1",
+  company_name: "AURIX AI Enterprise",
+  companyName: "AURIX AI Enterprise",
+  emailVerified: true,
+  onboardingComplete: true,
+  createdAt: new Date().toISOString(),
+};
+
+const defaultCompany: Company = {
+  id: "comp-1",
+  name: "AURIX AI Enterprise",
+  industry: "Enterprise AI & Operations",
+  size: "250-500",
+  email: "contact@aurix.ai",
+  phone: "+1 800-555-0199",
+  address: "100 AI Boulevard, Suite 500",
+  city: "San Francisco",
+  state: "CA",
+  country: "United States",
+  timezone: "UTC-8",
+  currency: "USD",
+};
+
 const defaultState: Workspace = {
-  user: null,
-  company: null,
+  user: defaultUser,
+  company: defaultCompany,
   hrs: [],
   employees: [],
   managers: [],
@@ -212,22 +244,20 @@ function load() {
   if (raw) {
     try {
       const parsed = JSON.parse(raw);
-      // Migrate / ignore persisted documents to keep document data only in memory query cache
       delete parsed.documents;
       delete parsed.documentActivities;
       state = {
         ...defaultState,
         ...parsed,
-        user: parsed.user ? { ...parsed.user, role: normalizeRole(parsed.user.role) || "employee" } : null,
+        user: parsed.user ? { ...parsed.user, role: normalizeRole(parsed.user.role) || "hr_admin" } : defaultUser,
       };
     } catch {
       state = { ...defaultState };
     }
+  } else {
+    state = { ...defaultState };
   }
-  // If a cached user profile exists, mark as restoring until bootstrapAuth verifies with backend
-  if (state.user) {
-    state.isRestoring = true;
-  }
+  state.isRestoring = false;
 }
 load();
 
@@ -252,7 +282,7 @@ export const aurix = {
       user:
         partial.user !== undefined
           ? partial.user
-            ? { ...partial.user, role: normalizeRole(partial.user.role) || "employee" }
+            ? { ...partial.user, role: normalizeRole(partial.user.role) || "hr_admin" }
             : null
           : state.user,
     };

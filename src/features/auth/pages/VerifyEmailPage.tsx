@@ -16,7 +16,7 @@ import {
   setSessionHint,
 } from "@/api";
 import { bootstrapAuth, persistAuthSession } from "@/lib/auth-bootstrap";
-import { getSafeRedirectUrl } from "@/lib/role-routing";
+import { getDefaultDashboardPath, getSafeRedirectUrl } from "@/lib/role-routing";
 import { normalizeRole } from "@/lib/roles";
 import { parseLoginResponse } from "@/features/auth/utils/parseLoginResponse";
 import { logger } from "@/lib/logger";
@@ -180,7 +180,7 @@ export function VerifyEmailPage() {
     // unless they already hold a valid access token in memory.
     if (isLoginMode) {
       if (hasValidAccessToken()) {
-        const dest = ws.user?.onboardingComplete ? "/dashboard" : "/onboarding";
+        const dest = ws.user?.onboardingComplete ? getDefaultDashboardPath(ws.user) : "/onboarding";
         navigate({ to: dest as any, replace: true });
       }
       return;
@@ -191,7 +191,7 @@ export function VerifyEmailPage() {
       if (!ws.user?.emailVerified && ws.user) {
         aurix.set({ user: { ...ws.user, emailVerified: true } });
       }
-      const dest = ws.user?.onboardingComplete ? "/dashboard" : "/onboarding";
+      const dest = ws.user?.onboardingComplete ? getDefaultDashboardPath(ws.user) : "/onboarding";
       navigate({ to: dest as any, replace: true });
       return;
     }

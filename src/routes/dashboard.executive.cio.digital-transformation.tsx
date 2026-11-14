@@ -1,8 +1,9 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
+
+const PageComponent = lazyFeaturePage(() => import("@/features/cio/pages/CioDigitalTransformationPage"));
 
 export const Route = createFileRoute("/dashboard/executive/cio/digital-transformation")({
-  beforeLoad: () => {
-    throw redirect({ to: "/dashboard/executive/cio" });
-  },
-  component: () => null,
+  head: () => ({ meta: [{ title: "Digital Transformation — OFC360" }] }),
+  component: PageComponent,
 });

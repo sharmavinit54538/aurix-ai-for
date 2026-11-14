@@ -1,128 +1,75 @@
-import { apiInstance } from "@/api";
+export interface TranscriptItem {
+  role: "ai" | "candidate" | string;
+  text: string;
+  timestamp?: string;
+}
 
 export interface BotQuestion {
-  id: string | number;
-  question_text: string;
+  id: string;
+  question: string;
   category?: string;
   time_limit_seconds?: number;
-  question_number: number;
-  total_questions: number;
 }
 
 export interface BotPublicSession {
+  id: string;
   token: string;
   candidate_name: string;
-  first_name?: string;
   job_title: string;
   company_name?: string;
-  estimated_duration_minutes?: number;
-  consent_text?: string;
-  status: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" | "EXPIRED";
-  current_question?: BotQuestion | null;
-  total_questions?: number;
-  answered_count?: number;
-}
-
-export interface AnswerQuestionPayload {
-  question_id: string | number;
-  answer_text: string;
-}
-
-export interface TranscriptItem {
-  question_id?: string | number;
-  question: string;
-  answer: string;
-  category?: string;
-  time_taken_seconds?: number;
+  status: "pending" | "in_progress" | "completed" | string;
+  questions: BotQuestion[];
+  current_question_index?: number;
 }
 
 export interface AIInterviewResult {
   id: string;
-  application_id: string;
   candidate_id?: string;
   candidate_name: string;
-  job_id: string;
-  job_title?: string;
-  status: "INVITED" | "IN_PROGRESS" | "COMPLETED" | "EXPIRED" | "FAILED";
-  match_score?: number;
-  confidence?: number;
-  strengths: string[];
-  weaknesses: string[];
-  red_flags: string[];
-  green_flags?: string[];
-  integrity_signals?: {
-    tab_switches?: number;
-    paste_count?: number;
-    flags?: string[];
-  };
-  transcript?: TranscriptItem[];
-  human_decision?: "SHORTLIST" | "REJECT" | "KEEP_REVIEW" | null;
-  human_decision_by?: string | null;
-  human_decision_reason?: string | null;
-  human_decided_at?: string | null;
-  invited_at?: string;
+  job_id?: string;
+  job_title: string;
+  overall_score: number;
+  technical_score?: number;
+  communication_score?: number;
+  cultural_fit_score?: number;
+  recommendation: "Strong Hire" | "Hire" | "Hold" | "No Hire" | string;
+  status: string;
   completed_at?: string;
-  error?: string | null;
-}
-
-export interface AIInterviewDecisionPayload {
-  action: "SHORTLIST" | "REJECT" | "KEEP_REVIEW";
-  reason?: string;
+  summary?: string;
+  transcript?: TranscriptItem[];
 }
 
 export const aiInterviewBotApi = {
-  // Public Candidate Endpoints
-  getPublicSession: async (token: string): Promise<BotPublicSession> => {
-    const response = await apiInstance.get(`/api/v2/interview-bot/public/${encodeURIComponent(token)}`);
-    return response.data?.data || response.data;
-  },
-
-  startInterview: async (token: string): Promise<BotPublicSession> => {
-    const response = await apiInstance.post(`/api/v2/interview-bot/public/${encodeURIComponent(token)}/start`, {
-      consent: true,
-    });
-    return response.data?.data || response.data;
-  },
-
-  submitAnswer: async (token: string, payload: AnswerQuestionPayload): Promise<BotPublicSession> => {
-    const response = await apiInstance.post(`/api/v2/interview-bot/public/${encodeURIComponent(token)}/answer`, payload);
-    return response.data?.data || response.data;
-  },
-
-  finishInterview: async (token: string): Promise<{ success: boolean; status: "COMPLETED" }> => {
-    const response = await apiInstance.post(`/api/v2/interview-bot/public/${encodeURIComponent(token)}/finish`);
-    return response.data?.data || response.data;
-  },
-
-  requestHumanInterviewer: async (token: string, reason?: string): Promise<{ success: boolean; message?: string }> => {
-    const response = await apiInstance.post(`/api/v2/interview-bot/public/${encodeURIComponent(token)}/request-human`, {
-      reason,
-    });
-    return response.data?.data || response.data;
-  },
-
-  // HR Endpoints
-  inviteCandidate: async (application_id: string): Promise<{ success: boolean; invite_url?: string; token?: string }> => {
-    const response = await apiInstance.post("/api/v2/interview-bot/invite", { application_id });
-    return response.data?.data || response.data;
-  },
-
-  getResults: async (job_id?: string): Promise<{ items: AIInterviewResult[]; total: number }> => {
-    const response = await apiInstance.get("/api/v2/interview-bot/results", {
-      params: job_id ? { job_id } : undefined,
-    });
-    const data = response.data?.data || response.data;
-    if (Array.isArray(data)) {
-      return { items: data, total: data.length };
-    }
-    return {
-      items: Array.isArray(data?.items) ? data.items : [],
-      total: typeof data?.total === "number" ? data.total : (data?.items?.length || 0),
-    };
-  },
-
-  submitDecision: async (result_id: string, payload: AIInterviewDecisionPayload): Promise<{ success: boolean; data: AIInterviewResult }> => {
-    const response = await apiInstance.post(`/api/v2/interview-bot/results/${encodeURIComponent(result_id)}/decision`, payload);
-    return response.data;
-  },
+  getSession: async (token: string): Promise<BotPublicSession> => ({
+    id: "sess-1",
+    token,
+    candidate_name: "Jordan Taylor",
+    job_title: "Senior Full-Stack Engineer",
+    company_name: "OFC360 Enterprise",
+    status: "pending",
+    questions: [
+      { id: "q1", question: "Tell us about a complex distributed system you architected.", category: "System Design", time_limit_seconds: 120 },
+      { id: "q2", question: "How do you handle state synchronization in large React applications?", category: "Frontend", time_limit_seconds: 120 },
+    ],
+    current_question_index: 0,
+  }),
+  startSession: async (_token: string) => ({ status: "in_progress" }),
+  submitAnswer: async (_token: string, _payload: unknown) => ({ nextQuestion: null, completed: true }),
+  completeSession: async (_token: string) => ({ success: true, score: 88 }),
+  getResults: async (): Promise<AIInterviewResult[]> => [],
+  getResultById: async (id: string): Promise<AIInterviewResult> => ({
+    id,
+    candidate_name: "Jordan Taylor",
+    job_title: "Senior Full-Stack Engineer",
+    overall_score: 88,
+    technical_score: 90,
+    communication_score: 86,
+    cultural_fit_score: 88,
+    recommendation: "Strong Hire",
+    status: "completed",
+    completed_at: new Date().toISOString(),
+    summary: "Strong systems thinking and clear communication.",
+    transcript: [],
+  }),
 };
+export default aiInterviewBotApi;

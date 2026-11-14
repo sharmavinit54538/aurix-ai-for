@@ -83,7 +83,10 @@ function markAllInInfiniteData(
 /**
  * Cursor-paginated infinite notifications query.
  */
-export function useNotifications(filters?: NotificationListParams) {
+export function useNotifications(
+  filters?: NotificationListParams,
+  options?: { enabled?: boolean },
+) {
   const { user } = useAurix();
   const userId = user?.id || "anonymous";
 
@@ -96,6 +99,7 @@ export function useNotifications(filters?: NotificationListParams) {
   >({
     queryKey: notificationKeys.list(userId, filters),
     initialPageParam: null,
+    enabled: options?.enabled ?? true,
     queryFn: async ({ pageParam }) => {
       return notificationsApi.getNotifications({
         ...filters,

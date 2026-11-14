@@ -1,6 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { VerifyResetOtpPage } from "@/features/auth/pages/VerifyResetOtpPage";
+import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
+
+const VerifyResetOtpPage = lazyFeaturePage(
+  () => import("@/features/auth/pages/VerifyResetOtpPage"),
+  "VerifyResetOtpPage",
+);
 
 export const Route = createFileRoute("/auth/verify-reset-otp")({
   validateSearch: z.object({

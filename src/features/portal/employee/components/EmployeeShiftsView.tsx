@@ -221,7 +221,7 @@ export function EmployeeShiftsView() {
       fallback: "bg-destructive/15 text-destructive border-destructive/30",
     };
     return (
-      <Badge variant="outline" className={configs[source] || "bg-muted/40 text-muted-foreground border-border text-[10px]"} asChild>
+      <Badge variant="outline" className={configs[source] || "bg-muted/40 text-muted-foreground border-border text-[10px]"}>
         {source.charAt(0).toUpperCase() + source.slice(1).replace("_", " ")}
       </Badge>
     );

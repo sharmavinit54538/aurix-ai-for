@@ -98,16 +98,20 @@ export function NotificationDropdown() {
 
   const navigate = useNavigate();
 
-  // Periodic tick to re-render relative times every 30s
+  // Periodic tick to re-render relative times every 30s only while popover is open
   useEffect(() => {
+    if (!open) return;
     const timer = setInterval(() => {
       setTick((t) => t + 1);
     }, 30_000);
     return () => clearInterval(timer);
-  }, []);
+  }, [open]);
 
   const { unreadCount } = useUnreadCount();
-  const { items, isLoading, isError, refetch } = useNotifications({ limit: 10 });
+  const { items, isLoading, isError, refetch } = useNotifications(
+    { limit: 10 },
+    { enabled: open },
+  );
   const markReadMutation = useMarkRead();
   const markAllReadMutation = useMarkAllRead();
   const archiveMutation = useArchive();

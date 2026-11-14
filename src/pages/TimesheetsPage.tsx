@@ -19,6 +19,12 @@ import { aurix, uid, useAurix } from "@/lib/aurix-store";
 import { api } from "@/api";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  mapPendingApprovalRecords,
+  mapTimesheetEntries,
+  mapTimesheetHistoryRecords,
+  normalizeTimesheetStatus,
+} from "@/lib/hrms/timesheet-helpers";
 
 
 
@@ -59,7 +65,7 @@ export function TimesheetsPage() {
 
   // Time logging rows state
   const [rows, setRows] = useState<TimeRow[]>([
-    { id: "row_1", projectId: "proj_aurix_core", hours: [0, 0, 0, 0, 0, 0, 0], description: "" }
+    { id: "row_1", projectId: AVAILABLE_PROJECTS[0].id, hours: [0, 0, 0, 0, 0, 0, 0], description: "" }
   ]);
 
   // Timesheet status
@@ -163,28 +169,10 @@ export function TimesheetsPage() {
     try {
       const formattedDate = getLocalDateString(startOfWeekDate);
       const res = await api.get<any>(`/timesheets/weekly?week_start_date=${formattedDate}`);
-      if (res?.success && res.data) {
-        setTimesheetStatus(res.data.status.toLowerCase());
-        if (res.data.entries && res.data.entries.length > 0) {
-          setRows(res.data.entries.map((e: any) => ({
-            id: e.id,
-            projectId: e.project_id,
-            hours: [
-              parseFloat(e.monday_hours) || 0,
-              parseFloat(e.tuesday_hours) || 0,
-              parseFloat(e.wednesday_hours) || 0,
-              parseFloat(e.thursday_hours) || 0,
-              parseFloat(e.friday_hours) || 0,
-              parseFloat(e.saturday_hours) || 0,
-              parseFloat(e.sunday_hours) || 0,
-            ],
-            description: e.description || ""
-          })));
-        } else {
-          setRows([
-            { id: uid("row"), projectId: AVAILABLE_PROJECTS[0].id, hours: [0, 0, 0, 0, 0, 0, 0], description: "" }
-          ]);
-        }
+      const payload = res?.data && typeof res.data === "object" && !Array.isArray(res.data) ? res.data : res;
+      if (payload && typeof payload === "object") {
+        setTimesheetStatus(normalizeTimesheetStatus(payload.status));
+        setRows(mapTimesheetEntries(payload.entries, AVAILABLE_PROJECTS[0].id, () => uid("row")));
       }
     } catch (err: any) {
       console.error("Error loading timesheet", err);
@@ -198,20 +186,7 @@ export function TimesheetsPage() {
   const loadHistory = async () => {
     try {
       const res = await api.get<any>("/timesheets/history");
-      if (res?.success && res.data) {
-        setHistoryRecords(res.data.map((t: any) => ({
-          id: t.id,
-          weekRange: formatDateRange(new Date(t.week_start_date)),
-          totalHours: t.entries.reduce((sum: number, e: any) => sum + 
-            (parseFloat(e.monday_hours) + parseFloat(e.tuesday_hours) + parseFloat(e.wednesday_hours) +
-             parseFloat(e.thursday_hours) + parseFloat(e.friday_hours) + parseFloat(e.saturday_hours) +
-             parseFloat(e.sunday_hours)), 0),
-          status: t.status.toLowerCase(),
-          submittedOn: t.submitted_at ? new Date(t.submitted_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—",
-          approvedBy: t.approved_by_id ? "Manager" : "—",
-          rejectionReason: t.rejection_reason
-        })));
-      }
+      setHistoryRecords(mapTimesheetHistoryRecords(res));
     } catch (err) {
       console.error("Error loading timesheet history", err);
     }
@@ -221,26 +196,7 @@ export function TimesheetsPage() {
   const loadPendingApprovals = async () => {
     try {
       const res = await api.get<any>("/timesheets/pending");
-      if (res?.success && res.data) {
-        setApprovals(res.data.map((t: any) => ({
-          id: t.id,
-          employeeName: t.employee?.fullName || "Employee",
-          department: t.employee?.department || "Operations",
-          weekRange: formatDateRange(new Date(t.week_start_date)),
-          totalHours: t.entries.reduce((sum: number, e: any) => sum + 
-            (parseFloat(e.monday_hours) + parseFloat(e.tuesday_hours) + parseFloat(e.wednesday_hours) +
-             parseFloat(e.thursday_hours) + parseFloat(e.friday_hours) + parseFloat(e.saturday_hours) +
-             parseFloat(e.sunday_hours)), 0),
-          status: t.status.toLowerCase(),
-          details: t.entries.map((e: any) => ({
-            project: AVAILABLE_PROJECTS.find(p => p.id === e.project_id)?.name || e.project_id,
-            hours: parseFloat(e.monday_hours) + parseFloat(e.tuesday_hours) + parseFloat(e.wednesday_hours) +
-                   parseFloat(e.thursday_hours) + parseFloat(e.friday_hours) + parseFloat(e.saturday_hours) +
-                   parseFloat(e.sunday_hours),
-            desc: e.description
-          }))
-        })));
-      }
+      setApprovals(mapPendingApprovalRecords(res, AVAILABLE_PROJECTS));
     } catch (err) {
       console.error("Error loading pending approvals", err);
     }

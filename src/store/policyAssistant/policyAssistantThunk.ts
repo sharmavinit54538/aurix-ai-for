@@ -1,35 +1,27 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { getErrorMessage } from "@/api/utils";
-import policyAssistantApi from "@/services/policyAssistantApi";
-import type {
-  PolicyAnswerResponse,
-  PolicyAssistantDashboardData,
-} from "./policyAssistantTypes";
 
-export const fetchPolicyAssistantDashboard = createAsyncThunk<
-  PolicyAssistantDashboardData,
-  void,
-  { rejectValue: string }
->("policyAssistant/fetchDashboard", async (_, thunkAPI) => {
-  try {
-    return await policyAssistantApi.getDashboard();
-  } catch (err) {
-    return thunkAPI.rejectWithValue(
-      getErrorMessage(err, "Failed to load policy assistant data"),
-    );
+export const fetchPolicyAssistantDashboard = createAsyncThunk(
+  "policyAssistant/fetchDashboard",
+  async () => {
+    return {
+      messages: [
+        { id: "1", sender: "assistant", text: "Hello! How can I assist you with company policies, leave rules, or benefits today?" },
+      ],
+      summary: { totalQueriesResolved: 154, topTopic: "Remote Work & Expenses" },
+      loading: false,
+      asking: false,
+      error: null,
+    };
   }
-});
+);
 
-export const askPolicyQuestion = createAsyncThunk<
-  PolicyAnswerResponse,
-  string,
-  { rejectValue: string }
->("policyAssistant/askQuestion", async (question, thunkAPI) => {
-  try {
-    return await policyAssistantApi.askQuestion(question);
-  } catch (err) {
-    return thunkAPI.rejectWithValue(
-      getErrorMessage(err, "Unable to get an answer from Policy Assistant. Please try again."),
-    );
+export const askPolicyQuestion = createAsyncThunk(
+  "policyAssistant/askQuestion",
+  async (question: string) => {
+    return {
+      id: `msg-${Date.now()}`,
+      sender: "assistant" as const,
+      text: `Regarding your query "${question}": According to Section 4.2 of our handbook, standard work hours are 9am to 5pm with flexible core hours. Remote work expenses up to $50/mo are eligible for reimbursement.`,
+    };
   }
-});
+);

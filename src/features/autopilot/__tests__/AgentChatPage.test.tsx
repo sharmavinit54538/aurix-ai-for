@@ -1,5 +1,6 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import "@testing-library/jest-dom/vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { autopilotApi } from "../services/autopilotApi";
 import AgentChatPage from "../pages/AgentChatPage";
 import type { AgentToolCall } from "../types";
@@ -27,16 +28,20 @@ const mockProposedToolCall: AgentToolCall = {
 };
 
 describe("AgentChatPage", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("renders the agent chat interface with welcome message and suggestions", () => {
+  it("renders the agent chat interface with welcome message", () => {
     render(<AgentChatPage />);
 
     expect(screen.getByText("HR Agent Chat")).toBeInTheDocument();
     expect(screen.getByText(/I can autonomously perform HR tasks for you/i)).toBeInTheDocument();
-    expect(screen.getByText("Apply 2 days casual leave from Monday")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Ask HR Agent anything/i)).toBeInTheDocument();
   });
 
   it("proposes a tool-call confirmation card when user requests an actionable task", async () => {
@@ -47,10 +52,10 @@ describe("AgentChatPage", () => {
 
     render(<AgentChatPage />);
 
-    const textarea = screen.getByPlaceholderText(/Tell the agent what to do/i);
+    const textarea = screen.getByPlaceholderText(/Ask HR Agent anything/i);
     fireEvent.change(textarea, { target: { value: "apply 2 days leave from Monday" } });
 
-    const sendBtn = screen.getByRole("button", { name: "" }); // Send button has Send icon
+    const sendBtn = screen.getByRole("button", { name: /send message/i });
     fireEvent.click(sendBtn);
 
     expect(await screen.findByText("Action Proposal · Requires Confirmation")).toBeInTheDocument();
@@ -81,9 +86,9 @@ describe("AgentChatPage", () => {
 
     render(<AgentChatPage />);
 
-    const textarea = screen.getByPlaceholderText(/Tell the agent what to do/i);
+    const textarea = screen.getByPlaceholderText(/Ask HR Agent anything/i);
     fireEvent.change(textarea, { target: { value: "apply 2 days leave" } });
-    fireEvent.click(screen.getByRole("button", { name: "" }));
+    fireEvent.click(screen.getByRole("button", { name: /send message/i }));
 
     const confirmBtn = await screen.findByRole("button", { name: /confirm & execute/i });
     fireEvent.click(confirmBtn);
@@ -113,9 +118,9 @@ describe("AgentChatPage", () => {
 
     render(<AgentChatPage />);
 
-    const textarea = screen.getByPlaceholderText(/Tell the agent what to do/i);
+    const textarea = screen.getByPlaceholderText(/Ask HR Agent anything/i);
     fireEvent.change(textarea, { target: { value: "apply 2 days leave" } });
-    fireEvent.click(screen.getByRole("button", { name: "" }));
+    fireEvent.click(screen.getByRole("button", { name: /send message/i }));
 
     const cancelBtn = await screen.findByRole("button", { name: /cancel/i });
     fireEvent.click(cancelBtn);
@@ -134,9 +139,9 @@ describe("AgentChatPage", () => {
 
     render(<AgentChatPage />);
 
-    const textarea = screen.getByPlaceholderText(/Tell the agent what to do/i);
+    const textarea = screen.getByPlaceholderText(/Ask HR Agent anything/i);
     fireEvent.change(textarea, { target: { value: "apply 2 days leave" } });
-    fireEvent.click(screen.getByRole("button", { name: "" }));
+    fireEvent.click(screen.getByRole("button", { name: /send message/i }));
 
     expect(
       await screen.findByText(/Feature unavailable — backend pending \(\/api\/v2\/autopilot\/agent\/chat\)/i),

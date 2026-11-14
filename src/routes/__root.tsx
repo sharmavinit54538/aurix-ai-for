@@ -6,10 +6,8 @@ import {
   Outlet,
   Link,
   createRootRouteWithContext,
-  HeadContent,
-  Scripts,
 } from "@tanstack/react-router";
-import { useEffect, Suspense, type ReactNode } from "react";
+import { useEffect, Suspense } from "react";
 import { bootstrapAuth } from "../lib/auth-bootstrap";
 import { PageSkeleton } from "../components/common/PageSkeleton";
 import {
@@ -183,49 +181,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
     ],
   }),
-  shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });
-
-function RootShell({ children }: { children: ReactNode }) {
-  return (
-    <html lang="en">
-      <head>
-        <HeadContent />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  window.addEventListener('vite:preloadError', function(event) {
-                    event.preventDefault();
-                    console.warn('[Vite] vite:preloadError event caught');
-                  });
-
-                  if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.getRegistrations().then(function(regs) {
-                      regs.forEach(function(r) {
-                        if (!r.active || !r.active.scriptURL.endsWith('/push-sw.js')) {
-                          r.unregister();
-                        }
-                      });
-                    }).catch(function() {});
-                  }
-                } catch(e) {}
-              })();
-            `,
-          }}
-        />
-      </head>
-      <body>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  );
-}
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();

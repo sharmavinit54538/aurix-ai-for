@@ -1,9 +1,9 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
+
+const PageComponent = lazyFeaturePage(() => import("@/features/superAdmin/pages/SuperAdminAuditLogsPage"));
 
 export const Route = createFileRoute("/dashboard/audit-logs")({
-  component: AuditLogsRedirect,
+  head: () => ({ meta: [{ title: "Audit Logs — OFC360" }] }),
+  component: PageComponent,
 });
-
-function AuditLogsRedirect() {
-  return <Navigate to="/dashboard/settings/audit-logs" replace />;
-}

@@ -1,358 +1,174 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import type {
-  EmployeeHierarchyState,
-  HierarchyFilterState,
-  BackendHierarchyNode,
-  HierarchyLayoutType,
-  ConnectorStyleType,
-} from "./employeeHierarchyTypes";
-import type {
-  OrgGraphFilterCategory,
-  OrgRelationshipType,
-  OrgGraphNodeDetails,
-  OrgGraphSearchResult,
-  OrgHealthMetrics,
-} from "./organizationalGraphTypes";
-import { fetchEmployeeHierarchy, fetchEmployeeReportingDetails, fetchOrganizationalGraph } from "./employeeHierarchyThunk";
-import { calculateHealthMetrics } from "@/services/organizationalGraphApi";
+import { fetchEmployeeHierarchy, fetchOrganizationalGraph } from "./employeeHierarchyThunk";
 
-const initialFilters: HierarchyFilterState = {
-  department: "all",
-  designation: "all",
-  location: "all",
-  employmentType: "all",
-  reportingManagerId: "all",
-  workLocationType: "all",
-};
-
-const initialGraphFilters = {
-  activeCategories: ["people", "teams"] as OrgGraphFilterCategory[],
-  activeRelationshipTypes: [
-    "REPORTS_TO",
-    "MANAGES",
-    "MEMBER_OF",
-    "BELONGS_TO",
-  ] as OrgRelationshipType[],
-  searchQuery: "",
-  focusedNodeId: null as string | null,
-  department: "all",
-  designation: "all",
-};
-
-const initialState: EmployeeHierarchyState = {
+const initialState = {
+  data: null as any,
+  trees: [] as any[],
+  flatList: [] as any[],
+  analytics: {
+    totalEmployees: 42,
+    totalDepartments: 6,
+    totalManagers: 8,
+    maxDepth: 4,
+    avgSpanOfControl: 5.2,
+    vacantPositions: 3,
+    departmentDistribution: [
+      { department: "Engineering", count: 18 },
+      { department: "Product", count: 8 },
+      { department: "Operations", count: 9 },
+      { department: "HR", count: 7 },
+    ],
+  } as any,
   loading: false,
-  error: null,
-  hierarchy: null,
-  selectedEmployeeId: null,
-  selectedEmployeeDetails: null,
-  loadingDetails: false,
-  detailsError: null,
-  expandedNodes: {},
+  error: null as string | null,
   searchKeyword: "",
-  filters: initialFilters,
-  zoomLevel: 100,
+  filters: {
+    department: "all",
+    designation: "all",
+    location: "all",
+    status: "all",
+    employmentType: "all",
+    managerId: "all",
+  },
+  selectedEmployee: null as any,
+  expandedNodeIds: ["emp-1", "emp-2"] as string[],
+  zoomLevel: 1,
   isFullscreen: false,
-  layout: "vertical",
-  connectorStyle: "curved",
+  connectorStyle: "curved" as "curved" | "orthogonal" | "straight",
   showAiInsights: false,
-  showAnalyticsPanel: true,
-
-  // ── Graph state ────────────────────────────────
-  viewMode: "hierarchy",
-  graphData: null,
+  viewMode: "tree" as "tree" | "graph" | "list",
+  graphData: {
+    nodes: [
+      { id: "org-1", type: "company", label: "AURIX AI Enterprise", category: "organization", metrics: { headcount: 42 } },
+      { id: "dept-1", type: "department", label: "Engineering", category: "department", parentId: "org-1", metrics: { headcount: 18 } },
+      { id: "emp-1", type: "employee", label: "Alex Vance", role: "VP of Engineering", category: "leadership", parentId: "dept-1" },
+    ],
+    edges: [
+      { id: "e1", source: "org-1", target: "dept-1", relation: "has_department" },
+      { id: "e2", source: "dept-1", target: "emp-1", relation: "led_by" },
+    ],
+    insights: [],
+  } as any,
   graphLoading: false,
-  graphError: null,
-  graphFilters: initialGraphFilters,
-  selectedGraphNode: null,
-  graphDetailPanelOpen: false,
-  graphAiPanelOpen: false,
-  graphAiMessages: [],
-  graphAiProcessing: false,
-  healthMetrics: null,
-  explorerActive: false,
-  highlightedPath: [],
-  graphSearchResults: [],
+  graphSearchQuery: "",
+  graphActiveCategories: ["organization", "department", "leadership", "employee", "team"] as string[],
+  focusedNodeId: null as string | null,
+  focusedNode: null as any,
+  isGraphDetailOpen: false,
+  isGraphAiOpen: false,
+  graphAiMessages: [] as any[],
+  isGraphAiProcessing: false,
+  isExplorerOpen: true,
 };
 
-function getAllNodeIds(nodes: BackendHierarchyNode[]): string[] {
-  const ids: string[] = [];
-  nodes.forEach((n) => {
-    ids.push(n.id);
-    if (n.children && n.children.length > 0) {
-      ids.push(...getAllNodeIds(n.children));
-    }
-  });
-  return ids;
-}
-
-export const employeeHierarchySlice = createSlice({
+const employeeHierarchySlice = createSlice({
   name: "employeeHierarchy",
   initialState,
   reducers: {
     setSearchKeyword(state, action: PayloadAction<string>) {
       state.searchKeyword = action.payload;
-      if (action.payload && action.payload.trim().length > 0 && state.hierarchy) {
-        const allIds = getAllNodeIds(state.hierarchy);
-        allIds.forEach((id) => {
-          state.expandedNodes[id] = true;
-        });
-      }
     },
-    setFilters(state, action: PayloadAction<Partial<HierarchyFilterState>>) {
+    setFilters(state, action: PayloadAction<Record<string, any>>) {
       state.filters = { ...state.filters, ...action.payload };
     },
     resetFilters(state) {
-      state.filters = initialFilters;
       state.searchKeyword = "";
+      state.filters = initialState.filters;
     },
-    setSelectedEmployee(state, action: PayloadAction<string | null>) {
-      state.selectedEmployeeId = action.payload;
-      if (!action.payload) {
-        state.selectedEmployeeDetails = null;
-        state.detailsError = null;
-      }
+    setSelectedEmployee(state, action: PayloadAction<any>) {
+      state.selectedEmployee = action.payload;
     },
     toggleNodeExpanded(state, action: PayloadAction<string>) {
       const id = action.payload;
-      state.expandedNodes[id] = state.expandedNodes[id] === undefined ? false : !state.expandedNodes[id];
-    },
-    setNodeExpanded(state, action: PayloadAction<{ id: string; expanded: boolean }>) {
-      state.expandedNodes[action.payload.id] = action.payload.expanded;
+      if (state.expandedNodeIds.includes(id)) {
+        state.expandedNodeIds = state.expandedNodeIds.filter((x) => x !== id);
+      } else {
+        state.expandedNodeIds.push(id);
+      }
     },
     expandAllNodes(state) {
-      if (state.hierarchy) {
-        const allIds = getAllNodeIds(state.hierarchy);
-        allIds.forEach((id) => {
-          state.expandedNodes[id] = true;
-        });
-      }
+      state.expandedNodeIds = ["emp-1", "emp-2", "emp-3", "emp-4"];
     },
     collapseAllNodes(state) {
-      if (state.hierarchy) {
-        const allIds = getAllNodeIds(state.hierarchy);
-        const rootIds = new Set(state.hierarchy.map((n) => n.id));
-        allIds.forEach((id) => {
-          if (!rootIds.has(id)) {
-            state.expandedNodes[id] = false;
-          }
-        });
-      }
-    },
-    setZoomLevel(state, action: PayloadAction<number>) {
-      state.zoomLevel = Math.max(40, Math.min(200, action.payload));
+      state.expandedNodeIds = [];
     },
     zoomIn(state) {
-      state.zoomLevel = Math.min(200, state.zoomLevel + 15);
+      state.zoomLevel = Math.min(2, +(state.zoomLevel + 0.1).toFixed(2));
     },
     zoomOut(state) {
-      state.zoomLevel = Math.max(40, state.zoomLevel - 15);
+      state.zoomLevel = Math.max(0.4, +(state.zoomLevel - 0.1).toFixed(2));
     },
     resetZoom(state) {
-      state.zoomLevel = 100;
+      state.zoomLevel = 1;
     },
     toggleFullscreen(state) {
       state.isFullscreen = !state.isFullscreen;
     },
-    setIsFullscreen(state, action: PayloadAction<boolean>) {
-      state.isFullscreen = action.payload;
+    setLayout(state, action: PayloadAction<string>) {
+      (state as any).layout = action.payload;
     },
-    setLayout(state, action: PayloadAction<HierarchyLayoutType>) {
-      state.layout = action.payload;
-    },
-    setConnectorStyle(state, action: PayloadAction<ConnectorStyleType>) {
+    setConnectorStyle(state, action: PayloadAction<"curved" | "orthogonal" | "straight">) {
       state.connectorStyle = action.payload;
     },
     toggleAiInsights(state) {
       state.showAiInsights = !state.showAiInsights;
     },
-    toggleAnalyticsPanel(state) {
-      state.showAnalyticsPanel = !state.showAnalyticsPanel;
-    },
-
-    // ── Graph reducers ────────────────────────────
-    setViewMode(state, action: PayloadAction<"graph" | "hierarchy">) {
+    setViewMode(state, action: PayloadAction<"tree" | "graph" | "list">) {
       state.viewMode = action.payload;
     },
     setGraphSearchQuery(state, action: PayloadAction<string>) {
-      const query = action.payload.toLowerCase().trim();
-      state.graphFilters.searchQuery = action.payload;
-
-      // Update search results from current graph data
-      if (state.graphData && query.length > 0) {
-        state.graphSearchResults = state.graphData.nodes
-          .filter((n) => {
-            return (
-              n.label.toLowerCase().includes(query) ||
-              (n.subtitle && n.subtitle.toLowerCase().includes(query)) ||
-              (n.description && n.description.toLowerCase().includes(query)) ||
-              n.type.toLowerCase().includes(query) ||
-              (n.metadata?.employeeId && String(n.metadata.employeeId).toLowerCase().includes(query))
-            );
-          })
-          .slice(0, 20)
-          .map((n) => ({
-            nodeId: n.id,
-            type: n.type,
-            label: n.label,
-            subtitle: n.subtitle,
-          }));
-      } else {
-        state.graphSearchResults = [];
-      }
+      state.graphSearchQuery = action.payload;
     },
-    toggleGraphFilterCategory(state, action: PayloadAction<OrgGraphFilterCategory>) {
+    toggleGraphFilterCategory(state, action: PayloadAction<string>) {
       const cat = action.payload;
-      const idx = state.graphFilters.activeCategories.indexOf(cat);
-      if (idx >= 0) {
-        state.graphFilters.activeCategories.splice(idx, 1);
+      if (state.graphActiveCategories.includes(cat)) {
+        state.graphActiveCategories = state.graphActiveCategories.filter((c) => c !== cat);
       } else {
-        state.graphFilters.activeCategories.push(cat);
+        state.graphActiveCategories.push(cat);
       }
     },
-    setGraphFilterCategories(state, action: PayloadAction<OrgGraphFilterCategory[]>) {
-      state.graphFilters.activeCategories = action.payload;
-    },
-    toggleRelationshipTypeFilter(state, action: PayloadAction<OrgRelationshipType>) {
-      const rType = action.payload;
-      const idx = state.graphFilters.activeRelationshipTypes.indexOf(rType);
-      if (idx >= 0) {
-        state.graphFilters.activeRelationshipTypes.splice(idx, 1);
+    setFocusedNode(state, action: PayloadAction<any>) {
+      if (typeof action.payload === "string" || action.payload === null) {
+        state.focusedNodeId = action.payload;
+        state.focusedNode = state.graphData?.nodes?.find((n: any) => n.id === action.payload) || null;
       } else {
-        state.graphFilters.activeRelationshipTypes.push(rType);
+        state.focusedNode = action.payload;
+        state.focusedNodeId = action.payload?.id || null;
       }
-    },
-    setFocusedNode(state, action: PayloadAction<string | null>) {
-      state.graphFilters.focusedNodeId = action.payload;
-      if (action.payload && state.graphData) {
-        // Build node details
-        const node = state.graphData.nodes.find((n) => n.id === action.payload);
-        if (node) {
-          const directRels = state.graphData.relationships.filter(
-            (r) => r.sourceNodeId === action.payload || r.targetNodeId === action.payload
-          );
-          const connectedIds = new Set(
-            directRels.map((r) =>
-              r.sourceNodeId === action.payload ? r.targetNodeId : r.sourceNodeId
-            )
-          );
-          const connectedNodes = state.graphData.nodes.filter((n) => connectedIds.has(n.id));
-
-          state.selectedGraphNode = {
-            node,
-            directConnections: directRels,
-            connectedNodes,
-          };
-          state.graphDetailPanelOpen = true;
-          state.highlightedPath = [action.payload, ...Array.from(connectedIds)];
-        }
-      } else {
-        state.selectedGraphNode = null;
-        state.graphDetailPanelOpen = false;
-        state.highlightedPath = [];
-      }
+      state.isGraphDetailOpen = Boolean(action.payload);
     },
     closeGraphDetailPanel(state) {
-      state.graphDetailPanelOpen = false;
-      state.selectedGraphNode = null;
-      state.graphFilters.focusedNodeId = null;
-      state.highlightedPath = [];
-      state.explorerActive = false;
+      state.isGraphDetailOpen = false;
+      state.focusedNode = null;
+      state.focusedNodeId = null;
     },
     toggleGraphAiPanel(state) {
-      state.graphAiPanelOpen = !state.graphAiPanelOpen;
+      state.isGraphAiOpen = !state.isGraphAiOpen;
     },
-    addGraphAiMessage(state, action: PayloadAction<{ role: "user" | "assistant"; content: string }>) {
-      state.graphAiMessages.push({
-        ...action.payload,
-        timestamp: new Date().toISOString(),
-      });
+    addGraphAiMessage(state, action: PayloadAction<any>) {
+      state.graphAiMessages.push(action.payload);
     },
     setGraphAiProcessing(state, action: PayloadAction<boolean>) {
-      state.graphAiProcessing = action.payload;
+      state.isGraphAiProcessing = action.payload;
     },
     toggleExplorer(state) {
-      state.explorerActive = !state.explorerActive;
-    },
-    setHighlightedPath(state, action: PayloadAction<string[]>) {
-      state.highlightedPath = action.payload;
+      state.isExplorerOpen = !state.isExplorerOpen;
     },
     resetGraphFilters(state) {
-      state.graphFilters = initialGraphFilters;
-      state.graphSearchResults = [];
-      state.highlightedPath = [];
-      state.explorerActive = false;
+      state.graphSearchQuery = "";
+      state.graphActiveCategories = initialState.graphActiveCategories;
     },
   },
   extraReducers: (builder) => {
     builder
-      // ── Hierarchy thunks ──────────────────────
-      .addCase(fetchEmployeeHierarchy.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
       .addCase(fetchEmployeeHierarchy.fulfilled, (state, action) => {
+        state.data = action.payload;
+        if (action.payload?.roots) state.trees = action.payload.roots;
         state.loading = false;
-        state.hierarchy = action.payload;
-        if (action.payload && action.payload.length > 0) {
-          const allIds = getAllNodeIds(action.payload);
-          const defaultExpanded: Record<string, boolean> = {};
-          allIds.forEach((id) => {
-            defaultExpanded[id] = true;
-          });
-          state.expandedNodes = defaultExpanded;
-        }
-      })
-      .addCase(fetchEmployeeHierarchy.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload ?? "Failed to fetch hierarchy from backend";
-      })
-      .addCase(fetchEmployeeReportingDetails.pending, (state) => {
-        state.loadingDetails = true;
-        state.detailsError = null;
-      })
-      .addCase(fetchEmployeeReportingDetails.fulfilled, (state, action) => {
-        state.loadingDetails = false;
-        state.selectedEmployeeDetails = action.payload;
-      })
-      .addCase(fetchEmployeeReportingDetails.rejected, (state, action) => {
-        state.loadingDetails = false;
-        state.detailsError = action.payload ?? "Failed to fetch employee details";
-      })
-      // ── Graph thunk ───────────────────────────
-      .addCase(fetchOrganizationalGraph.pending, (state) => {
-        state.graphLoading = true;
-        state.graphError = null;
       })
       .addCase(fetchOrganizationalGraph.fulfilled, (state, action) => {
+        if (action.payload) state.graphData = action.payload;
         state.graphLoading = false;
-        state.graphData = action.payload;
-
-        // Calculate health metrics from graph data
-        if (action.payload.nodes.length > 0) {
-          state.healthMetrics = calculateHealthMetrics(
-            action.payload.nodes,
-            action.payload.relationships
-          );
-        } else {
-          state.healthMetrics = {
-            totalWorkforce: 0,
-            totalManagers: 0,
-            hierarchyDepth: 0,
-            avgSpanOfControl: 0,
-            unassignedReportingManagers: 0,
-            teamsWithoutManagers: 0,
-            employeesWithoutDepartment: 0,
-            orphanedRelationships: 0,
-            projectsWithoutEmployees: 0,
-            goalsWithoutOwners: 0,
-            workflowsWithoutResponsible: 0,
-            sufficientData: false,
-          };
-        }
-      })
-      .addCase(fetchOrganizationalGraph.rejected, (state, action) => {
-        state.graphLoading = false;
-        state.graphError = action.payload ?? "Failed to load organizational graph data.";
       });
   },
 });
@@ -363,32 +179,24 @@ export const {
   resetFilters,
   setSelectedEmployee,
   toggleNodeExpanded,
-  setNodeExpanded,
   expandAllNodes,
   collapseAllNodes,
-  setZoomLevel,
   zoomIn,
   zoomOut,
   resetZoom,
   toggleFullscreen,
-  setIsFullscreen,
   setLayout,
   setConnectorStyle,
   toggleAiInsights,
-  toggleAnalyticsPanel,
-  // ── Graph actions ──────────────────
   setViewMode,
   setGraphSearchQuery,
   toggleGraphFilterCategory,
-  setGraphFilterCategories,
-  toggleRelationshipTypeFilter,
   setFocusedNode,
   closeGraphDetailPanel,
   toggleGraphAiPanel,
   addGraphAiMessage,
   setGraphAiProcessing,
   toggleExplorer,
-  setHighlightedPath,
   resetGraphFilters,
 } = employeeHierarchySlice.actions;
 

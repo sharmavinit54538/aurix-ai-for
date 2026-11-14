@@ -1,12 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
 
-const Page = lazyFeaturePage(
-  () => import("@/features/admin/recruitment/pages/CompensationOfferBuilderPage"),
-  "CompensationOfferBuilderPage",
-);
+const PageComponent = lazyFeaturePage(() => import("@/features/admin/recruitment/pages/CompensationOfferBuilderPage"));
 
 export const Route = createFileRoute("/dashboard/recruitment/compensation")({
-  head: () => ({ meta: [{ title: "Compensation & Offer Builder — Recruitment" }] }),
-  component: Page,
+  head: () => ({ meta: [{ title: "Offer & Compensation Builder — OFC360" }] }),
+  component: PageComponent,
 });

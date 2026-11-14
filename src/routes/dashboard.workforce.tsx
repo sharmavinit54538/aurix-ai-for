@@ -2,9 +2,9 @@ import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/workforce")({
   head: () => ({ meta: [{ title: "Workforce — OFC360" }] }),
-  component: WorkforceLayout,
+  component: LayoutComponent,
 });
 
-function WorkforceLayout() {
+function LayoutComponent() {
   return <Outlet />;
 }

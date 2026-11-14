@@ -1,0 +1,8 @@
+{
+  "name": "AURIX AI - HRMS & Operations Platform",
+  "description": "Futuristic operations and intelligence platform for modern enterprise teams.",
+  "request_frame_permission": false,
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

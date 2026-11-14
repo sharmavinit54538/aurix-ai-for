@@ -1,13 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { z } from "zod";
-import { ResetPasswordPage } from "@/features/auth/pages/ResetPasswordPage";
+import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
+
+const PageComponent = lazyFeaturePage(() => import("@/features/auth/pages/ResetPasswordPage"));
 
 export const Route = createFileRoute("/reset-password")({
-  validateSearch: z.object({
-    email: z.string().optional(),
-    resetToken: z.string().optional(),
-    token: z.string().optional(),
-  }),
-  head: () => ({ meta: [{ title: "Set new password — OFC360" }] }),
-  component: ResetPasswordPage,
+  head: () => ({ meta: [{ title: "Reset Password — OFC360" }] }),
+  component: PageComponent,
 });

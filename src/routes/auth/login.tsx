@@ -1,9 +1,14 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { LoginPage } from "@/features/auth/pages/LoginPage";
+import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
 import { isUserAuthenticated } from "@/lib/route-guards";
 import { aurix } from "@/lib/aurix-store";
 import { waitForAuth } from "@/lib/auth-bootstrap";
 import { getSafeRedirectUrl } from "@/lib/role-routing";
+
+const LoginPage = lazyFeaturePage(
+  () => import("@/features/auth/pages/LoginPage"),
+  "LoginPage",
+);
 
 export const Route = createFileRoute("/auth/login")({
   beforeLoad: async ({ search }) => {

@@ -28,6 +28,12 @@ export function lazyFeaturePage(
     if ("default" in module && module.default) {
       return { default: module.default };
     }
+    const firstExport = Object.values(module).find(
+      (v) => typeof v === "function" || (typeof v === "object" && v !== null)
+    ) as ComponentType | undefined;
+    if (firstExport) {
+      return { default: firstExport };
+    }
     throw new Error("Feature page must use default export or pass exportName to lazyFeaturePage");
   });
 }
