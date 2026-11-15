@@ -1,5 +1,6 @@
 import { TrendingDown } from "lucide-react";
 import { formatINR } from "../../utils/payrollPreview.utils";
+import { toPaise, addPaise, toRupees } from "../../utils/money";
 
 export function EmployeeDeductionsCard({ deductions, totalDeductions }: { deductions: any; totalDeductions: any }) {
   return (
@@ -24,7 +25,7 @@ export function EmployeeDeductionsCard({ deductions, totalDeductions }: { deduct
         {(deductions.loan != null || deductions.advance != null) && (
           <DeductionRow
             label="Loan / Advance Recovery"
-            value={(deductions.loan || 0) + (deductions.advance || 0)}
+            value={toRupees(addPaise(toPaise(deductions.loan), toPaise(deductions.advance)))}
           />
         )}
         {deductions.other != null && <DeductionRow label="Other Deductions" value={deductions.other} />}

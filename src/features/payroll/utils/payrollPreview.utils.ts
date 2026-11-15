@@ -1,25 +1,16 @@
-import type { StatusTone, ValidationBadge, PayrollPreviewEmployee, PayrollStatus } from "../types/payrollPreview.types";
+import type { StatusTone, ValidationBadge, PayrollPreviewEmployee } from "../types/payrollPreview.types";
+import { formatOptionalINR, formatOptionalCount } from "@/lib/format";
 
 /**
  * Currency Formatter (INR)
- * Operates purely on backend numbers, never computes synthetic math.
+ * Operates purely on backend numbers, preserves paise/sub-paise precision, never computes synthetic math.
  */
 export function formatINR(value: number | null | undefined): string {
-  if (value === null || value === undefined || isNaN(value)) {
-    return "—";
-  }
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(value);
+  return formatOptionalINR(value);
 }
 
 export function formatCount(value: number | null | undefined): string {
-  if (value === null || value === undefined || isNaN(value)) {
-    return "—";
-  }
-  return new Intl.NumberFormat("en-IN").format(value);
+  return formatOptionalCount(value);
 }
 
 /**

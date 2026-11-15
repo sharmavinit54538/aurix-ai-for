@@ -260,7 +260,10 @@ export default function PaymentBatchListPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") loadBatches();
+              if (e.key === "Enter") {
+                if (page !== 1) setPage(1);
+                else loadBatches();
+              }
             }}
             className="pl-8 h-9 rounded-xl text-xs"
           />

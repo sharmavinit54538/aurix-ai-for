@@ -30,7 +30,17 @@ import {
 } from "../types/reports";
 import { toast } from "sonner";
 
+const getCurrentIndianFyStart = () => {
+  const now = new Date();
+  return now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+};
+
 export default function PayrollReportsPage() {
+  const currentFyStart = getCurrentIndianFyStart();
+  const fyOptions = [currentFyStart - 2, currentFyStart - 1, currentFyStart, currentFyStart + 1].map(
+    (y) => `${y}-${y + 1}`
+  );
+
   const [selectedReportKey, setSelectedReportKey] = useState<ReportKey>("payroll_register");
   const [loading, setLoading] = useState(false);
   const [backendUnavailable, setBackendUnavailable] = useState(false);
@@ -39,9 +49,8 @@ export default function PayrollReportsPage() {
 
   // Filters
   const [periodId, setPeriodId] = useState("");
-  const [financialYear, setFinancialYear] = useState("2026-2027");
+  const [financialYear, setFinancialYear] = useState(`${currentFyStart}-${currentFyStart + 1}`);
   const [department, setDepartment] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
 
   // Export State
@@ -97,7 +106,9 @@ export default function PayrollReportsPage() {
 
       // Download file blob with proper filename and MIME type
       const { blob, filename, mimeType } = await reportsApi.downloadReportExport(exportMeta.exportId);
-      const url = window.URL.createObjectURL(blob, { type: mimeType });
+      const url = window.URL.createObjectURL(
+        new Blob([blob], { type: mimeType || blob.type || "application/octet-stream" })
+      );
       const a = document.createElement("a");
       a.href = url;
       a.download = filename || exportMeta.fileName || `${selectedReportKey}_${financialYear}.${format}`;
@@ -227,35 +238,44 @@ export default function PayrollReportsPage() {
           <div className="flex items-center gap-1.5">
             <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
             <select
+              aria-label="Financial Year"
               value={financialYear}
               onChange={(e) => setFinancialYear(e.target.value)}
               className="rounded-lg border border-input bg-background/80 px-2 py-1 text-xs"
             >
-              <option value="2026-2027">FY 2026-2027</option>
-              <option value="2025-2026">FY 2025-2026</option>
+              {fyOptions.map((fy) => (
+                <option key={fy} value={fy}>
+                  FY {fy}
+                </option>
+              ))}
             </select>
           </div>
 
           <div className="flex items-center gap-1.5">
             <Filter className="h-3.5 w-3.5 text-muted-foreground" />
-            <select
+            <Input
+              aria-label="Filter by department"
+              placeholder="Department (optional)"
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
-              className="rounded-lg border border-input bg-background/80 px-2 py-1 text-xs"
-            >
-              <option value="">All Departments</option>
-              <option value="Engineering">Engineering</option>
-              <option value="Product">Product</option>
-              <option value="Sales">Sales</option>
-              <option value="Human Resources">Human Resources</option>
-            </select>
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  if (page !== 1) setPage(1);
+                  else loadReport();
+                }
+              }}
+              className="h-7 w-44 rounded-lg text-xs"
+            />
           </div>
         </div>
 
         <Button
           size="sm"
           variant="secondary"
-          onClick={loadReport}
+          onClick={() => {
+            if (page !== 1) setPage(1);
+            else loadReport();
+          }}
           className="h-7 text-xs rounded-lg"
         >
           Apply Filters
@@ -289,7 +309,14 @@ export default function PayrollReportsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
-                {!accountingData || accountingData.entries.length === 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
+                      <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-primary" />
+                      <span>Loading accounting journal entries...</span>
+                    </td>
+                  </tr>
+                ) : !accountingData || accountingData.entries.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
                       No accounting journal entries found for this cycle. All entries come from authoritative backend GL mapping.

@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { fetchPayrollSettings, updatePayrollSettings, isMissingApiError } from "../../api";
 import { statutoryApi } from "@/features/payroll/api/statutoryApi";
+import { paiseToRupees } from "@/lib/format";
 import type { PayrollSettingsForm, SalaryComponentItem } from "../../types";
 import { UnsavedChangesBanner } from "../UnsavedChangesBanner";
 
@@ -92,24 +93,26 @@ export function PayrollSection({ canEdit, onDirtyChange }: PayrollSectionProps) 
         components: base.components || [],
         pfEmployeePercent:
           base.pfEmployeePercent ||
-          (statConfig ? Math.round(statConfig.pf.employeeContributionRate * 100 * 100) / 100 : 0),
+          (statConfig ? Number((statConfig.pf.employeeContributionRate * 100).toPrecision(12)) : 0),
         pfEmployerPercent:
           base.pfEmployerPercent ||
           (statConfig
-            ? Math.round((statConfig.pf.employerEpfrate + statConfig.pf.employerEpsRate) * 100 * 100) / 100
+            ? Number(
+                ((statConfig.pf.employerEpfrate + statConfig.pf.employerEpsRate) * 100).toPrecision(12)
+              )
             : 0),
         pfWageCeiling:
           base.pfWageCeiling ||
-          (statConfig ? Math.round(statConfig.pf.wageCeilingPaise / 100) : 0),
+          (statConfig ? paiseToRupees(statConfig.pf.wageCeilingPaise) : 0),
         esiEmployeePercent:
           base.esiEmployeePercent ||
-          (statConfig ? Math.round(statConfig.esi.employeeContributionRate * 100 * 100) / 100 : 0),
+          (statConfig ? Number((statConfig.esi.employeeContributionRate * 100).toPrecision(12)) : 0),
         esiEmployerPercent:
           base.esiEmployerPercent ||
-          (statConfig ? Math.round(statConfig.esi.employerContributionRate * 100 * 100) / 100 : 0),
+          (statConfig ? Number((statConfig.esi.employerContributionRate * 100).toPrecision(12)) : 0),
         esiWageCeiling:
           base.esiWageCeiling ||
-          (statConfig ? Math.round(statConfig.esi.grossWageCeilingPaise / 100) : 0),
+          (statConfig ? paiseToRupees(statConfig.esi.grossWageCeilingPaise) : 0),
         pfEnabled: base.pfEnabled ?? Boolean(statConfig?.pf),
         esiEnabled: base.esiEnabled ?? Boolean(statConfig?.esi),
       };

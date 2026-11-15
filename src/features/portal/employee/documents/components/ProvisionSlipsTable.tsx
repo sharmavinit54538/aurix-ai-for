@@ -10,6 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, FileText, Eye, Download } from "lucide-react";
+import { formatOptionalINR, formatDate } from "@/lib/format";
 import type { ProvisionSlip } from "../types";
 
 interface ProvisionSlipsTableProps {
@@ -73,18 +74,10 @@ export const ProvisionSlipsTable: React.FC<ProvisionSlipsTableProps> = ({
                 {slip.employeeName || currentUserName}
               </TableCell>
               <TableCell className="text-xs text-right font-bold text-amber-500">
-                {slip.provisionedAmount != null
-                  ? `₹${slip.provisionedAmount.toLocaleString("en-IN")}`
-                  : "—"}
+                {formatOptionalINR(slip.provisionedAmount)}
               </TableCell>
               <TableCell className="text-xs text-muted-foreground">
-                {slip.generatedAt
-                  ? new Date(slip.generatedAt).toLocaleDateString("en-IN", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })
-                  : "—"}
+                {formatDate(slip.generatedAt)}
               </TableCell>
               <TableCell className="text-xs">
                 <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[11px] capitalize">

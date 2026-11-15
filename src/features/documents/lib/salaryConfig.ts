@@ -1,6 +1,7 @@
 /**
  * Salary and currency configuration for Indian compensation structures (INR).
  */
+import { paiseToRupees, rupeesToPaise } from "@/lib/format";
 
 /**
  * Parses any Indian currency string or number to a clean numeric value.
@@ -71,7 +72,7 @@ export interface SalaryBreakup {
 }
 
 /**
- * Computes an itemized offer-letter salary breakup from annual CTC.
+ * Computes an itemized offer-letter salary breakup from annual CTC using integer paise precision.
  */
 export function calculateSalaryBreakup(
   annualCtcValue: number | string | null | undefined,
@@ -80,36 +81,35 @@ export function calculateSalaryBreakup(
   const ctc = parseINR(annualCtcValue);
   if (!ctc || ctc <= 0) return null;
 
-  const basicAnnual = Math.round(ctc * config.basicPercentage);
-  const basicMonthly = Math.round(basicAnnual / 12);
-
-  const hraAnnual = Math.round(basicAnnual * config.hraPercentageOfBasic);
-  const hraMonthly = Math.round(hraAnnual / 12);
-
-  const employerPfAnnual = Math.round(basicAnnual * config.employerPfPercentageOfBasic);
-  const employerPfMonthly = Math.round(employerPfAnnual / 12);
-
-  const specialAllowanceAnnual = Math.max(
+  const ctcPaise = rupeesToPaise(ctc);
+  const basicAnnualPaise = Math.round(ctcPaise * config.basicPercentage);
+  const hraAnnualPaise = Math.round(basicAnnualPaise * config.hraPercentageOfBasic);
+  const employerPfAnnualPaise = Math.round(basicAnnualPaise * config.employerPfPercentageOfBasic);
+  const specialAllowanceAnnualPaise = Math.max(
     0,
-    ctc - (basicAnnual + hraAnnual + employerPfAnnual)
+    ctcPaise - (basicAnnualPaise + hraAnnualPaise + employerPfAnnualPaise)
   );
-  const specialAllowanceMonthly = Math.round(specialAllowanceAnnual / 12);
 
-  const grossAnnual = basicAnnual + hraAnnual + specialAllowanceAnnual;
-  const grossMonthly = basicMonthly + hraMonthly + specialAllowanceMonthly;
+  const basicMonthlyPaise = Math.round(basicAnnualPaise / 12);
+  const hraMonthlyPaise = Math.round(hraAnnualPaise / 12);
+  const employerPfMonthlyPaise = Math.round(employerPfAnnualPaise / 12);
+  const specialAllowanceMonthlyPaise = Math.round(specialAllowanceAnnualPaise / 12);
+
+  const grossAnnualPaise = basicAnnualPaise + hraAnnualPaise + specialAllowanceAnnualPaise;
+  const grossMonthlyPaise = basicMonthlyPaise + hraMonthlyPaise + specialAllowanceMonthlyPaise;
 
   return {
-    annualCtc: ctc,
-    monthlyCtc: Math.round(ctc / 12),
-    basicAnnual,
-    basicMonthly,
-    hraAnnual,
-    hraMonthly,
-    employerPfAnnual,
-    employerPfMonthly,
-    specialAllowanceAnnual,
-    specialAllowanceMonthly,
-    grossAnnual,
-    grossMonthly,
+    annualCtc: paiseToRupees(ctcPaise),
+    monthlyCtc: Math.round(ctcPaise / 12) / 100,
+    basicAnnual: paiseToRupees(basicAnnualPaise),
+    basicMonthly: paiseToRupees(basicMonthlyPaise),
+    hraAnnual: paiseToRupees(hraAnnualPaise),
+    hraMonthly: paiseToRupees(hraMonthlyPaise),
+    employerPfAnnual: paiseToRupees(employerPfAnnualPaise),
+    employerPfMonthly: paiseToRupees(employerPfMonthlyPaise),
+    specialAllowanceAnnual: paiseToRupees(specialAllowanceAnnualPaise),
+    specialAllowanceMonthly: paiseToRupees(specialAllowanceMonthlyPaise),
+    grossAnnual: paiseToRupees(grossAnnualPaise),
+    grossMonthly: paiseToRupees(grossMonthlyPaise),
   };
 }

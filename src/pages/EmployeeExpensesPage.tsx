@@ -196,15 +196,8 @@ export function EmployeeExpensesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight">My Expense Claims</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Submit reimbursements, upload receipts, and track payout status for{" "}
-            <span className="font-medium text-foreground">{employeeName}</span>.
-          </p>
-        </div>
-        <Button onClick={openNewClaim} className="gap-2 self-start sm:self-auto">
+      <div className="flex justify-end">
+        <Button onClick={openNewClaim} className="gap-2">
           <Plus className="h-4 w-4" /> New expense claim
         </Button>
       </div>

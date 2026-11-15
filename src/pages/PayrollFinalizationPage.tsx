@@ -45,26 +45,10 @@ import {
   type PayrollStatus,
 } from "@/services/payrollApi";
 import { toast } from "sonner";
-
-// ── Currency Formatter (INR) ──────────────────────────────────────────
-// STRICT ZERO MOCK DATA: operates purely on authentic backend numbers.
-function formatINR(value: number | null | undefined): string {
-  if (value === null || value === undefined || isNaN(value)) {
-    return "—";
-  }
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
-function formatCount(value: number | null | undefined): string {
-  if (value === null || value === undefined || isNaN(value)) {
-    return "—";
-  }
-  return new Intl.NumberFormat("en-IN").format(value);
-}
+import {
+  formatOptionalINR as formatINR,
+  formatOptionalCount as formatCount,
+} from "@/lib/format";
 
 function formatDate(val: string | null | undefined): string {
   if (!val) return "—";

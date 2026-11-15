@@ -172,9 +172,10 @@ describe("Part 4 — Full & Final Settlement (F&F) & Employee Self-Service (ESS)
         })
       );
 
-      const blob = await fnfApi.downloadFnfStatement("fnf-001");
-      expect(blob).toBeInstanceOf(Blob);
-      expect(blob.type).toBe("application/pdf");
+      const result = await fnfApi.downloadFnfStatement("fnf-001");
+      expect(result.blob).toBeInstanceOf(Blob);
+      expect(result.mimeType).toBe("application/pdf");
+      expect(result.blob.type).toBe("application/pdf");
     });
   });
 
@@ -286,9 +287,10 @@ describe("Part 4 — Full & Final Settlement (F&F) & Employee Self-Service (ESS)
         })
       );
 
-      const blob = await essApi.downloadMyPayslip("run-aug-2026");
-      expect(blob).toBeInstanceOf(Blob);
-      expect(blob.type).toBe("application/pdf");
+      const result = await essApi.downloadMyPayslip("run-aug-2026");
+      expect(result.blob).toBeInstanceOf(Blob);
+      expect(result.mimeType).toBe("application/pdf");
+      expect(result.blob.type).toBe("application/pdf");
     });
 
     it("handles 404 when provision slips endpoint is un-deployed without crashing", async () => {

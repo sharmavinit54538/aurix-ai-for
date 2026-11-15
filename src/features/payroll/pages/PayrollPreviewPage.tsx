@@ -1,6 +1,7 @@
 import { usePayrollPreview } from "@/features/payroll/hooks/usePayrollPreview";
-import { ArrowLeft } from "lucide-react";
+import { AlertTriangle, ArrowLeft, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { GlassCard, Skeleton } from "@/components/hrms/Shared";
 import {
   PayrollSubNavigation,
   PayrollPageHeader,
@@ -20,7 +21,6 @@ export function PayrollPreviewPage() {
     ws,
     canViewPayroll,
     canRunPayroll,
-    isHr,
     previewData,
     statusTone,
     employees,
@@ -48,7 +48,6 @@ export function PayrollPreviewPage() {
     setSelectedValidation,
     setCurrentPage,
     setPageSize,
-    clearSearch,
     setDetailSheetOpen,
     setRecalculateModalOpen,
     onRetry,
@@ -127,11 +126,48 @@ export function PayrollPreviewPage() {
 
       <ProvisionalPayrollNotice />
 
-      <PayrollValidationPanel
-        previewData={previewData}
-        runId={runId}
-        onNavigateToValidation={() => navigate({ to: `/dashboard/payroll/runs/${runId}/validation` as any })}
-      />
+      {loadingPreview ? (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+          {Array.from({ length: 6 }).map((_, idx) => (
+            <Skeleton key={idx} className="h-24 w-full rounded-2xl" />
+          ))}
+        </div>
+      ) : isUnavailable || apiError ? (
+        <GlassCard className="p-6 border-destructive/30 bg-destructive/5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+              <div>
+                <h2 className="font-display text-sm font-semibold text-foreground">
+                  Unable to Load Payroll Preview
+                </h2>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {apiError || "Payroll preview data is currently unavailable."}
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="gap-1.5 shrink-0"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+              <span>Retry</span>
+            </Button>
+          </div>
+        </GlassCard>
+      ) : (
+        <>
+          {previewData ? <PayrollSummaryCards previewData={previewData} /> : null}
+          <PayrollValidationPanel
+            previewData={previewData}
+            runId={runId}
+            onNavigateToValidation={() => navigate({ to: `/dashboard/payroll/runs/${runId}/validation` as any })}
+          />
+        </>
+      )}
 
       <PayrollEmployeeTable
         employees={employees}

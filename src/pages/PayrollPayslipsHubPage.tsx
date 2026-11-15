@@ -32,19 +32,7 @@ import {
   type PayslipHistoryItem,
 } from "@/services/payrollApi";
 import { toast } from "sonner";
-
-// ── Currency Formatter (INR) ──────────────────────────────────────────
-// STRICT ZERO MOCK DATA: operates purely on authentic backend numbers.
-function formatINR(value: number | null | undefined): string {
-  if (value === null || value === undefined || isNaN(value)) {
-    return "—";
-  }
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
+import { formatOptionalINR as formatINR } from "@/lib/format";
 
 function formatDate(val: string | null | undefined): string {
   if (!val) return "—";

@@ -9,7 +9,6 @@ import { aurix, useAurix } from "@/lib/aurix-store";
 import {
   authService,
   hasValidAccessToken,
-  getAccessToken,
   setAccessToken,
   setRefreshToken,
   setTokens,
@@ -357,7 +356,7 @@ export function VerifyEmailPage() {
         }
 
         // 3. Fallback: If an access token already exists in memory/storage
-        if (hasValidAccessToken() || getAccessToken()) {
+        if (hasValidAccessToken()) {
           try {
             await bootstrapAuth({ force: true });
           } catch {

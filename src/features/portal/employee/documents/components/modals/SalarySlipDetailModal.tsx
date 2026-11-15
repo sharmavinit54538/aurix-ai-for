@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Download } from "lucide-react";
+import { formatOptionalINR, formatDate } from "@/lib/format";
 import type { SalarySlipRecord } from "../../types";
 
 interface SalarySlipDetailModalProps {
@@ -48,11 +49,7 @@ export const SalarySlipDetailModal: React.FC<SalarySlipDetailModalProps> = ({
               </div>
               <div className="flex justify-between items-center text-xs">
                 <span className="text-muted-foreground">Generated Date:</span>
-                <span>
-                  {selectedSlip.generatedDate
-                    ? new Date(selectedSlip.generatedDate).toLocaleDateString()
-                    : "—"}
-                </span>
+                <span>{formatDate(selectedSlip.generatedDate)}</span>
               </div>
               <div className="flex justify-between items-center text-xs">
                 <span className="text-muted-foreground">Status:</span>
@@ -64,25 +61,19 @@ export const SalarySlipDetailModal: React.FC<SalarySlipDetailModalProps> = ({
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-muted-foreground">Gross Earnings:</span>
                   <span className="font-semibold">
-                    {selectedSlip.grossSalary != null
-                      ? `₹${selectedSlip.grossSalary.toLocaleString("en-IN")}`
-                      : "—"}
+                    {formatOptionalINR(selectedSlip.grossSalary)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-muted-foreground">Total Deductions:</span>
                   <span className="font-semibold text-rose-400">
-                    {selectedSlip.deductions != null
-                      ? `₹${selectedSlip.deductions.toLocaleString("en-IN")}`
-                      : "—"}
+                    {formatOptionalINR(selectedSlip.deductions)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-sm font-bold border-t border-border/50 pt-2">
                   <span>Net Disbursed Salary:</span>
                   <span className="text-emerald-500">
-                    {selectedSlip.netSalary != null
-                      ? `₹${selectedSlip.netSalary.toLocaleString("en-IN")}`
-                      : "—"}
+                    {formatOptionalINR(selectedSlip.netSalary)}
                   </span>
                 </div>
               </div>

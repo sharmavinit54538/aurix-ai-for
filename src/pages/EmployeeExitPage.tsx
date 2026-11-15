@@ -8,7 +8,6 @@ import {
   FileText,
   LogOut,
   Package,
-  RefreshCw,
   ShieldCheck,
   Trash2,
 } from "lucide-react";
@@ -203,39 +202,18 @@ export function EmployeeExitPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
-            Exit & Resignation
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage your own resignation submission, notice period timeline, and offboarding clearances.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
+      {!activeCase && (
+        <div className="flex justify-end">
           <Button
-            variant="outline"
             size="sm"
-            onClick={loadMyExits}
-            disabled={loading}
-            className="gap-1.5 border-border"
+            onClick={() => setResignOpen(true)}
+            className="gap-1.5 bg-indigo-600 text-white hover:bg-indigo-700"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-            Refresh
+            <LogOut className="h-3.5 w-3.5" />
+            Submit Resignation
           </Button>
-          {!activeCase && (
-            <Button
-              size="sm"
-              onClick={() => setResignOpen(true)}
-              className="gap-1.5 bg-indigo-600 text-white hover:bg-indigo-700"
-            >
-              <LogOut className="h-3.5 w-3.5" />
-              Submit Resignation
-            </Button>
-          )}
         </div>
-      </div>
+      )}
 
       {/* Summary KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

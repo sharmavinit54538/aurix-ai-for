@@ -20,6 +20,7 @@ import {
   ClipboardCheck,
   Clock,
   Compass,
+  CreditCard,
   FileCheck,
   FileSearch,
   FileSignature,
@@ -202,6 +203,13 @@ const NAV_SECTIONS: SidebarNavSection[] = [
         permission: "ai.view",
       },
       HELP_NAV_ITEM,
+      {
+        to: "/dashboard/billing",
+        label: "Billing & Plans",
+        icon: CreditCard,
+        roles: ["super_admin", "hr_admin"],
+        matchPrefixes: ["/dashboard/settings/billing"],
+      },
       {
         to: "/dashboard/settings",
         label: "Settings",

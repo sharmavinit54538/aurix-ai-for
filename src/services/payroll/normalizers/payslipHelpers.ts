@@ -1,145 +1,139 @@
-import type {
-  PayrollPayslipEmployeeInfo,
-  PayrollPayslipAttendance,
-  PayrollPayslipEarnings,
-  PayrollPayslipDeductions,
-  PayrollPayslipStatutory,
-  PayrollPayslipEmployerContributions,
-  PayrollPayslipDocument,
-  PayrollPreviewEmployee,
-  PayrollFinalizationData,
-} from "../types";
+/**
+ * Pure helper functions for normalizing payslip payloads received from
+ * OFC360 backend payroll endpoints without synthetic client calculations.
+ */
 
-function extractEmployeeInfo(emp: Record<string, unknown>, employeeId: string): PayrollPayslipEmployeeInfo {
+export function pickFirst<T>(...values: Array<T | null | undefined>): T | undefined {
+  for (const v of values) {
+    if (v !== undefined && v !== null) return v;
+  }
+  return undefined;
+}
+
+export function toNullableNumber(val: unknown): number | null {
+  if (val === null || val === undefined || val === "") return null;
+  if (typeof val === "number") return Number.isFinite(val) ? val : null;
+  if (typeof val === "string") {
+    const cleaned = val.replace(/[₹,\s]/g, "").trim();
+    if (!cleaned) return null;
+    const n = Number(cleaned);
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
+}
+
+/**
+ * Resolves a monetary field from either rupee fields or `_paise` integer fields,
+ * preserving exact backend decimal precision without rounding.
+ */
+export function resolveMonetaryField(
+  rupeeVal: unknown,
+  paiseVal?: unknown
+): number | null {
+  const direct = toNullableNumber(rupeeVal);
+  if (direct !== null) return direct;
+  const paise = toNullableNumber(paiseVal);
+  if (paise !== null) return paise / 100;
+  return null;
+}
+
+export function toNullableString(val: unknown): string | null {
+  if (val === null || val === undefined) return null;
+  const s = String(val).trim();
+  return s ? s : null;
+}
+
+export function formatPeriodLabel(
+  periodName?: unknown,
+  month?: unknown,
+  year?: unknown
+): string {
+  const direct = toNullableString(periodName);
+  if (direct) return direct;
+  const m = toNullableNumber(month);
+  const y = toNullableNumber(year);
+  if (m && y && m >= 1 && m <= 12) {
+    try {
+      return new Intl.DateTimeFormat("en-IN", {
+        month: "long",
+        year: "numeric",
+      }).format(new Date(y, m - 1, 1));
+    } catch {
+      return `${m}/${y}`;
+    }
+  }
+  return "Payroll Cycle";
+}
+
+export interface NormalizedAttendance {
+  workingDays: number | null;
+  paidDays: number | null;
+  presentDays: number | null;
+  leaveDays: number | null;
+  lopDays: number | null;
+  holidays: number | null;
+  weeklyOffs: number | null;
+  overtimeHours: number | null;
+}
+
+export function normalizeAttendance(raw: any): NormalizedAttendance {
+  const src = raw?.attendance ?? raw?.attendance_summary ?? raw ?? {};
   return {
-    id: String(emp.id || emp.employeeId || employeeId),
-    name: String(emp.name || emp.employeeName || emp.full_name || "—"),
-    department: (emp.department || emp.dept || null) as string | null,
-    designation: (emp.designation || emp.role || null) as string | null,
-    location: (emp.location || emp.branch || null) as string | null,
-    joiningDate: (emp.joiningDate || emp.joining_date || emp.doj || null) as string | null,
-    employmentStatus: (emp.employmentStatus || emp.employment_status || null) as string | null,
-    pan: (emp.pan || emp.panNumber || emp.pan_number || null) as string | null,
-    uan: (emp.uan || emp.uanNumber || emp.uan_number || null) as string | null,
-    pfNumber: (emp.pfNumber || emp.pf_number || null) as string | null,
-    esiNumber: (emp.esiNumber || emp.esi_number || null) as string | null,
-    bankInfo: (emp.bankInfo || emp.bank || null) as PayrollPayslipEmployeeInfo["bankInfo"],
+    workingDays: toNullableNumber(
+      pickFirst(src.workingDays, src.working_days, src.totalWorkingDays, src.total_working_days)
+    ),
+    paidDays: toNullableNumber(
+      pickFirst(src.paidDays, src.paid_days, src.payableDays, src.payable_days)
+    ),
+    presentDays: toNullableNumber(
+      pickFirst(src.presentDays, src.present_days)
+    ),
+    leaveDays: toNullableNumber(
+      pickFirst(src.leaveDays, src.leave_days, src.approvedLeaves, src.approved_leaves)
+    ),
+    lopDays: toNullableNumber(
+      pickFirst(src.lopDays, src.lop_days, src.unpaidDays, src.unpaid_days)
+    ),
+    holidays: toNullableNumber(
+      pickFirst(src.holidays, src.holiday_days)
+    ),
+    weeklyOffs: toNullableNumber(
+      pickFirst(src.weeklyOffs, src.weekly_offs, src.weekOffDays, src.week_off_days)
+    ),
+    overtimeHours: toNullableNumber(
+      pickFirst(src.overtimeHours, src.overtime_hours)
+    ),
   };
 }
 
-function extractAttendance(att: Record<string, unknown>): PayrollPayslipAttendance {
-  return {
-    workingDays: (att.workingDays ?? att.working_days ?? att.totalDays ?? null) as number | null,
-    paidDays: (att.paidDays ?? att.paid_days ?? null) as number | null,
-    lopDays: (att.lopDays ?? att.lop_days ?? att.unpaidDays ?? null) as number | null,
-    leaveDays: (att.leaveDays ?? att.leave_days ?? null) as number | null,
-    presentDays: (att.presentDays ?? att.present_days ?? null) as number | null,
-    holidays: (att.holidays ?? att.holiday_days ?? null) as number | null,
-    weeklyOffs: (att.weeklyOffs ?? att.weekly_offs ?? null) as number | null,
-    overtimeHours: (att.overtimeHours ?? att.overtime_hours ?? null) as number | null,
-    ...att,
-  };
+export interface NormalizedBankInfo {
+  bankName: string | null;
+  accountNumber: string | null;
+  ifscCode: string | null;
+  accountHolderName: string | null;
 }
 
-function extractEarnings(earn: Record<string, unknown>, d: Record<string, unknown>, empFallback?: PayrollPreviewEmployee | null): PayrollPayslipEarnings {
+export function normalizeBankInfo(raw: any): NormalizedBankInfo | null {
+  const emp = raw?.employee ?? raw ?? {};
+  const src = raw?.bankInfo ?? raw?.bank_info ?? emp?.bankInfo ?? emp?.bank_info ?? emp?.bank_details ?? raw?.bankDetails;
+  if (!src && !emp?.bank_name && !emp?.bankName && !emp?.bank_account && !emp?.account_number) {
+    return null;
+  }
+  const target = src ?? emp;
   return {
-    basic: (earn.basic ?? earn.basic_salary ?? null) as number | null,
-    hra: (earn.hra ?? earn.house_rent_allowance ?? null) as number | null,
-    conveyance: (earn.conveyance ?? earn.conveyance_allowance ?? null) as number | null,
-    specialAllowance: (earn.specialAllowance ?? earn.special_allowance ?? null) as number | null,
-    medicalAllowance: (earn.medicalAllowance ?? earn.medical_allowance ?? null) as number | null,
-    otherAllowances: (earn.otherAllowances ?? earn.other_allowances ?? earn.allowances ?? null) as number | null,
-    overtime: (earn.overtime ?? earn.overtime_pay ?? null) as number | null,
-    bonus: (earn.bonus ?? null) as number | null,
-    incentives: (earn.incentives ?? earn.incentive ?? null) as number | null,
-    arrears: (earn.arrears ?? null) as number | null,
-    reimbursements: (earn.reimbursements ?? earn.reimbursement ?? null) as number | null,
-    otherEarnings: (earn.otherEarnings ?? earn.other ?? null) as number | null,
-    grossEarnings:
-      (d.grossEarnings ??
-      d.gross_earnings ??
-      earn.grossEarnings ??
-      earn.gross_earnings ??
-      empFallback?.grossEarnings ??
-      null) as number | null,
-    components: Array.isArray(earn.components) ? earn.components : undefined,
+    bankName: toNullableString(pickFirst(target.bankName, target.bank_name)),
+    accountNumber: toNullableString(
+      pickFirst(
+        target.accountNumberMasked,
+        target.account_number_masked,
+        target.accountNumber,
+        target.account_number,
+        target.bank_account
+      )
+    ),
+    ifscCode: toNullableString(pickFirst(target.ifscCode, target.ifsc_code, target.ifsc)),
+    accountHolderName: toNullableString(
+      pickFirst(target.accountHolderName, target.account_holder_name)
+    ),
   };
 }
-
-function extractDeductions(ded: Record<string, unknown>, d: Record<string, unknown>, empFallback?: PayrollPreviewEmployee | null): PayrollPayslipDeductions {
-  return {
-    pf: (ded.pf ?? ded.epf ?? ded.provident_fund ?? null) as number | null,
-    esi: (ded.esi ?? ded.esic ?? null) as number | null,
-    pt: (ded.pt ?? ded.professional_tax ?? null) as number | null,
-    tds: (ded.tds ?? ded.income_tax ?? ded.tax ?? null) as number | null,
-    loan: (ded.loan ?? ded.loan_deduction ?? null) as number | null,
-    advance: (ded.advance ?? ded.advance_salary ?? null) as number | null,
-    otherDeductions: (ded.otherDeductions ?? ded.other_deductions ?? ded.other ?? null) as number | null,
-    totalDeductions:
-      (d.totalDeductions ??
-      d.total_deductions ??
-      ded.totalDeductions ??
-      ded.total_deductions ??
-      empFallback?.totalDeductions ??
-      null) as number | null,
-    components: Array.isArray(ded.components) ? ded.components : undefined,
-  };
-}
-
-function extractStatutory(
-  stat: Record<string, unknown>,
-  statEmployee: Record<string, unknown> | undefined,
-  statEmployer: Record<string, unknown> | undefined,
-  ded: Record<string, unknown>,
-): PayrollPayslipStatutory | null {
-  if (!stat || typeof stat !== "object") return null;
-
-  return {
-    employeePf: (statEmployee?.epf ?? stat.employeePf ?? stat.employee_pf ?? ded.pf ?? null) as number | null,
-    employerPf: (statEmployer?.epf ?? stat.employerPf ?? stat.employer_pf ?? null) as number | null,
-    employeeEsi: (statEmployee?.esi ?? stat.employeeEsi ?? stat.employee_esi ?? ded.esi ?? null) as number | null,
-    employerEsi: (statEmployer?.esi ?? stat.employerEsi ?? stat.employer_esi ?? null) as number | null,
-    pt: (statEmployee?.pt ?? stat.pt ?? ded.pt ?? null) as number | null,
-    tds: (statEmployee?.tds ?? stat.tds ?? ded.tds ?? null) as number | null,
-    eps: (statEmployer?.eps ?? stat.eps ?? null) as number | null,
-    edli: (statEmployer?.edli ?? stat.edli ?? null) as number | null,
-    other: (stat.other || null) as Record<string, unknown> | number | null,
-  };
-}
-
-function extractEmployerContributions(
-  d: Record<string, unknown>,
-  statEmployer: Record<string, unknown> | undefined,
-  empFallback?: PayrollPreviewEmployee | null,
-): PayrollPayslipEmployerContributions | null {
-  if (d.employerContributions) return d.employerContributions as PayrollPayslipEmployerContributions;
-  if (!statEmployer) return null;
-
-  return {
-    pf: (statEmployer.epf ?? null) as number | null,
-    esi: (statEmployer.esi ?? null) as number | null,
-    eps: (statEmployer.eps ?? null) as number | null,
-    edli: (statEmployer.edli ?? null) as number | null,
-    total: (empFallback?.employerContribution ?? null) as number | null,
-  };
-}
-
-function extractDocument(doc: Record<string, unknown>, d: Record<string, unknown>): PayrollPayslipDocument {
-  return {
-    pdfUrl: (doc.pdfUrl || doc.pdf_url || d.pdfUrl || d.pdf_url || null) as string | null,
-    downloadUrl: (doc.downloadUrl || doc.download_url || d.downloadUrl || d.download_url || null) as string | null,
-    documentId: (doc.documentId || doc.document_id || d.documentId || null) as string | null,
-    hasDocument: Boolean(doc.pdfUrl || doc.downloadUrl || doc.hasDocument || d.hasDocument),
-    mimeType: String(doc.mimeType || doc.mime_type || "application/pdf"),
-  };
-}
-
-export {
-  extractEmployeeInfo,
-  extractAttendance,
-  extractEarnings,
-  extractDeductions,
-  extractStatutory,
-  extractEmployerContributions,
-  extractDocument,
-};

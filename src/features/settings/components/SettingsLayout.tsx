@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "@tanstack/react-router";
 import {
   Building2,
   User,
+  CreditCard,
   AlertTriangle,
 } from "lucide-react";
 import { useAurix } from "@/lib/aurix-store";
@@ -196,6 +198,29 @@ export function SettingsLayout({ initialSection, onSectionChange }: SettingsLayo
                 </button>
               );
             })}
+
+            {(userRole === "super_admin" || userRole === "hr_admin") && (
+              <Link
+                to="/dashboard/billing"
+                className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border bg-card/60 p-5 backdrop-blur-xl transition-all duration-200 hover:-translate-y-1 hover:border-foreground/30 hover:shadow-xl hover:bg-accent/40 text-left cursor-pointer"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br border from-emerald-500/20 to-indigo-500/20 text-indigo-400 border-indigo-500/30 transition-transform duration-200 group-hover:scale-105">
+                    <CreditCard className="h-6 w-6" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="font-display text-base font-semibold tracking-tight text-foreground transition-colors group-hover:text-primary">
+                        Billing & Subscription
+                      </h3>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground leading-relaxed line-clamp-2">
+                      Manage OFC360 subscription plans, dynamic employee seat pricing, Razorpay checkout, and GST invoices.
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            )}
           </div>
 
 

@@ -34,11 +34,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { formatINR, formatCount, formatDate } from "@/lib/format";
+import { formatCount, formatDate } from "@/lib/format";
+import { formatPaiseToINR } from "../utils/money";
 import { fnfApi } from "../api/fnfApi";
 import { useAurix } from "@/lib/aurix-store";
-import type { FnfRecord, FnfStatus } from "../types/fnf";
+import type { FnfRecord } from "../types/fnf";
 import { toast } from "sonner";
+
+const formatPaiseOrDash = (paise?: number | null) =>
+  paise != null ? formatPaiseToINR(paise) : "—";
 
 export default function FullAndFinalPage() {
   const aurixStore = useAurix();
@@ -165,7 +169,9 @@ export default function FullAndFinalPage() {
   const handleDownloadStatement = async (fnfId: string) => {
     try {
       const { blob, filename, mimeType } = await fnfApi.downloadFnfStatement(fnfId);
-      const url = window.URL.createObjectURL(blob, { type: mimeType });
+      const url = window.URL.createObjectURL(
+        new Blob([blob], { type: mimeType || blob.type || "application/pdf" })
+      );
       const a = document.createElement("a");
       a.href = url;
       a.download = filename || `FNF_STATEMENT_${fnfId}.pdf`;
@@ -317,7 +323,10 @@ export default function FullAndFinalPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") loadRecords();
+              if (e.key === "Enter") {
+                if (page !== 1) setPage(1);
+                else loadRecords();
+              }
             }}
             className="pl-8 h-9 rounded-xl text-xs"
           />
@@ -398,8 +407,7 @@ export default function FullAndFinalPage() {
                           size="sm"
                           variant="outline"
                           onClick={() => {
-                            setSelectedRecord(fnf);
-                            setDetailModalOpen(true);
+                            void handleViewDetail(fnf.id);
                           }}
                           className="h-7 text-xs rounded-lg"
                         >
@@ -556,10 +564,10 @@ export default function FullAndFinalPage() {
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-muted-foreground text-[11px]">
-                  <div>Unpaid Days Salary: {formatINR(selectedRecord.earnings.unpaidSalaryPaise / 100)}</div>
-                  <div>Leave Encashment: {formatINR(selectedRecord.earnings.leaveEncashmentPaise / 100)}</div>
-                  <div>Gratuity: {formatINR(selectedRecord.earnings.gratuityPaise / 100)}</div>
-                  <div>Statutory Bonus: {formatINR(selectedRecord.earnings.statutoryBonusPaise / 100)}</div>
+                  <div>Unpaid Days Salary: {formatPaiseOrDash(selectedRecord.earnings.unpaidSalaryPaise)}</div>
+                  <div>Leave Encashment: {formatPaiseOrDash(selectedRecord.earnings.leaveEncashmentPaise)}</div>
+                  <div>Gratuity: {formatPaiseOrDash(selectedRecord.earnings.gratuityPaise)}</div>
+                  <div>Statutory Bonus: {formatPaiseOrDash(selectedRecord.earnings.statutoryBonusPaise)}</div>
                 </div>
               </div>
 
@@ -572,10 +580,10 @@ export default function FullAndFinalPage() {
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-muted-foreground text-[11px]">
-                  <div>Notice Shortfall: {formatINR(selectedRecord.deductions.noticeShortfallRecoveryPaise / 100)}</div>
-                  <div>Loan / Advance Recovery: {formatINR(selectedRecord.deductions.loanAdvanceRecoveryPaise / 100)}</div>
-                  <div>Asset Recovery: {formatINR(selectedRecord.deductions.assetDamageRecoveryPaise / 100)}</div>
-                  <div>Tax / Statutory Deductions: {formatINR(selectedRecord.deductions.tdsDeductionPaise / 100)}</div>
+                  <div>Notice Shortfall: {formatPaiseOrDash(selectedRecord.deductions.noticeShortfallRecoveryPaise)}</div>
+                  <div>Loan / Advance Recovery: {formatPaiseOrDash(selectedRecord.deductions.loanAdvanceRecoveryPaise)}</div>
+                  <div>Asset Recovery: {formatPaiseOrDash(selectedRecord.deductions.assetDamageRecoveryPaise)}</div>
+                  <div>Tax / Statutory Deductions: {formatPaiseOrDash(selectedRecord.deductions.tdsDeductionPaise)}</div>
                 </div>
               </div>
 
@@ -612,7 +620,8 @@ export default function FullAndFinalPage() {
               Close
             </Button>
 
-            {selectedRecord?.status === "calculated" && (
+            {(selectedRecord?.status === "calculated" ||
+              selectedRecord?.status === "pending_approval") && (
               <>
                 <Button
                   variant="destructive"

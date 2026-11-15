@@ -277,7 +277,9 @@ export default function PaymentBatchDetailPage() {
     if (!batch) return;
     try {
       const { blob, filename, mimeType } = await paymentApi.downloadBankFile(batch.id);
-      const url = window.URL.createObjectURL(blob, { type: mimeType });
+      const url = window.URL.createObjectURL(
+        new Blob([blob], { type: mimeType || blob.type || "application/octet-stream" })
+      );
       const a = document.createElement("a");
       a.href = url;
       a.download = filename || bankFile?.fileName || `SALARY_${batch.batchNumber}.csv`;

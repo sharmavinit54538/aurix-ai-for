@@ -47,19 +47,7 @@ import {
   type PayrollPreviewData,
 } from "@/services/payrollApi";
 import { toast } from "sonner";
-
-// ── Currency Formatter (INR) ──────────────────────────────────────────
-// STRICT ZERO MOCK DATA: displays purely backend numbers.
-function formatINR(value: number | null | undefined): string {
-  if (value === null || value === undefined || isNaN(value)) {
-    return "—";
-  }
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
+import { formatOptionalINR as formatINR, maskAccountNumber } from "@/lib/format";
 
 function formatDate(val: string | null | undefined): string {
   if (!val) return "—";
@@ -621,7 +609,7 @@ export function EmployeePayrollDetailPage() {
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Account:</span>
                       <span className="font-mono text-foreground">
-                        {employee.bankInfo.accountNumber || "•••• ••••"}
+                        {maskAccountNumber(employee.bankInfo.accountNumber)}
                       </span>
                     </div>
                     {employee.bankInfo.ifscCode ? (

@@ -10,6 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, FileSpreadsheet, Receipt, Eye, Download } from "lucide-react";
+import { formatOptionalINR, formatDate } from "@/lib/format";
 import type { SalarySlipRecord } from "../types";
 
 interface SalarySlipsTableProps {
@@ -74,22 +75,16 @@ export const SalarySlipsTable: React.FC<SalarySlipsTableProps> = ({
                 {slip.payslipNumber || "—"}
               </TableCell>
               <TableCell className="text-xs text-right font-medium">
-                {slip.grossSalary != null ? `₹${slip.grossSalary.toLocaleString("en-IN")}` : "—"}
+                {formatOptionalINR(slip.grossSalary)}
               </TableCell>
               <TableCell className="text-xs text-right font-medium text-rose-500">
-                {slip.deductions != null ? `₹${slip.deductions.toLocaleString("en-IN")}` : "—"}
+                {formatOptionalINR(slip.deductions)}
               </TableCell>
               <TableCell className="text-xs text-right font-bold text-emerald-500">
-                {slip.netSalary != null ? `₹${slip.netSalary.toLocaleString("en-IN")}` : "—"}
+                {formatOptionalINR(slip.netSalary)}
               </TableCell>
               <TableCell className="text-xs text-muted-foreground">
-                {slip.generatedDate
-                  ? new Date(slip.generatedDate).toLocaleDateString("en-IN", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })
-                  : "—"}
+                {formatDate(slip.generatedDate)}
               </TableCell>
               <TableCell className="text-xs">
                 <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[11px] capitalize">

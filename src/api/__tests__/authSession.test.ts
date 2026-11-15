@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import axios from "axios";
 import { toast } from "sonner";
-import {
+import apiInstance, {
   refreshAccessToken,
   handleSessionExpired,
   resetSessionExpiredFlag,
@@ -150,7 +150,7 @@ describe("F-01: Auth and Session Management", () => {
     setTokens({ accessToken: "active-token" });
     expect(hasSessionHint()).toBe(true);
 
-    vi.spyOn(axios, "post").mockResolvedValue({ status: 200, data: { success: true } });
+    vi.spyOn(apiInstance, "post").mockResolvedValue({ status: 200, data: { success: true } });
 
     await logout({ redirect: false });
 

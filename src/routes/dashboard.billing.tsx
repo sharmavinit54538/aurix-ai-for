@@ -1,9 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { lazyFeaturePage } from "@/lib/lazyFeaturePage";
-
-const PageComponent = lazyFeaturePage(() => import("@/features/superAdmin/pages/SuperAdminSettingsPage"));
+import { BillingSubscriptionPage } from "@/features/billing/pages/BillingSubscriptionPage";
 
 export const Route = createFileRoute("/dashboard/billing")({
-  head: () => ({ meta: [{ title: "Billing — OFC360" }] }),
-  component: PageComponent,
+  head: () => ({ meta: [{ title: "Billing & Subscription — OFC360" }] }),
+  component: BillingSubscriptionPage,
 });

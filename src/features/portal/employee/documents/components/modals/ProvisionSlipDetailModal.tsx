@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Download } from "lucide-react";
+import { formatOptionalINR, formatDate } from "@/lib/format";
 import type { ProvisionSlip } from "../../types";
 
 interface ProvisionSlipDetailModalProps {
@@ -57,11 +58,7 @@ export const ProvisionSlipDetailModal: React.FC<ProvisionSlipDetailModalProps> =
               </div>
               <div className="flex justify-between items-center text-xs">
                 <span className="text-muted-foreground">Generated Date:</span>
-                <span>
-                  {selectedProvision.generatedAt
-                    ? new Date(selectedProvision.generatedAt).toLocaleDateString()
-                    : "—"}
-                </span>
+                <span>{formatDate(selectedProvision.generatedAt)}</span>
               </div>
               <div className="flex justify-between items-center text-xs">
                 <span className="text-muted-foreground">Status:</span>
@@ -73,9 +70,7 @@ export const ProvisionSlipDetailModal: React.FC<ProvisionSlipDetailModalProps> =
                 <div className="flex justify-between items-center text-sm font-bold">
                   <span>Provisioned Amount:</span>
                   <span className="text-amber-500">
-                    {selectedProvision.provisionedAmount != null
-                      ? `₹${selectedProvision.provisionedAmount.toLocaleString("en-IN")}`
-                      : "—"}
+                    {formatOptionalINR(selectedProvision.provisionedAmount)}
                   </span>
                 </div>
               </div>

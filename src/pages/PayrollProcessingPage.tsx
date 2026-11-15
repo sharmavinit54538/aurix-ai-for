@@ -1,7 +1,6 @@
 import { statusBadgeClass } from "@/lib/status-styles";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useParams, useNavigate } from "@tanstack/react-router";
-import { usePoller } from "@/hooks/usePoller";
 import {
   AlertCircle,
   AlertTriangle,
@@ -209,8 +208,12 @@ export function PayrollProcessingPage() {
   const [retryModalOpen, setRetryModalOpen] = useState<boolean>(false);
   const [isRetrying, setIsRetrying] = useState<boolean>(false);
 
-  // In-flight guard ref to prevent duplicate overlapping network requests
+  // In-flight guard and latest state refs for safe polling
   const inFlightRef = useRef<boolean>(false);
+  const jobIdRef = useRef<string>(jobId);
+  jobIdRef.current = jobId;
+  const runDataRef = useRef<PayrollRunStatus | null>(runData);
+  runDataRef.current = runData;
 
   // ── Fetch Status Handler ────────────────────────────────────────────
   const fetchStatus = useCallback(
@@ -225,11 +228,16 @@ export function PayrollProcessingPage() {
       }
 
       try {
-        const status = await payrollApi.getPayrollRunStatus(runId, jobId || undefined);
+        const status = await payrollApi.getPayrollRunStatus(
+          runId,
+          jobIdRef.current || undefined
+        );
         // Update jobId if returned by backend
-        if (status.jobId && status.jobId !== jobId) {
+        if (status.jobId && status.jobId !== jobIdRef.current) {
+          jobIdRef.current = status.jobId;
           setJobId(status.jobId);
         }
+        runDataRef.current = status;
         setRunData(status);
         setIsUnavailable(false);
         setApiError(null);
@@ -256,11 +264,10 @@ export function PayrollProcessingPage() {
         setIsRefreshing(false);
       }
     },
-    [runId, jobId]
+    [runId]
   );
 
   // ── Polling Lifecycle with Exponential Backoff ──────────────────────
-  const [pollInterval, setPollInterval] = useState(3000);
   const MAX_POLL_INTERVAL = 30000;
   const pollAttemptRef = useRef(0);
 
@@ -282,20 +289,22 @@ export function PayrollProcessingPage() {
       return;
     }
 
+    let cancelled = false;
     const scheduleNextPoll = () => {
       if (pollingTimerRef.current) {
         clearTimeout(pollingTimerRef.current);
       }
-      
+
       // Exponential backoff: start at 3s, max 30s
       const interval = Math.min(3000 * Math.pow(1.5, pollAttemptRef.current), MAX_POLL_INTERVAL);
-      setPollInterval(interval);
-      
+
       pollingTimerRef.current = window.setTimeout(async () => {
+        if (cancelled) return;
         pollAttemptRef.current += 1;
         await fetchStatus(true);
-        // Reschedule after fetch completes
-        if (runData && !isTerminalStatus(runData.status)) {
+        // Reschedule after fetch completes using latest ref status
+        const latest = runDataRef.current;
+        if (!cancelled && latest && !isTerminalStatus(latest.status)) {
           scheduleNextPoll();
         }
       }, interval);
@@ -305,6 +314,7 @@ export function PayrollProcessingPage() {
     scheduleNextPoll();
 
     return () => {
+      cancelled = true;
       if (pollingTimerRef.current) {
         clearTimeout(pollingTimerRef.current);
         pollingTimerRef.current = null;

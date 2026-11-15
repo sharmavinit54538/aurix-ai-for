@@ -171,6 +171,7 @@ export function PayrollPeriodsPage() {
   const [createModalOpen, setCreateModalOpen] = useState<boolean>(false);
   const [isSubmittingCreate, setIsSubmittingCreate] = useState<boolean>(false);
   const [createFormError, setCreateFormError] = useState<string | null>(null);
+  const [voidTargetPeriod, setVoidTargetPeriod] = useState<PayrollPeriod | null>(null);
 
   // Create Form Fields
   const now = new Date();
@@ -393,20 +394,19 @@ export function PayrollPeriodsPage() {
   };
 
   // ── Void Handler ────────────────────────────────────────────────────
-  const handleVoidPeriod = async (period: PayrollPeriod) => {
+  const handleVoidPeriod = (period: PayrollPeriod) => {
     if (!period.id) return;
-    if (
-      !window.confirm(
-        `Are you sure you want to void the payroll period "${period.name}"? This action cancels the period.`
-      )
-    ) {
-      return;
-    }
+    setVoidTargetPeriod(period);
+  };
 
-    setActionInProgressId(period.id);
+  const handleConfirmVoidPeriod = async () => {
+    if (!voidTargetPeriod?.id) return;
+    const target = voidTargetPeriod;
+    setVoidTargetPeriod(null);
+    setActionInProgressId(target.id);
     try {
-      await payrollApi.voidPeriod(period.id, "Voided by user request");
-      toast.success(`Period "${period.name}" has been voided.`);
+      await payrollApi.voidPeriod(target.id, "Voided by user request");
+      toast.success(`Period "${target.name}" has been voided.`);
       await fetchPeriods();
     } catch (err: any) {
       toast.error(
@@ -1097,6 +1097,50 @@ export function PayrollPeriodsPage() {
               onClick={() => setDetailsModalOpen(false)}
             >
               Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Void Period Confirmation Modal ─────────────────────────── */}
+      <Dialog
+        open={Boolean(voidTargetPeriod)}
+        onOpenChange={(open) => {
+          if (!open) setVoidTargetPeriod(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-[420px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 font-display text-lg text-destructive">
+              <XCircle className="h-5 w-5" />
+              Void Payroll Period
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Are you sure you want to void the payroll period{" "}
+              <span className="font-semibold text-foreground">
+                &ldquo;{voidTargetPeriod?.name}&rdquo;
+              </span>
+              ? This cancels the period and prevents future payroll runs against it.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setVoidTargetPeriod(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              disabled={!voidTargetPeriod || actionInProgressId === voidTargetPeriod?.id}
+              onClick={handleConfirmVoidPeriod}
+            >
+              Confirm Void
             </Button>
           </DialogFooter>
         </DialogContent>

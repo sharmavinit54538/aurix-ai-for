@@ -61,6 +61,7 @@ export default function EmployeeCompensationPage() {
 
   // History Slide-over / Modal
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [selectedRevision, setSelectedRevision] = useState<CompensationRevisionRecord | null>(null);
 
   // Approve/Reject Revision Modals
@@ -105,9 +106,25 @@ export default function EmployeeCompensationPage() {
   }, [page]);
 
   // Arrears Risk Check: If effective date is in the past, arrears calculation will be triggered
-  const isPastEffectiveDate = Boolean(
-    effectiveDate && new Date(effectiveDate) < new Date(new Date().setHours(0, 0, 0, 0))
-  );
+  const nowLocal = new Date();
+  const todayLocalStr = `${nowLocal.getFullYear()}-${String(nowLocal.getMonth() + 1).padStart(2, "0")}-${String(nowLocal.getDate()).padStart(2, "0")}`;
+  const isPastEffectiveDate = Boolean(effectiveDate && effectiveDate < todayLocalStr);
+
+  const handleOpenHistory = async (emp: EmployeeCompensation) => {
+    setSelectedEmp(emp);
+    setHistoryModalOpen(true);
+    setHistoryLoading(true);
+    try {
+      const detail = await compensationApi.getEmployeeCompensationDetail(emp.employeeId);
+      if (detail) {
+        setSelectedEmp(detail);
+      }
+    } catch {
+      // Fall back to table row snapshot if detail endpoint is unavailable
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
 
   const handleProposeRevision = async () => {
     if (!selectedEmp || !newCtcRupees || !effectiveDate || !revisionReason.trim()) {
@@ -322,7 +339,10 @@ export default function EmployeeCompensationPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") loadCompensations();
+              if (e.key === "Enter") {
+                if (page !== 1) setPage(1);
+                else loadCompensations();
+              }
             }}
             className="pl-8 h-9 rounded-xl text-xs"
           />
@@ -395,8 +415,7 @@ export default function EmployeeCompensationPage() {
                           size="sm"
                           variant="outline"
                           onClick={() => {
-                            setSelectedEmp(emp);
-                            setHistoryModalOpen(true);
+                            void handleOpenHistory(emp);
                           }}
                           className="h-7 text-xs rounded-lg gap-1"
                         >
@@ -526,7 +545,12 @@ export default function EmployeeCompensationPage() {
           </DialogHeader>
 
           <div className="space-y-3 py-2 text-xs max-h-96 overflow-y-auto">
-            {!selectedEmp?.revisions || selectedEmp.revisions.length === 0 ? (
+            {historyLoading ? (
+              <div className="flex items-center justify-center gap-2 py-6 text-muted-foreground">
+                <RefreshCw className="h-4 w-4 animate-spin text-primary" />
+                <span>Loading revision history...</span>
+              </div>
+            ) : !selectedEmp?.revisions || selectedEmp.revisions.length === 0 ? (
               <p className="text-center text-muted-foreground py-6">
                 No past revisions recorded for this employee.
               </p>

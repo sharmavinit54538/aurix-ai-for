@@ -3,17 +3,14 @@
  * Guarantees zero floating point error in all payment batch calculations and reconciliation.
  */
 
-import { formatINR } from "@/lib/format";
+import { formatINR, rupeesToPaise } from "@/lib/format";
 
 /**
  * Converts a currency string or numeric Rupee value to integer Paise.
- * e.g. "125000.50" -> 12500050 paise
+ * e.g. "125000.50" -> 12500050 paise, "₹5,00,000.00" -> 50000000 paise
  */
 export function toPaise(val?: number | string | null): number {
-  if (val === null || val === undefined || val === "") return 0;
-  const num = typeof val === "number" ? val : parseFloat(String(val).replace(/,/g, ""));
-  if (isNaN(num)) return 0;
-  return Math.round(num * 100);
+  return rupeesToPaise(val);
 }
 
 /**

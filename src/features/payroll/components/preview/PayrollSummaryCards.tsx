@@ -1,6 +1,6 @@
 import { GlassCard, StatCard } from "@/components/hrms/Shared";
 import { Banknote, Layers, TrendingDown, TrendingUp, Users } from "lucide-react";
-import { formatINR } from "../../utils/payrollPreview.utils";
+import { formatINR, formatCount } from "../../utils/payrollPreview.utils";
 
 interface PayrollSummaryCardsProps {
   previewData: any;
@@ -15,7 +15,7 @@ export function PayrollSummaryCards({ previewData }: PayrollSummaryCardsProps) {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
         <StatCard
           label="Employees"
-          value={formatINR(previewData?.summary?.employeeCount)}
+          value={formatCount(previewData?.summary?.employeeCount)}
           icon={Users}
           accent="brand"
         />

@@ -53,26 +53,10 @@ import {
   type PayrollStatus,
 } from "@/services/payrollApi";
 import { toast } from "sonner";
-
-// ── Currency Formatter (INR) ──────────────────────────────────────────
-// STRICT ZERO MOCK DATA: operates purely on authentic backend numbers.
-function formatINR(value: number | null | undefined): string {
-  if (value === null || value === undefined || isNaN(value)) {
-    return "—";
-  }
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
-function formatCount(value: number | null | undefined): string {
-  if (value === null || value === undefined || isNaN(value)) {
-    return "—";
-  }
-  return new Intl.NumberFormat("en-IN").format(value);
-}
+import {
+  formatOptionalINR as formatINR,
+  formatOptionalCount as formatCount,
+} from "@/lib/format";
 
 function formatDate(val: string | null | undefined): string {
   if (!val) return "—";
@@ -1055,12 +1039,10 @@ export function PayrollApprovalPage() {
                     <div className="rounded-lg border border-border/80 bg-muted/30 px-3 py-2 text-xs">
                       <span className="text-muted-foreground">Average Net Pay:</span>{" "}
                       <strong className="font-semibold text-foreground">
-                        {reviewData.summary?.employeeCount && reviewData.summary?.netPayroll
+                        {reviewData.summary?.employeeCount && reviewData.summary?.netPayroll != null
                           ? formatINR(
-                              Math.round(
-                                reviewData.summary.netPayroll /
-                                  reviewData.summary.employeeCount,
-                              ),
+                              reviewData.summary.netPayroll /
+                                reviewData.summary.employeeCount,
                             )
                           : "—"}
                       </strong>

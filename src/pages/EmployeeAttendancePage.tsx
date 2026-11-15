@@ -326,34 +326,21 @@ export function EmployeeAttendancePage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
-              My Attendance
-            </h1>
-            <Badge variant="outline" className="text-xs border-border bg-card/60 font-mono">
-              {displayEmpId}
-            </Badge>
-            <Badge
-              variant="outline"
-              className={`text-xs ${
-                status === "checked-in"
-                  ? statusBadgeClass("approved")
-                  : status === "on-break"
-                  ? statusBadgeClass("warning")
-                  : status === "checked-out"
-                  ? statusBadgeClass("info")
-                  : "border-border text-muted-foreground"
-              }`}
-            >
-              {statusLabel}
-            </Badge>
-          </div>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Daily check-in, break tracker, shift schedule, and your personal attendance history.
-          </p>
-        </div>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <Badge
+          variant="outline"
+          className={`text-xs ${
+            status === "checked-in"
+              ? statusBadgeClass("approved")
+              : status === "on-break"
+              ? statusBadgeClass("warning")
+              : status === "checked-out"
+              ? statusBadgeClass("info")
+              : "border-border text-muted-foreground"
+          }`}
+        >
+          {statusLabel}
+        </Badge>
 
         <div className="flex flex-wrap items-center gap-2">
           <Button asChild variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
@@ -365,15 +352,6 @@ export function EmployeeAttendancePage() {
             <Link to="/dashboard/attendance/rosters">
               <ScrollText className="h-3.5 w-3.5" /> My Roster
             </Link>
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={loadPersonalAttendance}
-            aria-label="Refresh my attendance"
-            className="h-8 w-8"
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>

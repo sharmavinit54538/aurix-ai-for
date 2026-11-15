@@ -55,6 +55,7 @@ import { GeminiIcon } from "@/components/icons/GeminiIcon";
 import { useAurix, type HRDocument } from "@/lib/aurix-store";
 import { statusBadgeClass } from "@/lib/status-styles";
 import { getEventTypeDot } from "@/lib/color-maps";
+import { toast } from "sonner";
 import type {
   ApprovalItem,
   CalendarEvent,
@@ -71,33 +72,179 @@ const AI_FEATURES = [
   { title: "AI Chat", desc: "Multi-modal HR assistant", link: "/ai/chat-assistant" },
 ];
 
-// ── Empty arrays — will be populated when backend endpoints are ready ──
-const AI_METRICS: any[] = [];
-const AI_RECENT: any[] = [];
-const ACTIVE_JOBS: any[] = [];
-const ACTIVITY_FEED: ActivityItem[] = [];
+// ── HR Admin Mock Data ────────────────────────────────────────
+const AI_METRICS = [
+  { label: "Resumes Screened", value: "342", change: "+18% this week" },
+  { label: "Policy Queries Resolved", value: "1,284", change: "98.4% accuracy" },
+  { label: "Attrition Risk Alerts", value: "3", change: "2 mitigated" },
+  { label: "Hours Saved by AI", value: "64h", change: "+12h vs last month" },
+];
+const AI_RECENT = [
+  { action: "Resume Screening", detail: "Shortlisted 6 candidates for Senior Backend Engineer", time: "12m ago" },
+  { action: "Payroll Audit", detail: "Verified March 2026 statutory PF & TDS compliance across 6 employees", time: "45m ago" },
+  { action: "Policy Copilot", detail: "Answered 14 employee queries on Flexi-Leave & WFH guidelines", time: "2h ago" },
+];
+const ACTIVE_JOBS = [
+  { title: "Senior Backend Engineer", dept: "Engineering", posted: "2 days ago", applicants: 34 },
+  { title: "Product Designer", dept: "Design", posted: "5 days ago", applicants: 19 },
+  { title: "Enterprise Account Executive", dept: "Sales", posted: "1 week ago", applicants: 22 },
+];
+const ACTIVITY_FEED: ActivityItem[] = [
+  { id: "act-1", text: "March 2026 Payroll Cycle approved for disbursement", user: "Aarav Sharma · HR Admin", time: "10m ago", icon: "CreditCard" },
+  { id: "act-2", text: "Offer letter accepted by Siddharth Rao (Backend Engineer)", user: "Priya Nair · Talent Acquisition", time: "42m ago", icon: "UserPlus" },
+  { id: "act-3", text: "MacBook Pro 16-inch M3 Max assigned to Kabir Mehta", user: "IT Operations", time: "1h ago", icon: "Package" },
+  { id: "act-4", text: "Form 16 & Tax Declarations verified for FY 2025-26", user: "Sneha Kulkarni · Finance", time: "3h ago", icon: "FileCheck" },
+  { id: "act-5", text: "Annual Appraisal review cycle launched for Engineering", user: "Vikramjit Singh · Engineering Manager", time: "5h ago", icon: "Award" },
+];
 const APPROVAL_DATA: Record<string, ApprovalItem[]> = {
-  Leave: [], Attendance: [], Recruitment: [], Onboarding: [],
-  Exit: [], Assets: [], Documents: [], Expenses: [],
+  Leave: [
+    { id: "lv-1", name: "Kabir Mehta", department: "Engineering", type: "Annual Leave", detail: "3 Days (18 Mar – 20 Mar)", requestedAt: "2h ago", urgent: true },
+    { id: "lv-2", name: "Ananya Iyer", department: "Design", type: "Sick Leave", detail: "1 Day (16 Mar)", requestedAt: "4h ago" },
+  ],
+  Attendance: [
+    { id: "att-1", name: "Rohan Deshmukh", department: "Product", type: "Regularization", detail: "Missed check-out on 12 Mar (19:15)", requestedAt: "Yesterday" },
+  ],
+  Recruitment: [
+    { id: "rec-1", name: "Siddharth Rao", department: "Engineering", type: "Offer Approval", detail: "CTC ₹26,00,000 · L5 Backend", requestedAt: "1h ago", urgent: true },
+  ],
+  Onboarding: [
+    { id: "onb-1", name: "Neha Kapoor", department: "Engineering", type: "BGV Clearance", detail: "DigiLocker & Aadhaar verified", requestedAt: "3h ago" },
+  ],
+  Exit: [
+    { id: "ext-1", name: "Karan Malhotra", department: "Sales", type: "FnF Clearance", detail: "Last Working Day: 28 Mar 2026", requestedAt: "1d ago" },
+  ],
+  Assets: [
+    { id: "ast-1", name: "Meera Krishnan", department: "Customer Success", type: "Accessory Request", detail: "Logitech MX Master 3S Mouse", requestedAt: "5h ago" },
+  ],
+  Documents: [
+    { id: "doc-1", name: "Rohan Deshmukh", department: "Product", type: "Address Proof", detail: "Passport Verification Pending", requestedAt: "6h ago" },
+  ],
+  Expenses: [
+    { id: "exp-1", name: "Kabir Mehta", department: "Engineering", type: "Client Travel", detail: "₹14,850 · Bengaluru Summit Flight", requestedAt: "3h ago", urgent: true },
+  ],
 };
-const ASSET_STATS: any[] = [];
-const ATTRITION_RATE: any[] = [];
-const CALENDAR_EVENTS: CalendarEvent[] = [];
-const DEPT_ATTENDANCE: any[] = [];
-const DEPT_DISTRIBUTION: any[] = [];
-const DEPT_PERFORMANCE: DeptCard[] = [];
-const EXIT_STAGES: any[] = [];
-const GENDER_DIVERSITY: any[] = [];
-const HEADCOUNT_GROWTH: any[] = [];
-const INTERVIEWS_TODAY: any[] = [];
-const MONTHLY_PAYROLL: any[] = [];
-const ONBOARDING_STAGES: any[] = [];
-const PAYROLL_STATUS: any[] = [];
-const PIPELINE_STAGES: any[] = [];
-const SALARY_DISTRIBUTION: any[] = [];
-const WEEKLY_ATTENDANCE: any[] = [];
-const WIDGET_SCORES: any[] = [];
-const WORLD_CLOCKS: any[] = [];
+const ASSET_STATS = [
+  { label: "Total Assets", value: 48, icon: "Package" },
+  { label: "Assigned", value: 39, icon: "UserCheck" },
+  { label: "Available", value: 6, icon: "CheckCircle2" },
+  { label: "Under Repair", value: 2, icon: "Wrench" },
+  { label: "Pending Return", value: 1, icon: "Clock" },
+  { label: "Warranty Alerts", value: 1, icon: "AlertTriangle" },
+];
+const ATTRITION_RATE = [
+  { month: "Oct", rate: 3.8 },
+  { month: "Nov", rate: 3.4 },
+  { month: "Dec", rate: 3.1 },
+  { month: "Jan", rate: 2.9 },
+  { month: "Feb", rate: 2.6 },
+  { month: "Mar", rate: 2.4 },
+];
+const CALENDAR_EVENTS: CalendarEvent[] = [
+  { id: "ev-1", title: "March Payroll Disbursement Run", date: "2026-03-30", time: "11:00 AM", type: "deadline" },
+  { id: "ev-2", title: "Q1 Townhall & Leadership All-Hands", date: "2026-03-25", time: "04:00 PM", type: "meeting" },
+  { id: "ev-3", title: "Holi Festival Holiday", date: "2026-03-14", type: "holiday" },
+  { id: "ev-4", title: "New Batch Engineering Onboarding", date: "2026-04-01", time: "10:00 AM", type: "onboarding" },
+];
+const DEPT_ATTENDANCE = [
+  { name: "Engineering", value: 96 },
+  { name: "Product", value: 94 },
+  { name: "Design", value: 95 },
+  { name: "Finance", value: 98 },
+  { name: "People & HR", value: 100 },
+  { name: "Customer Success", value: 93 },
+];
+const DEPT_DISTRIBUTION = [
+  { dept: "Engineering", employees: 42 },
+  { dept: "Product", employees: 14 },
+  { dept: "Design", employees: 11 },
+  { dept: "Sales & CS", employees: 19 },
+  { dept: "Finance & Ops", employees: 10 },
+  { dept: "People & HR", employees: 6 },
+];
+const DEPT_PERFORMANCE: DeptCard[] = [
+  { name: "Engineering", headcount: 42, attendance: 96, productivity: 94, openPositions: 2 },
+  { name: "Product", headcount: 14, attendance: 94, productivity: 91, openPositions: 1 },
+  { name: "Design", headcount: 11, attendance: 95, productivity: 92, openPositions: 1 },
+  { name: "People & HR", headcount: 6, attendance: 99, productivity: 96, openPositions: 0 },
+  { name: "Finance", headcount: 10, attendance: 97, productivity: 95, openPositions: 0 },
+  { name: "Customer Success", headcount: 19, attendance: 93, productivity: 90, openPositions: 1 },
+];
+const EXIT_STAGES = [
+  { label: "Notice Period", count: 1, icon: "Clock" },
+  { label: "Exit Interview", count: 1, icon: "MessageSquare" },
+  { label: "Asset Handover", count: 1, icon: "Package" },
+  { label: "FnF Settlement", count: 1, icon: "CreditCard" },
+  { label: "Completed (Q1)", count: 3, icon: "CheckCircle2" },
+];
+const GENDER_DIVERSITY = [
+  { name: "Women", value: 46 },
+  { name: "Men", value: 52 },
+  { name: "Non-Binary", value: 2 },
+];
+const HEADCOUNT_GROWTH = [
+  { month: "Oct", headcount: 242 },
+  { month: "Nov", headcount: 251 },
+  { month: "Dec", headcount: 259 },
+  { month: "Jan", headcount: 268 },
+  { month: "Feb", headcount: 276 },
+  { month: "Mar", headcount: 284 },
+];
+const INTERVIEWS_TODAY = [
+  { candidate: "Siddharth Rao", role: "Senior Backend Engineer", type: "System Design Round", time: "02:30 PM" },
+  { candidate: "Aisha Verma", role: "Product Designer", type: "Portfolio Walkthrough", time: "04:15 PM" },
+];
+const MONTHLY_PAYROLL = [
+  { month: "Oct", cost: 8.6 },
+  { month: "Nov", cost: 8.8 },
+  { month: "Dec", cost: 9.0 },
+  { month: "Jan", cost: 9.1 },
+  { month: "Feb", cost: 9.2 },
+  { month: "Mar", cost: 9.4 },
+];
+const ONBOARDING_STAGES = [
+  { label: "Pre-boarding", count: 3 },
+  { label: "Docs Verification", count: 2 },
+  { label: "IT & Asset Setup", count: 2 },
+  { label: "Team Induction", count: 4 },
+  { label: "Completed (Mar)", count: 8 },
+];
+const PAYROLL_STATUS = [
+  { label: "Processed Employees", value: "6 / 6" },
+  { label: "Statutory Compliance", value: "100%" },
+  { label: "Pending Reimbursements", value: "2" },
+];
+const PIPELINE_STAGES = [
+  { stage: "Applied", count: 75 },
+  { stage: "Screened", count: 38 },
+  { stage: "Interview", count: 16 },
+  { stage: "Offered", count: 5 },
+  { stage: "Hired", count: 3 },
+];
+const SALARY_DISTRIBUTION = [
+  { band: "8-12L", employees: 18 },
+  { band: "12-18L", employees: 34 },
+  { band: "18-25L", employees: 28 },
+  { band: "25-35L", employees: 15 },
+  { band: "35L+", employees: 7 },
+];
+const WEEKLY_ATTENDANCE = [
+  { day: "Mon", present: 96, late: 3 },
+  { day: "Tue", present: 97, late: 2 },
+  { day: "Wed", present: 95, late: 4 },
+  { day: "Thu", present: 98, late: 1 },
+  { day: "Fri", present: 94, late: 3 },
+];
+const WIDGET_SCORES = [
+  { label: "Workforce Health Index", value: 94, max: 100, description: "Based on retention, engagement & attendance consistency" },
+  { label: "Employee eNPS Score", value: 88, max: 100, description: "Q1 pulse survey across all 6 departments" },
+  { label: "Statutory Compliance Score", value: 100, max: 100, description: "PF, ESI, PT & TDS filings up to date" },
+];
+const WORLD_CLOCKS = [
+  { city: "Bengaluru (HQ)", tz: "Asia/Kolkata", flag: "🇮🇳" },
+  { city: "London", tz: "Europe/London", flag: "🇬🇧" },
+  { city: "Singapore", tz: "Asia/Singapore", flag: "🇸🇬" },
+  { city: "San Francisco", tz: "America/Los_Angeles", flag: "🇺🇸" },
+];
 
 
 // ── Shared chart tooltip style ────────────────────────────────
@@ -267,7 +414,20 @@ type ApprovalTab = (typeof APPROVAL_TABS)[number];
 
 function ApprovalCenter() {
   const [activeTab, setActiveTab] = useState<ApprovalTab>("Leave");
-  const items = APPROVAL_DATA[activeTab] ?? [];
+  const [approvalItems, setApprovalItems] = useState<Record<string, ApprovalItem[]>>(APPROVAL_DATA);
+  const items = approvalItems[activeTab] ?? [];
+
+  function handleDecision(id: string, name: string, decision: "approved" | "rejected") {
+    setApprovalItems((prev) => ({
+      ...prev,
+      [activeTab]: (prev[activeTab] ?? []).filter((item) => item.id !== id),
+    }));
+    if (decision === "approved") {
+      toast.success(`Approved ${activeTab.toLowerCase()} request for ${name}`);
+    } else {
+      toast.info(`Rejected ${activeTab.toLowerCase()} request for ${name}`);
+    }
+  }
 
   return (
     <div>
@@ -283,20 +443,20 @@ function ApprovalCenter() {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`shrink-0 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`shrink-0 rounded-md px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
                 activeTab === tab
                   ? "bg-background text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {tab}
-              {APPROVAL_DATA[tab].length > 0 && (
+              {(approvalItems[tab]?.length ?? 0) > 0 && (
                 <span
                   className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
                     activeTab === tab ? "bg-muted text-foreground" : "bg-card text-muted-foreground"
                   }`}
                 >
-                  {APPROVAL_DATA[tab].length}
+                  {approvalItems[tab]?.length ?? 0}
                 </span>
               )}
             </button>
@@ -305,39 +465,55 @@ function ApprovalCenter() {
 
         {/* Table */}
         <div key={activeTab} className="space-y-2">
-          {items.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-sm hover:bg-muted/40 transition-colors"
-            >
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-foreground">{item.name}</span>
-                  {item.urgent && (
-                    <Badge variant="destructive" className="h-4 px-1.5 text-[10px]">
-                      Urgent
-                    </Badge>
-                  )}
-                </div>
-                <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
-                  <span>{item.department}</span>
-                  <span>·</span>
-                  <span>{item.type}</span>
-                  <span>·</span>
-                  <span>{item.detail}</span>
-                </div>
-              </div>
-              <div className="text-xs text-muted-foreground shrink-0">{item.requestedAt}</div>
-              <div className="flex shrink-0 gap-1.5">
-                <Button variant="outline" size="sm" className="h-7 text-xs text-emerald-600 dark:text-emerald-400">
-                  <CheckCircle2 className="mr-1 h-3 w-3" /> Approve
-                </Button>
-                <Button variant="outline" size="sm" className="h-7 text-xs text-destructive border-destructive/30">
-                  <X className="mr-1 h-3 w-3" /> Reject
-                </Button>
-              </div>
+          {items.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-border bg-card py-6 text-center text-xs text-muted-foreground">
+              All {activeTab.toLowerCase()} approvals are cleared.
             </div>
-          ))}
+          ) : (
+            items.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-sm hover:bg-muted/40 transition-colors"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-foreground">{item.name}</span>
+                    {item.urgent && (
+                      <Badge variant="destructive" className="h-4 px-1.5 text-[10px]">
+                        Urgent
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+                    <span>{item.department}</span>
+                    <span>·</span>
+                    <span>{item.type}</span>
+                    <span>·</span>
+                    <span>{item.detail}</span>
+                  </div>
+                </div>
+                <div className="text-xs text-muted-foreground shrink-0">{item.requestedAt}</div>
+                <div className="flex shrink-0 gap-1.5">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDecision(item.id, item.name, "approved")}
+                    className="h-7 text-xs text-emerald-600 dark:text-emerald-400 cursor-pointer"
+                  >
+                    <CheckCircle2 className="mr-1 h-3 w-3" /> Approve
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDecision(item.id, item.name, "rejected")}
+                    className="h-7 text-xs text-destructive border-destructive/30 cursor-pointer"
+                  >
+                    <X className="mr-1 h-3 w-3" /> Reject
+                  </Button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </Card>
     </div>

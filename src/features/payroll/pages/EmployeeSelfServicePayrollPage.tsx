@@ -24,7 +24,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { essApi, type MyPayslipItem } from "../api/essApi";
 import type { EmployeeSelfServiceData, ProvisionSlipRecord } from "../types/ess";
 import { toast } from "sonner";
-import { formatINR, formatDate, maskAccountNumber } from "@/lib/format";
+import { formatDate } from "@/lib/format";
+import { formatPaiseToINR } from "../utils/money";
+
+const formatPaiseOrDash = (paise?: number | null) =>
+  paise != null ? formatPaiseToINR(paise) : "—";
 
 export default function EmployeeSelfServicePayrollPage() {
   const [loading, setLoading] = useState(false);
@@ -106,7 +110,9 @@ export default function EmployeeSelfServicePayrollPage() {
     setDownloadingRunId(runId);
     try {
       const { blob, filename, mimeType } = await essApi.downloadMyPayslip(runId);
-      const url = window.URL.createObjectURL(blob, { type: mimeType });
+      const url = window.URL.createObjectURL(
+        new Blob([blob], { type: mimeType || blob.type || "application/pdf" })
+      );
       const link = document.createElement("a");
       link.href = url;
       link.setAttribute("download", filename || `Payslip_${periodName.replace(/\s+/g, "_")}.pdf`);
@@ -212,29 +218,29 @@ export default function EmployeeSelfServicePayrollPage() {
       {data?.ytdSummary && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
-            label={`YTD Gross (${data.ytdSummary.financialYear})`}
-            value={data.ytdSummary.grossFormatted || formatINR(data.ytdSummary.totalGrossPaise / 100)}
+            label={`YTD Gross (${data.ytdSummary.financialYear || "—"})`}
+            value={data.ytdSummary.grossFormatted || formatPaiseOrDash(data.ytdSummary.totalGrossPaise)}
             hint="Gross taxable earnings"
             accent="brand"
             icon={Wallet}
           />
           <StatCard
             label="YTD Total Deductions"
-            value={data.ytdSummary.deductionsFormatted || formatINR(data.ytdSummary.totalDeductionsPaise / 100)}
+            value={data.ytdSummary.deductionsFormatted || formatPaiseOrDash(data.ytdSummary.totalDeductionsPaise)}
             hint="PF, PT, TDS & recoveries"
             accent="warning"
             icon={Layers}
           />
           <StatCard
             label="YTD Net Disbursed"
-            value={data.ytdSummary.netFormatted || formatINR(data.ytdSummary.totalNetPaise / 100)}
+            value={data.ytdSummary.netFormatted || formatPaiseOrDash(data.ytdSummary.totalNetPaise)}
             hint="Total net take-home"
             accent="success"
             icon={CheckCircle2}
           />
           <StatCard
             label="YTD Income Tax (TDS)"
-            value={formatINR(data.ytdSummary.totalTdsPaise / 100)}
+            value={formatPaiseOrDash(data.ytdSummary.totalTdsPaise)}
             hint="Deposited with IT Dept"
             accent="muted"
             icon={FileText}
@@ -405,14 +411,14 @@ export default function EmployeeSelfServicePayrollPage() {
                     </Badge>
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    Regime election for FY {data.ytdSummary?.financialYear || "current"}.
+                    Regime election for FY {data.ytdSummary?.financialYear || "—"}.
                   </p>
                 </div>
 
                 <div className="rounded-xl border border-border bg-card/40 p-4">
                   <div className="text-xs text-muted-foreground font-medium uppercase">Declared Deductions / Exemptions</div>
                   <div className="mt-2 text-2xl font-bold">
-                    {formatINR(data.taxOverview.declaredExemptionsPaise / 100)}
+                    {formatPaiseOrDash(data.taxOverview.declaredExemptionsPaise)}
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">
                     Section 80C, 80D, HRA & Chapter VI-A investments.
@@ -422,7 +428,7 @@ export default function EmployeeSelfServicePayrollPage() {
                 <div className="rounded-xl border border-border bg-card/40 p-4">
                   <div className="text-xs text-muted-foreground font-medium uppercase">Projected Annual Tax</div>
                   <div className="mt-2 text-2xl font-bold">
-                    {data.taxOverview.annualTaxFormatted || formatINR(data.taxOverview.projectedAnnualTaxPaise / 100)}
+                    {data.taxOverview.annualTaxFormatted || formatPaiseOrDash(data.taxOverview.projectedAnnualTaxPaise)}
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">
                     Total computed tax liability for current financial year.
@@ -432,7 +438,7 @@ export default function EmployeeSelfServicePayrollPage() {
                 <div className="rounded-xl border border-border bg-card/40 p-4">
                   <div className="text-xs text-muted-foreground font-medium uppercase">TDS Deducted So Far</div>
                   <div className="mt-2 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                    {data.taxOverview.taxDeductedFormatted || formatINR(data.taxOverview.taxDeductedSoFarPaise / 100)}
+                    {data.taxOverview.taxDeductedFormatted || formatPaiseOrDash(data.taxOverview.taxDeductedSoFarPaise)}
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">
                     Deposited with NSDL under Form 24Q.
@@ -442,7 +448,7 @@ export default function EmployeeSelfServicePayrollPage() {
                 <div className="rounded-xl border border-border bg-card/40 p-4">
                   <div className="text-xs text-muted-foreground font-medium uppercase">Remaining Projected Tax</div>
                   <div className="mt-2 text-2xl font-bold text-amber-600 dark:text-amber-400">
-                    {formatINR(data.taxOverview.remainingTaxPaise / 100)}
+                    {formatPaiseOrDash(data.taxOverview.remainingTaxPaise)}
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">
                     To be amortized over remaining payroll periods.

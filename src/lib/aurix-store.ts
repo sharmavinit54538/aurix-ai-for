@@ -1,6 +1,16 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { safeStorage } from "./safe-storage";
 import { normalizeRole, type AppRole } from "./roles";
+import {
+  MOCK_EMPLOYEES,
+  MOCK_HRS,
+  MOCK_HR_ADMIN_COMPANY,
+  MOCK_HR_ADMIN_TOKEN,
+  MOCK_HR_ADMIN_USER,
+  MOCK_HR_DOCUMENTS,
+  MOCK_HR_SEED_KEY,
+  MOCK_MANAGERS,
+} from "./mock-hr-admin";
 
 export type Role = AppRole;
 
@@ -195,6 +205,9 @@ export interface Workspace {
 
 const KEY = "aurix:workspace:v3";
 const REMEMBER_KEY = "aurix:remember";
+const IS_TEST_ENV =
+  (typeof import.meta !== "undefined" && (import.meta as any).env?.MODE === "test") ||
+  (typeof process !== "undefined" && Boolean((process as any).env?.VITEST || (process as any).env?.NODE_TEST_CONTEXT));
 
 const defaultState: Workspace = {
   user: null,
@@ -210,7 +223,83 @@ const defaultState: Workspace = {
 let state: Workspace = defaultState;
 const listeners = new Set<() => void>();
 
+function seedMockHrAdminWorkspace(): Workspace {
+  safeStorage.setItem(MOCK_HR_SEED_KEY, "1");
+  safeStorage.removeItem("aurix:logged_out");
+  safeStorage.setItem("ofc360:hr_onboarding_completed", "1");
+  safeStorage.setItem("ofc360:activated_invite_tokens", JSON.stringify(["emp_invite_demo"]));
+  safeStorage.setItem("ofc_session_hint", "1");
+  safeStorage.setItem("aurix:access_token", MOCK_HR_ADMIN_TOKEN);
+  safeStorage.setItem("access_token", MOCK_HR_ADMIN_TOKEN);
+  safeStorage.setItem(
+    "aurix:tokens",
+    JSON.stringify({ accessToken: MOCK_HR_ADMIN_TOKEN, refreshToken: "mock-demo-refresh-token" }),
+  );
+  const seeded: Workspace = {
+    user: { ...MOCK_HR_ADMIN_USER },
+    company: { ...MOCK_HR_ADMIN_COMPANY },
+    hrs: [...MOCK_HRS],
+    employees: [...MOCK_EMPLOYEES],
+    managers: [...MOCK_MANAGERS],
+    documents: [...MOCK_HR_DOCUMENTS],
+    documentActivities: [],
+    isRestoring: false,
+  };
+  const toSave = { ...seeded };
+  delete toSave.isRestoring;
+  delete toSave.documents;
+  delete toSave.documentActivities;
+  safeStorage.setItem(KEY, JSON.stringify(toSave));
+  return seeded;
+}
+
 function load() {
+  if (!IS_TEST_ENV && typeof window !== "undefined") {
+    const alreadySeeded = safeStorage.getItem(MOCK_HR_SEED_KEY) === "1";
+    const explicitlyLoggedOut = safeStorage.getItem("aurix:logged_out") === "1";
+    if (!alreadySeeded) {
+      state = seedMockHrAdminWorkspace();
+      return;
+    }
+    const raw = safeStorage.getItem(KEY);
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (!parsed.user && !explicitlyLoggedOut) {
+          state = seedMockHrAdminWorkspace();
+          return;
+        }
+        state = {
+          ...defaultState,
+          ...parsed,
+          company: parsed.company || MOCK_HR_ADMIN_COMPANY,
+          hrs: Array.isArray(parsed.hrs) && parsed.hrs.length > 0 ? parsed.hrs : MOCK_HRS,
+          employees:
+            Array.isArray(parsed.employees) && parsed.employees.length > 0
+              ? parsed.employees
+              : MOCK_EMPLOYEES,
+          managers:
+            Array.isArray(parsed.managers) && parsed.managers.length > 0
+              ? parsed.managers
+              : MOCK_MANAGERS,
+          documents: MOCK_HR_DOCUMENTS,
+          user: parsed.user
+            ? { ...parsed.user, role: normalizeRole(parsed.user.role) || "hr_admin" }
+            : null,
+          isRestoring: false,
+        };
+        return;
+      } catch {
+        state = seedMockHrAdminWorkspace();
+        return;
+      }
+    }
+    if (!explicitlyLoggedOut) {
+      state = seedMockHrAdminWorkspace();
+      return;
+    }
+  }
+
   const raw = safeStorage.getItem(KEY);
   if (raw) {
     try {

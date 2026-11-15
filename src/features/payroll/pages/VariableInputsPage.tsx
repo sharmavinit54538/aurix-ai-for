@@ -145,6 +145,16 @@ export default function VariableInputsPage() {
       return;
     }
 
+    let parsedUnits: number | undefined;
+    if (units.trim()) {
+      const n = Number(units.trim());
+      if (!Number.isFinite(n) || n < 0) {
+        toast.error("Units / Hours must be a valid non-negative number.");
+        return;
+      }
+      parsedUnits = n;
+    }
+
     setCreating(true);
     try {
       await variableInputsApi.createVariableInput({
@@ -152,7 +162,7 @@ export default function VariableInputsPage() {
         periodId: selectedPeriodId,
         type: inputType,
         amountPaise: paise,
-        units: units ? parseFloat(units) : undefined,
+        units: parsedUnits,
         description: description.trim(),
       });
       toast.success("Variable input submitted for checker approval.");
@@ -253,7 +263,10 @@ export default function VariableInputsPage() {
             <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
             <select
               value={selectedPeriodId}
-              onChange={(e) => setSelectedPeriodId(e.target.value)}
+              onChange={(e) => {
+                setSelectedPeriodId(e.target.value);
+                setPage(1);
+              }}
               disabled={loadingPeriods}
               className="rounded-lg border border-input bg-background/80 px-2 py-1.5 text-xs font-mono min-w-[200px]"
             >
@@ -367,7 +380,10 @@ export default function VariableInputsPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") loadInputs();
+              if (e.key === "Enter") {
+                if (page !== 1) setPage(1);
+                else loadInputs();
+              }
             }}
             className="pl-8 h-9 rounded-xl text-xs"
           />

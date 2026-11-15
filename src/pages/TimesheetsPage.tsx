@@ -4,9 +4,8 @@ import { useState, useEffect, useMemo } from "react";
 import {
   Timer, Plus, Trash2, CheckCircle2, XCircle, Sparkles, Calendar,
   FileText, ChevronLeft, ChevronRight, Save, Send, AlertCircle, Clock,
-  ArrowRight, ShieldCheck, UserCheck, RefreshCw, BarChart2
+  ArrowRight, ShieldCheck, UserCheck, BarChart2
 } from "lucide-react";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -385,19 +384,6 @@ export function TimesheetsPage() {
   return (
     <>
       <div className="flex justify-end gap-2">
-        {import.meta.env.DEV && userRole !== "super_admin" && userRole !== "hr_admin" && userRole !== "manager" && (
-          <Button 
-            variant="outline" className="gap-2 border-dashed"
-            onClick={() => {
-              toast.info("Switched view to simulated Manager context.");
-              setActiveTab(activeTab === "approvals" ? "my-timesheet" : "approvals");
-            }}
-          >
-            <RefreshCw className="h-4 w-4 animate-spin-slow" />
-            {activeTab === "approvals" ? "Show Employee Grid" : "Simulate Manager Approvals"}
-          </Button>
-        )}
-        
         <Button
           onClick={() => setAiAutofillOpen(true)}
           disabled={timesheetStatus === "pending" || timesheetStatus === "approved"}

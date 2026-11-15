@@ -52,24 +52,11 @@ import type {
   PayrollPeriod,
 } from "@/services/payrollApi";
 
-// ── Currency Formatter (INR) ──────────────────────────────────────────
-function formatINR(value: number | null | undefined): string {
-  if (value === null || value === undefined || isNaN(value)) {
-    return "—";
-  }
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
-function formatCount(value: number | null | undefined): string {
-  if (value === null || value === undefined || isNaN(value)) {
-    return "—";
-  }
-  return new Intl.NumberFormat("en-IN").format(value);
-}
+import {
+  formatOptionalINR as formatINR,
+  formatOptionalCount as formatCount,
+} from "@/lib/format";
+import { toPaise, addPaise, toRupees } from "../utils/money";
 
 // ── Chart Colors & Dark Mode Tooltip ──────────────────────────────────
 const CHART_COLORS = [
@@ -138,12 +125,12 @@ export function PayrollMetricsDashboard({
   const employerContributions = data?.summary?.employerCost ?? null;
   const totalPayrollCost =
     grossPayroll !== null || employerContributions !== null
-      ? (grossPayroll ?? 0) + (employerContributions ?? 0)
+      ? toRupees(addPaise(toPaise(grossPayroll ?? 0), toPaise(employerContributions ?? 0)))
       : null;
 
   const avgSalary =
     employeeCount !== null && employeeCount > 0 && grossPayroll !== null
-      ? Math.round(grossPayroll / employeeCount)
+      ? grossPayroll / employeeCount
       : null;
   const pendingApprovalsCount =
     data?.status === "Review" || data?.status === "Processing" ? 1 : 0;
@@ -448,7 +435,9 @@ export function PayrollMetricsDashboard({
                 className="text-xs text-muted-foreground"
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(val) => `₹${(val / 100000).toFixed(0)}L`}
+                tickFormatter={(val) =>
+                  val >= 100000 ? `₹${(val / 100000).toFixed(1)}L` : `₹${val}`
+                }
               />
               <Tooltip
                 contentStyle={CHART_TOOLTIP_STYLE}

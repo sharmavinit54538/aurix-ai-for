@@ -90,15 +90,18 @@ export default function PayrollRunPaymentPage() {
         }
       }
 
-      // 3. Fetch company source bank accounts
-      try {
-        const accounts = await paymentApi.getCompanyBankAccounts("default");
-        setSourceAccounts(accounts);
-        if (accounts.length > 0) {
-          setSelectedAccountId(accounts[0].id);
+      // 3. Fetch company source bank accounts when company context is available
+      const companyId = aurixStore.company?.id || currentUser?.companyId || "";
+      if (companyId) {
+        try {
+          const accounts = await paymentApi.getCompanyBankAccounts(companyId);
+          setSourceAccounts(accounts);
+          if (accounts.length > 0) {
+            setSelectedAccountId(accounts[0].id);
+          }
+        } catch {
+          // Source accounts endpoint pending or unavailable
         }
-      } catch {
-        // Source accounts endpoint pending
       }
     } catch (err: any) {
       if (err?.response?.status === 404) {
@@ -125,8 +128,8 @@ export default function PayrollRunPaymentPage() {
   const handleCreateBatch = async () => {
     if (inFlightRef.current || isSubmitting) return;
 
-    if (!selectedAccountId && sourceAccounts.length > 0) {
-      toast.error("Please select a source bank account");
+    if (!selectedAccountId) {
+      toast.error("Please select a verified corporate bank account for disbursement.");
       return;
     }
 
@@ -138,7 +141,7 @@ export default function PayrollRunPaymentPage() {
       const createdBatch = await paymentApi.createPaymentBatch(
         runId,
         {
-          sourceAccountId: selectedAccountId || "default-account-id",
+          sourceAccountId: selectedAccountId,
           paymentMode,
           heldEmployeeIds: heldEmployees.map((h) => ({
             employeeId: h.employeeId,
@@ -367,9 +370,8 @@ export default function PayrollRunPaymentPage() {
                     ))}
                   </select>
                 ) : (
-                  <div className="mt-1.5 rounded-xl border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground flex items-center justify-between">
-                    <span>Primary Corporate Account (HDFC Bank • ••••••••4431)</span>
-                    <Badge variant="outline" className="text-[10px]">Default</Badge>
+                  <div className="mt-1.5 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-200">
+                    No verified corporate bank accounts returned for disbursement. Ensure a company disbursement account is configured before creating a payment batch.
                   </div>
                 )}
                 <p className="mt-1 text-[11px] text-muted-foreground">
@@ -524,7 +526,7 @@ export default function PayrollRunPaymentPage() {
               <Button
                 id="create-payment-batch-btn"
                 variant="default"
-                disabled={!isFinalized || isSubmitting || loadingRun}
+                disabled={!isFinalized || !selectedAccountId || isSubmitting || loadingRun}
                 onClick={handleCreateBatch}
                 className="w-full h-10 gap-2 text-xs font-semibold rounded-xl shadow-md"
                 style={{ background: isFinalized ? "var(--gradient-brand)" : undefined }}

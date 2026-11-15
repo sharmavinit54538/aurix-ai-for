@@ -2,25 +2,22 @@ import React, { useState, useEffect } from "react";
 import {
   AlertCircle,
   Building,
-  CheckCircle2,
+  Calendar,
   Download,
   FileCheck,
-  FileSpreadsheet,
-  FileText,
-  Layers,
-  Lock,
   RefreshCw,
   Scale,
   ShieldCheck,
-  Users,
 } from "lucide-react";
 import { GlassCard, StatCard } from "@/components/hrms/Shared";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { formatINR, formatCount } from "@/lib/format";
+import { formatCount, formatDate } from "@/lib/format";
+import { formatPaiseToINR } from "../utils/money";
 import { statutoryApi } from "../api/statutoryApi";
+import { payrollApi, type PayrollPeriod } from "@/services/payrollApi";
 import type {
   StatutoryConfig,
   StatutoryPeriodSummary,
@@ -28,35 +25,56 @@ import type {
 } from "../types/statutory";
 import { toast } from "sonner";
 
+const formatPaiseOrDash = (paise?: number | null) =>
+  paise != null ? formatPaiseToINR(paise) : "—";
+
 export default function StatutoryCompliancePage() {
   const [activeTab, setActiveTab] = useState<"overview" | "pf" | "esi" | "pt" | "tds">("overview");
   const [loading, setLoading] = useState(false);
   const [backendUnavailable, setBackendUnavailable] = useState(false);
 
+  const [periods, setPeriods] = useState<PayrollPeriod[]>([]);
+  const [selectedPeriodId, setSelectedPeriodId] = useState<string>("");
   const [config, setConfig] = useState<StatutoryConfig | null>(null);
   const [summary, setSummary] = useState<StatutoryPeriodSummary | null>(null);
   const [downloadingReport, setDownloadingReport] = useState<StatutoryComponent | null>(null);
 
-  const loadData = async () => {
+  const loadSummary = async (periodId?: string) => {
+    const sumRes = await statutoryApi
+      .getStatutorySummary(periodId || undefined)
+      .catch((err) => {
+        if (err?.response?.status === 404 || err?.response?.status === 501) {
+          setBackendUnavailable(true);
+        }
+        return null;
+      });
+    setSummary(sumRes);
+  };
+
+  const loadData = async (explicitPeriodId?: string) => {
     setLoading(true);
     setBackendUnavailable(false);
     try {
-      const [cfgRes, sumRes] = await Promise.all([
+      const [cfgRes, periodsList] = await Promise.all([
         statutoryApi.getStatutoryConfig().catch((err) => {
           if (err?.response?.status === 404 || err?.response?.status === 501) {
             setBackendUnavailable(true);
           }
           return null;
         }),
-        statutoryApi.getStatutorySummary().catch((err) => {
-          if (err?.response?.status === 404 || err?.response?.status === 501) {
-            setBackendUnavailable(true);
-          }
-          return null;
-        }),
+        payrollApi.getPeriods().catch(() => [] as PayrollPeriod[]),
       ]);
       setConfig(cfgRes);
-      setSummary(sumRes);
+      setPeriods(periodsList);
+
+      let targetPeriodId = explicitPeriodId ?? selectedPeriodId;
+      if (!targetPeriodId && periodsList.length > 0) {
+        const current = periodsList.find((p) => p.isCurrent) || periodsList[0];
+        targetPeriodId = current.id;
+        setSelectedPeriodId(targetPeriodId);
+      }
+
+      await loadSummary(targetPeriodId || undefined);
     } catch {
       toast.error("Failed to load statutory compliance data");
     } finally {
@@ -65,13 +83,28 @@ export default function StatutoryCompliancePage() {
   };
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, []);
 
+  const handlePeriodChange = async (nextPeriodId: string) => {
+    setSelectedPeriodId(nextPeriodId);
+    setLoading(true);
+    setBackendUnavailable(false);
+    try {
+      await loadSummary(nextPeriodId || undefined);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDownloadReport = async (comp: StatutoryComponent, format: "csv" | "txt") => {
+    if (!selectedPeriodId) {
+      toast.error("Please select a payroll period before exporting statutory returns.");
+      return;
+    }
     setDownloadingReport(comp);
     try {
-      const blob = await statutoryApi.requestStatutoryReport(comp, "current", format);
+      const blob = await statutoryApi.requestStatutoryReport(comp, selectedPeriodId, format);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -115,11 +148,35 @@ export default function StatutoryCompliancePage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+            <select
+              aria-label="Payroll Period"
+              value={selectedPeriodId}
+              onChange={(e) => {
+                void handlePeriodChange(e.target.value);
+              }}
+              disabled={loading || periods.length === 0}
+              className="rounded-lg border border-input bg-background/80 px-2.5 py-1.5 text-xs min-w-[210px]"
+            >
+              {periods.length === 0 ? (
+                <option value="">No payroll periods</option>
+              ) : (
+                periods.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} ({formatDate(p.startDate)} – {formatDate(p.endDate)})
+                  </option>
+                ))
+              )}
+            </select>
+          </div>
           <Button
             variant="outline"
             size="sm"
-            onClick={loadData}
+            onClick={() => {
+              void loadData(selectedPeriodId || undefined);
+            }}
             disabled={loading}
             className="h-8 gap-1.5 text-xs rounded-xl"
           >
@@ -235,7 +292,14 @@ export default function StatutoryCompliancePage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/60">
-                  {!summary || summary.records.length === 0 ? (
+                  {loading ? (
+                    <tr>
+                      <td colSpan={9} className="px-4 py-12 text-center text-muted-foreground">
+                        <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-primary" />
+                        <span>Loading statutory compliance summary...</span>
+                      </td>
+                    </tr>
+                  ) : !summary || summary.records.length === 0 ? (
                     <tr>
                       <td colSpan={9} className="px-4 py-12 text-center text-muted-foreground">
                         <Scale className="h-8 w-8 mx-auto mb-2 text-muted-foreground/60" />
@@ -256,15 +320,15 @@ export default function StatutoryCompliancePage() {
                         </td>
                         <td className="px-4 py-3 font-mono text-muted-foreground">{r.pfUan || "—"}</td>
                         <td className="px-4 py-3 font-mono text-right font-semibold text-foreground">
-                          {formatINR(r.employeePfPaise / 100)}
+                          {formatPaiseOrDash(r.employeePfPaise)}
                         </td>
                         <td className="px-4 py-3 font-mono text-muted-foreground">{r.esiIpNumber || "—"}</td>
                         <td className="px-4 py-3 font-mono text-right font-semibold text-foreground">
-                          {formatINR(r.employeeEsiPaise / 100)}
+                          {formatPaiseOrDash(r.employeeEsiPaise)}
                         </td>
                         <td className="px-4 py-3">{r.ptState}</td>
                         <td className="px-4 py-3 font-mono text-right font-semibold text-foreground">
-                          {formatINR(r.ptAmountPaise / 100)}
+                          {formatPaiseOrDash(r.ptAmountPaise)}
                         </td>
                         <td className="px-4 py-3">
                           <Badge variant="outline" className="text-[10px]">
@@ -272,7 +336,7 @@ export default function StatutoryCompliancePage() {
                           </Badge>
                         </td>
                         <td className="px-4 py-3 font-mono text-right font-semibold text-emerald-600 dark:text-emerald-400">
-                          {formatINR(r.monthlyTdsPaise / 100)}
+                          {formatPaiseOrDash(r.monthlyTdsPaise)}
                         </td>
                       </tr>
                     ))
@@ -311,25 +375,25 @@ export default function StatutoryCompliancePage() {
               <div className="p-3 rounded-xl border border-border/60 bg-muted/20">
                 <span className="text-muted-foreground">Covered Employees</span>
                 <p className="font-mono font-semibold text-foreground mt-1">
-                  {formatCount(summary?.pfTotals?.eligibleCount || 0)}
+                  {formatCount(summary?.pfTotals?.eligibleCount)}
                 </p>
               </div>
               <div className="p-3 rounded-xl border border-border/60 bg-muted/20">
                 <span className="text-muted-foreground">Total Contributory Wages</span>
                 <p className="font-mono font-semibold text-foreground mt-1">
-                  {formatINR((summary?.pfTotals?.totalWagesPaise || 0) / 100)}
+                  {formatPaiseOrDash(summary?.pfTotals?.totalWagesPaise)}
                 </p>
               </div>
               <div className="p-3 rounded-xl border border-border/60 bg-muted/20">
                 <span className="text-muted-foreground">Employee PF (12%)</span>
                 <p className="font-mono font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
-                  {formatINR((summary?.pfTotals?.totalEmployeePfPaise || 0) / 100)}
+                  {formatPaiseOrDash(summary?.pfTotals?.totalEmployeePfPaise)}
                 </p>
               </div>
               <div className="p-3 rounded-xl border border-border/60 bg-muted/20">
                 <span className="text-muted-foreground">Employer Share (12%)</span>
                 <p className="font-mono font-semibold text-primary mt-1">
-                  {formatINR((summary?.pfTotals?.totalEmployerPfPaise || 0) / 100)}
+                  {formatPaiseOrDash(summary?.pfTotals?.totalEmployerPfPaise)}
                 </p>
               </div>
             </div>
@@ -364,25 +428,25 @@ export default function StatutoryCompliancePage() {
               <div className="p-3 rounded-xl border border-border/60 bg-muted/20">
                 <span className="text-muted-foreground">Covered Employees</span>
                 <p className="font-mono font-semibold text-foreground mt-1">
-                  {formatCount(summary?.esiTotals?.eligibleCount || 0)}
+                  {formatCount(summary?.esiTotals?.eligibleCount)}
                 </p>
               </div>
               <div className="p-3 rounded-xl border border-border/60 bg-muted/20">
                 <span className="text-muted-foreground">Gross Insurable Wages</span>
                 <p className="font-mono font-semibold text-foreground mt-1">
-                  {formatINR((summary?.esiTotals?.totalWagesPaise || 0) / 100)}
+                  {formatPaiseOrDash(summary?.esiTotals?.totalWagesPaise)}
                 </p>
               </div>
               <div className="p-3 rounded-xl border border-border/60 bg-muted/20">
                 <span className="text-muted-foreground">Employee Share (0.75%)</span>
                 <p className="font-mono font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
-                  {formatINR((summary?.esiTotals?.totalEmployeeEsiPaise || 0) / 100)}
+                  {formatPaiseOrDash(summary?.esiTotals?.totalEmployeeEsiPaise)}
                 </p>
               </div>
               <div className="p-3 rounded-xl border border-border/60 bg-muted/20">
                 <span className="text-muted-foreground">Employer Share (3.25%)</span>
                 <p className="font-mono font-semibold text-primary mt-1">
-                  {formatINR((summary?.esiTotals?.totalEmployerEsiPaise || 0) / 100)}
+                  {formatPaiseOrDash(summary?.esiTotals?.totalEmployerEsiPaise)}
                 </p>
               </div>
             </div>
@@ -417,7 +481,7 @@ export default function StatutoryCompliancePage() {
               <div className="p-3 rounded-xl border border-border/60 bg-muted/20">
                 <span className="text-muted-foreground">Employees Under PT Coverage</span>
                 <p className="font-mono font-semibold text-foreground mt-1">
-                  {formatCount(summary?.ptTotals?.coveredCount || 0)}
+                  {formatCount(summary?.ptTotals?.coveredCount)}
                 </p>
               </div>
               <div className="p-3 rounded-xl border border-border/60 bg-muted/20">
@@ -458,7 +522,7 @@ export default function StatutoryCompliancePage() {
               <div className="p-3 rounded-xl border border-border/60 bg-muted/20">
                 <span className="text-muted-foreground">Employees with TDS Withholdings</span>
                 <p className="font-mono font-semibold text-foreground mt-1">
-                  {formatCount(summary?.tdsTotals?.deductedCount || 0)}
+                  {formatCount(summary?.tdsTotals?.deductedCount)}
                 </p>
               </div>
               <div className="p-3 rounded-xl border border-border/60 bg-muted/20">
