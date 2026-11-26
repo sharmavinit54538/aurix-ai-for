@@ -112,7 +112,7 @@ export default function HolidaysPage() {
   const [officeFilter, setOfficeFilter] = useState("all");
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
-  const [yearFilter, setYearFilter] = useState("2026");
+  const [yearFilter, setYearFilter] = useState("all");
 
   // Selection & Details Drawers
   const [selectedHoliday, setSelectedHoliday] = useState<Holiday | null>(null);
@@ -126,7 +126,10 @@ export default function HolidaysPage() {
   // Form Fields
   const [formName, setFormName] = useState("");
   const [formDescription, setFormDescription] = useState("");
-  const [formDate, setFormDate] = useState("2026-06-25");
+  const [formDate, setFormDate] = useState(() => {
+    const d = new Date();
+    return d.toISOString().split("T")[0];
+  });
   const [formCountry, setFormCountry] = useState("USA");
   const [formState, setFormState] = useState("All States");
   const [formOffice, setFormOffice] = useState("All Offices");
@@ -152,10 +155,23 @@ export default function HolidaysPage() {
   const [calendarYear, setCalendarYear] = useState(2026);
   const [calendarMonth, setCalendarMonth] = useState(5); // June (0-indexed)
 
-  // Static system date — no Date.now() during render (SSR-safe)
-  const sysYear = 2026;
-  const sysMonth = 5; // June
-  const sysDay = 25;
+  // Get organization-local current date (avoids SSR mismatch by using client-only ref)
+  const getOrgCurrentDate = () => {
+    if (typeof window === "undefined") return { year: new Date().getFullYear(), month: new Date().getMonth(), day: new Date().getDate() };
+    return { year: new Date().getFullYear(), month: new Date().getMonth(), day: new Date().getDate() };
+  };
+  
+  const [orgDate, setOrgDate] = useState(() => getOrgCurrentDate());
+  
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setOrgDate(getOrgCurrentDate());
+    }
+  }, []);
+
+  const sysYear = orgDate.year;
+  const sysMonth = orgDate.month;
+  const sysDay = orgDate.day;
 
   const loadHolidays = async (showNotice = false) => {
     setLoading(true);
@@ -434,27 +450,40 @@ export default function HolidaysPage() {
     }
   };
 
-  const toggleArchiveHoliday = (holiday: Holiday) => {
+  const toggleArchiveHoliday = async (holiday: Holiday) => {
     const nextStatus = holiday.status === "Active" ? "Archived" : "Active";
-    setHolidays((prev) => prev.map((h) => (h.id === holiday.id ? { ...h, status: nextStatus } : h)));
-    toast.success(`Holiday "${holiday.name}" has been ${nextStatus === "Archived" ? "archived" : "unarchived"}`);
+    try {
+      if (nextStatus === "Archived") {
+        await attendanceApi.archiveHoliday(holiday.id);
+      } else {
+        await attendanceApi.restoreHoliday(holiday.id);
+      }
+      setHolidays((prev) => prev.map((h) => (h.id === holiday.id ? { ...h, status: nextStatus, updatedDate: new Date().toISOString().split("T")[0] } : h)));
+      toast.success(`Holiday "${holiday.name}" has been ${nextStatus === "Archived" ? "archived" : "unarchived"} on backend`);
+    } catch (err: any) {
+      toast.error(err?.message || `Failed to ${nextStatus === "Archived" ? "archive" : "unarchive"} holiday`);
+    }
     setIsDetailsOpen(false);
   };
 
-  // Export — all new Date() here is in event handler (client-only)
-  const exportHolidaysCSV = () => {
-    const headers = "ID,Name,Date,Type,Country,Region/State,Office,Department,Status,CreatedBy,CreatedDate\n";
-    const rows = filteredHolidays.map(
-      (h) => `"${h.id}","${h.name}","${h.date}","${h.type}","${h.country}","${h.state}","${h.office}","${h.department}","${h.status}","${h.createdBy}","${h.createdDate}"`
-    ).join("\n");
-    const csvContent = "data:text/csv;charset=utf-8," + headers + rows;
-    const link = document.createElement("a");
-    link.setAttribute("href", encodeURI(csvContent));
-    link.setAttribute("download", `ofc360_holidays_${new Date().toISOString().split("T")[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.success("CSV export started successfully!");
+  // Export — uses backend API
+  const exportHolidaysCSV = async () => {
+    try {
+      const year = yearFilter !== "all" ? Number(yearFilter) : calendarYear;
+      const branch = officeFilter !== "all" ? officeFilter : undefined;
+      const blob = await attendanceApi.exportHolidays({ year, branch });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `ofc360_holidays_${new Date().toISOString().split("T")[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success("CSV export completed successfully!");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to export holidays");
+    }
   };
 
   const handleDragOver = (e: React.DragEvent) => e.preventDefault();
@@ -754,7 +783,7 @@ export default function HolidaysPage() {
                   <button onClick={handlePrevMonth} className="rounded-lg border border-border bg-card/50 p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground" aria-label="Previous month">
                     <ChevronLeft className="h-4 w-4" />
                   </button>
-                  <button onClick={() => { setCalendarMonth(sysMonth); setCalendarYear(sysYear); }} className="rounded-lg border border-border bg-card/50 px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-foreground">Today</button>
+                  <button onClick={() => { setCalendarMonth(orgDate.month); setCalendarYear(orgDate.year); }} className="rounded-lg border border-border bg-card/50 px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-foreground">Today</button>
                   <button onClick={handleNextMonth} className="rounded-lg border border-border bg-card/50 p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground" aria-label="Next month">
                     <ChevronRight className="h-4 w-4" />
                   </button>

@@ -689,28 +689,6 @@ export function EmployeeFormDialog({
   );
 }
 
-const firstNameVal =
-  draft?.firstName !== undefined
-    ? draft.firstName
-    : (draft?.fullName || "").split(" ")[0] || "";
-const lastNameVal =
-  draft?.lastName !== undefined
-    ? draft.lastName
-    : (draft?.fullName || "").split(" ").slice(1).join(" ") || "";
-
-const officialEmailVal = draft?.companyEmail ?? draft?.email ?? "";
-const personalEmailVal = draft?.personalEmail ?? "";
-
-function updateName(nextFirst: string, nextLast: string) {
-  const combined = `${nextFirst} ${nextLast}`.trim();
-  onDraftChange({
-    ...draft!,
-    firstName: nextFirst,
-    lastName: nextLast,
-    fullName: combined,
-  });
-}
-
 function FormField({
   label,
   children,

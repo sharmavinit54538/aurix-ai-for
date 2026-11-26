@@ -12,6 +12,9 @@ import type {
   ResetPasswordResponse,
   ChangePasswordResponse,
   LogoutResponse,
+  ChangeEmailResponse,
+  VerifyNewEmailResponse,
+  ChangePhoneResponse,
 } from "./types";
 
 import { AUTH_ENDPOINTS, type AuthEndpointKey } from "./endpoints";

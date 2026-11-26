@@ -1,125 +1,136 @@
 import apiInstance from "@/api/apiInstance";
-import type { ShiftItem, ShiftChangeRequest } from "./types";
+import type {
+  ShiftItem,
+  ShiftCreatePayload,
+  ShiftUpdatePayload,
+  ShiftOption,
+  ShiftAssignPayload,
+  ShiftAssignResult,
+  ShiftOption as ShiftOptionType,
+  ShiftChangeRequest,
+  ShiftChangeRequestPayload,
+  ShiftListResponse,
+  ShiftEmployeesResponse,
+  MyScheduleData,
+  ListChangeRequestsParams,
+  CreateChangeRequestPayload,
+  ApproveChangeRequestPayload,
+  RejectChangeRequestPayload,
+} from "./types";
+
+function unwrapData<T>(res: any): T {
+  const payload = res.data?.data ?? res.data;
+  if (payload && typeof payload === "object" && "success" in payload) {
+    if (payload.success === false) {
+      throw new Error(payload.message || "API request failed");
+    }
+    return payload.data as T;
+  }
+  return payload as T;
+}
 
 export const getShifts = async (
   params?: Record<string, unknown>,
-): Promise<{ items: ShiftItem[]; total: number }> => {
-  const res = await apiInstance.get("/attendance/shifts", { params });
-  const d = res.data?.data ?? res.data;
-  const items: ShiftItem[] = Array.isArray(d)
-    ? d
-    : Array.isArray(d?.items)
-      ? d.items
-      : [];
-  return {
-    items,
-    total: Number(d?.total ?? items.length),
-  };
+): Promise<ShiftListResponse> => {
+  const res = await apiInstance.get("/api/v1/attendance/shifts", { params });
+  return unwrapData<ShiftListResponse>(res);
 };
 
-export const getShiftOptions = async (): Promise<ShiftItem[]> => {
-  const res = await getShifts();
-  return res.items;
+export const getShiftOptions = async (): Promise<ShiftOption[]> => {
+  const res = await apiInstance.get("/api/v1/attendance/shifts/options");
+  const data = unwrapData<{ options: ShiftOption[] }>(res);
+  return data.options ?? [];
 };
 
 export const createShift = async (
-  data: Partial<ShiftItem>,
+  data: ShiftCreatePayload,
 ): Promise<ShiftItem> => {
-  const res = await apiInstance.post("/attendance/shifts", data);
-  return res.data?.data ?? res.data;
+  const res = await apiInstance.post("/api/v1/attendance/shifts", data);
+  return unwrapData<ShiftItem>(res);
 };
 
 export const updateShift = async (
   id: string,
-  data: Partial<ShiftItem>,
+  data: ShiftUpdatePayload,
 ): Promise<ShiftItem> => {
-  const res = await apiInstance.put(`/attendance/shifts/${id}`, data);
-  return res.data?.data ?? res.data;
+  const res = await apiInstance.put(`/api/v1/attendance/shifts/${id}`, data);
+  return unwrapData<ShiftItem>(res);
 };
 
 export const deleteShift = async (
   id: string,
-): Promise<{ success: boolean }> => {
-  const res = await apiInstance.delete(`/attendance/shifts/${id}`);
-  return res.data?.data ?? res.data ?? { success: true };
+  reassignTo?: string,
+): Promise<{ success: boolean; reassigned?: boolean }> => {
+  const res = await apiInstance.delete(`/api/v1/attendance/shifts/${id}`, {
+    data: reassignTo ? { reassign_to: reassignTo } : undefined,
+  });
+  return unwrapData<{ success: boolean; reassigned?: boolean }>(res);
 };
 
-export const assignShift = async (payload: unknown) => {
-  const res = await apiInstance.post("/attendance/shifts/assign", payload);
-  return res.data?.data ?? res.data;
+export const assignShift = async (
+  shiftId: string,
+  payload: ShiftAssignPayload,
+): Promise<ShiftAssignResult> => {
+  const res = await apiInstance.post(`/api/v1/attendance/shifts/${shiftId}/assign`, payload);
+  return unwrapData<ShiftAssignResult>(res);
 };
 
-export const getShiftEmployees = async (shiftId: string): Promise<any[]> => {
-  const res = await apiInstance.get(`/attendance/shifts/${shiftId}/employees`);
-  const d = res.data?.data ?? res.data;
-  return Array.isArray(d) ? d : Array.isArray(d?.items) ? d.items : [];
+export const getShiftEmployees = async (
+  shiftId: string,
+  params?: Record<string, unknown>,
+): Promise<ShiftEmployeesResponse> => {
+  const res = await apiInstance.get(`/api/v1/attendance/shifts/${shiftId}/employees`, { params });
+  return unwrapData<ShiftEmployeesResponse>(res);
 };
 
 export const getMySchedule = async (
   params?: Record<string, unknown>,
-): Promise<any> => {
-  const res = await apiInstance.get("/attendance/shifts/my-schedule", {
-    params,
-  });
-  return res.data?.data ?? res.data ?? null;
+): Promise<MyScheduleData> => {
+  const res = await apiInstance.get("/api/v1/attendance/shifts/me/schedule", { params });
+  return unwrapData<MyScheduleData>(res);
 };
 
 export const getMyChangeRequests = async (): Promise<ShiftChangeRequest[]> => {
-  const res = await apiInstance.get("/attendance/shifts/change-requests/my");
-  const d = res.data?.data ?? res.data;
-  return Array.isArray(d) ? d : Array.isArray(d?.items) ? d.items : [];
+  const res = await apiInstance.get("/api/v1/attendance/shifts/change-requests/my");
+  const data = unwrapData<{ items: ShiftChangeRequest[] }>(res);
+  return data.items ?? [];
 };
 
 export const createChangeRequest = async (
-  payload: Partial<ShiftChangeRequest>,
+  payload: ShiftChangeRequestPayload,
 ): Promise<ShiftChangeRequest> => {
-  const res = await apiInstance.post(
-    "/attendance/shifts/change-requests",
-    payload,
-  );
-  return res.data?.data ?? res.data;
+  const res = await apiInstance.post("/api/v1/attendance/shifts/change-requests", payload);
+  return unwrapData<ShiftChangeRequest>(res);
 };
 
 export const listChangeRequests = async (
-  params?: Record<string, unknown>,
-): Promise<ShiftChangeRequest[]> => {
-  const res = await apiInstance.get("/attendance/shifts/change-requests", {
-    params,
-  });
-  const d = res.data?.data ?? res.data;
-  return Array.isArray(d) ? d : Array.isArray(d?.items) ? d.items : [];
+  params?: ListChangeRequestsParams,
+): Promise<{ items: ShiftChangeRequest[]; total: number; page: number; limit: number }> => {
+  const res = await apiInstance.get("/api/v1/attendance/shifts/change-requests", { params });
+  return unwrapData<{ items: ShiftChangeRequest[]; total: number; page: number; limit: number }>(res);
 };
 
 export const approveChangeRequest = async (
   id: string,
-  comment?: string,
-): Promise<{ success: boolean }> => {
-  const res = await apiInstance.post(
-    `/attendance/shifts/change-requests/${id}/approve`,
-    { comment },
-  );
-  return res.data?.data ?? res.data ?? { success: true };
+  payload?: ApproveChangeRequestPayload,
+): Promise<ShiftChangeRequest> => {
+  const res = await apiInstance.post(`/api/v1/attendance/shifts/change-requests/${id}/approve`, payload);
+  return unwrapData<ShiftChangeRequest>(res);
 };
 
 export const rejectChangeRequest = async (
   id: string,
-  comment?: string,
-): Promise<{ success: boolean }> => {
-  const res = await apiInstance.post(
-    `/attendance/shifts/change-requests/${id}/reject`,
-    { comment },
-  );
-  return res.data?.data ?? res.data ?? { success: true };
+  payload: RejectChangeRequestPayload,
+): Promise<ShiftChangeRequest> => {
+  const res = await apiInstance.post(`/api/v1/attendance/shifts/change-requests/${id}/reject`, payload);
+  return unwrapData<ShiftChangeRequest>(res);
 };
 
 export const cancelChangeRequest = async (
   id: string,
-): Promise<{ success: boolean }> => {
-  const res = await apiInstance.post(
-    `/attendance/shifts/change-requests/${id}/cancel`,
-    {},
-  );
-  return res.data?.data ?? res.data ?? { success: true };
+): Promise<ShiftChangeRequest> => {
+  const res = await apiInstance.post(`/api/v1/attendance/shifts/change-requests/${id}/cancel`, {});
+  return unwrapData<ShiftChangeRequest>(res);
 };
 
 export const shiftsApi = {

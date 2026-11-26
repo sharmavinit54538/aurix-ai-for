@@ -1,6 +1,9 @@
 import { api } from "@/api";
-import apiInstance from "@/api/apiInstance";
-import { HolidayRecord, HolidayCreatePayload } from "./types";
+import type {
+  HolidayRecord,
+  HolidayCreatePayload,
+  HolidayUpdatePayload,
+} from "./types";
 import { extractListPayload, extractObjectPayload } from "./helpers";
 
 // ─────────────────────────────────────────────────────────────
@@ -10,7 +13,6 @@ import { extractListPayload, extractObjectPayload } from "./helpers";
 /**
  * List holidays from backend.
  * Primary route: GET /api/v1/calendar/holidays.
- * Also aliases to GET /api/v1/attendance/holidays.
  */
 export async function getHolidays(params?: { branch?: string; year?: number }): Promise<HolidayRecord[]> {
   const query = new URLSearchParams();
@@ -18,16 +20,11 @@ export async function getHolidays(params?: { branch?: string; year?: number }): 
   if (params?.year) query.set("year", params.year.toString());
   const qs = query.toString();
 
-  let res: unknown;
-  try {
-    res = await api.get(`calendar/holidays${qs ? `?${qs}` : ""}`);
-  } catch {
-    // Fallback if attendance/holidays is mounted
-    res = await api.get(`attendance/holidays${qs ? `?${qs}` : ""}`);
-  }
+  const res = await api.get(`calendar/holidays${qs ? `?${qs}` : ""}`);
+  const data = extractListPayload<{ items: any[] }>(res);
+  const items = data?.items ?? [];
 
-  const list = extractListPayload(res);
-  return list.map((item: any) => ({
+  return items.map((item: any) => ({
     id: item.id || item._id,
     name: item.holiday_name || item.name,
     description: item.description || "",
@@ -53,48 +50,42 @@ export async function getHolidays(params?: { branch?: string; year?: number }): 
  * Create a holiday entry.
  * Primary route: POST /api/v1/calendar/holidays.
  */
-export async function createHoliday(data: HolidayCreatePayload): Promise<HolidayRecord> {
-  const payload = {
-    holiday_name: data.name,
-    holiday_date: data.date,
-    holiday_type: data.type,
-    branch: data.office || null,
-    description: data.description || null,
-    is_recurring: data.recurring ?? false,
-  };
-
-  let res: any;
-  try {
-    res = await api.post("calendar/holidays", payload);
-  } catch {
-    res = await api.post("attendance/holidays", {
-      ...payload,
-      name: data.name,
-      date: data.date,
-      type: data.type,
-    });
-  }
-
+export async function createHoliday(data: {
+  name: string;
+  description: string;
+  date: string;
+  type: "Public" | "Company" | "Regional" | "Optional";
+  country: string;
+  state: string;
+  office: string;
+  department: string;
+  color: string;
+  recurring: boolean;
+  everyYear: boolean;
+  applyToAll: boolean;
+  notes: string;
+}): Promise<any> {
+  const res = await api.post("calendar/holidays", data);
   const item = extractObjectPayload<any>(res);
   return {
     id: item.id || item._id,
-    name: item.holiday_name || data.name,
+    name: item.name || data.name,
     description: item.description || data.description || "",
-    date: item.holiday_date || data.date,
-    type: (item.holiday_type || data.type) as any,
-    country: data.country || "USA",
-    state: data.state || "All States",
-    office: item.branch || data.office || "All Offices",
-    department: data.department || "All Departments",
+    date: item.date || data.date,
+    type: (item.type || data.type) as any,
+    country: data.country,
+    state: data.state,
+    office: data.office,
+    department: data.department,
     status: "Active",
     createdBy: "Current User",
     createdDate: new Date().toISOString().split("T")[0],
     updatedDate: new Date().toISOString().split("T")[0],
     notes: data.notes || "",
     color: data.color || "#3B82F6",
-    recurring: Boolean(item.is_recurring ?? data.recurring),
-    everyYear: Boolean(data.everyYear ?? true),
-    applyToAll: Boolean(data.applyToAll ?? true),
+    recurring: data.recurring,
+    everyYear: data.everyYear,
+    applyToAll: data.applyToAll,
   };
 }
 
@@ -102,42 +93,42 @@ export async function createHoliday(data: HolidayCreatePayload): Promise<Holiday
  * Update an existing holiday.
  * Primary route: PUT /api/v1/calendar/holidays/:id.
  */
-export async function updateHoliday(id: string, data: Partial<HolidayCreatePayload>): Promise<HolidayRecord> {
-  const payload: Record<string, unknown> = {};
-  if (data.name) payload.holiday_name = data.name;
-  if (data.date) payload.holiday_date = data.date;
-  if (data.type) payload.holiday_type = data.type;
-  if (data.office !== undefined) payload.branch = data.office;
-  if (data.description !== undefined) payload.description = data.description;
-  if (data.recurring !== undefined) payload.is_recurring = data.recurring;
-
-  let res: any;
-  try {
-    res = await api.put(`calendar/holidays/${id}`, payload);
-  } catch {
-    res = await api.put(`attendance/holidays/${id}`, payload);
-  }
-
+export async function updateHoliday(id: string, data: {
+  name?: string;
+  description?: string;
+  date?: string;
+  type?: "Public" | "Company" | "Regional" | "Optional";
+  country?: string;
+  state?: string;
+  office?: string;
+  department?: string;
+  color?: string;
+  recurring?: boolean;
+  everyYear?: boolean;
+  applyToAll?: boolean;
+  notes?: string;
+}): Promise<any> {
+  const res = await api.put(`calendar/holidays/${id}`, data);
   const item = extractObjectPayload<any>(res);
   return {
     id: item.id || id,
-    name: item.holiday_name || data.name || "",
+    name: item.name || data.name || "",
     description: item.description || data.description || "",
-    date: item.holiday_date || data.date || "",
-    type: (item.holiday_type || data.type || "Public") as any,
-    country: data.country || "USA",
-    state: data.state || "All States",
-    office: item.branch || data.office || "All Offices",
-    department: data.department || "All Departments",
+    date: item.date || data.date || "",
+    type: (item.type || data.type || "Public") as any,
+    country: data.country,
+    state: data.state,
+    office: data.office,
+    department: data.department,
     status: "Active",
     createdBy: "Current User",
     createdDate: new Date().toISOString().split("T")[0],
     updatedDate: new Date().toISOString().split("T")[0],
     notes: data.notes || "",
     color: data.color || "#3B82F6",
-    recurring: Boolean(item.is_recurring ?? data.recurring),
-    everyYear: Boolean(data.everyYear ?? true),
-    applyToAll: Boolean(data.applyToAll ?? true),
+    recurring: data.recurring,
+    everyYear: data.everyYear,
+    applyToAll: data.applyToAll,
   };
 }
 
@@ -146,35 +137,42 @@ export async function updateHoliday(id: string, data: Partial<HolidayCreatePaylo
  * Primary route: DELETE /api/v1/calendar/holidays/:id.
  */
 export async function deleteHoliday(id: string): Promise<{ success: boolean }> {
-  try {
-    await api.delete(`calendar/holidays/${id}`);
-  } catch {
-    await api.delete(`attendance/holidays/${id}`);
-  }
+  await api.delete(`calendar/holidays/${id}`);
   return { success: true };
+}
+
+/**
+ * Archive a holiday.
+ * PATCH /api/v1/calendar/holidays/:id/archive
+ */
+export async function archiveHoliday(id: string): Promise<any> {
+  const res = await api.patch(`calendar/holidays/${id}/archive`);
+  return extractObjectPayload<any>(res);
+}
+
+/**
+ * Restore an archived holiday.
+ * PATCH /api/v1/calendar/holidays/:id/restore
+ */
+export async function restoreHoliday(id: string): Promise<any> {
+  const res = await api.patch(`calendar/holidays/${id}/restore`);
+  return extractObjectPayload<any>(res);
 }
 
 /**
  * Bulk import holidays via CSV/Excel file or payload.
  */
-export async function importHolidays(fileOrList: File | HolidayCreatePayload[]): Promise<{ importedCount: number }> {
+export async function importHolidays(fileOrList: File | { name: string; description: string; date: string; type: "Public" | "Company" | "Regional" | "Optional"; country: string; state: string; office: string; department: string; color: string; recurring: boolean; everyYear: boolean; applyToAll: boolean; notes: string }[]): Promise<{ importedCount: number }> {
   if (fileOrList instanceof File) {
     const formData = new FormData();
     formData.append("file", fileOrList);
     try {
-      const res: any = await apiInstance.post("/calendar/holidays/import", formData, {
+      const res = await api.post("calendar/holidays/import", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      const data = extractObjectPayload<any>(res.data);
+      const data = extractObjectPayload<any>(res);
       return { importedCount: data.imported_count ?? 1 };
     } catch (err: any) {
-      if (err?.response?.status === 404) {
-        const res: any = await apiInstance.post("/attendance/holidays/import", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        const data = extractObjectPayload<any>(res.data);
-        return { importedCount: data.imported_count ?? 1 };
-      }
       throw err;
     }
   } else {
@@ -186,4 +184,40 @@ export async function importHolidays(fileOrList: File | HolidayCreatePayload[]):
     }
     return { importedCount: count };
   }
+}
+
+/**
+ * Export holidays to CSV.
+ */
+export async function exportHolidays(params?: { branch?: string; year?: number }): Promise<Blob> {
+  const query = new URLSearchParams();
+  if (params?.branch && params.branch !== "all") query.set("branch", params.branch);
+  if (params?.year) query.set("year", params.year.toString());
+  const qs = query.toString();
+
+  const res = await api.get(`calendar/holidays/export${qs ? `?${qs}` : ""}`, {
+    responseType: "blob",
+  });
+  return res.data as Blob;
+}
+
+/**
+ * Get holiday statistics.
+ */
+export async function getHolidayStatistics(year?: number): Promise<{
+  total: number;
+  active: number;
+  archived: number;
+  public: number;
+  company: number;
+  regional: number;
+  optional: number;
+  upcoming: number;
+}> {
+  const query = new URLSearchParams();
+  if (year) query.set("year", year.toString());
+  const qs = query.toString();
+
+  const res = await api.get(`calendar/holidays/statistics${qs ? `?${qs}` : ""}`);
+  return extractObjectPayload<any>(res);
 }

@@ -138,16 +138,6 @@ export interface MyProfileData {
   role?: string;
 }
 
-export interface UploadLogoResponse {
-  logo_url?: string;
-  logo_data_url?: string;
-}
-
-export interface UploadStampResponse {
-  stamp_url?: string;
-  stamp_data_url?: string;
-}
-
 export type AuthMeResponse = ApiResponse<AuthUserPayload>;
 export type LoginResponse = ApiResponse<LoginData>;
 export type RegisterResponse = ApiResponse<RegisterResponseData>;

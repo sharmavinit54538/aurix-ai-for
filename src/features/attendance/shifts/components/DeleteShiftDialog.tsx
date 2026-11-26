@@ -37,7 +37,7 @@ export function DeleteShiftDialog({ open, onOpenChange, shift, onConfirm, deleti
     if (!shift) return;
     setLoadingOptions(true);
     try {
-      const res = await api.get("attendance/shifts/options");
+      const res = await api.get("/api/v1/attendance/shifts/options");
       const data = res as { data?: unknown } | unknown[];
       let list: unknown[] = [];
       if (Array.isArray(data)) {

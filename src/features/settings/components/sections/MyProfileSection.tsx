@@ -73,6 +73,24 @@ export function MyProfileSection({ canEdit = true, onDirtyChange }: MyProfileSec
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // Change Email State
+  const [emailChangeData, setEmailChangeData] = useState({
+    newEmail: "",
+    otp: "",
+  });
+  const [emailChangeErrors, setEmailChangeErrors] = useState<Record<string, string>>({});
+  const [changingEmail, setChangingEmail] = useState(false);
+  const [emailChangeStep, setEmailChangeStep] = useState<"request" | "verify">("request");
+
+  // Change Phone State
+  const [phoneChangeData, setPhoneChangeData] = useState({
+    newPhone: "",
+    otp: "",
+  });
+  const [phoneChangeErrors, setPhoneChangeErrors] = useState<Record<string, string>>({});
+  const [changingPhone, setChangingPhone] = useState(false);
+  const [phoneChangeStep, setPhoneChangeStep] = useState<"request" | "verify">("request");
+
   const isDirty = initialData
     ? formData.name !== initialData.name ||
       formData.email !== initialData.email ||
@@ -255,6 +273,136 @@ export function MyProfileSection({ canEdit = true, onDirtyChange }: MyProfileSec
     } finally {
       setChangingPassword(false);
     }
+  };
+
+  // Change Email Handlers
+  const handleEmailChangeRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const errs: Record<string, string> = {};
+    if (!emailChangeData.newEmail.trim()) {
+      errs.newEmail = "New email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailChangeData.newEmail)) {
+      errs.newEmail = "Enter a valid email address";
+    }
+    if (emailChangeData.newEmail === formData.email) {
+      errs.newEmail = "New email must be different from current email";
+    }
+    setEmailChangeErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
+    setChangingEmail(true);
+    try {
+      await changeMyEmail(emailChangeData.newEmail);
+      setEmailChangeStep("verify");
+      toast.success("Verification OTP sent to new email address");
+    } catch (err: unknown) {
+      const apiErr = err as { message?: string; status?: number; data?: Record<string, string> };
+      const msg = apiErr?.message || "Failed to request email change";
+      if (apiErr?.data && typeof apiErr.data === "object") {
+        if (apiErr.data.new_email) setEmailChangeErrors({ newEmail: apiErr.data.new_email });
+      }
+      toast.error(msg);
+    } finally {
+      setChangingEmail(false);
+    }
+  };
+
+  const handleEmailVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const errs: Record<string, string> = {};
+    if (!emailChangeData.otp.trim()) {
+      errs.otp = "OTP is required";
+    }
+    setEmailChangeErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
+    setChangingEmail(true);
+    try {
+      await verifyNewEmail(emailChangeData.newEmail, emailChangeData.otp);
+      setFormData((prev) => ({ ...prev, email: emailChangeData.newEmail }));
+      if (initialData) setInitialData((prev) => (prev ? { ...prev, email: emailChangeData.newEmail } : null));
+      toast.success("Email updated successfully!");
+      setEmailChangeData({ newEmail: "", otp: "" });
+      setEmailChangeStep("request");
+    } catch (err: unknown) {
+      const apiErr = err as { message?: string; status?: number; data?: Record<string, string> };
+      const msg = apiErr?.message || "Failed to verify email";
+      if (apiErr?.status === 400) setEmailChangeErrors({ otp: "Invalid or expired OTP" });
+      toast.error(msg);
+    } finally {
+      setChangingEmail(false);
+    }
+  };
+
+  const handleEmailChangeCancel = () => {
+    setEmailChangeData({ newEmail: "", otp: "" });
+    setEmailChangeErrors({});
+    setEmailChangeStep("request");
+  };
+
+  // Change Phone Handlers
+  const handlePhoneChangeRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const errs: Record<string, string> = {};
+    if (!phoneChangeData.newPhone.trim()) {
+      errs.newPhone = "New phone number is required";
+    } else if (!/^\+?[0-9\s-]{7,15}$/.test(phoneChangeData.newPhone)) {
+      errs.newPhone = "Enter a valid phone number (7-15 digits)";
+    }
+    if (phoneChangeData.newPhone === formData.phone) {
+      errs.newPhone = "New phone must be different from current phone";
+    }
+    setPhoneChangeErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
+    setChangingPhone(true);
+    try {
+      await changeMyPhone(phoneChangeData.newPhone);
+      setPhoneChangeStep("verify");
+      toast.success("Verification OTP sent to new phone number");
+    } catch (err: unknown) {
+      const apiErr = err as { message?: string; status?: number; data?: Record<string, string> };
+      const msg = apiErr?.message || "Failed to request phone change";
+      if (apiErr?.data && typeof apiErr.data === "object") {
+        if (apiErr.data.new_phone) setPhoneChangeErrors({ newPhone: apiErr.data.new_phone });
+      }
+      toast.error(msg);
+    } finally {
+      setChangingPhone(false);
+    }
+  };
+
+  const handlePhoneVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const errs: Record<string, string> = {};
+    if (!phoneChangeData.otp.trim()) {
+      errs.otp = "OTP is required";
+    }
+    setPhoneChangeErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
+    setChangingPhone(true);
+    try {
+      await changeMyPhone(phoneChangeData.newPhone, phoneChangeData.otp);
+      setFormData((prev) => ({ ...prev, phone: phoneChangeData.newPhone }));
+      if (initialData) setInitialData((prev) => (prev ? { ...prev, phone: phoneChangeData.newPhone } : null));
+      toast.success("Phone number updated successfully!");
+      setPhoneChangeData({ newPhone: "", otp: "" });
+      setPhoneChangeStep("request");
+    } catch (err: unknown) {
+      const apiErr = err as { message?: string; status?: number; data?: Record<string, string> };
+      const msg = apiErr?.message || "Failed to verify phone";
+      if (apiErr?.status === 400) setPhoneChangeErrors({ otp: "Invalid or expired OTP" });
+      toast.error(msg);
+    } finally {
+      setChangingPhone(false);
+    }
+  };
+
+  const handlePhoneChangeCancel = () => {
+    setPhoneChangeData({ newPhone: "", otp: "" });
+    setPhoneChangeErrors({});
+    setPhoneChangeStep("request");
   };
 
   const strength = calculatePasswordStrength(passwordData.newPassword);
@@ -608,6 +756,154 @@ export function MyProfileSection({ canEdit = true, onDirtyChange }: MyProfileSec
             </Button>
           </div>
         </form>
+      )}
+
+      {/* Change Email Card */}
+      {canEdit && (
+        <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-xl shadow-xs">
+          <div className="mb-5 flex items-center justify-between border-b border-border/60 pb-4">
+            <div>
+              <h3 className="text-sm font-semibold tracking-tight text-foreground flex items-center gap-2">
+                <Mail className="h-4 w-4 text-primary" />
+                Change Email
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Update your account email address. A verification OTP will be sent to the new address.
+              </p>
+            </div>
+          </div>
+
+          {emailChangeStep === "request" ? (
+            <form onSubmit={handleEmailChangeRequest} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="new-email" className="text-xs font-medium">
+                  New Email Address *
+                </Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="new-email"
+                    type="email"
+                    value={emailChangeData.newEmail}
+                    onChange={(e) => setEmailChangeData({ ...emailChangeData, newEmail: e.target.value })}
+                    placeholder="new@email.com"
+                    className={`pl-9 ${emailChangeErrors.newEmail ? "border-destructive" : ""}`}
+                    disabled={changingEmail}
+                  />
+                </div>
+                {emailChangeErrors.newEmail && (
+                  <p className="text-[11px] text-destructive">{emailChangeErrors.newEmail}</p>
+                )}
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="submit" size="sm" disabled={changingEmail || !emailChangeData.newEmail.trim()}>
+                  {changingEmail ? "Sending..." : "Send Verification OTP"}
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handleEmailVerify} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="email-otp" className="text-xs font-medium">
+                  Verification OTP *
+                </Label>
+                <Input
+                  id="email-otp"
+                  type="text"
+                  value={emailChangeData.otp}
+                  onChange={(e) => setEmailChangeData({ ...emailChangeData, otp: e.target.value })}
+                  placeholder="Enter 6-digit OTP"
+                  maxLength={6}
+                  className={emailChangeErrors.otp ? "border-destructive" : ""}
+                  disabled={changingEmail}
+                />
+                {emailChangeErrors.otp && <p className="text-[11px] text-destructive">{emailChangeErrors.otp}</p>}
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" size="sm" onClick={handleEmailChangeCancel} disabled={changingEmail}>
+                  Cancel
+                </Button>
+                <Button type="submit" size="sm" disabled={changingEmail || !emailChangeData.otp.trim()}>
+                  {changingEmail ? "Verifying..." : "Verify & Update Email"}
+                </Button>
+              </div>
+            </form>
+          )}
+        </div>
+      )}
+
+      {/* Change Phone Card */}
+      {canEdit && (
+        <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-xl shadow-xs">
+          <div className="mb-5 flex items-center justify-between border-b border-border/60 pb-4">
+            <div>
+              <h3 className="text-sm font-semibold tracking-tight text-foreground flex items-center gap-2">
+                <Phone className="h-4 w-4 text-primary" />
+                Change Phone Number
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Update your phone number. A verification OTP will be sent to the new number.
+              </p>
+            </div>
+          </div>
+
+          {phoneChangeStep === "request" ? (
+            <form onSubmit={handlePhoneChangeRequest} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="new-phone" className="text-xs font-medium">
+                  New Phone Number *
+                </Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="new-phone"
+                    type="tel"
+                    value={phoneChangeData.newPhone}
+                    onChange={(e) => setPhoneChangeData({ ...phoneChangeData, newPhone: e.target.value })}
+                    placeholder="+91 98765 43210"
+                    className={`pl-9 ${phoneChangeErrors.newPhone ? "border-destructive" : ""}`}
+                    disabled={changingPhone}
+                  />
+                </div>
+                {phoneChangeErrors.newPhone && (
+                  <p className="text-[11px] text-destructive">{phoneChangeErrors.newPhone}</p>
+                )}
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="submit" size="sm" disabled={changingPhone || !phoneChangeData.newPhone.trim()}>
+                  {changingPhone ? "Sending..." : "Send Verification OTP"}
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handlePhoneVerify} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="phone-otp" className="text-xs font-medium">
+                  Verification OTP *
+                </Label>
+                <Input
+                  id="phone-otp"
+                  type="text"
+                  value={phoneChangeData.otp}
+                  onChange={(e) => setPhoneChangeData({ ...phoneChangeData, otp: e.target.value })}
+                  placeholder="Enter 6-digit OTP"
+                  maxLength={6}
+                  className={phoneChangeErrors.otp ? "border-destructive" : ""}
+                  disabled={changingPhone}
+                />
+                {phoneChangeErrors.otp && <p className="text-[11px] text-destructive">{phoneChangeErrors.otp}</p>}
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" size="sm" onClick={handlePhoneChangeCancel} disabled={changingPhone}>
+                  Cancel
+                </Button>
+                <Button type="submit" size="sm" disabled={changingPhone || !phoneChangeData.otp.trim()}>
+                  {changingPhone ? "Verifying..." : "Verify & Update Phone"}
+                </Button>
+              </div>
+            </form>
+          )}
+        </div>
       )}
     </div>
   );

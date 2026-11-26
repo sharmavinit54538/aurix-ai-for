@@ -156,45 +156,10 @@ export const endBreak = async (
   return res.data?.data ?? res.data;
 };
 
-export const getHolidays = async (
-  params?: Record<string, unknown>,
-): Promise<HolidayRecord[]> => {
-  const res = await apiInstance.get("/holidays", { params });
-  const d = res.data?.data ?? res.data;
-  if (Array.isArray(d)) return d;
-  if (Array.isArray(d?.items)) return d.items;
-  return [];
-};
-
-export const createHoliday = async (
-  data: Partial<HolidayRecord>,
-): Promise<HolidayRecord> => {
-  const res = await apiInstance.post("/holidays", data);
-  return res.data?.data ?? res.data;
-};
-
-export const updateHoliday = async (
-  id: string,
-  data: Partial<HolidayRecord>,
-): Promise<HolidayRecord> => {
-  const res = await apiInstance.put(`/holidays/${id}`, data);
-  return res.data?.data ?? res.data;
-};
-
-export const deleteHoliday = async (id: string) => {
-  const res = await apiInstance.delete(`/holidays/${id}`);
-  return res.data?.data ?? res.data ?? { success: true };
-};
-
-export const importHolidays = async (payload: unknown) => {
-  const res = await apiInstance.post("/holidays/import", payload);
-  return res.data?.data ?? res.data;
-};
-
 export const getRosters = async (
   params?: Record<string, unknown>,
 ): Promise<RosterItem[]> => {
-  const res = await apiInstance.get("/rosters", { params });
+  const res = await apiInstance.get("/attendance/rosters", { params });
   const d = res.data?.data ?? res.data;
   if (Array.isArray(d)) return d;
   if (Array.isArray(d?.items)) return d.items;
@@ -206,7 +171,7 @@ export const getMyRoster = async (
   year: number,
   employeeId?: string,
 ) => {
-  const res = await apiInstance.get("/rosters/my", {
+  const res = await apiInstance.get("/attendance/rosters/my", {
     params: { month, year, employee_id: employeeId },
   });
   const d = res.data?.data ?? res.data ?? {};
@@ -226,14 +191,14 @@ export const getMyRoster = async (
 export const requestScheduleChange = async (
   payload: Partial<ScheduleChangeRequestPayload> & Record<string, any>,
 ) => {
-  const res = await apiInstance.post("/rosters/change-request", payload);
+  const res = await apiInstance.post("/attendance/rosters/change-request", payload);
   return res.data?.data ?? res.data;
 };
 
 export const createRoster = async (
   data: Partial<RosterCreatePayload>,
 ): Promise<RosterItem> => {
-  const res = await apiInstance.post("/rosters", data);
+  const res = await apiInstance.post("/attendance/rosters", data);
   return res.data?.data ?? res.data;
 };
 
@@ -241,12 +206,12 @@ export const updateRoster = async (
   id: string,
   data: Partial<RosterCreatePayload>,
 ): Promise<RosterItem> => {
-  const res = await apiInstance.put(`/rosters/${id}`, data);
+  const res = await apiInstance.put(`/attendance/rosters/${id}`, data);
   return res.data?.data ?? res.data;
 };
 
 export const deleteRoster = async (id: string) => {
-  const res = await apiInstance.delete(`/rosters/${id}`);
+  const res = await apiInstance.delete(`/attendance/rosters/${id}`);
   return res.data?.data ?? res.data ?? { success: true };
 };
 
@@ -269,11 +234,6 @@ export const attendanceApi = {
   checkOut,
   startBreak,
   endBreak,
-  getHolidays,
-  createHoliday,
-  updateHoliday,
-  deleteHoliday,
-  importHolidays,
   getRosters,
   getMyRoster,
   requestScheduleChange,
@@ -392,5 +352,7 @@ export const attendanceApi = {
     };
   },
 };
+
+export { createHoliday, updateHoliday, deleteHoliday, importHolidays, archiveHoliday, restoreHoliday, exportHolidays, getHolidayStatistics } from "./attendance/holidaysApi";
 
 export default attendanceApi;
