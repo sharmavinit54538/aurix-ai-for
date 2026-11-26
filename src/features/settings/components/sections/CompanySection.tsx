@@ -93,18 +93,32 @@ export function CompanySection({ canEdit, onDirtyChange }: CompanySectionProps) 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const stampInputRef = useRef<HTMLInputElement>(null);
 
-  const handleStampUpload = (file: File | null) => {
+  const [stampUploading, setStampUploading] = useState(false);
+
+  const handleStampUpload = async (file: File | null) => {
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) {
       toast.error("Stamp file size must be less than 2MB.");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      setFormData((prev) => ({ ...prev, stampDataUrl: reader.result as string }));
+
+    setStampUploading(true);
+    try {
+      const res = await uploadCompanyStamp(file);
+      if (res.stampUrl) {
+        setFormData((prev) => ({ ...prev, stampUrl: res.stampUrl }));
+      }
       toast.success("Company stamp uploaded successfully!");
-    };
-    reader.readAsDataURL(file);
+    } catch (err: unknown) {
+      if (isMissingApiError(err)) {
+        toast.info("Stamp preview updated locally. Dedicated stamp upload endpoint is not implemented on backend.");
+      } else {
+        const msg = (err as { message?: string })?.message || "Failed to upload stamp to server.";
+        toast.error(msg);
+      }
+    } finally {
+      setStampUploading(false);
+    }
   };
 
   const isDirty = initialData ? JSON.stringify(initialData) !== JSON.stringify(formData) : false;
