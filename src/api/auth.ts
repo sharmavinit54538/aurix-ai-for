@@ -71,6 +71,20 @@ export interface ChangePasswordPayload {
   confirm_password: string;
 }
 
+export interface ChangeEmailPayload {
+  new_email: string;
+}
+
+export interface VerifyNewEmailPayload {
+  email: string;
+  otp: string;
+}
+
+export interface ChangePhonePayload {
+  new_phone: string;
+  otp?: string;
+}
+
 /**
  * Canonical authentication service client.
  * All components and background services must route authentication calls through this service
@@ -175,5 +189,28 @@ export const authService = {
    */
   async getStatus(): Promise<AuthMeResponse> {
     return api.get<AuthMeResponse>(AUTH_ENDPOINTS.me);
+  },
+
+  /**
+   * Changes the authenticated user's email address.
+   * Requires verification of the new email address.
+   */
+  async changeEmail(payload: ChangeEmailPayload): Promise<ChangeEmailResponse> {
+    return api.patch<ChangeEmailResponse>(AUTH_ENDPOINTS.changeEmail, payload);
+  },
+
+  /**
+   * Verifies the new email address with OTP.
+   */
+  async verifyNewEmail(payload: VerifyNewEmailPayload): Promise<VerifyNewEmailResponse> {
+    return api.post<VerifyNewEmailResponse>(AUTH_ENDPOINTS.verifyNewEmail, payload);
+  },
+
+  /**
+   * Changes the authenticated user's phone number.
+   * May require OTP verification depending on backend policy.
+   */
+  async changePhone(payload: ChangePhonePayload): Promise<ChangePhoneResponse> {
+    return api.patch<ChangePhoneResponse>(AUTH_ENDPOINTS.changePhone, payload);
   },
 };

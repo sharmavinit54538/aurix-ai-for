@@ -16,6 +16,9 @@ export const AUTH_ENDPOINTS = {
   verifyResetOtp: "/api/v1/auth/verify-reset-otp",
   resetPassword: "/api/v1/auth/reset-password",
   changePassword: "/api/v1/auth/change-password",
+  changeEmail: "/api/v1/auth/change-email",
+  verifyNewEmail: "/api/v1/auth/verify-new-email",
+  changePhone: "/api/v1/auth/change-phone",
   status: "/api/v1/auth/status",
 } as const;
 

@@ -74,24 +74,26 @@ function getErrorStatus(err: unknown): number | undefined {
 // ─────────────────────────────────────────────────────────────
 
 export async function fetchCompanySettings(): Promise<CompanySettingsForm> {
-  const res = await apiInstance.get("/settings/company");
+  const res = await apiInstance.get("/api/v1/settings/company");
   const data = extractPayload<Record<string, unknown>>(res, {});
   return {
     name: String(data.name || data.company_name || ""),
-    logoUrl: String(data.logoUrl || data.logo_url || data.logo || ""),
-    logoDataUrl: String(data.logoDataUrl || data.logo_data_url || ""),
+    logoUrl: String(data.logo_url || data.logoUrl || data.logo || ""),
+    logoDataUrl: String(data.logo_data_url || data.logoDataUrl || ""),
+    stampUrl: String(data.stamp_url || data.stampUrl || ""),
+    stampDataUrl: String(data.stamp_data_url || data.stampDataUrl || ""),
     address: String(data.address || ""),
     city: String(data.city || ""),
     state: String(data.state || ""),
     country: String(data.country || ""),
-    postalCode: String(data.postalCode || data.postal_code || data.zip || ""),
+    postalCode: String(data.postal_code || data.postalCode || data.zip || ""),
     contactEmail: String(data.email || data.contactEmail || ""),
     contactPhone: String(data.phone || data.contactPhone || ""),
     website: String(data.website || ""),
     timezone: String(data.timezone || ""),
     currency: String(data.currency || ""),
-    financialYearStart: String(data.fiscalYearStart || data.financialYearStart || ""),
-    financialYearEnd: String(data.fiscalYearEnd || data.financialYearEnd || ""),
+    financialYearStart: String(data.fiscal_year_start || data.financialYearStart || ""),
+    financialYearEnd: String(data.fiscal_year_end || data.financialYearEnd || ""),
   };
 }
 
@@ -107,15 +109,15 @@ export async function updateCompanySettings(
     city: data.city,
     state: data.state,
     country: data.country,
-    postalCode: data.postalCode,
+    postal_code: data.postalCode,
     timezone: data.timezone,
     currency: data.currency,
-    financialYearStart: data.financialYearStart,
-    financialYearEnd: data.financialYearEnd,
-    logoUrl: data.logoUrl,
+    fiscal_year_start: data.financialYearStart,
+    fiscal_year_end: data.financialYearEnd,
+    logo_url: data.logoUrl,
   };
 
-  const res = await apiInstance.put("/settings/company", payload);
+  const res = await apiInstance.put("/api/v1/settings/company", payload);
   const updated = extractPayload<Record<string, unknown>>(res, payload);
 
   if (updated?.name) {
@@ -144,18 +146,34 @@ export async function updateCompanySettings(
 
 export async function uploadCompanyLogo(file: File): Promise<{ logoUrl: string }> {
   const formData = new FormData();
-  formData.append("logo", file);
   formData.append("file", file);
 
   try {
     // Let browser/Axios set multipart/form-data boundary automatically
-    const res = await apiInstance.post("/settings/company/logo", formData);
+    const res = await apiInstance.post("/api/v1/settings/company/logo", formData);
     const data = extractPayload<Record<string, unknown>>(res, {});
-    const logoUrl = String(data.logo || data.logoUrl || data.url || data.logo_url || "");
+    const logoUrl = String(data.logo_url || data.logoUrl || data.url || data.logo || "");
     return { logoUrl };
   } catch (err: unknown) {
     if (getErrorStatus(err) === 404) {
       throw createMissingApiError("POST", "/api/v1/settings/company/logo", "Company Logo Upload");
+    }
+    throw err;
+  }
+}
+
+export async function uploadCompanyStamp(file: File): Promise<{ stampUrl: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    const res = await apiInstance.post("/api/v1/settings/company/stamp", formData);
+    const data = extractPayload<Record<string, unknown>>(res, {});
+    const stampUrl = String(data.stamp_url || data.stampUrl || data.url || "");
+    return { stampUrl };
+  } catch (err: unknown) {
+    if (getErrorStatus(err) === 404) {
+      throw createMissingApiError("POST", "/api/v1/settings/company/stamp", "Company Stamp Upload");
     }
     throw err;
   }
@@ -167,14 +185,14 @@ export async function uploadCompanyLogo(file: File): Promise<{ logoUrl: string }
 
 export async function fetchMyProfile(): Promise<MyProfileForm> {
   try {
-    const res = await apiInstance.get("/settings/profile");
+    const res = await apiInstance.get("/api/v1/settings/profile");
     const data = extractPayload<Record<string, unknown>>(res, {});
-    if (data && (data.fullName || data.name || data.email)) {
+    if (data && (data.full_name || data.name || data.email)) {
       return {
-        name: String(data.fullName || data.name || ""),
+        name: String(data.full_name || data.name || ""),
         email: String(data.email || ""),
         phone: String(data.phone || ""),
-        avatarUrl: String(data.avatarUrl || data.avatar_url || ""),
+        avatarUrl: String(data.avatar_url || data.avatarUrl || ""),
         designation: String(data.designation || ""),
         department: String(data.department || ""),
       };
@@ -196,7 +214,7 @@ export async function fetchMyProfile(): Promise<MyProfileForm> {
 
 export async function updateMyProfile(form: MyProfileForm): Promise<MyProfileForm> {
   const payload: UpdateCurrentUserPayload = {};
-  if (form.name?.trim()) payload.fullName = form.name.trim();
+  if (form.name?.trim()) payload.full_name = form.name.trim();
   if (form.email?.trim()) payload.email = form.email.trim();
   if (form.phone !== undefined && form.phone !== null) payload.phone = form.phone.trim();
   if (form.designation?.trim()) payload.designation = form.designation.trim();
@@ -209,7 +227,7 @@ export async function updateMyProfile(form: MyProfileForm): Promise<MyProfileFor
     aurix.set({
       user: {
         ...ws.user,
-        fullName: updated.fullName || form.name,
+        fullName: updated.full_name || form.name,
         email: updated.email || form.email,
         phone: updated.phone || form.phone,
       },
@@ -218,10 +236,10 @@ export async function updateMyProfile(form: MyProfileForm): Promise<MyProfileFor
 
   return {
     ...form,
-    name: updated.fullName || form.name,
+    name: updated.full_name || form.name,
     email: updated.email || form.email,
     phone: updated.phone || form.phone,
-    avatarUrl: updated.avatarUrl || form.avatarUrl,
+    avatarUrl: updated.avatar_url || form.avatarUrl,
     designation: updated.designation || form.designation,
     department: updated.department || form.department,
   };
@@ -229,7 +247,7 @@ export async function updateMyProfile(form: MyProfileForm): Promise<MyProfileFor
 
 export async function uploadProfileAvatar(file: File): Promise<string> {
   const res = await profileApi.uploadAvatar(file);
-  return res.avatarUrl;
+  return res.avatar_url || res.avatarUrl || "";
 }
 
 export async function changeMyPassword(payload: {
@@ -242,6 +260,21 @@ export async function changeMyPassword(payload: {
     newPassword: payload.newPassword,
     confirmPassword: payload.confirmPassword,
   });
+}
+
+export async function changeMyEmail(newEmail: string): Promise<{ success: boolean; message: string }> {
+  const res = await apiInstance.patch("/api/v1/auth/change-email", { new_email: newEmail });
+  return { success: true, message: res.data?.message || "Email change requested. Please verify your new email." };
+}
+
+export async function verifyNewEmail(email: string, otp: string): Promise<{ success: boolean; message: string }> {
+  const res = await apiInstance.post("/api/v1/auth/verify-new-email", { email, otp });
+  return { success: true, message: res.data?.message || "Email verified successfully!" };
+}
+
+export async function changeMyPhone(newPhone: string): Promise<{ success: boolean; message: string }> {
+  const res = await apiInstance.patch("/api/v1/auth/change-phone", { new_phone: newPhone });
+  return { success: true, message: res.data?.message || "Phone number updated successfully!" };
 }
 
 // ─────────────────────────────────────────────────────────────

@@ -16,6 +16,7 @@ import {
   fetchCompanySettings,
   updateCompanySettings,
   uploadCompanyLogo,
+  uploadCompanyStamp,
   isMissingApiError,
 } from "../../api";
 import type { CompanySettingsForm } from "../../types";

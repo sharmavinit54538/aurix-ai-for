@@ -105,6 +105,49 @@ export interface AuthStatusResponseData {
   user?: AuthUserPayload;
 }
 
+export interface CompanySettingsData {
+  id?: string | number;
+  name: string;
+  logo_url?: string;
+  logo_data_url?: string;
+  stamp_url?: string;
+  stamp_data_url?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postal_code?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
+  timezone?: string;
+  currency?: string;
+  fiscal_year_start?: string;
+  fiscal_year_end?: string;
+}
+
+export interface MyProfileData {
+  id?: string | number;
+  name?: string;
+  full_name?: string;
+  email?: string;
+  phone?: string;
+  avatar_url?: string;
+  designation?: string;
+  department?: string;
+  role?: string;
+}
+
+export interface UploadLogoResponse {
+  logo_url?: string;
+  logo_data_url?: string;
+}
+
+export interface UploadStampResponse {
+  stamp_url?: string;
+  stamp_data_url?: string;
+}
+
 export type AuthMeResponse = ApiResponse<AuthUserPayload>;
 export type LoginResponse = ApiResponse<LoginData>;
 export type RegisterResponse = ApiResponse<RegisterResponseData>;
@@ -119,3 +162,7 @@ export type VerifyNewEmailResponse = ApiResponse<VerifyNewEmailResponseData>;
 export type ChangePhoneResponse = ApiResponse<ChangePhoneResponseData>;
 export type AuthStatusResponse = ApiResponse<AuthStatusResponseData>;
 export type LogoutResponse = ApiResponse<{ message?: string }>;
+export type CompanySettingsResponse = ApiResponse<CompanySettingsData>;
+export type MyProfileResponse = ApiResponse<MyProfileData>;
+export type UploadLogoResponse = ApiResponse<UploadLogoResponse>;
+export type UploadStampResponse = ApiResponse<UploadStampResponse>;
