@@ -337,10 +337,11 @@ export function CompanySection({ canEdit, onDirtyChange }: CompanySectionProps) 
                   variant="outline"
                   size="sm"
                   onClick={() => stampInputRef.current?.click()}
+                  disabled={stampUploading}
                   className="mt-1 h-8 gap-1.5 text-xs cursor-pointer"
                 >
                   <Upload className="h-3.5 w-3.5" />
-                  {formData.stampDataUrl || formData.stampUrl ? "Change Stamp" : "Upload Stamp"}
+                  {stampUploading ? "Uploading..." : formData.stampUrl ? "Change Stamp" : "Upload Stamp"}
                 </Button>
                 <p className="text-[10px] text-muted-foreground">Official seal under 2MB</p>
               </>

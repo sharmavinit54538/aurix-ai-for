@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { fetchMyProfile, updateMyProfile, uploadProfileAvatar, changeMyPassword } from "../../api";
+import { fetchMyProfile, updateMyProfile, uploadProfileAvatar, changeMyPassword, changeMyEmail, verifyNewEmail, changeMyPhone } from "../../api";
 import type { MyProfileForm } from "../../types";
 import { authService } from "@/api/auth";
 import { parseLoginResponse } from "@/features/auth/utils/parseLoginResponse";
