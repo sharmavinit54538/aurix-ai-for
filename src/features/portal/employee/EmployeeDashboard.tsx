@@ -785,36 +785,38 @@ function MyAssets() {
           subtitle="Assigned company equipment"
           link="/dashboard/assets"
         />
-        <div className="space-y-2">
+        <div>
           {isLoading ? (
-            <div className="py-6 text-center text-xs text-muted-foreground">
+            <div className="py-6 text-center text-sm text-muted-foreground">
               Loading assigned equipment...
             </div>
           ) : assignedAssets.length === 0 ? (
-            <div className="py-6 text-center text-xs text-muted-foreground">
+            <div className="py-6 text-center text-sm text-muted-foreground">
               No company equipment currently assigned.
             </div>
           ) : (
-            assignedAssets.slice(0, 4).map((a: any) => (
-              <div
-                key={a.id || a.tag}
-                className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-2.5"
-              >
-                <Package className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-medium">
-                    {a.name || a.asset_name}
+            <div className="divide-y divide-border rounded-lg border border-border">
+              {assignedAssets.slice(0, 4).map((a: any) => (
+                <div
+                  key={a.id || a.tag}
+                  className="flex items-center gap-3 px-3.5 py-2.5"
+                >
+                  <Package className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-medium text-foreground">
+                      {a.name || a.asset_name}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Tag: {a.tag || a.asset_tag || "AST"} ·{" "}
+                      {a.brand || "Hardware"}
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    Tag: {a.tag || a.asset_tag || "AST"} ·{" "}
-                    {a.brand || "Hardware"}
-                  </div>
+                  <Badge variant="outline" className={`text-xs capitalize ${statusBadgeClass(String(a.status || "active"))}`}>
+                    {a.status || "active"}
+                  </Badge>
                 </div>
-                <Badge variant="secondary" className="text-[10px] capitalize">
-                  {a.status || "active"}
-                </Badge>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
       </Card>
@@ -844,47 +846,49 @@ function EmployeeCalendar() {
           subtitle="Upcoming events and holidays"
           link="/dashboard/attendance/holidays"
         />
-        <div className="space-y-2">
+        <div>
           {isLoading ? (
-            <p className="py-6 text-center text-xs text-muted-foreground">
+            <p className="py-6 text-center text-sm text-muted-foreground">
               Loading calendar events...
             </p>
           ) : events.length === 0 ? (
-            <p className="py-6 text-center text-xs text-muted-foreground">
+            <p className="py-6 text-center text-sm text-muted-foreground">
               No upcoming events or holidays found.
             </p>
           ) : (
-            events.slice(0, 5).map((ev, i) => (
-              <div
-                key={ev.id || i}
-                className={`flex items-start gap-3 rounded-xl border px-3 py-2.5 ${
-                  EVENT_COLOR[String(ev.type || "holiday").toLowerCase()] ??
-                  "bg-muted/40 border-border"
-                }`}
-              >
-                <CalendarDays className="mt-0.5 h-4 w-4 shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-medium">
-                    {ev.title || ev.name}
-                  </div>
-                  <div className="text-xs opacity-70">
-                    {ev.date
-                      ? new Date(ev.date).toLocaleDateString("en-IN", {
-                          day: "numeric",
-                          month: "short",
-                        })
-                      : ""}
-                    {ev.time ? ` · ${ev.time}` : ""}
-                  </div>
-                </div>
-                <Badge
-                  variant="outline"
-                  className="shrink-0 capitalize text-[10px] border-current"
+            <div className="divide-y divide-border rounded-lg border border-border">
+              {events.slice(0, 5).map((ev, i) => (
+                <div
+                  key={ev.id || i}
+                  className="flex items-start gap-3 px-3.5 py-2.5"
                 >
-                  {ev.type || "holiday"}
-                </Badge>
-              </div>
-            ))
+                  <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-medium text-foreground">
+                      {ev.title || ev.name}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {ev.date
+                        ? new Date(ev.date).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                          })
+                        : ""}
+                      {ev.time ? ` · ${ev.time}` : ""}
+                    </div>
+                  </div>
+                  <Badge
+                    variant="outline"
+                    className={`shrink-0 capitalize text-xs ${
+                      EVENT_COLOR[String(ev.type || "holiday").toLowerCase()] ??
+                      statusBadgeClass("info")
+                    }`}
+                  >
+                    {ev.type || "holiday"}
+                  </Badge>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </Card>
@@ -900,63 +904,67 @@ function EmployeeNotifications() {
     <motion.div {...fadeUp}>
       <Card>
         <SectionHeader title="Notifications" link="/dashboard/notifications" />
-        <div className="space-y-2">
-          {items.map((n) => {
-            const isUrgent =
-              n.priority === "critical" || n.priority === "high";
-            return (
-              <div
-                key={n.id}
-                className="flex items-start gap-3 rounded-xl border border-border bg-background/50 px-3 py-2.5"
-              >
-                <div
-                  className={`mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg ${
-                    isUrgent
-                      ? "bg-destructive/10 text-destructive"
-                      : "bg-primary/10 text-primary"
-                  }`}
-                >
-                  <Bell className="h-3.5 w-3.5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">{n.title}</span>
-                    {isUrgent && (
-                      <Badge
-                        variant="destructive"
-                        className="h-4 px-1.5 text-[10px] uppercase font-bold"
-                      >
-                        {n.priority}
-                      </Badge>
-                    )}
-                    <Badge
-                      variant="outline"
-                      className="h-4 px-1 text-[9px] capitalize"
-                    >
-                      {n.category.replace(/_/g, " ")}
-                    </Badge>
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-0.5">
-                    {n.body}
-                  </div>
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <span className="text-xs text-muted-foreground font-mono">
-                    {formatRelativeTime(n.createdAt)}
-                  </span>
-                  <button
-                    onClick={() => archiveMutation.mutate(n.id)}
-                    className="rounded-md p-1 text-muted-foreground hover:bg-background/60 hover:text-foreground cursor-pointer"
-                    aria-label="Dismiss notification"
-                    title="Dismiss"
+        <div>
+          {items.length > 0 ? (
+            <div className="divide-y divide-border rounded-lg border border-border">
+              {items.map((n) => {
+                const isUrgent =
+                  n.priority === "critical" || n.priority === "high";
+                return (
+                  <div
+                    key={n.id}
+                    className="flex items-start gap-3 px-3.5 py-3"
                   >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-          {items.length === 0 && (
+                    <div
+                      className={`mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg ${
+                        isUrgent
+                          ? "bg-destructive/10 text-destructive"
+                          : "bg-primary/10 text-primary"
+                      }`}
+                    >
+                      <Bell className="h-3.5 w-3.5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-medium text-foreground">{n.title}</span>
+                        {isUrgent && (
+                          <Badge
+                            variant="destructive"
+                            className="px-1.5 py-0 text-xs capitalize"
+                          >
+                            {n.priority}
+                          </Badge>
+                        )}
+                        <Badge
+                          variant="outline"
+                          className="px-1.5 py-0 text-xs capitalize"
+                        >
+                          {n.category.replace(/_/g, " ")}
+                        </Badge>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        {n.body}
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-1.5">
+                      <span className="text-xs text-muted-foreground font-mono">
+                        {formatRelativeTime(n.createdAt)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => archiveMutation.mutate(n.id)}
+                        className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+                        aria-label="Dismiss notification"
+                        title="Dismiss"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
             <div className="py-6 text-center text-sm text-muted-foreground">
               <CheckCircle2 className="mx-auto mb-2 h-7 w-7 text-muted-foreground" />
               All caught up! No notifications.
@@ -975,15 +983,27 @@ export function EmployeeDashboard() {
 
   return (
     <div className="space-y-6">
-      <EmployeeHeader firstName={firstName} companyName={companyName} />
+      <PageHeader
+        title={`Welcome, ${firstName}`}
+        description={`${companyName} employee portal — manage daily attendance, leaves, and payslips.`}
+        action={
+          <Button asChild size="sm">
+            <Link to={"/dashboard/attendance" as any}>
+              <Clock className="h-4 w-4" />
+              Attendance &amp; Check In
+            </Link>
+          </Button>
+        }
+      />
+      <QuickActionBar />
       <EmployeeKpiCards />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <MyAttendance />
         <MyLeaves />
       </div>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <MyPerformance />
         <MyPayslips />
+        <MyPerformance />
       </div>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <MyDocuments />
