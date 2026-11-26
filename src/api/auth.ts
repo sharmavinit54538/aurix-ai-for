@@ -1,6 +1,18 @@
 import { api } from "./client";
 import { refreshAccessToken } from "./tokens";
-import type { ApiResponse, AuthMeResponse, LoginResponse } from "./types";
+import type {
+  ApiResponse,
+  AuthMeResponse,
+  LoginResponse,
+  RegisterResponse,
+  VerifyEmailResponse,
+  RefreshTokenResponse,
+  ForgotPasswordResponse,
+  VerifyResetOtpResponse,
+  ResetPasswordResponse,
+  ChangePasswordResponse,
+  LogoutResponse,
+} from "./types";
 
 import { AUTH_ENDPOINTS, type AuthEndpointKey } from "./endpoints";
 export { AUTH_ENDPOINTS, type AuthEndpointKey };
@@ -13,30 +25,32 @@ export interface LoginCredentials {
 export interface RegisterPayload {
   name: string;
   email: string;
-  phone?: string;
+  phone: string;
   password: string;
   company_name: string;
-  [key: string]: unknown;
 }
 
 export interface VerifyEmailPayload {
   email: string;
   otp: string;
-  code?: string;
-  verification_id?: string;
-  verificationId?: string;
-  [key: string]: unknown;
 }
 
 export interface ResendOtpPayload {
   email: string;
-  verification_id?: string;
-  verificationId?: string;
-  [key: string]: unknown;
+}
+
+export interface LoginOtpChallengePayload {
+  verification_id: string;
+  otp: string;
+}
+
+export interface ResendLoginOtpPayload {
+  verification_id: string;
+  email: string;
 }
 
 export interface ForgotPasswordPayload {
-  email: string;
+  identifier: string;
 }
 
 export interface VerifyResetOtpPayload {
@@ -45,14 +59,16 @@ export interface VerifyResetOtpPayload {
 }
 
 export interface ResetPasswordPayload {
-  token: string;
-  password: string;
+  email: string;
+  reset_token: string;
+  new_password: string;
   confirm_password: string;
 }
 
-export interface GoogleAuthPayload {
-  email: string;
-  action?: string;
+export interface ChangePasswordPayload {
+  current_password: string;
+  new_password: string;
+  confirm_password: string;
 }
 
 /**
@@ -63,14 +79,29 @@ export interface GoogleAuthPayload {
 export const authService = {
   /**
    * Logs in a user with email/identifier and password.
+   * Returns either authenticated login data or a verification challenge.
    */
-  async login(credentials: LoginCredentials): Promise<LoginResponse | unknown> {
-    return api.post(AUTH_ENDPOINTS.login, credentials);
+  async login(credentials: LoginCredentials): Promise<LoginResponse> {
+    return api.post<LoginResponse>(AUTH_ENDPOINTS.login, credentials);
+  },
+
+  /**
+   * Verifies login OTP challenge (email verification required during login).
+   */
+  async verifyLoginOtp(payload: LoginOtpChallengePayload): Promise<LoginResponse> {
+    return api.post<LoginResponse>(AUTH_ENDPOINTS.verifyEmailOtp, payload);
+  },
+
+  /**
+   * Resends login OTP challenge.
+   */
+  async resendLoginOtp(payload: ResendLoginOtpPayload): Promise<ApiResponse> {
+    return api.post<ApiResponse>(AUTH_ENDPOINTS.resendEmailOtp, payload);
   },
 
   /**
    * Refreshes the session access token using the canonical refresh endpoint.
-   * Sends in-memory refresh token if available and forwards HttpOnly cookies.
+   * Sends request with HttpOnly refresh cookie (withCredentials: true).
    */
   async refresh(options?: { silent?: boolean }): Promise<string> {
     return refreshAccessToken(options);
@@ -79,19 +110,15 @@ export const authService = {
   /**
    * Changes the authenticated user's password using the canonical auth endpoint.
    */
-  async changePassword(payload: {
-    current_password: string;
-    new_password: string;
-    confirm_password: string;
-  }): Promise<ApiResponse> {
-    return api.patch<ApiResponse>(AUTH_ENDPOINTS.changePassword, payload);
+  async changePassword(payload: ChangePasswordPayload): Promise<ChangePasswordResponse> {
+    return api.patch<ChangePasswordResponse>(AUTH_ENDPOINTS.changePassword, payload);
   },
 
   /**
    * Logs the user out on the remote backend and terminates the active session.
    */
-  async logout(): Promise<unknown> {
-    return api.post(AUTH_ENDPOINTS.logout);
+  async logout(): Promise<LogoutResponse> {
+    return api.post<LogoutResponse>(AUTH_ENDPOINTS.logout);
   },
 
   /**
@@ -104,107 +131,49 @@ export const authService = {
   /**
    * Registers a new tenant administrator / organization.
    */
-  async register(payload: RegisterPayload): Promise<ApiResponse> {
-    return api.post<ApiResponse>(AUTH_ENDPOINTS.register, payload);
+  async register(payload: RegisterPayload): Promise<RegisterResponse> {
+    return api.post<RegisterResponse>(AUTH_ENDPOINTS.register, payload);
   },
 
   /**
-   * Verifies the email address with a 6-digit OTP.
-   * Sends both 'otp' and 'code' keys to support various backend schema variants.
-   * If verification_id is provided, utilizes the login verification endpoint /api/v1/auth/verify-email-otp.
+   * Verifies the email address with a 6-digit OTP (registration verification).
    */
-  async verifyEmail(payload: VerifyEmailPayload): Promise<ApiResponse> {
-    const { email, otp, code, ...rest } = payload;
-    const effectiveVid = payload.verification_id || payload.verificationId;
-    const body: Record<string, unknown> = {
-      ...rest,
-      email,
-      otp: otp || code || "",
-      code: code || otp || "",
-      ...(effectiveVid ? { verification_id: effectiveVid, verificationId: effectiveVid } : {}),
-    };
-    if (effectiveVid) {
-      try {
-        return await api.post<ApiResponse>(AUTH_ENDPOINTS.verifyEmailOtp, {
-          verification_id: effectiveVid,
-          otp: payload.otp || payload.code || "",
-          email: payload.email,
-        });
-      } catch (err: any) {
-        if (err?.status !== 404 && err?.status !== 405) {
-          throw err;
-        }
-      }
-    }
-    try {
-      return await api.post<ApiResponse>(AUTH_ENDPOINTS.verifyEmail, body);
-    } catch (err: any) {
-      if (err?.status === 404) {
-        return await api.post<ApiResponse>(AUTH_ENDPOINTS.verifyEmailOtp, body);
-      }
-      throw err;
-    }
+  async verifyEmail(payload: VerifyEmailPayload): Promise<VerifyEmailResponse> {
+    return api.post<VerifyEmailResponse>(AUTH_ENDPOINTS.verifyEmail, payload);
   },
 
   /**
-   * Resends verification OTP to the user's email.
-   * If verification_id is provided, utilizes the login resend endpoint /api/v1/auth/resend-email-otp.
+   * Resends registration verification OTP to the user's email.
    */
   async resendOtp(payload: ResendOtpPayload): Promise<ApiResponse> {
-    const { email, ...rest } = payload;
-    const effectiveVid = payload.verification_id || payload.verificationId;
-    const body: Record<string, unknown> = {
-      ...rest,
-      email,
-      ...(effectiveVid ? { verification_id: effectiveVid, verificationId: effectiveVid } : {}),
-    };
-    if (effectiveVid) {
-      try {
-        return await api.post<ApiResponse>(AUTH_ENDPOINTS.resendEmailOtp, {
-          verification_id: effectiveVid,
-          email: payload.email,
-        });
-      } catch (err: any) {
-        if (err?.status !== 404 && err?.status !== 405) {
-          throw err;
-        }
-      }
-    }
-    try {
-      return await api.post<ApiResponse>(AUTH_ENDPOINTS.resendOtp, body);
-    } catch (err: any) {
-      if (err?.status === 404) {
-        return await api.post<ApiResponse>(AUTH_ENDPOINTS.resendEmailOtp, body);
-      }
-      throw err;
-    }
+    return api.post<ApiResponse>(AUTH_ENDPOINTS.resendOtp, payload);
   },
 
   /**
-   * Initiates password reset for the provided email address.
+   * Initiates password reset for the provided identifier (email or phone).
    */
-  async forgotPassword(payload: ForgotPasswordPayload): Promise<ApiResponse> {
-    return api.post<ApiResponse>(AUTH_ENDPOINTS.forgotPassword, payload);
+  async forgotPassword(payload: ForgotPasswordPayload): Promise<ForgotPasswordResponse> {
+    return api.post<ForgotPasswordResponse>(AUTH_ENDPOINTS.forgotPassword, payload);
   },
 
   /**
-   * Verifies OTP code for password reset and returns a resetToken.
+   * Verifies OTP code for password reset and returns a reset_token.
    */
-  async verifyResetOtp(payload: VerifyResetOtpPayload): Promise<ApiResponse<{ resetToken: string }>> {
-    return api.post<ApiResponse<{ resetToken: string }>>(AUTH_ENDPOINTS.verifyResetOtp, payload);
+  async verifyResetOtp(payload: VerifyResetOtpPayload): Promise<VerifyResetOtpResponse> {
+    return api.post<VerifyResetOtpResponse>(AUTH_ENDPOINTS.verifyResetOtp, payload);
   },
 
   /**
    * Completes password reset using verified reset token.
    */
-  async resetPassword(payload: ResetPasswordPayload): Promise<ApiResponse> {
-    return api.post<ApiResponse>(AUTH_ENDPOINTS.resetPassword, payload);
+  async resetPassword(payload: ResetPasswordPayload): Promise<ResetPasswordResponse> {
+    return api.post<ResetPasswordResponse>(AUTH_ENDPOINTS.resetPassword, payload);
   },
 
   /**
-   * Super Admin Google single sign-on / authentication.
+   * Gets authentication status (lightweight check).
    */
-  async googleAuth(payload: GoogleAuthPayload): Promise<unknown> {
-    return api.post(AUTH_ENDPOINTS.google, payload);
+  async getStatus(): Promise<AuthMeResponse> {
+    return api.get<AuthMeResponse>(AUTH_ENDPOINTS.me);
   },
 };

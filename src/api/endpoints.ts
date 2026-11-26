@@ -1,6 +1,6 @@
 /**
  * Centralized endpoint definitions for OFC360 backend API.
- * All backend API routes exist under /api/v1/ on the remote backend https://api.ofc360.com.
+ * All backend API routes exist under /api/v1/ on the remote backend.
  */
 export const AUTH_ENDPOINTS = {
   login: "/api/v1/auth/login",
@@ -15,8 +15,8 @@ export const AUTH_ENDPOINTS = {
   forgotPassword: "/api/v1/auth/forgot-password",
   verifyResetOtp: "/api/v1/auth/verify-reset-otp",
   resetPassword: "/api/v1/auth/reset-password",
-  google: "/api/v1/auth/google",
   changePassword: "/api/v1/auth/change-password",
+  status: "/api/v1/auth/status",
 } as const;
 
 export type AuthEndpointKey = keyof typeof AUTH_ENDPOINTS;

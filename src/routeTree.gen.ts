@@ -27,6 +27,7 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as VerifyDocumentsRouteImport } from './routes/verify-documents'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as VerifyResetOtpRouteImport } from './routes/verify-reset-otp'
 import { Route as AiInterviewTokenRouteImport } from './routes/ai-interview.$token'
@@ -55,6 +56,7 @@ import { Route as AuthVerifyResetOtpRouteImport } from './routes/auth/verify-res
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
+import { Route as DashboardAdminRouteImport } from './routes/dashboard.admin'
 import { Route as DashboardAiHubRouteImport } from './routes/dashboard.ai-hub'
 import { Route as DashboardAiInsightsRouteImport } from './routes/dashboard.ai-insights'
 import { Route as DashboardAnalyticsRouteImport } from './routes/dashboard.analytics'
@@ -71,6 +73,7 @@ import { Route as DashboardDepartmentsRouteImport } from './routes/dashboard.dep
 import { Route as DashboardDocumentsRouteImport } from './routes/dashboard.documents'
 import { Route as DashboardEmployeeRouteImport } from './routes/dashboard.employee'
 import { Route as DashboardEmployeesRouteImport } from './routes/dashboard.employees'
+import { Route as DashboardExecutiveRouteImport } from './routes/dashboard.executive'
 import { Route as DashboardExecutivesRouteImport } from './routes/dashboard.executives'
 import { Route as DashboardExitRouteImport } from './routes/dashboard.exit'
 import { Route as DashboardExitManagementRouteImport } from './routes/dashboard.exit-management'
@@ -103,6 +106,8 @@ import { Route as DashboardTimesheetsRouteImport } from './routes/dashboard.time
 import { Route as DashboardTravelRouteImport } from './routes/dashboard.travel'
 import { Route as DashboardVisitorsRouteImport } from './routes/dashboard.visitors'
 import { Route as DashboardWorkforceRouteImport } from './routes/dashboard.workforce'
+import { Route as VerifyDocumentsIndexRouteImport } from './routes/verify-documents.index'
+import { Route as VerifyDocumentsCallbackRouteImport } from './routes/verify-documents.callback'
 import { Route as DashboardAiHubIndexRouteImport } from './routes/dashboard.ai-hub.index'
 import { Route as DashboardAiHubAssistantRouteImport } from './routes/dashboard.ai-hub.assistant'
 import { Route as DashboardAiHubAutomationRouteImport } from './routes/dashboard.ai-hub.automation'
@@ -263,6 +268,12 @@ import { Route as DashboardRecruitmentCandidatesCandidateIdRouteImport } from '.
 import { Route as DashboardRecruitmentJobsIndexRouteImport } from './routes/dashboard/recruitment/jobs/index'
 import { Route as DashboardRecruitmentJobsJobIdRouteImport } from './routes/dashboard/recruitment/jobs/$jobId'
 import { Route as DashboardRecruitmentJobsNewRouteImport } from './routes/dashboard/recruitment/jobs/new'
+import { Route as PayrollRunsRunIdApprovalRouteImport } from './routes/payroll.runs.$runId.approval'
+import { Route as PayrollRunsRunIdFinalizeRouteImport } from './routes/payroll.runs.$runId.finalize'
+import { Route as PayrollRunsRunIdPreviewRouteImport } from './routes/payroll.runs.$runId.preview'
+import { Route as PayrollRunsRunIdProcessingRouteImport } from './routes/payroll.runs.$runId.processing'
+import { Route as PayrollRunsRunIdReviewRouteImport } from './routes/payroll.runs.$runId.review'
+import { Route as PayrollRunsRunIdValidationRouteImport } from './routes/payroll.runs.$runId.validation'
 import { Route as DashboardPayrollRunsRunIdApprovalRouteImport } from './routes/dashboard.payroll.runs.$runId.approval'
 import { Route as DashboardPayrollRunsRunIdFinalizeRouteImport } from './routes/dashboard.payroll.runs.$runId.finalize'
 import { Route as DashboardPayrollRunsRunIdPaymentRouteImport } from './routes/dashboard.payroll.runs.$runId.payment'
@@ -271,7 +282,9 @@ import { Route as DashboardPayrollRunsRunIdProcessingRouteImport } from './route
 import { Route as DashboardPayrollRunsRunIdReviewRouteImport } from './routes/dashboard.payroll.runs.$runId.review'
 import { Route as DashboardPayrollRunsRunIdValidationRouteImport } from './routes/dashboard.payroll.runs.$runId.validation'
 import { Route as DashboardRecruitmentJobsJobIdPublishRouteImport } from './routes/dashboard/recruitment/jobs/$jobId/publish'
+import { Route as PayrollRunsRunIdEmployeeEmployeeIdRouteImport } from './routes/payroll.runs.$runId.employee.$employeeId'
 import { Route as DashboardPayrollRunsRunIdEmployeesEmployeeIdRouteImport } from './routes/dashboard.payroll.runs.$runId.employees.$employeeId'
+import { Route as PayrollRunsRunIdEmployeeEmployeeIdPayslipRouteImport } from './routes/payroll.runs.$runId.employee.$employeeId.payslip'
 import { Route as DashboardPayrollRunsRunIdEmployeesEmployeeIdPayslipRouteImport } from './routes/dashboard.payroll.runs.$runId.employees.$employeeId.payslip'
 
 const IndexRoute = IndexRouteImport.update({
@@ -362,6 +375,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerifyDocumentsRoute = VerifyDocumentsRouteImport.update({
+  id: '/verify-documents',
+  path: '/verify-documents',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
@@ -504,6 +522,11 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardAdminRoute = DashboardAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardAiHubRoute = DashboardAiHubRouteImport.update({
   id: '/ai-hub',
   path: '/ai-hub',
@@ -583,6 +606,11 @@ const DashboardEmployeeRoute = DashboardEmployeeRouteImport.update({
 const DashboardEmployeesRoute = DashboardEmployeesRouteImport.update({
   id: '/employees',
   path: '/employees',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardExecutiveRoute = DashboardExecutiveRouteImport.update({
+  id: '/executive',
+  path: '/executive',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardExecutivesRoute = DashboardExecutivesRouteImport.update({
@@ -746,6 +774,16 @@ const DashboardWorkforceRoute = DashboardWorkforceRouteImport.update({
   path: '/workforce',
   getParentRoute: () => DashboardRoute,
 } as any)
+const VerifyDocumentsIndexRoute = VerifyDocumentsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => VerifyDocumentsRoute,
+} as any)
+const VerifyDocumentsCallbackRoute = VerifyDocumentsCallbackRouteImport.update({
+  id: '/callback',
+  path: '/callback',
+  getParentRoute: () => VerifyDocumentsRoute,
+} as any)
 const DashboardAiHubIndexRoute = DashboardAiHubIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -883,39 +921,39 @@ const DashboardEmployeePayrollRoute =
     getParentRoute: () => DashboardEmployeeRoute,
   } as any)
 const DashboardExecutiveIndexRoute = DashboardExecutiveIndexRouteImport.update({
-  id: '/executive/',
-  path: '/executive/',
-  getParentRoute: () => DashboardRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardExecutiveRoute,
 } as any)
 const DashboardExecutiveCeoRoute = DashboardExecutiveCeoRouteImport.update({
-  id: '/executive/ceo',
-  path: '/executive/ceo',
-  getParentRoute: () => DashboardRoute,
+  id: '/ceo',
+  path: '/ceo',
+  getParentRoute: () => DashboardExecutiveRoute,
 } as any)
 const DashboardExecutiveCfoRoute = DashboardExecutiveCfoRouteImport.update({
-  id: '/executive/cfo',
-  path: '/executive/cfo',
-  getParentRoute: () => DashboardRoute,
+  id: '/cfo',
+  path: '/cfo',
+  getParentRoute: () => DashboardExecutiveRoute,
 } as any)
 const DashboardExecutiveCioRoute = DashboardExecutiveCioRouteImport.update({
-  id: '/executive/cio',
-  path: '/executive/cio',
-  getParentRoute: () => DashboardRoute,
+  id: '/cio',
+  path: '/cio',
+  getParentRoute: () => DashboardExecutiveRoute,
 } as any)
 const DashboardExecutiveCmoRoute = DashboardExecutiveCmoRouteImport.update({
-  id: '/executive/cmo',
-  path: '/executive/cmo',
-  getParentRoute: () => DashboardRoute,
+  id: '/cmo',
+  path: '/cmo',
+  getParentRoute: () => DashboardExecutiveRoute,
 } as any)
 const DashboardExecutiveCooRoute = DashboardExecutiveCooRouteImport.update({
-  id: '/executive/coo',
-  path: '/executive/coo',
-  getParentRoute: () => DashboardRoute,
+  id: '/coo',
+  path: '/coo',
+  getParentRoute: () => DashboardExecutiveRoute,
 } as any)
 const DashboardExecutiveCtoRoute = DashboardExecutiveCtoRouteImport.update({
-  id: '/executive/cto',
-  path: '/executive/cto',
-  getParentRoute: () => DashboardRoute,
+  id: '/cto',
+  path: '/cto',
+  getParentRoute: () => DashboardExecutiveRoute,
 } as any)
 const DashboardHelpdeskAnalyticsRoute =
   DashboardHelpdeskAnalyticsRouteImport.update({
@@ -1677,6 +1715,40 @@ const DashboardRecruitmentJobsNewRoute =
     path: '/jobs/new',
     getParentRoute: () => DashboardRecruitmentRoute,
   } as any)
+const PayrollRunsRunIdApprovalRoute =
+  PayrollRunsRunIdApprovalRouteImport.update({
+    id: '/payroll/runs/$runId/approval',
+    path: '/payroll/runs/$runId/approval',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PayrollRunsRunIdFinalizeRoute =
+  PayrollRunsRunIdFinalizeRouteImport.update({
+    id: '/payroll/runs/$runId/finalize',
+    path: '/payroll/runs/$runId/finalize',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PayrollRunsRunIdPreviewRoute = PayrollRunsRunIdPreviewRouteImport.update({
+  id: '/payroll/runs/$runId/preview',
+  path: '/payroll/runs/$runId/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PayrollRunsRunIdProcessingRoute =
+  PayrollRunsRunIdProcessingRouteImport.update({
+    id: '/payroll/runs/$runId/processing',
+    path: '/payroll/runs/$runId/processing',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PayrollRunsRunIdReviewRoute = PayrollRunsRunIdReviewRouteImport.update({
+  id: '/payroll/runs/$runId/review',
+  path: '/payroll/runs/$runId/review',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PayrollRunsRunIdValidationRoute =
+  PayrollRunsRunIdValidationRouteImport.update({
+    id: '/payroll/runs/$runId/validation',
+    path: '/payroll/runs/$runId/validation',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const DashboardPayrollRunsRunIdApprovalRoute =
   DashboardPayrollRunsRunIdApprovalRouteImport.update({
     id: '/runs/$runId/approval',
@@ -1725,11 +1797,23 @@ const DashboardRecruitmentJobsJobIdPublishRoute =
     path: '/publish',
     getParentRoute: () => DashboardRecruitmentJobsJobIdRoute,
   } as any)
+const PayrollRunsRunIdEmployeeEmployeeIdRoute =
+  PayrollRunsRunIdEmployeeEmployeeIdRouteImport.update({
+    id: '/payroll/runs/$runId/employee/$employeeId',
+    path: '/payroll/runs/$runId/employee/$employeeId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const DashboardPayrollRunsRunIdEmployeesEmployeeIdRoute =
   DashboardPayrollRunsRunIdEmployeesEmployeeIdRouteImport.update({
     id: '/runs/$runId/employees/$employeeId',
     path: '/runs/$runId/employees/$employeeId',
     getParentRoute: () => DashboardPayrollRoute,
+  } as any)
+const PayrollRunsRunIdEmployeeEmployeeIdPayslipRoute =
+  PayrollRunsRunIdEmployeeEmployeeIdPayslipRouteImport.update({
+    id: '/payslip',
+    path: '/payslip',
+    getParentRoute: () => PayrollRunsRunIdEmployeeEmployeeIdRoute,
   } as any)
 const DashboardPayrollRunsRunIdEmployeesEmployeeIdPayslipRoute =
   DashboardPayrollRunsRunIdEmployeesEmployeeIdPayslipRouteImport.update({
@@ -1757,6 +1841,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/verify-documents': typeof VerifyDocumentsRouteWithChildren
   '/verify-email': typeof VerifyEmailRoute
   '/verify-reset-otp': typeof VerifyResetOtpRoute
   '/ai-interview/$token': typeof AiInterviewTokenRoute
@@ -1782,6 +1867,7 @@ export interface FileRoutesByFullPath {
   '/auth/verify-email': typeof AuthVerifyEmailRoute
   '/auth/verify-reset-otp': typeof AuthVerifyResetOtpRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/dashboard/admin': typeof DashboardAdminRoute
   '/dashboard/ai-hub': typeof DashboardAiHubRouteWithChildren
   '/dashboard/ai-insights': typeof DashboardAiInsightsRoute
   '/dashboard/analytics': typeof DashboardAnalyticsRouteWithChildren
@@ -1798,6 +1884,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/documents': typeof DashboardDocumentsRoute
   '/dashboard/employee': typeof DashboardEmployeeRouteWithChildren
   '/dashboard/employees': typeof DashboardEmployeesRoute
+  '/dashboard/executive': typeof DashboardExecutiveRouteWithChildren
   '/dashboard/executives': typeof DashboardExecutivesRoute
   '/dashboard/exit': typeof DashboardExitRoute
   '/dashboard/exit-management': typeof DashboardExitManagementRoute
@@ -1830,9 +1917,11 @@ export interface FileRoutesByFullPath {
   '/dashboard/travel': typeof DashboardTravelRoute
   '/dashboard/visitors': typeof DashboardVisitorsRoute
   '/dashboard/workforce': typeof DashboardWorkforceRouteWithChildren
+  '/verify-documents/callback': typeof VerifyDocumentsCallbackRoute
   '/ai/': typeof AiIndexRoute
   '/blog/': typeof BlogIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/verify-documents/': typeof VerifyDocumentsIndexRoute
   '/dashboard/ai-hub/assistant': typeof DashboardAiHubAssistantRoute
   '/dashboard/ai-hub/automation': typeof DashboardAiHubAutomationRoute
   '/dashboard/ai-hub/document-generator': typeof DashboardAiHubDocumentGeneratorRoute
@@ -1988,6 +2077,12 @@ export interface FileRoutesByFullPath {
   '/dashboard/recruitment/candidates/$candidateId': typeof DashboardRecruitmentCandidatesCandidateIdRoute
   '/dashboard/recruitment/jobs/$jobId': typeof DashboardRecruitmentJobsJobIdRouteWithChildren
   '/dashboard/recruitment/jobs/new': typeof DashboardRecruitmentJobsNewRoute
+  '/payroll/runs/$runId/approval': typeof PayrollRunsRunIdApprovalRoute
+  '/payroll/runs/$runId/finalize': typeof PayrollRunsRunIdFinalizeRoute
+  '/payroll/runs/$runId/preview': typeof PayrollRunsRunIdPreviewRoute
+  '/payroll/runs/$runId/processing': typeof PayrollRunsRunIdProcessingRoute
+  '/payroll/runs/$runId/review': typeof PayrollRunsRunIdReviewRoute
+  '/payroll/runs/$runId/validation': typeof PayrollRunsRunIdValidationRoute
   '/dashboard/executive/ceo/': typeof DashboardExecutiveCeoIndexRoute
   '/dashboard/executive/cio/': typeof DashboardExecutiveCioIndexRoute
   '/dashboard/executive/cto/': typeof DashboardExecutiveCtoIndexRoute
@@ -2001,7 +2096,9 @@ export interface FileRoutesByFullPath {
   '/dashboard/payroll/runs/$runId/review': typeof DashboardPayrollRunsRunIdReviewRoute
   '/dashboard/payroll/runs/$runId/validation': typeof DashboardPayrollRunsRunIdValidationRoute
   '/dashboard/recruitment/jobs/$jobId/publish': typeof DashboardRecruitmentJobsJobIdPublishRoute
+  '/payroll/runs/$runId/employee/$employeeId': typeof PayrollRunsRunIdEmployeeEmployeeIdRouteWithChildren
   '/dashboard/payroll/runs/$runId/employees/$employeeId': typeof DashboardPayrollRunsRunIdEmployeesEmployeeIdRouteWithChildren
+  '/payroll/runs/$runId/employee/$employeeId/payslip': typeof PayrollRunsRunIdEmployeeEmployeeIdPayslipRoute
   '/dashboard/payroll/runs/$runId/employees/$employeeId/payslip': typeof DashboardPayrollRunsRunIdEmployeesEmployeeIdPayslipRoute
 }
 export interface FileRoutesByTo {
@@ -2045,6 +2142,7 @@ export interface FileRoutesByTo {
   '/auth/verify-email': typeof AuthVerifyEmailRoute
   '/auth/verify-reset-otp': typeof AuthVerifyResetOtpRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/dashboard/admin': typeof DashboardAdminRoute
   '/dashboard/ai-insights': typeof DashboardAiInsightsRoute
   '/dashboard/asset-management': typeof DashboardAssetManagementRoute
   '/dashboard/assets': typeof DashboardAssetsRoute
@@ -2078,9 +2176,11 @@ export interface FileRoutesByTo {
   '/dashboard/timesheets': typeof DashboardTimesheetsRoute
   '/dashboard/travel': typeof DashboardTravelRoute
   '/dashboard/visitors': typeof DashboardVisitorsRoute
+  '/verify-documents/callback': typeof VerifyDocumentsCallbackRoute
   '/ai': typeof AiIndexRoute
   '/blog': typeof BlogIndexRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/verify-documents': typeof VerifyDocumentsIndexRoute
   '/dashboard/ai-hub/assistant': typeof DashboardAiHubAssistantRoute
   '/dashboard/ai-hub/automation': typeof DashboardAiHubAutomationRoute
   '/dashboard/ai-hub/document-generator': typeof DashboardAiHubDocumentGeneratorRoute
@@ -2232,6 +2332,12 @@ export interface FileRoutesByTo {
   '/dashboard/recruitment/candidates/$candidateId': typeof DashboardRecruitmentCandidatesCandidateIdRoute
   '/dashboard/recruitment/jobs/$jobId': typeof DashboardRecruitmentJobsJobIdRouteWithChildren
   '/dashboard/recruitment/jobs/new': typeof DashboardRecruitmentJobsNewRoute
+  '/payroll/runs/$runId/approval': typeof PayrollRunsRunIdApprovalRoute
+  '/payroll/runs/$runId/finalize': typeof PayrollRunsRunIdFinalizeRoute
+  '/payroll/runs/$runId/preview': typeof PayrollRunsRunIdPreviewRoute
+  '/payroll/runs/$runId/processing': typeof PayrollRunsRunIdProcessingRoute
+  '/payroll/runs/$runId/review': typeof PayrollRunsRunIdReviewRoute
+  '/payroll/runs/$runId/validation': typeof PayrollRunsRunIdValidationRoute
   '/dashboard/executive/ceo': typeof DashboardExecutiveCeoIndexRoute
   '/dashboard/executive/cio': typeof DashboardExecutiveCioIndexRoute
   '/dashboard/executive/cto': typeof DashboardExecutiveCtoIndexRoute
@@ -2245,7 +2351,9 @@ export interface FileRoutesByTo {
   '/dashboard/payroll/runs/$runId/review': typeof DashboardPayrollRunsRunIdReviewRoute
   '/dashboard/payroll/runs/$runId/validation': typeof DashboardPayrollRunsRunIdValidationRoute
   '/dashboard/recruitment/jobs/$jobId/publish': typeof DashboardRecruitmentJobsJobIdPublishRoute
+  '/payroll/runs/$runId/employee/$employeeId': typeof PayrollRunsRunIdEmployeeEmployeeIdRouteWithChildren
   '/dashboard/payroll/runs/$runId/employees/$employeeId': typeof DashboardPayrollRunsRunIdEmployeesEmployeeIdRouteWithChildren
+  '/payroll/runs/$runId/employee/$employeeId/payslip': typeof PayrollRunsRunIdEmployeeEmployeeIdPayslipRoute
   '/dashboard/payroll/runs/$runId/employees/$employeeId/payslip': typeof DashboardPayrollRunsRunIdEmployeesEmployeeIdPayslipRoute
 }
 export interface FileRoutesById {
@@ -2268,6 +2376,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/verify-documents': typeof VerifyDocumentsRouteWithChildren
   '/verify-email': typeof VerifyEmailRoute
   '/verify-reset-otp': typeof VerifyResetOtpRoute
   '/ai-interview/$token': typeof AiInterviewTokenRoute
@@ -2293,6 +2402,7 @@ export interface FileRoutesById {
   '/auth/verify-email': typeof AuthVerifyEmailRoute
   '/auth/verify-reset-otp': typeof AuthVerifyResetOtpRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/dashboard/admin': typeof DashboardAdminRoute
   '/dashboard/ai-hub': typeof DashboardAiHubRouteWithChildren
   '/dashboard/ai-insights': typeof DashboardAiInsightsRoute
   '/dashboard/analytics': typeof DashboardAnalyticsRouteWithChildren
@@ -2309,6 +2419,7 @@ export interface FileRoutesById {
   '/dashboard/documents': typeof DashboardDocumentsRoute
   '/dashboard/employee': typeof DashboardEmployeeRouteWithChildren
   '/dashboard/employees': typeof DashboardEmployeesRoute
+  '/dashboard/executive': typeof DashboardExecutiveRouteWithChildren
   '/dashboard/executives': typeof DashboardExecutivesRoute
   '/dashboard/exit': typeof DashboardExitRoute
   '/dashboard/exit-management': typeof DashboardExitManagementRoute
@@ -2341,9 +2452,11 @@ export interface FileRoutesById {
   '/dashboard/travel': typeof DashboardTravelRoute
   '/dashboard/visitors': typeof DashboardVisitorsRoute
   '/dashboard/workforce': typeof DashboardWorkforceRouteWithChildren
+  '/verify-documents/callback': typeof VerifyDocumentsCallbackRoute
   '/ai/': typeof AiIndexRoute
   '/blog/': typeof BlogIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/verify-documents/': typeof VerifyDocumentsIndexRoute
   '/dashboard/ai-hub/assistant': typeof DashboardAiHubAssistantRoute
   '/dashboard/ai-hub/automation': typeof DashboardAiHubAutomationRoute
   '/dashboard/ai-hub/document-generator': typeof DashboardAiHubDocumentGeneratorRoute
@@ -2499,6 +2612,12 @@ export interface FileRoutesById {
   '/dashboard/recruitment/candidates/$candidateId': typeof DashboardRecruitmentCandidatesCandidateIdRoute
   '/dashboard/recruitment/jobs/$jobId': typeof DashboardRecruitmentJobsJobIdRouteWithChildren
   '/dashboard/recruitment/jobs/new': typeof DashboardRecruitmentJobsNewRoute
+  '/payroll/runs/$runId/approval': typeof PayrollRunsRunIdApprovalRoute
+  '/payroll/runs/$runId/finalize': typeof PayrollRunsRunIdFinalizeRoute
+  '/payroll/runs/$runId/preview': typeof PayrollRunsRunIdPreviewRoute
+  '/payroll/runs/$runId/processing': typeof PayrollRunsRunIdProcessingRoute
+  '/payroll/runs/$runId/review': typeof PayrollRunsRunIdReviewRoute
+  '/payroll/runs/$runId/validation': typeof PayrollRunsRunIdValidationRoute
   '/dashboard/executive/ceo/': typeof DashboardExecutiveCeoIndexRoute
   '/dashboard/executive/cio/': typeof DashboardExecutiveCioIndexRoute
   '/dashboard/executive/cto/': typeof DashboardExecutiveCtoIndexRoute
@@ -2512,7 +2631,9 @@ export interface FileRoutesById {
   '/dashboard/payroll/runs/$runId/review': typeof DashboardPayrollRunsRunIdReviewRoute
   '/dashboard/payroll/runs/$runId/validation': typeof DashboardPayrollRunsRunIdValidationRoute
   '/dashboard/recruitment/jobs/$jobId/publish': typeof DashboardRecruitmentJobsJobIdPublishRoute
+  '/payroll/runs/$runId/employee/$employeeId': typeof PayrollRunsRunIdEmployeeEmployeeIdRouteWithChildren
   '/dashboard/payroll/runs/$runId/employees/$employeeId': typeof DashboardPayrollRunsRunIdEmployeesEmployeeIdRouteWithChildren
+  '/payroll/runs/$runId/employee/$employeeId/payslip': typeof PayrollRunsRunIdEmployeeEmployeeIdPayslipRoute
   '/dashboard/payroll/runs/$runId/employees/$employeeId/payslip': typeof DashboardPayrollRunsRunIdEmployeesEmployeeIdPayslipRoute
 }
 export interface FileRouteTypes {
@@ -2536,6 +2657,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sitemap.xml'
     | '/terms'
+    | '/verify-documents'
     | '/verify-email'
     | '/verify-reset-otp'
     | '/ai-interview/$token'
@@ -2561,6 +2683,7 @@ export interface FileRouteTypes {
     | '/auth/verify-email'
     | '/auth/verify-reset-otp'
     | '/blog/$slug'
+    | '/dashboard/admin'
     | '/dashboard/ai-hub'
     | '/dashboard/ai-insights'
     | '/dashboard/analytics'
@@ -2577,6 +2700,7 @@ export interface FileRouteTypes {
     | '/dashboard/documents'
     | '/dashboard/employee'
     | '/dashboard/employees'
+    | '/dashboard/executive'
     | '/dashboard/executives'
     | '/dashboard/exit'
     | '/dashboard/exit-management'
@@ -2609,9 +2733,11 @@ export interface FileRouteTypes {
     | '/dashboard/travel'
     | '/dashboard/visitors'
     | '/dashboard/workforce'
+    | '/verify-documents/callback'
     | '/ai/'
     | '/blog/'
     | '/dashboard/'
+    | '/verify-documents/'
     | '/dashboard/ai-hub/assistant'
     | '/dashboard/ai-hub/automation'
     | '/dashboard/ai-hub/document-generator'
@@ -2767,6 +2893,12 @@ export interface FileRouteTypes {
     | '/dashboard/recruitment/candidates/$candidateId'
     | '/dashboard/recruitment/jobs/$jobId'
     | '/dashboard/recruitment/jobs/new'
+    | '/payroll/runs/$runId/approval'
+    | '/payroll/runs/$runId/finalize'
+    | '/payroll/runs/$runId/preview'
+    | '/payroll/runs/$runId/processing'
+    | '/payroll/runs/$runId/review'
+    | '/payroll/runs/$runId/validation'
     | '/dashboard/executive/ceo/'
     | '/dashboard/executive/cio/'
     | '/dashboard/executive/cto/'
@@ -2780,7 +2912,9 @@ export interface FileRouteTypes {
     | '/dashboard/payroll/runs/$runId/review'
     | '/dashboard/payroll/runs/$runId/validation'
     | '/dashboard/recruitment/jobs/$jobId/publish'
+    | '/payroll/runs/$runId/employee/$employeeId'
     | '/dashboard/payroll/runs/$runId/employees/$employeeId'
+    | '/payroll/runs/$runId/employee/$employeeId/payslip'
     | '/dashboard/payroll/runs/$runId/employees/$employeeId/payslip'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -2824,6 +2958,7 @@ export interface FileRouteTypes {
     | '/auth/verify-email'
     | '/auth/verify-reset-otp'
     | '/blog/$slug'
+    | '/dashboard/admin'
     | '/dashboard/ai-insights'
     | '/dashboard/asset-management'
     | '/dashboard/assets'
@@ -2857,9 +2992,11 @@ export interface FileRouteTypes {
     | '/dashboard/timesheets'
     | '/dashboard/travel'
     | '/dashboard/visitors'
+    | '/verify-documents/callback'
     | '/ai'
     | '/blog'
     | '/dashboard'
+    | '/verify-documents'
     | '/dashboard/ai-hub/assistant'
     | '/dashboard/ai-hub/automation'
     | '/dashboard/ai-hub/document-generator'
@@ -3011,6 +3148,12 @@ export interface FileRouteTypes {
     | '/dashboard/recruitment/candidates/$candidateId'
     | '/dashboard/recruitment/jobs/$jobId'
     | '/dashboard/recruitment/jobs/new'
+    | '/payroll/runs/$runId/approval'
+    | '/payroll/runs/$runId/finalize'
+    | '/payroll/runs/$runId/preview'
+    | '/payroll/runs/$runId/processing'
+    | '/payroll/runs/$runId/review'
+    | '/payroll/runs/$runId/validation'
     | '/dashboard/executive/ceo'
     | '/dashboard/executive/cio'
     | '/dashboard/executive/cto'
@@ -3024,7 +3167,9 @@ export interface FileRouteTypes {
     | '/dashboard/payroll/runs/$runId/review'
     | '/dashboard/payroll/runs/$runId/validation'
     | '/dashboard/recruitment/jobs/$jobId/publish'
+    | '/payroll/runs/$runId/employee/$employeeId'
     | '/dashboard/payroll/runs/$runId/employees/$employeeId'
+    | '/payroll/runs/$runId/employee/$employeeId/payslip'
     | '/dashboard/payroll/runs/$runId/employees/$employeeId/payslip'
   id:
     | '__root__'
@@ -3046,6 +3191,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sitemap.xml'
     | '/terms'
+    | '/verify-documents'
     | '/verify-email'
     | '/verify-reset-otp'
     | '/ai-interview/$token'
@@ -3071,6 +3217,7 @@ export interface FileRouteTypes {
     | '/auth/verify-email'
     | '/auth/verify-reset-otp'
     | '/blog/$slug'
+    | '/dashboard/admin'
     | '/dashboard/ai-hub'
     | '/dashboard/ai-insights'
     | '/dashboard/analytics'
@@ -3087,6 +3234,7 @@ export interface FileRouteTypes {
     | '/dashboard/documents'
     | '/dashboard/employee'
     | '/dashboard/employees'
+    | '/dashboard/executive'
     | '/dashboard/executives'
     | '/dashboard/exit'
     | '/dashboard/exit-management'
@@ -3119,9 +3267,11 @@ export interface FileRouteTypes {
     | '/dashboard/travel'
     | '/dashboard/visitors'
     | '/dashboard/workforce'
+    | '/verify-documents/callback'
     | '/ai/'
     | '/blog/'
     | '/dashboard/'
+    | '/verify-documents/'
     | '/dashboard/ai-hub/assistant'
     | '/dashboard/ai-hub/automation'
     | '/dashboard/ai-hub/document-generator'
@@ -3277,6 +3427,12 @@ export interface FileRouteTypes {
     | '/dashboard/recruitment/candidates/$candidateId'
     | '/dashboard/recruitment/jobs/$jobId'
     | '/dashboard/recruitment/jobs/new'
+    | '/payroll/runs/$runId/approval'
+    | '/payroll/runs/$runId/finalize'
+    | '/payroll/runs/$runId/preview'
+    | '/payroll/runs/$runId/processing'
+    | '/payroll/runs/$runId/review'
+    | '/payroll/runs/$runId/validation'
     | '/dashboard/executive/ceo/'
     | '/dashboard/executive/cio/'
     | '/dashboard/executive/cto/'
@@ -3290,7 +3446,9 @@ export interface FileRouteTypes {
     | '/dashboard/payroll/runs/$runId/review'
     | '/dashboard/payroll/runs/$runId/validation'
     | '/dashboard/recruitment/jobs/$jobId/publish'
+    | '/payroll/runs/$runId/employee/$employeeId'
     | '/dashboard/payroll/runs/$runId/employees/$employeeId'
+    | '/payroll/runs/$runId/employee/$employeeId/payslip'
     | '/dashboard/payroll/runs/$runId/employees/$employeeId/payslip'
   fileRoutesById: FileRoutesById
 }
@@ -3313,6 +3471,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
+  VerifyDocumentsRoute: typeof VerifyDocumentsRouteWithChildren
   VerifyEmailRoute: typeof VerifyEmailRoute
   VerifyResetOtpRoute: typeof VerifyResetOtpRoute
   AiInterviewTokenRoute: typeof AiInterviewTokenRoute
@@ -3325,6 +3484,13 @@ export interface RootRouteChildren {
   AuthVerifyResetOtpRoute: typeof AuthVerifyResetOtpRoute
   InterviewBookTokenRoute: typeof InterviewBookTokenRoute
   JobsApplyUkeyRoute: typeof JobsApplyUkeyRoute
+  PayrollRunsRunIdApprovalRoute: typeof PayrollRunsRunIdApprovalRoute
+  PayrollRunsRunIdFinalizeRoute: typeof PayrollRunsRunIdFinalizeRoute
+  PayrollRunsRunIdPreviewRoute: typeof PayrollRunsRunIdPreviewRoute
+  PayrollRunsRunIdProcessingRoute: typeof PayrollRunsRunIdProcessingRoute
+  PayrollRunsRunIdReviewRoute: typeof PayrollRunsRunIdReviewRoute
+  PayrollRunsRunIdValidationRoute: typeof PayrollRunsRunIdValidationRoute
+  PayrollRunsRunIdEmployeeEmployeeIdRoute: typeof PayrollRunsRunIdEmployeeEmployeeIdRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -3453,6 +3619,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verify-documents': {
+      id: '/verify-documents'
+      path: '/verify-documents'
+      fullPath: '/verify-documents'
+      preLoaderRoute: typeof VerifyDocumentsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/verify-email': {
@@ -3651,6 +3824,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/admin': {
+      id: '/dashboard/admin'
+      path: '/admin'
+      fullPath: '/dashboard/admin'
+      preLoaderRoute: typeof DashboardAdminRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/ai-hub': {
       id: '/dashboard/ai-hub'
       path: '/ai-hub'
@@ -3761,6 +3941,13 @@ declare module '@tanstack/react-router' {
       path: '/employees'
       fullPath: '/dashboard/employees'
       preLoaderRoute: typeof DashboardEmployeesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/executive': {
+      id: '/dashboard/executive'
+      path: '/executive'
+      fullPath: '/dashboard/executive'
+      preLoaderRoute: typeof DashboardExecutiveRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/executives': {
@@ -3987,6 +4174,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardWorkforceRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/verify-documents/': {
+      id: '/verify-documents/'
+      path: '/'
+      fullPath: '/verify-documents/'
+      preLoaderRoute: typeof VerifyDocumentsIndexRouteImport
+      parentRoute: typeof VerifyDocumentsRoute
+    }
+    '/verify-documents/callback': {
+      id: '/verify-documents/callback'
+      path: '/callback'
+      fullPath: '/verify-documents/callback'
+      preLoaderRoute: typeof VerifyDocumentsCallbackRouteImport
+      parentRoute: typeof VerifyDocumentsRoute
+    }
     '/dashboard/ai-hub/': {
       id: '/dashboard/ai-hub/'
       path: '/'
@@ -4157,52 +4358,52 @@ declare module '@tanstack/react-router' {
     }
     '/dashboard/executive/': {
       id: '/dashboard/executive/'
-      path: '/executive'
+      path: '/'
       fullPath: '/dashboard/executive/'
       preLoaderRoute: typeof DashboardExecutiveIndexRouteImport
-      parentRoute: typeof DashboardRoute
+      parentRoute: typeof DashboardExecutiveRoute
     }
     '/dashboard/executive/ceo': {
       id: '/dashboard/executive/ceo'
-      path: '/executive/ceo'
+      path: '/ceo'
       fullPath: '/dashboard/executive/ceo'
       preLoaderRoute: typeof DashboardExecutiveCeoRouteImport
-      parentRoute: typeof DashboardRoute
+      parentRoute: typeof DashboardExecutiveRoute
     }
     '/dashboard/executive/cfo': {
       id: '/dashboard/executive/cfo'
-      path: '/executive/cfo'
+      path: '/cfo'
       fullPath: '/dashboard/executive/cfo'
       preLoaderRoute: typeof DashboardExecutiveCfoRouteImport
-      parentRoute: typeof DashboardRoute
+      parentRoute: typeof DashboardExecutiveRoute
     }
     '/dashboard/executive/cio': {
       id: '/dashboard/executive/cio'
-      path: '/executive/cio'
+      path: '/cio'
       fullPath: '/dashboard/executive/cio'
       preLoaderRoute: typeof DashboardExecutiveCioRouteImport
-      parentRoute: typeof DashboardRoute
+      parentRoute: typeof DashboardExecutiveRoute
     }
     '/dashboard/executive/cmo': {
       id: '/dashboard/executive/cmo'
-      path: '/executive/cmo'
+      path: '/cmo'
       fullPath: '/dashboard/executive/cmo'
       preLoaderRoute: typeof DashboardExecutiveCmoRouteImport
-      parentRoute: typeof DashboardRoute
+      parentRoute: typeof DashboardExecutiveRoute
     }
     '/dashboard/executive/coo': {
       id: '/dashboard/executive/coo'
-      path: '/executive/coo'
+      path: '/coo'
       fullPath: '/dashboard/executive/coo'
       preLoaderRoute: typeof DashboardExecutiveCooRouteImport
-      parentRoute: typeof DashboardRoute
+      parentRoute: typeof DashboardExecutiveRoute
     }
     '/dashboard/executive/cto': {
       id: '/dashboard/executive/cto'
-      path: '/executive/cto'
+      path: '/cto'
       fullPath: '/dashboard/executive/cto'
       preLoaderRoute: typeof DashboardExecutiveCtoRouteImport
-      parentRoute: typeof DashboardRoute
+      parentRoute: typeof DashboardExecutiveRoute
     }
     '/dashboard/helpdesk/analytics': {
       id: '/dashboard/helpdesk/analytics'
@@ -5107,6 +5308,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRecruitmentJobsNewRouteImport
       parentRoute: typeof DashboardRecruitmentRoute
     }
+    '/payroll/runs/$runId/approval': {
+      id: '/payroll/runs/$runId/approval'
+      path: '/payroll/runs/$runId/approval'
+      fullPath: '/payroll/runs/$runId/approval'
+      preLoaderRoute: typeof PayrollRunsRunIdApprovalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payroll/runs/$runId/finalize': {
+      id: '/payroll/runs/$runId/finalize'
+      path: '/payroll/runs/$runId/finalize'
+      fullPath: '/payroll/runs/$runId/finalize'
+      preLoaderRoute: typeof PayrollRunsRunIdFinalizeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payroll/runs/$runId/preview': {
+      id: '/payroll/runs/$runId/preview'
+      path: '/payroll/runs/$runId/preview'
+      fullPath: '/payroll/runs/$runId/preview'
+      preLoaderRoute: typeof PayrollRunsRunIdPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payroll/runs/$runId/processing': {
+      id: '/payroll/runs/$runId/processing'
+      path: '/payroll/runs/$runId/processing'
+      fullPath: '/payroll/runs/$runId/processing'
+      preLoaderRoute: typeof PayrollRunsRunIdProcessingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payroll/runs/$runId/review': {
+      id: '/payroll/runs/$runId/review'
+      path: '/payroll/runs/$runId/review'
+      fullPath: '/payroll/runs/$runId/review'
+      preLoaderRoute: typeof PayrollRunsRunIdReviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payroll/runs/$runId/validation': {
+      id: '/payroll/runs/$runId/validation'
+      path: '/payroll/runs/$runId/validation'
+      fullPath: '/payroll/runs/$runId/validation'
+      preLoaderRoute: typeof PayrollRunsRunIdValidationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/payroll/runs/$runId/approval': {
       id: '/dashboard/payroll/runs/$runId/approval'
       path: '/runs/$runId/approval'
@@ -5163,12 +5406,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRecruitmentJobsJobIdPublishRouteImport
       parentRoute: typeof DashboardRecruitmentJobsJobIdRoute
     }
+    '/payroll/runs/$runId/employee/$employeeId': {
+      id: '/payroll/runs/$runId/employee/$employeeId'
+      path: '/payroll/runs/$runId/employee/$employeeId'
+      fullPath: '/payroll/runs/$runId/employee/$employeeId'
+      preLoaderRoute: typeof PayrollRunsRunIdEmployeeEmployeeIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/payroll/runs/$runId/employees/$employeeId': {
       id: '/dashboard/payroll/runs/$runId/employees/$employeeId'
       path: '/runs/$runId/employees/$employeeId'
       fullPath: '/dashboard/payroll/runs/$runId/employees/$employeeId'
       preLoaderRoute: typeof DashboardPayrollRunsRunIdEmployeesEmployeeIdRouteImport
       parentRoute: typeof DashboardPayrollRoute
+    }
+    '/payroll/runs/$runId/employee/$employeeId/payslip': {
+      id: '/payroll/runs/$runId/employee/$employeeId/payslip'
+      path: '/payslip'
+      fullPath: '/payroll/runs/$runId/employee/$employeeId/payslip'
+      preLoaderRoute: typeof PayrollRunsRunIdEmployeeEmployeeIdPayslipRouteImport
+      parentRoute: typeof PayrollRunsRunIdEmployeeEmployeeIdRoute
     }
     '/dashboard/payroll/runs/$runId/employees/$employeeId/payslip': {
       id: '/dashboard/payroll/runs/$runId/employees/$employeeId/payslip'
@@ -5349,6 +5606,130 @@ const DashboardEmployeeRouteChildren: DashboardEmployeeRouteChildren = {
 
 const DashboardEmployeeRouteWithChildren =
   DashboardEmployeeRoute._addFileChildren(DashboardEmployeeRouteChildren)
+
+interface DashboardExecutiveCeoRouteChildren {
+  DashboardExecutiveCeoAiInsightsRoute: typeof DashboardExecutiveCeoAiInsightsRoute
+  DashboardExecutiveCeoBusinessRoute: typeof DashboardExecutiveCeoBusinessRoute
+  DashboardExecutiveCeoFinanceRoute: typeof DashboardExecutiveCeoFinanceRoute
+  DashboardExecutiveCeoOperationsRoute: typeof DashboardExecutiveCeoOperationsRoute
+  DashboardExecutiveCeoOrganizationRoute: typeof DashboardExecutiveCeoOrganizationRoute
+  DashboardExecutiveCeoReportsRoute: typeof DashboardExecutiveCeoReportsRoute
+  DashboardExecutiveCeoSalesRoute: typeof DashboardExecutiveCeoSalesRoute
+  DashboardExecutiveCeoSettingsRoute: typeof DashboardExecutiveCeoSettingsRoute
+  DashboardExecutiveCeoIndexRoute: typeof DashboardExecutiveCeoIndexRoute
+}
+
+const DashboardExecutiveCeoRouteChildren: DashboardExecutiveCeoRouteChildren = {
+  DashboardExecutiveCeoAiInsightsRoute: DashboardExecutiveCeoAiInsightsRoute,
+  DashboardExecutiveCeoBusinessRoute: DashboardExecutiveCeoBusinessRoute,
+  DashboardExecutiveCeoFinanceRoute: DashboardExecutiveCeoFinanceRoute,
+  DashboardExecutiveCeoOperationsRoute: DashboardExecutiveCeoOperationsRoute,
+  DashboardExecutiveCeoOrganizationRoute:
+    DashboardExecutiveCeoOrganizationRoute,
+  DashboardExecutiveCeoReportsRoute: DashboardExecutiveCeoReportsRoute,
+  DashboardExecutiveCeoSalesRoute: DashboardExecutiveCeoSalesRoute,
+  DashboardExecutiveCeoSettingsRoute: DashboardExecutiveCeoSettingsRoute,
+  DashboardExecutiveCeoIndexRoute: DashboardExecutiveCeoIndexRoute,
+}
+
+const DashboardExecutiveCeoRouteWithChildren =
+  DashboardExecutiveCeoRoute._addFileChildren(
+    DashboardExecutiveCeoRouteChildren,
+  )
+
+interface DashboardExecutiveCioRouteChildren {
+  DashboardExecutiveCioAnalyticsRoute: typeof DashboardExecutiveCioAnalyticsRoute
+  DashboardExecutiveCioCloudNetworkRoute: typeof DashboardExecutiveCioCloudNetworkRoute
+  DashboardExecutiveCioCyberSecurityRoute: typeof DashboardExecutiveCioCyberSecurityRoute
+  DashboardExecutiveCioDigitalTransformationRoute: typeof DashboardExecutiveCioDigitalTransformationRoute
+  DashboardExecutiveCioInfrastructureRoute: typeof DashboardExecutiveCioInfrastructureRoute
+  DashboardExecutiveCioItGovernanceRoute: typeof DashboardExecutiveCioItGovernanceRoute
+  DashboardExecutiveCioItOperationsRoute: typeof DashboardExecutiveCioItOperationsRoute
+  DashboardExecutiveCioSettingsRoute: typeof DashboardExecutiveCioSettingsRoute
+  DashboardExecutiveCioIndexRoute: typeof DashboardExecutiveCioIndexRoute
+}
+
+const DashboardExecutiveCioRouteChildren: DashboardExecutiveCioRouteChildren = {
+  DashboardExecutiveCioAnalyticsRoute: DashboardExecutiveCioAnalyticsRoute,
+  DashboardExecutiveCioCloudNetworkRoute:
+    DashboardExecutiveCioCloudNetworkRoute,
+  DashboardExecutiveCioCyberSecurityRoute:
+    DashboardExecutiveCioCyberSecurityRoute,
+  DashboardExecutiveCioDigitalTransformationRoute:
+    DashboardExecutiveCioDigitalTransformationRoute,
+  DashboardExecutiveCioInfrastructureRoute:
+    DashboardExecutiveCioInfrastructureRoute,
+  DashboardExecutiveCioItGovernanceRoute:
+    DashboardExecutiveCioItGovernanceRoute,
+  DashboardExecutiveCioItOperationsRoute:
+    DashboardExecutiveCioItOperationsRoute,
+  DashboardExecutiveCioSettingsRoute: DashboardExecutiveCioSettingsRoute,
+  DashboardExecutiveCioIndexRoute: DashboardExecutiveCioIndexRoute,
+}
+
+const DashboardExecutiveCioRouteWithChildren =
+  DashboardExecutiveCioRoute._addFileChildren(
+    DashboardExecutiveCioRouteChildren,
+  )
+
+interface DashboardExecutiveCtoRouteChildren {
+  DashboardExecutiveCtoAiRoute: typeof DashboardExecutiveCtoAiRoute
+  DashboardExecutiveCtoAnalyticsRoute: typeof DashboardExecutiveCtoAnalyticsRoute
+  DashboardExecutiveCtoDatabaseRoute: typeof DashboardExecutiveCtoDatabaseRoute
+  DashboardExecutiveCtoDevelopersRoute: typeof DashboardExecutiveCtoDevelopersRoute
+  DashboardExecutiveCtoDevopsRoute: typeof DashboardExecutiveCtoDevopsRoute
+  DashboardExecutiveCtoEngineeringRoute: typeof DashboardExecutiveCtoEngineeringRoute
+  DashboardExecutiveCtoInfrastructureRoute: typeof DashboardExecutiveCtoInfrastructureRoute
+  DashboardExecutiveCtoMonitoringRoute: typeof DashboardExecutiveCtoMonitoringRoute
+  DashboardExecutiveCtoProjectsRoute: typeof DashboardExecutiveCtoProjectsRoute
+  DashboardExecutiveCtoSecurityRoute: typeof DashboardExecutiveCtoSecurityRoute
+  DashboardExecutiveCtoSettingsRoute: typeof DashboardExecutiveCtoSettingsRoute
+  DashboardExecutiveCtoIndexRoute: typeof DashboardExecutiveCtoIndexRoute
+}
+
+const DashboardExecutiveCtoRouteChildren: DashboardExecutiveCtoRouteChildren = {
+  DashboardExecutiveCtoAiRoute: DashboardExecutiveCtoAiRoute,
+  DashboardExecutiveCtoAnalyticsRoute: DashboardExecutiveCtoAnalyticsRoute,
+  DashboardExecutiveCtoDatabaseRoute: DashboardExecutiveCtoDatabaseRoute,
+  DashboardExecutiveCtoDevelopersRoute: DashboardExecutiveCtoDevelopersRoute,
+  DashboardExecutiveCtoDevopsRoute: DashboardExecutiveCtoDevopsRoute,
+  DashboardExecutiveCtoEngineeringRoute: DashboardExecutiveCtoEngineeringRoute,
+  DashboardExecutiveCtoInfrastructureRoute:
+    DashboardExecutiveCtoInfrastructureRoute,
+  DashboardExecutiveCtoMonitoringRoute: DashboardExecutiveCtoMonitoringRoute,
+  DashboardExecutiveCtoProjectsRoute: DashboardExecutiveCtoProjectsRoute,
+  DashboardExecutiveCtoSecurityRoute: DashboardExecutiveCtoSecurityRoute,
+  DashboardExecutiveCtoSettingsRoute: DashboardExecutiveCtoSettingsRoute,
+  DashboardExecutiveCtoIndexRoute: DashboardExecutiveCtoIndexRoute,
+}
+
+const DashboardExecutiveCtoRouteWithChildren =
+  DashboardExecutiveCtoRoute._addFileChildren(
+    DashboardExecutiveCtoRouteChildren,
+  )
+
+interface DashboardExecutiveRouteChildren {
+  DashboardExecutiveCeoRoute: typeof DashboardExecutiveCeoRouteWithChildren
+  DashboardExecutiveCfoRoute: typeof DashboardExecutiveCfoRoute
+  DashboardExecutiveCioRoute: typeof DashboardExecutiveCioRouteWithChildren
+  DashboardExecutiveCmoRoute: typeof DashboardExecutiveCmoRoute
+  DashboardExecutiveCooRoute: typeof DashboardExecutiveCooRoute
+  DashboardExecutiveCtoRoute: typeof DashboardExecutiveCtoRouteWithChildren
+  DashboardExecutiveIndexRoute: typeof DashboardExecutiveIndexRoute
+}
+
+const DashboardExecutiveRouteChildren: DashboardExecutiveRouteChildren = {
+  DashboardExecutiveCeoRoute: DashboardExecutiveCeoRouteWithChildren,
+  DashboardExecutiveCfoRoute: DashboardExecutiveCfoRoute,
+  DashboardExecutiveCioRoute: DashboardExecutiveCioRouteWithChildren,
+  DashboardExecutiveCmoRoute: DashboardExecutiveCmoRoute,
+  DashboardExecutiveCooRoute: DashboardExecutiveCooRoute,
+  DashboardExecutiveCtoRoute: DashboardExecutiveCtoRouteWithChildren,
+  DashboardExecutiveIndexRoute: DashboardExecutiveIndexRoute,
+}
+
+const DashboardExecutiveRouteWithChildren =
+  DashboardExecutiveRoute._addFileChildren(DashboardExecutiveRouteChildren)
 
 interface DashboardHelpdeskRouteChildren {
   DashboardHelpdeskAnalyticsRoute: typeof DashboardHelpdeskAnalyticsRoute
@@ -5722,108 +6103,8 @@ const DashboardWorkforceRouteChildren: DashboardWorkforceRouteChildren = {
 const DashboardWorkforceRouteWithChildren =
   DashboardWorkforceRoute._addFileChildren(DashboardWorkforceRouteChildren)
 
-interface DashboardExecutiveCeoRouteChildren {
-  DashboardExecutiveCeoAiInsightsRoute: typeof DashboardExecutiveCeoAiInsightsRoute
-  DashboardExecutiveCeoBusinessRoute: typeof DashboardExecutiveCeoBusinessRoute
-  DashboardExecutiveCeoFinanceRoute: typeof DashboardExecutiveCeoFinanceRoute
-  DashboardExecutiveCeoOperationsRoute: typeof DashboardExecutiveCeoOperationsRoute
-  DashboardExecutiveCeoOrganizationRoute: typeof DashboardExecutiveCeoOrganizationRoute
-  DashboardExecutiveCeoReportsRoute: typeof DashboardExecutiveCeoReportsRoute
-  DashboardExecutiveCeoSalesRoute: typeof DashboardExecutiveCeoSalesRoute
-  DashboardExecutiveCeoSettingsRoute: typeof DashboardExecutiveCeoSettingsRoute
-  DashboardExecutiveCeoIndexRoute: typeof DashboardExecutiveCeoIndexRoute
-}
-
-const DashboardExecutiveCeoRouteChildren: DashboardExecutiveCeoRouteChildren = {
-  DashboardExecutiveCeoAiInsightsRoute: DashboardExecutiveCeoAiInsightsRoute,
-  DashboardExecutiveCeoBusinessRoute: DashboardExecutiveCeoBusinessRoute,
-  DashboardExecutiveCeoFinanceRoute: DashboardExecutiveCeoFinanceRoute,
-  DashboardExecutiveCeoOperationsRoute: DashboardExecutiveCeoOperationsRoute,
-  DashboardExecutiveCeoOrganizationRoute:
-    DashboardExecutiveCeoOrganizationRoute,
-  DashboardExecutiveCeoReportsRoute: DashboardExecutiveCeoReportsRoute,
-  DashboardExecutiveCeoSalesRoute: DashboardExecutiveCeoSalesRoute,
-  DashboardExecutiveCeoSettingsRoute: DashboardExecutiveCeoSettingsRoute,
-  DashboardExecutiveCeoIndexRoute: DashboardExecutiveCeoIndexRoute,
-}
-
-const DashboardExecutiveCeoRouteWithChildren =
-  DashboardExecutiveCeoRoute._addFileChildren(
-    DashboardExecutiveCeoRouteChildren,
-  )
-
-interface DashboardExecutiveCioRouteChildren {
-  DashboardExecutiveCioAnalyticsRoute: typeof DashboardExecutiveCioAnalyticsRoute
-  DashboardExecutiveCioCloudNetworkRoute: typeof DashboardExecutiveCioCloudNetworkRoute
-  DashboardExecutiveCioCyberSecurityRoute: typeof DashboardExecutiveCioCyberSecurityRoute
-  DashboardExecutiveCioDigitalTransformationRoute: typeof DashboardExecutiveCioDigitalTransformationRoute
-  DashboardExecutiveCioInfrastructureRoute: typeof DashboardExecutiveCioInfrastructureRoute
-  DashboardExecutiveCioItGovernanceRoute: typeof DashboardExecutiveCioItGovernanceRoute
-  DashboardExecutiveCioItOperationsRoute: typeof DashboardExecutiveCioItOperationsRoute
-  DashboardExecutiveCioSettingsRoute: typeof DashboardExecutiveCioSettingsRoute
-  DashboardExecutiveCioIndexRoute: typeof DashboardExecutiveCioIndexRoute
-}
-
-const DashboardExecutiveCioRouteChildren: DashboardExecutiveCioRouteChildren = {
-  DashboardExecutiveCioAnalyticsRoute: DashboardExecutiveCioAnalyticsRoute,
-  DashboardExecutiveCioCloudNetworkRoute:
-    DashboardExecutiveCioCloudNetworkRoute,
-  DashboardExecutiveCioCyberSecurityRoute:
-    DashboardExecutiveCioCyberSecurityRoute,
-  DashboardExecutiveCioDigitalTransformationRoute:
-    DashboardExecutiveCioDigitalTransformationRoute,
-  DashboardExecutiveCioInfrastructureRoute:
-    DashboardExecutiveCioInfrastructureRoute,
-  DashboardExecutiveCioItGovernanceRoute:
-    DashboardExecutiveCioItGovernanceRoute,
-  DashboardExecutiveCioItOperationsRoute:
-    DashboardExecutiveCioItOperationsRoute,
-  DashboardExecutiveCioSettingsRoute: DashboardExecutiveCioSettingsRoute,
-  DashboardExecutiveCioIndexRoute: DashboardExecutiveCioIndexRoute,
-}
-
-const DashboardExecutiveCioRouteWithChildren =
-  DashboardExecutiveCioRoute._addFileChildren(
-    DashboardExecutiveCioRouteChildren,
-  )
-
-interface DashboardExecutiveCtoRouteChildren {
-  DashboardExecutiveCtoAiRoute: typeof DashboardExecutiveCtoAiRoute
-  DashboardExecutiveCtoAnalyticsRoute: typeof DashboardExecutiveCtoAnalyticsRoute
-  DashboardExecutiveCtoDatabaseRoute: typeof DashboardExecutiveCtoDatabaseRoute
-  DashboardExecutiveCtoDevelopersRoute: typeof DashboardExecutiveCtoDevelopersRoute
-  DashboardExecutiveCtoDevopsRoute: typeof DashboardExecutiveCtoDevopsRoute
-  DashboardExecutiveCtoEngineeringRoute: typeof DashboardExecutiveCtoEngineeringRoute
-  DashboardExecutiveCtoInfrastructureRoute: typeof DashboardExecutiveCtoInfrastructureRoute
-  DashboardExecutiveCtoMonitoringRoute: typeof DashboardExecutiveCtoMonitoringRoute
-  DashboardExecutiveCtoProjectsRoute: typeof DashboardExecutiveCtoProjectsRoute
-  DashboardExecutiveCtoSecurityRoute: typeof DashboardExecutiveCtoSecurityRoute
-  DashboardExecutiveCtoSettingsRoute: typeof DashboardExecutiveCtoSettingsRoute
-  DashboardExecutiveCtoIndexRoute: typeof DashboardExecutiveCtoIndexRoute
-}
-
-const DashboardExecutiveCtoRouteChildren: DashboardExecutiveCtoRouteChildren = {
-  DashboardExecutiveCtoAiRoute: DashboardExecutiveCtoAiRoute,
-  DashboardExecutiveCtoAnalyticsRoute: DashboardExecutiveCtoAnalyticsRoute,
-  DashboardExecutiveCtoDatabaseRoute: DashboardExecutiveCtoDatabaseRoute,
-  DashboardExecutiveCtoDevelopersRoute: DashboardExecutiveCtoDevelopersRoute,
-  DashboardExecutiveCtoDevopsRoute: DashboardExecutiveCtoDevopsRoute,
-  DashboardExecutiveCtoEngineeringRoute: DashboardExecutiveCtoEngineeringRoute,
-  DashboardExecutiveCtoInfrastructureRoute:
-    DashboardExecutiveCtoInfrastructureRoute,
-  DashboardExecutiveCtoMonitoringRoute: DashboardExecutiveCtoMonitoringRoute,
-  DashboardExecutiveCtoProjectsRoute: DashboardExecutiveCtoProjectsRoute,
-  DashboardExecutiveCtoSecurityRoute: DashboardExecutiveCtoSecurityRoute,
-  DashboardExecutiveCtoSettingsRoute: DashboardExecutiveCtoSettingsRoute,
-  DashboardExecutiveCtoIndexRoute: DashboardExecutiveCtoIndexRoute,
-}
-
-const DashboardExecutiveCtoRouteWithChildren =
-  DashboardExecutiveCtoRoute._addFileChildren(
-    DashboardExecutiveCtoRouteChildren,
-  )
-
 interface DashboardRouteChildren {
+  DashboardAdminRoute: typeof DashboardAdminRoute
   DashboardAiHubRoute: typeof DashboardAiHubRouteWithChildren
   DashboardAiInsightsRoute: typeof DashboardAiInsightsRoute
   DashboardAnalyticsRoute: typeof DashboardAnalyticsRouteWithChildren
@@ -5840,6 +6121,7 @@ interface DashboardRouteChildren {
   DashboardDocumentsRoute: typeof DashboardDocumentsRoute
   DashboardEmployeeRoute: typeof DashboardEmployeeRouteWithChildren
   DashboardEmployeesRoute: typeof DashboardEmployeesRoute
+  DashboardExecutiveRoute: typeof DashboardExecutiveRouteWithChildren
   DashboardExecutivesRoute: typeof DashboardExecutivesRoute
   DashboardExitRoute: typeof DashboardExitRoute
   DashboardExitManagementRoute: typeof DashboardExitManagementRoute
@@ -5873,17 +6155,11 @@ interface DashboardRouteChildren {
   DashboardVisitorsRoute: typeof DashboardVisitorsRoute
   DashboardWorkforceRoute: typeof DashboardWorkforceRouteWithChildren
   DashboardIndexRoute: typeof DashboardIndexRoute
-  DashboardExecutiveCeoRoute: typeof DashboardExecutiveCeoRouteWithChildren
-  DashboardExecutiveCfoRoute: typeof DashboardExecutiveCfoRoute
-  DashboardExecutiveCioRoute: typeof DashboardExecutiveCioRouteWithChildren
-  DashboardExecutiveCmoRoute: typeof DashboardExecutiveCmoRoute
-  DashboardExecutiveCooRoute: typeof DashboardExecutiveCooRoute
-  DashboardExecutiveCtoRoute: typeof DashboardExecutiveCtoRouteWithChildren
-  DashboardExecutiveIndexRoute: typeof DashboardExecutiveIndexRoute
   DashboardPeopleIndexRoute: typeof DashboardPeopleIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardAdminRoute: DashboardAdminRoute,
   DashboardAiHubRoute: DashboardAiHubRouteWithChildren,
   DashboardAiInsightsRoute: DashboardAiInsightsRoute,
   DashboardAnalyticsRoute: DashboardAnalyticsRouteWithChildren,
@@ -5900,6 +6176,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardDocumentsRoute: DashboardDocumentsRoute,
   DashboardEmployeeRoute: DashboardEmployeeRouteWithChildren,
   DashboardEmployeesRoute: DashboardEmployeesRoute,
+  DashboardExecutiveRoute: DashboardExecutiveRouteWithChildren,
   DashboardExecutivesRoute: DashboardExecutivesRoute,
   DashboardExitRoute: DashboardExitRoute,
   DashboardExitManagementRoute: DashboardExitManagementRoute,
@@ -5933,19 +6210,41 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardVisitorsRoute: DashboardVisitorsRoute,
   DashboardWorkforceRoute: DashboardWorkforceRouteWithChildren,
   DashboardIndexRoute: DashboardIndexRoute,
-  DashboardExecutiveCeoRoute: DashboardExecutiveCeoRouteWithChildren,
-  DashboardExecutiveCfoRoute: DashboardExecutiveCfoRoute,
-  DashboardExecutiveCioRoute: DashboardExecutiveCioRouteWithChildren,
-  DashboardExecutiveCmoRoute: DashboardExecutiveCmoRoute,
-  DashboardExecutiveCooRoute: DashboardExecutiveCooRoute,
-  DashboardExecutiveCtoRoute: DashboardExecutiveCtoRouteWithChildren,
-  DashboardExecutiveIndexRoute: DashboardExecutiveIndexRoute,
   DashboardPeopleIndexRoute: DashboardPeopleIndexRoute,
 }
 
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
   DashboardRouteChildren,
 )
+
+interface VerifyDocumentsRouteChildren {
+  VerifyDocumentsCallbackRoute: typeof VerifyDocumentsCallbackRoute
+  VerifyDocumentsIndexRoute: typeof VerifyDocumentsIndexRoute
+}
+
+const VerifyDocumentsRouteChildren: VerifyDocumentsRouteChildren = {
+  VerifyDocumentsCallbackRoute: VerifyDocumentsCallbackRoute,
+  VerifyDocumentsIndexRoute: VerifyDocumentsIndexRoute,
+}
+
+const VerifyDocumentsRouteWithChildren = VerifyDocumentsRoute._addFileChildren(
+  VerifyDocumentsRouteChildren,
+)
+
+interface PayrollRunsRunIdEmployeeEmployeeIdRouteChildren {
+  PayrollRunsRunIdEmployeeEmployeeIdPayslipRoute: typeof PayrollRunsRunIdEmployeeEmployeeIdPayslipRoute
+}
+
+const PayrollRunsRunIdEmployeeEmployeeIdRouteChildren: PayrollRunsRunIdEmployeeEmployeeIdRouteChildren =
+  {
+    PayrollRunsRunIdEmployeeEmployeeIdPayslipRoute:
+      PayrollRunsRunIdEmployeeEmployeeIdPayslipRoute,
+  }
+
+const PayrollRunsRunIdEmployeeEmployeeIdRouteWithChildren =
+  PayrollRunsRunIdEmployeeEmployeeIdRoute._addFileChildren(
+    PayrollRunsRunIdEmployeeEmployeeIdRouteChildren,
+  )
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -5966,6 +6265,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
+  VerifyDocumentsRoute: VerifyDocumentsRouteWithChildren,
   VerifyEmailRoute: VerifyEmailRoute,
   VerifyResetOtpRoute: VerifyResetOtpRoute,
   AiInterviewTokenRoute: AiInterviewTokenRoute,
@@ -5978,17 +6278,15 @@ const rootRouteChildren: RootRouteChildren = {
   AuthVerifyResetOtpRoute: AuthVerifyResetOtpRoute,
   InterviewBookTokenRoute: InterviewBookTokenRoute,
   JobsApplyUkeyRoute: JobsApplyUkeyRoute,
+  PayrollRunsRunIdApprovalRoute: PayrollRunsRunIdApprovalRoute,
+  PayrollRunsRunIdFinalizeRoute: PayrollRunsRunIdFinalizeRoute,
+  PayrollRunsRunIdPreviewRoute: PayrollRunsRunIdPreviewRoute,
+  PayrollRunsRunIdProcessingRoute: PayrollRunsRunIdProcessingRoute,
+  PayrollRunsRunIdReviewRoute: PayrollRunsRunIdReviewRoute,
+  PayrollRunsRunIdValidationRoute: PayrollRunsRunIdValidationRoute,
+  PayrollRunsRunIdEmployeeEmployeeIdRoute:
+    PayrollRunsRunIdEmployeeEmployeeIdRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

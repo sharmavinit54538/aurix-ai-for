@@ -6,6 +6,13 @@ export interface ApiResponse<T = unknown> {
   data?: T;
 }
 
+export interface ApiErrorResponse {
+  success: false;
+  message: string;
+  errors?: Array<{ field?: string | null; message: string }>;
+  detail?: string;
+}
+
 export interface AuthUserPayload {
   id: string | number;
   name: string;
@@ -30,9 +37,68 @@ export interface AuthUserPayload {
 
 export interface LoginData {
   access_token: string;
-  refresh_token: string;
+  token_type: string;
+  expires_in: number;
   user: AuthUserPayload;
+}
+
+export interface RegisterResponseData {
+  user: AuthUserPayload;
+}
+
+export interface VerifyEmailResponseData {
+  access_token?: string;
+  token_type?: string;
+  expires_in?: number;
+  user?: AuthUserPayload;
+}
+
+export interface LoginChallengeResponse {
+  requires_email_verification: boolean;
+  verification_id: string;
+  masked_email: string;
+  message?: string;
+}
+
+export interface RefreshTokenResponseData {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+}
+
+export interface ForgotPasswordResponseData {}
+
+export interface VerifyResetOtpResponseData {
+  email: string;
+  reset_token: string;
+}
+
+export interface ResetPasswordResponseData {}
+
+export interface ChangePasswordResponseData {}
+
+export interface ChangeEmailResponseData {}
+
+export interface VerifyNewEmailResponseData {}
+
+export interface ChangePhoneResponseData {}
+
+export interface AuthStatusResponseData {
+  authenticated: boolean;
+  user?: AuthUserPayload;
 }
 
 export type AuthMeResponse = ApiResponse<AuthUserPayload>;
 export type LoginResponse = ApiResponse<LoginData>;
+export type RegisterResponse = ApiResponse<RegisterResponseData>;
+export type VerifyEmailResponse = ApiResponse<VerifyEmailResponseData>;
+export type RefreshTokenResponse = ApiResponse<RefreshTokenResponseData>;
+export type ForgotPasswordResponse = ApiResponse<ForgotPasswordResponseData>;
+export type VerifyResetOtpResponse = ApiResponse<VerifyResetOtpResponseData>;
+export type ResetPasswordResponse = ApiResponse<ResetPasswordResponseData>;
+export type ChangePasswordResponse = ApiResponse<ChangePasswordResponseData>;
+export type ChangeEmailResponse = ApiResponse<ChangeEmailResponseData>;
+export type VerifyNewEmailResponse = ApiResponse<VerifyNewEmailResponseData>;
+export type ChangePhoneResponse = ApiResponse<ChangePhoneResponseData>;
+export type AuthStatusResponse = ApiResponse<AuthStatusResponseData>;
+export type LogoutResponse = ApiResponse<{}>;

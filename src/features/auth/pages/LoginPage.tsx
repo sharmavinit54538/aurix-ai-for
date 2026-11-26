@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { aurix, rememberStore } from "@/lib/aurix-store";
-import { loginWithDemoAccount, persistAuthSession, useAuthReady } from "@/lib/auth-bootstrap";
+import { persistAuthSession, useAuthReady } from "@/lib/auth-bootstrap";
 import { getSafeRedirectUrl } from "@/lib/role-routing";
 import { normalizeRole } from "@/lib/roles";
 import { authService, hasValidAccessToken } from "@/api";
@@ -25,11 +25,6 @@ const schema = z.object({
   email: z.string().email("Enter a valid work email"),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
-
-const DEMO_EMAILS = new Set(["hr@aurix.ai", "employee@aurix.ai", "manager@aurix.ai"]);
-const IS_TEST_ENV =
-  (typeof import.meta !== "undefined" && (import.meta as any).env?.MODE === "test") ||
-  (typeof process !== "undefined" && Boolean((process as any).env?.VITEST || (process as any).env?.NODE_TEST_CONTEXT));
 
 function formatLoginError(message: string) {
   return message === "Invalid email or password." ? "Invalid email or password" : message;
@@ -64,17 +59,6 @@ export function LoginPage() {
     }
   }, [authReady, navigate]);
 
-  function handleDemoQuickLogin(demoEmail: string, demoPassword: string) {
-    setEmail(demoEmail);
-    setPassword(demoPassword);
-    setErrors({});
-    if (!IS_TEST_ENV) {
-      const demo = loginWithDemoAccount(demoEmail);
-      toast.success(`Welcome back, ${demo.user.fullName}!`);
-      navigate({ to: demo.destination as any });
-    }
-  }
-
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     const r = schema.safeParse({ email, password });
@@ -87,21 +71,9 @@ export function LoginPage() {
     setErrors({});
     setLoading(true);
 
-    const normalizedEmail = email.trim().toLowerCase();
-
     try {
       if (remember) rememberStore.set(email);
       else rememberStore.clear();
-
-      if (!IS_TEST_ENV && DEMO_EMAILS.has(normalizedEmail)) {
-        const demo = loginWithDemoAccount(normalizedEmail);
-        toast.success(`Welcome back, ${demo.user.fullName}!`);
-        const params = new URLSearchParams(window.location.search);
-        const redirectParam = params.get("redirect") || params.get("callbackUrl");
-        const destination = getSafeRedirectUrl(redirectParam, demo.user);
-        navigate({ to: destination as any });
-        return;
-      }
 
       const res = await authService.login({
         identifier: email,
@@ -254,12 +226,6 @@ export function LoginPage() {
 
       toast.error(formatLoginError(getApiResponseMessage(res)));
     } catch (err: unknown) {
-      if (!IS_TEST_ENV && DEMO_EMAILS.has(normalizedEmail)) {
-        const demo = loginWithDemoAccount(normalizedEmail);
-        toast.success(`Welcome back, ${demo.user.fullName}!`);
-        navigate({ to: demo.destination as any });
-        return;
-      }
       toast.error(formatLoginError(getErrorMessage(err, "Server error")));
     } finally {
       setLoading(false);
@@ -332,36 +298,6 @@ export function LoginPage() {
           {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           Sign in
         </Button>
-
-        <div className="mt-4 rounded-xl border border-border/70 bg-muted/30 p-3 text-xs space-y-2">
-          <div className="font-semibold text-foreground">Demo Login Credentials (Click to sign in with mock data):</div>
-          <div className="grid grid-cols-1 gap-1.5">
-            <button
-              type="button"
-              onClick={() => handleDemoQuickLogin("hr@aurix.ai", "Admin@123")}
-              className="flex items-center justify-between rounded-lg border border-primary/40 bg-primary/10 px-2.5 py-1.5 text-left hover:bg-primary/20 transition-colors cursor-pointer"
-            >
-              <span className="font-semibold text-foreground">HR Admin (Mock Data)</span>
-              <span className="font-mono text-[11px] text-muted-foreground">hr@aurix.ai / Admin@123</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleDemoQuickLogin("employee@aurix.ai", "Employee@123")}
-              className="flex items-center justify-between rounded-lg border border-border/60 bg-background/70 px-2.5 py-1.5 text-left hover:bg-accent transition-colors cursor-pointer"
-            >
-              <span className="font-medium text-foreground">Employee Portal</span>
-              <span className="font-mono text-[11px] text-muted-foreground">employee@aurix.ai / Employee@123</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleDemoQuickLogin("manager@aurix.ai", "Manager@123")}
-              className="flex items-center justify-between rounded-lg border border-border/60 bg-background/70 px-2.5 py-1.5 text-left hover:bg-accent transition-colors cursor-pointer"
-            >
-              <span className="font-medium text-foreground">Manager Portal</span>
-              <span className="font-mono text-[11px] text-muted-foreground">manager@aurix.ai / Manager@123</span>
-            </button>
-          </div>
-        </div>
       </form>
     </AuthShell>
   );

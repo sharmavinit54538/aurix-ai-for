@@ -74,49 +74,25 @@ function getErrorStatus(err: unknown): number | undefined {
 // ─────────────────────────────────────────────────────────────
 
 export async function fetchCompanySettings(): Promise<CompanySettingsForm> {
-  const ws = aurix.get();
-  try {
-    const res = await apiInstance.get("/settings/company");
-    const data = extractPayload<Record<string, unknown>>(res, {});
-    return {
-      name: String(data.name || ws.company?.name || ""),
-      logoUrl: String(data.logoUrl || data.logo_url || data.logo || ""),
-      logoDataUrl: String(data.logoDataUrl || ws.company?.logoDataUrl || ""),
-      address: String(data.address || ws.company?.address || ""),
-      city: String(data.city || ws.company?.city || ""),
-      state: String(data.state || ws.company?.state || ""),
-      country: String(data.country || ws.company?.country || "India"),
-      postalCode: String(data.postalCode || data.postal_code || data.zip || ""),
-      contactEmail: String(data.email || data.contactEmail || ws.company?.email || ""),
-      contactPhone: String(data.phone || data.contactPhone || ws.company?.phone || ""),
-      website: String(data.website || ws.company?.website || ""),
-      timezone: String(data.timezone || ws.company?.timezone || "Asia/Kolkata (IST)"),
-      currency: String(data.currency || "INR (₹)"),
-      financialYearStart: String(data.fiscalYearStart || data.financialYearStart || "April"),
-      financialYearEnd: String(data.fiscalYearEnd || data.financialYearEnd || "March"),
-    };
-  } catch (err: unknown) {
-    if (ws.company) {
-      return {
-        name: ws.company.name || "",
-        logoUrl: "",
-        logoDataUrl: ws.company.logoDataUrl || "",
-        address: ws.company.address || "",
-        city: ws.company.city || "",
-        state: ws.company.state || "",
-        country: ws.company.country || "India",
-        postalCode: "",
-        contactEmail: ws.company.email || "",
-        contactPhone: ws.company.phone || "",
-        website: ws.company.website || "",
-        timezone: ws.company.timezone || "Asia/Kolkata (IST)",
-        currency: "INR (₹)",
-        financialYearStart: "April",
-        financialYearEnd: "March",
-      };
-    }
-    throw err;
-  }
+  const res = await apiInstance.get("/settings/company");
+  const data = extractPayload<Record<string, unknown>>(res, {});
+  return {
+    name: String(data.name || data.company_name || ""),
+    logoUrl: String(data.logoUrl || data.logo_url || data.logo || ""),
+    logoDataUrl: String(data.logoDataUrl || data.logo_data_url || ""),
+    address: String(data.address || ""),
+    city: String(data.city || ""),
+    state: String(data.state || ""),
+    country: String(data.country || ""),
+    postalCode: String(data.postalCode || data.postal_code || data.zip || ""),
+    contactEmail: String(data.email || data.contactEmail || ""),
+    contactPhone: String(data.phone || data.contactPhone || ""),
+    website: String(data.website || ""),
+    timezone: String(data.timezone || ""),
+    currency: String(data.currency || ""),
+    financialYearStart: String(data.fiscalYearStart || data.financialYearStart || ""),
+    financialYearEnd: String(data.fiscalYearEnd || data.financialYearEnd || ""),
+  };
 }
 
 export async function updateCompanySettings(

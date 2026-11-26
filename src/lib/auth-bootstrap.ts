@@ -14,70 +14,8 @@ import { getDefaultDashboardPath, getSafeRedirectUrl } from "./role-routing";
 import { clearQueryCache } from "./query-client";
 import { store } from "@/redux/store";
 import { settingsApi } from "@/redux/settingsApi";
-import {
-  isMockDemoToken,
-  MOCK_EMPLOYEES,
-  MOCK_EMPLOYEE_TOKEN,
-  MOCK_EMPLOYEE_USER,
-  MOCK_HRS,
-  MOCK_HR_ADMIN_COMPANY,
-  MOCK_HR_ADMIN_TOKEN,
-  MOCK_HR_ADMIN_USER,
-  MOCK_HR_DOCUMENTS,
-  MOCK_HR_SEED_KEY,
-  MOCK_MANAGERS,
-  MOCK_MANAGER_TOKEN,
-  MOCK_MANAGER_USER,
-} from "./mock-hr-admin";
 
 export { getDefaultDashboardPath, getSafeRedirectUrl };
-
-const IS_TEST_ENV =
-  (typeof import.meta !== "undefined" && (import.meta as any).env?.MODE === "test") ||
-  (typeof process !== "undefined" && Boolean((process as any).env?.VITEST || (process as any).env?.NODE_TEST_CONTEXT));
-
-export function loginWithDemoAccount(emailInput?: string) {
-  const normalized = (emailInput || "hr@aurix.ai").trim().toLowerCase();
-  let demoUser = MOCK_HR_ADMIN_USER;
-  let demoToken = MOCK_HR_ADMIN_TOKEN;
-
-  if (normalized === "employee@aurix.ai") {
-    demoUser = MOCK_EMPLOYEE_USER;
-    demoToken = MOCK_EMPLOYEE_TOKEN;
-  } else if (normalized === "manager@aurix.ai") {
-    demoUser = MOCK_MANAGER_USER;
-    demoToken = MOCK_MANAGER_TOKEN;
-  }
-
-  safeStorage.removeItem(LOGGED_OUT_KEY);
-  safeStorage.setItem(MOCK_HR_SEED_KEY, "1");
-  safeStorage.setItem("ofc360:hr_onboarding_completed", "1");
-  safeStorage.setItem("ofc360:activated_invite_tokens", JSON.stringify(["emp_invite_demo"]));
-
-  setTokens({
-    accessToken: demoToken,
-    refreshToken: "mock-demo-refresh-token",
-  });
-
-  aurix.set({
-    isRestoring: false,
-    user: { ...demoUser },
-    company: { ...MOCK_HR_ADMIN_COMPANY },
-    hrs: [...MOCK_HRS],
-    employees: [...MOCK_EMPLOYEES],
-    managers: [...MOCK_MANAGERS],
-    documents: [...MOCK_HR_DOCUMENTS],
-  });
-
-  authBootstrapState.status = "ready";
-  emit();
-
-  return {
-    user: demoUser,
-    accessToken: demoToken,
-    destination: getDefaultDashboardPath(demoUser),
-  };
-}
 
 type AuthStatus = "bootstrapping" | "ready";
 
@@ -157,27 +95,16 @@ export function getPostLoginRoute(user: any): string {
 }
 
 export async function bootstrapAuth(options?: { force?: boolean }): Promise<void> {
+  const staleToken = getAccessToken();
+  if (staleToken?.startsWith("mock-demo-") || safeStorage.getItem("aurix:mock_hr_seeded") === "1") {
+    clearTokens();
+    safeStorage.removeItem("aurix:mock_hr_seeded");
+    aurix.reset();
+  }
+
   const isLoggedOut = safeStorage.getItem(LOGGED_OUT_KEY) === "1";
   const hasHint = hasSessionHint();
   const existingToken = getAccessToken();
-
-  if (!IS_TEST_ENV && !isLoggedOut) {
-    if (isMockDemoToken(existingToken) || (!existingToken && !hasHint)) {
-      const currentUser = aurix.get().user;
-      if (!currentUser) {
-        loginWithDemoAccount("hr@aurix.ai");
-      } else if (!existingToken) {
-        setTokens({
-          accessToken: MOCK_HR_ADMIN_TOKEN,
-          refreshToken: "mock-demo-refresh-token",
-        });
-      }
-      authBootstrapState.status = "ready";
-      authBootstrapState.bootstrapPromise = null;
-      emit();
-      return;
-    }
-  }
 
   if ((isLoggedOut && !options?.force) || (!hasHint && !existingToken && !options?.force)) {
     aurix.set({ user: null, company: null, isRestoring: false });
@@ -193,12 +120,6 @@ export async function bootstrapAuth(options?: { force?: boolean }): Promise<void
   authBootstrapState.bootstrapPromise = (async () => {
     try {
       let token = getAccessToken();
-      if (!IS_TEST_ENV && isMockDemoToken(token)) {
-        if (!aurix.get().user) {
-          loginWithDemoAccount("hr@aurix.ai");
-        }
-        return;
-      }
       if (!token && hasSessionHint()) {
         token = await refreshAccessToken({ silent: true });
       }

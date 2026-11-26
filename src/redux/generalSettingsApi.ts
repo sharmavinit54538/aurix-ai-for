@@ -242,26 +242,16 @@ export const generalSettingsApi = settingsApi.injectEndpoints({
 
           if (updatedName || updatedEmail || updatedPhone) {
             const ws = aurix.get();
-            aurix.set({
-              user: ws.user
-                ? {
-                    ...ws.user,
-                    fullName: updatedName || ws.user.fullName,
-                    email: updatedEmail || ws.user.email,
-                    phone: updatedPhone || ws.user.phone,
-                  }
-                : {
-                    id: "usr_current",
-                    fullName: updatedName || "User",
-                    email: updatedEmail || "",
-                    phone: updatedPhone || "",
-                    role: "super_admin",
-                    companyId: "workspace",
-                    emailVerified: true,
-                    onboardingComplete: true,
-                    createdAt: new Date().toISOString(),
-                  },
-            });
+            if (ws.user) {
+              aurix.set({
+                user: {
+                  ...ws.user,
+                  fullName: updatedName || ws.user.fullName,
+                  email: updatedEmail || ws.user.email,
+                  phone: updatedPhone || ws.user.phone,
+                },
+              });
+            }
           }
 
           if (response?.data) {
@@ -312,26 +302,16 @@ export const generalSettingsApi = settingsApi.injectEndpoints({
 
           if (updatedName || updatedEmail || updatedPhone) {
             const ws = aurix.get();
-            aurix.set({
-              user: ws.user
-                ? {
-                    ...ws.user,
-                    fullName: updatedName || ws.user.fullName,
-                    email: updatedEmail || ws.user.email,
-                    phone: updatedPhone || ws.user.phone,
-                  }
-                : {
-                    id: "usr_current",
-                    fullName: updatedName || "User",
-                    email: updatedEmail || "",
-                    phone: updatedPhone || "",
-                    role: "super_admin",
-                    companyId: "workspace",
-                    emailVerified: true,
-                    onboardingComplete: true,
-                    createdAt: new Date().toISOString(),
-                  },
-            });
+            if (ws.user) {
+              aurix.set({
+                user: {
+                  ...ws.user,
+                  fullName: updatedName || ws.user.fullName,
+                  email: updatedEmail || ws.user.email,
+                  phone: updatedPhone || ws.user.phone,
+                },
+              });
+            }
           }
 
           if (response?.data) {
