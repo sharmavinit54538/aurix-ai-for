@@ -105,7 +105,7 @@ export function PayrollStepper({
     <nav
       aria-label="Payroll Lifecycle Progress"
       className={cn(
-        "w-full rounded-2xl border border-border/60 bg-background/80 p-3 sm:p-4 backdrop-blur-xl shadow-sm",
+        "w-full rounded-xl border border-border bg-card p-3 sm:p-4 shadow-xs",
         className
       )}
     >
@@ -135,24 +135,24 @@ export function PayrollStepper({
                 aria-disabled={!isClickable}
                 tabIndex={isClickable ? 0 : -1}
                 className={cn(
-                  "group flex items-center gap-2 rounded-xl px-2.5 py-1.5 sm:px-3 sm:py-2 text-left transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+                  "group flex items-center gap-2 rounded-lg px-2.5 py-1.5 sm:px-3 sm:py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                   isClickable
-                    ? "cursor-pointer hover:bg-muted/70 hover:shadow-xs active:scale-[0.98]"
+                    ? "cursor-pointer hover:bg-muted/70"
                     : "cursor-not-allowed opacity-55",
                   isCurrent &&
-                    "bg-primary/10 text-primary font-medium ring-1 ring-primary/30 shadow-xs"
+                    "bg-primary/10 text-primary font-medium ring-1 ring-primary/30"
                 )}
               >
                 {/* Step indicator circle */}
                 <div
                   className={cn(
-                    "flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg text-xs font-semibold transition-colors duration-200",
+                    "flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg text-xs font-semibold transition-colors",
                     state === "completed" &&
-                      "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-500/30",
+                      "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-500/30",
                     state === "active" &&
-                      "bg-primary text-primary-foreground shadow-sm shadow-primary/25",
+                      "bg-primary text-primary-foreground shadow-xs",
                     state === "upcoming" &&
-                      "bg-muted text-muted-foreground ring-1 ring-border/80",
+                      "bg-muted text-muted-foreground ring-1 ring-border",
                     state === "disabled" &&
                       "bg-muted/50 text-muted-foreground/60"
                   )}
@@ -170,7 +170,7 @@ export function PayrollStepper({
                 <div className="flex flex-col">
                   <span
                     className={cn(
-                      "text-xs font-medium tracking-tight whitespace-nowrap",
+                      "text-[13px] font-medium tracking-tight whitespace-nowrap",
                       isCurrent
                         ? "text-primary font-semibold"
                         : state === "completed"
@@ -180,7 +180,7 @@ export function PayrollStepper({
                   >
                     {step.label}
                   </span>
-                  <span className="hidden xl:inline text-[10px] text-muted-foreground/75 whitespace-nowrap">
+                  <span className="hidden xl:inline text-xs text-muted-foreground whitespace-nowrap">
                     {step.description}
                   </span>
                 </div>
@@ -192,8 +192,8 @@ export function PayrollStepper({
                   className={cn(
                     "h-3.5 w-3.5 shrink-0 transition-colors",
                     idx < currentIndex
-                      ? "text-emerald-500/60"
-                      : "text-muted-foreground/30"
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-muted-foreground/40"
                   )}
                   aria-hidden="true"
                 />

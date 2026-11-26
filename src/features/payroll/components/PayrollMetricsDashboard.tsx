@@ -56,27 +56,25 @@ import {
   formatOptionalINR as formatINR,
   formatOptionalCount as formatCount,
 } from "@/lib/format";
+import { statusBadgeClass } from "@/lib/status-styles";
 import { toPaise, addPaise, toRupees } from "../utils/money";
 
-// ── Chart Colors & Dark Mode Tooltip ──────────────────────────────────
+// ── Chart Colors & Theme-aware Tooltip ────────────────────────────────
 const CHART_COLORS = [
-  "#6366f1", // Indigo
-  "#06b6d4", // Cyan
-  "#10b981", // Emerald
-  "#f59e0b", // Amber
-  "#f43f5e", // Rose
-  "#a855f7", // Purple
-  "#3b82f6", // Blue
+  "hsl(var(--primary))",
+  "hsl(var(--chart-2))",
+  "hsl(var(--chart-1))",
+  "hsl(var(--chart-3))",
+  "hsl(var(--chart-4))",
 ];
 
 const CHART_TOOLTIP_STYLE = {
-  backgroundColor: "#0f172a",
-  border: "1px solid rgba(255, 255, 255, 0.12)",
-  borderRadius: "12px",
-  color: "#f8fafc",
+  backgroundColor: "hsl(var(--card))",
+  border: "1px solid hsl(var(--border))",
+  borderRadius: "8px",
+  color: "hsl(var(--foreground))",
   fontSize: "12px",
   padding: "8px 12px",
-  boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.4)",
 };
 
 interface MetricKpiConfig {
@@ -86,7 +84,7 @@ interface MetricKpiConfig {
   trend?: string;
   trendDirection?: "up" | "down" | "neutral";
   icon: LucideIcon;
-  accent: string;
+  tone?: "default" | "warning" | "critical" | "positive";
 }
 
 interface PayrollMetricsDashboardProps {
@@ -149,35 +147,30 @@ export function PayrollMetricsDashboard({
       value: formatINR(totalPayrollCost),
       subtext: "Gross + Employer Statutory matching",
       icon: Banknote,
-      accent: "from-indigo-500/20 to-blue-500/10 text-indigo-400 border-indigo-500/30",
     },
     {
       label: "Net Payroll",
       value: formatINR(netPayroll),
       subtext: "Net disbursed to employee accounts",
       icon: TrendingUp,
-      accent: "from-emerald-500/20 to-teal-500/10 text-emerald-400 border-emerald-500/30",
     },
     {
       label: "Gross Payroll",
       value: formatINR(grossPayroll),
       subtext: "Total earnings before deductions",
       icon: Layers,
-      accent: "from-sky-500/20 to-cyan-500/10 text-sky-400 border-sky-500/30",
     },
     {
       label: "Total Deductions",
       value: formatINR(totalDeductions),
       subtext: "Statutory & voluntary deductions",
       icon: TrendingDown,
-      accent: "from-rose-500/20 to-pink-500/10 text-rose-400 border-rose-500/30",
     },
     {
       label: "Total Employees Paid",
       value: formatCount(employeeCount),
       subtext: "Active salaried personnel in cycle",
       icon: Users,
-      accent: "from-violet-500/20 to-purple-500/10 text-violet-400 border-violet-500/30",
     },
     {
       label: "Pending Payroll",
@@ -186,7 +179,6 @@ export function PayrollMetricsDashboard({
       trend: data?.status ? `Status: ${data.status}` : undefined,
       trendDirection: "neutral",
       icon: Clock,
-      accent: "from-amber-500/20 to-orange-500/10 text-amber-400 border-amber-500/30",
     },
     {
       label: "Payroll Exceptions",
@@ -201,10 +193,10 @@ export function PayrollMetricsDashboard({
       trendDirection:
         payrollExceptionsCount !== null && payrollExceptionsCount > 0 ? "down" : "up",
       icon: AlertCircle,
-      accent:
+      tone:
         payrollExceptionsCount !== null && payrollExceptionsCount > 0
-          ? "from-amber-500/20 to-rose-500/10 text-amber-400 border-amber-500/30"
-          : "from-emerald-500/20 to-teal-500/10 text-emerald-400 border-emerald-500/30",
+          ? "warning"
+          : "positive",
     },
     {
       label: "Failed Payments",
@@ -218,10 +210,10 @@ export function PayrollMetricsDashboard({
           : undefined,
       trendDirection: failedPaymentsCount === 0 ? "up" : "down",
       icon: AlertOctagon,
-      accent:
+      tone:
         failedPaymentsCount !== null && failedPaymentsCount > 0
-          ? "from-rose-500/20 to-red-500/10 text-rose-400 border-rose-500/30"
-          : "from-slate-500/20 to-slate-600/10 text-slate-400 border-slate-500/30",
+          ? "critical"
+          : "default",
     },
     {
       label: "Pending Approvals",
@@ -231,21 +223,18 @@ export function PayrollMetricsDashboard({
         pendingApprovalsCount === 0 ? "All sign-offs completed" : "Approval queue active",
       trendDirection: "neutral",
       icon: UserCheck,
-      accent: "from-cyan-500/20 to-blue-500/10 text-cyan-400 border-cyan-500/30",
     },
     {
       label: "Employer Contributions",
       value: formatINR(employerContributions),
       subtext: "PF, ESI, gratuity matching funds",
       icon: Building,
-      accent: "from-purple-500/20 to-pink-500/10 text-purple-400 border-purple-500/30",
     },
     {
       label: "Average Salary",
       value: formatINR(avgSalary),
       subtext: "Mean compensation per employee",
       icon: Coins,
-      accent: "from-emerald-500/20 to-green-500/10 text-emerald-400 border-emerald-500/30",
     },
   ];
 

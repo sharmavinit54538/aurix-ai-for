@@ -10,17 +10,15 @@ export function ModuleCard({ module, onClick }: ModuleCardProps) {
   const Icon = module.icon;
 
   const content = (
-    <div className="flex items-start gap-4">
-      <div
-        className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${module.color}`}
-      >
-        <Icon className="h-5 w-5 text-white" />
+    <div className="flex items-start gap-3.5">
+      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+        <Icon className="h-5 w-5" />
       </div>
-      <div className="space-y-1">
-        <h3 className="font-display text-sm font-semibold tracking-tight text-foreground transition-colors group-hover:text-indigo-400">
+      <div className="min-w-0 space-y-1">
+        <h3 className="font-display text-sm font-semibold tracking-tight text-foreground transition-colors group-hover:text-primary">
           {module.title}
         </h3>
-        <p className="text-xs text-muted-foreground leading-normal">
+        <p className="text-[13px] text-muted-foreground leading-relaxed">
           {module.description}
         </p>
       </div>
@@ -28,7 +26,7 @@ export function ModuleCard({ module, onClick }: ModuleCardProps) {
   );
 
   const cardClasses =
-    "group relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border border-border/80 bg-card/45 backdrop-blur-md p-5 transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500/40 hover:bg-card/75 hover:shadow-lg hover:shadow-indigo-500/5 text-left cursor-pointer";
+    "group relative flex h-full flex-col justify-between overflow-hidden rounded-xl border border-border bg-card p-5 shadow-xs transition-colors hover:border-primary/40 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring text-left cursor-pointer";
 
   if (onClick) {
     return (
