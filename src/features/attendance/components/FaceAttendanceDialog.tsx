@@ -294,7 +294,9 @@ export function FaceAttendanceDialog({
         const userMsg = extractFaceApiError(err);
         setErrorMessage(userMsg);
 
-        // If the backend indicates an active session already exists for check-in, sync status gracefully
+        // If the backend indicates an active session already exists for check-in, 
+        // do NOT create a fake success. Instead, let the parent component handle 
+        // the conflict by refetching the actual attendance state.
         const isAlreadyCheckedIn =
           code === "ALREADY_CHECKED_IN" ||
           userMsg.toLowerCase().includes("already checked in") ||
@@ -303,17 +305,9 @@ export function FaceAttendanceDialog({
           String(err?.response?.data?.detail || "").toLowerCase().includes("already checked in");
 
         if (isAlreadyCheckedIn && modeRef.current === "check-in") {
-          const syncResult: AttendancePunchResult = {
-            id: err?.response?.data?.id || err?.response?.data?.attendance_id || "",
-            status: "checked-in",
-            time: err?.response?.data?.check_in_time || new Date().toISOString(),
-            checkInTime: err?.response?.data?.check_in_time || new Date().toISOString(),
-            success: true,
-            message: "Active check-in session detected. Synced successfully!",
-          };
-          setPunchResult(syncResult);
-          setStage("success");
-          onSuccessRef.current(syncResult);
+          // Don't create a synthetic success - the error will be shown to user
+          // Parent component should call loadAttendanceState() to sync
+          setStage("error");
           return;
         }
 

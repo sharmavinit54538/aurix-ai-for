@@ -76,6 +76,7 @@ export interface AttendanceTodayResponse {
   employee: EmployeeSummary | null;
   today_attendance: AttendanceRecord | null;
   timezone?: string;
+  overtime_hours?: number | null;
 }
 
 export interface FaceStatusResponse {
@@ -550,4 +551,100 @@ export interface ShiftOption {
   start_time: string;
   end_time: string;
   is_overnight: boolean;
+}
+
+export interface AttendanceTrendDataPoint {
+  date: string;
+  present: number;
+  late: number;
+  absent: number;
+  onLeave: number;
+  total: number;
+}
+
+export interface AttendanceTrendsResponse {
+  trends: AttendanceTrendDataPoint[];
+  dateRange: {
+    start: string;
+    end: string;
+  };
+}
+
+export interface AttendanceDistributionResponse {
+  present: number;
+  late: number;
+  absent: number;
+  onLeave: number;
+  total: number;
+}
+
+export interface WeeklyAttendanceDataPoint {
+  day: string;
+  date?: string;
+  present: number;
+  late: number;
+  absent: number;
+  onLeave: number;
+  total: number;
+}
+
+export interface WeeklyAttendanceResponse {
+  weekly: WeeklyAttendanceDataPoint[];
+  dateRange: {
+    start: string;
+    end: string;
+  };
+  viewMode: string;
+}
+
+export interface AttendanceRateKPIResponse {
+  currentRate: number;
+  previousRate: number | null;
+  changePercentagePoints: number | null;
+  trend: "up" | "down" | "stable";
+  period: {
+    start: string;
+    end: string;
+  };
+  previousPeriod: {
+    start: string;
+    end: string;
+  } | null;
+}
+
+export interface AttendanceAnalyticsFilters {
+  startDate?: string;
+  endDate?: string;
+  departmentId?: string;
+  shiftId?: string;
+  locationId?: string;
+  viewMode?: string;
+}
+
+export interface CreateChangeRequestPayload {
+  requestedShift: string;
+  effectiveDate: string;
+  reason: string;
+}
+
+export interface ApproveChangeRequestPayload {
+  reviewNote?: string;
+}
+
+export interface RejectChangeRequestPayload {
+  reviewNote: string;
+}
+
+export interface EmployeeShiftInfo {
+  shiftName: string;
+  shiftType: string;
+  startTime: string;
+  endTime: string;
+  breakDuration: string;
+  breakWindow: string;
+  totalWorkingHours: number;
+  gracePeriodMinutes: number;
+  nightPremiumPercent: number;
+  workingDays: string[];
+  description: string;
 }

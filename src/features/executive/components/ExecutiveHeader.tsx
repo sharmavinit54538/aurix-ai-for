@@ -31,13 +31,13 @@ export interface ExecutiveHeaderProps {
   onRefresh?: () => void;
 }
 
-const ROLES_NAV: { role: ExecutiveRole; label: string; icon: any; color: string }[] = [
-  { role: "ceo", label: "CEO Dashboard", icon: Crown, color: "text-amber-400 border-amber-500/30 bg-amber-500/10" },
-  { role: "cto", label: "CTO Dashboard", icon: Code2, color: "text-purple-400 border-purple-500/30 bg-purple-500/10" },
-  { role: "cfo", label: "CFO Dashboard", icon: DollarSign, color: "text-emerald-400 border-emerald-500/30 bg-emerald-500/10" },
-  { role: "cio", label: "CIO Dashboard", icon: Server, color: "text-blue-400 border-blue-500/30 bg-blue-500/10" },
-  { role: "coo", label: "COO Dashboard", icon: Workflow, color: "text-sky-400 border-sky-500/30 bg-sky-500/10" },
-  { role: "cmo", label: "CMO Dashboard", icon: Megaphone, color: "text-rose-400 border-rose-500/30 bg-rose-500/10" },
+const ROLES_NAV: { role: ExecutiveRole; label: string; icon: any }[] = [
+  { role: "ceo", label: "CEO Dashboard", icon: Crown },
+  { role: "cto", label: "CTO Dashboard", icon: Code2 },
+  { role: "cfo", label: "CFO Dashboard", icon: DollarSign },
+  { role: "cio", label: "CIO Dashboard", icon: Server },
+  { role: "coo", label: "COO Dashboard", icon: Workflow },
+  { role: "cmo", label: "CMO Dashboard", icon: Megaphone },
 ];
 
 export function ExecutiveHeader({
@@ -65,7 +65,7 @@ export function ExecutiveHeader({
   return (
     <div className="space-y-4">
       {/* Breadcrumb Navigation */}
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
         <Link to="/dashboard" className="hover:text-foreground transition-colors">
           Dashboard
         </Link>
@@ -74,30 +74,26 @@ export function ExecutiveHeader({
           Executive Control Center
         </Link>
         <ChevronRight className="h-3 w-3" />
-        <span className="font-semibold text-foreground capitalize">{role.toUpperCase()} Dashboard</span>
+        <span className="font-semibold text-foreground uppercase">{role} Dashboard</span>
       </div>
 
-      {/* Main Banner */}
-      <div className="relative overflow-hidden rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-xl shadow-lg">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 h-56 w-56 rounded-full bg-brand/10 blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5 text-left">
-          <div className="space-y-2">
+      {/* Main Header */}
+      <div className="rounded-xl border border-border bg-card p-5 sm:p-6 shadow-xs">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 text-left">
+          <div className="space-y-2 min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-
-
-              <div className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-xs font-semibold ${currentRoleObj.color}`}>
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-3 py-0.5 text-xs font-semibold text-primary">
                 <RoleIcon className="h-3.5 w-3.5" />
                 {role.toUpperCase()} Executive Command
               </div>
 
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-0.5 text-xs font-semibold text-emerald-400">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/12 px-3 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
                 <ShieldCheck className="h-3.5 w-3.5" />
                 Health Score: {healthScore}%
               </div>
             </div>
 
-            <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-foreground">
+            <h1 className="font-display text-2xl sm:text-[26px] font-semibold tracking-tight text-foreground">
               {title}
             </h1>
             <p className="max-w-2xl text-sm text-muted-foreground leading-relaxed">
@@ -108,15 +104,16 @@ export function ExecutiveHeader({
           {/* Action Controls Bar */}
           <div className="flex flex-wrap items-center gap-2 shrink-0">
             {/* Date Range Selector */}
-            <div className="flex items-center gap-1 bg-accent/30 border border-border/60 rounded-lg p-1 text-xs">
+            <div className="flex flex-wrap items-center gap-1 bg-muted border border-border rounded-lg p-1 text-xs">
               <Calendar className="h-3.5 w-3.5 text-muted-foreground ml-1.5" />
               {(["today", "week", "month", "quarter", "year"] as DateRangeType[]).map((r) => (
                 <button
                   key={r}
+                  type="button"
                   onClick={() => setDateRange(r)}
-                  className={`px-2 py-1 rounded-md capitalize font-medium transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-md capitalize text-xs font-medium transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                     dateRange === r
-                      ? "bg-brand text-brand-foreground shadow-xs"
+                      ? "bg-primary text-primary-foreground shadow-xs"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -125,32 +122,33 @@ export function ExecutiveHeader({
               ))}
             </div>
 
-            {/* Export Dropdown */}
-            <div className="flex items-center gap-1">
+            {/* Export & Refresh Actions */}
+            <div className="flex flex-wrap items-center gap-1.5">
               <Button
                 variant="outline"
                 size="sm"
-                className="h-9 text-xs gap-1.5 border-border/60 hover:bg-accent cursor-pointer"
+                className="h-9 text-[13px] gap-1.5 cursor-pointer"
                 onClick={() => handleExport("pdf")}
               >
-                <Download className="h-3.5 w-3.5 text-emerald-400" /> Export PDF
+                <Download className="h-3.5 w-3.5 text-primary" /> Export PDF
               </Button>
 
               <Button
                 variant="outline"
                 size="sm"
-                className="h-9 text-xs gap-1.5 border-border/60 hover:bg-accent cursor-pointer"
+                className="h-9 text-[13px] gap-1.5 cursor-pointer"
                 onClick={() => handleExport("excel")}
               >
-                <Download className="h-3.5 w-3.5 text-blue-400" /> Excel
+                <Download className="h-3.5 w-3.5 text-muted-foreground" /> Excel
               </Button>
 
               <Button
                 variant="outline"
                 size="icon"
-                className="h-9 w-9 border-border/60 hover:bg-accent cursor-pointer"
+                className="h-9 w-9 cursor-pointer"
                 onClick={() => handleExport("print")}
                 title="Print Report"
+                aria-label="Print Report"
               >
                 <Printer className="h-4 w-4" />
               </Button>
@@ -158,9 +156,10 @@ export function ExecutiveHeader({
               <Button
                 variant="outline"
                 size="icon"
-                className="h-9 w-9 border-border/60 hover:bg-accent cursor-pointer"
+                className="h-9 w-9 cursor-pointer"
                 onClick={onRefresh || (() => toast.success("Refreshed executive dataset."))}
                 title="Refresh Dataset"
+                aria-label="Refresh Dataset"
               >
                 <RefreshCw className="h-4 w-4" />
               </Button>
@@ -177,11 +176,12 @@ export function ExecutiveHeader({
           return (
             <button
               key={nav.role}
+              type="button"
               onClick={() => navigate({ to: `/dashboard/executive/${nav.role}` as any })}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer border ${
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-[13px] font-medium whitespace-nowrap transition-colors cursor-pointer border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 isActive
-                  ? `${nav.color} shadow-sm border-brand/50`
-                  : "border-border/40 bg-card/40 text-muted-foreground hover:bg-accent/40 hover:text-foreground"
+                  ? "bg-primary/10 text-primary border-primary/30 font-semibold"
+                  : "border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground"
               }`}
             >
               <Icon className="h-4 w-4" />

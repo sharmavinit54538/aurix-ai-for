@@ -347,6 +347,8 @@ export function extractErrorCode(err: any): string | undefined {
 }
 
 export function parseShiftDefinition(raw: string): EmployeeShiftInfo {
+  // This function should only be used as a last resort when backend doesn't provide shift details.
+  // Prefer using actual backend shift data from the API.
   const s = raw.trim().toLowerCase();
   if (s.includes("night")) {
     return {
@@ -407,6 +409,28 @@ export function parseShiftDefinition(raw: string): EmployeeShiftInfo {
     workingDays: ["Mon", "Tue", "Wed", "Thu", "Fri"],
     description: "Standard daytime corporate office schedule with 8 hours of productive working time.",
   };
+}
+
+/**
+ * Validate GPS coordinates
+ */
+export function validateCoordinates(lat: number, lng: number, accuracy?: number): { valid: boolean; error?: string } {
+  if (typeof lat !== 'number' || typeof lng !== 'number') {
+    return { valid: false, error: 'Coordinates must be numbers' };
+  }
+  if (!isFinite(lat) || !isFinite(lng)) {
+    return { valid: false, error: 'Coordinates must be finite numbers' };
+  }
+  if (lat < -90 || lat > 90) {
+    return { valid: false, error: 'Latitude must be between -90 and 90' };
+  }
+  if (lng < -180 || lng > 180) {
+    return { valid: false, error: 'Longitude must be between -180 and 180' };
+  }
+  if (accuracy !== undefined && (typeof accuracy !== 'number' || accuracy < 0 || !isFinite(accuracy))) {
+    return { valid: false, error: 'Accuracy must be a non-negative finite number' };
+  }
+  return { valid: true };
 }
 
 export function formatTimeStr(isoOrTime: string): string {

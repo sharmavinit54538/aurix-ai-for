@@ -53,6 +53,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { GeminiIcon } from "@/components/icons/GeminiIcon";
 import { useAurix, type HRDocument } from "@/lib/aurix-store";
+import { PageHeader } from "@/components/aurix/DashboardShell";
 import { statusBadgeClass } from "@/lib/status-styles";
 import { getEventTypeDot } from "@/lib/color-maps";
 import { toast } from "sonner";
@@ -249,11 +250,11 @@ const WORLD_CLOCKS = [
 
 // ── Shared chart tooltip style ────────────────────────────────
 const chartTooltipStyle = {
-  backgroundColor: "var(--card)",
-  border: "1px solid var(--border)",
+  backgroundColor: "hsl(var(--card))",
+  border: "1px solid hsl(var(--border))",
   borderRadius: 8,
   fontSize: 12,
-  color: "var(--foreground)",
+  color: "hsl(var(--foreground))",
 };
 
 // ── Shared card wrapper ───────────────────────────────────────
@@ -268,7 +269,7 @@ function Card({
 }) {
   return (
     <div
-      className={`rounded-xl border border-border bg-card shadow-sm ${
+      className={`rounded-xl border border-border bg-card shadow-xs ${
         noPad ? "" : "p-5"
       } ${className}`}
     >
@@ -330,7 +331,7 @@ function SectionHeader({
   title,
   subtitle,
   link,
-  linkLabel = "View More",
+  linkLabel = "View more",
   action,
 }: {
   title: string;
@@ -340,20 +341,20 @@ function SectionHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="mb-5 flex items-start justify-between gap-3">
-      <div>
-        <h2 className="font-display text-lg font-semibold tracking-tight text-foreground">{title}</h2>
+    <div className="mb-4 flex items-start justify-between gap-3">
+      <div className="min-w-0">
+        <h2 className="font-display text-base sm:text-lg font-semibold tracking-tight text-foreground">{title}</h2>
         {subtitle && (
-          <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>
         )}
       </div>
       {action ||
         (link && (
           <Link
             to={link as any}
-            className="flex shrink-0 items-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
+            className="inline-flex min-h-8 shrink-0 items-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground/80 transition-colors hover:border-primary/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            {linkLabel} <ChevronRight className="h-3 w-3" />
+            {linkLabel} <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         ))}
     </div>
@@ -380,28 +381,27 @@ const QUICK_ACTIONS = [
 
 const QuickActions = memo(function QuickActions() {
   return (
-    <div className="mb-6">
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
+    <section aria-label="Quick actions">
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 lg:grid-cols-8">
         {QUICK_ACTIONS.map((a) => {
           const Icon = a.icon;
           return (
-            <div key={a.label}>
-              <Link
-                to={a.link as any}
-                className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-3 text-center shadow-sm transition-all hover:bg-muted/50 hover:border-foreground/20 hover:-translate-y-0.5"
-              >
-                <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary/10 text-primary">
-                  <Icon className="h-4 w-4" />
-                </div>
-                <span className="text-[11px] font-medium leading-tight text-muted-foreground group-hover:text-foreground">
-                  {a.label}
-                </span>
-              </Link>
-            </div>
+            <Link
+              key={a.label}
+              to={a.link as any}
+              className="group flex min-h-[84px] flex-col items-center justify-center gap-2 rounded-xl border border-border bg-card p-3 text-center shadow-xs transition-colors hover:border-primary/35 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                <Icon className="h-4 w-4" />
+              </div>
+              <span className="text-[13px] font-medium leading-snug text-foreground/90 group-hover:text-foreground break-words">
+                {a.label}
+              </span>
+            </Link>
           );
         })}
       </div>
-    </div>
+    </section>
   );
 });
 
@@ -438,22 +438,23 @@ function ApprovalCenter() {
           link="/dashboard/hr-ops"
         />
         {/* Tabs */}
-        <div className="mb-4 flex gap-1.5 overflow-x-auto rounded-lg bg-muted p-1 pb-1">
+        <div className="mb-4 flex gap-1.5 overflow-x-auto rounded-lg bg-muted p-1">
           {APPROVAL_TABS.map((tab) => (
             <button
               key={tab}
+              type="button"
               onClick={() => setActiveTab(tab)}
-              className={`shrink-0 rounded-md px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
+              className={`shrink-0 rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 activeTab === tab
-                  ? "bg-background text-foreground shadow-sm"
+                  ? "bg-card text-foreground shadow-xs"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {tab}
               {(approvalItems[tab]?.length ?? 0) > 0 && (
                 <span
-                  className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
-                    activeTab === tab ? "bg-muted text-foreground" : "bg-card text-muted-foreground"
+                  className={`ml-1.5 rounded-full px-1.5 py-0.5 text-xs font-semibold tabular-nums ${
+                    activeTab === tab ? "bg-primary/15 text-primary" : "bg-background/70 text-muted-foreground"
                   }`}
                 >
                   {approvalItems[tab]?.length ?? 0}
@@ -463,56 +464,60 @@ function ApprovalCenter() {
           ))}
         </div>
 
-        {/* Table */}
-        <div key={activeTab} className="space-y-2">
+        {/* Pending Approvals List */}
+        <div key={activeTab}>
           {items.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border bg-card py-6 text-center text-xs text-muted-foreground">
+            <div className="rounded-lg border border-dashed border-border py-6 text-center text-sm text-muted-foreground">
               All {activeTab.toLowerCase()} approvals are cleared.
             </div>
           ) : (
-            items.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-sm hover:bg-muted/40 transition-colors"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-foreground">{item.name}</span>
-                    {item.urgent && (
-                      <Badge variant="destructive" className="h-4 px-1.5 text-[10px]">
-                        Urgent
-                      </Badge>
-                    )}
+            <div className="divide-y divide-border rounded-lg border border-border">
+              {items.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex flex-col gap-3 px-4 py-3 transition-colors hover:bg-muted/35 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-sm font-medium text-foreground">{item.name}</span>
+                      {item.urgent && (
+                        <Badge variant="destructive" className="px-1.5 py-0 text-xs">
+                          Urgent
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+                      <span>{item.department}</span>
+                      <span aria-hidden="true">·</span>
+                      <span>{item.type}</span>
+                      <span aria-hidden="true">·</span>
+                      <span>{item.detail}</span>
+                    </div>
                   </div>
-                  <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>{item.department}</span>
-                    <span>·</span>
-                    <span>{item.type}</span>
-                    <span>·</span>
-                    <span>{item.detail}</span>
+                  <div className="flex flex-wrap items-center justify-between gap-2 sm:justify-end">
+                    <span className="text-xs text-muted-foreground">{item.requestedAt}</span>
+                    <div className="flex shrink-0 gap-1.5">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDecision(item.id, item.name, "approved")}
+                        className="h-8 border-emerald-300 text-[13px] text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800/60 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
+                      >
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Approve
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDecision(item.id, item.name, "rejected")}
+                        className="h-8 border-destructive/35 text-[13px] text-destructive hover:bg-destructive/10"
+                      >
+                        <X className="h-3.5 w-3.5" /> Reject
+                      </Button>
+                    </div>
                   </div>
                 </div>
-                <div className="text-xs text-muted-foreground shrink-0">{item.requestedAt}</div>
-                <div className="flex shrink-0 gap-1.5">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDecision(item.id, item.name, "approved")}
-                    className="h-7 text-xs text-emerald-600 dark:text-emerald-400 cursor-pointer"
-                  >
-                    <CheckCircle2 className="mr-1 h-3 w-3" /> Approve
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDecision(item.id, item.name, "rejected")}
-                    className="h-7 text-xs text-destructive border-destructive/30 cursor-pointer"
-                  >
-                    <X className="mr-1 h-3 w-3" /> Reject
-                  </Button>
-                </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
       </Card>
@@ -537,15 +542,15 @@ function RecruitmentDashboard() {
             <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={PIPELINE_STAGES} layout="vertical" margin={{ left: 0, right: 16, top: 0, bottom: 0 }}>
-                  <CartesianGrid stroke="var(--border)" horizontal={false} />
-                  <XAxis type="number" stroke="var(--muted-foreground)" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
-                  <YAxis type="category" dataKey="stage" stroke="var(--muted-foreground)" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} width={64} />
+                  <CartesianGrid stroke="hsl(var(--border))" horizontal={false} />
+                  <XAxis type="number" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
+                  <YAxis type="category" dataKey="stage" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={72} />
                   <Tooltip
                     contentStyle={chartTooltipStyle}
-                    itemStyle={{ color: "var(--foreground)" }}
-                    labelStyle={{ color: "var(--foreground)" }}
+                    itemStyle={{ color: "hsl(var(--foreground))" }}
+                    labelStyle={{ color: "hsl(var(--foreground))" }}
                   />
-                  <Bar dataKey="count" radius={[0, 6, 6, 0]} fill="var(--primary)" />
+                  <Bar dataKey="count" radius={[0, 6, 6, 0]} fill="hsl(var(--primary))" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -555,21 +560,19 @@ function RecruitmentDashboard() {
           <div className="space-y-4">
             <div>
               <p className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Active Jobs</p>
-              <div className="space-y-2">
+              <div className="divide-y divide-border rounded-lg border border-border">
                 {ACTIVE_JOBS.map((job) => (
                   <div
                     key={job.title}
-                    className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2 shadow-sm"
+                    className="flex items-center justify-between gap-2 px-3 py-2.5"
                   >
-                    <div>
+                    <div className="min-w-0">
                       <div className="text-sm font-medium text-foreground">{job.title}</div>
                       <div className="text-xs text-muted-foreground">{job.dept} · {job.posted}</div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className={statusBadgeClass("active")}>
-                        {job.applicants} applicants
-                      </Badge>
-                    </div>
+                    <Badge variant="outline" className={`shrink-0 ${statusBadgeClass("active")}`}>
+                      {job.applicants} applicants
+                    </Badge>
                   </div>
                 ))}
               </div>
@@ -577,11 +580,11 @@ function RecruitmentDashboard() {
 
             <div>
               <p className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Interviews Today</p>
-              <div className="space-y-2">
+              <div className="divide-y divide-border rounded-lg border border-border">
                 {INTERVIEWS_TODAY.map((iv) => (
                   <div
                     key={iv.candidate}
-                    className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2 shadow-sm"
+                    className="flex items-center gap-3 px-3 py-2.5"
                   >
                     <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
                       <CalendarDays className="h-4 w-4" />
@@ -620,16 +623,16 @@ const AttendanceAnalytics = memo(function AttendanceAnalytics() {
                 <AreaChart data={WEEKLY_ATTENDANCE} margin={{ top: 6, right: 8, left: -16, bottom: 0 }}>
                   <defs>
                     <linearGradient id="attGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.35} />
-                      <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.28} />
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid stroke="var(--border)" vertical={false} />
-                  <XAxis dataKey="day" stroke="var(--muted-foreground)" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
-                  <YAxis stroke="var(--muted-foreground)" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={chartTooltipStyle} itemStyle={{ color: "var(--foreground)" }} labelStyle={{ color: "var(--foreground)" }} />
-                  <Area type="monotone" dataKey="present" stroke="var(--primary)" strokeWidth={2} fill="url(#attGrad)" name="Present" />
-                  <Area type="monotone" dataKey="late" stroke="var(--muted-foreground)" strokeWidth={1.5} fill="transparent" name="Late" />
+                  <CartesianGrid stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
+                  <Tooltip contentStyle={chartTooltipStyle} itemStyle={{ color: "hsl(var(--foreground))" }} labelStyle={{ color: "hsl(var(--foreground))" }} />
+                  <Area type="monotone" dataKey="present" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#attGrad)" name="Present" />
+                  <Area type="monotone" dataKey="late" stroke="hsl(var(--muted-foreground))" strokeWidth={1.5} fill="transparent" name="Late" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -640,11 +643,11 @@ const AttendanceAnalytics = memo(function AttendanceAnalytics() {
             <div className="h-52">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={DEPT_ATTENDANCE} margin={{ top: 6, right: 8, left: -16, bottom: 0 }}>
-                  <CartesianGrid stroke="var(--border)" vertical={false} />
-                  <XAxis dataKey="name" stroke="var(--muted-foreground)" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
-                  <YAxis stroke="var(--muted-foreground)" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} domain={[80, 100]} />
-                  <Tooltip contentStyle={chartTooltipStyle} itemStyle={{ color: "var(--foreground)" }} labelStyle={{ color: "var(--foreground)" }} formatter={(v) => [`${v}%`, "Attendance"]} />
-                  <Bar dataKey="value" radius={[6, 6, 0, 0]} fill="var(--primary)" />
+                  <CartesianGrid stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} domain={[80, 100]} />
+                  <Tooltip contentStyle={chartTooltipStyle} itemStyle={{ color: "hsl(var(--foreground))" }} labelStyle={{ color: "hsl(var(--foreground))" }} formatter={(v) => [`${v}%`, "Attendance"]} />
+                  <Bar dataKey="value" radius={[6, 6, 0, 0]} fill="hsl(var(--primary))" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -668,24 +671,24 @@ const PayrollOverview = memo(function PayrollOverview({ data }: { data?: ReturnT
       <Card>
         <SectionHeader title="Payroll Overview" subtitle="Monthly salary cost & status" link="/dashboard/payroll" />
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          {/* Status cards */}
-          <div className="space-y-3">
+          {/* Status summary */}
+          <div className="space-y-2.5">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Payroll Status</p>
             {statusItems.map((s) => (
               <div
                 key={s.label}
-                className="flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3 shadow-sm"
+                className="flex items-center justify-between rounded-lg bg-muted/40 px-4 py-3"
               >
                 <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                   <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
                   {s.label}
                 </div>
-                <span className="font-display text-xl font-semibold text-foreground">{s.value}</span>
+                <span className="font-display text-lg font-semibold tabular-nums text-foreground">{s.value}</span>
               </div>
             ))}
-            <div className="rounded-xl border border-border bg-card px-4 py-3 shadow-sm">
+            <div className="rounded-lg border border-border bg-muted/25 px-4 py-3">
               <div className="text-xs text-muted-foreground">Total Cost This Month</div>
-              <div className="mt-1 font-display text-2xl font-bold text-foreground">{totalCostText}</div>
+              <div className="mt-1 font-display text-2xl font-bold tabular-nums text-foreground">{totalCostText}</div>
             </div>
           </div>
 
@@ -695,16 +698,16 @@ const PayrollOverview = memo(function PayrollOverview({ data }: { data?: ReturnT
             <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} margin={{ top: 6, right: 8, left: -16, bottom: 0 }}>
-                  <CartesianGrid stroke="var(--border)" vertical={false} />
-                  <XAxis dataKey="month" stroke="var(--muted-foreground)" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
-                  <YAxis stroke="var(--muted-foreground)" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
+                  <CartesianGrid stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
                   <Tooltip
                     contentStyle={chartTooltipStyle}
-                    itemStyle={{ color: "var(--foreground)" }}
-                    labelStyle={{ color: "var(--foreground)" }}
+                    itemStyle={{ color: "hsl(var(--foreground))" }}
+                    labelStyle={{ color: "hsl(var(--foreground))" }}
                     formatter={(v) => [`₹${v}L`, "Payroll"]}
                   />
-                  <Bar dataKey="cost" radius={[6, 6, 0, 0]} fill="var(--primary)" />
+                  <Bar dataKey="cost" radius={[6, 6, 0, 0]} fill="hsl(var(--primary))" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -727,13 +730,13 @@ function AssetOverview() {
             return (
               <div
                 key={a.label}
-                className="flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-4 text-center shadow-sm"
+                className="flex flex-col items-center gap-2 rounded-lg bg-muted/35 p-4 text-center"
               >
                 <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary/10 text-primary">
                   <Icon className="h-4 w-4" />
                 </div>
-                <div className="font-display text-2xl font-bold text-foreground">{a.value}</div>
-                <div className="text-[11px] font-medium leading-tight text-muted-foreground">{a.label}</div>
+                <div className="font-display text-2xl font-bold tabular-nums text-foreground">{a.value}</div>
+                <div className="text-xs font-medium leading-snug text-muted-foreground">{a.label}</div>
               </div>
             );
           })}
@@ -752,9 +755,9 @@ function OnboardingCenter() {
         <SectionHeader title="Onboarding Center" subtitle="New employee journey tracking" link="/dashboard/onboarding-checklist" />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
           {ONBOARDING_STAGES.map((s) => (
-            <div key={s.label} className="rounded-xl border border-border bg-card p-4 text-center shadow-sm">
-              <div className="font-display text-3xl font-bold text-foreground">{s.count}</div>
-              <div className="mt-1 text-xs text-muted-foreground">{s.label}</div>
+            <div key={s.label} className="rounded-lg bg-muted/35 p-3.5 text-center">
+              <div className="font-display text-2xl font-bold tabular-nums text-foreground">{s.count}</div>
+              <div className="mt-1 text-xs font-medium text-muted-foreground">{s.label}</div>
               <div className="mt-2">
                 <Progress
                   value={total > 0 ? (s.count / total) * 100 : 0}
@@ -779,12 +782,12 @@ function ExitManagement() {
           {EXIT_STAGES.map((s) => {
             const Icon = ICON_MAP[s.icon] ?? Clock;
             return (
-              <div key={s.label} className="rounded-xl border border-border bg-card p-4 text-center shadow-sm">
+              <div key={s.label} className="rounded-lg bg-muted/35 p-3.5 text-center">
                 <div className="mx-auto mb-2 grid h-9 w-9 place-items-center rounded-lg bg-primary/10 text-primary">
                   <Icon className="h-4 w-4" />
                 </div>
-                <div className="font-display text-2xl font-bold text-foreground">{s.count}</div>
-                <div className="mt-1 text-xs text-muted-foreground">{s.label}</div>
+                <div className="font-display text-2xl font-bold tabular-nums text-foreground">{s.count}</div>
+                <div className="mt-1 text-xs font-medium text-muted-foreground">{s.label}</div>
               </div>
             );
           })}
@@ -812,45 +815,47 @@ function DocumentsCenter() {
     <div>
       <Card>
         <SectionHeader title="Documents Center" subtitle="Document status and verifications" link="/dashboard/documents" />
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-4">
+        <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
             { label: "Missing/Rejected", value: missing.length },
             { label: "Pending Review", value: pending.length },
             { label: "Expiring Soon", value: expiring.length },
             { label: "Total Documents", value: docs.length },
           ].map((s) => (
-            <div key={s.label} className="rounded-xl border border-border bg-card p-4 text-center shadow-sm">
-              <div className="font-display text-2xl font-bold text-foreground">{s.value}</div>
+            <div key={s.label} className="rounded-lg bg-muted/35 p-3.5 text-center">
+              <div className="font-display text-2xl font-bold tabular-nums text-foreground">{s.value}</div>
               <div className="mt-1 text-xs text-muted-foreground">{s.label}</div>
             </div>
           ))}
         </div>
         <p className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Recent Uploads</p>
-        <div className="space-y-2">
+        <div>
           {recent.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card py-6 text-center shadow-sm">
-              <FileText className="h-8 w-8 text-muted-foreground mb-1" />
-              <p className="text-xs text-muted-foreground">No recent documents uploaded</p>
-              <Link to="/dashboard/documents" className="mt-2 text-xs font-medium text-primary hover:underline">
+            <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-6 text-center">
+              <FileText className="mb-1.5 h-7 w-7 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">No recent documents uploaded</p>
+              <Link to="/dashboard/documents" className="mt-2 text-[13px] font-medium text-primary hover:underline">
                 Upload or manage documents &rarr;
               </Link>
             </div>
           ) : (
-            recent.map((d: HRDocument) => (
-              <div key={d.id} className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2 shadow-sm hover:bg-muted/40 transition-colors">
-                <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium text-foreground">{d.name}</div>
-                  <div className="text-xs text-muted-foreground">{d.uploadDate || "Recent"}</div>
+            <div className="divide-y divide-border rounded-lg border border-border">
+              {recent.map((d: HRDocument) => (
+                <div key={d.id} className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-muted/35">
+                  <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium text-foreground">{d.name}</div>
+                    <div className="text-xs text-muted-foreground">{d.uploadDate || "Recent"}</div>
+                  </div>
+                  <Badge
+                    variant="outline"
+                    className={`shrink-0 text-xs ${statusBadgeClass(d.status)}`}
+                  >
+                    {d.status}
+                  </Badge>
                 </div>
-                <Badge
-                  variant="outline"
-                  className={`shrink-0 text-[10px] ${statusBadgeClass(d.status)}`}
-                >
-                  {d.status}
-                </Badge>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
       </Card>
@@ -867,24 +872,24 @@ function AICommandCenter() {
         {/* Metrics row */}
         <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {AI_METRICS.map((m) => (
-            <div key={m.label} className="rounded-xl border border-border bg-card p-3 text-center shadow-sm">
-              <div className="font-display text-xl font-bold text-foreground">{m.value}</div>
-              <div className="mt-0.5 text-[10px] text-muted-foreground">{m.label}</div>
-              <div className="mt-1 text-[10px] font-medium text-muted-foreground">{m.change}</div>
+            <div key={m.label} className="rounded-lg bg-muted/35 p-3.5 text-center">
+              <div className="font-display text-xl font-bold tabular-nums text-foreground">{m.value}</div>
+              <div className="mt-0.5 text-xs text-muted-foreground">{m.label}</div>
+              <div className="mt-1 text-xs font-medium text-primary">{m.change}</div>
             </div>
           ))}
         </div>
 
         {/* Feature cards */}
-        <div className="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="mb-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
           {AI_FEATURES.map((f) => (
-            <Link key={f.title} to={f.link as any}>
-              <div className="group flex flex-col gap-2 rounded-xl border border-border bg-card p-3 shadow-sm transition-all hover:bg-muted/50 hover:border-foreground/20 hover:-translate-y-0.5">
+            <Link key={f.title} to={f.link as any} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg">
+              <div className="group flex h-full flex-col gap-2 rounded-lg border border-border bg-background/50 p-3.5 transition-colors hover:border-primary/35 hover:bg-muted/40">
                 <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10 text-primary">
                   <GeminiIcon className="h-4 w-4" />
                 </div>
-                <div className="text-xs font-semibold text-foreground">{f.title}</div>
-                <div className="text-[10px] text-muted-foreground leading-snug">{f.desc}</div>
+                <div className="text-[13px] font-semibold text-foreground">{f.title}</div>
+                <div className="text-xs text-muted-foreground leading-relaxed">{f.desc}</div>
               </div>
             </Link>
           ))}
@@ -892,9 +897,9 @@ function AICommandCenter() {
 
         {/* Recent activity */}
         <p className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Recent AI Activity</p>
-        <div className="space-y-2">
+        <div className="divide-y divide-border rounded-lg border border-border">
           {AI_RECENT.map((r, i) => (
-            <div key={i} className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2 shadow-sm">
+            <div key={i} className="flex items-center gap-3 px-3 py-2.5">
               <div className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
                 <Sparkles className="h-3.5 w-3.5" />
               </div>
@@ -926,15 +931,15 @@ function ExecutiveAnalytics() {
                 <AreaChart data={HEADCOUNT_GROWTH} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
                   <defs>
                     <linearGradient id="hcGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.35} />
-                      <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.28} />
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid stroke="var(--border)" vertical={false} />
-                  <XAxis dataKey="month" stroke="var(--muted-foreground)" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
-                  <YAxis stroke="var(--muted-foreground)" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} domain={[230, 295]} />
-                  <Tooltip contentStyle={chartTooltipStyle} itemStyle={{ color: "var(--foreground)" }} labelStyle={{ color: "var(--foreground)" }} />
-                  <Area type="monotone" dataKey="headcount" stroke="var(--primary)" strokeWidth={2} fill="url(#hcGrad)" />
+                  <CartesianGrid stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} domain={[230, 295]} />
+                  <Tooltip contentStyle={chartTooltipStyle} itemStyle={{ color: "hsl(var(--foreground))" }} labelStyle={{ color: "hsl(var(--foreground))" }} />
+                  <Area type="monotone" dataKey="headcount" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#hcGrad)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -946,11 +951,11 @@ function ExecutiveAnalytics() {
             <div className="h-44">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={ATTRITION_RATE} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-                  <CartesianGrid stroke="var(--border)" vertical={false} />
-                  <XAxis dataKey="month" stroke="var(--muted-foreground)" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
-                  <YAxis stroke="var(--muted-foreground)" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} domain={[2, 5]} />
-                  <Tooltip contentStyle={chartTooltipStyle} itemStyle={{ color: "var(--foreground)" }} labelStyle={{ color: "var(--foreground)" }} formatter={(v) => [`${v}%`, "Attrition"]} />
-                  <Line type="monotone" dataKey="rate" stroke="var(--destructive)" strokeWidth={2} dot={false} />
+                  <CartesianGrid stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} domain={[2, 5]} />
+                  <Tooltip contentStyle={chartTooltipStyle} itemStyle={{ color: "hsl(var(--foreground))" }} labelStyle={{ color: "hsl(var(--foreground))" }} formatter={(v) => [`${v}%`, "Attrition"]} />
+                  <Line type="monotone" dataKey="rate" stroke="hsl(var(--destructive))" strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -972,11 +977,11 @@ function ExecutiveAnalytics() {
                     paddingAngle={3}
                   >
                     {GENDER_DIVERSITY.map((_, i) => (
-                      <Cell key={i} fill={i === 0 ? "var(--primary)" : i === 1 ? "var(--muted-foreground)" : "var(--chart-1)"} />
+                      <Cell key={i} fill={i === 0 ? "hsl(var(--primary))" : i === 1 ? "hsl(var(--muted-foreground))" : "hsl(var(--chart-2))"} />
                     ))}
                   </Pie>
-                  <Tooltip contentStyle={chartTooltipStyle} itemStyle={{ color: "var(--foreground)" }} labelStyle={{ color: "var(--foreground)" }} />
-                  <Legend iconSize={10} wrapperStyle={{ fontSize: 11, color: "var(--muted-foreground)" }} />
+                  <Tooltip contentStyle={chartTooltipStyle} itemStyle={{ color: "hsl(var(--foreground))" }} labelStyle={{ color: "hsl(var(--foreground))" }} />
+                  <Legend iconSize={10} wrapperStyle={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -988,11 +993,11 @@ function ExecutiveAnalytics() {
             <div className="h-44">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={SALARY_DISTRIBUTION} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-                  <CartesianGrid stroke="var(--border)" vertical={false} />
-                  <XAxis dataKey="band" stroke="var(--muted-foreground)" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
-                  <YAxis stroke="var(--muted-foreground)" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={chartTooltipStyle} itemStyle={{ color: "var(--foreground)" }} labelStyle={{ color: "var(--foreground)" }} />
-                  <Bar dataKey="employees" radius={[4, 4, 0, 0]} fill="var(--primary)" />
+                  <CartesianGrid stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis dataKey="band" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
+                  <Tooltip contentStyle={chartTooltipStyle} itemStyle={{ color: "hsl(var(--foreground))" }} labelStyle={{ color: "hsl(var(--foreground))" }} />
+                  <Bar dataKey="employees" radius={[4, 4, 0, 0]} fill="hsl(var(--primary))" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -1004,11 +1009,11 @@ function ExecutiveAnalytics() {
             <div className="h-44">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={DEPT_DISTRIBUTION} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-                  <CartesianGrid stroke="var(--border)" vertical={false} />
-                  <XAxis dataKey="dept" stroke="var(--muted-foreground)" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
-                  <YAxis stroke="var(--muted-foreground)" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={chartTooltipStyle} itemStyle={{ color: "var(--foreground)" }} labelStyle={{ color: "var(--foreground)" }} />
-                  <Bar dataKey="employees" radius={[4, 4, 0, 0]} fill="var(--primary)" />
+                  <CartesianGrid stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis dataKey="dept" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
+                  <Tooltip contentStyle={chartTooltipStyle} itemStyle={{ color: "hsl(var(--foreground))" }} labelStyle={{ color: "hsl(var(--foreground))" }} />
+                  <Bar dataKey="employees" radius={[4, 4, 0, 0]} fill="hsl(var(--primary))" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -1025,22 +1030,22 @@ function CompanyCalendar() {
     <div>
       <Card>
         <SectionHeader title="Company Calendar" subtitle="Upcoming meetings, holidays & key dates" link="/dashboard/attendance/holidays" />
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
           {CALENDAR_EVENTS.map((ev) => (
             <div
               key={ev.id}
-              className="flex items-start gap-3 rounded-xl border border-border bg-card px-3 py-2.5 shadow-sm"
+              className="flex items-start gap-3 rounded-lg bg-muted/35 px-3.5 py-2.5"
             >
               <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${getEventTypeDot(ev.type)}`} />
               <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-medium text-foreground truncate">{ev.title}</div>
+                <div className="truncate text-sm font-medium text-foreground">{ev.title}</div>
                 <div className="text-xs text-muted-foreground">
                   {new Date(ev.date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
                   {ev.time ? ` · ${ev.time}` : ""}
                 </div>
               </div>
-              <Badge variant="outline" className={`ml-auto shrink-0 capitalize text-[10px] ${statusBadgeClass(ev.type)}`}>
+              <Badge variant="outline" className={`ml-auto shrink-0 capitalize text-xs ${statusBadgeClass(ev.type)}`}>
                 {ev.type}
               </Badge>
             </div>
@@ -1057,13 +1062,13 @@ function ActivityFeed() {
     <div>
       <Card>
         <SectionHeader title="Live Activity Feed" subtitle="Real-time HR system activity" link="/dashboard/hr-operations/timeline" />
-        <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
+        <div className="divide-y divide-border rounded-lg border border-border max-h-96 overflow-y-auto">
           {ACTIVITY_FEED.map((a) => {
             const Icon = ICON_MAP[a.icon] ?? Zap;
             return (
               <div
                 key={a.id}
-                className="flex items-start gap-3 rounded-xl border border-border bg-card px-3 py-2.5 shadow-sm"
+                className="flex items-start gap-3 px-3.5 py-3"
               >
                 <div className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
                   <Icon className="h-3.5 w-3.5" />
@@ -1091,42 +1096,46 @@ function NotificationCenter() {
     <div>
       <Card>
         <SectionHeader
-          title="Smart Notification Center"
-          subtitle="Alerts, compliance & AI suggestions"
+          title="Priority Alerts"
+          subtitle="Compliance notices & system exceptions"
           link="/dashboard/notifications"
         />
-        <div className="space-y-2">
-          {items.map((n) => (
-            <div
-              key={n.id}
-              className="flex items-start gap-3 rounded-xl border border-border bg-card px-3 py-2.5 shadow-sm"
-            >
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-foreground">{n.title}</span>
-                  <Badge variant="outline" className={`shrink-0 text-[10px] capitalize ${statusBadgeClass(n.priority)}`}>
-                    {n.category.replace(/_/g, " ")}
-                  </Badge>
-                </div>
-                <div className="mt-0.5 text-xs text-muted-foreground">{n.body}</div>
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <span className="text-xs text-muted-foreground font-mono">
-                  {formatRelativeTime(n.createdAt)}
-                </span>
-                <button
-                  onClick={() => archiveMutation.mutate(n.id)}
-                  className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
-                  aria-label="Dismiss notification"
-                  title="Dismiss"
+        <div>
+          {items.length > 0 ? (
+            <div className="divide-y divide-border rounded-lg border border-border">
+              {items.map((n) => (
+                <div
+                  key={n.id}
+                  className="flex items-start gap-3 px-3.5 py-3"
                 >
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-sm font-medium text-foreground">{n.title}</span>
+                      <Badge variant="outline" className={`shrink-0 text-xs capitalize ${statusBadgeClass(n.priority)}`}>
+                        {n.category.replace(/_/g, " ")}
+                      </Badge>
+                    </div>
+                    <div className="mt-0.5 text-xs text-muted-foreground">{n.body}</div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <span className="text-xs text-muted-foreground font-mono">
+                      {formatRelativeTime(n.createdAt)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => archiveMutation.mutate(n.id)}
+                      className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+                      aria-label="Dismiss notification"
+                      title="Dismiss"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-          {items.length === 0 && (
+          ) : (
             <div className="py-8 text-center text-sm text-muted-foreground">
               <CheckCircle2 className="mx-auto mb-2 h-8 w-8 text-primary" />
               All caught up! No active high-priority alerts.
@@ -1148,11 +1157,11 @@ function DepartmentPerformance() {
           {DEPT_PERFORMANCE.map((d) => (
             <div
               key={d.name}
-              className="rounded-xl border border-border bg-card p-4 shadow-sm"
+              className="rounded-lg border border-border bg-muted/20 p-4"
             >
-              <div className="mb-3 flex items-center justify-between">
+              <div className="mb-3 flex items-center justify-between gap-2">
                 <span className="text-sm font-semibold text-foreground">{d.name}</span>
-                <Badge variant="outline" className="text-[10px]">
+                <Badge variant="outline" className="text-xs">
                   {d.headcount} employees
                 </Badge>
               </div>
@@ -1195,50 +1204,27 @@ function ReportsCenter() {
   return (
     <div>
       <Card>
-        <div className="mb-5 flex items-center justify-between gap-3">
-          <div>
-            <h2 className="font-display text-lg font-semibold tracking-tight text-foreground">
-              Reports Center
-            </h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              One-click report generation
-            </p>
-          </div>
-          <Link
-            to="/dashboard/reports"
-            className="group inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all duration-200 hover:border-foreground/30 hover:bg-accent hover:text-foreground"
-          >
-            <span>View More</span>
-            <ChevronRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
-          </Link>
-        </div>
+        <SectionHeader
+          title="Reports Center"
+          subtitle="One-click report generation"
+          link="/dashboard/reports"
+        />
 
-        <div className="reports-center-container w-full">
-          <div className="reports-center-grid">
-            {REPORT_CARD_ITEMS.map((r) => (
-              <Link
-                key={r.label}
-                to={r.link as any}
-                className="group flex flex-col justify-center outline-hidden"
-              >
-                <div
-                  className="flex h-24 w-full flex-col items-center justify-center gap-2 rounded-xl border border-border bg-card px-2 py-3 text-center shadow-sm transition-all duration-200 ease-out hover:-translate-y-1 hover:bg-muted/50 hover:border-foreground/20 active:translate-y-0 cursor-pointer select-none"
-                >
-                  <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10 text-primary">
-                    <Download className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
-                  </div>
-                  <span
-                    className={`w-full max-w-full truncate px-1 text-center font-medium text-foreground tracking-tight leading-none ${
-                      r.isLong ? "text-[11px]" : "text-xs"
-                    }`}
-                    title={r.label}
-                  >
-                    {r.label}
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
+          {REPORT_CARD_ITEMS.map((r) => (
+            <Link
+              key={r.label}
+              to={r.link as any}
+              className="group flex min-h-[82px] flex-col items-center justify-center gap-2 rounded-lg border border-border bg-background/50 px-3 py-3 text-center transition-colors hover:border-primary/35 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                <Download className="h-4 w-4" />
+              </div>
+              <span className="text-[13px] font-medium leading-snug text-foreground break-words">
+                {r.label}
+              </span>
+            </Link>
+          ))}
         </div>
       </Card>
     </div>
@@ -1272,9 +1258,9 @@ function WorldClock() {
   return (
     <Card>
       <SectionHeader title="World Clock" />
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-2.5">
         {clocks.map((c) => (
-          <div key={c.city} className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 shadow-sm">
+          <div key={c.city} className="flex items-center gap-2.5 rounded-lg bg-muted/35 px-3 py-2.5">
             <span className="text-lg">{c.flag}</span>
             <div>
               <div className="text-xs text-muted-foreground">{c.city}</div>
@@ -1294,9 +1280,9 @@ function ScoreWidgets() {
       <div className="space-y-4">
         {WIDGET_SCORES.map((w) => (
           <div key={w.label}>
-            <div className="mb-1 flex items-center justify-between text-xs">
+            <div className="mb-1 flex items-center justify-between text-[13px]">
               <span className="font-medium text-foreground">{w.label}</span>
-              <span className="font-semibold text-foreground">
+              <span className="font-semibold tabular-nums text-foreground">
                 {w.value}/{w.max}
               </span>
             </div>
@@ -1304,7 +1290,7 @@ function ScoreWidgets() {
               value={w.max > 0 ? (w.value / w.max) * 100 : 0}
               className="h-2 w-full"
             />
-            <p className="mt-0.5 text-[10px] text-muted-foreground">{w.description}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{w.description}</p>
           </div>
         ))}
       </div>
@@ -1314,13 +1300,27 @@ function ScoreWidgets() {
 
 // ── Main Executive Dashboard ──────────────────────────────────
 export function ExecutiveDashboard() {
+  const ws = useAurix();
   const live = useExecutiveDashboardData();
 
   return (
     <div className="space-y-6">
+      <PageHeader
+        title="Executive Overview"
+        description={`${ws.company?.name ?? "Organization"} workforce metrics, pending approvals, and operational alerts.`}
+        action={
+          <Button asChild size="sm">
+            <Link to={"/dashboard/employees?action=add" as any}>
+              <UserPlus className="h-4 w-4" />
+              Add employee
+            </Link>
+          </Button>
+        }
+      />
+
       {/* Live Error Banner if an API had issues */}
       {live.error && (
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-xs text-destructive">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" />
             <span>Some live metrics could not be loaded ({live.error}). Showing cached metrics.</span>
@@ -1330,43 +1330,43 @@ export function ExecutiveDashboard() {
             size="sm"
             onClick={live.refetch}
             disabled={live.loading}
-            className="h-7 border-destructive/30 text-destructive hover:bg-destructive/20 text-xs"
+            className="h-8 border-destructive/30 text-[13px] text-destructive hover:bg-destructive/15"
           >
-            <RefreshCw className={`mr-1.5 h-3 w-3 ${live.loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-3.5 w-3.5 ${live.loading ? "animate-spin" : ""}`} />
             Retry
           </Button>
         </div>
       )}
 
-      {/* Quick Actions */}
-      <WidgetErrorBoundary name="Quick Actions">
-        <QuickActions />
-      </WidgetErrorBoundary>
-
-      {/* KPI Command Cards */}
+      {/* Priority KPI Metrics */}
       <WidgetErrorBoundary name="KPI Metrics">
         <ExecutiveKpiCards details={live.kpiDetails} loading={live.loading} />
       </WidgetErrorBoundary>
 
-      {/* Approvals + Activity Feed */}
+      {/* Exceptions & Pending Approvals */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <WidgetErrorBoundary name="HR Approvals">
             <ApprovalCenter />
           </WidgetErrorBoundary>
         </div>
-        <WidgetErrorBoundary name="Activity Feed">
-          <ActivityFeed />
+        <WidgetErrorBoundary name="Priority Alerts">
+          <NotificationCenter />
         </WidgetErrorBoundary>
       </div>
 
-      {/* Announcements + Notifications */}
+      {/* Quick Actions */}
+      <WidgetErrorBoundary name="Quick Actions">
+        <QuickActions />
+      </WidgetErrorBoundary>
+
+      {/* Activity + Announcements */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <WidgetErrorBoundary name="Activity Feed">
+          <ActivityFeed />
+        </WidgetErrorBoundary>
         <WidgetErrorBoundary name="Latest Announcements">
           <LatestAnnouncementsWidget />
-        </WidgetErrorBoundary>
-        <WidgetErrorBoundary name="Notifications">
-          <NotificationCenter />
         </WidgetErrorBoundary>
       </div>
 

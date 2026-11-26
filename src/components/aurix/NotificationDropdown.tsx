@@ -157,7 +157,7 @@ export function NotificationDropdown() {
           {badgeText && (
             <span
               id="notification-badge"
-              className="absolute -top-1 -right-1 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground shadow-xs"
+              className="absolute -top-1 -right-1 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-destructive text-[11px] font-bold text-destructive-foreground shadow-xs"
             >
               {badgeText}
             </span>

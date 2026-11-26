@@ -16,18 +16,18 @@ export function LatestAnnouncementsWidget() {
   const items = data?.items ?? [];
 
   return (
-    <Card className="h-full border border-border/60 shadow-xs">
+    <Card className="h-full border border-border shadow-xs">
       <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-md bg-amber-500/10 text-amber-500">
+          <div className="p-1.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300">
             <Megaphone className="h-4 w-4" />
           </div>
-          <CardTitle className="text-sm font-semibold tracking-tight">
+          <CardTitle className="text-base font-semibold tracking-tight">
             Latest Announcements
           </CardTitle>
         </div>
 
-        <Button variant="ghost" size="sm" asChild className="h-7 text-xs text-primary gap-1 px-2">
+        <Button variant="ghost" size="sm" asChild className="h-8 text-[13px] text-primary gap-1 px-2">
           <Link to="/dashboard/announcements">
             <span>View All</span>
             <ArrowRight className="h-3.5 w-3.5" />
@@ -60,22 +60,22 @@ export function LatestAnnouncementsWidget() {
             <Button
               size="sm"
               variant="outline"
-              className="mt-2 h-7 text-xs gap-1"
+              className="mt-2 h-8 text-[13px] gap-1"
               onClick={() => refetch()}
             >
-              <RefreshCw className="h-3 w-3" />
+              <RefreshCw className="h-3.5 w-3.5" />
               <span>Retry</span>
             </Button>
           </div>
         ) : items.length === 0 ? (
           <div className="text-center py-6 text-muted-foreground">
-            <p className="text-xs">No active announcements</p>
-            <p className="text-[11px] text-muted-foreground/70 mt-0.5">
+            <p className="text-sm font-medium">No active announcements</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
               Official company updates will appear here.
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-border/40">
+          <div className="divide-y divide-border/60">
             {items.slice(0, 4).map((ann) => {
               const dateStr = ann.created_at
                 ? new Date(ann.created_at).toLocaleDateString(undefined, {
@@ -92,20 +92,20 @@ export function LatestAnnouncementsWidget() {
                   className="block py-2.5 group transition-colors hover:bg-muted/40 rounded-sm -mx-1 px-1"
                 >
                   <div className="flex items-center justify-between gap-2 mb-1">
-                    <h4 className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                    <h4 className="text-sm font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">
                       {ann.title}
                     </h4>
-                    <span className="text-[10px] text-muted-foreground shrink-0">{dateStr}</span>
+                    <span className="text-xs text-muted-foreground shrink-0">{dateStr}</span>
                   </div>
 
                   <div className="flex items-center gap-2">
                     {ann.is_pinned && (
-                      <Badge variant="outline" className="text-[9px] py-0 px-1 bg-primary/10 text-primary border-primary/20">
+                      <Badge variant="outline" className="text-xs py-0 px-1.5 bg-primary/10 text-primary border-primary/20">
                         Pinned
                       </Badge>
                     )}
                     {ann.visibility && (
-                      <span className="text-[10px] text-muted-foreground line-clamp-1">
+                      <span className="text-xs text-muted-foreground line-clamp-1">
                         {ann.visibility.replace(/_/g, " ")}
                       </span>
                     )}

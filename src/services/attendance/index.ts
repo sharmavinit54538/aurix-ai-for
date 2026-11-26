@@ -40,6 +40,19 @@ import {
   getMyRoster,
   requestScheduleChange,
 } from "./portalSelfServiceApi";
+import {
+  AttendanceTrendDataPoint,
+  AttendanceTrendsResponse,
+  AttendanceDistributionResponse,
+  WeeklyAttendanceDataPoint,
+  WeeklyAttendanceResponse,
+  AttendanceRateKPIResponse,
+  AttendanceAnalyticsFilters,
+  ShiftItem,
+  CreateChangeRequestPayload,
+  ApproveChangeRequestPayload,
+  RejectChangeRequestPayload,
+} from "./types";
 
 export * from "./types";
 export * from "./helpers";

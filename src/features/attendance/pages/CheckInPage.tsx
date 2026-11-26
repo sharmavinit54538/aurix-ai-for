@@ -1,5 +1,5 @@
 import { statusBadgeClass } from "@/lib/status-styles";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   AlertCircle, Briefcase, CalendarDays, Camera, CheckCircle2,
   ChevronDown, ChevronRight, Clock, Coffee, Download,
@@ -28,20 +28,26 @@ import {
   HolidayRecord,
   AttendancePunchResult,
   FaceAttendanceStatus,
-  FaceShiftSummary,
+  AttendanceTodayResponse,
+  TodayPunchStatus,
+  AttendanceShiftSummary,
   extractErrorCode,
-} from "@/services/attendanceApi";
+} from "@/services/attendance";
 import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog";
-import { formatHHmmTo12h, parseTimeToMinutes } from "@/lib/datetime";
+import { formatHHmmTo12h } from "@/lib/datetime";
 import { FaceAttendanceDialog, type FaceAttendanceMode } from "../components/FaceAttendanceDialog";
 
-// ── Types ─────────────────────────────────────────────────────
-type AttendanceStatus = "not-checked-in" | "checked-in" | "on-break" | "checked-out";
+// ── Attendance State Machine Types ─────────────────────────────
+type AttendanceState = 
+  | "LOADING"
+  | "STATUS_UNAVAILABLE"
+  | "NOT_CHECKED_IN"
+  | "VERIFYING"
+  | "CHECKED_IN"
+  | "ON_BREAK"
+  | "CHECKED_OUT";
 
-interface AttendanceDay {
-  date: number;
-  status: "present" | "absent" | "late" | "leave" | "holiday" | "weekend" | "halfday" | "today" | "future";
-}
+type FaceEnrollmentState = "ENROLLED" | "NOT_ENROLLED" | "STATUS_UNAVAILABLE";
 
 // ── Geolocation Helper with Accuracy ────────────────────────────
 function getCoordinates(): Promise<{ lat: number; lng: number; accuracy?: number } | null> {
@@ -162,40 +168,74 @@ function TimelineItem({ event, isLast }: { event: TimelineEventItem; isLast: boo
 }
 
 // ── Calendar Widget ────────────────────────────────────────────
-function MiniCalendar({ history }: { history: AttendanceHistoryItem[] }) {
+interface CalendarDayStatus {
+  date: string;
+  status: "present" | "absent" | "late" | "leave" | "holiday" | "weekend" | "halfday" | "today" | "future" | "not_scheduled";
+  shiftName?: string;
+  isOff?: boolean;
+  holidayName?: string;
+}
+
+function MiniCalendar({ 
+  history, 
+  todayAttendance,
+  holidays,
+  shiftSchedule 
+}: { 
+  history: AttendanceHistoryItem[]; 
+  todayAttendance: AttendanceTodayResponse | null;
+  holidays: HolidayRecord[];
+  shiftSchedule?: { workingDays: string[] } | null;
+}) {
   const today = new Date();
   const year = today.getFullYear();
   const month = today.getMonth();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDay = new Date(year, month, 1).getDay();
 
-  // Create a fast lookup map for recorded attendance dates
+  // Create lookup maps
   const historyMap = new Map<string, AttendanceHistoryItem>();
   history.forEach((h) => {
     if (h.date) historyMap.set(h.date, h);
   });
 
-  const statuses: Record<number, AttendanceDay["status"]> = {};
+  const holidayMap = new Map<string, HolidayRecord>();
+  holidays.forEach((h) => {
+    if (h.date) holidayMap.set(h.date, h);
+  });
+
+  const workingDaysSet = new Set(shiftSchedule?.workingDays?.map(d => d.toLowerCase().slice(0, 3)) || ["mon", "tue", "wed", "thu", "fri"]);
+
+  const statuses: Record<number, CalendarDayStatus> = {};
   const todayDate = today.getDate();
 
   for (let d = 1; d <= daysInMonth; d++) {
     const dayDate = new Date(year, month, d);
     const dayOfWeek = dayDate.getDay();
+    const dayName = dayDate.toLocaleDateString("en-US", { weekday: "short" }).toLowerCase();
     const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    const isWorkingDay = workingDaysSet.has(dayName);
+
+    const holiday = holidayMap.get(dateStr);
+    const record = historyMap.get(dateStr);
 
     if (d === todayDate) {
-      statuses[d] = "today";
+      statuses[d] = { date: dateStr, status: "today", shiftName: todayAttendance?.shift?.shift_name };
     } else if (d > todayDate) {
-      statuses[d] = "future";
-    } else if (dayOfWeek === 0 || dayOfWeek === 6) {
-      statuses[d] = "weekend";
+      statuses[d] = { date: dateStr, status: "future" };
+    } else if (holiday) {
+      statuses[d] = { date: dateStr, status: "holiday", holidayName: holiday.name };
+    } else if (!isWorkingDay) {
+      statuses[d] = { date: dateStr, status: "weekend" };
+    } else if (record) {
+      statuses[d] = { 
+        date: dateStr, 
+        status: record.status === "Late" ? "late" : record.status === "Absent" ? "absent" : "present",
+        shiftName: record.shiftName
+      };
     } else {
-      const record = historyMap.get(dateStr);
-      if (record) {
-        statuses[d] = record.status === "Late" ? "late" : "present";
-      } else {
-        statuses[d] = "absent";
-      }
+      // No record on a working day - could be absent or not yet processed
+      statuses[d] = { date: dateStr, status: "not_scheduled" };
     }
   }
 
@@ -209,6 +249,7 @@ function MiniCalendar({ history }: { history: AttendanceHistoryItem[] }) {
     halfday: "bg-muted text-foreground",
     today: "ring-2 ring-primary bg-primary/15 text-primary font-bold",
     future: "text-muted-foreground/40",
+    not_scheduled: "bg-muted/30 text-muted-foreground/50",
   };
 
   const days = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
@@ -228,11 +269,13 @@ function MiniCalendar({ history }: { history: AttendanceHistoryItem[] }) {
         ))}
         {cells.map((day, i) => {
           if (!day) return <div key={`e-${i}`} />;
-          const s = statuses[day] ?? "future";
+          const dayStatus = statuses[day] ?? { status: "future" };
+          const s = dayStatus.status;
           return (
             <div
               key={day}
               className={`flex h-7 w-7 mx-auto items-center justify-center rounded-full text-xs transition-colors cursor-default ${COLOR[s] ?? ""}`}
+              title={dayStatus.holidayName || dayStatus.shiftName || ""}
             >
               {day}
             </div>
@@ -245,6 +288,8 @@ function MiniCalendar({ history }: { history: AttendanceHistoryItem[] }) {
           { color: "bg-muted-foreground", label: "Late" },
           { color: "bg-destructive", label: "Absent" },
           { color: "bg-muted-foreground/50", label: "Weekend / Off" },
+          { color: "bg-primary/15", label: "Holiday" },
+          { color: "bg-muted/30", label: "Not Scheduled" },
         ].map((item) => (
           <div key={item.label} className="flex items-center gap-1">
             <span className={`h-2 w-2 rounded-full ${item.color}`} />
@@ -288,33 +333,85 @@ function AttendBtn({
       {loading ? <RefreshCw className="h-5 w-5 animate-spin" /> : <Icon className="h-5 w-5" />}
       <span>{label}</span>
     </button>
-  );
+);
+}
+ 
+// ── Helper Functions ─────────────────────────────────────────
+function parseTimeToMinutes(timeStr: string): number {
+  const [h, m] = timeStr.split(":").map(Number);
+  return h * 60 + m;
 }
 
+function calculateLateMinutes(checkInTimeStr: string, shift: AttendanceShiftSummary): number {
+  const checkInDate = new Date(checkInTimeStr);
+  if (isNaN(checkInDate.getTime())) return 0;
+  
+  const shiftStartStr = shift.start_time;
+  const graceMinutes = shift.grace_period_mins ?? 0;
+  
+  let shiftH = 0;
+  let shiftM = 0;
+  const is12Hour = shiftStartStr.includes("AM") || shiftStartStr.includes("PM");
+  if (is12Hour) {
+    const parts = shiftStartStr.trim().split(/\s+/);
+    const [hStr, mStr] = (parts[0] || "").split(":");
+    let h = parseInt(hStr, 10) || 0;
+    const m = parseInt(mStr, 10) || 0;
+    if (parts[1]?.toUpperCase() === "PM" && h < 12) h += 12;
+    if (parts[1]?.toUpperCase() === "AM" && h === 12) h = 0;
+    shiftH = h;
+    shiftM = m;
+  } else {
+    const [hStr, mStr] = shiftStartStr.split(":");
+    shiftH = parseInt(hStr, 10) || 0;
+    shiftM = parseInt(mStr, 10) || 0;
+  }
+
+  const shiftStart = new Date(checkInDate);
+  shiftStart.setHours(shiftH, shiftM, 0, 0);
+  const diffSec = Math.floor((checkInDate.getTime() - shiftStart.getTime()) / 1000);
+  const graceSec = graceMinutes * 60;
+  return diffSec > graceSec ? Math.floor(diffSec / 60) : 0;
+}
+
+function checkLate(checkInTimeStr: string, shift: AttendanceShiftSummary): boolean {
+  return calculateLateMinutes(checkInTimeStr, shift) > 0;
+}
+ 
 // ── Main Page ─────────────────────────────────────────────────
 function CheckInPage() {
   const ws = useAurix();
   const user = ws.user;
 
-  // ── States ──────────────────────────────────────────────────
-  const [status, setStatus] = useState<AttendanceStatus>("not-checked-in");
+  // ── Attendance State Machine ─────────────────────────────────
+  const [attendanceState, setAttendanceState] = useState<AttendanceState>("LOADING");
+  const [faceEnrollmentState, setFaceEnrollmentState] = useState<FaceEnrollmentState>("STATUS_UNAVAILABLE");
   const [loading, setLoading] = useState<string | null>(null);
-  const [pageLoading, setPageLoading] = useState(true);
   const [apiError, setApiError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" | "info" } | null>(null);
   const [noteEmp, setNoteEmp] = useState("");
   const [notesOpen, setNotesOpen] = useState(false);
 
-  // ── Timers ──────────────────────────────────────────────────
-  const [workSec, setWorkSec] = useState(0);
-  const [breakSec, setBreakSec] = useState(0);
-  const [activeSec, setActiveSec] = useState(0);
-  const checkInTimeRef = useRef<Date | null>(null);
+  // ── Timer State ──────────────────────────────────────────────
+  const [timerState, setTimerState] = useState<{
+    workSec: number;
+    breakSec: number;
+    activeSec: number;
+    checkInTime: Date | null;
+    breakStartTime: Date | null;
+  }>({
+    workSec: 0,
+    breakSec: 0,
+    activeSec: 0,
+    checkInTime: null,
+    breakStartTime: null,
+  });
 
   // ── Backend Data ─────────────────────────────────────────────
   const [timeline, setTimeline] = useState<TimelineEventItem[]>([]);
   const [historyList, setHistoryList] = useState<AttendanceHistoryItem[]>([]);
   const [faceAttendanceStatus, setFaceAttendanceStatus] = useState<FaceAttendanceStatus | null>(null);
+  const [todayAttendance, setTodayAttendance] = useState<AttendanceTodayResponse | null>(null);
   const [holidays, setHolidays] = useState<HolidayRecord[]>([]);
   const [employeeDetails, setEmployeeDetails] = useState<{
     id: string;
@@ -329,7 +426,6 @@ function CheckInPage() {
   const [faceModalMode, setFaceModalMode] = useState<FaceAttendanceMode>("check-in");
 
   // ── Face Enrollment & Biometric Registration Modal State ─────
-  const [isFaceEnrolled, setIsFaceEnrolled] = useState<boolean | null>(null);
   const [enrolledAt, setEnrolledAt] = useState<string | null>(null);
   const [showEnrollModal, setShowEnrollModal] = useState(false);
   const [showReEnrollConfirm, setShowReEnrollConfirm] = useState(false);
@@ -347,10 +443,10 @@ function CheckInPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // ── Toast Helper ─────────────────────────────────────────────
-  function showToast(msg: string, type: "success" | "error" | "info" = "success") {
+  const showToast = useCallback((msg: string, type: "success" | "error" | "info" = "success") => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 4000);
-  }
+  }, []);
 
   // Modal camera handlers for registration
   const stopModalCamera = useCallback(() => {
@@ -506,38 +602,48 @@ function CheckInPage() {
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [stopModalCamera, startModalCamera, showEnrollModal, uploadedPhotoBase64]);
 
-  // ── Live Working Clock Ticker ────────────────────────────────
+  // ── Derived values from timer state ──────────────────────────
+  const { workSec, breakSec, activeSec, checkInTime, breakStartTime } = timerState;
+
+  // ── Live Working Clock Ticker (timestamp-based, no drift) ────
   useEffect(() => {
-    if (status !== "checked-in" && status !== "on-break") return;
+    if (attendanceState !== "CHECKED_IN" && attendanceState !== "ON_BREAK") return;
 
-    const t = setInterval(() => {
-      if (checkInTimeRef.current) {
-        const nowMs = Date.now();
-        const inMs = checkInTimeRef.current.getTime();
-        const elapsed = Math.max(0, Math.floor((nowMs - inMs) / 1000));
-        setWorkSec(elapsed);
+    const tick = () => {
+      setTimerState((prev) => {
+        const now = Date.now();
+        let work = 0;
+        let active = 0;
+        let brk = prev.breakSec;
 
-        if (status === "checked-in") {
-          setActiveSec(Math.max(0, elapsed - breakSec));
-        } else if (status === "on-break") {
-          setBreakSec((b) => b + 1);
+        if (prev.checkInTime) {
+          const elapsed = Math.max(0, Math.floor((now - prev.checkInTime.getTime()) / 1000));
+          work = elapsed;
+          
+          if (attendanceState === "CHECKED_IN") {
+            active = Math.max(0, elapsed - prev.breakSec);
+          } else if (attendanceState === "ON_BREAK" && prev.breakStartTime) {
+            const breakElapsed = Math.max(0, Math.floor((now - prev.breakStartTime.getTime()) / 1000));
+            brk = prev.breakSec - breakElapsed + breakElapsed; // current break session elapsed
+            active = Math.max(0, elapsed - brk);
+          }
         }
-      } else {
-        if (status === "checked-in") {
-          setWorkSec((s) => s + 1);
-          setActiveSec((s) => s + 1);
-        } else if (status === "on-break") {
-          setWorkSec((s) => s + 1);
-          setBreakSec((s) => s + 1);
-        }
-      }
-    }, 1000);
-    return () => clearInterval(t);
-  }, [status, breakSec]);
 
-  // ── Load Real Attendance State & Face Status from Backend ─────
+        return { ...prev, workSec: work, breakSec: brk, activeSec: active };
+      });
+    };
+
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [attendanceState]);
+
+  // ── Load Real Attendance State from Backend (single canonical call) ─────
   const loadAttendanceState = useCallback(async () => {
     setApiError(null);
+    setAttendanceState("LOADING");
+    setFaceEnrollmentState("STATUS_UNAVAILABLE");
+
     try {
       const [punchRes, timelineRes, historyRes, faceStatusRes, holidaysRes, empRes] =
         await Promise.allSettled([
@@ -549,76 +655,151 @@ function CheckInPage() {
           attendanceApi.resolveCurrentEmployee(),
         ]);
 
-      // 1. Process Face Attendance Status (includes shift summary)
+      // 1. Process Face Enrollment Status (authoritative)
       if (faceStatusRes.status === "fulfilled") {
         const fs = faceStatusRes.value;
         setFaceAttendanceStatus(fs);
-        setIsFaceEnrolled(Boolean(fs.faceRegistered));
-        setEnrolledAt(fs.enrolled_at || null);
-      } else {
-        setFaceAttendanceStatus(null);
-        setIsFaceEnrolled(false);
-      }
-
-      // 2. Process Today's Punch & Session State
-      const punchData = punchRes.status === "fulfilled" ? punchRes.value : null;
-      const faceData = faceStatusRes.status === "fulfilled" ? faceStatusRes.value : null;
-
-      const isCheckedOut = Boolean(punchData?.checkedOut || faceData?.checkedOut);
-      const isOnBreak = Boolean(punchData?.onBreak);
-      const isCheckedIn = Boolean(punchData?.checkedIn || faceData?.checkedIn || isOnBreak);
-
-      let currentStatus: AttendanceStatus = "not-checked-in";
-      if (isCheckedOut) {
-        currentStatus = "checked-out";
-      } else if (isOnBreak) {
-        currentStatus = "on-break";
-      } else if (isCheckedIn) {
-        currentStatus = "checked-in";
-      } else {
-        currentStatus = "not-checked-in";
-      }
-      setStatus(currentStatus);
-
-      // 3. Process Timers and Start Time
-      const effectiveCheckInTime = punchData?.checkInTime || faceData?.checkInTime;
-      const breakDurationMins = punchData?.breakDurationMinutes ?? 0;
-      const breakDurationSec = Math.max(0, Math.round(breakDurationMins * 60));
-      setBreakSec(breakDurationSec);
-
-      if (effectiveCheckInTime) {
-        const inDate = new Date(effectiveCheckInTime);
-        if (!isNaN(inDate.getTime())) {
-          checkInTimeRef.current = inDate;
-          const elapsedSec = Math.max(0, Math.floor((Date.now() - inDate.getTime()) / 1000));
-
-          if (currentStatus === "checked-in" || currentStatus === "on-break") {
-            setWorkSec(elapsedSec);
-            const computedActive = Math.max(0, elapsedSec - breakDurationSec);
-            setActiveSec(punchData?.activeSeconds != null ? punchData.activeSeconds : computedActive);
-          } else if (currentStatus === "checked-out") {
-            const effectiveWorkHours = punchData?.workingHours ?? faceData?.workingHours;
-            if (typeof effectiveWorkHours === "number" && effectiveWorkHours > 0) {
-              const totalSec = Math.round(effectiveWorkHours * 3600);
-              setWorkSec(totalSec);
-              setActiveSec(Math.max(0, totalSec - breakDurationSec));
-            } else {
-              const outTime = punchData?.checkOutTime || faceData?.checkOutTime;
-              if (outTime) {
-                const outDate = new Date(outTime);
-                const totalSec = Math.max(0, Math.floor((outDate.getTime() - inDate.getTime()) / 1000));
-                setWorkSec(totalSec);
-                setActiveSec(Math.max(0, totalSec - breakDurationSec));
-              } else {
-                setWorkSec(elapsedSec);
-                setActiveSec(Math.max(0, elapsedSec - breakDurationSec));
-              }
-            }
-          }
+        if (fs.faceRegistered === true) {
+          setFaceEnrollmentState("ENROLLED");
+          setEnrolledAt(fs.enrolled_at || null);
+        } else if (fs.faceRegistered === false) {
+          setFaceEnrollmentState("NOT_ENROLLED");
+        } else {
+          setFaceEnrollmentState("STATUS_UNAVAILABLE");
+        }
+      } else if (faceStatusRes.status === "rejected") {
+        const err = faceStatusRes.reason;
+        const errorCode = extractErrorCode(err);
+        if (errorCode === "FACE_NOT_ENROLLED" || 
+            errorCode === "face_not_enrolled" ||
+            err?.message?.toLowerCase().includes("face not enrolled") ||
+            err?.message?.toLowerCase().includes("not enrolled")) {
+          setFaceEnrollmentState("NOT_ENROLLED");
+        } else {
+          setFaceEnrollmentState("STATUS_UNAVAILABLE");
         }
       }
 
-      // 4. Populate Timeline, History, Holidays, and Employee Details
+      // 2. Process Today's Attendance (single source of truth)
+      // Combine data from punchRes (TodayPunchStatus) and faceStatusRes (FaceAttendanceStatus)
+      let todayData: AttendanceTodayResponse | null = null;
+      let faceData: FaceAttendanceStatus | null = null;
+      
+      if (punchRes.status === "fulfilled") {
+        const punchData = punchRes.value as TodayPunchStatus;
+        faceData = faceStatusRes.status === "fulfilled" ? faceStatusRes.value : null;
+        
+        // Build AttendanceTodayResponse from both sources
+        todayData = {
+          checked_in: punchData.checkedIn,
+          checked_out: punchData.checkedOut,
+          check_in_time: punchData.checkInTime,
+          check_out_time: punchData.checkOutTime,
+          working_hours: punchData.workingHours,
+          break_duration_hours: punchData.breakDurationMinutes ? punchData.breakDurationMinutes / 60 : null,
+          total_break_minutes: punchData.breakDurationMinutes ?? null,
+          is_on_break: punchData.onBreak,
+          current_break: null, // Will be populated from faceData if available
+          breaks: null,
+          is_late: faceData?.shift ? (punchData.checkInTime ? checkLate(punchData.checkInTime, faceData.shift) : false) : false,
+          late_minutes: 0, // Will be calculated
+          shift: faceData?.shift ?? null,
+          is_face_enrolled: faceData?.faceRegistered ?? false,
+          face_enrolled_at: faceData?.enrolled_at ?? null,
+          verification_status: faceData?.message ?? null,
+          employee: null, // Will be populated from empRes
+          today_attendance: null,
+          timezone: faceData?.timezone,
+        };
+        
+        // Calculate late_minutes if we have check_in_time and shift
+        if (todayData.check_in_time && todayData.shift) {
+          todayData.late_minutes = calculateLateMinutes(todayData.check_in_time, todayData.shift);
+          todayData.is_late = todayData.late_minutes > 0;
+        }
+        
+        setTodayAttendance(todayData);
+      }
+
+      // 3. Derive attendance state from backend response
+      let derivedState: AttendanceState = "NOT_CHECKED_IN";
+      if (todayData) {
+        if (todayData.checked_out) {
+          derivedState = "CHECKED_OUT";
+        } else if (todayData.is_on_break) {
+          derivedState = "ON_BREAK";
+        } else if (todayData.checked_in) {
+          derivedState = "CHECKED_IN";
+        } else {
+          derivedState = "NOT_CHECKED_IN";
+        }
+      }
+      setAttendanceState(derivedState);
+
+      // 4. Initialize timer state from backend timestamps
+      if (todayData) {
+        let checkInTs: Date | null = null;
+        let breakStartTs: Date | null = null;
+        let totalBreakSec = 0;
+
+        if (todayData.check_in_time) {
+          const d = new Date(todayData.check_in_time);
+          if (!isNaN(d.getTime())) checkInTs = d;
+        }
+
+        if (todayData.current_break?.break_start) {
+          const d = new Date(todayData.current_break.break_start);
+          if (!isNaN(d.getTime())) breakStartTs = d;
+        }
+
+        if (todayData.total_break_minutes) {
+          totalBreakSec = todayData.total_break_minutes * 60;
+        } else if (todayData.break_duration_hours) {
+          totalBreakSec = Math.round(todayData.break_duration_hours * 3600);
+        }
+
+        const now = Date.now();
+        let work = 0;
+        let active = 0;
+
+        if (checkInTs) {
+          const elapsed = Math.max(0, Math.floor((now - checkInTs.getTime()) / 1000));
+          work = elapsed;
+          
+          if (derivedState === "CHECKED_IN") {
+            active = Math.max(0, elapsed - totalBreakSec);
+          } else if (derivedState === "ON_BREAK" && breakStartTs) {
+            const breakElapsed = Math.max(0, Math.floor((now - breakStartTs.getTime()) / 1000));
+            const currentBreakSec = totalBreakSec + breakElapsed;
+            active = Math.max(0, elapsed - currentBreakSec);
+          } else if (derivedState === "CHECKED_OUT" && todayData.check_out_time) {
+            const outTs = new Date(todayData.check_out_time);
+            if (!isNaN(outTs.getTime())) {
+              const totalElapsed = Math.max(0, Math.floor((outTs.getTime() - checkInTs.getTime()) / 1000));
+              work = totalElapsed;
+              active = Math.max(0, totalElapsed - totalBreakSec);
+            }
+          }
+        }
+
+        setTimerState({
+          workSec: work,
+          breakSec: totalBreakSec,
+          activeSec: active,
+          checkInTime: checkInTs,
+          breakStartTime: breakStartTs,
+        });
+      } else {
+        setTimerState({
+          workSec: 0,
+          breakSec: 0,
+          activeSec: 0,
+          checkInTime: null,
+          breakStartTime: null,
+        });
+      }
+
+      // 5. Populate Timeline, History, Holidays, Employee Details
       if (timelineRes.status === "fulfilled" && Array.isArray(timelineRes.value)) {
         setTimeline(timelineRes.value);
       }
@@ -633,9 +814,9 @@ function CheckInPage() {
       }
     } catch (err: any) {
       console.error("Error loading attendance state:", err);
-      setApiError(err?.message || "Failed to load real attendance data from backend.");
-    } finally {
-      setPageLoading(false);
+      setApiError(err?.message || "Failed to load attendance data from backend.");
+      setAttendanceState("STATUS_UNAVAILABLE");
+      setFaceEnrollmentState("STATUS_UNAVAILABLE");
     }
   }, []);
 
@@ -643,8 +824,8 @@ function CheckInPage() {
     loadAttendanceState();
   }, [loadAttendanceState]);
 
-  // ── Capture & Register Face (Condition A & Task 4 Re-Enroll) ─
-  async function executeEnrollFace(base64: string, allowReEnroll = true) {
+  // ── Capture & Register Face (allowReEnroll: false by default) ─
+  const executeEnrollFace = useCallback(async (base64: string, allowReEnroll = false) => {
     setEnrollError(null);
     setIsEnrolling(true);
     try {
@@ -653,7 +834,7 @@ function CheckInPage() {
       showToast(successMsg, "success");
       sonnerToast.success(successMsg);
 
-      setIsFaceEnrolled(true);
+      setFaceEnrollmentState("ENROLLED");
       setShowEnrollModal(false);
       setShowReEnrollConfirm(false);
       setPendingEnrollBase64(null);
@@ -681,9 +862,9 @@ function CheckInPage() {
     } finally {
       setIsEnrolling(false);
     }
-  }
+  }, [showToast, stopModalCamera, loadAttendanceState]);
 
-  async function handleCaptureAndRegisterFace() {
+  const handleCaptureAndRegisterFace = useCallback(async () => {
     setEnrollError(null);
     const base64 = uploadedPhotoBase64 || captureModalBase64();
     if (!base64) {
@@ -692,45 +873,54 @@ function CheckInPage() {
       showToast(msg, "error");
       return;
     }
-    await executeEnrollFace(base64, true);
-  }
+    // Use allowReEnroll: false for initial enrollment
+    await executeEnrollFace(base64, false);
+  }, [uploadedPhotoBase64, captureModalBase64, executeEnrollFace, showToast]);
 
   // ── Face Check-In Trigger ────────────────────────────────────
-  function handleCheckIn() {
-    if (isFaceEnrolled === false) {
+  const handleCheckIn = useCallback(() => {
+    if (faceEnrollmentState === "NOT_ENROLLED") {
       setShowEnrollModal(true);
       startModalCamera();
       showToast("Face registration required before check-in.", "error");
       sonnerToast.error("Face registration required before check-in.");
       return;
     }
-    if (status !== "not-checked-in") {
-      sonnerToast.info(status === "checked-out" ? "You have already completed attendance for today." : "You are already checked in.");
+    if (faceEnrollmentState === "STATUS_UNAVAILABLE") {
+      showToast("Cannot verify face enrollment status. Please try again.", "error");
+      return;
+    }
+    if (attendanceState !== "NOT_CHECKED_IN") {
+      sonnerToast.info(attendanceState === "CHECKED_OUT" ? "You have already completed attendance for today." : "You are already checked in.");
       return;
     }
     setFaceModalMode("check-in");
     setFaceModalOpen(true);
-  }
+  }, [faceEnrollmentState, attendanceState, showToast, startModalCamera]);
 
   // ── Face Check-Out Trigger ───────────────────────────────────
-  function handleCheckOut() {
-    if (status === "not-checked-in") {
+  const handleCheckOut = useCallback(() => {
+    if (attendanceState === "NOT_CHECKED_IN") {
       sonnerToast.error("You must check in first before checking out.");
       return;
     }
-    if (status === "checked-out") {
+    if (attendanceState === "CHECKED_OUT") {
       sonnerToast.info("You have already checked out for today.");
       return;
     }
-    if (isFaceEnrolled === false) {
+    if (faceEnrollmentState === "NOT_ENROLLED") {
       setShowEnrollModal(true);
       startModalCamera();
       sonnerToast.error("Face registration required before check-out.");
       return;
     }
+    if (faceEnrollmentState === "STATUS_UNAVAILABLE") {
+      showToast("Cannot verify face enrollment status. Please try again.", "error");
+      return;
+    }
     setFaceModalMode("check-out");
     setFaceModalOpen(true);
-  }
+  }, [attendanceState, faceEnrollmentState, showToast, startModalCamera]);
 
   // ── Successful Face Punch Callback ───────────────────────────
   const handleFaceSuccess = useCallback(
@@ -738,117 +928,97 @@ function CheckInPage() {
       let defaultMsg = "Attendance verified successfully!";
       if (faceModalMode === "check-in") {
         defaultMsg = "Attendance verified & check-in marked successfully!";
-        setStatus("checked-in");
-        const punchTime = result.checkInTime || result.time;
-        const inDate = punchTime ? new Date(punchTime) : new Date();
-        const validDate = !isNaN(inDate.getTime()) ? inDate : new Date();
-        checkInTimeRef.current = validDate;
-        const elapsedSec = Math.max(0, Math.floor((Date.now() - validDate.getTime()) / 1000));
-        setWorkSec(elapsedSec);
-        setActiveSec(elapsedSec);
+        setAttendanceState("CHECKED_IN");
       } else if (faceModalMode === "check-out") {
         defaultMsg = "Attendance verified & check-out marked successfully!";
-        setStatus("checked-out");
+        setAttendanceState("CHECKED_OUT");
       } else if (faceModalMode === "break-in") {
         defaultMsg = "Break started. Face verified.";
-        setStatus("on-break");
+        setAttendanceState("ON_BREAK");
       } else if (faceModalMode === "break-out") {
         defaultMsg = "Break ended. Welcome back!";
-        setStatus("checked-in");
+        setAttendanceState("CHECKED_IN");
       }
       const msg = result.message || defaultMsg;
       showToast(msg, "success");
       sonnerToast.success(msg);
       await loadAttendanceState();
     },
-    [faceModalMode, loadAttendanceState]
+    [faceModalMode, showToast, loadAttendanceState]
   );
 
   // ── Break In & Out Controls (Face-Verified) ───────────────────
-  function handleBreakIn() {
-    if (status !== "checked-in") {
+  const handleBreakIn = useCallback(() => {
+    if (attendanceState !== "CHECKED_IN") {
       const msg =
-        status === "on-break"
+        attendanceState === "ON_BREAK"
           ? "You are already on a break."
-          : status === "checked-out"
+          : attendanceState === "CHECKED_OUT"
           ? "You have already completed attendance for today."
           : "You must be checked in to start a break.";
       showToast(msg, "info");
       sonnerToast.info(msg);
       return;
     }
-    if (isFaceEnrolled === false) {
+    if (faceEnrollmentState === "NOT_ENROLLED") {
       setShowEnrollModal(true);
       startModalCamera();
       showToast("Face registration required before starting break.", "error");
       sonnerToast.error("Face registration required before starting break.");
       return;
     }
+    if (faceEnrollmentState === "STATUS_UNAVAILABLE") {
+      showToast("Cannot verify face enrollment status. Please try again.", "error");
+      return;
+    }
     setFaceModalMode("break-in");
     setFaceModalOpen(true);
-  }
+  }, [attendanceState, faceEnrollmentState, showToast, startModalCamera]);
 
-  function handleBreakOut() {
-    if (status !== "on-break") {
+  const handleBreakOut = useCallback(() => {
+    if (attendanceState !== "ON_BREAK") {
       const msg =
-        status === "checked-in"
+        attendanceState === "CHECKED_IN"
           ? "You are not currently on a break."
-          : status === "checked-out"
+          : attendanceState === "CHECKED_OUT"
           ? "You have already completed attendance for today."
           : "You must be on a break to end break.";
       showToast(msg, "info");
       sonnerToast.info(msg);
       return;
     }
-    if (isFaceEnrolled === false) {
+    if (faceEnrollmentState === "NOT_ENROLLED") {
       setShowEnrollModal(true);
       startModalCamera();
       showToast("Face registration required before ending break.", "error");
       sonnerToast.error("Face registration required before ending break.");
       return;
     }
+    if (faceEnrollmentState === "STATUS_UNAVAILABLE") {
+      showToast("Cannot verify face enrollment status. Please try again.", "error");
+      return;
+    }
     setFaceModalMode("break-out");
     setFaceModalOpen(true);
-  }
+  }, [attendanceState, faceEnrollmentState, showToast, startModalCamera]);
 
-  // ── Overtime & Late calculation based on real backend data ────
-  const shiftSummary = faceAttendanceStatus?.shift;
-  const expectedHours = shiftSummary?.grace_period_mins != null 
-    ? Math.round((parseTimeToMinutes(shiftSummary.end_time) - parseTimeToMinutes(shiftSummary.start_time) + (shiftSummary.is_overnight ? 1440 : 0) - shiftSummary.grace_period_mins) / 60)
-    : null;
-  const overtimeSec = expectedHours != null ? Math.max(0, workSec - expectedHours * 3600) : 0;
-
-  const shiftStartStr = shiftSummary?.start_time;
-  const graceMinutes = shiftSummary?.grace_period_mins ?? 0;
-
-  const lateBy = (() => {
-    if (!checkInTimeRef.current || !shiftStartStr) return 0;
-    const checkInDate = new Date(checkInTimeRef.current);
-    let shiftH = 0;
-    let shiftM = 0;
-    const is12Hour = shiftStartStr.includes("AM") || shiftStartStr.includes("PM");
-    if (is12Hour) {
-      const parts = shiftStartStr.trim().split(/\s+/);
-      const [hStr, mStr] = (parts[0] || "").split(":");
-      let h = parseInt(hStr, 10) || 0;
-      const m = parseInt(mStr, 10) || 0;
-      if (parts[1]?.toUpperCase() === "PM" && h < 12) h += 12;
-      if (parts[1]?.toUpperCase() === "AM" && h === 12) h = 0;
-      shiftH = h;
-      shiftM = m;
-    } else {
-      const [hStr, mStr] = shiftStartStr.split(":");
-      shiftH = parseInt(hStr, 10) || 0;
-      shiftM = parseInt(mStr, 10) || 0;
-    }
-
-const shiftStart = new Date(checkInDate);
-    shiftStart.setHours(shiftH, shiftM, 0, 0);
-    const diffSec = Math.floor((checkInDate.getTime() - shiftStart.getTime()) / 1000);
-    const graceSec = graceMinutes * 60;
-    return diffSec > graceSec ? diffSec : 0;
+  // ── Overtime & Late calculation from BACKEND data (not frontend) ────
+  // Use backend-provided overtime hours if available
+  const overtimeSec = todayAttendance?.overtime_hours ? todayAttendance.overtime_hours * 3600 : 0;
+  // Fallback to frontend calculation if backend doesn't provide overtime
+  const fallbackOvertimeSec = (() => {
+    const shiftSummary = todayAttendance?.shift || faceAttendanceStatus?.shift;
+    const expectedHours = shiftSummary?.grace_period_mins != null 
+      ? Math.round((parseTimeToMinutes(shiftSummary.end_time) - parseTimeToMinutes(shiftSummary.start_time) + (shiftSummary.is_overnight ? 1440 : 0) - shiftSummary.grace_period_mins) / 60)
+      : null;
+    return expectedHours != null ? Math.max(0, workSec - expectedHours * 3600) : 0;
   })();
-  
+  const displayOvertimeSec = todayAttendance?.overtime_hours ? overtimeSec : fallbackOvertimeSec;
+
+  // Use backend-provided late minutes instead of frontend calculation
+  const lateBy = todayAttendance?.late_minutes ? todayAttendance.late_minutes * 60 : 0;
+  const isLate = todayAttendance?.is_late ?? false;
+
   const initials =
     user?.fullName
       ?.split(" ")
@@ -857,7 +1027,7 @@ const shiftStart = new Date(checkInDate);
       .join("") || "EM";
 
   // System/device info
-  const browserInfo = (() => {
+  const browserInfo = useMemo(() => {
     if (typeof navigator === "undefined") return "Web Browser";
     const ua = navigator.userAgent;
     if (ua.includes("Chrome")) return "Chrome";
@@ -865,17 +1035,29 @@ const shiftStart = new Date(checkInDate);
     if (ua.includes("Firefox")) return "Firefox";
     if (ua.includes("Edge")) return "Edge";
     return "Browser";
-  })();
+  }, []);
 
   const platformInfo = typeof navigator !== "undefined" ? navigator.platform || "Desktop" : "Desktop";
   const onlineStatus = typeof navigator !== "undefined" && navigator.onLine ? "Online" : "Offline";
   const screenSize = typeof window !== "undefined" ? `${window.screen.width} × ${window.screen.height}` : "Desktop";
 
-  if (pageLoading) {
+  if (attendanceState === "LOADING") {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3">
         <RefreshCw className="h-8 w-8 animate-spin text-primary" />
         <p className="text-sm text-muted-foreground font-medium">Connecting to attendance services...</p>
+      </div>
+    );
+  }
+
+  if (attendanceState === "STATUS_UNAVAILABLE") {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3">
+        <AlertCircle className="h-8 w-8 text-destructive" />
+        <p className="text-sm text-muted-foreground font-medium">Status Unavailable</p>
+        <Button onClick={loadAttendanceState} className="gap-1 text-xs">
+          <RefreshCw className="h-3 w-3" /> Retry
+        </Button>
       </div>
     );
   }
@@ -910,8 +1092,8 @@ const shiftStart = new Date(checkInDate);
         </div>
       )}
 
-      {/* ── Mandatory Face Registration Alert Banner (Condition A) ── */}
-      {isFaceEnrolled === false && (
+      {/* ── Mandatory Face Registration Alert Banner ── */}
+      {faceEnrollmentState === "NOT_ENROLLED" && (
         <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
@@ -944,6 +1126,37 @@ const shiftStart = new Date(checkInDate);
         </div>
       )}
 
+      {/* ── Enrollment Status Unavailable ── */}
+      {faceEnrollmentState === "STATUS_UNAVAILABLE" && attendanceState !== "CHECKED_OUT" && (
+        <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-muted/10 text-muted-foreground border border-muted/20">
+                <HelpCircle className="h-6 w-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-display text-sm sm:text-base font-semibold text-foreground">
+                    Face Enrollment Status Unknown
+                  </h3>
+                  <Badge variant="outline" className={`text-[10px] font-bold ${statusBadgeClass("warning")}`}>Unavailable</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1 max-w-xl">
+                  Unable to verify your biometric enrollment status. Please try refreshing or contact support if the issue persists.
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              onClick={loadAttendanceState}
+              className="w-full sm:w-auto shrink-0 gap-2"
+            >
+              <RefreshCw className="h-4 w-4" /> Retry
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* ── Main Grid ── */}
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         {/* Left 2 Cols: Check-in, Timer, Actions, History */}
@@ -960,7 +1173,7 @@ const shiftStart = new Date(checkInDate);
                     </div>
                     <div
                       className={`absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background ${
-  status === "checked-in" ? "bg-primary" : status === "on-break" ? "bg-muted-foreground" : "bg-muted-foreground"
+    attendanceState === "CHECKED_IN" ? "bg-primary" : attendanceState === "ON_BREAK" ? "bg-muted-foreground" : attendanceState === "CHECKED_OUT" ? "bg-success" : "bg-muted-foreground"
                       }`}
                     />
                   </div>
@@ -984,7 +1197,7 @@ const shiftStart = new Date(checkInDate);
                   <div className="text-xs text-muted-foreground uppercase tracking-wide">Working Today</div>
                   <div className="font-mono text-2xl font-bold tabular-nums">{fmtHM(workSec)}</div>
                   <div className="text-xs text-muted-foreground">
-                    {status === "checked-in" ? "Shift in progress" : status === "checked-out" ? "Shift completed" : "Awaiting check-in"}
+                    {attendanceState === "CHECKED_IN" ? "Shift in progress" : attendanceState === "CHECKED_OUT" ? "Shift completed" : attendanceState === "ON_BREAK" ? "On break" : "Awaiting check-in"}
                   </div>
                 </div>
               </div>
@@ -994,21 +1207,28 @@ const shiftStart = new Date(checkInDate);
                 <div className="relative">
                   <AttendBtn
                     label={
-                      isFaceEnrolled === false
+                      faceEnrollmentState === "NOT_ENROLLED"
                         ? "Face Required"
-                        : status === "checked-in" || status === "on-break"
+                        : faceEnrollmentState === "STATUS_UNAVAILABLE"
+                        ? "Status Unknown"
+                        : attendanceState === "CHECKED_IN" || attendanceState === "ON_BREAK"
                         ? "Checked In Today"
-                        : status === "checked-out"
+                        : attendanceState === "CHECKED_OUT"
                         ? "Day Complete"
                         : "Face Check-In"
                     }
                     icon={LogIn}
                     onClick={handleCheckIn}
-                    disabled={status !== "not-checked-in" || isFaceEnrolled === false || loading !== null || faceModalOpen}
+                    disabled={
+                      attendanceState !== "NOT_CHECKED_IN" || 
+                      faceEnrollmentState !== "ENROLLED" || 
+                      loading !== null || 
+                      faceModalOpen
+                    }
                     variant="success"
                     loading={loading === "checkin"}
                   />
-                  {isFaceEnrolled === false && (
+                  {faceEnrollmentState === "NOT_ENROLLED" && (
                     <span className="absolute -top-2 right-1 rounded-full bg-primary px-1.5 py-0.5 text-[9px] font-extrabold text-primary-foreground uppercase tracking-wide shadow-sm">
                       Enroll First
                     </span>
@@ -1018,7 +1238,7 @@ const shiftStart = new Date(checkInDate);
                   label="Break In"
                   icon={Coffee}
                   onClick={handleBreakIn}
-                  disabled={status !== "checked-in" || loading !== null || faceModalOpen}
+                  disabled={attendanceState !== "CHECKED_IN" || loading !== null || faceModalOpen}
                   variant="warning"
                   loading={loading === "breakin"}
                 />
@@ -1026,21 +1246,25 @@ const shiftStart = new Date(checkInDate);
                   label="Break Out"
                   icon={Play}
                   onClick={handleBreakOut}
-                  disabled={status !== "on-break" || loading !== null || faceModalOpen}
+                  disabled={attendanceState !== "ON_BREAK" || loading !== null || faceModalOpen}
                   variant="primary"
                   loading={loading === "breakout"}
                 />
                 <AttendBtn
                   label={
-                    status === "not-checked-in"
+                    attendanceState === "NOT_CHECKED_IN"
                       ? "Check In First"
-                      : status === "checked-out"
+                      : attendanceState === "CHECKED_OUT"
                       ? "Checked Out Today"
                       : "Face Check-Out"
                   }
                   icon={LogOut}
                   onClick={handleCheckOut}
-                  disabled={(status !== "checked-in" && status !== "on-break") || loading !== null || faceModalOpen}
+                  disabled={
+                    (attendanceState !== "CHECKED_IN" && attendanceState !== "ON_BREAK") || 
+                    loading !== null || 
+                    faceModalOpen
+                  }
                   variant="danger"
                   loading={loading === "checkout"}
                 />
@@ -1051,15 +1275,15 @@ const shiftStart = new Date(checkInDate);
                 <div className="flex items-center gap-2">
                   <span
                     className={`h-2 w-2 rounded-full ${
-status === "checked-in" ? "bg-primary animate-pulse" : status === "on-break" ? "bg-muted-foreground animate-pulse" : "bg-muted-foreground"
+    attendanceState === "CHECKED_IN" ? "bg-primary animate-pulse" : attendanceState === "ON_BREAK" ? "bg-muted-foreground animate-pulse" : attendanceState === "CHECKED_OUT" ? "bg-success" : "bg-muted-foreground"
                     }`}
                   />
                   <span className="font-medium">
-                    {status === "not-checked-in"
+                    {attendanceState === "NOT_CHECKED_IN"
                       ? "Not Checked In"
-                      : status === "checked-in"
+                      : attendanceState === "CHECKED_IN"
                       ? "Currently Working"
-                      : status === "on-break"
+                      : attendanceState === "ON_BREAK"
                       ? "On Break"
                       : "Day Complete"}
                   </span>
@@ -1069,9 +1293,9 @@ status === "checked-in" ? "bg-primary animate-pulse" : status === "on-break" ? "
                     Break: <strong className="text-foreground">{fmtHM(breakSec)}</strong>
                   </span>
                   <span>
-                    OT: <strong className={overtimeSec > 0 ? "text-primary" : "text-foreground"}>{fmtHM(overtimeSec)}</strong>
+                    OT: <strong className={displayOvertimeSec > 0 ? "text-primary" : "text-foreground"}>{fmtHM(displayOvertimeSec)}</strong>
                   </span>
-                  {lateBy > 0 && (
+                  {isLate && lateBy > 0 && (
                     <span>
                       Late by: <strong className="text-foreground">{fmtHM(lateBy)}</strong>
                     </span>
@@ -1085,13 +1309,13 @@ status === "checked-in" ? "bg-primary animate-pulse" : status === "on-break" ? "
           <GlassCard>
             <SectionHeader title="Live Working Timer" icon={Timer} />
             <div className="flex flex-col items-center gap-6 py-4">
-              <DigitalTimer seconds={workSec} running={status === "checked-in"} />
+              <DigitalTimer seconds={workSec} running={attendanceState === "CHECKED_IN" || attendanceState === "ON_BREAK"} />
               <div className="grid grid-cols-2 gap-3 w-full sm:grid-cols-4">
                 {[
                   { label: "Total Work", value: fmtHM(workSec) },
                   { label: "Active Time", value: fmtHM(activeSec) },
                   { label: "Break Time", value: fmtHM(breakSec) },
-                  { label: "Overtime", value: fmtHM(overtimeSec) },
+                  { label: "Overtime", value: fmtHM(displayOvertimeSec) },
                 ].map((item) => (
                   <div key={item.label} className="rounded-xl border border-border bg-card p-3 text-center">
                     <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{item.label}</div>
@@ -1109,44 +1333,48 @@ status === "checked-in" ? "bg-primary animate-pulse" : status === "on-break" ? "
               <StatCard
                 label="Working Hours"
                 value={fmtHM(workSec)}
-                hint={faceAttendanceStatus?.shift?.grace_period_mins != null ? `Expected: ${Math.round((parseTimeToMinutes(faceAttendanceStatus.shift.end_time) - parseTimeToMinutes(faceAttendanceStatus.shift.start_time) + (faceAttendanceStatus.shift.is_overnight ? 1440 : 0) - faceAttendanceStatus.shift.grace_period_mins) / 60)}h` : "Flexible"}
+                hint={todayAttendance?.shift?.grace_period_mins != null ? `Expected: ${Math.round((parseTimeToMinutes(todayAttendance.shift.end_time) - parseTimeToMinutes(todayAttendance.shift.start_time) + (todayAttendance.shift.is_overnight ? 1440 : 0) - todayAttendance.shift.grace_period_mins) / 60)}h` : "Flexible"}
                 icon={Clock}
                 accent="brand"
               />
               <StatCard
                 label="Break Duration"
                 value={fmtHM(breakSec)}
-                hint={faceAttendanceStatus?.shift?.break_duration_mins ? `Standard: ${faceAttendanceStatus.shift.break_duration_mins} min` : "Recorded time"}
+                hint={todayAttendance?.shift?.break_duration_mins ? `Standard: ${todayAttendance.shift.break_duration_mins} min` : "Recorded time"}
                 icon={Coffee}
                 accent="warning"
               />
               <StatCard
                 label="Overtime"
-                value={fmtHM(overtimeSec)}
-                hint={overtimeSec > 0 ? "Eligible for OT" : "Standard hours"}
+                value={fmtHM(displayOvertimeSec)}
+                hint={displayOvertimeSec > 0 ? "Eligible for OT" : "Standard hours"}
                 icon={Zap}
                 accent="success"
               />
               <StatCard
                 label="Late By"
-                value={lateBy > 0 ? fmtHM(lateBy) : "On Time"}
-                hint={faceAttendanceStatus?.shift?.grace_period_mins ? `Grace: ${faceAttendanceStatus.shift.grace_period_mins}m` : "Standard timing"}
+                value={isLate && lateBy > 0 ? fmtHM(lateBy) : "On Time"}
+                hint={todayAttendance?.shift?.grace_period_mins ? `Grace: ${todayAttendance.shift.grace_period_mins}m` : "Standard timing"}
                 icon={AlertCircle}
-                accent={lateBy > 0 ? "danger" : "success"}
+                accent={isLate ? "danger" : "success"}
               />
               <StatCard
                 label="Check In Time"
-                value={checkInTimeRef.current ? checkInTimeRef.current.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }) : "—"}
-                hint={checkInTimeRef.current ? "Recorded today" : "Pending check-in"}
+                value={checkInTime ? checkInTime.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }) : "—"}
+                hint={checkInTime ? "Recorded today" : "Pending check-in"}
                 icon={LogIn}
                 accent="brand"
               />
               <StatCard
                 label="Current Status"
-                value={status === "checked-in" ? "Working" : status === "on-break" ? "On Break" : status === "checked-out" ? "Checked Out" : "Not In"}
+                value={
+                  attendanceState === "CHECKED_IN" ? "Working" : 
+                  attendanceState === "ON_BREAK" ? "On Break" : 
+                  attendanceState === "CHECKED_OUT" ? "Checked Out" : "Not In"
+                }
                 hint={nowDateStr()}
                 icon={CheckCircle2}
-                accent={status === "checked-in" ? "success" : "muted"}
+                accent={attendanceState === "CHECKED_IN" ? "success" : "muted"}
               />
             </div>
           </div>
@@ -1237,30 +1465,35 @@ status === "checked-in" ? "bg-primary animate-pulse" : status === "on-break" ? "
             <GlassCard className="relative overflow-hidden">
               <div className="flex items-center justify-between mb-4">
                 <SectionHeader title="Biometric Face Attendance" icon={ScanFace} />
-                {isFaceEnrolled !== null && (
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${statusBadgeClass(isFaceEnrolled ? "approved" : "warning")}`}
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${statusBadgeClass(
+                      faceEnrollmentState === "ENROLLED" ? "approved" : 
+                      faceEnrollmentState === "NOT_ENROLLED" ? "warning" : "default"
+                    )}`}
+                  >
+                    <span className={`h-1.5 w-1.5 rounded-full ${
+                      faceEnrollmentState === "ENROLLED" ? "bg-primary" : 
+                      faceEnrollmentState === "NOT_ENROLLED" ? "bg-muted-foreground animate-pulse" : "bg-muted-foreground"
+                    }`} />
+                    {faceEnrollmentState === "ENROLLED" ? "Face Profile Active" : 
+                     faceEnrollmentState === "NOT_ENROLLED" ? "Registration Required" : "Status Unknown"}
+                  </span>
+                  {faceEnrollmentState === "ENROLLED" && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setShowEnrollModal(true);
+                        startModalCamera();
+                      }}
+                      className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground"
                     >
-                      <span className={`h-1.5 w-1.5 rounded-full ${isFaceEnrolled ? "bg-primary" : "bg-muted-foreground animate-pulse"}`} />
-                      {isFaceEnrolled ? "Face Profile Active" : "Registration Required"}
-                    </span>
-                    {isFaceEnrolled && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setShowEnrollModal(true);
-                          startModalCamera();
-                        }}
-                        className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground"
-                      >
-                        Re-enroll
-                      </Button>
-                    )}
-                  </div>
-                )}
+                      Re-enroll
+                    </Button>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-4">
@@ -1293,7 +1526,7 @@ status === "checked-in" ? "bg-primary animate-pulse" : status === "on-break" ? "
 
                 {/* Primary Action Button */}
                 <div>
-                  {isFaceEnrolled === false ? (
+                  {faceEnrollmentState === "NOT_ENROLLED" ? (
                     <Button
                       onClick={() => {
                         setShowEnrollModal(true);
@@ -1303,14 +1536,22 @@ status === "checked-in" ? "bg-primary animate-pulse" : status === "on-break" ? "
                     >
                       <ScanFace className="h-4 w-4" /> Register Face Profile
                     </Button>
-                  ) : status === "not-checked-in" ? (
+                  ) : faceEnrollmentState === "STATUS_UNAVAILABLE" ? (
+                    <Button
+                      variant="outline"
+                      onClick={loadAttendanceState}
+                      className="w-full gap-2 text-xs"
+                    >
+                      <RefreshCw className="h-4 w-4" /> Retry Status Check
+                    </Button>
+                  ) : attendanceState === "NOT_CHECKED_IN" ? (
                     <Button
                       onClick={handleCheckIn}
                       className="w-full gap-2 text-xs"
                     >
                       <LogIn className="h-4 w-4" /> Start Face Check-In
                     </Button>
-                  ) : status === "checked-in" || status === "on-break" ? (
+                  ) : attendanceState === "CHECKED_IN" || attendanceState === "ON_BREAK" ? (
                     <Button
                       onClick={handleCheckOut}
                       variant="destructive" className="w-full gap-2 text-xs"
@@ -1388,7 +1629,12 @@ status === "checked-in" ? "bg-primary animate-pulse" : status === "on-break" ? "
           {/* ── Calendar ── */}
           <GlassCard>
             <SectionHeader title="Monthly Attendance Calendar" icon={CalendarDays} />
-            <MiniCalendar history={historyList} />
+            <MiniCalendar 
+              history={historyList} 
+              todayAttendance={todayAttendance}
+              holidays={holidays}
+              shiftSchedule={todayAttendance?.shift ? { workingDays: todayAttendance.shift.working_days } : null}
+            />
           </GlassCard>
 
           {/* ── Real Attendance History Table ── */}
@@ -1461,29 +1707,29 @@ status === "checked-in" ? "bg-primary animate-pulse" : status === "on-break" ? "
                 </div>
                 <div>
                   <div className="font-semibold text-foreground">
-                    {status === "checked-in"
+                    {attendanceState === "CHECKED_IN"
                       ? "Active Shift"
-                      : status === "on-break"
+                      : attendanceState === "ON_BREAK"
                       ? "On Break"
-                      : status === "checked-out"
+                      : attendanceState === "CHECKED_OUT"
                       ? "Shift Finished"
                       : "Awaiting Punch"}
                   </div>
                   <div className="text-muted-foreground mt-0.5">
-                    {checkInTimeRef.current
-                      ? `Checked in at ${checkInTimeRef.current.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}`
+                    {checkInTime
+                      ? `Checked in at ${checkInTime.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}`
                       : "Punch in to begin recording today's work hours."}
                   </div>
                 </div>
               </div>
 
-              {lateBy > 0 && (
+              {isLate && lateBy > 0 && (
                 <div className="flex items-start gap-3 rounded-lg border border-border bg-muted p-2.5">
                   <AlertCircle className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                   <div>
                     <div className="font-semibold text-foreground">Late Punch Alert</div>
                     <div className="text-[11px] text-muted-foreground mt-0.5">
-                      Shift arrival was recorded after the standard 15-minute grace window.
+                      Shift arrival was recorded after the standard grace window.
                     </div>
                   </div>
                 </div>

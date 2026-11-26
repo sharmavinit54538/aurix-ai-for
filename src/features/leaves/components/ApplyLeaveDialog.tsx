@@ -55,6 +55,8 @@ export function ApplyLeaveDialog({
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
   const [dateError, setDateError] = useState<string | null>(null);
+  const [reasonError, setReasonError] = useState<string | null>(null);
+  const [startError, setStartError] = useState<string | null>(null);
 
   const todayStr = getTodayDateString();
 
@@ -77,6 +79,8 @@ export function ApplyLeaveDialog({
       setReason("");
       setLoading(false);
       setDateError(null);
+      setStartError(null);
+      setReasonError(null);
     }
   }, [open]);
 
@@ -122,13 +126,27 @@ export function ApplyLeaveDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (calculatedDays <= 0) {
-      toast.error("Invalid dates selected. End date must be on or after start date.");
-      return;
+    let hasError = false;
+    if (!startDate) {
+      setStartError("Select a start date.");
+      hasError = true;
+    } else {
+      setStartError(null);
+    }
+
+    if (!endDate || calculatedDays <= 0) {
+      setDateError("End date must be on or after start date.");
+      hasError = true;
     }
 
     if (!reason.trim() || reason.trim().length < 5) {
-      toast.error("Please provide a valid reason (min 5 characters).");
+      setReasonError("Please provide at least 5 characters explaining your leave.");
+      hasError = true;
+    } else {
+      setReasonError(null);
+    }
+
+    if (hasError) {
       return;
     }
 
@@ -164,22 +182,22 @@ export function ApplyLeaveDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md border border-border bg-card text-foreground">
+      <DialogContent className="max-w-lg border border-border bg-card text-foreground">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl font-bold">
+          <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
             <Calendar className="h-5 w-5 text-primary" />
             Apply for Leave
           </DialogTitle>
-          <DialogDescription className="text-xs">
+          <DialogDescription className="text-sm text-muted-foreground">
             Fill in your leave details and submit to your manager for approval.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 py-2">
+        <form onSubmit={handleSubmit} noValidate className="space-y-5 py-2">
           {/* Leave Type & Balance Preview */}
           <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <Label htmlFor="apply-leave-type" className="text-sm font-medium text-foreground">
                 Leave Type
               </Label>
               <span className="text-xs text-muted-foreground">
@@ -190,7 +208,7 @@ export function ApplyLeaveDialog({
               </span>
             </div>
             <Select value={leaveType} onValueChange={setLeaveType}>
-              <SelectTrigger>
+              <SelectTrigger id="apply-leave-type">
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
@@ -204,11 +222,11 @@ export function ApplyLeaveDialog({
           </div>
 
           {/* Date pickers */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label
                 htmlFor="apply-start-date"
-                className="text-xs font-semibold text-muted-foreground uppercase"
+                className="text-sm font-medium text-foreground"
               >
                 Start Date
               </Label>
@@ -218,13 +236,24 @@ export function ApplyLeaveDialog({
                 required
                 min={minStartDate}
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                aria-invalid={Boolean(startError)}
+                aria-describedby={startError ? "apply-start-date-error" : undefined}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  if (startError) setStartError(null);
+                }}
               />
+              {startError && (
+                <p id="apply-start-date-error" className="text-xs text-destructive flex items-center gap-1" role="alert">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                  {startError}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label
                 htmlFor="apply-end-date"
-                className="text-xs font-semibold text-muted-foreground uppercase"
+                className="text-sm font-medium text-foreground"
               >
                 End Date
               </Label>
@@ -234,11 +263,16 @@ export function ApplyLeaveDialog({
                 required
                 min={minEndDate}
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                aria-invalid={Boolean(dateError)}
+                aria-describedby={dateError ? "apply-end-date-error" : undefined}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  if (dateError) setDateError(null);
+                }}
               />
               {dateError && (
-                <p className="text-xs text-destructive flex items-center gap-1" role="alert">
-                  <AlertTriangle className="h-3 w-3" />
+                <p id="apply-end-date-error" className="text-xs text-destructive flex items-center gap-1" role="alert">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
                   {dateError}
                 </p>
               )}
@@ -248,8 +282,8 @@ export function ApplyLeaveDialog({
           {/* Estimated Days Preview */}
           {calculatedDays > 0 && (
             <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg flex items-center justify-between text-sm">
-              <span className="text-muted-foreground text-xs">Estimated Duration:</span>
-              <span className="font-bold text-primary tabular-nums">
+              <span className="text-foreground/80 text-[13px]">Estimated Duration:</span>
+              <span className="font-semibold text-primary tabular-nums">
                 {calculatedDays} {calculatedDays === 1 ? "day" : "days"} (estimated)
               </span>
             </div>
@@ -257,8 +291,8 @@ export function ApplyLeaveDialog({
 
           {/* Estimated days label */}
           {calculatedDays > 0 && (
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <Info className="h-3 w-3" />
+            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+              <Info className="h-3.5 w-3.5 shrink-0" />
               Estimated (calendar days). Final days are calculated by the server.
             </p>
           )}
@@ -278,7 +312,7 @@ export function ApplyLeaveDialog({
           <div className="space-y-2">
             <Label
               htmlFor="apply-reason-input"
-              className="text-xs font-semibold text-muted-foreground uppercase"
+              className="text-sm font-medium text-foreground"
             >
               Reason for absence
             </Label>
@@ -286,10 +320,23 @@ export function ApplyLeaveDialog({
               id="apply-reason-input"
               required
               value={reason}
-              onChange={(e) => setReason(e.target.value)}
+              aria-invalid={Boolean(reasonError)}
+              aria-describedby={reasonError ? "apply-reason-error" : undefined}
+              onChange={(e) => {
+                setReason(e.target.value);
+                if (reasonError && e.target.value.trim().length >= 5) {
+                  setReasonError(null);
+                }
+              }}
               placeholder="Describe why you need time off (min 5 characters)..."
-              className="min-h-[90px]"
+              className="min-h-[96px]"
             />
+            {reasonError && (
+              <p id="apply-reason-error" className="text-xs text-destructive flex items-center gap-1" role="alert">
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                {reasonError}
+              </p>
+            )}
           </div>
 
           <DialogFooter className="gap-2 pt-2">

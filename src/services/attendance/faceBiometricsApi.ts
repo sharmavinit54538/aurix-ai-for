@@ -13,28 +13,20 @@ import {
 
 /**
  * Get the authenticated employee's face attendance status.
- * Calls GET /api/v1/attendance/face/me.
- * Infers face enrollment from the API response:
- * - A successful response means the employee is recognized (face registered).
- * - A specific error (e.g. FACE_NOT_ENROLLED) means no face enrolled.
- * - A 404 with no face enrollment indication means the endpoint isn't available.
+ * Calls GET /api/v1/attendance/face/me (canonical endpoint).
+ * Returns explicit enrollment status from backend response.
  */
 export async function getFaceAttendanceStatus(): Promise<FaceAttendanceStatus> {
   try {
     const res: any = await api.get("attendance/face/me");
     const data = extractObjectPayload<any>(res);
 
-    // Inspect live backend response for explicit enrollment status fields.
-    // Read is_face_enrolled first (and camelCase isFaceEnrolled).
-    let faceRegistered: boolean | undefined = undefined;
+    // Read explicit enrollment status from backend
+    let faceRegistered: boolean = false;
     if (typeof data.is_face_enrolled === "boolean") faceRegistered = data.is_face_enrolled;
     else if (typeof data.isFaceEnrolled === "boolean") faceRegistered = data.isFaceEnrolled;
     else if (typeof data.face_registered === "boolean") faceRegistered = data.face_registered;
     else if (typeof data.faceRegistered === "boolean") faceRegistered = data.faceRegistered;
-    else if (typeof data.is_registered === "boolean") faceRegistered = data.is_registered;
-    else if (typeof data.isRegistered === "boolean") faceRegistered = data.isRegistered;
-    else if (typeof data.is_face_registered === "boolean") faceRegistered = data.is_face_registered;
-    else if (typeof data.isFaceRegistered === "boolean") faceRegistered = data.isFaceRegistered;
     else if (typeof data.is_enrolled === "boolean") faceRegistered = data.is_enrolled;
     else if (typeof data.isEnrolled === "boolean") faceRegistered = data.isEnrolled;
     else if (typeof data.face_enrolled === "boolean") faceRegistered = data.face_enrolled;
@@ -42,8 +34,12 @@ export async function getFaceAttendanceStatus(): Promise<FaceAttendanceStatus> {
     else if (typeof data.enrolled === "boolean") faceRegistered = data.enrolled;
     else if (typeof data.has_face === "boolean") faceRegistered = data.has_face;
     else if (typeof data.hasFace === "boolean") faceRegistered = data.hasFace;
-    else if (data.enrollment_status === "not_enrolled" || data.enrollmentStatus === "not_enrolled") faceRegistered = false;
     else if (data.enrollment_status === "enrolled" || data.enrollmentStatus === "enrolled") faceRegistered = true;
+    else if (data.enrollment_status === "not_enrolled" || data.enrollmentStatus === "not_enrolled") faceRegistered = false;
+    else {
+      // If no explicit flag, do NOT assume enrolled. Return faceRegistered: false.
+      faceRegistered = false;
+    }
 
     let enrolledAt =
       data.face_enrolled_at ||
@@ -52,24 +48,10 @@ export async function getFaceAttendanceStatus(): Promise<FaceAttendanceStatus> {
       data.enrolledAt ||
       null;
 
-    // Remove the unsafe default of true. If no known flag is present, call getFaceStatus()
-    // (/attendance/face-status) as the authoritative source; if that also fails, return faceRegistered = false (not true).
-    if (faceRegistered === undefined) {
-      try {
-        const statusRes = await getFaceStatus();
-        faceRegistered = Boolean(statusRes.is_enrolled ?? statusRes.faceRegistered ?? false);
-        if (!enrolledAt && statusRes.enrolled_at) {
-          enrolledAt = statusRes.enrolled_at;
-        }
-      } catch {
-        faceRegistered = false;
-      }
-    }
-
     const punchStatus = parseTodayPunchData(res);
 
     return {
-      faceRegistered: Boolean(faceRegistered),
+      faceRegistered,
       checkedIn: punchStatus.checkedIn,
       checkedOut: punchStatus.checkedOut,
       checkInTime: punchStatus.checkInTime,
@@ -114,9 +96,7 @@ export async function getFaceAttendanceStatus(): Promise<FaceAttendanceStatus> {
       };
     }
 
-    // If the API responds with 404, it might mean either:
-    // 1. Employee has no attendance record for today (face IS registered)
-    // 2. Employee has no face registered at all
+    // If the API responds with 404, check if it's about missing face record
     if (status === 404) {
       const isFaceMissing =
         errorMsg.toLowerCase().includes("face") ||
@@ -142,8 +122,9 @@ export async function getFaceAttendanceStatus(): Promise<FaceAttendanceStatus> {
 }
 
 /**
- * Get employee face enrollment status.
- * Calls GET /attendance/face-status (normalized to /api/v1/attendance/face-status).
+ * Get employee face enrollment status (dedicated endpoint).
+ * Calls GET /api/v1/attendance/face-status (canonical endpoint).
+ * This is the authoritative source for enrollment status.
  */
 export async function getFaceStatus(): Promise<FaceStatusResponse> {
   try {
@@ -156,7 +137,6 @@ export async function getFaceStatus(): Promise<FaceStatusResponse> {
       data.isFaceEnrolled ??
       data.face_registered ??
       data.faceRegistered ??
-      (res && typeof res === "object" && (res.is_enrolled ?? res.isEnrolled)) ??
       false
     );
     return {
@@ -169,37 +149,21 @@ export async function getFaceStatus(): Promise<FaceStatusResponse> {
     if (errorCode === "FACE_NOT_ENROLLED") {
       return { is_enrolled: false, enrolled_at: null, faceRegistered: false };
     }
-    // Graceful fallback to /attendance/face/me
-    try {
-      const fallbackRes: any = await api.get("attendance/face/me");
-      const fbData = extractObjectPayload<any>(fallbackRes);
-      const isEnrolled = Boolean(
-        fbData.is_face_enrolled ??
-        fbData.isFaceEnrolled ??
-        fbData.face_registered ??
-        fbData.is_registered ??
-        fbData.is_enrolled ??
-        false
-      );
-      return {
-        is_enrolled: isEnrolled,
-        enrolled_at: fbData.face_enrolled_at || fbData.enrolled_at || null,
-        faceRegistered: isEnrolled,
-      };
-    } catch {
-      return { is_enrolled: false, enrolled_at: null, faceRegistered: false };
-    }
+    // Do NOT fall back to /attendance/face/me - use this endpoint as source of truth
+    // If this endpoint fails, the enrollment status is UNKNOWN
+    throw err;
   }
 }
 
 /**
  * Enroll / register the authenticated employee's face via Base64 snapshot.
- * Calls POST /attendance/face-enroll (normalized to /api/v1/attendance/face-enroll).
- * Explicitly sends allow_re_enroll: true to overwrite or register existing face records.
+ * Calls POST /api/v1/attendance/face-enroll (canonical endpoint).
+ * Default allow_re_enroll: false to prevent accidental overwrites.
+ * Must explicitly pass allowReEnroll: true after authorized confirmation.
  */
 export async function enrollFace(
   imageBase64: string,
-  allowReEnroll: boolean = true
+  allowReEnroll: boolean = false
 ): Promise<FaceEnrollResponse> {
   try {
     const res: any = await api.post("attendance/face-enroll", {

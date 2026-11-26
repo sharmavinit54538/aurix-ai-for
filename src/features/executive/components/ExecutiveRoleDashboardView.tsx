@@ -18,7 +18,7 @@ import { ExecutiveKpiCard } from "./ExecutiveKpiCard";
 import { ExecutiveAiInsightCard } from "./ExecutiveAiInsightCard";
 import { ExecutiveDataTable } from "./ExecutiveDataTable";
 import { executiveApi, type ExecutiveOverviewResponse } from "@/services/executiveApi";
-import { AlertCircle, RefreshCw } from "lucide-react";
+import { AlertCircle, ChevronDown, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -40,6 +40,7 @@ export function ExecutiveRoleDashboardView({ role }: ExecutiveRoleDashboardViewP
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<ExecutiveOverviewResponse | null>(null);
+  const [showAllMobileKpis, setShowAllMobileKpis] = useState(false);
 
   const meta = ROLE_META[role] ?? ROLE_META.ceo;
 
@@ -141,22 +142,46 @@ export function ExecutiveRoleDashboardView({ role }: ExecutiveRoleDashboardViewP
 
       {/* KPI Cards Grid */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <ExecutiveKpiCard key={i} kpi={{} as any} loading={true} />
           ))}
         </div>
       ) : kpis.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {kpis.map((kpi) => (
-            <ExecutiveKpiCard key={kpi.id} kpi={kpi} />
-          ))}
-        </div>
+        <>
+          <div className="space-y-3 sm:hidden">
+            <div className="grid grid-cols-1 gap-3">
+              {(showAllMobileKpis ? kpis : kpis.slice(0, 2)).map((kpi) => (
+                <ExecutiveKpiCard key={kpi.id} kpi={kpi} />
+              ))}
+            </div>
+            {kpis.length > 2 ? (
+              <button
+                type="button"
+                aria-expanded={showAllMobileKpis}
+                onClick={() => setShowAllMobileKpis((prev) => !prev)}
+                className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-[13px] font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+              >
+                <span>{showAllMobileKpis ? "Show fewer metrics" : "View all metrics"}</span>
+                <ChevronDown
+                  className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
+                    showAllMobileKpis ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+            ) : null}
+          </div>
+          <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {kpis.map((kpi) => (
+              <ExecutiveKpiCard key={kpi.id} kpi={kpi} />
+            ))}
+          </div>
+        </>
       ) : (
-        <div className="rounded-2xl border border-dashed border-border/80 bg-card/40 p-8 text-center backdrop-blur-md">
-          <AlertCircle className="mx-auto h-8 w-8 text-muted-foreground/60 mb-2" />
+        <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center">
+          <AlertCircle className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
           <h3 className="text-sm font-semibold text-foreground">No executive KPI metrics available</h3>
-          <p className="text-xs text-muted-foreground mt-1 max-w-md mx-auto">
+          <p className="text-sm text-muted-foreground mt-1 max-w-md mx-auto">
             Operational telemetry for {role.toUpperCase()} will appear as organizational activities and payroll cycles close.
           </p>
         </div>
@@ -165,37 +190,38 @@ export function ExecutiveRoleDashboardView({ role }: ExecutiveRoleDashboardViewP
       {/* 12-Month Real Time Series Charts */}
       {timeSeriesData.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="rounded-2xl border border-border bg-card/60 p-5 backdrop-blur-xl space-y-3 text-left shadow-md">
+          <div className="rounded-xl border border-border bg-card p-5 space-y-3 text-left shadow-xs">
             <div>
-              <h3 className="font-display text-base font-bold text-foreground">12-Month Headcount & Retention Trend</h3>
-              <p className="text-xs text-muted-foreground">Historical personnel strength and retention metrics</p>
+              <h3 className="font-display text-base font-semibold text-foreground">12-Month Headcount & Retention Trend</h3>
+              <p className="text-sm text-muted-foreground">Historical personnel strength and retention metrics</p>
             </div>
             <div className="h-72 w-full pt-2">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={timeSeriesData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="grad-headcount" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="#06b6d4" stopOpacity={0.0} />
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.25} />
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
-                  <XAxis dataKey="month" stroke="#94a3b8" fontSize={11} tickLine={false} />
-                  <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "#0f172a",
-                      borderColor: "rgba(255,255,255,0.15)",
-                      borderRadius: "12px",
+                      backgroundColor: "hsl(var(--card))",
+                      borderColor: "hsl(var(--border))",
+                      borderRadius: "8px",
+                      color: "hsl(var(--foreground))",
                       fontSize: "12px",
                     }}
                   />
-                  <Legend wrapperStyle={{ fontSize: "11px", paddingTop: "8px" }} />
+                  <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "8px" }} />
                   <Area
                     type="monotone"
                     dataKey="headcount"
                     name="Active Headcount"
-                    stroke="#06b6d4"
+                    stroke="hsl(var(--primary))"
                     fill="url(#grad-headcount)"
                     strokeWidth={2}
                   />
@@ -204,27 +230,28 @@ export function ExecutiveRoleDashboardView({ role }: ExecutiveRoleDashboardViewP
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border bg-card/60 p-5 backdrop-blur-xl space-y-3 text-left shadow-md">
+          <div className="rounded-xl border border-border bg-card p-5 space-y-3 text-left shadow-xs">
             <div>
-              <h3 className="font-display text-base font-bold text-foreground">Operational Utilization & Attendance</h3>
-              <p className="text-xs text-muted-foreground">Monthly organizational attendance rate</p>
+              <h3 className="font-display text-base font-semibold text-foreground">Operational Utilization & Attendance</h3>
+              <p className="text-sm text-muted-foreground">Monthly organizational attendance rate</p>
             </div>
             <div className="h-72 w-full pt-2">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={timeSeriesData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
-                  <XAxis dataKey="month" stroke="#94a3b8" fontSize={11} tickLine={false} />
-                  <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "#0f172a",
-                      borderColor: "rgba(255,255,255,0.15)",
-                      borderRadius: "12px",
+                      backgroundColor: "hsl(var(--card))",
+                      borderColor: "hsl(var(--border))",
+                      borderRadius: "8px",
+                      color: "hsl(var(--foreground))",
                       fontSize: "12px",
                     }}
                   />
-                  <Legend wrapperStyle={{ fontSize: "11px", paddingTop: "8px" }} />
-                  <Bar dataKey="attendanceRate" name="Attendance Rate (%)" fill="#8b5cf6" radius={[6, 6, 0, 0]} />
+                  <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "8px" }} />
+                  <Bar dataKey="attendanceRate" name="Attendance Rate (%)" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

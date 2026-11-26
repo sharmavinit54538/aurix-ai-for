@@ -305,6 +305,7 @@ export async function getMyShiftSchedule(): Promise<EmployeeShiftScheduleData> {
 /**
  * Fetches the employee's planned work schedule / roster entries from the real backend.
  * Uses GET /rosters with employee_id filter.
+ * Uses actual shift data from backend instead of hardcoded values.
  */
 export async function getMyRoster(
   month?: number,
@@ -340,8 +341,30 @@ export async function getMyRoster(
   const holidayMap = new Map<string, HolidayRecord>();
   holidays.forEach((h) => holidayMap.set(h.date, h));
 
+  // Also fetch shift schedule for accurate shift details
+  let shiftSchedule: { 
+    current_shift?: { 
+      name: string; 
+      start_time: string; 
+      end_time: string; 
+      break_duration_mins: number;
+      grace_period_mins: number;
+      night_shift: boolean;
+      is_overnight: boolean;
+      working_days: string[];
+    } | null;
+  } | null = null;
+  
+  try {
+    const res = await api.get("attendance/shifts/me/schedule");
+    const data = res as { data?: unknown } | unknown;
+    shiftSchedule = (data as { data?: unknown })?.data ?? data;
+  } catch {
+    // Shift schedule not available
+  }
+
   const assignedShiftName = currentEmp.shift;
-  if (!assignedShiftName && backendRosters.length === 0) {
+  if (!assignedShiftName && backendRosters.length === 0 && !shiftSchedule?.current_shift) {
     return {
       entries: [],
       hasRoster: false,
@@ -350,16 +373,20 @@ export async function getMyRoster(
     };
   }
 
+  // Use shift schedule data if available, otherwise fall back to minimal defaults
+  const currentShift = shiftSchedule?.current_shift;
   const shiftDef = {
-    shiftName: assignedShiftName || "Morning Shift",
-    startTime: "09:00",
-    endTime: "18:00",
-    workingHours: 8,
-    breakDuration: "1 Hour",
+    shiftName: currentShift?.name || assignedShiftName || "Morning Shift",
+    startTime: currentShift?.start_time || "09:00",
+    endTime: currentShift?.end_time || "18:00",
+    workingHours: currentShift 
+      ? Math.round((parseTimeToMinutes(currentShift.end_time) - parseTimeToMinutes(currentShift.start_time) + (currentShift.is_overnight ? 1440 : 0) - currentShift.break_duration_mins) / 60)
+      : 8,
+    breakDuration: currentShift ? `${currentShift.break_duration_mins} min` : "1 Hour",
     breakWindow: "01:00 PM – 02:00 PM",
-    gracePeriodMinutes: 15,
-    nightPremiumPercent: 0,
-    workingDays: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+    gracePeriodMinutes: currentShift?.grace_period_mins ?? 15,
+    nightPremiumPercent: currentShift?.night_shift ? 15 : 0,
+    workingDays: currentShift?.working_days || ["Mon", "Tue", "Wed", "Thu", "Fri"],
   };
 
   const daysInMonth = new Date(targetYear, targetMonth, 0).getDate();
@@ -371,6 +398,8 @@ export async function getMyRoster(
     const dayName = d.toLocaleDateString("en-US", { weekday: "long" });
     const dayOfWeek = d.getDay();
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    const dayShort = d.toLocaleDateString("en-US", { weekday: "short" });
+    const isWorkingDay = shiftDef.workingDays.some(wd => wd.toLowerCase() === dayShort.toLowerCase());
 
     // Check if explicit backend roster exists for this day
     const explicit = backendRosters.find((r) => r.date === dateStr);
@@ -403,11 +432,11 @@ export async function getMyRoster(
         status: "Holiday",
         notes: holiday.description || holiday.type,
       });
-      continue;
+      continue
     }
 
-    // Check weekend
-    if (isWeekend) {
+    // Check if non-working day based on shift's working days
+    if (!isWorkingDay) {
       entries.push({
         id: `roster-${dateStr}`,
         date: dateStr,

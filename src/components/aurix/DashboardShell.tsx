@@ -101,16 +101,16 @@ const isParent = (i: SidebarNavItem): i is SidebarNavParent => "children" in i;
 
 // ── Badge color map ────────────────────────────────────────────
 const BADGE_STYLES: Record<BadgeKind, string> = {
-  New: "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30",
-  AI: "bg-violet-500/20 text-violet-400 border border-violet-500/30",
-  Beta: "bg-amber-500/20 text-amber-400 border border-amber-500/30",
-  Hot: "bg-rose-500/20 text-rose-400 border border-rose-500/30",
-  Live: "bg-red-500/20 text-red-400 border border-red-500/30",
+  New: "bg-emerald-500/12 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25",
+  AI: "bg-primary/10 text-primary border border-primary/25",
+  Beta: "bg-amber-500/12 text-amber-700 dark:text-amber-300 border border-amber-500/25",
+  Hot: "bg-rose-500/12 text-rose-700 dark:text-rose-300 border border-rose-500/25",
+  Live: "bg-rose-500/12 text-rose-700 dark:text-rose-300 border border-rose-500/25",
 };
 
 function NavBadge({ kind }: { kind: BadgeKind }) {
   return (
-    <span className={`ml-auto shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${BADGE_STYLES[kind]}`}>
+    <span className={`ml-auto shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${BADGE_STYLES[kind]}`}>
       {kind}
     </span>
   );
@@ -118,7 +118,7 @@ function NavBadge({ kind }: { kind: BadgeKind }) {
 
 function NavCount({ count }: { count: number }) {
   return (
-    <span className="ml-auto shrink-0 min-w-[18px] rounded-full bg-destructive/80 px-1.5 py-0.5 text-center text-[9px] font-bold text-white">
+    <span className="ml-auto shrink-0 min-w-[20px] rounded-full bg-destructive px-1.5 py-0.5 text-center text-xs font-semibold text-destructive-foreground">
       {count > 99 ? "99+" : count}
     </span>
   );
@@ -621,53 +621,94 @@ export function DashboardShell() {
   }
 
   const homeLink = getDefaultDashboardPath(ws.user);
+  const navSections = visibleNav.length > 0 ? visibleNav : NAV_SECTIONS;
+
+  const activeSectionLabel = useMemo(() => {
+    for (const section of navSections) {
+      for (const item of section.items) {
+        if (isParent(item)) {
+          const matchedChild = item.children.find((child) => {
+            const [targetPath] = child.to.split("?");
+            return child.exact
+              ? pathname === targetPath
+              : pathname === targetPath || pathname.startsWith(targetPath + "/");
+          });
+          if (matchedChild) return matchedChild.label;
+          if (pathname === item.basePath || pathname.startsWith(item.basePath + "/")) {
+            return item.label;
+          }
+        } else {
+          const matches = item.exact
+            ? pathname === item.to
+            : pathname === item.to ||
+              pathname.startsWith(item.to + "/") ||
+              (item.matchPrefixes?.some((prefix) => pathname === prefix || pathname.startsWith(prefix + "/")) ?? false);
+          if (matches) return item.label;
+        }
+      }
+    }
+    const segments = pathname.split("/").filter(Boolean);
+    const last = segments[segments.length - 1];
+    if (!last || last === "dashboard") return "Overview";
+    return last
+      .split("-")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+  }, [navSections, pathname]);
 
   return (
     <DocumentVerificationGuard>
       <RealtimeCallProvider>
-        <div className="flex min-h-screen w-full flex-col overflow-x-hidden bg-background text-foreground">
+        <div className="flex min-h-screen w-full flex-col overflow-x-clip bg-background text-foreground">
 
       <div className="relative flex min-w-0 flex-1">
         {/* Sidebar — fixed to viewport; main content scrolls independently */}
         <aside
-          className={`fixed left-0 z-40 flex flex-col border-r border-border bg-card/95 transition-[width,transform] duration-200 ${
+          aria-label="Sidebar navigation"
+          className={`fixed left-0 z-40 flex flex-col border-r border-border bg-card transition-[width,transform] duration-200 ${
             "inset-y-0"
-          } ${collapsed ? "w-[60px]" : "w-[200px]"} ${
+          } ${collapsed ? "w-[64px]" : "w-[228px]"} ${
             mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
           }`}
         >
-          <div className={`flex h-16 shrink-0 items-center border-b border-border px-2.5 ${collapsed ? "justify-center" : "justify-between"}`}>
+          <div className={`flex h-16 shrink-0 items-center border-b border-border px-3 ${collapsed ? "justify-center" : "justify-between"}`}>
             {!collapsed ? (
               <>
-                <Link to={homeLink} className="flex items-center gap-2 min-w-0">
-                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-brand-foreground shadow-glow" style={{ background: "var(--gradient-brand)" }}>
+                <Link
+                  to={homeLink}
+                  className="flex items-center gap-2.5 min-w-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground shadow-xs">
                     <Sparkles className="h-3.5 w-3.5" />
                   </span>
-                  <span className="font-display text-base font-semibold tracking-tight truncate">OFC360</span>
+                  <span className="font-display text-base font-semibold tracking-tight truncate text-foreground">OFC360</span>
                 </Link>
-                <div className="flex items-center gap-0.5 shrink-0">
+                <div className="flex items-center gap-1 shrink-0">
                   <button
+                    type="button"
                     onClick={() => setSearchOpen(true)}
-                    className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer transition-colors"
+                    className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     aria-label="Search"
                     title="Search (Ctrl+K)"
                   >
-                    <Search className="h-3.5 w-3.5" />
+                    <Search className="h-4 w-4" />
                   </button>
                   <button
+                    type="button"
                     onClick={() => setCollapsed(true)}
-                    className="hidden rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground lg:inline-flex cursor-pointer transition-colors"
+                    className="hidden rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground lg:inline-flex cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     aria-label="Collapse sidebar"
                     title="Collapse sidebar"
                   >
-                    <PanelLeft className="h-3.5 w-3.5" />
+                    <PanelLeft className="h-4 w-4" />
                   </button>
                 </div>
               </>
             ) : (
               <button
+                type="button"
                 onClick={() => setCollapsed(false)}
-                className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer transition-colors"
+                className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label="Expand sidebar"
                 title="Expand sidebar"
               >
@@ -676,11 +717,11 @@ export function DashboardShell() {
             )}
           </div>
 
-          <nav className="flex-1 space-y-1.5 overflow-y-auto overflow-x-hidden p-2">
-            {(visibleNav.length > 0 ? visibleNav : NAV_SECTIONS).map((section, sIdx) => (
-              <div key={section.id || sIdx} className="space-y-0.5">
+          <nav className="flex-1 space-y-2 overflow-y-auto overflow-x-hidden p-2.5">
+            {navSections.map((section, sIdx) => (
+              <div key={section.id || sIdx} className="space-y-1">
                 {section.title && !collapsed ? (
-                  <div className="px-2 pb-1 pt-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 truncate">
+                  <div className="px-2.5 pb-1 pt-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground truncate">
                     {section.title}
                   </div>
                 ) : null}
@@ -709,11 +750,14 @@ export function DashboardShell() {
                       key={item.to}
                       to={item.to as string}
                       title={collapsed ? item.label : undefined}
-                      className={`group relative flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors ${
-                        active ? "bg-accent text-foreground font-semibold" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+                      aria-current={active ? "page" : undefined}
+                      className={`group relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                        active
+                          ? "bg-primary/10 text-primary font-semibold"
+                          : "font-medium text-muted-foreground hover:bg-accent/70 hover:text-foreground"
                       } ${collapsed ? "justify-center px-0" : ""}`}
                     >
-                      {active ? <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r bg-foreground" /> : null}
+                      {active ? <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r bg-primary" /> : null}
                       <Icon className="h-4 w-4 shrink-0" />
                       {!collapsed ? (
                         <>
@@ -733,47 +777,58 @@ export function DashboardShell() {
         {mobileOpen ? <div onClick={() => setMobileOpen(false)} className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm lg:hidden" /> : null}
 
         <div
-          className={`flex min-h-screen min-w-0 flex-1 flex-col overflow-x-hidden transition-[margin] duration-200 ${
-            collapsed ? "lg:ml-[60px]" : "lg:ml-[200px]"
+          className={`flex min-h-screen min-w-0 flex-1 flex-col overflow-x-clip transition-[margin] duration-200 ${
+            collapsed ? "lg:ml-[64px]" : "lg:ml-[228px]"
           }`}
         >
           {/* Topbar */}
-          <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/90 px-4 backdrop-blur-sm sm:px-6">
-            <div className="flex items-center gap-2">
-              <button onClick={() => setMobileOpen(true)} className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground lg:hidden cursor-pointer" aria-label="Open menu">
+          <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-border bg-background/95 px-4 backdrop-blur-sm sm:px-6">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => setMobileOpen(true)}
+                className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground lg:hidden cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label="Open menu"
+              >
                 <Menu className="h-5 w-5" />
               </button>
+              <span className="truncate text-sm font-semibold text-foreground lg:hidden">
+                {activeSectionLabel}
+              </span>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex shrink-0 items-center gap-2 sm:gap-3">
               <button
+                type="button"
                 onClick={() => setSearchOpen(true)}
-                className="flex items-center gap-2 rounded-lg border border-border/80 bg-card/60 px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer transition-all shadow-sm"
+                className="flex items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-1.5 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer transition-colors shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 title="Search (Ctrl+K)"
+                aria-label="Open quick search"
               >
                 <Search className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Search...</span>
-                <kbd className="hidden rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground sm:inline-block">
+                <span className="hidden sm:inline">Search</span>
+                <kbd className="hidden rounded bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground sm:inline-block">
                   ⌘K
                 </kbd>
               </button>
               <button
+                type="button"
                 onClick={toggleTheme}
-                className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer"
+                className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label="Toggle theme"
               >
                 {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </button>
               <NotificationDropdown />
-              <div className="hidden items-center gap-2 rounded-md border border-border bg-card/40 px-3 py-1.5 text-xs sm:flex">
+              <div className="hidden items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 text-[13px] sm:flex">
                 <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="font-medium">{ws.company?.name || "Workspace"}</span>
+                <span className="max-w-[160px] truncate font-medium text-foreground">{ws.company?.name || "Workspace"}</span>
               </div>
               <UserProfileMenu variant="topbar" />
             </div>
           </header>
 
-          <main className="min-w-0 flex-1 overflow-x-hidden p-4 sm:p-6 lg:p-8">
+          <main className="min-w-0 flex-1 overflow-x-clip p-4 sm:p-6 lg:p-8">
             <BackButton className="mb-4" />
             <Suspense fallback={<PageSkeleton />}>
               <Outlet />
@@ -852,13 +907,16 @@ const NavGroup = memo(function NavGroup({
     return (
       <Link
         to={item.basePath as any}
-        className={`group relative flex items-center justify-center rounded-lg py-1.5 text-sm font-medium transition-colors ${
-          isActive ? "bg-accent text-foreground font-semibold" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+        aria-current={isActive ? "page" : undefined}
+        className={`group relative flex items-center justify-center rounded-lg py-2 text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+          isActive
+            ? "bg-primary/10 text-primary font-semibold"
+            : "font-medium text-muted-foreground hover:bg-accent/70 hover:text-foreground"
         }`}
         title={item.label}
         aria-label={item.label}
       >
-        {isActive ? <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r bg-foreground" /> : null}
+        {isActive ? <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r bg-primary" /> : null}
         <Icon className="h-4 w-4 shrink-0" />
       </Link>
     );
@@ -867,17 +925,20 @@ const NavGroup = memo(function NavGroup({
   return (
     <div>
       <div
-        className={`group relative flex w-full items-center rounded-lg text-sm font-medium transition-colors ${
-          isActive ? "bg-accent text-foreground font-semibold" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+        className={`group relative flex w-full items-center rounded-lg text-[13px] transition-colors ${
+          isActive
+            ? "bg-primary/10 text-primary font-semibold"
+            : "font-medium text-muted-foreground hover:bg-accent/70 hover:text-foreground"
         }`}
       >
-        {isActive ? <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r bg-foreground" /> : null}
+        {isActive ? <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r bg-primary" /> : null}
         <button
           type="button"
+          aria-expanded={isExpanded}
           onClick={() => {
             dispatch(toggleSectionExpand(item.id));
           }}
-          className="flex flex-1 items-center gap-2.5 rounded-lg px-2.5 py-1.5 min-w-0 text-left cursor-pointer"
+          className="flex flex-1 items-center gap-2.5 rounded-lg px-2.5 py-2 min-w-0 text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <Icon className="h-4 w-4 shrink-0" />
           <span className="flex-1 truncate whitespace-nowrap text-[13px]">{item.label}</span>
@@ -891,7 +952,7 @@ const NavGroup = memo(function NavGroup({
         </button>
       </div>
       {isExpanded ? (
-        <div className="ml-3 mt-0.5 space-y-0.5 border-l border-border pl-2 transition-all duration-200">
+        <div className="ml-3 mt-1 space-y-0.5 border-l border-border pl-2.5 transition-all duration-200">
           {item.children.map((child) => {
             const childActive = isChildActive(child);
             const ChildIcon = child.icon;
@@ -903,8 +964,11 @@ const NavGroup = memo(function NavGroup({
                 key={child.to}
                 to={targetPath as any}
                 search={searchObj as any}
-                className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-xs transition-colors min-w-0 ${
-                  childActive ? "bg-accent text-foreground font-medium" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+                aria-current={childActive ? "page" : undefined}
+                className={`flex items-center gap-2 rounded-md px-2.5 py-1.5 text-[13px] transition-colors min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                  childActive
+                    ? "bg-primary/10 text-primary font-semibold"
+                    : "text-muted-foreground hover:bg-accent/70 hover:text-foreground"
                 }`}
               >
                 <ChildIcon className="h-3.5 w-3.5 shrink-0" />
@@ -939,12 +1003,16 @@ export function PageHeader({
 }) {
   return (
     <div className="mb-6 flex flex-col min-w-0 gap-2 text-left">
-      <div className="flex min-w-0 flex-wrap items-end justify-between gap-4">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <h1 className="font-display text-2xl font-semibold tracking-tight">{title}</h1>
-          {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground sm:text-[26px]">
+            {title}
+          </h1>
+          {description ? (
+            <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{description}</p>
+          ) : null}
         </div>
-        {actions ? <div className="flex shrink-0 flex-wrap gap-2">{actions}</div> : null}
+        {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div> : null}
       </div>
     </div>
   );
@@ -960,11 +1028,11 @@ export function ComingSoon({
   icon: React.ElementType;
 }) {
   return (
-    <div className="rounded-2xl border border-dashed border-border bg-card/40 p-12 text-center">
-      <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-xl text-brand-foreground shadow-glow" style={{ background: "var(--gradient-brand)" }}>
+    <div className="rounded-xl border border-dashed border-border bg-card p-12 text-center">
+      <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-lg bg-primary/10 text-primary">
         <Icon className="h-5 w-5" />
       </div>
-      <h2 className="font-display text-lg font-semibold tracking-tight">{title}</h2>
+      <h2 className="font-display text-lg font-semibold tracking-tight text-foreground">{title}</h2>
       <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{description}</p>
     </div>
   );

@@ -13,23 +13,25 @@ export function StatCard({
   icon?: any;
   accent?: "brand" | "success" | "warning" | "danger" | "muted";
 }) {
-  const accentClass = {
-    brand: "from-violet-500/15 to-fuchsia-500/10 text-foreground",
-    success: "from-emerald-500/15 to-teal-500/10 text-foreground",
-    warning: "from-amber-500/15 to-orange-500/10 text-foreground",
-    danger: "from-rose-500/15 to-red-500/10 text-foreground",
-    muted: "from-muted to-muted/40 text-foreground",
+  const iconToneClass = {
+    brand: "bg-primary/10 text-primary",
+    success: "bg-emerald-500/12 text-emerald-700 dark:text-emerald-300",
+    warning: "bg-amber-500/12 text-amber-700 dark:text-amber-300",
+    danger: "bg-rose-500/12 text-rose-700 dark:text-rose-300",
+    muted: "bg-muted text-muted-foreground",
   }[accent];
   return (
-    <div className={`relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br ${accentClass} p-4 backdrop-blur-xl shadow-sm`}>
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</div>
-          <div className="mt-2 font-display text-2xl font-semibold tracking-tight">{value}</div>
+    <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="text-[13px] font-medium text-muted-foreground">{label}</div>
+          <div className="mt-1.5 font-display text-2xl font-semibold tracking-tight text-foreground tabular-nums break-words">
+            {value}
+          </div>
           {hint ? <div className="mt-1 text-xs text-muted-foreground">{hint}</div> : null}
         </div>
         {Icon ? (
-          <div className="grid h-9 w-9 place-items-center rounded-xl bg-background/60 text-foreground/80 shadow-sm">
+          <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${iconToneClass}`}>
             <Icon className="h-4 w-4" />
           </div>
         ) : null}
@@ -41,15 +43,15 @@ export function StatCard({
 export function StatusBadge({ status, tone }: { status: string; tone?: "success" | "warning" | "danger" | "info" | "muted" }) {
   const t = tone ?? "muted";
   const cls = {
-    success: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 ring-emerald-500/20",
-    warning: "bg-amber-500/15 text-amber-700 dark:text-amber-300 ring-amber-500/20",
-    danger: "bg-rose-500/15 text-rose-600 dark:text-rose-300 ring-rose-500/20",
-    info: "bg-sky-500/15 text-sky-600 dark:text-sky-300 ring-sky-500/20",
+    success: "bg-emerald-500/12 text-emerald-700 dark:text-emerald-300 ring-emerald-500/25",
+    warning: "bg-amber-500/12 text-amber-700 dark:text-amber-300 ring-amber-500/25",
+    danger: "bg-rose-500/12 text-rose-700 dark:text-rose-300 ring-rose-500/25",
+    info: "bg-sky-500/12 text-sky-700 dark:text-sky-300 ring-sky-500/25",
     muted: "bg-muted text-muted-foreground ring-border",
   }[t];
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium capitalize ring-1 ${cls}`}>
-      <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" />
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ring-1 ${cls}`}>
+      <span className="h-1.5 w-1.5 rounded-full bg-current" />
       {status.replace(/-/g, " ")}
     </span>
   );
@@ -65,18 +67,18 @@ export function SearchBox({ value, onChange, placeholder }: { value: string; onC
 }
 
 export function GlassCard({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={`rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl shadow-sm ${className}`}>{children}</div>;
+  return <div className={`rounded-xl border border-border bg-card p-4 shadow-xs ${className}`}>{children}</div>;
 }
 
 export function EmptyState({ title, description, icon: Icon }: { title: string; description?: string; icon?: any }) {
   return (
-    <div className="rounded-2xl border border-dashed border-border bg-card/40 p-10 text-center">
+    <div className="rounded-xl border border-dashed border-border bg-card p-10 text-center">
       {Icon ? (
-        <div className="mx-auto mb-3 grid h-10 w-10 place-items-center rounded-xl text-brand-foreground shadow-glow" style={{ background: "var(--gradient-brand)" }}>
-          <Icon className="h-4 w-4" />
+        <div className="mx-auto mb-3 grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary">
+          <Icon className="h-5 w-5" />
         </div>
       ) : null}
-      <h3 className="font-display text-base font-semibold">{title}</h3>
+      <h3 className="font-display text-base font-semibold text-foreground">{title}</h3>
       {description ? <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">{description}</p> : null}
     </div>
   );
@@ -130,7 +132,7 @@ export function Progress({ value, max = 100 }: { value: number; max?: number }) 
   const pct = Math.round((value / max) * 100);
   return (
     <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-      <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: "var(--gradient-brand)" }} />
+      <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
     </div>
   );
 }

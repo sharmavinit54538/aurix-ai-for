@@ -199,7 +199,7 @@ export const BackButton: React.FC<BackButtonProps> = ({
         variant="ghost"
         size="sm"
         onClick={handleClick}
-        className="group -ml-2 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:bg-accent hover:text-foreground cursor-pointer"
+        className="group -ml-2 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer"
         aria-label={effectiveLabel}
       >
         <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />

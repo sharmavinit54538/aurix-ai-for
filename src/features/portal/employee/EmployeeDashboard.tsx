@@ -36,6 +36,8 @@ import {
   YAxis,
 } from "recharts";
 import { useAurix } from "@/lib/aurix-store";
+import { PageHeader } from "@/components/aurix/DashboardShell";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import type { EmpKpi } from "./types";
@@ -71,7 +73,7 @@ function Card({
 }) {
   return (
     <div
-      className={`rounded-2xl border border-border bg-card shadow-sm p-5 ${className}`}
+      className={`rounded-xl border border-border bg-card shadow-xs p-5 ${className}`}
     >
       {children}
     </div>
@@ -82,7 +84,7 @@ function SectionHeader({
   title,
   subtitle,
   link,
-  linkLabel = "View More",
+  linkLabel = "View more",
 }: {
   title: string;
   subtitle?: string;
@@ -91,20 +93,20 @@ function SectionHeader({
 }) {
   return (
     <div className="mb-4 flex items-start justify-between gap-3">
-      <div>
-        <h2 className="font-display text-lg font-semibold tracking-tight">
+      <div className="min-w-0">
+        <h2 className="font-display text-base sm:text-lg font-semibold tracking-tight text-foreground">
           {title}
         </h2>
         {subtitle && (
-          <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>
         )}
       </div>
       {link && (
         <Link
           to={link as any}
-          className="flex shrink-0 items-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
+          className="inline-flex min-h-8 shrink-0 items-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground/80 transition-colors hover:border-primary/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          {linkLabel} <ChevronRight className="h-3 w-3" />
+          {linkLabel} <ChevronRight className="h-3.5 w-3.5" />
         </Link>
       )}
     </div>
@@ -138,55 +140,37 @@ const EVENT_COLOR: Record<string, string> = {
 };
 
 const EMP_QUICK_ACTIONS = [
+  { label: "My Attendance", icon: Clock, link: "/dashboard/attendance" },
   { label: "Apply Leave", icon: FileText, link: "/dashboard/leaves" },
   { label: "View Payslip", icon: Download, link: "/dashboard/payroll/payslips" },
-  { label: "My Attendance", icon: Clock, link: "/dashboard/attendance" },
   { label: "My Documents", icon: FileText, link: "/dashboard/documents" },
   { label: "My Assets", icon: Package, link: "/dashboard/assets" },
   { label: "AI Assistant", icon: Bot, link: "/ai/chat-assistant" },
 ];
 
-function EmployeeHeader({
-  firstName: _firstName,
-  companyName: _companyName,
-}: { firstName?: string; companyName?: string } = {}) {
+function QuickActionBar() {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, ease: "easeOut" }}
-      className="rounded-2xl border border-border bg-card p-5"
-    >
-      <div className="flex items-center justify-end gap-3">
-        <Link
-          to="/ai/chat-assistant"
-          className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 hover:-translate-y-0.5"
-        >
-          <Sparkles className="h-3.5 w-3.5" /> AI Assistant
-        </Link>
-      </div>
-
-      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-        {EMP_QUICK_ACTIONS.map((a, i) => {
+    <section aria-label="Daily tasks and quick actions">
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
+        {EMP_QUICK_ACTIONS.map((a) => {
           const Icon = a.icon;
           return (
-            <motion.div key={a.label} {...stagger(i)}>
-              <Link
-                to={a.link as any}
-                className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-background/60 p-3 text-center transition-all hover:border-foreground/20 hover:shadow-md hover:-translate-y-0.5"
-              >
-                <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10 text-primary">
-                  <Icon className="h-4 w-4" />
-                </div>
-                <span className="text-[11px] font-medium leading-tight text-muted-foreground group-hover:text-foreground">
-                  {a.label}
-                </span>
-              </Link>
-            </motion.div>
+            <Link
+              key={a.label}
+              to={a.link as any}
+              className="group flex min-h-[84px] flex-col items-center justify-center gap-2 rounded-xl border border-border bg-card p-3.5 text-center shadow-xs transition-colors hover:border-primary/35 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                <Icon className="h-4 w-4" />
+              </div>
+              <span className="text-[13px] sm:text-sm font-medium leading-snug text-foreground break-words">
+                {a.label}
+              </span>
+            </Link>
           );
         })}
       </div>
-    </motion.div>
+    </section>
   );
 }
 
@@ -208,51 +192,47 @@ function EmployeeKpiCards() {
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-      {kpis.map((kpi, i) => (
-        <motion.div key={kpi.id} {...stagger(i)}>
-          <Card className="cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-md">
-            <div
-              className={`mb-3 inline-flex items-center rounded-lg p-2 ${kpi.bgAccent}`}
-            >
-              <Zap className={`h-3.5 w-3.5 ${kpi.accent}`} />
-            </div>
-            <div className="font-display text-xl font-bold tracking-tight">
-              {kpi.value}
-            </div>
-            <div className="mt-0.5 text-[11px] text-muted-foreground">
-              {kpi.label}
-            </div>
-            <div
-              className={`mt-1.5 flex items-center gap-1 text-[11px] font-medium ${
-                kpi.changeType === "up"
-                  ? "text-foreground"
-                  : kpi.changeType === "down"
-                    ? "text-destructive"
-                    : "text-muted-foreground"
-              }`}
-            >
-              {kpi.changeType === "up" ? (
-                <TrendingUp className="h-3 w-3" />
-              ) : kpi.changeType === "down" ? (
-                <TrendingDown className="h-3 w-3" />
-              ) : null}
-              {kpi.change}
-            </div>
-            <div className="mt-2 h-8 w-full opacity-60">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={kpi.spark || []}>
-                  <Line
-                    type="monotone"
-                    dataKey="v"
-                    stroke="var(--primary)"
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </Card>
-        </motion.div>
+      {kpis.map((kpi) => (
+        <Card key={kpi.id} className="transition-colors hover:border-primary/35">
+          <div className="mb-3 inline-flex items-center rounded-lg bg-primary/10 p-2 text-primary">
+            <Zap className="h-3.5 w-3.5" />
+          </div>
+          <div className="font-display text-xl font-bold tracking-tight tabular-nums text-foreground">
+            {kpi.value}
+          </div>
+          <div className="mt-0.5 text-[13px] font-medium text-muted-foreground leading-snug">
+            {kpi.label}
+          </div>
+          <div
+            className={`mt-1.5 flex items-center gap-1 text-xs font-medium ${
+              kpi.changeType === "up"
+                ? "text-emerald-700 dark:text-emerald-300"
+                : kpi.changeType === "down"
+                  ? "text-destructive"
+                  : "text-muted-foreground"
+            }`}
+          >
+            {kpi.changeType === "up" ? (
+              <TrendingUp className="h-3.5 w-3.5" />
+            ) : kpi.changeType === "down" ? (
+              <TrendingDown className="h-3.5 w-3.5" />
+            ) : null}
+            {kpi.change}
+          </div>
+          <div className="mt-2 h-8 w-full opacity-75">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={kpi.spark || []}>
+                <Line
+                  type="monotone"
+                  dataKey="v"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                  dot={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
       ))}
     </div>
   );
@@ -291,25 +271,28 @@ function MyAttendance() {
                 margin={{ top: 4, right: 8, left: -20, bottom: 0 }}
               >
                 <CartesianGrid
-                  stroke="oklch(0.5 0.02 264 / 0.1)"
+                  stroke="hsl(var(--border))"
                   vertical={false}
                 />
                 <XAxis
                   dataKey="week"
-                  tick={{ fontSize: 11 }}
+                  stroke="hsl(var(--muted-foreground))"
+                  tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
                   tickLine={false}
                   axisLine={false}
                 />
                 <YAxis
-                  tick={{ fontSize: 11 }}
+                  stroke="hsl(var(--muted-foreground))"
+                  tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
                   tickLine={false}
                   axisLine={false}
                   domain={[0, 5]}
                 />
                 <Tooltip
                   contentStyle={{
-                    background: "var(--card)",
-                    border: "1px solid var(--border)",
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    color: "hsl(var(--foreground))",
                     borderRadius: 8,
                     fontSize: 12,
                   }}
@@ -318,56 +301,58 @@ function MyAttendance() {
                 <Bar
                   dataKey="days"
                   radius={[4, 4, 0, 0]}
-                  fill="var(--primary)"
+                  fill="hsl(var(--primary))"
                 />
               </BarChart>
             </ResponsiveContainer>
           </div>
         )}
 
-        <div className="space-y-2">
+        <div>
           {isLoading ? (
-            <p className="py-6 text-center text-xs text-muted-foreground">
+            <p className="py-6 text-center text-sm text-muted-foreground">
               Loading attendance records...
             </p>
           ) : records.length === 0 ? (
-            <p className="py-6 text-center text-xs text-muted-foreground">
+            <p className="py-6 text-center text-sm text-muted-foreground">
               No attendance records found.
             </p>
           ) : (
-            records.map((a, idx) => {
-              const statusKey = String(a.status || "present").toLowerCase();
-              return (
-                <div
-                  key={a.id || a.date || idx}
-                  className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-2"
-                >
-                  <div className="w-20 shrink-0 text-xs text-muted-foreground">
-                    {a.date
-                      ? new Date(a.date).toLocaleDateString("en-IN", {
-                          day: "numeric",
-                          month: "short",
-                        })
-                      : "—"}
-                  </div>
-                  <span
-                    className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-medium capitalize ${
-                      ATTENDANCE_STATUS[statusKey] || statusBadgeClass("info")
-                    }`}
+            <div className="divide-y divide-border rounded-lg border border-border">
+              {records.map((a, idx) => {
+                const statusKey = String(a.status || "present").toLowerCase();
+                return (
+                  <div
+                    key={a.id || a.date || idx}
+                    className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-3.5 py-2.5"
                   >
-                    {statusKey === "wfh" ? "WFH" : a.status || "Present"}
-                  </span>
-                  <div className="flex-1 text-xs text-muted-foreground">
-                    {a.checkIn || a.checkInTime
-                      ? `${a.checkIn || a.checkInTime} → ${a.checkOut || a.checkOutTime || "–"}`
-                      : "Not recorded"}
+                    <div className="w-20 shrink-0 text-xs font-medium text-muted-foreground">
+                      {a.date
+                        ? new Date(a.date).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                          })
+                        : "—"}
+                    </div>
+                    <span
+                      className={`shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-medium capitalize ${
+                        ATTENDANCE_STATUS[statusKey] || statusBadgeClass("info")
+                      }`}
+                    >
+                      {statusKey === "wfh" ? "WFH" : a.status || "Present"}
+                    </span>
+                    <div className="min-w-0 flex-1 text-xs text-muted-foreground">
+                      {a.checkIn || a.checkInTime
+                        ? `${a.checkIn || a.checkInTime} → ${a.checkOut || a.checkOutTime || "–"}`
+                        : "Not recorded"}
+                    </div>
+                    <div className="shrink-0 text-xs font-medium tabular-nums text-foreground">
+                      {a.hours ?? (a.workingHours ? `${a.workingHours}h` : "—")}
+                    </div>
                   </div>
-                  <div className="shrink-0 text-xs font-medium">
-                    {a.hours ?? (a.workingHours ? `${a.workingHours}h` : "—")}
-                  </div>
-                </div>
-              );
-            })
+                );
+              })}
+            </div>
           )}
         </div>
       </Card>
@@ -405,10 +390,11 @@ function MyLeaves() {
           {(["history", "balance"] as const).map((t) => (
             <button
               key={t}
+              type="button"
               onClick={() => setTab(t)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
+              className={`rounded-lg px-3 py-1.5 text-[13px] font-medium capitalize transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 tab === t
-                  ? "bg-foreground text-background"
+                  ? "bg-primary text-primary-foreground shadow-xs"
                   : "border border-border text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -425,52 +411,47 @@ function MyLeaves() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -8 }}
               transition={{ duration: 0.18 }}
-              className="space-y-2"
             >
               {isLoading ? (
-                <p className="py-6 text-center text-xs text-muted-foreground">
+                <p className="py-6 text-center text-sm text-muted-foreground">
                   Loading leave history...
                 </p>
               ) : leaves.length === 0 ? (
-                <p className="py-6 text-center text-xs text-muted-foreground">
+                <p className="py-6 text-center text-sm text-muted-foreground">
                   No leave history found.
                 </p>
               ) : (
-                leaves.map((l) => (
-                  <div
-                    key={l.id}
-                    className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-2.5"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">
-                          {l.type || l.leave_type}
-                        </span>
-                        <Badge
-                          variant={
-                            l.status === "approved"
-                              ? "default"
-                              : l.status === "pending"
-                                ? "secondary"
-                                : "destructive"
-                          }
-                          className="text-[10px] capitalize"
-                        >
-                          {l.status}
-                        </Badge>
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {l.from || l.start_date} → {l.to || l.end_date} ·{" "}
-                        {l.days ?? 1} day{(l.days ?? 1) !== 1 ? "s" : ""}
-                      </div>
-                      {l.approvedBy && (
-                        <div className="text-xs text-muted-foreground">
-                          Approved by {l.approvedBy}
+                <div className="divide-y divide-border rounded-lg border border-border">
+                  {leaves.map((l) => (
+                    <div
+                      key={l.id}
+                      className="flex items-center gap-3 px-3.5 py-2.5"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-sm font-medium text-foreground">
+                            {l.type || l.leave_type}
+                          </span>
+                          <Badge
+                            variant="outline"
+                            className={`text-xs capitalize ${statusBadgeClass(String(l.status || "pending"))}`}
+                          >
+                            {l.status}
+                          </Badge>
                         </div>
-                      )}
+                        <div className="mt-0.5 text-xs text-muted-foreground">
+                          {l.from || l.start_date} → {l.to || l.end_date} ·{" "}
+                          {l.days ?? 1} day{(l.days ?? 1) !== 1 ? "s" : ""}
+                        </div>
+                        {l.approvedBy && (
+                          <div className="text-xs text-muted-foreground">
+                            Approved by {l.approvedBy}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))
+                  ))}
+                </div>
               )}
             </motion.div>
           )}
@@ -484,16 +465,16 @@ function MyLeaves() {
               className="space-y-3"
             >
               {quota.length === 0 ? (
-                <p className="py-6 text-center text-xs text-muted-foreground">
+                <p className="py-6 text-center text-sm text-muted-foreground">
                   No leave balance data available.
                 </p>
               ) : (
                 quota.map((q) => (
                   <div key={q.type}>
-                    <div className="mb-1 flex items-center justify-between text-xs">
-                      <span className="font-medium">{q.type}</span>
+                    <div className="mb-1 flex items-center justify-between text-[13px]">
+                      <span className="font-medium text-foreground">{q.type}</span>
                       <span className="text-muted-foreground">
-                        <span className="font-semibold text-foreground">
+                        <span className="font-semibold text-foreground tabular-nums">
                           {q.remaining}
                         </span>
                         /{q.total} remaining
@@ -516,9 +497,9 @@ function MyLeaves() {
 
         <Link
           to="/dashboard/leaves"
-          className="mt-4 flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-border py-2.5 text-xs font-medium text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
+          className="mt-4 flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-dashed border-border py-2 text-[13px] font-medium text-foreground/80 transition-colors hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <FileText className="h-3.5 w-3.5" /> Apply New Leave
+          <FileText className="h-4 w-4" /> Apply New Leave
         </Link>
       </Card>
     </motion.div>
@@ -547,9 +528,9 @@ function MyPerformance() {
           link="/dashboard/performance"
         />
         {score !== null && (
-          <div className="mb-4 flex items-center gap-4 rounded-xl border border-border bg-background/50 px-4 py-3">
+          <div className="mb-4 flex items-center gap-4 rounded-lg bg-muted/35 px-4 py-3">
             <div className="text-center">
-              <div className="font-display text-3xl font-bold text-foreground">
+              <div className="font-display text-3xl font-bold tabular-nums text-foreground">
                 {score}
               </div>
               <div className="text-xs text-muted-foreground">Score</div>
@@ -572,19 +553,19 @@ function MyPerformance() {
         </p>
         <div className="space-y-3">
           {isLoading ? (
-            <p className="py-4 text-center text-xs text-muted-foreground">
+            <p className="py-4 text-center text-sm text-muted-foreground">
               Loading goals...
             </p>
           ) : goals.length === 0 ? (
-            <p className="py-4 text-center text-xs text-muted-foreground">
+            <p className="py-4 text-center text-sm text-muted-foreground">
               No active goals assigned yet.
             </p>
           ) : (
             goals.map((g, idx) => (
               <div key={g.id || g.goal || idx}>
-                <div className="mb-1 flex items-center justify-between text-xs">
-                  <span className="font-medium">{g.goal || g.title}</span>
-                  <span className="text-muted-foreground">
+                <div className="mb-1 flex items-center justify-between text-[13px]">
+                  <span className="font-medium text-foreground">{g.goal || g.title}</span>
+                  <span className="text-xs text-muted-foreground">
                     {g.due ? `Due ${g.due} · ` : ""}
                     <span className="font-semibold text-foreground">
                       {g.progress ?? 0}%
@@ -628,43 +609,45 @@ function MyPayslips() {
           subtitle="Salary statements"
           link="/dashboard/payroll/payslips"
         />
-        <div className="space-y-2">
+        <div>
           {isLoading ? (
-            <p className="text-xs text-muted-foreground py-3 text-center">
+            <p className="py-4 text-center text-sm text-muted-foreground">
               Loading payslips...
             </p>
           ) : payslips.length === 0 ? (
-            <p className="text-xs text-muted-foreground py-3 text-center">
+            <p className="py-4 text-center text-sm text-muted-foreground">
               No finalized payslips available yet.
             </p>
           ) : (
-            payslips.map((p, idx) => (
-              <div
-                key={p.id || p.month || idx}
-                className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-3"
-              >
-                <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
-                  <Download className="h-4 w-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-medium">
-                    {p.month || p.period_name}
+            <div className="divide-y divide-border rounded-lg border border-border">
+              {payslips.map((p, idx) => (
+                <div
+                  key={p.id || p.month || idx}
+                  className="flex items-center gap-3 px-3.5 py-3"
+                >
+                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                    <Download className="h-4 w-4" />
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    Gross: {p.gross ?? p.gross_pay ?? "—"}
-                    {p.date ? ` · Paid on ${p.date}` : ""}
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-medium text-foreground">
+                      {p.month || p.period_name}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Gross: {p.gross ?? p.gross_pay ?? "—"}
+                      {p.date ? ` · Paid on ${p.date}` : ""}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-semibold tabular-nums text-foreground">
+                      {p.net ?? p.net_pay ?? "—"}
+                    </div>
+                    <Badge variant="outline" className={`mt-0.5 text-xs ${statusBadgeClass("approved")}`}>
+                      Paid
+                    </Badge>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="font-semibold text-foreground">
-                    {p.net ?? p.net_pay ?? "—"}
-                  </div>
-                  <Badge variant="default" className="text-[10px]">
-                    Paid
-                  </Badge>
-                </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
       </Card>
@@ -700,44 +683,46 @@ function MyDocuments() {
           subtitle="Document verification status"
           link="/dashboard/documents"
         />
-        <div className="space-y-2">
+        <div>
           {isLoading ? (
-            <p className="py-6 text-center text-xs text-muted-foreground">
+            <p className="py-6 text-center text-sm text-muted-foreground">
               Loading documents...
             </p>
           ) : documents.length === 0 ? (
-            <p className="py-6 text-center text-xs text-muted-foreground">
+            <p className="py-6 text-center text-sm text-muted-foreground">
               No documents uploaded yet.
             </p>
           ) : (
-            documents.map((d, idx) => {
-              const statusKey = String(d.status || "pending").toLowerCase();
-              return (
-                <div
-                  key={d.id || d.name || idx}
-                  className="flex items-center gap-3 rounded-xl border border-border bg-background/50 px-3 py-2.5"
-                >
-                  <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm font-medium">
-                      {d.name || d.title}
-                    </div>
-                    {d.dueDate && (
-                      <div className="text-xs text-muted-foreground">
-                        {d.dueDate}
-                      </div>
-                    )}
-                  </div>
-                  <span
-                    className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-medium capitalize ${
-                      DOC_STATUS_STYLE[statusKey] || statusBadgeClass("pending")
-                    }`}
+            <div className="divide-y divide-border rounded-lg border border-border">
+              {documents.map((d, idx) => {
+                const statusKey = String(d.status || "pending").toLowerCase();
+                return (
+                  <div
+                    key={d.id || d.name || idx}
+                    className="flex items-center gap-3 px-3.5 py-2.5"
                   >
-                    {d.status || "Pending"}
-                  </span>
-                </div>
-              );
-            })
+                    <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium text-foreground">
+                        {d.name || d.title}
+                      </div>
+                      {d.dueDate && (
+                        <div className="text-xs text-muted-foreground">
+                          {d.dueDate}
+                        </div>
+                      )}
+                    </div>
+                    <span
+                      className={`shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-medium capitalize ${
+                        DOC_STATUS_STYLE[statusKey] || statusBadgeClass("pending")
+                      }`}
+                    >
+                      {d.status || "Pending"}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
       </Card>
