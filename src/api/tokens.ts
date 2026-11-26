@@ -3,7 +3,7 @@
  *
  * Security:
  * - Access token is kept in-memory for active API authorizations.
- * - Refresh token is kept strictly in-memory (and forwarded via HttpOnly cookie).
+ * - Refresh token is managed by backend via HttpOnly Secure cookie.
  * - Refresh token is NEVER persisted in localStorage or sessionStorage.
  * - A non-sensitive session hint `ofc_session_hint=1` is stored in localStorage
  *   to avoid pre-login 401s on app boot.
@@ -20,68 +20,13 @@ import { API_BASE_URL } from "./baseUrl";
 import { logger } from "@/lib/logger";
 
 export const SESSION_HINT_KEY = "ofc_session_hint";
-export const ACCESS_TOKEN_KEY = "aurix:access_token";
-export const REFRESH_TOKEN_KEY = "aurix:refresh_token";
-export const TOKENS_KEY = "aurix:tokens";
 
 let inMemoryAccessToken: string | null = null;
-let inMemoryRefreshToken: string | null = null;
 let isSessionExpiredHandled = false;
-
-// Initialize in-memory cache from safeStorage if available on boot
-function hydrateTokensFromStorage(): void {
-  if (typeof window === "undefined") return;
-  if (!inMemoryAccessToken) {
-    const storedAccess =
-      safeStorage.getItem(ACCESS_TOKEN_KEY) ||
-      safeStorage.getItem("access_token") ||
-      safeStorage.getItem("token") ||
-      (typeof window !== "undefined"
-        ? window.sessionStorage?.getItem(ACCESS_TOKEN_KEY) ||
-          window.sessionStorage?.getItem("access_token") ||
-          window.sessionStorage?.getItem("token")
-        : null);
-    if (storedAccess) {
-      inMemoryAccessToken = storedAccess;
-    } else {
-      const storedTokens =
-        safeStorage.getItem(TOKENS_KEY) ||
-        (typeof window !== "undefined" ? window.sessionStorage?.getItem(TOKENS_KEY) : null);
-      if (storedTokens) {
-        try {
-          const parsed = JSON.parse(storedTokens);
-          if (parsed?.accessToken || parsed?.access_token) {
-            inMemoryAccessToken = parsed.accessToken || parsed.access_token;
-            if (!inMemoryRefreshToken && (parsed?.refreshToken || parsed?.refresh_token)) {
-              inMemoryRefreshToken = parsed.refreshToken || parsed.refresh_token;
-            }
-          }
-        } catch {
-          /* ignore */
-        }
-      }
-    }
-  }
-  if (!inMemoryRefreshToken) {
-    const storedRefresh =
-      safeStorage.getItem(REFRESH_TOKEN_KEY) ||
-      safeStorage.getItem("refresh_token") ||
-      (typeof window !== "undefined"
-        ? window.sessionStorage?.getItem(REFRESH_TOKEN_KEY) ||
-          window.sessionStorage?.getItem("refresh_token")
-        : null);
-    if (storedRefresh) {
-      inMemoryRefreshToken = storedRefresh;
-    }
-  }
-}
-
-// Hydrate immediately on module load
-hydrateTokensFromStorage();
 
 export function hasSessionHint(): boolean {
   if (typeof window === "undefined") return false;
-  return safeStorage.getItem(SESSION_HINT_KEY) === "1" || Boolean(safeStorage.getItem(ACCESS_TOKEN_KEY)) || Boolean(safeStorage.getItem(TOKENS_KEY));
+  return safeStorage.getItem(SESSION_HINT_KEY) === "1";
 }
 
 export function setSessionHint(): void {
@@ -96,62 +41,30 @@ export function clearSessionHint(): void {
 
 export interface Tokens {
   accessToken: string;
-  refreshToken?: string;
 }
 
 export function getTokens(): Tokens | null {
-  if (!inMemoryAccessToken) {
-    hydrateTokensFromStorage();
-  }
   if (!inMemoryAccessToken) return null;
   return {
     accessToken: inMemoryAccessToken,
-    refreshToken: inMemoryRefreshToken || undefined,
   };
 }
 
-export function setTokens(tokens: { accessToken?: string; refreshToken?: string } | null) {
+export function setTokens(tokens: { accessToken?: string } | null) {
   inMemoryAccessToken = tokens?.accessToken || null;
-  inMemoryRefreshToken = tokens?.refreshToken || inMemoryRefreshToken || null;
 
   if (tokens?.accessToken) {
     setSessionHint();
-    if (typeof window !== "undefined") {
-      safeStorage.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
-      safeStorage.setItem("access_token", tokens.accessToken);
-      if (tokens.refreshToken) {
-        safeStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
-        safeStorage.setItem("refresh_token", tokens.refreshToken);
-      }
-      safeStorage.setItem(
-        TOKENS_KEY,
-        JSON.stringify({
-          accessToken: tokens.accessToken,
-          refreshToken: tokens.refreshToken || inMemoryRefreshToken,
-        }),
-      );
-    }
   }
 
   // When clearing all tokens (null)
   if (!tokens) {
     inMemoryAccessToken = null;
-    inMemoryRefreshToken = null;
     clearSessionHint();
-    if (typeof window !== "undefined") {
-      safeStorage.removeItem(ACCESS_TOKEN_KEY);
-      safeStorage.removeItem("access_token");
-      safeStorage.removeItem(REFRESH_TOKEN_KEY);
-      safeStorage.removeItem("refresh_token");
-      safeStorage.removeItem(TOKENS_KEY);
-    }
   }
 }
 
 export function getAccessToken(): string | null {
-  if (!inMemoryAccessToken) {
-    hydrateTokensFromStorage();
-  }
   return inMemoryAccessToken;
 }
 
@@ -159,51 +72,12 @@ export function setAccessToken(token: string | null) {
   inMemoryAccessToken = token;
   if (token) {
     setSessionHint();
-    if (typeof window !== "undefined") {
-      safeStorage.setItem(ACCESS_TOKEN_KEY, token);
-      safeStorage.setItem("access_token", token);
-    }
-  } else {
-    if (typeof window !== "undefined") {
-      safeStorage.removeItem(ACCESS_TOKEN_KEY);
-      safeStorage.removeItem("access_token");
-    }
-  }
-}
-
-export function getRefreshToken(): string | null {
-  if (!inMemoryRefreshToken) {
-    hydrateTokensFromStorage();
-  }
-  return inMemoryRefreshToken;
-}
-
-export function setRefreshToken(token: string | null) {
-  inMemoryRefreshToken = token;
-  if (token) {
-    if (typeof window !== "undefined") {
-      safeStorage.setItem(REFRESH_TOKEN_KEY, token);
-      safeStorage.setItem("refresh_token", token);
-    }
-  } else {
-    if (typeof window !== "undefined") {
-      safeStorage.removeItem(REFRESH_TOKEN_KEY);
-      safeStorage.removeItem("refresh_token");
-    }
   }
 }
 
 export function clearTokens() {
   inMemoryAccessToken = null;
-  inMemoryRefreshToken = null;
   clearSessionHint();
-  if (typeof window !== "undefined") {
-    safeStorage.removeItem(ACCESS_TOKEN_KEY);
-    safeStorage.removeItem("access_token");
-    safeStorage.removeItem(REFRESH_TOKEN_KEY);
-    safeStorage.removeItem("refresh_token");
-    safeStorage.removeItem(TOKENS_KEY);
-  }
 }
 
 export function handleSessionExpired() {
@@ -222,9 +96,6 @@ export function handleSessionExpired() {
   clearTokens();
   clearSessionHint();
   aurix.set({ isRestoring: false, user: null, company: null });
-  safeStorage.removeItem("aurix:workspace:v1");
-  safeStorage.removeItem("aurix:tokens");
-  safeStorage.removeItem("aurix:refresh_token");
 
   if (!isSessionExpiredHandled) {
     isSessionExpiredHandled = true;
@@ -291,6 +162,7 @@ let refreshPromise: Promise<string> | null = null;
 /**
  * Refreshes the active access token using the canonical refresh endpoint.
  * Concurrency-safe: shares a single in-flight promise for all concurrent callers.
+ * Uses HttpOnly refresh cookie (withCredentials: true) - no body needed.
  */
 export async function refreshAccessToken(options?: { silent?: boolean }): Promise<string> {
   if (refreshPromise) {
@@ -300,21 +172,14 @@ export async function refreshAccessToken(options?: { silent?: boolean }): Promis
   refreshPromise = (async () => {
     try {
       return await acquireRefreshLock(async () => {
-        // Build request body: include in-memory refresh token if present; otherwise empty {} for HttpOnly cookie
-        const currentRefreshToken = getRefreshToken();
-        const body: Record<string, string> = {};
-        if (currentRefreshToken) {
-          body.refresh_token = currentRefreshToken;
-          body.refreshToken = currentRefreshToken;
-        }
-
         const refreshUrl = `${API_BASE_URL}${AUTH_ENDPOINTS.refresh}`;
         if (import.meta.env.DEV && import.meta.env.MODE !== "test" && !options?.silent) {
+          logger.debug(`[AUTH] Refreshing token: POST ${refreshUrl}`);
         }
 
         let res;
         try {
-          res = await axios.post(refreshUrl, body, {
+          res = await axios.post(refreshUrl, {}, {
             withCredentials: true,
             headers: {
               "Content-Type": "application/json",
@@ -329,7 +194,9 @@ export async function refreshAccessToken(options?: { silent?: boolean }): Promis
             : postErr && typeof postErr === "object" && "response" in postErr && typeof (postErr as { response?: { status?: unknown } }).response?.status === "number"
               ? (postErr as { response: { status: number } }).response.status
               : undefined;
+
           if (import.meta.env.DEV && import.meta.env.MODE !== "test" && !options?.silent) {
+            logger.error(`[AUTH] Refresh failed with status ${status}`);
           }
 
           if (status === 404) {
@@ -379,8 +246,7 @@ export async function refreshAccessToken(options?: { silent?: boolean }): Promis
           throw new Error("Invalid session refresh response: missing access token");
         }
 
-        const newRefreshToken = tokenData?.refresh_token || tokenData?.refreshToken || currentRefreshToken;
-        setTokens({ accessToken, refreshToken: newRefreshToken || undefined });
+        setTokens({ accessToken });
         setSessionHint();
         return accessToken;
       });

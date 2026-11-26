@@ -43,7 +43,6 @@ describe("F-01: Auth and Session Management", () => {
   });
 
   it("reload restores session with HttpOnly cookie mock", async () => {
-    // Set hint as if previous session was active before reload
     setSessionHint();
     expect(hasSessionHint()).toBe(true);
 
@@ -68,7 +67,6 @@ describe("F-01: Auth and Session Management", () => {
 
     expect(token).toBe("mock-access-token-123");
     expect(getAccessToken()).toBe("mock-access-token-123");
-    // Verify it was called with withCredentials: true and empty body (since no in-memory refresh token existed)
     expect(postSpy).toHaveBeenCalledWith(
       expect.stringContaining("/auth/refresh"),
       {},
@@ -81,10 +79,8 @@ describe("F-01: Auth and Session Management", () => {
     expect(hasSessionHint()).toBe(false);
     const postSpy = vi.spyOn(axios, "post");
 
-    // bootstrapAuth checks hasSessionHint()
     await bootstrapAuth();
 
-    // Refresh should NOT have been called
     expect(postSpy).not.toHaveBeenCalled();
     expect(aurix.get().user).toBeNull();
   });
@@ -96,7 +92,6 @@ describe("F-01: Auth and Session Management", () => {
     vi.spyOn(axios, "post").mockImplementation(async (url: string) => {
       if (url.includes("/auth/refresh")) {
         refreshCallCount++;
-        // Small delay to simulate network latency
         await new Promise((resolve) => setTimeout(resolve, 50));
         return {
           status: 200,
@@ -111,7 +106,6 @@ describe("F-01: Auth and Session Management", () => {
       return { status: 200, data: {} };
     });
 
-    // Fire 3 simultaneous refresh calls
     const [token1, token2, token3] = await Promise.all([
       refreshAccessToken(),
       refreshAccessToken(),
@@ -139,7 +133,6 @@ describe("F-01: Auth and Session Management", () => {
 
     await expect(refreshAccessToken()).rejects.toThrow("Failed to refresh session");
 
-    // Hint and tokens must be cleared
     expect(hasSessionHint()).toBe(false);
     expect(getTokens()).toBeNull();
     expect(toast.error).toHaveBeenCalledWith("Session expired. Please sign in again.");
@@ -157,7 +150,6 @@ describe("F-01: Auth and Session Management", () => {
     expect(hasSessionHint()).toBe(false);
     expect(getTokens()).toBeNull();
     expect(safeStorage.getItem(SESSION_HINT_KEY)).toBeNull();
-    expect(safeStorage.getItem("aurix:refresh_token")).toBeNull();
   });
 
   it("parseLoginResponse parses standard login response with access_token", async () => {
@@ -167,6 +159,8 @@ describe("F-01: Auth and Session Management", () => {
       data: {
         access_token: "jwt-access-token",
         refresh_token: "jwt-refresh-token",
+        token_type: "Bearer",
+        expires_in: 900,
         user: {
           id: "u-101",
           email: "hr@ofc360.com",
@@ -189,7 +183,6 @@ describe("F-01: Auth and Session Management", () => {
   it("parseLoginResponse parses 200 OK verification_required challenge without throwing errors", async () => {
     const { parseLoginResponse } = await import("@/features/auth/utils/parseLoginResponse");
 
-    // Case 1: Backend returns requires_verification flag
     const challengeRes1 = {
       requires_verification: true,
       message: "Verify your OFC360 login",
@@ -207,7 +200,6 @@ describe("F-01: Auth and Session Management", () => {
       expect(result1.userId).toBe("u-202");
     }
 
-    // Case 2: Backend returns status: "verification_required" with message
     const challengeRes2 = {
       status: "verification_required",
       detail: "Login requires email verification",

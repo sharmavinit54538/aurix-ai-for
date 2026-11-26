@@ -3,6 +3,7 @@ import {
   announcementsApi,
   type AnnouncementsListResult,
   type Announcement,
+  type AnnouncementDetail,
   type CreateAnnouncementInput,
   type UpdateAnnouncementInput,
 } from "@/services/announcementsApi";
@@ -14,6 +15,9 @@ export function useAnnouncements(params?: {
   search?: string;
   page?: number;
   limit?: number;
+  department?: string;
+  branch?: string;
+  priority?: string;
 }) {
   return useQuery<AnnouncementsListResult, Error>({
     queryKey: [...ANNOUNCEMENTS_QUERY_KEY, params],
@@ -23,7 +27,7 @@ export function useAnnouncements(params?: {
 }
 
 export function useAnnouncement(id?: string) {
-  return useQuery<Announcement, Error>({
+  return useQuery<AnnouncementDetail, Error>({
     queryKey: [...ANNOUNCEMENTS_QUERY_KEY, "detail", id],
     queryFn: () => {
       if (!id) throw new Error("Announcement ID is required");

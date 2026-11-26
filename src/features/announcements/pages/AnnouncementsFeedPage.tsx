@@ -28,23 +28,23 @@ export default function AnnouncementsFeedPage() {
   const canManage = currentRole === "hr_admin" || currentRole === "super_admin";
 
   const [search, setSearch] = useState("");
-  const [selectedAudience, setSelectedAudience] = useState<string>("all");
+  const [selectedVisibility, setSelectedVisibility] = useState<string>("all");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
-  const { data, isLoading, isError, error, refetch } = useAnnouncements();
+  const { data, isLoading, isError, error, refetch } = useAnnouncements({ status: "PUBLISHED" });
 
   const allItems = data?.items ?? [];
 
-  // Extract distinct audiences for filter dropdown
-  const audienceOptions = useMemo(() => {
+  // Extract distinct visibility options for filter dropdown
+  const visibilityOptions = useMemo(() => {
     const set = new Set<string>();
     allItems.forEach((a) => {
-      if (a.targetAudience) set.add(a.targetAudience);
+      if (a.visibility) set.add(a.visibility);
     });
     return Array.from(set);
   }, [allItems]);
 
-  // Client-side filtering & sorting (pinned upar)
+  // Client-side filtering & sorting (pinned first)
   const filteredAnnouncements = useMemo(() => {
     let list = [...allItems];
 
@@ -53,24 +53,24 @@ export default function AnnouncementsFeedPage() {
       list = list.filter(
         (a) =>
           a.title.toLowerCase().includes(q) ||
-          (a.content && a.content.toLowerCase().includes(q)) ||
-          (a.summary && a.summary.toLowerCase().includes(q)),
+          (a.description && a.description.toLowerCase().includes(q)) ||
+          (a.category && a.category.toLowerCase().includes(q)),
       );
     }
 
-    if (selectedAudience !== "all") {
-      list = list.filter((a) => a.targetAudience === selectedAudience);
+    if (selectedVisibility !== "all") {
+      list = list.filter((a) => a.visibility === selectedVisibility);
     }
 
     // Sort: Pinned first, then newest createdAt
     return list.sort((a, b) => {
-      if (a.isPinned && !b.isPinned) return -1;
-      if (!a.isPinned && b.isPinned) return 1;
-      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      if (a.is_pinned && !b.is_pinned) return -1;
+      if (!a.is_pinned && b.is_pinned) return 1;
+      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
       return dateB - dateA;
     });
-  }, [allItems, search, selectedAudience]);
+  }, [allItems, search, selectedVisibility]);
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12 px-4 sm:px-6">
@@ -106,14 +106,14 @@ export default function AnnouncementsFeedPage() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search announcements by title or content..."
+            placeholder="Search announcements by title or description..."
             className="pl-9 bg-background border-border/80"
           />
         </div>
 
-        {audienceOptions.length > 0 && (
+        {visibilityOptions.length > 0 && (
           <div className="w-full sm:w-[220px]">
-            <Select value={selectedAudience} onValueChange={setSelectedAudience}>
+            <Select value={selectedVisibility} onValueChange={setSelectedVisibility}>
               <SelectTrigger className="w-full bg-background border-border/80">
                 <div className="flex items-center gap-2 truncate">
                   <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
@@ -121,10 +121,10 @@ export default function AnnouncementsFeedPage() {
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Audiences</SelectItem>
-                {audienceOptions.map((aud) => (
-                  <SelectItem key={aud} value={aud}>
-                    {aud}
+                <SelectItem value="all">All Visibilities</SelectItem>
+                {visibilityOptions.map((vis) => (
+                  <SelectItem key={vis} value={vis}>
+                    {vis.replace(/_/g, " ")}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -181,17 +181,17 @@ export default function AnnouncementsFeedPage() {
             No Announcements Found
           </h3>
           <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-            {search || selectedAudience !== "all"
-              ? "No announcements matched your search or audience filters."
+            {search || selectedVisibility !== "all"
+              ? "No announcements matched your search or visibility filters."
               : "There are currently no announcements broadcast to your team."}
           </p>
-          {(search || selectedAudience !== "all") && (
+          {(search || selectedVisibility !== "all") && (
             <Button
               variant="outline"
               size="sm"
               onClick={() => {
                 setSearch("");
-                setSelectedAudience("all");
+                setSelectedVisibility("all");
               }}
             >
               Clear Filters

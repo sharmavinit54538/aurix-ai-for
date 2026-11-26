@@ -8,7 +8,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAnnouncements } from "../hooks/useAnnouncements";
 
 export function LatestAnnouncementsWidget() {
-  const { data, isLoading, isError, error, refetch } = useAnnouncements({ limit: 4 });
+  const { data, isLoading, isError, error, refetch } = useAnnouncements({ 
+    limit: 4,
+    status: "PUBLISHED",
+  });
 
   const items = data?.items ?? [];
 
@@ -74,8 +77,8 @@ export function LatestAnnouncementsWidget() {
         ) : (
           <div className="divide-y divide-border/40">
             {items.slice(0, 4).map((ann) => {
-              const dateStr = ann.createdAt
-                ? new Date(ann.createdAt).toLocaleDateString(undefined, {
+              const dateStr = ann.created_at
+                ? new Date(ann.created_at).toLocaleDateString(undefined, {
                     month: "short",
                     day: "numeric",
                   })
@@ -96,14 +99,14 @@ export function LatestAnnouncementsWidget() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    {ann.isPinned && (
+                    {ann.is_pinned && (
                       <Badge variant="outline" className="text-[9px] py-0 px-1 bg-primary/10 text-primary border-primary/20">
                         Pinned
                       </Badge>
                     )}
-                    {ann.targetAudience && (
+                    {ann.visibility && (
                       <span className="text-[10px] text-muted-foreground line-clamp-1">
-                        {ann.targetAudience}
+                        {ann.visibility.replace(/_/g, " ")}
                       </span>
                     )}
                   </div>

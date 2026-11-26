@@ -25,7 +25,7 @@ export function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      const response = (await authService.forgotPassword({ email })) as any;
+      const response = await authService.forgotPassword({ identifier: email });
       const isSuccess = Boolean(response?.data?.success ?? response?.success);
       const message = response?.data?.message || response?.message;
       if (isSuccess) {

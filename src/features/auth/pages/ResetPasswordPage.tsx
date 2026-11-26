@@ -11,15 +11,14 @@ import { toast } from "sonner";
 export function ResetPasswordPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { email: searchEmail, resetToken: searchResetToken, token: searchToken } = useSearch({ strict: false }) as {
+  const { email: searchEmail, resetToken: searchResetToken } = useSearch({ strict: false }) as {
     email?: string;
     resetToken?: string;
-    token?: string;
   };
 
   const state = location.state as { email?: string; resetToken?: string } | undefined;
   const email = searchEmail || state?.email || "";
-  const resetToken = searchResetToken || searchToken || state?.resetToken || "";
+  const resetToken = searchResetToken || state?.resetToken || "";
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -28,11 +27,11 @@ export function ResetPasswordPage() {
   const [validationError, setValidationError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!resetToken) {
+    if (!resetToken || !email) {
       toast.error("Invalid reset session. Please request password reset again.");
       navigate({ to: "/forgot-password" });
     }
-  }, [resetToken, navigate]);
+  }, [resetToken, email, navigate]);
 
   const validatePassword = () => {
     if (password.length < 8) {
@@ -69,11 +68,12 @@ export function ResetPasswordPage() {
     setLoading(true);
 
     try {
-      const response = (await authService.resetPassword({
-        token: resetToken,
-        password: password,
+      const response = await authService.resetPassword({
+        email,
+        reset_token: resetToken,
+        new_password: password,
         confirm_password: confirmPassword,
-      })) as any;
+      });
 
       const isSuccess = Boolean(response?.data?.success ?? response?.success);
       const message = response?.data?.message || response?.message;
@@ -108,7 +108,7 @@ export function ResetPasswordPage() {
               type={show ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
               disabled={loading}
             />
             <button
@@ -128,7 +128,7 @@ export function ResetPasswordPage() {
             type={show ? "text" : "password"}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="••••••••"
+            placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
             disabled={loading}
           />
         </div>

@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { getRejectMessage } from "@/api/utils";
 import { useAppDispatch } from "@/redux/hooks";
@@ -36,6 +36,8 @@ export function useEmployeeConfirmDialogs({ employees, onChanged }: UseEmployeeC
     close: closeDeactivate,
   } = useConfirmDialog<Employee>();
 
+  const [deactivateReason, setDeactivateReason] = useState("");
+
   const requestRemove = useCallback(
     (id: string) => {
       const employee = employees.find((e) => e.id === id);
@@ -60,23 +62,30 @@ export function useEmployeeConfirmDialogs({ employees, onChanged }: UseEmployeeC
   const requestDeactivate = useCallback(
     (id: string) => {
       const employee = employees.find((e) => e.id === id);
-      if (employee) openDeactivateWith(employee);
+      if (employee) {
+        setDeactivateReason("");
+        openDeactivateWith(employee);
+      }
     },
     [employees, openDeactivateWith],
   );
 
   const confirmDeactivate = useCallback(async () => {
-    if (!employeeToDeactivate) return;
+    if (!employeeToDeactivate || !deactivateReason.trim()) {
+      toast.error("Please provide a reason for deactivation");
+      return;
+    }
 
-    const result = await dispatch(deactivateEmployee(employeeToDeactivate.id));
+    const result = await dispatch(deactivateEmployee({ id: employeeToDeactivate.id, reason: deactivateReason }));
     if (deactivateEmployee.fulfilled.match(result)) {
       toast.success("Employee account deactivated successfully");
       closeDeactivate();
+      setDeactivateReason("");
       onChanged?.();
     } else {
       toast.error(getRejectMessage(result.payload, "Failed to deactivate employee"));
     }
-  }, [closeDeactivate, dispatch, employeeToDeactivate, onChanged]);
+  }, [closeDeactivate, dispatch, employeeToDeactivate, deactivateReason, onChanged]);
 
   const deleteConfirm: EmployeeConfirmDialogState = {
     open: deleteOpen,
@@ -94,5 +103,5 @@ export function useEmployeeConfirmDialogs({ employees, onChanged }: UseEmployeeC
     onConfirm: confirmDeactivate,
   };
 
-  return { deleteConfirm, deactivateConfirm };
+  return { deleteConfirm, deactivateConfirm, deactivateReason, setDeactivateReason };
 }

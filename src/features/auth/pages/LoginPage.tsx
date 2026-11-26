@@ -4,6 +4,7 @@ import { z } from "zod";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { AuthShell } from "@/features/auth/components/AuthShell";
 import { getApiResponseMessage, parseLoginResponse } from "@/features/auth/utils/parseLoginResponse";
+import { buildOtpTimerKey, saveOtpTimerState } from "@/features/auth/utils/otpTimerStorage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,9 +50,9 @@ export function LoginPage() {
   }, []);
 
   useEffect(() => {
-    if (IS_TEST_ENV || !authReady) return;
+    if (!authReady) return;
     const currentUser = aurix.get().user;
-    if (currentUser && hasValidAccessToken() && currentUser.onboardingComplete !== false) {
+    if (currentUser && hasValidAccessToken() && currentUser.emailVerified) {
       const params = new URLSearchParams(window.location.search);
       const redirectParam = params.get("redirect") || params.get("callbackUrl");
       const destination = getSafeRedirectUrl(redirectParam, currentUser);
@@ -92,7 +93,7 @@ export function LoginPage() {
             /* ignore */
           }
         }
-        persistAuthSession(user, { accessToken, refreshToken });
+        persistAuthSession(user, { accessToken });
         toast.success(`Welcome back, ${user.name}!`);
 
         const params = new URLSearchParams(window.location.search);
@@ -168,13 +169,10 @@ export function LoginPage() {
           if (typeof window !== "undefined") {
             window.sessionStorage?.removeItem("ofc360_email_verified");
             window.localStorage?.removeItem("ofc360_email_verified");
+            window.sessionStorage?.removeItem("ofc360_pending_verification_password");
+            window.sessionStorage?.removeItem("aurix_pending_auth");
             window.sessionStorage?.setItem("ofc360_pending_verification_email", targetEmail);
-            window.sessionStorage?.setItem("ofc360_pending_verification_password", password);
             window.sessionStorage?.setItem("ofc360_pending_verification_mode", "login");
-            window.sessionStorage?.setItem(
-              "aurix_pending_auth",
-              JSON.stringify({ email: targetEmail, password }),
-            );
             if (login.userId) {
               window.sessionStorage?.setItem("ofc360_pending_verification_user_id", String(login.userId));
             }
@@ -186,6 +184,12 @@ export function LoginPage() {
         } catch {
           // ignore sessionStorage write errors
         }
+
+        saveOtpTimerState(
+          buildOtpTimerKey(targetEmail, vid),
+          (login.otpMeta as any) ?? null,
+          { expirySeconds: 600, cooldownSeconds: 30 },
+        );
 
         const existingUser = aurix.get().user;
         aurix.set({

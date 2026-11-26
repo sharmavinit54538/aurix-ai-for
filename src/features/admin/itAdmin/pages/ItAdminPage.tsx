@@ -292,11 +292,11 @@ export function ItAdminPage() {
         toast.error(getRejectMessage(result.payload, "Failed to update IT administrator"));
       }
     } else {
-      const result = await dispatch(
+const result = await dispatch(
         createEmployee({
-          first_name,
-          last_name,
-          personal_email: formData.email,
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          personal_email: formData.personalEmail,
           company_email: formData.email,
           phone: formData.phone,
           department: formData.department,
@@ -304,7 +304,6 @@ export function ItAdminPage() {
           joining_date: formData.joiningDate,
           employee_id: formData.employeeId || `IT-${Math.floor(100000 + Math.random() * 900000)}`,
           employment_type: "FULL_TIME",
-          employment_status: "PROBATION",
           role: "it_admin",
           shift: formData.shift,
         })

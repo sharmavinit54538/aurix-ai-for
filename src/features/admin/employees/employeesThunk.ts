@@ -2,10 +2,20 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { apiInstance } from "@/api";
 import { parseApiError, type ParsedError } from "@/api/utils";
 import type {
-  CreateEmployeePayload,
   Employee,
   FetchEmployeesParams,
-  UpdateEmployeePayload,
+  EmployeeCreateRequest,
+  EmployeeUpdateRequest,
+  EmployeeListResponse,
+  EmployeeStatistics,
+  EmployeeOnboardingStatus,
+  DeactivateEmployeeRequest,
+  InvitationValidationResponse,
+  ActivateEmployeeResponse,
+  ResetPasswordResponse,
+  SendInvitationResponse,
+  EmployeeImportResponse,
+  EmployeeExportResponse,
 } from "./employeesTypes";
 
 function mapEmployee(emp: Record<string, unknown>): Employee {
@@ -80,8 +90,8 @@ function mapEmployee(emp: Record<string, unknown>): Employee {
     probationPeriodMonths: emp.probation_period_months !== undefined ? Number(emp.probation_period_months) : undefined,
     profilePhotoUrl: (emp.profile_photo_url || emp.avatar_url || emp.avatar) ? String(emp.profile_photo_url || emp.avatar_url || emp.avatar) : undefined,
     avatarUrl: (emp.avatar_url || emp.profile_photo_url || emp.avatar) ? String(emp.avatar_url || emp.profile_photo_url || emp.avatar) : undefined,
-    salary: emp.salary ? String(emp.salary) : undefined,
-    ctc: emp.ctc ? String(emp.ctc) : emp.ctc_annual ? String(emp.ctc_annual) : undefined,
+    salary: emp.salary !== undefined ? Number(emp.salary) : undefined,
+    ctc: emp.ctc !== undefined ? Number(emp.ctc) : emp.ctc_annual !== undefined ? Number(emp.ctc_annual) : undefined,
     sendOnboardingInvite: emp.send_onboarding_invite !== undefined ? Boolean(emp.send_onboarding_invite) : true,
     panNumber: emp.pan_number ? String(emp.pan_number) : undefined,
     aadhaarNumber: emp.aadhaar_number ? String(emp.aadhaar_number) : undefined,
@@ -104,16 +114,7 @@ function mapEmployee(emp: Record<string, unknown>): Employee {
 }
 
 export const fetchEmployees = createAsyncThunk<
-  {
-    items: Employee[];
-    total: number;
-    page: number;
-    limit: number;
-    pages: number;
-    total_pages: number;
-    has_next: boolean;
-    has_previous: boolean;
-  },
+  EmployeeListResponse,
   FetchEmployeesParams | void,
   { rejectValue: ParsedError }
 >("employees/fetchEmployees", async (params, thunkAPI) => {
@@ -149,14 +150,14 @@ export const fetchEmployees = createAsyncThunk<
     }
 
     const response = await apiInstance.get(`/employees?${searchParams.toString()}`);
-    const data = response.data?.data ?? {};
-    const items = data.items ?? [];
+    const data = response.data?.data ?? response.data ?? {};
+    const items = data.items ?? data ?? [];
     return {
-      items: items.map((item: Record<string, unknown>) => mapEmployee(item)),
+      items: Array.isArray(items) ? items.map((item: Record<string, unknown>) => mapEmployee(item)) : [],
       total: Number(data.total ?? 0),
       page: Number(data.page ?? 1),
       limit: Number(data.limit ?? 10),
-      pages: Number(data.pages ?? 0),
+      pages: Number(data.pages ?? data.total_pages ?? 0),
       total_pages: Number(data.total_pages ?? data.pages ?? 0),
       has_next: Boolean(data.has_next ?? false),
       has_previous: Boolean(data.has_previous ?? false),
@@ -166,82 +167,164 @@ export const fetchEmployees = createAsyncThunk<
   }
 });
 
+export const fetchEmployeeById = createAsyncThunk<
+  Employee,
+  string,
+  { rejectValue: ParsedError }
+>("employees/fetchEmployeeById", async (id, thunkAPI) => {
+  try {
+    const response = await apiInstance.get(`/employees/${id}`);
+    const data = response.data?.data ?? response.data ?? {};
+    return mapEmployee(data);
+  } catch (error) {
+    return thunkAPI.rejectWithValue(parseApiError(error, "Failed to fetch employee"));
+  }
+});
+
 export const createEmployee = createAsyncThunk<
-  void,
-  CreateEmployeePayload,
+  Employee,
+  EmployeeCreateRequest,
   { rejectValue: ParsedError }
 >("employees/createEmployee", async (payload, thunkAPI) => {
   try {
-    await apiInstance.post("/employees", payload);
+    const response = await apiInstance.post("/employees", payload);
+    const data = response.data?.data ?? response.data ?? {};
+    return mapEmployee(data);
   } catch (error) {
     return thunkAPI.rejectWithValue(parseApiError(error, "Failed to add employee"));
   }
 });
 
 export const updateEmployee = createAsyncThunk<
-  void,
-  { id: string; payload: UpdateEmployeePayload },
+  Employee,
+  { id: string; payload: EmployeeUpdateRequest },
   { rejectValue: ParsedError }
 >("employees/updateEmployee", async ({ id, payload }, thunkAPI) => {
   try {
-    await apiInstance.put(`/employees/${id}`, payload);
+    const response = await apiInstance.put(`/employees/${id}`, payload);
+    const data = response.data?.data ?? response.data ?? {};
+    return mapEmployee(data);
   } catch (error) {
     return thunkAPI.rejectWithValue(parseApiError(error, "Failed to update employee"));
   }
 });
 
-export const deleteEmployee = createAsyncThunk<string, string, { rejectValue: ParsedError }>(
-  "employees/deleteEmployee",
-  async (id, thunkAPI) => {
-    try {
-      await apiInstance.delete(`/employees/${id}`);
-      return id;
-    } catch (error) {
-      return thunkAPI.rejectWithValue(parseApiError(error, "Failed to remove employee"));
-    }
-  },
-);
+export const deleteEmployee = createAsyncThunk<
+  string,
+  string,
+  { rejectValue: ParsedError }
+>("employees/deleteEmployee", async (id, thunkAPI) => {
+  try {
+    await apiInstance.delete(`/employees/${id}`);
+    return id;
+  } catch (error) {
+    return thunkAPI.rejectWithValue(parseApiError(error, "Failed to remove employee"));
+  }
+});
 
-export const resendEmployeeInvite = createAsyncThunk<void, string, { rejectValue: ParsedError }>(
-  "employees/resendEmployeeInvite",
-  async (id, thunkAPI) => {
-    try {
-      await apiInstance.post(`/employees/${id}/send-invite`);
-    } catch (error) {
-      return thunkAPI.rejectWithValue(parseApiError(error, "Failed to resend invitation"));
-    }
-  },
-);
+export const resendEmployeeInvite = createAsyncThunk<
+  SendInvitationResponse,
+  string,
+  { rejectValue: ParsedError }
+>("employees/resendEmployeeInvite", async (id, thunkAPI) => {
+  try {
+    const response = await apiInstance.post(`/employees/${id}/send-invite`);
+    return response.data?.data ?? response.data ?? { success: true, message: "Invitation sent" };
+  } catch (error) {
+    return thunkAPI.rejectWithValue(parseApiError(error, "Failed to resend invitation"));
+  }
+});
 
-export const deactivateEmployee = createAsyncThunk<void, string, { rejectValue: ParsedError }>(
-  "employees/deactivateEmployee",
-  async (id, thunkAPI) => {
-    try {
-      await apiInstance.post(`/employees/${id}/deactivate`);
-    } catch (error) {
-      return thunkAPI.rejectWithValue(parseApiError(error, "Failed to deactivate employee"));
-    }
-  },
-);
+export const deactivateEmployee = createAsyncThunk<
+  { success: boolean; message?: string },
+  { id: string; reason: string },
+  { rejectValue: ParsedError }
+>("employees/deactivateEmployee", async ({ id, reason }, thunkAPI) => {
+  try {
+    const payload: DeactivateEmployeeRequest = { reason };
+    const response = await apiInstance.post(`/employees/${id}/deactivate`, payload);
+    return response.data?.data ?? response.data ?? { success: true, message: "Employee deactivated" };
+  } catch (error) {
+    return thunkAPI.rejectWithValue(parseApiError(error, "Failed to deactivate employee"));
+  }
+});
 
-export const activateEmployee = createAsyncThunk<void, string, { rejectValue: ParsedError }>(
-  "employees/activateEmployee",
-  async (id, thunkAPI) => {
-    try {
-      await apiInstance.post(`/employees/${id}/activate-by-admin`);
-    } catch (error) {
-      return thunkAPI.rejectWithValue(parseApiError(error, "Failed to activate employee"));
-    }
-  },
-);
+export const activateEmployee = createAsyncThunk<
+  ActivateEmployeeResponse,
+  string,
+  { rejectValue: ParsedError }
+>("employees/activateEmployee", async (id, thunkAPI) => {
+  try {
+    const response = await apiInstance.post(`/employees/${id}/activate-by-admin`);
+    return response.data?.data ?? response.data ?? { success: true, message: "Employee activated" };
+  } catch (error) {
+    return thunkAPI.rejectWithValue(parseApiError(error, "Failed to activate employee"));
+  }
+});
 
-export const resetEmployeePassword = createAsyncThunk<void, string, { rejectValue: ParsedError }>(
-  "employees/resetEmployeePassword",
-  async (id, thunkAPI) => {
-    try {
-      await apiInstance.post(`/employees/${id}/reset-password`);
-    } catch (error) {
-      return thunkAPI.rejectWithValue(parseApiError(error, "Failed to reset password"));
-    }
-  },
-);
+export const resetEmployeePassword = createAsyncThunk<
+  ResetPasswordResponse,
+  string,
+  { rejectValue: ParsedError }
+>("employees/resetEmployeePassword", async (id, thunkAPI) => {
+  try {
+    const response = await apiInstance.post(`/employees/${id}/reset-password`);
+    return response.data?.data ?? response.data ?? { success: true, message: "Password reset email sent" };
+  } catch (error) {
+    return thunkAPI.rejectWithValue(parseApiError(error, "Failed to reset password"));
+  }
+});
+
+export const fetchEmployeeStatistics = createAsyncThunk<
+  EmployeeStatistics,
+  void,
+  { rejectValue: ParsedError }
+>("employees/fetchEmployeeStatistics", async (_, thunkAPI) => {
+  try {
+    const response = await apiInstance.get("/employees/stats");
+    return response.data?.data ?? response.data ?? {};
+  } catch (error) {
+    return thunkAPI.rejectWithValue(parseApiError(error, "Failed to fetch employee statistics"));
+  }
+});
+
+export const fetchEmployeeOnboardingStatus = createAsyncThunk<
+  EmployeeOnboardingStatus,
+  string,
+  { rejectValue: ParsedError }
+>("employees/fetchEmployeeOnboardingStatus", async (id, thunkAPI) => {
+  try {
+    const response = await apiInstance.get(`/employees/${id}/onboarding-status`);
+    return response.data?.data ?? response.data ?? {};
+  } catch (error) {
+    return thunkAPI.rejectWithValue(parseApiError(error, "Failed to fetch onboarding status"));
+  }
+});
+
+export const validateEmployeeInvitation = createAsyncThunk<
+  InvitationValidationResponse,
+  string,
+  { rejectValue: ParsedError }
+>("employees/validateEmployeeInvitation", async (token, thunkAPI) => {
+  try {
+    const response = await apiInstance.get("/employees/validate-invitation", {
+      params: { token },
+    });
+    return response.data?.data ?? response.data ?? { valid: false };
+  } catch (error) {
+    return thunkAPI.rejectWithValue(parseApiError(error, "Failed to validate invitation"));
+  }
+});
+
+export const activateEmployeeByToken = createAsyncThunk<
+  ActivateEmployeeResponse,
+  { token: string; password: string },
+  { rejectValue: ParsedError }
+>("employees/activateEmployeeByToken", async ({ token, password }, thunkAPI) => {
+  try {
+    const response = await apiInstance.post("/employees/activate", { token, password });
+    return response.data?.data ?? response.data ?? { success: false, message: "Activation failed" };
+  } catch (error) {
+    return thunkAPI.rejectWithValue(parseApiError(error, "Failed to activate account"));
+  }
+});

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Briefcase,
   IndianRupee,
@@ -30,58 +30,41 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { Employee } from "../employeesTypes";
-import { generateEmployeeCode } from "../utils/employeeStatus";
-
-const DEPARTMENT_OPTIONS = [
-  "Engineering",
-  "HR",
-  "Sales",
-  "Finance",
-  "Product",
-  "Marketing",
-  "AI Research",
-  "Operations & People",
-];
+import { departmentsApi } from "@/services/departmentsApi";
+import { designationsApi } from "@/services/designationsApi";
+import { shiftsApi } from "@/services/shiftsApi";
 
 const GENDER_OPTIONS = [
-  "Male",
-  "Female",
-  "Non-Binary",
-  "Prefer not to say",
-];
+  { label: "Male", value: "MALE" },
+  { label: "Female", value: "FEMALE" },
+  { label: "Other", value: "OTHER" },
+] as const;
 
 const EMPLOYMENT_TYPES = [
-  "Full-time",
-  "Part-time",
-  "Contract",
-  "Intern",
-];
+  { label: "Full Time", value: "FULL_TIME" },
+  { label: "Part Time", value: "PART_TIME" },
+  { label: "Contract", value: "CONTRACT" },
+  { label: "Intern", value: "INTERN" },
+] as const;
 
 const WORK_MODES = [
-  "Office / On-Site",
-  "Remote / WFH",
-  "Hybrid",
-];
+  { label: "Office / On-Site", value: "OFFICE" },
+  { label: "Remote / WFH", value: "REMOTE" },
+  { label: "Hybrid", value: "HYBRID" },
+] as const;
 
 const PROBATION_OPTIONS = [
-  { label: "3 months", value: "3" },
-  { label: "6 months", value: "6" },
-  { label: "No Probation (Confirmed)", value: "0" },
-];
-
-const SHIFT_OPTIONS = [
-  "General Shift (09:30 - 18:30)",
-  "Morning Shift (06:00 - 15:00)",
-  "Night Shift (22:00 - 07:00)",
-  "Flexible",
-];
+  { label: "3 months", value: 3 },
+  { label: "6 months", value: 6 },
+  { label: "No Probation (Confirmed)", value: 0 },
+] as const;
 
 const SYSTEM_ROLES = [
   { label: "Employee", value: "employee" },
   { label: "Manager", value: "manager" },
   { label: "Executive", value: "executive" },
-  { label: "IT-Admin", value: "it_admin" },
-];
+  { label: "IT Admin", value: "it_admin" },
+] as const;
 
 interface EmployeeFormDialogProps {
   open: boolean;
@@ -104,29 +87,103 @@ export function EmployeeFormDialog({
 }: EmployeeFormDialogProps) {
   const isEdit = Boolean(draft && draft.id !== "");
 
-  const managerOptions = useMemo(() => {
-    const names = new Set<string>();
-    existingEmployees.forEach((emp) => {
-      if (emp.fullName) {
-        const label = emp.designation
-          ? `${emp.fullName} (${emp.designation})`
-          : emp.fullName;
-        names.add(label);
-      }
-    });
-    if (draft?.managerName && !names.has(draft.managerName)) {
-      names.add(draft.managerName);
-    }
-    return Array.from(names);
-  }, [existingEmployees, draft?.managerName]);
+  // State for dynamic options
+  const [departments, setDepartments] = useState<Array<{ id: string; name: string }>>([]);
+  const [designations, setDesignations] = useState<Array<{ id: string; name: string }>>([]);
+  const [shifts, setShifts] = useState<Array<{ id: string; name: string }>>([]);
+  const [managers, setManagers] = useState<Array<{ id: string; name: string; designation?: string; department?: string }>>([]);
+  const [loadingOptions, setLoadingOptions] = useState(false);
 
+  // Fetch dynamic options on mount and when draft changes
+  useEffect(() => {
+    let mounted = true;
+    setLoadingOptions(true);
+
+    const fetchOptions = async () => {
+      try {
+        const [deptsRes, desigsRes, shiftsRes] = await Promise.allSettled([
+          departmentsApi.getDepartments({ limit: 100 }),
+          designationsApi.getDesignations({ limit: 100 }),
+          shiftsApi.getShifts({ limit: 100 }),
+        ]);
+
+        if (!mounted) return;
+
+        if (deptsRes.status === "fulfilled") {
+          setDepartments(deptsRes.value.items.map((d) => ({ id: d.id, name: d.name })));
+        }
+        if (desigsRes.status === "fulfilled") {
+          setDesignations(desigsRes.value.items.map((d) => ({ id: d.id, name: d.name })));
+        }
+        if (shiftsRes.status === "fulfilled") {
+          setShifts(shiftsRes.value.items.map((s) => ({ id: s.id, name: s.name })));
+        }
+
+        // Build managers list from existing employees
+        const managerList = existingEmployees
+          .filter((emp) => emp.id && emp.fullName)
+          .map((emp) => ({
+            id: emp.id,
+            name: emp.fullName,
+            designation: emp.designation,
+            department: emp.department,
+          }));
+        setManagers(managerList);
+      } catch {
+        // Ignore errors, fallback to empty arrays
+      } finally {
+        if (mounted) setLoadingOptions(false);
+      }
+    };
+
+    fetchOptions();
+    return () => {
+      mounted = false;
+    };
+  }, [existingEmployees]);
+
+  // Build department list with fallback for current draft value
   const departmentList = useMemo(() => {
-    const list = new Set<string>(DEPARTMENT_OPTIONS);
+    const list = new Set<string>();
+    departments.forEach((d) => list.add(d.name));
     if (draft?.department && !list.has(draft.department)) {
       list.add(draft.department);
     }
     return Array.from(list);
-  }, [draft?.department]);
+  }, [departments, draft?.department]);
+
+  // Build managers list with fallback for current draft value
+  const managerOptions = useMemo(() => {
+    const list = new Set<string>();
+    managers.forEach((m) => {
+      const label = m.designation ? `${m.name} (${m.designation})` : m.name;
+      list.add(label);
+    });
+    if (draft?.reportingManagerName && !list.has(draft.reportingManagerName)) {
+      list.add(draft.reportingManagerName);
+    }
+    return Array.from(list);
+  }, [managers, draft?.reportingManagerName]);
+
+  // Build designations list with fallback
+  const designationList = useMemo(() => {
+    const list = new Set<string>();
+    designations.forEach((d) => list.add(d.name));
+    if (draft?.designation && !list.has(draft.designation)) {
+      list.add(draft.designation);
+    }
+    return Array.from(list);
+  }, [designations, draft?.designation]);
+
+  // Build shifts list with fallback
+  const shiftList = useMemo(() => {
+    const list = new Set<string>();
+    shifts.forEach((s) => list.add(s.name));
+    if (draft?.shift && !list.has(draft.shift)) {
+      list.add(draft.shift);
+    }
+    return Array.from(list);
+  }, [shifts, draft?.shift]);
 
   if (!draft) return null;
 
@@ -149,6 +206,39 @@ export function EmployeeFormDialog({
       firstName: nextFirst,
       lastName: nextLast,
       fullName: combined,
+    });
+  };
+
+  // Handle reporting manager selection by ID
+  const handleManagerChange = (val: string) => {
+    const selectedManager = managers.find((m) =>
+      `${m.name} (${m.designation || ""})`.trim() === val || m.name === val
+    );
+    onDraftChange({
+      ...draft,
+      managerName: val === "none" ? "" : val,
+      reportingManagerName: val === "none" ? "" : val,
+      reportingManagerId: selectedManager?.id || null,
+    });
+  };
+
+  // Handle designation change - could fetch department if needed
+  const handleDesignationChange = (val: string) => {
+    onDraftChange({ ...draft, designation: val });
+  };
+
+  // Handle department change
+  const handleDepartmentChange = (val: string) => {
+    onDraftChange({ ...draft, department: val });
+  };
+
+  // Handle salary/CTC change - ensure numeric
+  const handleSalaryChange = (val: string) => {
+    const numericVal = val.replace(/[^0-9.]/g, "");
+    onDraftChange({
+      ...draft,
+      ctc: numericVal ? Number(numericVal) : undefined,
+      salary: numericVal ? Number(numericVal) : undefined,
     });
   };
 
@@ -239,7 +329,7 @@ export function EmployeeFormDialog({
 
               <FormField label="Gender">
                 <Select
-                  value={draft.gender || "Male"}
+                  value={draft.gender || "MALE"}
                   onValueChange={(val) =>
                     onDraftChange({ ...draft, gender: val })
                   }
@@ -249,8 +339,8 @@ export function EmployeeFormDialog({
                   </SelectTrigger>
                   <SelectContent>
                     {GENDER_OPTIONS.map((g) => (
-                      <SelectItem key={g} value={g}>
-                        {g}
+                      <SelectItem key={g.value} value={g.value}>
+                        {g.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -289,39 +379,30 @@ export function EmployeeFormDialog({
               <FormField label="Employee Code">
                 <div className="flex items-center gap-2">
                   <Input
-                    placeholder="e.g. EMP-3655"
+                    placeholder="Auto-generated if left blank"
                     value={draft.employeeId || ""}
                     onChange={(e) =>
                       onDraftChange({ ...draft, employeeId: e.target.value })
                     }
                     className="font-mono"
+                    disabled={isEdit}
                   />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    title="Auto-generate Employee Code"
-                    onClick={() =>
-                      onDraftChange({
-                        ...draft,
-                        employeeId: generateEmployeeCode(),
-                      })
-                    }
-                  >
-                    <RefreshCw className="h-3.5 w-3.5" />
-                  </Button>
+                  {loadingOptions && (
+                    <Button type="button" variant="outline" size="icon" disabled>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    </Button>
+                  )}
                 </div>
               </FormField>
 
               <FormField label="Department *">
                 <Select
-                  value={draft.department || "Engineering"}
-                  onValueChange={(val) =>
-                    onDraftChange({ ...draft, department: val })
-                  }
+                  value={draft.department || ""}
+                  onValueChange={handleDepartmentChange}
+                  disabled={loadingOptions}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select department" />
+                    <SelectValue placeholder={loadingOptions ? "Loading..." : "Select department"} />
                   </SelectTrigger>
                   <SelectContent>
                     {departmentList.map((dept) => (
@@ -331,31 +412,37 @@ export function EmployeeFormDialog({
                     ))}
                   </SelectContent>
                 </Select>
+                {loadingOptions && <p className="text-[11px] text-muted-foreground">Loading departments...</p>}
               </FormField>
 
               <FormField label="Designation *">
-                <Input
-                  placeholder="e.g. Senior Software Engineer"
+                <Select
                   value={draft.designation || ""}
-                  onChange={(e) =>
-                    onDraftChange({ ...draft, designation: e.target.value })
-                  }
-                />
+                  onValueChange={handleDesignationChange}
+                  disabled={loadingOptions}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={loadingOptions ? "Loading..." : "Select designation"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {designationList.map((desig) => (
+                      <SelectItem key={desig} value={desig}>
+                        {desig}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {loadingOptions && <p className="text-[11px] text-muted-foreground">Loading designations...</p>}
               </FormField>
 
               <FormField label="Reporting Manager">
                 <Select
-                  value={draft.managerName || "none"}
-                  onValueChange={(val) =>
-                    onDraftChange({
-                      ...draft,
-                      managerName: val === "none" ? "" : val,
-                      reportingManagerName: val === "none" ? "" : val,
-                    })
-                  }
+                  value={draft.reportingManagerName ? `${draft.reportingManagerName} (${draft.designation || ""})`.trim() : "none"}
+                  onValueChange={handleManagerChange}
+                  disabled={loadingOptions}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select reporting manager" />
+                    <SelectValue placeholder={loadingOptions ? "Loading..." : "Select reporting manager"} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">None (Direct to Leadership)</SelectItem>
@@ -371,7 +458,7 @@ export function EmployeeFormDialog({
               <FormField label="Date of Joining *">
                 <Input
                   type="date"
-                  value={draft.joiningDate || ""}
+                  value={draft.joiningDate || new Date().toISOString().split("T")[0]}
                   onChange={(e) =>
                     onDraftChange({ ...draft, joiningDate: e.target.value })
                   }
@@ -380,7 +467,7 @@ export function EmployeeFormDialog({
 
               <FormField label="Employment Type">
                 <Select
-                  value={draft.employmentType || "Full-time"}
+                  value={draft.employmentType || "FULL_TIME"}
                   onValueChange={(val) =>
                     onDraftChange({ ...draft, employmentType: val })
                   }
@@ -390,8 +477,8 @@ export function EmployeeFormDialog({
                   </SelectTrigger>
                   <SelectContent>
                     {EMPLOYMENT_TYPES.map((t) => (
-                      <SelectItem key={t} value={t}>
-                        {t}
+                      <SelectItem key={t.value} value={t.value}>
+                        {t.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -400,7 +487,7 @@ export function EmployeeFormDialog({
 
               <FormField label="Work Mode">
                 <Select
-                  value={draft.workMode || "Office / On-Site"}
+                  value={draft.workMode || "OFFICE"}
                   onValueChange={(val) =>
                     onDraftChange({ ...draft, workMode: val })
                   }
@@ -410,8 +497,8 @@ export function EmployeeFormDialog({
                   </SelectTrigger>
                   <SelectContent>
                     {WORK_MODES.map((m) => (
-                      <SelectItem key={m} value={m}>
-                        {m}
+                      <SelectItem key={m.value} value={m.value}>
+                        {m.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -433,7 +520,7 @@ export function EmployeeFormDialog({
                   </SelectTrigger>
                   <SelectContent>
                     {PROBATION_OPTIONS.map((p) => (
-                      <SelectItem key={p.value} value={p.value}>
+                      <SelectItem key={p.value} value={String(p.value)}>
                         {p.label}
                       </SelectItem>
                     ))}
@@ -443,33 +530,35 @@ export function EmployeeFormDialog({
 
               <FormField label="Default Shift Assignment">
                 <Select
-                  value={draft.shift || "General Shift (09:30 - 18:30)"}
+                  value={draft.shift || ""}
                   onValueChange={(val) =>
                     onDraftChange({ ...draft, shift: val })
                   }
+                  disabled={loadingOptions}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select default shift" />
+                    <SelectValue placeholder={loadingOptions ? "Loading..." : "Select default shift"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {SHIFT_OPTIONS.map((s) => (
+                    {shiftList.map((s) => (
                       <SelectItem key={s} value={s}>
                         {s}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                {loadingOptions && <p className="text-[11px] text-muted-foreground">Loading shifts...</p>}
               </FormField>
 
-              <FormField label="Office Location">
+              <FormField label="Work Location">
                 <Input
                   placeholder="e.g. Bengaluru · Global HQ"
-                  value={draft.officeLocation ?? draft.workLocation ?? ""}
+                  value={draft.workLocation ?? draft.officeLocation ?? ""}
                   onChange={(e) =>
                     onDraftChange({
                       ...draft,
-                      officeLocation: e.target.value,
                       workLocation: e.target.value,
+                      officeLocation: e.target.value,
                     })
                   }
                 />
@@ -494,17 +583,37 @@ export function EmployeeFormDialog({
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField label="Initial CTC / Salary Structure">
+              <FormField label="Annual CTC (₹)">
                 <Input
-                  placeholder="e.g. ₹12,00,000 / year"
-                  value={draft.ctc ?? draft.salary ?? ""}
-                  onChange={(e) =>
+                  type="number"
+                  placeholder="e.g. 1200000"
+                  value={draft.ctc ? String(draft.ctc) : ""}
+                  onChange={(e) => {
+                    const numericVal = e.target.value.replace(/[^0-9]/g, "");
                     onDraftChange({
                       ...draft,
-                      ctc: e.target.value,
-                      salary: e.target.value,
-                    })
-                  }
+                      ctc: numericVal ? Number(numericVal) : undefined,
+                    });
+                  }}
+                  step="1000"
+                  min="0"
+                />
+              </FormField>
+
+              <FormField label="Monthly Salary (₹)">
+                <Input
+                  type="number"
+                  placeholder="e.g. 100000"
+                  value={draft.salary ? String(draft.salary) : ""}
+                  onChange={(e) => {
+                    const numericVal = e.target.value.replace(/[^0-9]/g, "");
+                    onDraftChange({
+                      ...draft,
+                      salary: numericVal ? Number(numericVal) : undefined,
+                    });
+                  }}
+                  step="1000"
+                  min="0"
                 />
               </FormField>
 
@@ -578,6 +687,28 @@ export function EmployeeFormDialog({
       </DialogContent>
     </Dialog>
   );
+}
+
+const firstNameVal =
+  draft?.firstName !== undefined
+    ? draft.firstName
+    : (draft?.fullName || "").split(" ")[0] || "";
+const lastNameVal =
+  draft?.lastName !== undefined
+    ? draft.lastName
+    : (draft?.fullName || "").split(" ").slice(1).join(" ") || "";
+
+const officialEmailVal = draft?.companyEmail ?? draft?.email ?? "";
+const personalEmailVal = draft?.personalEmail ?? "";
+
+function updateName(nextFirst: string, nextLast: string) {
+  const combined = `${nextFirst} ${nextLast}`.trim();
+  onDraftChange({
+    ...draft!,
+    firstName: nextFirst,
+    lastName: nextLast,
+    fullName: combined,
+  });
 }
 
 function FormField({

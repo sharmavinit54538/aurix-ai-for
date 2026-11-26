@@ -36,13 +36,12 @@ function emit() {
 
 export function persistAuthSession(
   user: any,
-  tokens?: { accessToken?: string; refreshToken?: string },
+  tokens?: { accessToken?: string },
 ) {
   safeStorage.removeItem(LOGGED_OUT_KEY);
   if (tokens?.accessToken) {
     setTokens({
       accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
     });
   }
   if (!user) {
@@ -63,7 +62,20 @@ export function persistAuthSession(
       companyId: String(user.company_id || user.companyId || ""),
       company_name: companyName || undefined,
       companyName: companyName || undefined,
-      emailVerified: Boolean(user.is_verified ?? user.emailVerified ?? false),
+      emailVerified: Boolean(
+        user.is_verified ??
+          user.is_email_verified ??
+          user.email_verified ??
+          user.isVerified ??
+          user.emailVerified ??
+          false,
+      ),
+      emailVerifiedAt:
+        typeof user.email_verified_at === "string"
+          ? user.email_verified_at
+          : typeof user.emailVerifiedAt === "string"
+            ? user.emailVerifiedAt
+            : undefined,
       onboardingComplete: Boolean(
         user.onboarding_completed ??
           user.onboardingCompleted ??
@@ -95,13 +107,6 @@ export function getPostLoginRoute(user: any): string {
 }
 
 export async function bootstrapAuth(options?: { force?: boolean }): Promise<void> {
-  const staleToken = getAccessToken();
-  if (staleToken?.startsWith("mock-demo-") || safeStorage.getItem("aurix:mock_hr_seeded") === "1") {
-    clearTokens();
-    safeStorage.removeItem("aurix:mock_hr_seeded");
-    aurix.reset();
-  }
-
   const isLoggedOut = safeStorage.getItem(LOGGED_OUT_KEY) === "1";
   const hasHint = hasSessionHint();
   const existingToken = getAccessToken();
@@ -117,6 +122,9 @@ export async function bootstrapAuth(options?: { force?: boolean }): Promise<void
     return authBootstrapState.bootstrapPromise;
   }
 
+  authBootstrapState.status = "bootstrapping";
+  emit();
+
   authBootstrapState.bootstrapPromise = (async () => {
     try {
       let token = getAccessToken();
@@ -128,12 +136,20 @@ export async function bootstrapAuth(options?: { force?: boolean }): Promise<void
         const userPayload = res.data?.data ?? res.data?.user ?? res.data;
         if (userPayload && typeof userPayload === "object" && (userPayload.id || userPayload.email)) {
           persistAuthSession(userPayload, { accessToken: token });
+        } else {
+          aurix.set({ user: null, company: null, isRestoring: false });
         }
       } else {
         aurix.set({ user: null, company: null, isRestoring: false });
       }
-    } catch {
-      aurix.set({ isRestoring: false });
+    } catch (err: any) {
+      const status = err?.response?.status ?? err?.status;
+      if (status === 401 || status === 403 || !getAccessToken()) {
+        clearTokens();
+        aurix.set({ user: null, company: null, isRestoring: false });
+      } else {
+        aurix.set({ isRestoring: false });
+      }
     } finally {
       authBootstrapState.status = "ready";
       authBootstrapState.bootstrapPromise = null;
@@ -145,7 +161,14 @@ export async function bootstrapAuth(options?: { force?: boolean }): Promise<void
 }
 
 export function waitForAuth(): Promise<void> {
-  return authBootstrapState.bootstrapPromise ?? Promise.resolve();
+  if (authBootstrapState.bootstrapPromise) {
+    return authBootstrapState.bootstrapPromise;
+  }
+  const isLoggedOut = safeStorage.getItem(LOGGED_OUT_KEY) === "1";
+  if (!isLoggedOut && !aurix.get().user && (getAccessToken() || hasSessionHint())) {
+    return bootstrapAuth();
+  }
+  return Promise.resolve();
 }
 
 export function useAuthReady(): boolean {

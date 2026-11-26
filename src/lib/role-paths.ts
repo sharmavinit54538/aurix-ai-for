@@ -30,12 +30,12 @@ export function getDefaultDashboardPath(target?: RoleOrUser): string {
 
   if (typeof target === "object") {
     // 1. Email verification prerequisite
-    const isVerified =
-      "is_verified" in target
-        ? target.is_verified
-        : "emailVerified" in target
-          ? target.emailVerified
-          : true;
+    const rawVerified =
+      (target as any).is_verified ??
+      (target as any).is_email_verified ??
+      (target as any).email_verified ??
+      (target as any).emailVerified;
+    const isVerified = rawVerified !== undefined ? Boolean(rawVerified) : true;
 
     if (!isVerified) {
       return "/verify-email";
@@ -44,12 +44,11 @@ export function getDefaultDashboardPath(target?: RoleOrUser): string {
     const role = normalizeRole(target.role);
 
     // 2. HR Admin onboarding prerequisite
-    const onboardingCompleted =
-      "onboarding_completed" in target
-        ? target.onboarding_completed
-        : "onboardingComplete" in target
-          ? target.onboardingComplete
-          : true;
+    const rawOnboarding =
+      (target as any).onboarding_completed ??
+      (target as any).onboardingCompleted ??
+      (target as any).onboardingComplete;
+    const onboardingCompleted = rawOnboarding !== undefined ? Boolean(rawOnboarding) : true;
 
     if (role === "hr_admin" && !onboardingCompleted) {
       return "/onboarding";

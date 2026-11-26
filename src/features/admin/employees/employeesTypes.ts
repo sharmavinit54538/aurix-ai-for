@@ -44,8 +44,8 @@ export interface Employee {
   probationPeriodMonths?: number;
   profilePhotoUrl?: string;
   avatarUrl?: string;
-  salary?: string | number;
-  ctc?: string | number;
+  salary?: number;
+  ctc?: number;
   sendOnboardingInvite?: boolean;
   panNumber?: string;
   aadhaarNumber?: string;
@@ -77,6 +77,12 @@ export interface EmployeesState {
   pages: number;
   has_next: boolean;
   has_previous: boolean;
+  selectedEmployee: Employee | null;
+  employeeDetailLoading: boolean;
+  statistics: EmployeeStatistics | null;
+  statisticsLoading: boolean;
+  onboardingStatus: EmployeeOnboardingStatus | null;
+  onboardingStatusLoading: boolean;
 }
 
 export interface FetchEmployeesParams {
@@ -92,51 +98,128 @@ export interface FetchEmployeesParams {
   limit?: number;
 }
 
-export interface CreateEmployeePayload {
-  first_name: string;
-  last_name: string;
-  personal_email: string;
-  company_email: string;
-  phone: string;
-  gender?: string;
-  date_of_birth?: string;
-  department: string;
-  designation: string;
-  reporting_manager_name?: string;
-  joining_date: string;
-  employee_id: string;
-  employment_type: string;
-  employment_status: string;
-  work_mode?: string;
-  probation_period_months?: number;
-  office_location?: string;
-  ctc?: string | number;
-  salary?: string | number;
-  role: string;
-  shift: string;
-  send_onboarding_invite?: boolean;
-}
-
-export interface UpdateEmployeePayload {
+export interface EmployeeCreateRequest {
   first_name: string;
   last_name: string;
   personal_email: string;
   company_email?: string;
-  phone?: string;
-  gender?: string;
+  phone: string;
+  gender?: "MALE" | "FEMALE" | "OTHER";
   date_of_birth?: string;
   department: string;
   designation: string;
-  reporting_manager_name?: string;
+  reporting_manager_id?: string | null;
+  joining_date: string;
+  employee_id?: string;
+  employment_type?: "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERN";
+  work_mode?: "OFFICE" | "REMOTE" | "HYBRID";
+  probation_period_months?: number;
+  shift?: string;
+  work_location?: string;
+  ctc?: number;
+  salary?: number;
+  role?: string;
+  send_onboarding_invite?: boolean;
+}
+
+export interface EmployeeUpdateRequest {
+  first_name?: string;
+  last_name?: string;
+  personal_email?: string;
+  company_email?: string;
+  phone?: string;
+  gender?: "MALE" | "FEMALE" | "OTHER";
+  date_of_birth?: string;
+  department?: string;
+  designation?: string;
+  reporting_manager_id?: string | null;
   joining_date?: string;
   employee_id?: string;
-  employment_type?: string;
-  work_mode?: string;
+  employment_type?: "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERN";
+  work_mode?: "OFFICE" | "REMOTE" | "HYBRID";
   probation_period_months?: number;
-  office_location?: string;
-  ctc?: string | number;
-  salary?: string | number;
-  role?: string;
   shift?: string;
+  work_location?: string;
+  ctc?: number;
+  salary?: number;
+  role?: string;
   send_onboarding_invite?: boolean;
+}
+
+export interface EmployeeListResponse {
+  items: Employee[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+  total_pages: number;
+  has_next: boolean;
+  has_previous: boolean;
+}
+
+export interface EmployeeStatistics {
+  total_employees: number;
+  active_employees: number;
+  invited_employees: number;
+  inactive_employees: number;
+  disabled_employees: number;
+  department_distribution: Record<string, number>;
+  onboarding_stats?: {
+    pending: number;
+    in_progress: number;
+    completed: number;
+    failed: number;
+  };
+}
+
+export interface EmployeeOnboardingStatus {
+  employee_id: string;
+  status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "FAILED";
+  steps_completed: number;
+  total_steps: number;
+  pending_documents: string[];
+  completed_at?: string;
+}
+
+export interface DeactivateEmployeeRequest {
+  reason: string;
+}
+
+export interface InvitationValidationResponse {
+  valid: boolean;
+  employee_id?: string;
+  employee_email?: string;
+  employee_name?: string;
+  expires_at?: string;
+  message?: string;
+}
+
+export interface ActivateEmployeeResponse {
+  success: boolean;
+  message?: string;
+  user_created?: boolean;
+}
+
+export interface ResetPasswordResponse {
+  success: boolean;
+  message?: string;
+}
+
+export interface SendInvitationResponse {
+  success: boolean;
+  message?: string;
+  invitation_sent?: boolean;
+}
+
+export interface EmployeeImportResponse {
+  success: boolean;
+  message?: string;
+  imported: number;
+  failed: number;
+  errors?: Array<{ row: number; field: string; message: string }>;
+}
+
+export interface EmployeeExportResponse {
+  url: string;
+  filename: string;
 }

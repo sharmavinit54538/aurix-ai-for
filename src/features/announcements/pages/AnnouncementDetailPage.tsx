@@ -28,8 +28,8 @@ export default function AnnouncementDetailPage() {
 
   const { data: announcement, isLoading, isError, error, refetch } = useAnnouncement(id);
 
-  const formattedDate = announcement?.createdAt
-    ? new Date(announcement.createdAt).toLocaleDateString(undefined, {
+  const formattedDate = announcement?.created_at
+    ? new Date(announcement.created_at).toLocaleDateString(undefined, {
         weekday: "long",
         year: "numeric",
         month: "long",
@@ -37,8 +37,8 @@ export default function AnnouncementDetailPage() {
       })
     : "—";
 
-  const formattedTime = announcement?.createdAt
-    ? new Date(announcement.createdAt).toLocaleTimeString(undefined, {
+  const formattedTime = announcement?.created_at
+    ? new Date(announcement.created_at).toLocaleTimeString(undefined, {
         hour: "2-digit",
         minute: "2-digit",
       })
@@ -113,7 +113,7 @@ export default function AnnouncementDetailPage() {
             <div className="p-6 sm:p-8 space-y-4">
               {/* Badges / Metadata */}
               <div className="flex flex-wrap items-center gap-2">
-                {announcement.isPinned && (
+                {announcement.is_pinned && (
                   <Badge variant="default" className="text-xs gap-1 bg-primary text-primary-foreground">
                     <Pin className="h-3 w-3 fill-current rotate-45" />
                     <span>PINNED</span>
@@ -132,10 +132,29 @@ export default function AnnouncementDetailPage() {
                   </Badge>
                 )}
 
-                {announcement.targetAudience && (
+                {announcement.visibility && (
                   <Badge variant="outline" className="text-xs gap-1">
                     <Globe className="h-3 w-3" />
-                    <span>{announcement.targetAudience}</span>
+                    <span>{announcement.visibility.replace(/_/g, " ")}</span>
+                  </Badge>
+                )}
+
+                {announcement.department && (
+                  <Badge variant="outline" className="text-xs gap-1">
+                    <span>Dept: {announcement.department}</span>
+                  </Badge>
+                )}
+
+                {announcement.branch && (
+                  <Badge variant="outline" className="text-xs gap-1">
+                    <span>Branch: {announcement.branch}</span>
+                  </Badge>
+                )}
+
+                {announcement.expiry_date && (
+                  <Badge variant="outline" className="text-xs gap-1">
+                    <Calendar className="h-3 w-3" />
+                    <span>Expires: {new Date(announcement.expiry_date).toLocaleDateString()}</span>
                   </Badge>
                 )}
               </div>
@@ -149,7 +168,7 @@ export default function AnnouncementDetailPage() {
               <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground border-y border-border/40 py-3">
                 <span className="flex items-center gap-1.5 font-medium text-foreground">
                   <User className="h-3.5 w-3.5 text-primary" />
-                  <span>{announcement.authorName ?? "Organization Executive Office"}</span>
+                  <span>{announcement.created_by ?? "Organization Executive Office"}</span>
                 </span>
 
                 <span className="flex items-center gap-1.5">
@@ -163,20 +182,27 @@ export default function AnnouncementDetailPage() {
                     <span>{formattedTime}</span>
                   </span>
                 )}
+
+                {announcement.publish_date && (
+                  <span className="flex items-center gap-1.5">
+                    <Calendar className="h-3.5 w-3.5" />
+                    <span>Published: {new Date(announcement.publish_date).toLocaleDateString()}</span>
+                  </span>
+                )}
               </div>
 
               {/* Summary / Description Lead if present */}
-              {(announcement.description || announcement.summary) && (
+              {announcement.description && (
                 <div className="p-4 rounded-lg bg-muted/40 border-l-4 border-primary text-sm font-medium text-foreground leading-relaxed">
-                  {announcement.description ?? announcement.summary}
+                  {announcement.description}
                 </div>
               )}
 
               {/* Main Content */}
               <CardContent className="px-0 pt-4 pb-2">
-                {announcement.content ? (
+                {announcement.description ? (
                   <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap leading-relaxed text-foreground/90 font-normal">
-                    {announcement.content}
+                    {announcement.description}
                   </div>
                 ) : (
                   <p className="text-xs text-muted-foreground italic">No detailed content provided.</p>

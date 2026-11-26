@@ -221,19 +221,18 @@ export function ExecutivesPage() {
         toast.error(getRejectMessage(result.payload, "Failed to update executive profile"));
       }
     } else {
-      const result = await dispatch(
+const result = await dispatch(
         createEmployee({
-          first_name,
-          last_name,
-          personal_email: formData.email,
-          company_email: formData.email,
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          personal_email: formData.personalEmail,
+          company_email: formData.companyEmail,
           phone: formData.phone,
           department: formData.department,
           designation: formData.designation,
           joining_date: formData.joiningDate,
           employee_id: formData.employeeId || `EXEC-${Math.floor(100000 + Math.random() * 900000)}`,
           employment_type: "FULL_TIME",
-          employment_status: "CONFIRMED",
           role: "executive",
           shift: formData.shift,
         })

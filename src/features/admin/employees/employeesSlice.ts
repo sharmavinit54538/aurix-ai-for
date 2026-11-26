@@ -2,13 +2,18 @@ import { createSlice } from "@reduxjs/toolkit";
 import type { EmployeesState } from "./employeesTypes";
 import {
   activateEmployee,
+  activateEmployeeByToken,
   createEmployee,
   deactivateEmployee,
   deleteEmployee,
+  fetchEmployeeById,
   fetchEmployees,
+  fetchEmployeeOnboardingStatus,
+  fetchEmployeeStatistics,
   resendEmployeeInvite,
   resetEmployeePassword,
   updateEmployee,
+  validateEmployeeInvitation,
 } from "./employeesThunk";
 
 const initialState: EmployeesState = {
@@ -22,15 +27,17 @@ const initialState: EmployeesState = {
   pages: 0,
   has_next: false,
   has_previous: false,
+  selectedEmployee: null,
+  employeeDetailLoading: false,
+  statistics: null,
+  statisticsLoading: false,
+  onboardingStatus: null,
+  onboardingStatusLoading: false,
 };
 
 const mutationThunks = [
   createEmployee,
   updateEmployee,
-  resendEmployeeInvite,
-  deactivateEmployee,
-  activateEmployee,
-  resetEmployeePassword,
 ];
 
 const employeesSlice = createSlice({
@@ -40,6 +47,12 @@ const employeesSlice = createSlice({
     clearEmployees(state) {
       state.employees = [];
       state.error = null;
+    },
+    clearSelectedEmployee(state) {
+      state.selectedEmployee = null;
+    },
+    setSelectedEmployee(state, action) {
+      state.selectedEmployee = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -63,7 +76,43 @@ const employeesSlice = createSlice({
         const err = action.payload;
         state.error = typeof err === "string" ? err : err?.message ?? action.error.message ?? "Something went wrong";
       })
-        .addCase(deleteEmployee.pending, (state) => {
+      .addCase(fetchEmployeeById.pending, (state) => {
+        state.employeeDetailLoading = true;
+      })
+      .addCase(fetchEmployeeById.fulfilled, (state, action) => {
+        state.employeeDetailLoading = false;
+        state.selectedEmployee = action.payload;
+      })
+      .addCase(fetchEmployeeById.rejected, (state, action) => {
+        state.employeeDetailLoading = false;
+        const err = action.payload;
+        state.error = typeof err === "string" ? err : err?.message ?? action.error.message ?? "Failed to fetch employee";
+      })
+      .addCase(fetchEmployeeStatistics.pending, (state) => {
+        state.statisticsLoading = true;
+      })
+      .addCase(fetchEmployeeStatistics.fulfilled, (state, action) => {
+        state.statisticsLoading = false;
+        state.statistics = action.payload;
+      })
+      .addCase(fetchEmployeeStatistics.rejected, (state, action) => {
+        state.statisticsLoading = false;
+        const err = action.payload;
+        state.error = typeof err === "string" ? err : err?.message ?? action.error.message ?? "Failed to fetch statistics";
+      })
+      .addCase(fetchEmployeeOnboardingStatus.pending, (state) => {
+        state.onboardingStatusLoading = true;
+      })
+      .addCase(fetchEmployeeOnboardingStatus.fulfilled, (state, action) => {
+        state.onboardingStatusLoading = false;
+        state.onboardingStatus = action.payload;
+      })
+      .addCase(fetchEmployeeOnboardingStatus.rejected, (state, action) => {
+        state.onboardingStatusLoading = false;
+        const err = action.payload;
+        state.error = typeof err === "string" ? err : err?.message ?? action.error.message ?? "Failed to fetch onboarding status";
+      })
+      .addCase(deleteEmployee.pending, (state) => {
         state.submitting = true;
       })
       .addCase(deleteEmployee.fulfilled, (state, action) => {
@@ -86,8 +135,68 @@ const employeesSlice = createSlice({
           state.submitting = false;
         });
     });
+
+    builder
+      .addCase(activateEmployee.pending, (state) => {
+        state.submitting = true;
+      })
+      .addCase(activateEmployee.fulfilled, (state) => {
+        state.submitting = false;
+      })
+      .addCase(activateEmployee.rejected, (state) => {
+        state.submitting = false;
+      })
+      .addCase(activateEmployeeByToken.pending, (state) => {
+        state.submitting = true;
+      })
+      .addCase(activateEmployeeByToken.fulfilled, (state) => {
+        state.submitting = false;
+      })
+      .addCase(activateEmployeeByToken.rejected, (state) => {
+        state.submitting = false;
+      })
+      .addCase(resendEmployeeInvite.pending, (state) => {
+        state.submitting = true;
+      })
+      .addCase(resendEmployeeInvite.fulfilled, (state) => {
+        state.submitting = false;
+      })
+      .addCase(resendEmployeeInvite.rejected, (state) => {
+        state.submitting = false;
+      })
+      .addCase(deactivateEmployee.pending, (state) => {
+        state.submitting = true;
+      })
+      .addCase(deactivateEmployee.fulfilled, (state) => {
+        state.submitting = false;
+      })
+      .addCase(deactivateEmployee.rejected, (state) => {
+        state.submitting = false;
+      })
+      .addCase(resetEmployeePassword.pending, (state) => {
+        state.submitting = true;
+      })
+      .addCase(resetEmployeePassword.fulfilled, (state) => {
+        state.submitting = false;
+      })
+      .addCase(resetEmployeePassword.rejected, (state) => {
+        state.submitting = false;
+      })
+      .addCase(validateEmployeeInvitation.pending, (state) => {
+        state.submitting = true;
+      })
+      .addCase(validateEmployeeInvitation.fulfilled, (state) => {
+        state.submitting = false;
+      })
+      .addCase(validateEmployeeInvitation.rejected, (state) => {
+        state.submitting = false;
+      });
   },
 });
 
-export const { clearEmployees } = employeesSlice.actions;
+export const {
+  clearEmployees,
+  clearSelectedEmployee,
+  setSelectedEmployee,
+} = employeesSlice.actions;
 export default employeesSlice.reducer;

@@ -542,6 +542,11 @@ export function DashboardShell() {
       return;
     }
 
+    if (!ws.user.emailVerified) {
+      navigate({ to: "/verify-email", replace: true });
+      return;
+    }
+
     if (pathname === "/dashboard/employee" && currentRole !== "employee") {
       if (currentRole === "manager") {
         navigate({ to: "/dashboard/manager" });

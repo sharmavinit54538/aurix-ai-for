@@ -230,125 +230,19 @@ export function OnboardingPage() {
     if (token) { setResuming(false); return; } // skip for employee onboarding
     if (!safetyTimedOut && (ws.isRestoring || !authReady)) return;
 
-    // Check if verification was marked in storage
-    const storedVerifiedEmail =
-      typeof window !== "undefined"
-        ? window.sessionStorage?.getItem("ofc360_email_verified") ||
-          window.localStorage?.getItem("ofc360_email_verified")
-        : null;
-
     const activeToken = getAccessToken();
 
     if (!ws.user) {
       if (activeToken) {
-        // Access token exists in storage; bootstrap auth in background
         void bootstrapAuth({ force: true });
-
-        // Also check if we can populate a provisional user so the UI isn't blocked
-        let fallbackEmail =
-          storedVerifiedEmail ||
-          (typeof window !== "undefined"
-            ? window.sessionStorage?.getItem("ofc360_pending_verification_email")
-            : null);
-
-        if (!fallbackEmail && typeof window !== "undefined") {
-          try {
-            const authStr = window.sessionStorage?.getItem("aurix_pending_auth");
-            if (authStr) {
-              const parsed = JSON.parse(authStr);
-              if (parsed.email) fallbackEmail = parsed.email;
-            }
-          } catch {
-            /* ignore */
-          }
-        }
-
-        if (!fallbackEmail && activeToken) {
-          try {
-            const parts = activeToken.split(".");
-            if (parts.length === 3) {
-              const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-              const payload = JSON.parse(atob(b64));
-              if (payload?.email) fallbackEmail = payload.email;
-              else if (payload?.sub && typeof payload.sub === "string" && payload.sub.includes("@")) {
-                fallbackEmail = payload.sub;
-              }
-            }
-          } catch {
-            /* ignore */
-          }
-        }
-
-        const provCompanyName = getStoredCompanyName();
-
-        if (fallbackEmail) {
-          aurix.set({
-            user: {
-              id:
-                (typeof window !== "undefined" &&
-                  window.sessionStorage?.getItem("ofc360_pending_verification_user_id")) ||
-                "",
-              fullName: "",
-              email: fallbackEmail,
-              phone: "",
-              role: "hr_admin",
-              companyId: "workspace",
-              company_name: provCompanyName || undefined,
-              companyName: provCompanyName || undefined,
-              emailVerified: true,
-              onboardingComplete: isHrOnboardingCompletedInStorage(),
-              createdAt: new Date().toISOString(),
-            },
-            ...(provCompanyName && (!ws.company?.name || ws.company.name === "Workspace")
-              ? { company: { ...(ws.company ?? { id: uid("co") }), name: provCompanyName } }
-              : {}),
-          });
-          return;
-        }
         return;
       }
-
-      const pendingEmail =
-        storedVerifiedEmail ||
-        (typeof window !== "undefined"
-          ? window.sessionStorage?.getItem("ofc360_pending_verification_email")
-          : null);
-
-      if (pendingEmail) {
-        const provCompanyName = getStoredCompanyName();
-        aurix.set({
-          user: {
-            id:
-              (typeof window !== "undefined" &&
-                window.sessionStorage?.getItem("ofc360_pending_verification_user_id")) ||
-              "",
-            fullName: "",
-            email: pendingEmail,
-            phone: "",
-            role: "hr_admin",
-            companyId: "workspace",
-            company_name: provCompanyName || undefined,
-            companyName: provCompanyName || undefined,
-            emailVerified: true,
-            onboardingComplete: isHrOnboardingCompletedInStorage(),
-            createdAt: new Date().toISOString(),
-          },
-          ...(provCompanyName && (!ws.company?.name || ws.company.name === "Workspace")
-            ? { company: { ...(ws.company ?? { id: uid("co") }), name: provCompanyName } }
-            : {}),
-        });
-        return;
-      }
-      navigate({ to: "/login" as any });
+      navigate({ to: "/login" as any, replace: true });
       return;
     }
 
     if (!ws.user.emailVerified) {
-      if (activeToken || (storedVerifiedEmail && storedVerifiedEmail.toLowerCase() === ws.user.email.toLowerCase())) {
-        aurix.set({ user: { ...ws.user, emailVerified: true } });
-        return;
-      }
-      navigate({ to: "/verify-email" as any });
+      navigate({ to: "/verify-email" as any, replace: true });
       return;
     }
 

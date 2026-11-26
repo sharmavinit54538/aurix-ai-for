@@ -23,8 +23,8 @@ export function AnnouncementCard({
   onPublish,
   onArchive,
 }: AnnouncementCardProps) {
-  const formattedDate = announcement.createdAt
-    ? new Date(announcement.createdAt).toLocaleDateString(undefined, {
+  const formattedDate = announcement.created_at
+    ? new Date(announcement.created_at).toLocaleDateString(undefined, {
         year: "numeric",
         month: "short",
         day: "numeric",
@@ -40,19 +40,22 @@ export function AnnouncementCard({
   const priorityColor: Record<string, string> = {
     urgent: "bg-rose-500/15 text-rose-500 border-rose-500/30",
     high: "bg-amber-500/15 text-amber-500 border-amber-500/30",
-    normal: "bg-blue-500/15 text-blue-500 border-blue-500/30",
+    medium: "bg-blue-500/15 text-blue-500 border-blue-500/30",
     low: "bg-muted text-muted-foreground border-border",
   };
+
+  const status = announcement.status?.toLowerCase() ?? "draft";
+  const priority = announcement.priority?.toLowerCase() ?? "medium";
 
   return (
     <Card
       className={`relative overflow-hidden transition-all duration-200 hover:shadow-md border ${
-        announcement.isPinned
+        announcement.is_pinned
           ? "border-primary/40 bg-gradient-to-br from-primary/[0.03] to-transparent shadow-sm"
           : "border-border/60 hover:border-border"
       }`}
     >
-      {announcement.isPinned && (
+      {announcement.is_pinned && (
         <div className="absolute top-0 right-0">
           <div className="bg-primary/90 text-primary-foreground text-[10px] font-semibold px-2.5 py-0.5 rounded-bl-md flex items-center gap-1 shadow-sm">
             <Pin className="h-3 w-3 fill-current rotate-45" />
@@ -66,7 +69,7 @@ export function AnnouncementCard({
           {announcement.status && (
             <Badge
               variant="outline"
-              className={`text-[11px] capitalize ${statusColor[announcement.status.toLowerCase()] ?? ""}`}
+              className={`text-[11px] capitalize ${statusColor[status] ?? ""}`}
             >
               {announcement.status}
             </Badge>
@@ -75,16 +78,16 @@ export function AnnouncementCard({
           {announcement.priority && (
             <Badge
               variant="outline"
-              className={`text-[11px] capitalize ${priorityColor[announcement.priority.toLowerCase()] ?? ""}`}
+              className={`text-[11px] capitalize ${priorityColor[priority] ?? ""}`}
             >
               {announcement.priority}
             </Badge>
           )}
 
-          {announcement.targetAudience && (
+          {announcement.visibility && (
             <Badge variant="secondary" className="text-[11px] flex items-center gap-1">
               <Globe className="h-3 w-3" />
-              <span>{announcement.targetAudience}</span>
+              <span>{announcement.visibility.replace(/_/g, " ")}</span>
             </Badge>
           )}
         </div>
@@ -98,14 +101,6 @@ export function AnnouncementCard({
         {announcement.description ? (
           <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
             {announcement.description}
-          </p>
-        ) : announcement.summary ? (
-          <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
-            {announcement.summary}
-          </p>
-        ) : announcement.content ? (
-          <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed whitespace-pre-wrap">
-            {announcement.content}
           </p>
         ) : (
           <p className="text-xs text-muted-foreground italic">No description provided.</p>
@@ -121,14 +116,14 @@ export function AnnouncementCard({
 
           <span className="flex items-center gap-1.5">
             <User className="h-3.5 w-3.5" />
-            <span>{announcement.authorName ?? "Organization"}</span>
+            <span>{announcement.created_by ?? "Organization"}</span>
           </span>
         </div>
 
         <div className="flex items-center gap-2">
           {isManageMode ? (
             <>
-              {announcement.status !== "published" && onPublish && (
+              {announcement.status !== "PUBLISHED" && onPublish && (
                 <Button
                   size="sm"
                   variant="outline"
@@ -141,7 +136,7 @@ export function AnnouncementCard({
                 </Button>
               )}
 
-              {announcement.status !== "archived" && onArchive && (
+              {announcement.status !== "ARCHIVED" && onArchive && (
                 <Button
                   size="sm"
                   variant="ghost"

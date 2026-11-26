@@ -53,62 +53,14 @@ function CustomTooltip({ active, payload, label, unit = "" }: any) {
   return null;
 }
 
-// ── Helper to build smooth sparkline trend ──────────────────
+// ── Helper to validate sparkline trend points without fabrication ──
 function buildSparklineData(
-  actualPoints: Array<{ v: number; label?: string }> | undefined,
-  currentValue: number,
-  pattern: "growth" | "fluctuate" | "stable" | "financial" = "growth"
+  actualPoints: Array<{ v: number; label?: string }> | undefined
 ): Array<{ v: number; label?: string }> {
   if (actualPoints && actualPoints.length >= 2) {
     return actualPoints;
   }
-
-  const v = Number(currentValue) || 0;
-  if (pattern === "growth") {
-    const base = Math.max(v, 1);
-    return [
-      { v: Math.max(0, Math.round(base * 0.72)) },
-      { v: Math.max(0, Math.round(base * 0.8)) },
-      { v: Math.max(0, Math.round(base * 0.84)) },
-      { v: Math.max(0, Math.round(base * 0.92)) },
-      { v: Math.max(0, Math.round(base * 0.96)) },
-      { v: base },
-    ];
-  }
-
-  if (pattern === "fluctuate") {
-    const base = Math.max(v, 1);
-    return [
-      { v: Math.max(0, Math.round(base * 0.6)) },
-      { v: Math.max(0, Math.round(base * 0.9)) },
-      { v: Math.max(0, Math.round(base * 0.7)) },
-      { v: Math.max(0, Math.round(base * 0.95)) },
-      { v: Math.max(0, Math.round(base * 0.85)) },
-      { v: base },
-    ];
-  }
-
-  if (pattern === "financial") {
-    const base = v > 0 ? v : 12;
-    return [
-      { v: +(base * 0.85).toFixed(1) },
-      { v: +(base * 0.9).toFixed(1) },
-      { v: +(base * 0.92).toFixed(1) },
-      { v: +(base * 0.96).toFixed(1) },
-      { v: +(base * 0.98).toFixed(1) },
-      { v: +base.toFixed(1) },
-    ];
-  }
-
-  const base = Math.max(v, 1);
-  return [
-    { v: Math.max(0, Math.round(base * 0.85)) },
-    { v: Math.max(0, Math.round(base * 0.9)) },
-    { v: Math.max(0, Math.round(base * 0.95)) },
-    { v: Math.max(0, Math.round(base * 0.92)) },
-    { v: Math.max(0, Math.round(base * 0.98)) },
-    { v: base },
-  ];
+  return [];
 }
 
 interface KpiSparklineProps {
@@ -124,6 +76,14 @@ const KpiSparkline = memo(function KpiSparkline({
   gradientId,
   unit = "",
 }: KpiSparklineProps) {
+  if (!data || data.length < 2) {
+    return (
+      <div className="flex h-14 w-full items-center justify-center rounded-lg border border-dashed border-border/50 bg-muted/20 px-2 text-[10px] text-muted-foreground">
+        No trend history yet
+      </div>
+    );
+  }
+
   return (
     <div className="h-14 w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -178,41 +138,27 @@ export const ExecutiveKpiCards = memo(function ExecutiveKpiCards({
 
   const { headcount, openings, departments, payroll, assets, exits } = details;
 
-  // Build sparkline trend datasets for all 6 cards
+  // Build sparkline trend datasets strictly from backend historical series
   const headcountData = buildSparklineData(
-    headcount.trend?.map((t) => ({ v: t.value, label: t.date })),
-    headcount.value,
-    "growth"
+    headcount.trend?.map((t) => ({ v: t.value, label: t.date }))
   );
 
   const openingsData = buildSparklineData(
-    openings.bars?.length >= 2 ? openings.bars.map((b) => ({ v: b.count, label: b.label })) : undefined,
-    openings.value,
-    "fluctuate"
+    openings.bars?.length >= 2 ? openings.bars.map((b) => ({ v: b.count, label: b.label })) : undefined
   );
 
   const departmentsData = buildSparklineData(
-    departments.distribution?.length >= 2 ? departments.distribution.map((d) => ({ v: d.count, label: d.name })) : undefined,
-    departments.value,
-    "stable"
+    departments.distribution?.length >= 2 ? departments.distribution.map((d) => ({ v: d.count, label: d.name })) : undefined
   );
 
   const payrollData = buildSparklineData(
-    payroll.history?.map((p) => ({ v: p.cost, label: p.month })),
-    payroll.rawValue,
-    "financial"
+    payroll.history?.map((p) => ({ v: p.cost, label: p.month }))
   );
 
-  const assetsData = buildSparklineData(
-    undefined,
-    assets.value,
-    "stable"
-  );
+  const assetsData = buildSparklineData(undefined);
 
   const exitsData = buildSparklineData(
-    exits.timeline?.map((t) => ({ v: t.count, label: t.date })),
-    exits.value,
-    "growth"
+    exits.timeline?.map((t) => ({ v: t.count, label: t.date }))
   );
 
   return (

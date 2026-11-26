@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { aurix } from "@/lib/aurix-store";
 import { authService } from "@/api";
+import { buildOtpTimerKey, extractOtpMeta, saveOtpTimerState } from "@/features/auth/utils/otpTimerStorage";
 import { toast } from "sonner";
 
 const schema = z
@@ -86,7 +86,7 @@ export function RegisterPage() {
         password: form.password,
         company_name: form.companyName,
       };
-      const response = (await authService.register(payload)) as any;
+      const response = await authService.register(payload);
       const isSuccess = Boolean(response?.data?.success ?? response?.success);
       const message =
         response?.data?.message ||
@@ -98,17 +98,14 @@ export function RegisterPage() {
           if (typeof window !== "undefined") {
             window.sessionStorage?.removeItem("ofc360_email_verified");
             window.localStorage?.removeItem("ofc360_email_verified");
+            window.sessionStorage?.removeItem("ofc360_pending_verification_password");
+            window.sessionStorage?.removeItem("aurix_pending_auth");
             window.sessionStorage?.setItem("ofc360_pending_verification_email", form.email);
-            window.sessionStorage?.setItem("ofc360_pending_verification_password", form.password);
             window.sessionStorage?.setItem("ofc360_pending_verification_mode", "register");
             window.sessionStorage?.setItem("ofc360_registered_company_name", form.companyName);
             window.localStorage?.setItem("ofc360_registered_company_name", form.companyName);
             window.sessionStorage?.setItem("company_name", form.companyName);
             window.localStorage?.setItem("company_name", form.companyName);
-            window.sessionStorage?.setItem(
-              "aurix_pending_auth",
-              JSON.stringify({ email: form.email, password: form.password, companyName: form.companyName, company_name: form.companyName }),
-            );
             const regUserId = response?.data?.user?.id ?? response?.user?.id;
             if (regUserId) {
               window.sessionStorage?.setItem("ofc360_pending_verification_user_id", String(regUserId));
@@ -118,24 +115,9 @@ export function RegisterPage() {
           // ignore sessionStorage write errors
         }
 
-        aurix.set({
-          user: {
-            id: response?.data?.user?.id ?? response?.user?.id ?? "",
-            fullName: form.fullName,
-            email: form.email,
-            phone: form.phone,
-            role: "hr_admin",
-            companyId: "workspace",
-            company_name: form.companyName,
-            companyName: form.companyName,
-            emailVerified: false,
-            onboardingComplete: false,
-            createdAt: new Date().toISOString(),
-          },
-          company: {
-            id: "workspace",
-            name: form.companyName,
-          },
+        saveOtpTimerState(buildOtpTimerKey(form.email, null), extractOtpMeta(response), {
+          expirySeconds: 600,
+          cooldownSeconds: 30,
         });
 
         toast.success(message);
@@ -245,7 +227,7 @@ export function RegisterPage() {
               type={show ? "text" : "password"}
               value={form.password}
               onChange={(e) => set("password", e.target.value)}
-              placeholder="••••••••"
+              placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
               aria-invalid={!!errors.password}
             />
             <button
@@ -270,7 +252,7 @@ export function RegisterPage() {
           ) : null}
           {!form.password && (
             <p className="text-xs text-muted-foreground">
-              Must be 8–64 chars with uppercase, lowercase, number &amp; special character (e.g. @, #, !)
+              Must be 8\u201364 chars with uppercase, lowercase, number & special character (e.g. @, #, !)
             </p>
           )}
           {errors.password ? <p className="text-xs text-destructive">{errors.password}</p> : null}
@@ -283,7 +265,7 @@ export function RegisterPage() {
             type={show ? "text" : "password"}
             value={form.confirm}
             onChange={(e) => set("confirm", e.target.value)}
-            placeholder="••••••••"
+            placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
             aria-invalid={!!errors.confirm}
           />
           {errors.confirm ? <p className="text-xs text-destructive">{errors.confirm}</p> : null}

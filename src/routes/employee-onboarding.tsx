@@ -6,6 +6,8 @@ import { isUserOnboardingComplete } from "@/lib/onboarding-once";
 import { getDefaultDashboardPath } from "@/lib/role-paths";
 import { normalizeRole } from "@/lib/roles";
 
+import { guardEmployeeOnboardingRoute } from "@/lib/auth-route-guards";
+
 const PageComponent = lazyFeaturePage(() => import("@/features/admin/recruitment/pages/EnterpriseOnboardingPage"));
 
 function GuardedEmployeeOnboarding() {
@@ -31,6 +33,7 @@ function GuardedEmployeeOnboarding() {
 }
 
 export const Route = createFileRoute("/employee-onboarding")({
+  beforeLoad: async ({ search }) => guardEmployeeOnboardingRoute(search as Record<string, unknown>),
   head: () => ({ meta: [{ title: "Employee Onboarding — OFC360" }] }),
   component: GuardedEmployeeOnboarding,
 });

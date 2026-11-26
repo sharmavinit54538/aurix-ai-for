@@ -69,18 +69,8 @@ export function DailyAttendanceTrend({
   onRetry,
   className,
 }: DailyAttendanceTrendProps) {
-  // Resilient fallback data so chart is never broken or empty
   const displayData = useMemo(() => {
-    if (data && data.length > 0) return data;
-    return [
-      { date: "Mon", present: 44, late: 3, absent: 1, onLeave: 2, total: 50 },
-      { date: "Tue", present: 45, late: 2, absent: 2, onLeave: 1, total: 50 },
-      { date: "Wed", present: 43, late: 4, absent: 1, onLeave: 2, total: 50 },
-      { date: "Thu", present: 46, late: 1, absent: 1, onLeave: 2, total: 50 },
-      { date: "Fri", present: 42, late: 5, absent: 2, onLeave: 1, total: 50 },
-      { date: "Sat", present: 20, late: 1, absent: 1, onLeave: 28, total: 50 },
-      { date: "Sun", present: 8, late: 0, absent: 0, onLeave: 42, total: 50 },
-    ];
+    return Array.isArray(data) ? data : [];
   }, [data]);
 
   const CustomTooltip = ({
@@ -158,11 +148,6 @@ export function DailyAttendanceTrend({
             <div>
               <CardTitle className="text-sm font-semibold tracking-tight text-foreground flex items-center gap-2">
                 Daily Attendance Trend
-                {error && (
-                  <Badge variant="outline" className="text-[10px] text-amber-400 border-amber-500/30 bg-amber-500/10 px-1.5 py-0 h-4.5">
-                    Preview Data
-                  </Badge>
-                )}
               </CardTitle>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Daily check-in volume and attendance status trajectory
@@ -207,6 +192,27 @@ export function DailyAttendanceTrend({
       </CardHeader>
 
       <CardContent className="p-5 pt-3 h-[330px]">
+        {error ? (
+          <div className="h-full w-full flex flex-col items-center justify-center text-center gap-3">
+            <AlertCircle className="h-8 w-8 text-destructive/80" />
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">Unable to load attendance trend</p>
+              <p className="text-xs text-muted-foreground max-w-xs">{error}</p>
+            </div>
+            {onRetry && (
+              <Button variant="outline" size="sm" onClick={onRetry} className="h-8 text-xs gap-1.5">
+                <RefreshCw className="h-3.5 w-3.5" />
+                Retry
+              </Button>
+            )}
+          </div>
+        ) : displayData.length === 0 ? (
+          <div className="h-full w-full flex flex-col items-center justify-center text-center gap-2">
+            <Activity className="h-8 w-8 text-muted-foreground/50" />
+            <p className="text-sm font-medium text-foreground">No attendance trend data</p>
+            <p className="text-xs text-muted-foreground">Attendance logs will appear here once recorded.</p>
+          </div>
+        ) : (
         <div className="h-full w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={displayData} margin={{ top: 12, right: 12, left: -16, bottom: 0 }}>
@@ -298,6 +304,7 @@ export function DailyAttendanceTrend({
             </AreaChart>
           </ResponsiveContainer>
         </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -324,23 +331,20 @@ export function AttendanceDistribution({
 }: AttendanceDistributionProps) {
   const safeData = useMemo(() => {
     if (data && data.total > 0) return data;
-    return {
-      present: 42,
-      late: 4,
-      absent: 2,
-      onLeave: 2,
-      total: 50,
-    };
+    return null;
   }, [data]);
 
-  const total = safeData.total || 1;
+  const total = safeData?.total || 0;
 
-  const distributionList = useMemo(() => [
-    { name: "Present", value: safeData.present, color: STATUS_COLORS.present, percentage: Math.round((safeData.present / total) * 100) },
-    { name: "Late", value: safeData.late, color: STATUS_COLORS.late, percentage: Math.round((safeData.late / total) * 100) },
-    { name: "Absent", value: safeData.absent, color: STATUS_COLORS.absent, percentage: Math.round((safeData.absent / total) * 100) },
-    { name: "On Leave", value: safeData.onLeave, color: STATUS_COLORS.onLeave, percentage: Math.round((safeData.onLeave / total) * 100) },
-  ], [safeData, total]);
+  const distributionList = useMemo(() => {
+    if (!safeData || total <= 0) return [];
+    return [
+      { name: "Present", value: safeData.present, color: STATUS_COLORS.present, percentage: Math.round((safeData.present / total) * 100) },
+      { name: "Late", value: safeData.late, color: STATUS_COLORS.late, percentage: Math.round((safeData.late / total) * 100) },
+      { name: "Absent", value: safeData.absent, color: STATUS_COLORS.absent, percentage: Math.round((safeData.absent / total) * 100) },
+      { name: "On Leave", value: safeData.onLeave, color: STATUS_COLORS.onLeave, percentage: Math.round((safeData.onLeave / total) * 100) },
+    ];
+  }, [safeData, total]);
 
   if (loading) {
     return (
@@ -372,11 +376,6 @@ export function AttendanceDistribution({
             <div>
               <CardTitle className="text-sm font-semibold tracking-tight text-foreground flex items-center gap-2">
                 Attendance Distribution
-                {error && (
-                  <Badge variant="outline" className="text-[10px] text-amber-400 border-amber-500/30 bg-amber-500/10 px-1.5 py-0 h-4.5">
-                    Preview
-                  </Badge>
-                )}
               </CardTitle>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Breakdown of active status proportions
@@ -398,6 +397,28 @@ export function AttendanceDistribution({
       </CardHeader>
 
       <CardContent className="p-5 pt-2 flex flex-col justify-between h-[330px]">
+        {error ? (
+          <div className="h-full w-full flex flex-col items-center justify-center text-center gap-3">
+            <AlertCircle className="h-8 w-8 text-destructive/80" />
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">Unable to load distribution</p>
+              <p className="text-xs text-muted-foreground max-w-xs">{error}</p>
+            </div>
+            {onRetry && (
+              <Button variant="outline" size="sm" onClick={onRetry} className="h-8 text-xs gap-1.5">
+                <RefreshCw className="h-3.5 w-3.5" />
+                Retry
+              </Button>
+            )}
+          </div>
+        ) : !safeData ? (
+          <div className="h-full w-full flex flex-col items-center justify-center text-center gap-2">
+            <Users className="h-8 w-8 text-muted-foreground/50" />
+            <p className="text-sm font-medium text-foreground">No attendance distribution data</p>
+            <p className="text-xs text-muted-foreground">Status breakdown appears once staff check in.</p>
+          </div>
+        ) : (
+        <>
         {/* Donut container */}
         <div className="relative w-full h-[180px] flex items-center justify-center">
           <ResponsiveContainer width="100%" height="100%">
@@ -473,6 +494,8 @@ export function AttendanceDistribution({
             </div>
           ))}
         </div>
+        </>
+        )}
       </CardContent>
     </Card>
   );
@@ -500,24 +523,8 @@ export function WeeklyAttendance({
   className,
 }: WeeklyAttendanceProps) {
   const displayData = useMemo(() => {
-    if (data && data.length > 0) return data;
-    if (viewMode === "month") {
-      return [
-        { day: "Week 1", present: 43, late: 4, absent: 2, onLeave: 1, total: 50 },
-        { day: "Week 2", present: 45, late: 2, absent: 1, onLeave: 2, total: 50 },
-        { day: "Week 3", present: 42, late: 5, absent: 2, onLeave: 1, total: 50 },
-        { day: "Week 4", present: 46, late: 2, absent: 1, onLeave: 1, total: 50 },
-      ];
-    }
-    return [
-      { day: "Mon", present: 43, late: 3, absent: 2, onLeave: 2, total: 50 },
-      { day: "Tue", present: 45, late: 2, absent: 1, onLeave: 2, total: 50 },
-      { day: "Wed", present: 44, late: 4, absent: 1, onLeave: 1, total: 50 },
-      { day: "Thu", present: 46, late: 2, absent: 1, onLeave: 1, total: 50 },
-      { day: "Fri", present: 42, late: 5, absent: 2, onLeave: 1, total: 50 },
-      { day: "Sat", present: 18, late: 2, absent: 1, onLeave: 29, total: 50 },
-    ];
-  }, [data, viewMode]);
+    return Array.isArray(data) ? data : [];
+  }, [data]);
 
   const CustomTooltip = ({
     active,
@@ -587,11 +594,6 @@ export function WeeklyAttendance({
             <div>
               <CardTitle className="text-sm font-semibold tracking-tight text-foreground flex items-center gap-2">
                 {viewMode === "week" ? "Weekly Attendance" : "Monthly Attendance"}
-                {error && (
-                  <Badge variant="outline" className="text-[10px] text-amber-400 border-amber-500/30 bg-amber-500/10 px-1.5 py-0 h-4.5">
-                    Preview
-                  </Badge>
-                )}
               </CardTitle>
               <p className="text-xs text-muted-foreground mt-0.5">
                 {viewMode === "week" ? "Turnout volume by weekday" : "Aggregated weekly turnout comparison"}
@@ -619,6 +621,27 @@ export function WeeklyAttendance({
       </CardHeader>
 
       <CardContent className="p-5 pt-3 h-[330px]">
+        {error ? (
+          <div className="h-full w-full flex flex-col items-center justify-center text-center gap-3">
+            <AlertCircle className="h-8 w-8 text-destructive/80" />
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">Unable to load attendance trend</p>
+              <p className="text-xs text-muted-foreground max-w-xs">{error}</p>
+            </div>
+            {onRetry && (
+              <Button variant="outline" size="sm" onClick={onRetry} className="h-8 text-xs gap-1.5">
+                <RefreshCw className="h-3.5 w-3.5" />
+                Retry
+              </Button>
+            )}
+          </div>
+        ) : displayData.length === 0 ? (
+          <div className="h-full w-full flex flex-col items-center justify-center text-center gap-2">
+            <Activity className="h-8 w-8 text-muted-foreground/50" />
+            <p className="text-sm font-medium text-foreground">No attendance trend data</p>
+            <p className="text-xs text-muted-foreground">Attendance logs will appear here once recorded.</p>
+          </div>
+        ) : (
         <div className="h-full w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={displayData} margin={{ top: 12, right: 12, left: -16, bottom: 0 }}>
@@ -648,7 +671,8 @@ export function WeeklyAttendance({
               <Bar dataKey="onLeave" fill={STATUS_COLORS.onLeave} radius={[5, 5, 0, 0]} name="On Leave" />
             </BarChart>
           </ResponsiveContainer>
-        </div>
+</div>
+      )}
       </CardContent>
     </Card>
   );
@@ -674,22 +698,15 @@ export function AttendanceRateKPI({
   className,
 }: AttendanceRateKPIProps) {
   const safeData = useMemo(() => {
-    if (data && data.currentRate !== undefined && data.currentRate > 0) return data;
-    return {
-      currentRate: 92.4,
-      previousRate: 90.6,
-      changePercentagePoints: 1.8,
-      trend: "up" as const,
-      period: { start: "Recent Period", end: "Present" },
-      previousPeriod: { start: "Prior Cycle", end: "Previous" },
-    };
+    if (data && data.currentRate !== undefined && data.currentRate !== null) return data;
+    return null;
   }, [data]);
 
-  const changeText = safeData.changePercentagePoints !== null
+  const changeText = safeData && safeData.changePercentagePoints !== null
     ? `${safeData.changePercentagePoints > 0 ? "+" : ""}${safeData.changePercentagePoints.toFixed(1)}pp`
     : "—";
 
-  const isPositive = safeData.trend === "up" || (safeData.changePercentagePoints ?? 0) >= 0;
+  const isPositive = safeData ? (safeData.trend === "up" || (safeData.changePercentagePoints ?? 0) >= 0) : false;
 
   if (loading) {
     return (
@@ -723,11 +740,6 @@ export function AttendanceRateKPI({
             <div>
               <CardTitle className="text-sm font-semibold tracking-tight text-foreground flex items-center gap-2">
                 Attendance Rate KPI
-                {error && (
-                  <Badge variant="outline" className="text-[10px] text-amber-400 border-amber-500/30 bg-amber-500/10 px-1.5 py-0 h-4.5">
-                    Preview
-                  </Badge>
-                )}
               </CardTitle>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Workforce efficiency & presence rating
@@ -749,6 +761,28 @@ export function AttendanceRateKPI({
       </CardHeader>
 
       <CardContent className="p-5 pt-2 flex flex-col justify-between h-[330px]">
+        {error ? (
+          <div className="h-full w-full flex flex-col items-center justify-center text-center gap-3">
+            <AlertCircle className="h-8 w-8 text-destructive/80" />
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">Unable to load attendance KPI</p>
+              <p className="text-xs text-muted-foreground max-w-xs">{error}</p>
+            </div>
+            {onRetry && (
+              <Button variant="outline" size="sm" onClick={onRetry} className="h-8 text-xs gap-1.5">
+                <RefreshCw className="h-3.5 w-3.5" />
+                Retry
+              </Button>
+            )}
+          </div>
+        ) : !safeData ? (
+          <div className="h-full w-full flex flex-col items-center justify-center text-center gap-2">
+            <Activity className="h-8 w-8 text-muted-foreground/50" />
+            <p className="text-sm font-medium text-foreground">No attendance rate metrics</p>
+            <p className="text-xs text-muted-foreground">KPI metrics will populate once attendance logs are recorded.</p>
+          </div>
+        ) : (
+        <>
         {/* Hero Score Display */}
         <div className="flex flex-col items-center justify-center text-center my-auto py-2">
           <div className="relative inline-flex items-baseline justify-center">
@@ -811,6 +845,8 @@ export function AttendanceRateKPI({
             </span>
           </div>
         </div>
+        </>
+        )}
       </CardContent>
     </Card>
   );

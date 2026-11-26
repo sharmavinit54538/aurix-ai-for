@@ -74,6 +74,7 @@ export interface AurixUser {
   company_name?: string;
   companyName?: string;
   emailVerified: boolean;
+  emailVerifiedAt?: string;
   onboardingComplete: boolean;
   documentVerificationStatus?: "NOT_STARTED" | "IN_PROGRESS" | "VERIFIED" | "FAILED";
   documentsVerified?: boolean;
@@ -195,7 +196,9 @@ export interface Workspace {
 
 const KEY = "aurix:workspace:v3";
 const REMEMBER_KEY = "aurix:remember";
-const MOCK_SEED_KEY = "aurix:mock_hr_seeded";
+const IS_TEST_ENV =
+  (typeof import.meta !== "undefined" && (import.meta as any).env?.MODE === "test") ||
+  (typeof process !== "undefined" && Boolean((process as any).env?.VITEST || (process as any).env?.NODE_TEST_CONTEXT));
 
 const defaultState: Workspace = {
   user: null,
@@ -212,17 +215,6 @@ let state: Workspace = defaultState;
 const listeners = new Set<() => void>();
 
 function load() {
-  // Purge any leftover mock demo workspace data from prior development builds
-  const storedAccessToken = safeStorage.getItem("aurix:access_token") || safeStorage.getItem("access_token");
-  if (safeStorage.getItem(MOCK_SEED_KEY) === "1" || storedAccessToken?.startsWith("mock-demo-")) {
-    safeStorage.removeItem(MOCK_SEED_KEY);
-    safeStorage.removeItem(KEY);
-    safeStorage.removeItem("aurix:access_token");
-    safeStorage.removeItem("access_token");
-    safeStorage.removeItem("aurix:tokens");
-    safeStorage.removeItem("ofc_session_hint");
-  }
-
   const raw = safeStorage.getItem(KEY);
   if (raw) {
     try {

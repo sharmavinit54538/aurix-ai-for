@@ -145,6 +145,25 @@ test("resolveRootEntryDestination enters demo onboarding once, then always route
     }),
     { to: "/onboarding" },
   );
+
+  // Authenticated but unverified user goes to /verify-email
+  assert.deepEqual(
+    resolveRootEntryDestination({
+      user: { id: "hr-unv", role: "hr_admin", emailVerified: false, onboardingComplete: false },
+      hasAccessToken: true,
+      demoInviteActivated: false,
+      hrOnboardingCompleted: false,
+    }),
+    { to: "/verify-email" },
+  );
+
+  assert.equal(
+    resolveOnboardingGuardRedirect({
+      user: { id: "hr-unv", role: "hr_admin", emailVerified: false, onboardingComplete: false },
+      hasInviteToken: false,
+    }),
+    "/verify-email",
+  );
 });
 
 test("storage helpers persist activated tokens and HR onboarding completion idempotently", () => {

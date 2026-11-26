@@ -16,6 +16,7 @@ export interface VerificationRequiredLoginResult {
   tempToken?: string;
   verificationId?: string;
   mode?: string;
+  otpMeta?: Record<string, unknown> | null;
 }
 
 export type ParsedLoginResult = AuthenticatedLoginResult | VerificationRequiredLoginResult;
@@ -117,13 +118,29 @@ function normalizeUser(raw: unknown, tokenRole?: string | null): AuthUserPayload
     (typeof user.org_name === "string" ? user.org_name : null) ??
     undefined;
 
+  const verifiedFlag = Boolean(
+    user.is_verified ??
+      user.is_email_verified ??
+      user.email_verified ??
+      user.isVerified ??
+      user.emailVerified,
+  );
+
   return {
     id: typeof user.id === "string" || typeof user.id === "number" ? user.id : "",
     name: String(user.name ?? user.full_name ?? user.fullName ?? combinedName ?? ""),
     email: user.email,
     phone: typeof user.phone === "string" ? user.phone : undefined,
     role: normalizeRole(rawRole) ?? "employee",
-    is_verified: Boolean(user.is_verified ?? user.isVerified ?? user.email_verified),
+    is_verified: verifiedFlag,
+    is_email_verified: verifiedFlag,
+    email_verified: verifiedFlag,
+    email_verified_at:
+      typeof user.email_verified_at === "string"
+        ? user.email_verified_at
+        : typeof user.emailVerifiedAt === "string"
+          ? user.emailVerifiedAt
+          : undefined,
     onboarding_completed: Boolean(user.onboarding_completed ?? user.onboardingCompleted ?? false),
     created_at: typeof user.created_at === "string" ? user.created_at : undefined,
     company_id:
@@ -264,11 +281,11 @@ export function parseLoginResponse(res: unknown, fallbackEmail?: string): Parsed
     }
   }
 
-  if (typeof accessToken === "string" && typeof refreshToken === "string" && user) {
+  if (typeof accessToken === "string" && accessToken.length > 0 && user) {
     return {
       status: "authenticated",
       accessToken,
-      refreshToken,
+      refreshToken: typeof refreshToken === "string" ? refreshToken : "",
       user,
     };
   }
@@ -312,6 +329,10 @@ export function parseLoginResponse(res: unknown, fallbackEmail?: string): Parsed
     undefined;
 
   if (challengeDetected || (!accessToken && emailCandidate && messageCandidate)) {
+    const metaCandidate =
+      asRecord(body.meta) ??
+      asRecord(nested?.meta) ??
+      null;
     return {
       status: "verification_required",
       email: emailCandidate,
@@ -319,6 +340,7 @@ export function parseLoginResponse(res: unknown, fallbackEmail?: string): Parsed
       message: messageCandidate || "Verification code sent to your email. Please verify to continue.",
       tempToken: tempTokenCandidate,
       verificationId: tempTokenCandidate,
+      otpMeta: metaCandidate,
     };
   }
 

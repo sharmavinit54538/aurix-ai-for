@@ -3,8 +3,6 @@ import axios from "axios";
 import {
   getAccessToken,
   setAccessToken,
-  getRefreshToken,
-  setRefreshToken,
   setTokens,
   getTokens,
   clearTokens,
@@ -26,23 +24,20 @@ describe("Token Refresh & Export Integrity", () => {
     expect(typeof refreshAccessToken).toBe("function");
     expect(typeof getAccessToken).toBe("function");
     expect(typeof setAccessToken).toBe("function");
-    expect(typeof getRefreshToken).toBe("function");
-    expect(typeof setRefreshToken).toBe("function");
     expect(typeof getTokens).toBe("function");
     expect(typeof setTokens).toBe("function");
     expect(typeof clearTokens).toBe("function");
   });
 
-  it("successfully refreshes token and updates in-memory access and refresh tokens", async () => {
+  it("successfully refreshes token and updates in-memory access token", async () => {
     setSessionHint();
-    setTokens({ accessToken: "old-token", refreshToken: "old-refresh" });
+    setTokens({ accessToken: "old-token" });
 
     vi.spyOn(axios, "post").mockResolvedValueOnce({
       status: 200,
       data: {
         data: {
           access_token: "refreshed-access-token",
-          refresh_token: "refreshed-refresh-token",
         },
       },
     });
@@ -50,7 +45,6 @@ describe("Token Refresh & Export Integrity", () => {
     const token = await refreshAccessToken();
     expect(token).toBe("refreshed-access-token");
     expect(getAccessToken()).toBe("refreshed-access-token");
-    expect(getRefreshToken()).toBe("refreshed-refresh-token");
   });
 
   it("shares a single-flight in-flight promise when called concurrently from @/api/tokens", async () => {

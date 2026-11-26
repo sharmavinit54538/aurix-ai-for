@@ -65,7 +65,7 @@ export default function AnnouncementManagePage() {
     let list = [...allItems];
 
     if (activeTab !== "all") {
-      list = list.filter((a) => (a.status ?? "draft").toLowerCase() === activeTab);
+      list = list.filter((a) => (a.status ?? "DRAFT").toLowerCase() === activeTab);
     }
 
     if (search.trim()) {
@@ -73,17 +73,17 @@ export default function AnnouncementManagePage() {
       list = list.filter(
         (a) =>
           a.title.toLowerCase().includes(q) ||
-          (a.content && a.content.toLowerCase().includes(q)) ||
-          (a.targetAudience && a.targetAudience.toLowerCase().includes(q)),
+          (a.description && a.description.toLowerCase().includes(q)) ||
+          (a.category && a.category.toLowerCase().includes(q)),
       );
     }
 
     // Sort: pinned first, then newest
     return list.sort((a, b) => {
-      if (a.isPinned && !b.isPinned) return -1;
-      if (!a.isPinned && b.isPinned) return 1;
-      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      if (a.is_pinned && !b.is_pinned) return -1;
+      if (!a.is_pinned && b.is_pinned) return 1;
+      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
       return dateB - dateA;
     });
   }, [allItems, activeTab, search]);
@@ -234,8 +234,8 @@ export default function AnnouncementManagePage() {
       ) : (
         <div className="border rounded-lg bg-card overflow-hidden divide-y divide-border">
           {filteredItems.map((item) => {
-            const formattedDate = item.createdAt
-              ? new Date(item.createdAt).toLocaleDateString(undefined, {
+            const formattedDate = item.created_at
+              ? new Date(item.created_at).toLocaleDateString(undefined, {
                   month: "short",
                   day: "numeric",
                   year: "numeric",
@@ -249,7 +249,7 @@ export default function AnnouncementManagePage() {
               >
                 <div className="space-y-1.5 flex-1 min-w-0 pr-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    {item.isPinned && (
+                    {item.is_pinned && (
                       <Badge variant="default" className="text-[10px] gap-1 py-0 bg-primary/90">
                         <Pin className="h-2.5 w-2.5 fill-current rotate-45" />
                         <span>Pinned</span>
@@ -259,14 +259,14 @@ export default function AnnouncementManagePage() {
                     <Badge
                       variant="outline"
                       className={`text-[10px] capitalize ${
-                        item.status === "published"
+                        item.status === "PUBLISHED"
                           ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
-                          : item.status === "archived"
+                          : item.status === "ARCHIVED"
                           ? "bg-muted text-muted-foreground"
                           : "bg-amber-500/10 text-amber-500 border-amber-500/20"
                       }`}
                     >
-                      {item.status ?? "draft"}
+                      {item.status ?? "DRAFT"}
                     </Badge>
 
                     {item.priority && (
@@ -275,10 +275,10 @@ export default function AnnouncementManagePage() {
                       </Badge>
                     )}
 
-                    {item.targetAudience && (
+                    {item.visibility && (
                       <span className="text-xs text-muted-foreground flex items-center gap-1">
                         <Globe className="h-3 w-3" />
-                        <span>{item.targetAudience}</span>
+                        <span>{item.visibility.replace(/_/g, " ")}</span>
                       </span>
                     )}
                   </div>
@@ -293,13 +293,13 @@ export default function AnnouncementManagePage() {
                       <span>{formattedDate}</span>
                     </span>
                     <span>•</span>
-                    <span>By: {item.authorName ?? "HR Admin"}</span>
+                    <span>By: {item.created_by ?? "HR Admin"}</span>
                   </div>
                 </div>
 
                 {/* Row Action Controls */}
                 <div className="flex items-center gap-2 shrink-0">
-                  {item.status !== "published" && (
+                  {item.status !== "PUBLISHED" && (
                     <Button
                       size="sm"
                       variant="outline"
@@ -312,7 +312,7 @@ export default function AnnouncementManagePage() {
                     </Button>
                   )}
 
-                  {item.status !== "archived" && (
+                  {item.status !== "ARCHIVED" && (
                     <Button
                       size="sm"
                       variant="ghost"

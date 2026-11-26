@@ -9,6 +9,8 @@ import {
   activateEmployee,
   createEmployee,
   fetchEmployees,
+  fetchEmployeeById,
+  fetchEmployeeStatistics,
   resendEmployeeInvite,
   resetEmployeePassword,
   updateEmployee,
@@ -22,11 +24,7 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { EmployeesConfirmDialogs } from "../components/EmployeesConfirmDialogs";
 import { EmployeeDetailPage } from "../components/EmployeeDetailPage";
 import { useEmployeeConfirmDialogs } from "../hooks/useEmployeeConfirmDialogs";
-import {
-  createEmptyEmployee,
-  exportEmployeesCsv,
-  generateEmployeeCode,
-} from "../utils/employeeStatus";
+import { createEmptyEmployee, exportEmployeesCsv } from "../utils/employeeStatus";
 
 export function EmployeesPage() {
   const dispatch = useAppDispatch();
@@ -35,7 +33,7 @@ export function EmployeesPage() {
     employeeId?: string;
     action?: string;
   };
-  const { employees, loading, submitting, error } = useAppSelector(
+  const { employees, loading, submitting, error, statistics, statisticsLoading } = useAppSelector(
     (state) => state.employees,
   );
   const [q, setQ] = useState("");
@@ -43,12 +41,11 @@ export function EmployeesPage() {
   const [dept, setDept] = useState<string>("all");
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Employee | null>(null);
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
-    null,
-  );
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
 
   useEffect(() => {
     dispatch(fetchEmployees({ search: debouncedQ, department: dept }));
+    dispatch(fetchEmployeeStatistics());
   }, [dispatch, debouncedQ, dept]);
 
   useEffect(() => {
@@ -81,7 +78,13 @@ export function EmployeesPage() {
   }
 
   useEffect(() => {
-    if (searchParams?.employeeId && employees.length > 0) {
+    if (searchParams?.employeeId) {
+      dispatch(fetchEmployeeById(searchParams.employeeId));
+    }
+  }, [searchParams?.employeeId, dispatch]);
+
+  useEffect(() => {
+    if (searchParams?.employeeId && !selectedEmployee) {
       const match = employees.find(
         (e) =>
           e.id === searchParams.employeeId ||
@@ -91,7 +94,7 @@ export function EmployeesPage() {
         setSelectedEmployee(match);
       }
     }
-  }, [searchParams?.employeeId, employees]);
+  }, [searchParams?.employeeId, employees, selectedEmployee]);
 
   const departments = useMemo(
     () =>
@@ -101,9 +104,10 @@ export function EmployeesPage() {
 
   function refetch() {
     dispatch(fetchEmployees({ search: q, department: dept }));
+    dispatch(fetchEmployeeStatistics());
   }
 
-  const { deleteConfirm, deactivateConfirm } = useEmployeeConfirmDialogs({
+  const { deleteConfirm, deactivateConfirm, deactivateReason, setDeactivateReason } = useEmployeeConfirmDialogs({
     employees,
     onChanged: refetch,
   });
@@ -113,9 +117,7 @@ export function EmployeesPage() {
     if (resendEmployeeInvite.fulfilled.match(result)) {
       toast.success("Invitation email resent successfully");
     } else {
-      toast.error(
-        getRejectMessage(result.payload, "Failed to resend invitation"),
-      );
+      toast.error(getRejectMessage(result.payload, "Failed to resend invitation"));
     }
   }
 
@@ -125,9 +127,7 @@ export function EmployeesPage() {
       toast.success("Employee account activated successfully");
       refetch();
     } else {
-      toast.error(
-        getRejectMessage(result.payload, "Failed to activate employee"),
-      );
+      toast.error(getRejectMessage(result.payload, "Failed to activate employee"));
     }
   }
 
@@ -203,20 +203,20 @@ export function EmployeesPage() {
             company_email: officialEmail,
             personal_email: personalEmail,
             phone: draft.phone || undefined,
-            gender: draft.gender,
+            gender: (draft.gender as "MALE" | "FEMALE" | "OTHER") || "MALE",
             date_of_birth: draft.dateOfBirth || undefined,
             employee_id: draft.employeeId,
             department: draft.department || "Engineering",
             designation: draft.designation || "Senior Software Engineer",
-            reporting_manager_name: draft.managerName || draft.reportingManagerName,
+            reporting_manager_id: draft.reportingManagerId || undefined,
             joining_date: draft.joiningDate || undefined,
-            employment_type: draft.employmentType || "Full-time",
-            work_mode: draft.workMode || "Office / On-Site",
+            employment_type: (draft.employmentType as "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERN") || "FULL_TIME",
+            work_mode: (draft.workMode as "OFFICE" | "REMOTE" | "HYBRID") || "OFFICE",
             probation_period_months: draft.probationPeriodMonths ?? 3,
             shift: draft.shift || "General Shift (09:30 - 18:30)",
-            office_location: draft.officeLocation || draft.workLocation,
-            ctc: draft.ctc || draft.salary,
-            salary: draft.ctc || draft.salary,
+            work_location: draft.workLocation || draft.officeLocation,
+            ctc: draft.ctc ? Number(draft.ctc) : undefined,
+            salary: draft.salary ? Number(draft.salary) : undefined,
             role: draft.role || "employee",
             send_onboarding_invite: draft.sendOnboardingInvite,
           },
@@ -228,37 +228,33 @@ export function EmployeesPage() {
         setOpen(false);
         refetch();
       } else {
-        toast.error(
-          getRejectMessage(result.payload, "Failed to update employee"),
-        );
+        toast.error(getRejectMessage(result.payload, "Failed to update employee"));
       }
     } else {
       const result = await dispatch(
-        createEmployee({
-          first_name,
-          last_name: last_name || " ",
-          company_email: officialEmail,
-          personal_email: personalEmail,
-          phone: draft.phone || "",
-          gender: draft.gender || "Male",
-          date_of_birth: draft.dateOfBirth || undefined,
-          employee_id: draft.employeeId || generateEmployeeCode(),
-          department: draft.department || "Engineering",
-          designation: draft.designation || "Senior Software Engineer",
-          reporting_manager_name: draft.managerName || draft.reportingManagerName || "",
-          joining_date: draft.joiningDate || new Date().toISOString().split("T")[0],
-          employment_type: draft.employmentType || "Full-time",
-          employment_status:
-            (draft.probationPeriodMonths ?? 3) > 0 ? "PROBATION" : "CONFIRMED",
-          work_mode: draft.workMode || "Office / On-Site",
-          probation_period_months: draft.probationPeriodMonths ?? 3,
-          shift: draft.shift || "General Shift (09:30 - 18:30)",
-          office_location: draft.officeLocation || "Bengaluru · Global HQ",
-          ctc: draft.ctc || "₹12,00,000 / year",
-          salary: draft.ctc || "₹12,00,000 / year",
-          role: draft.role || "employee",
-          send_onboarding_invite: draft.sendOnboardingInvite !== false,
-        }),
+createEmployee({
+            first_name,
+            last_name: last_name || " ",
+            company_email: officialEmail,
+            personal_email: personalEmail,
+            phone: draft.phone || "",
+            gender: (draft.gender as "MALE" | "FEMALE" | "OTHER") || "MALE",
+            date_of_birth: draft.dateOfBirth || undefined,
+            employee_id: draft.employeeId || undefined,
+            department: draft.department || "Engineering",
+            designation: draft.designation || "Senior Software Engineer",
+            reporting_manager_id: draft.reportingManagerId || null,
+            joining_date: draft.joiningDate || new Date().toISOString().split("T")[0],
+            employment_type: (draft.employmentType as "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERN") || "FULL_TIME",
+            work_mode: (draft.workMode as "OFFICE" | "REMOTE" | "HYBRID") || "OFFICE",
+            probation_period_months: draft.probationPeriodMonths ?? 3,
+            shift: draft.shift || "General Shift (09:30 - 18:30)",
+            work_location: draft.workLocation || draft.officeLocation,
+            ctc: draft.ctc ? Number(draft.ctc) : undefined,
+            salary: draft.salary ? Number(draft.salary) : undefined,
+            role: draft.role || "employee",
+            send_onboarding_invite: draft.sendOnboardingInvite !== false,
+          }),
       );
 
       if (createEmployee.fulfilled.match(result)) {
@@ -303,10 +299,12 @@ export function EmployeesPage() {
             }
           }}
         />
-        <EmployeesConfirmDialogs
-          deleteConfirm={deleteConfirm}
-          deactivateConfirm={deactivateConfirm}
-        />
+<EmployeesConfirmDialogs
+        deleteConfirm={deleteConfirm}
+        deactivateConfirm={deactivateConfirm}
+        deactivateReason={deactivateReason}
+        setDeactivateReason={setDeactivateReason}
+      />
       </div>
     );
   }
@@ -365,6 +363,8 @@ export function EmployeesPage() {
       <EmployeesConfirmDialogs
         deleteConfirm={deleteConfirm}
         deactivateConfirm={deactivateConfirm}
+        deactivateReason={deactivateReason}
+        setDeactivateReason={setDeactivateReason}
       />
     </>
   );

@@ -148,15 +148,15 @@ export function resolveOnboardingGuardRedirect({
   }
 
   if (user) {
-    const emailVerified =
-      "emailVerified" in user
-        ? user.emailVerified !== false
-        : "is_verified" in user
-          ? user.is_verified !== false
-          : true;
+    const rawVerified =
+      (user as any).emailVerified ??
+      (user as any).is_email_verified ??
+      (user as any).is_verified ??
+      (user as any).email_verified;
+    const emailVerified = rawVerified !== undefined ? rawVerified !== false : true;
 
     if (!emailVerified) {
-      return null;
+      return "/verify-email";
     }
 
     if (isUserOnboardingComplete(user)) {
@@ -196,6 +196,16 @@ export function resolveRootEntryDestination({
   demoInviteToken = "emp_invite_demo",
 }: RootEntryInput): { to: string; search?: Record<string, string> } {
   const role = normalizeRole(user?.role);
+  const rawVerified =
+    user &&
+    ((user as any).emailVerified ??
+      (user as any).is_email_verified ??
+      (user as any).is_verified ??
+      (user as any).email_verified);
+  if (user && rawVerified === false) {
+    return { to: "/verify-email" };
+  }
+
   const userOnboarded = isUserOnboardingComplete(user);
 
   if (user && !userOnboarded) {

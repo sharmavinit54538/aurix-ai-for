@@ -176,7 +176,6 @@ describe("Login and Email Verification Challenge Flow", () => {
           expect.objectContaining({
             email: "unverified@ofc360.com",
             otp: "123456",
-            code: "123456",
           }),
         );
         expect(toast.success).toHaveBeenCalledWith("Email verified successfully!");
@@ -225,7 +224,7 @@ describe("Login and Email Verification Challenge Flow", () => {
     );
   });
 
-  it("VerifyEmailPage routes user to /onboarding when verify-email succeeds without tokens (standard registration flow)", async () => {
+  it("VerifyEmailPage requires backend tokens/session confirmation rather than self-marking emailVerified locally", async () => {
     window.history.pushState({}, "Verify", "/verify-email?email=newuser%40ofc360.com");
     window.sessionStorage.setItem("ofc360_pending_verification_email", "newuser@ofc360.com");
 
@@ -259,9 +258,9 @@ describe("Login and Email Verification Challenge Flow", () => {
 
     await waitFor(
       () => {
-        expect(toast.success).toHaveBeenCalledWith("Email verified successfully.");
-        expect(mockNavigate).toHaveBeenCalledWith({ to: "/onboarding" });
-        expect(aurix.get().user?.emailVerified).toBe(true);
+        expect(toast.success).toHaveBeenCalled();
+        expect(mockNavigate).toHaveBeenCalledWith({ to: "/login", replace: true });
+        expect(aurix.get().user?.emailVerified).toBe(false);
       },
       { timeout: 3000 },
     );

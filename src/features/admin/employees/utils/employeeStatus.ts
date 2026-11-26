@@ -82,14 +82,11 @@ export function exportEmployeesCsv(employees: Employee[]) {
   URL.revokeObjectURL(url);
 }
 
-export function generateEmployeeCode(): string {
-  return `EMP-${Math.floor(1000 + Math.random() * 9000)}`;
-}
-
 export function createEmptyEmployee(): Employee {
+  const today = new Date().toISOString().split("T")[0];
   return {
     id: "",
-    employeeId: generateEmployeeCode(),
+    employeeId: "",
     firstName: "",
     lastName: "",
     fullName: "",
@@ -97,20 +94,23 @@ export function createEmptyEmployee(): Employee {
     companyEmail: "",
     personalEmail: "",
     phone: "",
-    gender: "Male",
+    gender: "",
     dateOfBirth: "",
-    department: "Engineering",
+    department: "",
     designation: "",
     managerName: "",
     reportingManagerName: "",
-    joiningDate: new Date().toISOString().split("T")[0],
-    employmentType: "Full-time",
-    workMode: "Office / On-Site",
+    joiningDate: today,
+    employmentType: "FULL_TIME",
+    workMode: "OFFICE",
+    workLocation: "",
     probationPeriodMonths: 3,
     shift: "General Shift (09:30 - 18:30)",
-    officeLocation: "Bengaluru · Global HQ",
-    ctc: "",
+    officeLocation: "",
+    ctc: undefined,
+    salary: undefined,
     role: "employee",
     sendOnboardingInvite: true,
+    status: "INVITED",
   };
 }
