@@ -1,30 +1,25 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Search, UserCheck, Users, RefreshCw, AlertCircle, Loader2 } from "lucide-react";
-import { api } from "@/api";
 import { toast } from "sonner";
 import type { LeaveEmployee, LeaveBalance } from "../types";
-import { mapBalance, unwrapList } from "../mappers";
+import { mapBalance } from "../mappers";
 import { cn } from "@/lib/utils";
+import { useCompanyEmployees, useEmployeeLeaveBalances } from "@/hooks/useLeaves";
 
 export function AllBalancesPanel() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [employees, setEmployees] = useState<LeaveEmployee[]>([]);
-  const [employeesLoading, setEmployeesLoading] = useState(false);
-  const [employeesError, setEmployeesError] = useState<string | null>(null);
+
+  const { data: employeesData, isLoading: employeesLoading, isError: employeesError, refetch: refetchEmployees } = useCompanyEmployees(debouncedQuery, 1, 50);
+  const employees = employeesData?.items || [];
 
   const [selectedEmp, setSelectedEmp] = useState<LeaveEmployee | null>(null);
-  const [empBalances, setEmpBalances] = useState<LeaveBalance[]>([]);
-  const [empBalancesLoading, setEmpBalancesLoading] = useState(false);
-
-  // References to discard stale async responses
-  const searchSeqRef = useRef(0);
-  const activeEmpIdRef = useRef<string | null>(null);
+  const { data: empBalances = [], isLoading: empBalancesLoading, refetch: refetchEmpBalances } = useEmployeeLeaveBalances(selectedEmp?.id ?? null);
 
   // Debounce search input by 300ms
   useEffect(() => {
@@ -34,83 +29,12 @@ export function AllBalancesPanel() {
     return () => clearTimeout(handler);
   }, [searchQuery]);
 
-  // Fetch employees list from GET /leaves/employees?q=
-  const fetchEmployees = useCallback(async (query: string) => {
-    const seq = ++searchSeqRef.current;
-    // Don't clear employees while loading new search results (keep previous list visible)
-    // Only set loading true, don't clear employees array
-    setEmployeesLoading(true);
-    setEmployeesError(null);
-
-    try {
-      const cleanQ = (query ?? "").trim();
-      const res = await api.get<any>(
-        `/leaves/employees?q=${encodeURIComponent(cleanQ)}`,
-        { headers: { "x-skip-cache": "true" } }
-      );
-
-      // Discard if a newer search request has been triggered
-      if (seq !== searchSeqRef.current) return;
-
-      const rawList = unwrapList(res);
-
-      const mappedList: LeaveEmployee[] = rawList.map((e: any) => ({
-        id: String(e.id ?? ""),
-        employee_code: String(e.employee_code ?? e.employeeId ?? "—"),
-        full_name: String(e.full_name ?? e.fullName ?? "Unnamed"),
-        department: String(e.department ?? "—"),
-        designation: String(e.designation ?? "—"),
-      }));
-
-      setEmployees(mappedList);
-    } catch (err: any) {
-      if (seq !== searchSeqRef.current) return;
-      console.error("Error fetching employees for leave balances", err);
-      setEmployeesError(err?.data?.message || err?.message || "Failed to load employees.");
-    } finally {
-      if (seq === searchSeqRef.current) {
-        setEmployeesLoading(false);
-      }
-    }
-  }, []);
-
   useEffect(() => {
-    void fetchEmployees(debouncedQuery);
-  }, [debouncedQuery, fetchEmployees]);
+    refetchEmployees();
+  }, [debouncedQuery, refetchEmployees]);
 
-  // Fetch balances for a specific employee by UUID
-  const handleSelectEmployee = async (emp: LeaveEmployee) => {
+  const handleSelectEmployee = (emp: LeaveEmployee) => {
     setSelectedEmp(emp);
-    setEmpBalances([]);
-    setEmpBalancesLoading(true);
-    activeEmpIdRef.current = emp.id;
-
-    try {
-      const res = await api.get<any>(`/leaves/balances/${emp.id}`, {
-        headers: { "x-skip-cache": "true" },
-      });
-
-      // Ignore response if user has already clicked another employee
-      if (activeEmpIdRef.current !== emp.id) return;
-
-      if (res?.success && res.data) {
-        const list = Array.isArray(res.data) ? res.data : [];
-        setEmpBalances(list.map(mapBalance));
-      } else if (Array.isArray(res)) {
-        setEmpBalances(res.map(mapBalance));
-      } else {
-        setEmpBalances([]);
-      }
-    } catch (err: any) {
-      if (activeEmpIdRef.current !== emp.id) return;
-      console.error("Error fetching employee balances", err);
-      toast.error(err?.data?.message || err?.message || "Failed to load balances for selected employee.");
-      setEmpBalances([]);
-    } finally {
-      if (activeEmpIdRef.current === emp.id) {
-        setEmpBalancesLoading(false);
-      }
-    }
   };
 
   return (
@@ -166,11 +90,11 @@ export function AllBalancesPanel() {
                   <TableCell colSpan={5} className="text-center py-8 text-destructive">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <AlertCircle className="h-5 w-5" />
-                      <span className="text-xs">{employeesError}</span>
+                      <span className="text-xs">Failed to load employees</span>
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => fetchEmployees(debouncedQuery)}
+                        onClick={() => refetchEmployees()}
                         className="text-xs gap-1"
                       >
                         <RefreshCw className="h-3.5 w-3.5" />
@@ -261,6 +185,8 @@ export function AllBalancesPanel() {
                       <div className="text-[10px] text-muted-foreground flex justify-between pt-1">
                         <span>Total: {b.total_days} days</span>
                         <span>Used: {b.used_days} days</span>
+                        {b.pending_days !== undefined && <span>Pending: {b.pending_days} days</span>}
+                        {b.available_days !== undefined && <span>Available: {b.available_days} days</span>}
                       </div>
                     </div>
                   ))}

@@ -258,15 +258,15 @@ export function PayrollMetricsDashboard({
   }, [data?.recentRuns]);
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-6">
       {/* ── Filter Bar & Actions ───────────────────────────────────── */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-2xl border border-border/80 bg-card/45 backdrop-blur-md p-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-xl border border-border bg-card p-4 shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
             <Calendar className="h-5 w-5" />
           </div>
           <div>
-            <div className="text-xs text-muted-foreground font-medium">Payroll Cycle</div>
+            <div className="text-xs font-medium text-muted-foreground">Payroll Cycle</div>
             <div className="text-sm font-semibold text-foreground">
               {selectedPeriod ? selectedPeriod.name : "Active Payroll Period"}
             </div>
@@ -275,17 +275,17 @@ export function PayrollMetricsDashboard({
 
         <div className="flex flex-wrap items-center gap-2">
           {periods.length > 0 ? (
-            <div className="w-[240px]">
+            <div className="w-full sm:w-[240px]">
               <Select value={selectedPeriodId} onValueChange={onPeriodChange}>
-                <SelectTrigger className="h-9 w-full bg-card/80 border-border/80 text-xs font-medium rounded-lg">
+                <SelectTrigger aria-label="Select payroll period" className="h-9 w-full bg-background border-border text-[13px] font-medium rounded-lg">
                   <SelectValue placeholder="Select period" />
                 </SelectTrigger>
                 <SelectContent>
                   {periods.map((p) => (
-                    <SelectItem key={p.id} value={p.id} className="text-xs">
+                    <SelectItem key={p.id} value={p.id} className="text-[13px]">
                       <span>{p.name}</span>
                       {p.isCurrent ? (
-                        <span className="ml-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.2 text-[10px] font-semibold text-emerald-400">
+                        <span className="ml-2 rounded-full border border-emerald-300 bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:border-emerald-800/60 dark:text-emerald-300">
                           Current
                         </span>
                       ) : null}
@@ -301,7 +301,7 @@ export function PayrollMetricsDashboard({
             size="sm"
             onClick={onRefresh}
             disabled={isLoading}
-            className="h-9 px-3 text-xs gap-1.5 cursor-pointer rounded-lg border-border/80"
+            className="h-9 px-3 text-[13px] gap-1.5 cursor-pointer rounded-lg"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
@@ -311,62 +311,69 @@ export function PayrollMetricsDashboard({
             <Button
               size="sm"
               onClick={onRunPayrollClick}
-              className="h-9 gap-1.5 rounded-lg bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 text-white font-semibold shadow-md cursor-pointer border-0"
+              className="h-9 gap-1.5 rounded-lg text-[13px] cursor-pointer"
             >
-              <Play className="h-3.5 w-3.5 fill-white text-white" />
+              <Play className="h-3.5 w-3.5" />
               <span>Run Payroll</span>
             </Button>
           ) : null}
         </div>
       </div>
 
-      {/* ── 14 KPI Cards Grid ───────────────────────────────────────── */}
+      {/* ── KPI Cards Grid ───────────────────────────────────────── */}
       <section aria-labelledby="payroll-kpi-heading">
         <h2 id="payroll-kpi-heading" className="sr-only">
           Payroll Performance Indicators
         </h2>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
-          {kpiConfigs.map((kpi, idx) => {
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {kpiConfigs.map((kpi) => {
             const Icon = kpi.icon;
+            const iconBoxClass =
+              kpi.tone === "critical"
+                ? "bg-destructive/10 text-destructive"
+                : kpi.tone === "warning"
+                  ? "bg-amber-500/15 text-amber-700 dark:text-amber-300"
+                  : kpi.tone === "positive"
+                    ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                    : "bg-primary/10 text-primary";
             return (
               <div
                 key={kpi.label}
-                style={{ animation: `fade-in 300ms ease-out ${idx * 25}ms both` }}
-                className={`group relative overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-br ${kpi.accent} p-4.5 backdrop-blur-xl shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-500/40 hover:shadow-md text-left`}
+                className="rounded-xl border border-border bg-card p-4 shadow-xs transition-colors hover:border-primary/35 text-left"
               >
-                <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground truncate">
+                    <div className="text-xs font-medium text-muted-foreground leading-snug">
                       {kpi.label}
                     </div>
-                    <div className="mt-2 font-display text-2xl font-bold tracking-tight text-foreground truncate">
+                    <div className="mt-2 font-display text-2xl font-bold tracking-tight tabular-nums text-foreground">
                       {kpi.value}
                     </div>
                   </div>
-                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-background/60 shadow-xs">
-                    <Icon className="h-4.5 w-4.5" />
+                  <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${iconBoxClass}`}>
+                    <Icon className="h-4 w-4" />
                   </div>
                 </div>
 
                 {kpi.subtext ? (
-                  <p className="mt-2 text-[11px] text-muted-foreground line-clamp-1 leading-normal">
+                  <p className="mt-2 text-xs text-muted-foreground line-clamp-1 leading-normal">
                     {kpi.subtext}
                   </p>
                 ) : null}
 
                 {kpi.trend ? (
-                  <div className="mt-1.5 flex items-center gap-1 text-[11px] font-medium">
+                  <div className="mt-1.5 flex items-center gap-1 text-xs font-medium">
                     {kpi.trendDirection === "up" ? (
-                      <ArrowUpRight className="h-3 w-3 text-emerald-400" />
+                      <ArrowUpRight className="h-3.5 w-3.5 text-emerald-700 dark:text-emerald-300" />
                     ) : kpi.trendDirection === "down" ? (
-                      <ArrowDownRight className="h-3 w-3 text-rose-400" />
+                      <ArrowDownRight className="h-3.5 w-3.5 text-rose-700 dark:text-rose-300" />
                     ) : null}
                     <span
                       className={
                         kpi.trendDirection === "up"
-                          ? "text-emerald-400"
+                          ? "text-emerald-700 dark:text-emerald-300"
                           : kpi.trendDirection === "down"
-                          ? "text-rose-400"
+                          ? "text-rose-700 dark:text-rose-300"
                           : "text-muted-foreground"
                       }
                     >
@@ -381,18 +388,18 @@ export function PayrollMetricsDashboard({
       </section>
 
       {/* ── Chart: Payroll Cost Trend (from actual recent runs) ─────── */}
-      <div className="rounded-2xl border border-border/80 bg-card/45 backdrop-blur-md p-5 text-left">
-        <div className="mb-4 flex items-center justify-between">
+      <div className="rounded-xl border border-border bg-card p-5 shadow-xs text-left">
+        <div className="mb-4 flex items-center justify-between gap-2">
           <div>
-            <h3 className="font-display text-sm font-semibold tracking-tight text-foreground">
+            <h3 className="font-display text-base font-semibold tracking-tight text-foreground">
               Payroll Cost Trend
             </h3>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               Total gross payroll vs net disbursed over recorded cycle runs
             </p>
           </div>
           {costTrendData.length > 0 && (
-            <Badge variant="outline" className="border-indigo-500/30 text-indigo-400 text-[10px]">
+            <Badge variant="outline" className="border-primary/30 text-primary text-xs">
               {costTrendData.length} Cycles
             </Badge>
           )}
@@ -403,25 +410,25 @@ export function PayrollMetricsDashboard({
             <AreaChart data={costTrendData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={CHART_COLORS[0]} stopOpacity={0.4} />
+                  <stop offset="5%" stopColor={CHART_COLORS[0]} stopOpacity={0.28} />
                   <stop offset="95%" stopColor={CHART_COLORS[0]} stopOpacity={0.0} />
                 </linearGradient>
                 <linearGradient id="colorNet" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={CHART_COLORS[2]} stopOpacity={0.4} />
+                  <stop offset="5%" stopColor={CHART_COLORS[2]} stopOpacity={0.28} />
                   <stop offset="95%" stopColor={CHART_COLORS[2]} stopOpacity={0.0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid stroke="rgba(255, 255, 255, 0.08)" vertical={false} />
+              <CartesianGrid stroke="hsl(var(--border))" vertical={false} />
               <XAxis
                 dataKey="month"
-                stroke="currentColor"
-                className="text-xs text-muted-foreground"
+                stroke="hsl(var(--muted-foreground))"
+                tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
                 tickLine={false}
                 axisLine={false}
               />
               <YAxis
-                stroke="currentColor"
-                className="text-xs text-muted-foreground"
+                stroke="hsl(var(--muted-foreground))"
+                tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(val) =>
@@ -430,9 +437,11 @@ export function PayrollMetricsDashboard({
               />
               <Tooltip
                 contentStyle={CHART_TOOLTIP_STYLE}
+                itemStyle={{ color: "hsl(var(--foreground))" }}
+                labelStyle={{ color: "hsl(var(--foreground))" }}
                 formatter={(val: any) => formatINR(Number(val))}
               />
-              <Legend wrapperStyle={{ fontSize: 11, paddingTop: 10 }} />
+              <Legend wrapperStyle={{ fontSize: 12, paddingTop: 10 }} />
               <Area
                 type="monotone"
                 dataKey="totalCost"
@@ -452,12 +461,12 @@ export function PayrollMetricsDashboard({
             </AreaChart>
           </ResponsiveContainer>
         ) : (
-          <div className="flex h-[200px] flex-col items-center justify-center rounded-xl border border-dashed border-border/80 bg-background/30 text-center">
-            <Clock className="h-8 w-8 text-muted-foreground/50" />
-            <p className="mt-2 text-xs font-medium text-foreground">
+          <div className="flex h-[200px] flex-col items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 text-center px-4">
+            <Clock className="h-8 w-8 text-muted-foreground/60" />
+            <p className="mt-2 text-sm font-medium text-foreground">
               No historical cycle runs available
             </p>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="mt-0.5 text-xs text-muted-foreground">
               Historical trends will populate once payroll runs are recorded.
             </p>
           </div>
@@ -465,14 +474,14 @@ export function PayrollMetricsDashboard({
       </div>
 
       {/* ── Recent Payroll Runs Table ───────────────────────────────── */}
-      <div className="rounded-2xl border border-border/80 bg-card/45 backdrop-blur-md p-5 text-left">
-        <div className="mb-4 flex items-center justify-between">
+      <div className="rounded-xl border border-border bg-card p-5 shadow-xs text-left">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h3 className="font-display text-sm font-semibold tracking-tight text-foreground flex items-center gap-2">
-              <FileSpreadsheet className="h-4 w-4 text-indigo-400" />
+            <h3 className="font-display text-base font-semibold tracking-tight text-foreground flex items-center gap-2">
+              <FileSpreadsheet className="h-4 w-4 text-primary" />
               Recent Payroll Runs & Audit History
             </h3>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               Historical cycle executions, employee volume, and calculation status
             </p>
           </div>
@@ -480,90 +489,102 @@ export function PayrollMetricsDashboard({
             asChild
             variant="ghost"
             size="sm"
-            className="text-xs text-indigo-400 hover:text-indigo-300"
+            className="text-[13px] text-primary hover:text-primary"
           >
             <Link to="/dashboard/payroll/periods">All Cycles →</Link>
           </Button>
         </div>
 
         {data?.recentRuns && data.recentRuns.length > 0 ? (
-          <div className="overflow-x-auto rounded-xl border border-border/70">
+          <div className="overflow-x-auto rounded-lg border border-border">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/40 text-xs">
                   <TableHead>Payroll Period</TableHead>
-                  <TableHead className="text-right">Employees</TableHead>
-                  <TableHead className="text-right">Gross Payroll</TableHead>
+                  <TableHead className="hidden md:table-cell text-right">Employees</TableHead>
+                  <TableHead className="hidden lg:table-cell text-right">Gross Payroll</TableHead>
                   <TableHead className="text-right">Net Payroll</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Run Date</TableHead>
+                  <TableHead className="hidden md:table-cell">Run Date</TableHead>
                   <TableHead className="text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data.recentRuns.map((run) => (
-                  <TableRow key={run.id} className="text-xs">
-                    <TableCell className="font-semibold text-foreground">
-                      {run.periodName}
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
-                      {formatCount(run.employeeCount)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-muted-foreground">
-                      {formatINR(run.grossPayroll)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono font-semibold text-foreground">
-                      {formatINR(run.netPayroll)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={`text-[10px] font-semibold uppercase ${
-                          run.status?.toLowerCase() === "finalized" ||
-                          run.status?.toLowerCase() === "approved"
-                            ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
-                            : run.status?.toLowerCase() === "failed"
-                            ? "border-rose-500/30 bg-rose-500/10 text-rose-400"
-                            : "border-amber-500/30 bg-amber-500/10 text-amber-400"
-                        }`}
-                      >
-                        {run.status || "—"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {run.runDate
-                        ? new Date(run.runDate).toLocaleDateString("en-IN", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          })
-                        : "—"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 text-xs text-indigo-400 hover:text-indigo-300"
-                        onClick={() => {
-                          if (run.id) {
-                            navigate({
-                              to: `/dashboard/payroll/runs/${run.id}/preview` as any,
-                            });
-                          } else {
-                            navigate({ to: "/dashboard/payroll/periods" as any });
-                          }
-                        }}
-                      >
-                        View Details
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {data.recentRuns.map((run) => {
+                  const statusTone =
+                    run.status?.toLowerCase() === "finalized" ||
+                    run.status?.toLowerCase() === "approved"
+                      ? statusBadgeClass("approved")
+                      : run.status?.toLowerCase() === "failed"
+                        ? statusBadgeClass("rejected")
+                        : statusBadgeClass("pending");
+
+                  return (
+                    <TableRow key={run.id} className="text-sm">
+                      <TableCell className="font-medium text-foreground">
+                        <div>{run.periodName}</div>
+                        <div className="mt-0.5 text-xs text-muted-foreground md:hidden">
+                          {formatCount(run.employeeCount)} employees
+                          {run.runDate
+                            ? ` · ${new Date(run.runDate).toLocaleDateString("en-IN", {
+                                month: "short",
+                                day: "numeric",
+                              })}`
+                            : ""}
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell text-right font-medium tabular-nums">
+                        {formatCount(run.employeeCount)}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell text-right font-mono text-muted-foreground">
+                        {formatINR(run.grossPayroll)}
+                      </TableCell>
+                      <TableCell className="text-right font-mono font-semibold text-foreground whitespace-nowrap">
+                        {formatINR(run.netPayroll)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={`text-xs font-medium capitalize ${statusTone}`}
+                        >
+                          {run.status || "—"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell text-xs text-muted-foreground whitespace-nowrap">
+                        {run.runDate
+                          ? new Date(run.runDate).toLocaleDateString("en-IN", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })
+                          : "—"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 text-[13px] text-primary hover:text-primary whitespace-nowrap"
+                          onClick={() => {
+                            if (run.id) {
+                              navigate({
+                                to: `/dashboard/payroll/runs/${run.id}/preview` as any,
+                              });
+                            } else {
+                              navigate({ to: "/dashboard/payroll/periods" as any });
+                            }
+                          }}
+                        >
+                          View Details
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
         ) : (
-          <div className="rounded-xl border border-dashed border-border/80 bg-background/30 p-8 text-center">
+          <div className="rounded-lg border border-dashed border-border bg-muted/20 p-8 text-center">
             <Clock className="mx-auto h-8 w-8 text-muted-foreground/60" />
             <div className="mt-2 text-sm font-medium text-foreground">No payroll runs yet</div>
             <p className="mt-1 text-xs text-muted-foreground">

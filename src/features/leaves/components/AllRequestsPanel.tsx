@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,18 +12,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search, RefreshCw, AlertCircle, Loader2, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
-import { api } from "@/api";
 import { toast } from "sonner";
-import type { LeaveRequestExtended } from "../types";
-import { mapLeaveExtended, unwrapList, formatDateStr, statusBadgeClass } from "../mappers";
+import type { LeaveRequestExtended, LeaveAllRequestsParams } from "../types";
+import { formatDateStr, statusBadgeClass } from "../mappers";
 import { cn } from "@/lib/utils";
-
-interface PaginatedResponse<T> {
-  items: T[];
-  total: number;
-  page: number;
-  limit: number;
-}
+import { useAllLeaveRequests } from "@/hooks/useLeaves";
 
 export function AllRequestsPanel() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -34,12 +27,20 @@ export function AllRequestsPanel() {
   const [page, setPage] = useState(1);
   const [limit] = useState(20);
 
-  const [requests, setRequests] = useState<LeaveRequestExtended[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const params: LeaveAllRequestsParams = useMemo(() => ({
+    page,
+    limit,
+    status: statusFilter !== "all" ? statusFilter : undefined,
+    search: debouncedQuery.trim() || undefined,
+    from_date: dateFrom || undefined,
+    to_date: dateTo || undefined,
+  }), [page, limit, statusFilter, debouncedQuery, dateFrom, dateTo]);
 
-  const searchSeqRef = useRef(0);
+  const { data: requestsData, isLoading, isError, error, refetch } = useAllLeaveRequests(params);
+  const requests = requestsData?.items || [];
+  const meta = requestsData?.meta || { total: 0, page: 1, limit: 20, pages: 1 };
+  const total = meta.total;
+  const totalPages = meta.pages || Math.ceil(total / limit) || 1;
 
   // Debounce search input by 300ms
   useEffect(() => {
@@ -50,62 +51,6 @@ export function AllRequestsPanel() {
     return () => clearTimeout(handler);
   }, [searchQuery]);
 
-  // Build query params
-  const buildParams = useCallback(() => {
-    const params = new URLSearchParams();
-    if (debouncedQuery.trim()) params.set("q", debouncedQuery.trim());
-    if (statusFilter !== "all") params.set("status", statusFilter);
-    if (dateFrom) params.set("from", dateFrom);
-    if (dateTo) params.set("to", dateTo);
-    params.set("page", String(page));
-    params.set("limit", String(limit));
-    return params.toString();
-  }, [debouncedQuery, statusFilter, dateFrom, dateTo, page, limit]);
-
-  const fetchRequests = useCallback(async () => {
-    const seq = ++searchSeqRef.current;
-    setLoading(true);
-    setError(null);
-
-    try {
-      const params = buildParams();
-      const res = await api.get<any>(`/leaves/requests?${params}`, {
-        headers: { "x-skip-cache": "true" },
-      });
-
-      if (seq !== searchSeqRef.current) return;
-
-      const rawList = unwrapList(res);
-      const mappedList: LeaveRequestExtended[] = rawList.map(mapLeaveExtended);
-      setRequests(mappedList);
-
-      // Try to get total from response
-      if (res?.data && typeof res.data === "object" && "total" in res.data) {
-        setTotal(res.data.total);
-      } else if (res?.total) {
-        setTotal(res.total);
-      } else {
-        setTotal(mappedList.length);
-      }
-    } catch (err: any) {
-      if (seq !== searchSeqRef.current) return;
-      console.error("Error fetching all leave requests", err);
-      setError(err?.data?.message || err?.message || "Failed to load leave requests.");
-      setRequests([]);
-      setTotal(0);
-    } finally {
-      if (seq === searchSeqRef.current) {
-        setLoading(false);
-      }
-    }
-  }, [buildParams]);
-
-  useEffect(() => {
-    void fetchRequests();
-  }, [fetchRequests]);
-
-  const totalPages = Math.ceil(total / limit) || 1;
-
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setPage(newPage);
@@ -114,7 +59,7 @@ export function AllRequestsPanel() {
 
   const handleRefresh = () => {
     setPage(1);
-    void fetchRequests();
+    refetch();
   };
 
   const statusOptions = [
@@ -145,7 +90,7 @@ export function AllRequestsPanel() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
             />
-            {loading && requests.length > 0 && (
+            {isLoading && requests.length > 0 && (
               <Loader2 className="absolute right-3 top-2.5 h-4 w-4 text-primary animate-spin" aria-hidden="true" />
             )}
           </div>
@@ -181,7 +126,7 @@ export function AllRequestsPanel() {
               />
             </div>
             <div className="relative flex-1">
-              <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-muted_foreground" />
               <Input
                 type="date"
                 placeholder="To"
@@ -196,8 +141,8 @@ export function AllRequestsPanel() {
             </div>
           </div>
 
-          <Button variant="outline" onClick={handleRefresh} disabled={loading} className="gap-2">
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+          <Button variant="outline" onClick={handleRefresh} disabled={isLoading} className="gap-2">
+            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
         </div>
@@ -221,7 +166,7 @@ export function AllRequestsPanel() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {loading && requests.length === 0 && (
+            {isLoading && requests.length === 0 && (
               <TableRow>
                 <TableCell colSpan={10} className="text-center py-10 text-muted-foreground">
                   <div className="flex items-center justify-center gap-2">
@@ -232,12 +177,12 @@ export function AllRequestsPanel() {
               </TableRow>
             )}
 
-            {error && requests.length === 0 && (
+            {isError && requests.length === 0 && (
               <TableRow>
                 <TableCell colSpan={10} className="text-center py-8 text-destructive">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <AlertCircle className="h-5 w-5" />
-                    <span className="text-xs">{error}</span>
+                    <span className="text-xs">{error?.message || "Failed to load leave requests."}</span>
                     <Button
                       size="sm"
                       variant="outline"
@@ -303,7 +248,7 @@ export function AllRequestsPanel() {
               </TableRow>
             ))}
 
-            {!loading && !error && requests.length === 0 && (
+            {!isLoading && !isError && requests.length === 0 && (
               <TableRow>
                 <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                   No leave requests match the current filters.
@@ -324,7 +269,7 @@ export function AllRequestsPanel() {
                 variant="outline"
                 size="sm"
                 onClick={() => handlePageChange(page - 1)}
-                disabled={page === 1 || loading}
+                disabled={page === 1 || isLoading}
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -332,7 +277,7 @@ export function AllRequestsPanel() {
                 variant="outline"
                 size="sm"
                 onClick={() => handlePageChange(page + 1)}
-                disabled={page === totalPages || loading}
+                disabled={page === totalPages || isLoading}
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>

@@ -15,28 +15,28 @@ export function PayrollTableHeader({
             <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
           </div>
         </TableHead>
-        <TableHead>Employee ID</TableHead>
-        <TableHead className="cursor-pointer select-none" onClick={() => onSort("department")}>
+        <TableHead className="hidden lg:table-cell">Employee ID</TableHead>
+        <TableHead className="hidden md:table-cell cursor-pointer select-none" onClick={() => onSort("department")}>
           <div className="flex items-center gap-1">
             <span>Department</span>
             <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
           </div>
         </TableHead>
-        <TableHead className="text-right cursor-pointer select-none" onClick={() => onSort("grossSalary")}>
+        <TableHead className="hidden md:table-cell text-right cursor-pointer select-none" onClick={() => onSort("grossSalary")}>
           <div className="flex items-center justify-end gap-1">
             <span>Gross Earnings</span>
             <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
           </div>
         </TableHead>
-        <TableHead className="text-right">Total Deductions</TableHead>
+        <TableHead className="hidden lg:table-cell text-right">Total Deductions</TableHead>
         <TableHead className="text-right cursor-pointer select-none" onClick={() => onSort("netSalary")}>
           <div className="flex items-center justify-end gap-1">
             <span>Net Pay</span>
             <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
           </div>
         </TableHead>
-        <TableHead>Validation</TableHead>
-        <TableHead className="text-right">Actions</TableHead>
+        <TableHead>Status</TableHead>
+        <TableHead className="text-right">Action</TableHead>
       </TableRow>
     </TableHeader>
   );

@@ -65,7 +65,6 @@ export function RecalculateDialog({
             size="sm"
             onClick={onConfirm}
             disabled={isRecalculating}
-            style={{ background: "var(--gradient-brand)" }}
           >
             {isRecalculating ? (
               <>

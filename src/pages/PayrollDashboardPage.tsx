@@ -327,7 +327,7 @@ export function PayrollDashboardPage() {
       <PageHeader
         title="Payroll"
         description="Track the active pay cycle, review validation findings, and run payroll with audit controls."
-        action={
+        actions={
           nextAction.isRunAction ? (
             <Button
               size="sm"

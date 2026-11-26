@@ -329,7 +329,7 @@ createEmployee({
           </>
         }
       />
-      <div className="rounded-2xl border border-border bg-card/60 backdrop-blur-xl">
+      <div className="rounded-xl border border-border bg-card shadow-xs">
         <EmployeesFilters
           search={q}
           department={dept}

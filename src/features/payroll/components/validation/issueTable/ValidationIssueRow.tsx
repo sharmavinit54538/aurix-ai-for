@@ -34,19 +34,19 @@ export function ValidationIssueRow({
       <TableCell className="font-medium text-foreground">
         {issue.employeeName || issue.employeeId ? (
           <div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5">
               <span>{issue.employeeName || "—"}</span>
               {issue.department ? (
                 <Badge
                   variant="outline"
-                  className="text-[9px] bg-muted/40 font-normal px-1.5 py-0"
+                  className="text-xs bg-muted/40 font-normal px-1.5 py-0"
                 >
                   {issue.department}
                 </Badge>
               ) : null}
             </div>
             {issue.employeeId ? (
-              <div className="font-mono text-[10px] text-muted-foreground">
+              <div className="font-mono text-xs text-muted-foreground">
                 {issue.employeeId}
               </div>
             ) : null}
@@ -61,7 +61,7 @@ export function ValidationIssueRow({
           {issue.message}
         </div>
         {issue.code ? (
-          <div className="font-mono text-[9px] text-muted-foreground mt-0.5">
+          <div className="font-mono text-xs text-muted-foreground mt-0.5">
             Rule: {issue.code}
           </div>
         ) : null}
@@ -70,7 +70,7 @@ export function ValidationIssueRow({
       <TableCell>
         <Badge
           variant="outline"
-          className="text-[10px] bg-muted/40 font-normal"
+          className="text-xs bg-muted/40 font-normal"
         >
           {issue.category || "General"}
         </Badge>
@@ -85,14 +85,14 @@ export function ValidationIssueRow({
           issue.blocking ? (
             <Badge
               variant="outline"
-              className="text-[9px] border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400 font-semibold"
+              className="text-xs border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300 font-medium"
             >
               Blocking
             </Badge>
           ) : (
             <Badge
               variant="outline"
-              className="text-[9px] border-border bg-muted/40 text-muted-foreground"
+              className="text-xs border-border bg-muted/40 text-muted-foreground"
             >
               Non-blocking
             </Badge>
@@ -110,7 +110,7 @@ export function ValidationIssueRow({
             onClick={() =>
               onViewPayroll(issue.employeeId)
             }
-            className="h-7 text-xs text-primary hover:text-primary gap-1"
+            className="h-8 text-[13px] text-primary hover:text-primary gap-1"
           >
             <Eye className="h-3.5 w-3.5" />
             <span>View Payroll</span>
@@ -122,7 +122,7 @@ export function ValidationIssueRow({
             onClick={(e) => {
               e.stopPropagation();
             }}
-            className="h-7 text-xs text-muted-foreground hover:text-foreground gap-1"
+            className="h-8 text-[13px] text-muted-foreground hover:text-foreground gap-1"
           >
             <Info className="h-3.5 w-3.5" />
             <span>Details</span>

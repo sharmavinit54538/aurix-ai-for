@@ -411,7 +411,6 @@ export function PayrollProcessingPage() {
           <Button
             size="sm"
             onClick={() => navigate({ to: "/dashboard/payroll" as any })}
-            style={{ background: "var(--gradient-brand)" }}
           >
             <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
             Go to Payroll Dashboard
@@ -526,8 +525,7 @@ export function PayrollProcessingPage() {
             <Button
               size="sm"
               onClick={() => setRetryModalOpen(true)}
-              className="h-9 gap-1.5 text-xs shadow-sm"
-              style={{ background: "var(--gradient-brand)" }}
+              className="h-9 gap-1.5 text-[13px] shadow-xs"
               title="Retry calculation run on the backend"
             >
               <RotateCcw className="h-3.5 w-3.5" />
@@ -962,8 +960,7 @@ export function PayrollProcessingPage() {
                         to: `/dashboard/payroll/runs/${runId}/preview` as any,
                       })
                     }
-                    style={{ background: "var(--gradient-brand)" }}
-                    className="gap-1.5 text-xs shadow-sm"
+                    className="gap-1.5 text-[13px] shadow-xs"
                   >
                     <span>View Payroll Preview</span>
                     <ExternalLink className="h-3.5 w-3.5" />
@@ -1089,7 +1086,6 @@ export function PayrollProcessingPage() {
               size="sm"
               onClick={handleConfirmRetry}
               disabled={isRetrying}
-              style={{ background: "var(--gradient-brand)" }}
             >
               {isRetrying ? (
                 <>

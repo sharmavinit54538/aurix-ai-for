@@ -667,8 +667,7 @@ export function PayrollFinalizationPage() {
                     size="sm"
                     variant="default"
                     onClick={() => navigate({ to: "/dashboard/payroll/payslips" as any })}
-                    className="text-xs gap-1.5"
-                    style={{ background: "var(--gradient-brand)" }}
+                    className="text-[13px] gap-1.5"
                   >
                     <FileCheck className="h-3.5 w-3.5" />
                     <span>View Final Payslips (Step 9)</span>
@@ -1044,8 +1043,7 @@ export function PayrollFinalizationPage() {
               size="sm"
               onClick={handleConfirmFinalization}
               disabled={isFinalizing}
-              className="text-xs gap-1.5"
-              style={{ background: "var(--gradient-brand)" }}
+              className="text-[13px] gap-1.5"
             >
               {isFinalizing ? (
                 <RefreshCw className="h-3.5 w-3.5 animate-spin" />

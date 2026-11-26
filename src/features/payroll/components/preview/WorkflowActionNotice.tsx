@@ -26,8 +26,7 @@ export function WorkflowActionNotice({ runId }: { runId: string }) {
             onClick={() => {
               toast.info("Review & Approval workflow is handled in the next stage.");
             }}
-            style={{ background: "var(--gradient-brand)" }}
-            className="gap-1.5 text-xs shadow-sm"
+            className="gap-1.5 text-[13px] shadow-xs"
           >
             <span>Continue to Review & Approval</span>
             <ExternalLink className="h-3.5 w-3.5" />

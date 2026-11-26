@@ -10,3 +10,4 @@ export { ApplyLeaveDialog } from "./components/ApplyLeaveDialog";
 export { RejectDialog } from "./components/RejectDialog";
 export { ApproveDialog } from "./components/ApproveDialog";
 export { CancelLeaveDialog } from "./components/CancelLeaveDialog";
+export * from "./leavesApi";

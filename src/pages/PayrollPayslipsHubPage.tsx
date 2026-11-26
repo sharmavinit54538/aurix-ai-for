@@ -294,8 +294,7 @@ export function PayrollPayslipsHubPage() {
                 size="sm"
                 variant="default"
                 onClick={() => navigate({ to: "/dashboard/payroll" as any })}
-                className="text-xs gap-1.5"
-                style={{ background: "var(--gradient-brand)" }}
+                className="text-[13px] gap-1.5"
               >
                 <Lock className="h-3.5 w-3.5" />
                 <span>Go to Payroll Finalization</span>

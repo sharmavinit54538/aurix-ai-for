@@ -93,6 +93,13 @@ export function EmployeeFormDialog({
   const [shifts, setShifts] = useState<Array<{ id: string; name: string }>>([]);
   const [managers, setManagers] = useState<Array<{ id: string; name: string; designation?: string; department?: string }>>([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<
+    Partial<Record<"firstName" | "officialEmail" | "personalEmail", string>>
+  >({});
+
+  useEffect(() => {
+    setFieldErrors({});
+  }, [open, draft?.id]);
 
   // Fetch dynamic options on mount and when draft changes
   useEffect(() => {
@@ -242,83 +249,131 @@ export function EmployeeFormDialog({
     });
   };
 
+  const handleValidateAndSave = () => {
+    const nextErrors: Partial<Record<"firstName" | "officialEmail" | "personalEmail", string>> = {};
+    if (!firstNameVal.trim()) {
+      nextErrors.firstName = "First name is required.";
+    }
+    if (!officialEmailVal.trim()) {
+      nextErrors.officialEmail = "Official email is required.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(officialEmailVal.trim())) {
+      nextErrors.officialEmail = "Enter a valid official email address.";
+    }
+    if (personalEmailVal.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(personalEmailVal.trim())) {
+      nextErrors.personalEmail = "Enter a valid personal email address.";
+    }
+    setFieldErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
+      const firstInvalidId = nextErrors.firstName
+        ? "emp-first-name"
+        : nextErrors.officialEmail
+          ? "emp-official-email"
+          : "emp-personal-email";
+      document.getElementById(firstInvalidId)?.focus();
+      return;
+    }
+    onSave();
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/60 bg-card/60">
-          <DialogTitle className="text-lg font-bold">
+      <DialogContent className="sm:max-w-3xl max-h-[90vh] flex flex-col p-0 overflow-hidden overflow-y-hidden">
+        <DialogHeader className="px-5 sm:px-6 pt-5 pb-4 border-b border-border bg-card">
+          <DialogTitle className="text-lg font-semibold">
             {isEdit ? "Edit Employee Profile" : "Add New Employee"}
           </DialogTitle>
-          <DialogDescription className="text-xs text-muted-foreground">
+          <DialogDescription className="text-sm text-muted-foreground">
             Complete personal details, organization & job classification, and compensation & system access settings.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+        <div className="flex-1 overflow-y-auto px-5 sm:px-6 py-5 space-y-6">
           {/* ── Section 1: Personal Details ─────────────────────────────── */}
-          <div className="rounded-xl border border-border/60 bg-background/40 p-4 space-y-4">
-            <div className="flex items-center gap-2 border-b border-border/50 pb-2.5">
-              <div className="grid h-7 w-7 place-items-center rounded-lg bg-primary/10 text-primary">
+          <section aria-labelledby="emp-section-personal" className="space-y-4">
+            <div className="flex items-center gap-2.5 border-b border-border pb-2.5">
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
                 <User className="h-4 w-4" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-foreground">
-                  1. Personal Details
+                <h3 id="emp-section-personal" className="text-sm font-semibold text-foreground">
+                  Personal Details
                 </h3>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Legal name, official & personal email addresses, mobile number, gender, and date of birth
                 </p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField label="First Name *">
+              <FormField label="First Name *" htmlFor="emp-first-name" error={fieldErrors.firstName}>
                 <Input
+                  id="emp-first-name"
                   placeholder="e.g. Kabir"
                   value={firstNameVal}
-                  onChange={(e) => updateName(e.target.value, lastNameVal)}
+                  aria-invalid={Boolean(fieldErrors.firstName)}
+                  aria-describedby={fieldErrors.firstName ? "emp-first-name-error" : undefined}
+                  onChange={(e) => {
+                    updateName(e.target.value, lastNameVal);
+                    if (fieldErrors.firstName && e.target.value.trim()) {
+                      setFieldErrors((prev) => ({ ...prev, firstName: undefined }));
+                    }
+                  }}
                 />
               </FormField>
 
-              <FormField label="Last Name *">
+              <FormField label="Last Name *" htmlFor="emp-last-name">
                 <Input
+                  id="emp-last-name"
                   placeholder="e.g. Mehta"
                   value={lastNameVal}
                   onChange={(e) => updateName(firstNameVal, e.target.value)}
                 />
               </FormField>
 
-              <FormField label="Official Email *">
+              <FormField label="Official Email *" htmlFor="emp-official-email" error={fieldErrors.officialEmail}>
                 <Input
+                  id="emp-official-email"
                   type="email"
                   placeholder="e.g. kabir.mehta@ofc360.com"
                   value={officialEmailVal}
-                  onChange={(e) =>
+                  aria-invalid={Boolean(fieldErrors.officialEmail)}
+                  aria-describedby={fieldErrors.officialEmail ? "emp-official-email-error" : undefined}
+                  onChange={(e) => {
                     onDraftChange({
                       ...draft,
                       companyEmail: e.target.value,
                       email: e.target.value,
-                    })
-                  }
+                    });
+                    if (fieldErrors.officialEmail && e.target.value.trim()) {
+                      setFieldErrors((prev) => ({ ...prev, officialEmail: undefined }));
+                    }
+                  }}
                 />
               </FormField>
 
-              <FormField label="Personal Email">
+              <FormField label="Personal Email" htmlFor="emp-personal-email" error={fieldErrors.personalEmail}>
                 <Input
+                  id="emp-personal-email"
                   type="email"
                   placeholder="e.g. kabir.personal@gmail.com"
                   value={personalEmailVal}
-                  onChange={(e) =>
+                  aria-invalid={Boolean(fieldErrors.personalEmail)}
+                  aria-describedby={fieldErrors.personalEmail ? "emp-personal-email-error" : undefined}
+                  onChange={(e) => {
                     onDraftChange({
                       ...draft,
                       personalEmail: e.target.value,
-                    })
-                  }
+                    });
+                    if (fieldErrors.personalEmail) {
+                      setFieldErrors((prev) => ({ ...prev, personalEmail: undefined }));
+                    }
+                  }}
                 />
               </FormField>
 
-              <FormField label="Mobile Number *">
+              <FormField label="Mobile Number *" htmlFor="emp-mobile">
                 <Input
+                  id="emp-mobile"
                   placeholder="e.g. +91 98201 11223"
                   value={draft.phone || ""}
                   onChange={(e) =>
@@ -327,14 +382,14 @@ export function EmployeeFormDialog({
                 />
               </FormField>
 
-              <FormField label="Gender">
+              <FormField label="Gender" htmlFor="emp-gender">
                 <Select
                   value={draft.gender || "MALE"}
                   onValueChange={(val) =>
                     onDraftChange({ ...draft, gender: val })
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="emp-gender">
                     <SelectValue placeholder="Select gender" />
                   </SelectTrigger>
                   <SelectContent>
@@ -347,8 +402,9 @@ export function EmployeeFormDialog({
                 </Select>
               </FormField>
 
-              <FormField label="Date of Birth">
+              <FormField label="Date of Birth" htmlFor="emp-dob">
                 <Input
+                  id="emp-dob"
                   type="date"
                   value={draft.dateOfBirth || ""}
                   onChange={(e) =>
@@ -357,28 +413,29 @@ export function EmployeeFormDialog({
                 />
               </FormField>
             </div>
-          </div>
+          </section>
 
           {/* ── Section 2: Organization, Job & Classification ───────────── */}
-          <div className="rounded-xl border border-border/60 bg-background/40 p-4 space-y-4">
-            <div className="flex items-center gap-2 border-b border-border/50 pb-2.5">
-              <div className="grid h-7 w-7 place-items-center rounded-lg bg-blue-500/10 text-blue-400">
+          <section aria-labelledby="emp-section-org" className="space-y-4 border-t border-border pt-6">
+            <div className="flex items-center gap-2.5 border-b border-border pb-2.5">
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
                 <Briefcase className="h-4 w-4" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-foreground">
-                  2. Organization, Job & Classification
+                <h3 id="emp-section-org" className="text-sm font-semibold text-foreground">
+                  Organization, Job & Classification
                 </h3>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Employee code, department, designation, reporting manager, shift, and work mode
                 </p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField label="Employee Code">
+              <FormField label="Employee Code" htmlFor="emp-code">
                 <div className="flex items-center gap-2">
                   <Input
+                    id="emp-code"
                     placeholder="Auto-generated if left blank"
                     value={draft.employeeId || ""}
                     onChange={(e) =>
@@ -388,20 +445,20 @@ export function EmployeeFormDialog({
                     disabled={isEdit}
                   />
                   {loadingOptions && (
-                    <Button type="button" variant="outline" size="icon" disabled>
+                    <Button type="button" variant="outline" size="icon" disabled aria-label="Loading options">
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     </Button>
                   )}
                 </div>
               </FormField>
 
-              <FormField label="Department *">
+              <FormField label="Department *" htmlFor="emp-department">
                 <Select
                   value={draft.department || ""}
                   onValueChange={handleDepartmentChange}
                   disabled={loadingOptions}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="emp-department">
                     <SelectValue placeholder={loadingOptions ? "Loading..." : "Select department"} />
                   </SelectTrigger>
                   <SelectContent>
@@ -412,16 +469,16 @@ export function EmployeeFormDialog({
                     ))}
                   </SelectContent>
                 </Select>
-                {loadingOptions && <p className="text-[11px] text-muted-foreground">Loading departments...</p>}
+                {loadingOptions && <p className="text-xs text-muted-foreground">Loading departments...</p>}
               </FormField>
 
-              <FormField label="Designation *">
+              <FormField label="Designation *" htmlFor="emp-designation">
                 <Select
                   value={draft.designation || ""}
                   onValueChange={handleDesignationChange}
                   disabled={loadingOptions}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="emp-designation">
                     <SelectValue placeholder={loadingOptions ? "Loading..." : "Select designation"} />
                   </SelectTrigger>
                   <SelectContent>
@@ -432,16 +489,16 @@ export function EmployeeFormDialog({
                     ))}
                   </SelectContent>
                 </Select>
-                {loadingOptions && <p className="text-[11px] text-muted-foreground">Loading designations...</p>}
+                {loadingOptions && <p className="text-xs text-muted-foreground">Loading designations...</p>}
               </FormField>
 
-              <FormField label="Reporting Manager">
+              <FormField label="Reporting Manager" htmlFor="emp-manager">
                 <Select
                   value={draft.reportingManagerName ? `${draft.reportingManagerName} (${draft.designation || ""})`.trim() : "none"}
                   onValueChange={handleManagerChange}
                   disabled={loadingOptions}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="emp-manager">
                     <SelectValue placeholder={loadingOptions ? "Loading..." : "Select reporting manager"} />
                   </SelectTrigger>
                   <SelectContent>
@@ -455,8 +512,9 @@ export function EmployeeFormDialog({
                 </Select>
               </FormField>
 
-              <FormField label="Date of Joining *">
+              <FormField label="Date of Joining *" htmlFor="emp-joining-date">
                 <Input
+                  id="emp-joining-date"
                   type="date"
                   value={draft.joiningDate || new Date().toISOString().split("T")[0]}
                   onChange={(e) =>
@@ -465,14 +523,14 @@ export function EmployeeFormDialog({
                 />
               </FormField>
 
-              <FormField label="Employment Type">
+              <FormField label="Employment Type" htmlFor="emp-employment-type">
                 <Select
                   value={draft.employmentType || "FULL_TIME"}
                   onValueChange={(val) =>
                     onDraftChange({ ...draft, employmentType: val })
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="emp-employment-type">
                     <SelectValue placeholder="Select employment type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -485,14 +543,14 @@ export function EmployeeFormDialog({
                 </Select>
               </FormField>
 
-              <FormField label="Work Mode">
+              <FormField label="Work Mode" htmlFor="emp-work-mode">
                 <Select
                   value={draft.workMode || "OFFICE"}
                   onValueChange={(val) =>
                     onDraftChange({ ...draft, workMode: val })
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="emp-work-mode">
                     <SelectValue placeholder="Select work mode" />
                   </SelectTrigger>
                   <SelectContent>
@@ -505,7 +563,7 @@ export function EmployeeFormDialog({
                 </Select>
               </FormField>
 
-              <FormField label="Probation Period">
+              <FormField label="Probation Period" htmlFor="emp-probation">
                 <Select
                   value={String(draft.probationPeriodMonths ?? 3)}
                   onValueChange={(val) =>
@@ -515,7 +573,7 @@ export function EmployeeFormDialog({
                     })
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="emp-probation">
                     <SelectValue placeholder="Select probation period" />
                   </SelectTrigger>
                   <SelectContent>
@@ -528,7 +586,7 @@ export function EmployeeFormDialog({
                 </Select>
               </FormField>
 
-              <FormField label="Default Shift Assignment">
+              <FormField label="Default Shift Assignment" htmlFor="emp-shift">
                 <Select
                   value={draft.shift || ""}
                   onValueChange={(val) =>
@@ -536,7 +594,7 @@ export function EmployeeFormDialog({
                   }
                   disabled={loadingOptions}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="emp-shift">
                     <SelectValue placeholder={loadingOptions ? "Loading..." : "Select default shift"} />
                   </SelectTrigger>
                   <SelectContent>
@@ -547,11 +605,12 @@ export function EmployeeFormDialog({
                     ))}
                   </SelectContent>
                 </Select>
-                {loadingOptions && <p className="text-[11px] text-muted-foreground">Loading shifts...</p>}
+                {loadingOptions && <p className="text-xs text-muted-foreground">Loading shifts...</p>}
               </FormField>
 
-              <FormField label="Work Location">
+              <FormField label="Work Location" htmlFor="emp-work-location">
                 <Input
+                  id="emp-work-location"
                   placeholder="e.g. Bengaluru · Global HQ"
                   value={draft.workLocation ?? draft.officeLocation ?? ""}
                   onChange={(e) =>
@@ -564,27 +623,28 @@ export function EmployeeFormDialog({
                 />
               </FormField>
             </div>
-          </div>
+          </section>
 
           {/* ── Section 3: Compensation, Role & Invite ──────────────────── */}
-          <div className="rounded-xl border border-border/60 bg-background/40 p-4 space-y-4">
-            <div className="flex items-center gap-2 border-b border-border/50 pb-2.5">
-              <div className="grid h-7 w-7 place-items-center rounded-lg bg-emerald-500/10 text-emerald-400">
+          <section aria-labelledby="emp-section-comp" className="space-y-4 border-t border-border pt-6">
+            <div className="flex items-center gap-2.5 border-b border-border pb-2.5">
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
                 <IndianRupee className="h-4 w-4" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-foreground">
-                  3. Compensation, Role & Invite
+                <h3 id="emp-section-comp" className="text-sm font-semibold text-foreground">
+                  Compensation, Role & Invite
                 </h3>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Annual CTC package, system access role, and digital onboarding invitation
                 </p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField label="Annual CTC (₹)">
+              <FormField label="Annual CTC (₹)" htmlFor="emp-ctc">
                 <Input
+                  id="emp-ctc"
                   type="number"
                   placeholder="e.g. 1200000"
                   value={draft.ctc ? String(draft.ctc) : ""}
@@ -600,8 +660,9 @@ export function EmployeeFormDialog({
                 />
               </FormField>
 
-              <FormField label="Monthly Salary (₹)">
+              <FormField label="Monthly Salary (₹)" htmlFor="emp-salary">
                 <Input
+                  id="emp-salary"
                   type="number"
                   placeholder="e.g. 100000"
                   value={draft.salary ? String(draft.salary) : ""}
@@ -617,14 +678,14 @@ export function EmployeeFormDialog({
                 />
               </FormField>
 
-              <FormField label="System Access Role">
+              <FormField label="System Access Role" htmlFor="emp-role">
                 <Select
                   value={draft.role && draft.role !== "hr_admin" ? draft.role : "employee"}
                   onValueChange={(val) =>
                     onDraftChange({ ...draft, role: val })
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="emp-role">
                     <SelectValue placeholder="Select system role" />
                   </SelectTrigger>
                   <SelectContent>
@@ -641,7 +702,7 @@ export function EmployeeFormDialog({
               </FormField>
 
               <div className="sm:col-span-2">
-                <label className="flex items-start gap-3 rounded-xl border border-border/60 bg-card/50 p-3.5 cursor-pointer hover:bg-accent/30 transition-colors">
+                <label className="flex items-start gap-3 rounded-lg border border-border bg-muted/25 p-3.5 cursor-pointer hover:bg-muted/45 transition-colors">
                   <Checkbox
                     checked={draft.sendOnboardingInvite !== false}
                     onCheckedChange={(checked) =>
@@ -652,12 +713,12 @@ export function EmployeeFormDialog({
                     }
                     className="mt-0.5"
                   />
-                  <div className="space-y-0.5 text-xs">
-                    <div className="flex items-center gap-1.5 font-semibold text-foreground">
+                  <div className="space-y-0.5 text-sm">
+                    <div className="flex items-center gap-1.5 font-medium text-foreground">
                       <Mail className="h-3.5 w-3.5 text-primary" />
                       Send Onboarding Invite
                     </div>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       Automatically dispatch a digital onboarding invitation link and portal credentials to{" "}
                       <span className="font-mono text-foreground">
                         {officialEmailVal || personalEmailVal || "the employee's email"}
@@ -668,10 +729,10 @@ export function EmployeeFormDialog({
                 </label>
               </div>
             </div>
-          </div>
+          </section>
         </div>
 
-        <DialogFooter className="px-6 py-4 border-t border-border/60 bg-card/60">
+        <DialogFooter className="px-5 sm:px-6 py-4 border-t border-border bg-card">
           <Button
             type="button"
             variant="outline"
@@ -679,7 +740,7 @@ export function EmployeeFormDialog({
           >
             Cancel
           </Button>
-          <Button type="button" onClick={onSave} disabled={submitting}>
+          <Button type="button" onClick={handleValidateAndSave} disabled={submitting}>
             {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isEdit ? "Save Changes" : "Add Employee"}
           </Button>
@@ -691,17 +752,29 @@ export function EmployeeFormDialog({
 
 function FormField({
   label,
+  htmlFor,
+  error,
   children,
   wide,
 }: {
   label: string;
+  htmlFor?: string;
+  error?: string;
   children: React.ReactNode;
   wide?: boolean;
 }) {
+  const errorId = htmlFor ? `${htmlFor}-error` : undefined;
   return (
     <div className={`space-y-1.5 ${wide ? "sm:col-span-2" : ""}`}>
-      <Label className="text-xs font-medium">{label}</Label>
+      <Label htmlFor={htmlFor} className="text-sm font-medium text-foreground">
+        {label}
+      </Label>
       {children}
+      {error && (
+        <p id={errorId} role="alert" className="text-xs text-destructive">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

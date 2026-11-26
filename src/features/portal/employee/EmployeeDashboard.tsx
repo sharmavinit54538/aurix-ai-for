@@ -986,7 +986,7 @@ export function EmployeeDashboard() {
       <PageHeader
         title={`Welcome, ${firstName}`}
         description={`${companyName} employee portal — manage daily attendance, leaves, and payslips.`}
-        action={
+        actions={
           <Button asChild size="sm">
             <Link to={"/dashboard/attendance" as any}>
               <Clock className="h-4 w-4" />

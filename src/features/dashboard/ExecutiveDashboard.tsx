@@ -1308,7 +1308,7 @@ export function ExecutiveDashboard() {
       <PageHeader
         title="Executive Overview"
         description={`${ws.company?.name ?? "Organization"} workforce metrics, pending approvals, and operational alerts.`}
-        action={
+        actions={
           <Button asChild size="sm">
             <Link to={"/dashboard/employees?action=add" as any}>
               <UserPlus className="h-4 w-4" />

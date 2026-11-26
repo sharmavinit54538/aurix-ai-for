@@ -171,6 +171,9 @@ export function PayrollPeriodsPage() {
   const [createModalOpen, setCreateModalOpen] = useState<boolean>(false);
   const [isSubmittingCreate, setIsSubmittingCreate] = useState<boolean>(false);
   const [createFormError, setCreateFormError] = useState<string | null>(null);
+  const [createFieldErrors, setCreateFieldErrors] = useState<
+    Partial<Record<"name" | "startDate" | "endDate" | "payDate", string>>
+  >({});
   const [voidTargetPeriod, setVoidTargetPeriod] = useState<PayrollPeriod | null>(null);
 
   // Create Form Fields
@@ -291,43 +294,47 @@ export function PayrollPeriodsPage() {
   const handleCreatePeriodSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreateFormError(null);
+    const nextFieldErrors: Partial<Record<"name" | "startDate" | "endDate" | "payDate", string>> = {};
 
-    // Basic UX Validation
+    // Per-field UX Validation
     if (!formName.trim()) {
-      setCreateFormError("Payroll Period Name is required.");
-      return;
+      nextFieldErrors.name = "Payroll Period Name is required.";
     }
     if (!formStartDate) {
-      setCreateFormError("Start Date is required.");
-      return;
+      nextFieldErrors.startDate = "Start Date is required.";
     }
     if (!formEndDate) {
-      setCreateFormError("End Date is required.");
-      return;
+      nextFieldErrors.endDate = "End Date is required.";
     }
     if (!formPayDate) {
-      setCreateFormError("Pay Date is required.");
-      return;
+      nextFieldErrors.payDate = "Pay Date is required.";
     }
 
     const start = new Date(formStartDate);
     const end = new Date(formEndDate);
     const pay = new Date(formPayDate);
 
-    if (isNaN(start.getTime())) {
-      setCreateFormError("Start Date is invalid.");
-      return;
+    if (formStartDate && isNaN(start.getTime())) {
+      nextFieldErrors.startDate = "Start Date is invalid.";
     }
-    if (isNaN(end.getTime())) {
-      setCreateFormError("End Date is invalid.");
-      return;
+    if (formEndDate && isNaN(end.getTime())) {
+      nextFieldErrors.endDate = "End Date is invalid.";
+    } else if (formStartDate && formEndDate && end < start) {
+      nextFieldErrors.endDate = "End Date cannot be earlier than Start Date.";
     }
-    if (isNaN(pay.getTime())) {
-      setCreateFormError("Pay Date is invalid.");
-      return;
+    if (formPayDate && isNaN(pay.getTime())) {
+      nextFieldErrors.payDate = "Pay Date is invalid.";
     }
-    if (end < start) {
-      setCreateFormError("End Date cannot be earlier than Start Date.");
+
+    setCreateFieldErrors(nextFieldErrors);
+    if (Object.keys(nextFieldErrors).length > 0) {
+      const firstErr =
+        nextFieldErrors.name ||
+        nextFieldErrors.startDate ||
+        nextFieldErrors.endDate ||
+        nextFieldErrors.payDate ||
+        null;
+      setCreateFormError(firstErr);
       return;
     }
 
@@ -441,32 +448,32 @@ export function PayrollPeriodsPage() {
   return (
     <div className="space-y-6">
       {/* ── Page Header ───────────────────────────────────────────── */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
             Payroll Periods
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Create, manage, and monitor payroll periods.
+            Create, manage, and monitor payroll cycles.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          {/* Navigation Tabs (Segmented Control matching Attendance) */}
-          <div className="flex items-center bg-card/65 border border-border/80 p-0.5 rounded-lg">
+          {/* Navigation Tabs */}
+          <div className="inline-flex items-center rounded-lg border border-border bg-muted/50 p-1">
             <Button
               asChild
               variant="ghost"
               size="sm"
-              className="text-xs h-7 px-3 font-semibold rounded-md cursor-pointer text-muted-foreground hover:text-foreground"
+              className="h-8 px-3 text-[13px] font-medium rounded-md cursor-pointer text-muted-foreground hover:text-foreground"
             >
               <Link to="/dashboard/payroll">Payroll Dashboard</Link>
             </Button>
             <Button
               asChild
-              variant="secondary"
+              variant="default"
               size="sm"
-              className="text-xs h-7 px-3 font-semibold rounded-md cursor-pointer"
+              className="h-8 px-3 text-[13px] font-medium rounded-md cursor-pointer"
             >
               <Link to="/dashboard/payroll/periods">Payroll Periods</Link>
             </Button>
@@ -479,8 +486,7 @@ export function PayrollPeriodsPage() {
                 setCreateFormError(null);
                 setCreateModalOpen(true);
               }}
-              className="h-8 gap-1.5 cursor-pointer text-xs text-brand-foreground shadow-sm"
-              style={{ background: "var(--gradient-brand)" }}
+              className="h-9 gap-1.5 cursor-pointer text-[13px]"
             >
               <Plus className="h-4 w-4" />
               <span>Create Payroll Period</span>
@@ -610,8 +616,7 @@ export function PayrollPeriodsPage() {
                   setCreateFormError(null);
                   setCreateModalOpen(true);
                 }}
-                className="gap-1.5 text-brand-foreground shadow-sm"
-                style={{ background: "var(--gradient-brand)" }}
+                className="gap-1.5"
               >
                 <Plus className="h-4 w-4" />
                 <span>Create Payroll Period</span>
@@ -627,18 +632,18 @@ export function PayrollPeriodsPage() {
               <TableHeader>
                 <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
                   <TableHead className="font-semibold">Payroll Period</TableHead>
-                  <TableHead className="font-semibold">Start Date</TableHead>
-                  <TableHead className="font-semibold">End Date</TableHead>
-                  <TableHead className="font-semibold">Pay Date</TableHead>
-                  <TableHead className="font-semibold text-right">
-                    Employee Count
+                  <TableHead className="hidden lg:table-cell font-semibold">Start Date</TableHead>
+                  <TableHead className="hidden lg:table-cell font-semibold">End Date</TableHead>
+                  <TableHead className="hidden md:table-cell font-semibold">Pay Date</TableHead>
+                  <TableHead className="hidden sm:table-cell font-semibold text-right">
+                    Employees
                   </TableHead>
                   <TableHead className="font-semibold text-center">
                     Status
                   </TableHead>
-                  <TableHead className="font-semibold">Created Date</TableHead>
+                  <TableHead className="hidden xl:table-cell font-semibold">Created Date</TableHead>
                   <TableHead className="font-semibold text-right">
-                    Actions
+                    Action
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -658,42 +663,45 @@ export function PayrollPeriodsPage() {
                     >
                       {/* Period Name */}
                       <TableCell className="font-medium text-foreground">
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <CalendarDays className="h-4 w-4 text-muted-foreground shrink-0" />
                           <span>{period.name}</span>
                           {period.isCurrent ? (
                             <Badge
                               variant="outline"
-                              className="text-[10px] px-1.5 py-0 border-emerald-500/30 text-emerald-500 bg-emerald-500/10"
+                              className="text-xs px-2 py-0 border-emerald-300 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300 bg-emerald-500/10"
                             >
                               Current
                             </Badge>
                           ) : null}
                           {period.isLocked ? (
                             <span title="Locked period">
-                              <Lock className="h-3 w-3 text-amber-500 shrink-0" />
+                              <Lock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                             </span>
                           ) : null}
+                        </div>
+                        <div className="mt-0.5 text-xs text-muted-foreground md:hidden">
+                          Pay Date: {formatDate(period.payDate)} · {formatCount(period.employeeCount)} employees
                         </div>
                       </TableCell>
 
                       {/* Start Date */}
-                      <TableCell className="text-xs text-muted-foreground">
+                      <TableCell className="hidden lg:table-cell text-xs text-muted-foreground whitespace-nowrap">
                         {formatDate(period.startDate)}
                       </TableCell>
 
                       {/* End Date */}
-                      <TableCell className="text-xs text-muted-foreground">
+                      <TableCell className="hidden lg:table-cell text-xs text-muted-foreground whitespace-nowrap">
                         {formatDate(period.endDate)}
                       </TableCell>
 
                       {/* Pay Date */}
-                      <TableCell className="text-xs text-muted-foreground">
+                      <TableCell className="hidden md:table-cell text-xs text-muted-foreground whitespace-nowrap">
                         {formatDate(period.payDate)}
                       </TableCell>
 
                       {/* Employee Count */}
-                      <TableCell className="text-xs text-right font-mono text-muted-foreground">
+                      <TableCell className="hidden sm:table-cell text-xs text-right font-mono text-muted-foreground">
                         {formatCount(period.employeeCount)}
                       </TableCell>
 
@@ -706,66 +714,76 @@ export function PayrollPeriodsPage() {
                       </TableCell>
 
                       {/* Created Date */}
-                      <TableCell className="text-xs text-muted-foreground">
+                      <TableCell className="hidden xl:table-cell text-xs text-muted-foreground whitespace-nowrap">
                         {formatDate(period.createdAt)}
                       </TableCell>
 
                       {/* Actions */}
                       <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                              disabled={actionInProgressId === period.id}
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Open menu</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-44">
-                            <DropdownMenuItem
-                              onClick={() => handleViewDetails(period)}
-                              className="gap-2 cursor-pointer text-xs"
-                            >
-                              <Eye className="h-3.5 w-3.5" />
-                              <span>View Details</span>
-                            </DropdownMenuItem>
-
-                            {canLockPeriod ? (
-                              <DropdownMenuItem
-                                onClick={() => handleToggleLock(period)}
-                                className="gap-2 cursor-pointer text-xs"
+                        <div className="inline-flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewDetails(period)}
+                            className="h-8 px-2.5 text-[13px] text-primary hover:text-primary"
+                          >
+                            Details
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                disabled={actionInProgressId === period.id}
                               >
-                                {period.isLocked ? (
-                                  <>
-                                    <Unlock className="h-3.5 w-3.5 text-amber-500" />
-                                    <span>Reopen Period</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Lock className="h-3.5 w-3.5 text-muted-foreground" />
-                                    <span>Lock Period</span>
-                                  </>
-                                )}
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">More actions for {period.name}</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-44">
+                              <DropdownMenuItem
+                                onClick={() => handleViewDetails(period)}
+                                className="gap-2 cursor-pointer text-[13px]"
+                              >
+                                <Eye className="h-3.5 w-3.5" />
+                                <span>View Details</span>
                               </DropdownMenuItem>
-                            ) : null}
 
-                            {!isLockedOrFinalized && canCreatePeriod ? (
-                              <>
-                                <DropdownMenuSeparator />
+                              {canLockPeriod ? (
                                 <DropdownMenuItem
-                                  onClick={() => handleVoidPeriod(period)}
-                                  className="gap-2 cursor-pointer text-xs text-destructive focus:text-destructive"
+                                  onClick={() => handleToggleLock(period)}
+                                  className="gap-2 cursor-pointer text-[13px]"
                                 >
-                                  <XCircle className="h-3.5 w-3.5" />
-                                  <span>Void Period</span>
+                                  {period.isLocked ? (
+                                    <>
+                                      <Unlock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                                      <span>Reopen Period</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                                      <span>Lock Period</span>
+                                    </>
+                                  )}
                                 </DropdownMenuItem>
-                              </>
-                            ) : null}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                              ) : null}
+
+                              {!isLockedOrFinalized && canCreatePeriod ? (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={() => handleVoidPeriod(period)}
+                                    className="gap-2 cursor-pointer text-[13px] text-destructive focus:text-destructive"
+                                  >
+                                    <XCircle className="h-3.5 w-3.5" />
+                                    <span>Void Period</span>
+                                  </DropdownMenuItem>
+                                </>
+                              ) : null}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -882,25 +900,37 @@ export function PayrollPeriodsPage() {
 
               {/* Period Name */}
               <div className="space-y-1.5">
-                <Label htmlFor="period-name" className="text-xs font-medium">
+                <Label htmlFor="period-name" className="text-sm font-medium">
                   Payroll Period Name <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="period-name"
                   value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
+                  aria-invalid={Boolean(createFieldErrors.name)}
+                  aria-describedby={createFieldErrors.name ? "period-name-error" : undefined}
+                  onChange={(e) => {
+                    setFormName(e.target.value);
+                    if (createFieldErrors.name) {
+                      setCreateFieldErrors((prev) => ({ ...prev, name: undefined }));
+                    }
+                  }}
                   placeholder="e.g., September 2026"
                   required
-                  className="h-9 text-xs"
+                  className="h-9 text-sm"
                 />
+                {createFieldErrors.name && (
+                  <p id="period-name-error" role="alert" className="text-xs text-destructive">
+                    {createFieldErrors.name}
+                  </p>
+                )}
               </div>
 
               {/* Start Date & End Date */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label
                     htmlFor="period-start-date"
-                    className="text-xs font-medium"
+                    className="text-sm font-medium"
                   >
                     Start Date <span className="text-destructive">*</span>
                   </Label>
@@ -908,16 +938,28 @@ export function PayrollPeriodsPage() {
                     id="period-start-date"
                     type="date"
                     value={formStartDate}
-                    onChange={(e) => setFormStartDate(e.target.value)}
+                    aria-invalid={Boolean(createFieldErrors.startDate)}
+                    aria-describedby={createFieldErrors.startDate ? "period-start-error" : undefined}
+                    onChange={(e) => {
+                      setFormStartDate(e.target.value);
+                      if (createFieldErrors.startDate) {
+                        setCreateFieldErrors((prev) => ({ ...prev, startDate: undefined }));
+                      }
+                    }}
                     required
-                    className="h-9 text-xs"
+                    className="h-9 text-sm"
                   />
+                  {createFieldErrors.startDate && (
+                    <p id="period-start-error" role="alert" className="text-xs text-destructive">
+                      {createFieldErrors.startDate}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-1.5">
                   <Label
                     htmlFor="period-end-date"
-                    className="text-xs font-medium"
+                    className="text-sm font-medium"
                   >
                     End Date <span className="text-destructive">*</span>
                   </Label>
@@ -925,34 +967,58 @@ export function PayrollPeriodsPage() {
                     id="period-end-date"
                     type="date"
                     value={formEndDate}
-                    onChange={(e) => setFormEndDate(e.target.value)}
+                    aria-invalid={Boolean(createFieldErrors.endDate)}
+                    aria-describedby={createFieldErrors.endDate ? "period-end-error" : undefined}
+                    onChange={(e) => {
+                      setFormEndDate(e.target.value);
+                      if (createFieldErrors.endDate) {
+                        setCreateFieldErrors((prev) => ({ ...prev, endDate: undefined }));
+                      }
+                    }}
                     required
-                    className="h-9 text-xs"
+                    className="h-9 text-sm"
                   />
+                  {createFieldErrors.endDate && (
+                    <p id="period-end-error" role="alert" className="text-xs text-destructive">
+                      {createFieldErrors.endDate}
+                    </p>
+                  )}
                 </div>
               </div>
 
               {/* Pay Date */}
               <div className="space-y-1.5">
-                <Label htmlFor="period-pay-date" className="text-xs font-medium">
+                <Label htmlFor="period-pay-date" className="text-sm font-medium">
                   Pay Date <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="period-pay-date"
                   type="date"
                   value={formPayDate}
-                  onChange={(e) => setFormPayDate(e.target.value)}
+                  aria-invalid={Boolean(createFieldErrors.payDate)}
+                  aria-describedby={createFieldErrors.payDate ? "period-pay-error" : undefined}
+                  onChange={(e) => {
+                    setFormPayDate(e.target.value);
+                    if (createFieldErrors.payDate) {
+                      setCreateFieldErrors((prev) => ({ ...prev, payDate: undefined }));
+                    }
+                  }}
                   required
-                  className="h-9 text-xs"
+                  className="h-9 text-sm"
                 />
-                <p className="text-[11px] text-muted-foreground">
+                {createFieldErrors.payDate && (
+                  <p id="period-pay-error" role="alert" className="text-xs text-destructive">
+                    {createFieldErrors.payDate}
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground">
                   The scheduled date when salary disbursement is planned.
                 </p>
               </div>
 
               {/* Remarks */}
               <div className="space-y-1.5">
-                <Label htmlFor="period-remarks" className="text-xs font-medium">
+                <Label htmlFor="period-remarks" className="text-sm font-medium">
                   Remarks / Notes
                 </Label>
                 <Textarea
@@ -961,12 +1027,12 @@ export function PayrollPeriodsPage() {
                   onChange={(e) => setFormRemarks(e.target.value)}
                   placeholder="Optional operational remarks or cycle notes"
                   rows={2}
-                  className="text-xs"
+                  className="text-sm"
                 />
               </div>
             </div>
 
-            <DialogFooter className="gap-2 sm:gap-0">
+            <DialogFooter className="gap-2 sm:gap-2">
               <Button
                 type="button"
                 variant="outline"
@@ -980,8 +1046,7 @@ export function PayrollPeriodsPage() {
                 type="submit"
                 size="sm"
                 disabled={isSubmittingCreate}
-                className="gap-1.5 text-brand-foreground shadow-sm"
-                style={{ background: "var(--gradient-brand)" }}
+                className="gap-1.5"
               >
                 {isSubmittingCreate ? (
                   <>
@@ -1002,17 +1067,17 @@ export function PayrollPeriodsPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <CalendarDays className="h-5 w-5 text-foreground" />
+              <CalendarDays className="h-5 w-5 text-primary" />
               <span>{selectedDetailsPeriod?.name || "Payroll Period Details"}</span>
             </DialogTitle>
-            <DialogDescription className="text-xs">
+            <DialogDescription className="text-sm text-muted-foreground">
               Review live period configurations and status recorded on backend.
             </DialogDescription>
           </DialogHeader>
 
           {selectedDetailsPeriod && (
             <div className="space-y-3 py-2 text-xs">
-              <div className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-card/60 p-3">
+              <div className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-muted/30 p-3">
                 <div>
                   <span className="text-muted-foreground">Status:</span>
                   <div className="mt-1">
@@ -1026,11 +1091,11 @@ export function PayrollPeriodsPage() {
                   <span className="text-muted-foreground">Lock State:</span>
                   <div className="mt-1 font-medium">
                     {selectedDetailsPeriod.isLocked ? (
-                      <span className="text-amber-500 font-semibold flex items-center gap-1">
+                      <span className="text-amber-700 dark:text-amber-300 font-semibold flex items-center gap-1">
                         <Lock className="h-3 w-3" /> Locked
                       </span>
                     ) : (
-                      <span className="text-emerald-500 font-semibold flex items-center gap-1">
+                      <span className="text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-1">
                         <Unlock className="h-3 w-3" /> Open
                       </span>
                     )}

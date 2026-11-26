@@ -61,8 +61,7 @@ export function EmployeeDetailSheet({
                 onClose();
                 onOpenFullDetail(employee);
               }}
-              className="w-full gap-1.5 text-xs shadow-sm"
-              style={{ background: "var(--gradient-brand)" }}
+              className="w-full gap-1.5 text-[13px] shadow-xs"
             >
               <ExternalLink className="h-3.5 w-3.5" />
               <span>Open Dedicated Employee Payroll Page</span>

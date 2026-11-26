@@ -599,8 +599,7 @@ export function PayrollApprovalPage() {
               size="sm"
               onClick={() => setApprovalModalOpen(true)}
               disabled={!canApproveNow || loadingReview || isApproving || isRejecting}
-              className="h-9 gap-1.5 text-xs shadow-sm"
-              style={{ background: canApproveNow ? "var(--gradient-brand)" : undefined }}
+              className="h-9 gap-1.5 text-[13px] shadow-xs"
               title={
                 hasBlockingErrors
                   ? "Approval blocked by validation errors"
@@ -765,8 +764,7 @@ export function PayrollApprovalPage() {
                         to: `/dashboard/payroll/runs/${runId}/finalize` as any,
                       })
                     }
-                    className="h-8 gap-1.5 text-xs font-semibold"
-                    style={{ background: "var(--gradient-brand)" }}
+                    className="h-8 gap-1.5 text-[13px] font-medium"
                     title="Proceed to Step 8 Payroll Finalization"
                   >
                     <Lock className="h-3.5 w-3.5" />

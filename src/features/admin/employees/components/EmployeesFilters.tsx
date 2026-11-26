@@ -17,18 +17,19 @@ export function EmployeesFilters({
   onDepartmentChange,
 }: EmployeesFiltersProps) {
   return (
-    <div className="flex flex-wrap items-center gap-3 border-b border-border p-4">
-      <div className="relative flex-1 min-w-[200px]">
+    <div className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center">
+      <div className="relative w-full sm:flex-1 sm:min-w-[200px]">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
+          aria-label="Search employees"
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search by name, email, or ID"
-          className="h-9 pl-9"
+          className="h-9 pl-9 text-sm"
         />
       </div>
       <Select value={department} onValueChange={onDepartmentChange}>
-        <SelectTrigger className="h-9 w-48">
+        <SelectTrigger aria-label="Filter by department" className="h-9 w-full sm:w-52 text-[13px]">
           <SelectValue placeholder="All departments" />
         </SelectTrigger>
         <DepartmentSelectContent includeAllOption />

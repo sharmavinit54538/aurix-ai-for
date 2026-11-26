@@ -30,7 +30,7 @@ export function PayrollPageHeader({
           </h1>
           <Badge
             variant="outline"
-            className="font-mono text-[11px] font-medium border-border/80 bg-muted/30"
+            className="font-mono text-xs font-medium border-border bg-muted/40"
             title={`Payroll Run Identifier: ${runId}`}
           >
             Run: {runId}
@@ -44,8 +44,8 @@ export function PayrollPageHeader({
             </Badge>
           ) : null}
         </div>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Review and audit backend-calculated provisional payroll figures prior to formal review & approval.
+        <p className="mt-1 text-sm text-muted-foreground">
+          Review and audit calculated provisional payroll figures before approval.
         </p>
       </div>
 
@@ -54,22 +54,11 @@ export function PayrollPageHeader({
           variant="outline"
           size="sm"
           onClick={onNavigateToValidation}
-          className="h-9 gap-1.5 text-xs shadow-sm text-primary border-primary/30 hover:bg-primary/5"
+          className="h-9 gap-1.5 text-[13px] shadow-xs"
           title="View validation findings and rule violations"
         >
-          <ShieldCheck className="h-3.5 w-3.5" />
+          <ShieldCheck className="h-3.5 w-3.5 text-primary" />
           <span>Validation & Issues</span>
-        </Button>
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onNavigateToApproval}
-          className="h-9 gap-1.5 text-xs shadow-sm text-foreground hover:bg-muted/60"
-          title="Proceed to Step 7 Review & Approval"
-        >
-          <UserCheck className="h-3.5 w-3.5 text-primary" />
-          <span>Review & Approval</span>
         </Button>
 
         {canRunPayroll ? (
@@ -77,13 +66,23 @@ export function PayrollPageHeader({
             variant="outline"
             size="sm"
             onClick={onRecalculate}
-            className="h-9 gap-1.5 text-xs shadow-sm"
+            className="h-9 gap-1.5 text-[13px] shadow-xs"
             title="Recalculate payroll figures on backend"
           >
             <RotateCcw className="h-3.5 w-3.5" />
             <span>Recalculate Payroll</span>
           </Button>
         ) : null}
+
+        <Button
+          size="sm"
+          onClick={onNavigateToApproval}
+          className="h-9 gap-1.5 text-[13px] shadow-xs"
+          title="Proceed to Review & Approval"
+        >
+          <UserCheck className="h-3.5 w-3.5" />
+          <span>Review & Approval</span>
+        </Button>
       </div>
     </div>
   );

@@ -129,15 +129,15 @@ export default function EmployeeSelfServicePayrollPage() {
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight">My Payroll & Payslips</h1>
-            <Badge variant="outline" className="gap-1 border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">My Payroll & Payslips</h1>
+            <Badge variant="outline" className="gap-1 border-emerald-300 dark:border-emerald-800/60 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
               <ShieldCheck className="h-3.5 w-3.5" />
-              Strict Self-Isolation
+              Verified Self-Service
             </Badge>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -176,15 +176,15 @@ export default function EmployeeSelfServicePayrollPage() {
 
       {/* Employee Identity Card */}
       {data && (
-        <div className="rounded-2xl border border-border bg-gradient-to-r from-brand-500/10 via-brand-500/5 to-transparent p-5 backdrop-blur-xl">
+        <div className="rounded-xl border border-border bg-card p-5 shadow-xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-500/20 text-brand-600 dark:text-brand-300 font-bold text-lg">
+              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary font-bold text-lg">
                 {data.employeeName?.charAt(0) || "U"}
               </div>
               <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-lg font-semibold">{data.employeeName}</span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-lg font-semibold text-foreground">{data.employeeName}</span>
                   <Badge variant="secondary" className="font-mono text-xs">{data.employeeCode}</Badge>
                 </div>
                 <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">

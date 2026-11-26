@@ -69,10 +69,10 @@ export function EmployeesConfirmDialogs({
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="space-y-4 px-6 py-4">
+          <div className="space-y-3 py-2">
             <div className="space-y-2">
               <Label htmlFor="deactivate-reason" className="text-sm font-medium">
-                Reason for deactivation *
+                Reason for deactivation <span className="text-destructive">*</span>
               </Label>
               <Textarea
                 id="deactivate-reason"
@@ -80,9 +80,13 @@ export function EmployeesConfirmDialogs({
                 onChange={(e) => setDeactivateReason(e.target.value)}
                 placeholder="e.g. Employment ended, Resignation, Contract completion..."
                 rows={3}
-                className="w-full"
+                className="w-full text-sm"
+                aria-describedby="deactivate-reason-hint"
                 required
               />
+              <p id="deactivate-reason-hint" className="text-xs text-muted-foreground">
+                Required before confirming deactivation.
+              </p>
             </div>
           </div>
           <AlertDialogFooter>

@@ -528,8 +528,7 @@ export default function PayrollRunPaymentPage() {
                 variant="default"
                 disabled={!isFinalized || !selectedAccountId || isSubmitting || loadingRun}
                 onClick={handleCreateBatch}
-                className="w-full h-10 gap-2 text-xs font-semibold rounded-xl shadow-md"
-                style={{ background: isFinalized ? "var(--gradient-brand)" : undefined }}
+                className="w-full h-10 gap-2 text-[13px] font-semibold rounded-xl shadow-xs"
               >
                 {isSubmitting ? (
                   <>
@@ -543,7 +542,7 @@ export default function PayrollRunPaymentPage() {
                   </>
                 )}
               </Button>
-              <p className="mt-2 text-[10px] text-center text-muted-foreground">
+              <p className="mt-2 text-xs text-center text-muted-foreground">
                 Uses unique <code>Idempotency-Key</code> to guarantee duplicate-submission protection.
               </p>
             </div>
