@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import {
   MessageSquare,
@@ -15,6 +16,9 @@ import {
   ThumbsUp,
   ThumbsDown,
   BarChart3,
+  Square,
+  History,
+  Trash2,
 } from "lucide-react";
 import { AgentToolCallCard } from "@/features/autopilot/components/AgentToolCallCard";
 import { autopilotApi } from "@/features/autopilot/services/autopilotApi";
@@ -41,7 +45,6 @@ import type { Stage, EmploymentType, WorkMode } from "@/features/admin/recruitme
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
   createChatConversation,
-  sendChatMessage,
   fetchChatConversations,
   fetchChatConversation,
   deleteChatConversation,
@@ -49,13 +52,18 @@ import {
 import {
   setActiveConversation,
   clearOperationStatus,
+  addLocalMessage,
+  appendStreamChunk,
+  finalizeStreamMessage,
+  interruptStreamMessage,
 } from "@/store/aiHub/aiHub.slice";
 import {
   selectChatAssistant,
   selectAIHubOperationLoading,
   selectAIHubOperationError,
 } from "@/store/aiHub/aiHub.selectors";
-import { aiHubApi } from "@/services/aiHub.api";
+import { aiHubApi, createClientMessageId, normalizeAIError } from "@/services/aiHub.api";
+import { useAuthReady } from "@/lib/auth-bootstrap";
 import type {
   ChatMessage,
   ChatActionRequired,
@@ -78,12 +86,50 @@ const COMMAND_SUGGESTIONS = [
 ];
 
 const SESSION_KEY = "lastActiveChatConversationId";
+const PENDING_KEY = "lastPendingChatMessage";
+
+export function formatMarkdownForRender(content: string): string {
+  if (!content || !content.includes("|")) return content;
+  const hasDelimiter = /\|[\s:-]*-{2,}[\s:-]*\|/.test(content);
+  if (!hasDelimiter) return content;
+
+  const outputLines: string[] = [];
+  let inTableBlock = false;
+
+  for (const rawLine of content.split("\n")) {
+    const lineHasDelimiter = /\|[\s:-]*-{2,}[\s:-]*\|/.test(rawLine);
+    const hasAdjacentRowPipes = /\|[ \t]+\|/.test(rawLine);
+    const trimmed = rawLine.trim();
+
+    if (hasAdjacentRowPipes && (lineHasDelimiter || (inTableBlock && trimmed.startsWith("|")))) {
+      let line = rawLine;
+      const firstPipeIdx = line.indexOf("|");
+      if (firstPipeIdx > 0 && line.slice(0, firstPipeIdx).trim().length > 0) {
+        outputLines.push(line.slice(0, firstPipeIdx).trimEnd(), "");
+        line = line.slice(firstPipeIdx);
+      }
+      const splitRows = line.replace(/\|[ \t]+\|/g, "|\n|").split("\n");
+      for (const row of splitRows) {
+        const cleanRow = row.trim();
+        if (cleanRow) outputLines.push(cleanRow);
+      }
+      inTableBlock = true;
+      continue;
+    }
+
+    inTableBlock = trimmed.startsWith("|") && trimmed.endsWith("|");
+    outputLines.push(rawLine);
+  }
+
+  return outputLines.join("\n");
+}
 
 const WELCOME_MESSAGE: ChatMessage = {
   id: "m-welcome",
   conversationId: undefined,
   sender: "assistant",
   role: "ai",
+  status: "completed",
   content:
     "Hi 👋 I am your OFC360 workforce copilot. You can ask questions about your workforce or issue text commands to search candidates, inspect job postings, review scheduled interviews, structure offers, and monitor payroll records.",
   timestamp: new Date().toISOString(),
@@ -138,9 +184,10 @@ function ChatChartRenderer({ chart }: { chart: ChatChart }) {
 export default function ChatAssistantPage() {
   const dispatch = useAppDispatch();
   const { moveStage, upsertInterview, upsertOffer, upsertJob } = useRecruitment();
+  const authReady = useAuthReady();
 
-  const isSending = useAppSelector(selectAIHubOperationLoading("sendChatMessage"));
-  const sendError = useAppSelector(selectAIHubOperationError("sendChatMessage"));
+  const isSending = useAppSelector(selectAIHubOperationLoading);
+  const sendError = useAppSelector(selectAIHubOperationError);
   const chatAssistantSection = useAppSelector(selectChatAssistant);
 
   const [msgs, setMsgs] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
@@ -151,6 +198,9 @@ export default function ChatAssistantPage() {
   const [executedActionMessageIds, setExecutedActionMessageIds] = useState<Set<string>>(new Set());
   const [feedbackMap, setFeedbackMap] = useState<Record<string, "up" | "down">>({});
   const [suggestions, setSuggestions] = useState(COMMAND_SUGGESTIONS);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamError, setStreamError] = useState<string | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const [confirmModal, setConfirmModal] = useState<{
     action: ChatActionRequired;
@@ -163,9 +213,38 @@ export default function ChatAssistantPage() {
   ]);
 
   const bottomRef = useRef<HTMLDivElement>(null);
+  const streamAbortRef = useRef<AbortController | null>(null);
+  const activeStreamRef = useRef<{
+    conversationId?: string;
+    clientMessageId: string;
+    assistantMsgId: string;
+  } | null>(null);
+  const sendLockRef = useRef(false);
+  const mountedRef = useRef(true);
 
-  // Load chat suggestions dynamically on mount
+  const isBusy = isSending || isStreaming;
+  const combinedError = streamError || sendError;
+
   useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      if (streamAbortRef.current) {
+        streamAbortRef.current.abort();
+        streamAbortRef.current = null;
+      }
+      const active = activeStreamRef.current;
+      if (active?.conversationId) {
+        void aiHubApi
+          .cancelChatGeneration(active.conversationId, active.clientMessageId)
+          .catch(() => {});
+      }
+    };
+  }, []);
+
+  // Load chat suggestions dynamically on mount (after auth is ready)
+  useEffect(() => {
+    if (!authReady) return;
     let mounted = true;
     aiHubApi
       .getChatSuggestions()
@@ -178,35 +257,109 @@ export default function ChatAssistantPage() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [authReady]);
 
-  // Fetch conversations list on mount
+  // Fetch conversations list on mount (after auth is ready)
   useEffect(() => {
+    if (!authReady) return;
     dispatch(fetchChatConversations());
-  }, [dispatch]);
+  }, [dispatch, authReady]);
 
   // Restore saved conversation from sessionStorage on mount (if user previously selected one)
   useEffect(() => {
+    if (!authReady) return;
     const savedId = sessionStorage.getItem(SESSION_KEY);
     if (savedId && !currentConversationId) {
       setCurrentConversationId(savedId);
-      dispatch(fetchChatConversation(savedId)).then((res) => {
-        if (fetchChatConversation.fulfilled.match(res)) {
-          if (res.payload.messages && res.payload.messages.length > 0) {
-            setMsgs(res.payload.messages);
+      dispatch(fetchChatConversation(savedId)).then(async (res) => {
+        if (!mountedRef.current) return;
+        let loadedMsgs: ChatMessage[] = [];
+        if (fetchChatConversation.fulfilled.match(res) && res.payload.messages?.length) {
+          loadedMsgs = res.payload.messages;
+          setMsgs(loadedMsgs);
+        }
+
+        const pendingRaw = sessionStorage.getItem(PENDING_KEY);
+        if (pendingRaw) {
+          try {
+            const pending = JSON.parse(pendingRaw) as {
+              conversationId?: string;
+              clientMessageId?: string;
+              content?: string;
+            };
+            if (pending.conversationId === savedId && pending.clientMessageId) {
+              const alreadyDone = loadedMsgs.some(
+                (m) =>
+                  (m.role !== "user" && m.sender !== "user") &&
+                  m.clientMessageId === pending.clientMessageId &&
+                  m.status === "completed",
+              );
+              if (alreadyDone) {
+                sessionStorage.removeItem(PENDING_KEY);
+              } else {
+                const statusRes = await aiHubApi
+                  .reconcileMessageStatus(savedId, pending.clientMessageId)
+                  .catch(() => null);
+                if (!mountedRef.current) return;
+                if (statusRes?.found && statusRes.status === "completed" && statusRes.message) {
+                  setMsgs((prev) => [...prev.filter((x) => x.clientMessageId !== pending.clientMessageId || x.sender === "user"), statusRes.message!]);
+                  sessionStorage.removeItem(PENDING_KEY);
+                } else if (statusRes?.found && statusRes.partialContent) {
+                  setMsgs((prev) => [
+                    ...prev,
+                    {
+                      id: `ai-rec-${Date.now()}`,
+                      conversationId: savedId,
+                      sender: "assistant",
+                      role: "ai",
+                      content: statusRes.partialContent!,
+                      status: "interrupted",
+                      isPartial: true,
+                      retryable: true,
+                      clientMessageId: pending.clientMessageId,
+                      timestamp: new Date().toISOString(),
+                    },
+                  ]);
+                  sessionStorage.removeItem(PENDING_KEY);
+                } else if (statusRes && statusRes.status === "not_found") {
+                  sessionStorage.removeItem(PENDING_KEY);
+                }
+              }
+            }
+          } catch {
+            sessionStorage.removeItem(PENDING_KEY);
           }
         }
       });
     }
-  }, [dispatch, currentConversationId]);
+  }, [dispatch, currentConversationId, authReady]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [msgs, isSending, sendError]);
+  }, [msgs, isBusy, combinedError]);
+
+  const abortActiveStream = useCallback(() => {
+    if (streamAbortRef.current) {
+      streamAbortRef.current.abort();
+      streamAbortRef.current = null;
+    }
+    const active = activeStreamRef.current;
+    if (active?.conversationId) {
+      void aiHubApi
+        .cancelChatGeneration(active.conversationId, active.clientMessageId)
+        .catch(() => {});
+    }
+    activeStreamRef.current = null;
+    sendLockRef.current = false;
+    setIsStreaming(false);
+  }, []);
 
   const handleSelectConversation = useCallback(
     async (convId: string) => {
+      setHistoryOpen(false);
       if (convId === currentConversationId) return;
+      abortActiveStream();
+      setStreamError(null);
       setCurrentConversationId(convId);
       sessionStorage.setItem(SESSION_KEY, convId);
       dispatch(setActiveConversation(convId));
@@ -214,6 +367,7 @@ export default function ChatAssistantPage() {
       setFailedMessageIds(new Set());
 
       const res = await dispatch(fetchChatConversation(convId));
+      if (!mountedRef.current) return;
       if (fetchChatConversation.fulfilled.match(res)) {
         if (res.payload.messages && res.payload.messages.length > 0) {
           setMsgs(res.payload.messages);
@@ -222,18 +376,22 @@ export default function ChatAssistantPage() {
         }
       }
     },
-    [currentConversationId, dispatch],
+    [abortActiveStream, currentConversationId, dispatch],
   );
 
   const handleNewChat = useCallback(() => {
+    abortActiveStream();
+    setStreamError(null);
+    setHistoryOpen(false);
     setCurrentConversationId(null);
     sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(PENDING_KEY);
     dispatch(setActiveConversation(null));
     dispatch(clearOperationStatus("sendChatMessage"));
     setMsgs([WELCOME_MESSAGE]);
     setFailedMessageIds(new Set());
     setInput("");
-  }, [dispatch]);
+  }, [abortActiveStream, dispatch]);
 
   const handleDeleteConversation = useCallback(
     async (convId: string, e: React.MouseEvent) => {
@@ -251,42 +409,91 @@ export default function ChatAssistantPage() {
     [currentConversationId, dispatch, handleNewChat],
   );
 
-  const handleExecuteCommand = useCallback(
-    async (q: string, retryOptions?: { messageId?: string }) => {
-      const trimmed = q.trim();
-      if (!trimmed || isSending) return;
+  const handleStopGenerating = useCallback(() => {
+    abortActiveStream();
+  }, [abortActiveStream]);
 
+  const handleExecuteCommand = useCallback(
+    async (
+      q: string,
+      retryOptions?: { messageId?: string; clientMessageId?: string; restoreInputOnError?: boolean },
+    ) => {
+      const trimmed = q.trim();
+      if (!trimmed || isBusy || sendLockRef.current) return;
+
+      sendLockRef.current = true;
+      setStreamError(null);
       setLastQuery(trimmed);
       dispatch(clearOperationStatus("sendChatMessage"));
 
+      const clientMessageId = retryOptions?.clientMessageId || createClientMessageId();
+      const assistantMsgId = `ai-${clientMessageId}`;
       let userMsgId = retryOptions?.messageId;
 
       if (!userMsgId) {
-        // New user message
-        const newMsg: ChatMessage = {
-          id: `u-${Date.now()}`,
+        const userMsg: ChatMessage = {
+          id: `u-${clientMessageId}`,
           conversationId: currentConversationId || undefined,
           sender: "user",
           role: "user",
           content: trimmed,
+          status: "sending",
+          clientMessageId,
           timestamp: new Date().toISOString(),
         };
-        userMsgId = newMsg.id;
-        setMsgs((prev) => [...prev, newMsg]);
+        userMsgId = userMsg.id;
+        const placeholderAi: ChatMessage = {
+          id: assistantMsgId,
+          conversationId: currentConversationId || undefined,
+          sender: "assistant",
+          role: "ai",
+          content: "",
+          status: "generating",
+          clientMessageId,
+          timestamp: new Date().toISOString(),
+        };
+        setMsgs((prev) => [...prev, userMsg, placeholderAi]);
         setInput("");
       } else {
-        // Retrying existing message - do NOT duplicate bubble!
         setFailedMessageIds((prev) => {
           const next = new Set(prev);
           next.delete(userMsgId!);
           return next;
         });
+        setMsgs((prev) => {
+          const filtered = prev.filter(
+            (m) =>
+              !((m.role !== "user" && m.sender !== "user") &&
+                m.clientMessageId === clientMessageId &&
+                (m.status === "failed" || m.status === "interrupted" || !m.content.trim())),
+          );
+          return [
+            ...filtered.map((m) =>
+              m.id === userMsgId
+                ? { ...m, status: "retrying" as const, failed: false, clientMessageId }
+                : m,
+            ),
+            {
+              id: assistantMsgId,
+              conversationId: currentConversationId || undefined,
+              sender: "assistant",
+              role: "ai",
+              content: "",
+              status: "generating",
+              clientMessageId,
+              timestamp: new Date().toISOString(),
+            },
+          ];
+        });
       }
+
+      let anyChunkArrived = false;
+      const controller = new AbortController();
+      streamAbortRef.current = controller;
 
       try {
         let convId = currentConversationId;
 
-        // Lazy conversation initialization on first message if none exists
         if (!convId) {
           const createAction = await dispatch(
             createChatConversation({
@@ -295,70 +502,280 @@ export default function ChatAssistantPage() {
             }),
           );
 
+          if (!mountedRef.current) return;
+
           if (createChatConversation.fulfilled.match(createAction)) {
             convId = createAction.payload.id;
             setCurrentConversationId(convId);
             sessionStorage.setItem(SESSION_KEY, convId);
           } else {
-            // Failed to create conversation - NO FAKE ID!
             const errMsg =
-              createAction.payload || "Failed to create chat conversation with the backend.";
+              createAction.payload || "Unable to start a new conversation. Please try again.";
+            setStreamError(errMsg);
             toast.error(errMsg);
             setFailedMessageIds((prev) => new Set(prev).add(userMsgId!));
+            setMsgs((prev) => prev.filter((m) => m.id !== assistantMsgId));
+            if (retryOptions?.restoreInputOnError !== false) {
+              setInput((cur) => cur || trimmed);
+            }
             return;
           }
         }
 
-        // Dispatch real sendChatMessage thunk backed by backend LLM
-        const sendAction = await dispatch(
-          sendChatMessage({
-            conversationId: convId,
+        if (convId) {
+          dispatch(
+            addLocalMessage({
+              conversationId: convId,
+              message: {
+                id: userMsgId,
+                conversationId: convId,
+                sender: "user",
+                role: "user",
+                content: trimmed,
+                status: "accepted",
+                clientMessageId,
+                timestamp: new Date().toISOString(),
+              },
+            }),
+          );
+          sessionStorage.setItem(
+            PENDING_KEY,
+            JSON.stringify({ conversationId: convId, clientMessageId, content: trimmed }),
+          );
+        }
+
+        activeStreamRef.current = { conversationId: convId || undefined, clientMessageId, assistantMsgId };
+        setIsStreaming(true);
+
+        await aiHubApi.streamChatMessage(
+          {
+            conversationId: convId || undefined,
             content: trimmed,
             agentId: "general-copilot",
-          }),
+            clientMessageId,
+            stream: true,
+          },
+          {
+            onStatus: (evt) => {
+              if (!mountedRef.current) return;
+              if (evt.conversationId && evt.conversationId !== convId) {
+                convId = evt.conversationId;
+                setCurrentConversationId(convId);
+                sessionStorage.setItem(SESSION_KEY, convId);
+              }
+              setMsgs((prev) =>
+                prev.map((m) =>
+                  m.id === userMsgId
+                    ? { ...m, conversationId: evt.conversationId || m.conversationId, status: evt.status }
+                    : m.id === assistantMsgId
+                      ? { ...m, conversationId: evt.conversationId || m.conversationId, status: evt.status }
+                      : m,
+                ),
+              );
+            },
+            onChunk: (evt) => {
+              if (!mountedRef.current) return;
+              anyChunkArrived = true;
+              setMsgs((prev) =>
+                prev.map((m) =>
+                  m.id === assistantMsgId
+                    ? {
+                        ...m,
+                        conversationId: evt.conversationId || m.conversationId,
+                        content: evt.content,
+                        status: "streaming",
+                        model: evt.model || m.model,
+                        provider: evt.provider || m.provider,
+                      }
+                    : m,
+                ),
+              );
+              if (convId) {
+                dispatch(
+                  appendStreamChunk({
+                    conversationId: convId,
+                    assistantMessageId: assistantMsgId,
+                    clientMessageId,
+                    content: evt.content,
+                    model: evt.model,
+                    provider: evt.provider,
+                  }),
+                );
+              }
+            },
+            onComplete: (completedMsg) => {
+              if (!mountedRef.current) return;
+              const targetConv = completedMsg.conversationId || convId || undefined;
+              if (targetConv) {
+                setCurrentConversationId(targetConv);
+                sessionStorage.setItem(SESSION_KEY, targetConv);
+                dispatch(
+                  finalizeStreamMessage({
+                    conversationId: targetConv,
+                    assistantMessageId: assistantMsgId,
+                    clientMessageId,
+                    completed: completedMsg,
+                  }),
+                );
+              }
+              sessionStorage.removeItem(PENDING_KEY);
+              setMsgs((prev) =>
+                prev.map((m) => {
+                  if (m.id === userMsgId) {
+                    return { ...m, status: "completed", failed: false, conversationId: targetConv };
+                  }
+                  if (m.id === assistantMsgId) {
+                    return {
+                      ...completedMsg,
+                      id: completedMsg.id || assistantMsgId,
+                      clientMessageId,
+                      status: "completed",
+                    };
+                  }
+                  return m;
+                }),
+              );
+              if (completedMsg.actionRequired) {
+                setActivityHistory((p) => [
+                  `AI proposed action: ${completedMsg.actionRequired!.actionName || completedMsg.actionRequired!.title || "Action"}`,
+                  ...p,
+                ]);
+              } else {
+                setActivityHistory((p) => [
+                  `Processed: ${trimmed.slice(0, 30)}${trimmed.length > 30 ? "…" : ""}`,
+                  ...p,
+                ]);
+              }
+              void dispatch(fetchChatConversations());
+            },
+            onCancelled: (partialContent, resolvedConvId) => {
+              if (!mountedRef.current) return;
+              sessionStorage.removeItem(PENDING_KEY);
+              const cid = resolvedConvId || convId || undefined;
+              if (cid) {
+                dispatch(
+                  interruptStreamMessage({
+                    conversationId: cid,
+                    assistantMessageId: assistantMsgId,
+                    clientMessageId,
+                    status: "cancelled",
+                    partialContent,
+                  }),
+                );
+              }
+              setMsgs((prev) =>
+                prev.map((m) => {
+                  if (m.id === userMsgId) return { ...m, status: "cancelled" };
+                  if (m.id === assistantMsgId) {
+                    return {
+                      ...m,
+                      content: partialContent.trim() || "Response generation stopped.",
+                      status: "cancelled",
+                      isPartial: Boolean(partialContent.trim()),
+                    };
+                  }
+                  return m;
+                }),
+              );
+            },
+          },
+          { signal: controller.signal },
         );
-
-        if (sendChatMessage.fulfilled.match(sendAction)) {
-          const aiMsg = sendAction.payload;
-          setMsgs((prev) => [...prev, aiMsg]);
-
-          if (aiMsg.actionRequired) {
-            setActivityHistory((p) => [
-              `AI proposed action: ${aiMsg.actionRequired!.actionName}`,
-              ...p,
-            ]);
-          } else {
-            setActivityHistory((p) => [
-              `Processed: ${trimmed.slice(0, 30)}${trimmed.length > 30 ? "…" : ""}`,
-              ...p,
-            ]);
-          }
-        } else if (sendChatMessage.rejected.match(sendAction)) {
-          const errMsg = sendAction.payload || "Failed to receive response from AI backend";
-          toast.error(errMsg);
-          setFailedMessageIds((prev) => new Set(prev).add(userMsgId!));
-        }
       } catch (err: unknown) {
-        const msg =
-          err instanceof Error
-            ? err.message
-            : "An unexpected error occurred while communicating with the AI service.";
-        toast.error(msg);
-        setFailedMessageIds((prev) => new Set(prev).add(userMsgId!));
+        if (!mountedRef.current) return;
+        const norm = normalizeAIError(err);
+        if (norm.code === "cancelled") {
+          sessionStorage.removeItem(PENDING_KEY);
+          setMsgs((prev) =>
+            prev
+              .map((m) =>
+                m.id === assistantMsgId
+                  ? m.content.trim()
+                    ? { ...m, status: "cancelled" as const, isPartial: true }
+                    : null
+                  : m,
+              )
+              .filter((x): x is ChatMessage => Boolean(x)),
+          );
+          return;
+        }
+
+        const partialText =
+          err && typeof err === "object" && "partialContent" in err
+            ? String((err as { partialContent?: string }).partialContent || "")
+            : "";
+
+        setStreamError(norm.message);
+        toast.error(norm.message);
+
+        if (partialText.trim() || anyChunkArrived) {
+          setMsgs((prev) =>
+            prev.map((m) => {
+              if (m.id === userMsgId) {
+                return { ...m, status: "interrupted", failed: true, clientMessageId };
+              }
+              if (m.id === assistantMsgId) {
+                return {
+                  ...m,
+                  content: partialText || m.content,
+                  status: "interrupted",
+                  isPartial: true,
+                  failed: true,
+                  errorMessage: norm.message,
+                  retryable: norm.retryable,
+                  clientMessageId,
+                };
+              }
+              return m;
+            }),
+          );
+          setFailedMessageIds((prev) => new Set(prev).add(userMsgId!));
+        } else {
+          setFailedMessageIds((prev) => new Set(prev).add(userMsgId!));
+          setMsgs((prev) =>
+            prev
+              .filter((m) => m.id !== assistantMsgId)
+              .map((m) =>
+                m.id === userMsgId
+                  ? { ...m, status: "failed", failed: true, errorMessage: norm.message, clientMessageId }
+                  : m,
+              ),
+          );
+          if (retryOptions?.restoreInputOnError !== false && !retryOptions?.messageId) {
+            setInput((cur) => cur || trimmed);
+          }
+        }
+        sessionStorage.removeItem(PENDING_KEY);
+      } finally {
+        if (mountedRef.current) {
+          streamAbortRef.current = null;
+          activeStreamRef.current = null;
+          sendLockRef.current = false;
+          setIsStreaming(false);
+        }
       }
     },
-    [currentConversationId, dispatch, isSending],
+    [currentConversationId, dispatch, isBusy],
   );
 
   const handleRetry = useCallback(() => {
-    // Find the last user message or last query
-    const lastUserMsg = [...msgs].reverse().find((m) => m.role === "user" || m.sender === "user");
-    if (lastUserMsg) {
-      handleExecuteCommand(lastUserMsg.content, { messageId: lastUserMsg.id });
+    if (isBusy) return;
+    const failedUserMsg = [...msgs]
+      .reverse()
+      .find((m) => (m.role === "user" || m.sender === "user") && (failedMessageIds.has(m.id) || m.failed));
+    const targetMsg =
+      failedUserMsg ||
+      [...msgs].reverse().find((m) => m.role === "user" || m.sender === "user");
+    if (targetMsg) {
+      handleExecuteCommand(targetMsg.content, {
+        messageId: targetMsg.id,
+        clientMessageId: targetMsg.clientMessageId,
+        restoreInputOnError: false,
+      });
     } else if (lastQuery) {
-      handleExecuteCommand(lastQuery);
+      handleExecuteCommand(lastQuery, { restoreInputOnError: false });
     }
-  }, [handleExecuteCommand, lastQuery, msgs]);
+  }, [failedMessageIds, handleExecuteCommand, isBusy, lastQuery, msgs]);
 
   const handleFeedback = useCallback(
     async (messageId: string, rating: "up" | "down") => {
@@ -549,12 +966,13 @@ export default function ChatAssistantPage() {
     }
   };
 
-  const conversations = chatAssistantSection?.data?.conversations || [];
+  const conversations =
+    chatAssistantSection?.conversations || chatAssistantSection?.data?.conversations || [];
 
   return (
     <div className="h-[calc(100vh-140px)] min-h-[600px] flex flex-col">
       {/* Main Chat Window */}
-      <div className="flex flex-1 flex-col rounded-2xl border border-border bg-card/60 backdrop-blur-xl shadow-sm overflow-hidden">
+      <div className="flex flex-1 flex-col rounded-2xl border border-border bg-card/60 backdrop-blur-xl shadow-sm overflow-hidden relative">
         {/* Chat Window Header */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-border/60 bg-card/80 backdrop-blur shrink-0">
           <div className="flex items-center gap-2.5">
@@ -565,14 +983,62 @@ export default function ChatAssistantPage() {
               OFC360 AI Assistant
             </div>
           </div>
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-8 text-xs gap-1.5 bg-background/60 hover:bg-accent border-border/60 cursor-pointer"
-            onClick={handleNewChat}
-          >
-            <Plus className="h-3.5 w-3.5" /> New Chat
-          </Button>
+          <div className="flex items-center gap-2">
+            {conversations.length > 0 && (
+              <div className="relative">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 text-xs gap-1.5 hover:bg-accent cursor-pointer"
+                  onClick={() => setHistoryOpen((o) => !o)}
+                  aria-label="Conversation history"
+                >
+                  <History className="h-3.5 w-3.5" />
+                  History ({conversations.length})
+                </Button>
+                {historyOpen && (
+                  <div className="absolute right-0 mt-1.5 w-72 max-h-80 overflow-y-auto rounded-xl border border-border bg-popover text-popover-foreground shadow-lg z-30 p-1.5 space-y-1">
+                    {conversations.map((conv) => (
+                      <div
+                        key={conv.id}
+                        onClick={() => handleSelectConversation(conv.id)}
+                        className={`flex items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-xs cursor-pointer transition-colors ${
+                          conv.id === currentConversationId
+                            ? "bg-accent text-accent-foreground font-medium"
+                            : "hover:bg-muted/60"
+                        }`}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate">{conv.title || "Conversation"}</div>
+                          {conv.lastMessage && (
+                            <div className="text-[10px] text-muted-foreground truncate">
+                              {conv.lastMessage}
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          aria-label="Delete conversation"
+                          onClick={(e) => handleDeleteConversation(conv.id, e)}
+                          className="p-1 rounded hover:bg-destructive/15 text-muted-foreground hover:text-destructive shrink-0"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 text-xs gap-1.5 bg-background/60 hover:bg-accent border-border/60 cursor-pointer"
+              onClick={handleNewChat}
+            >
+              <Plus className="h-3.5 w-3.5" /> New Chat
+            </Button>
+          </div>
         </div>
 
         {/* Messages Feed */}
@@ -580,7 +1046,7 @@ export default function ChatAssistantPage() {
             {msgs.map((m) => {
               const isUser = m.role === "user" || m.sender === "user";
               const isSystem = m.role === "system" || m.sender === "system";
-              const isFailed = failedMessageIds.has(m.id);
+              const isFailed = failedMessageIds.has(m.id) || Boolean(m.failed);
               const isActionExecuted = executedActionMessageIds.has(m.id);
 
               if (isSystem) {
@@ -619,9 +1085,16 @@ export default function ChatAssistantPage() {
                         )}
                         {m.content}
                       </div>
+                    ) : !m.content.trim() &&
+                      (m.status === "generating" || m.status === "accepted" || m.status === "sending") ? (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground py-0.5">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin text-primary shrink-0" />
+                        <span className="animate-pulse">Thinking...</span>
+                      </div>
                     ) : (
                       <div className="text-xs leading-relaxed prose dark:prose-invert max-w-none text-foreground">
                         <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
                           components={{
                             h1: ({ children }) => (
                               <h1 className="text-base font-bold my-2 text-foreground">
@@ -677,7 +1150,7 @@ export default function ChatAssistantPage() {
                             ),
                           }}
                         >
-                          {m.content}
+                          {formatMarkdownForRender(m.content)}
                         </ReactMarkdown>
                       </div>
                     )}
@@ -954,7 +1427,7 @@ export default function ChatAssistantPage() {
                               key={sIdx}
                               type="button"
                               onClick={() => handleExecuteCommand(sug)}
-                              disabled={isSending}
+                              disabled={isBusy}
                               className="text-[11px] px-2.5 py-1 rounded-full bg-background/70 hover:bg-background border border-border text-foreground/80 hover:text-foreground transition-colors text-left cursor-pointer"
                             >
                               {sug}
@@ -964,8 +1437,31 @@ export default function ChatAssistantPage() {
                       </div>
                     )}
 
+                    {/* Partial / Interrupted Notice */}
+                    {(m.isPartial || m.status === "interrupted" || m.status === "cancelled") &&
+                      !isUser && (
+                        <div className="mt-2 flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
+                          <span>
+                            {m.status === "cancelled"
+                              ? "Stopped generating"
+                              : "Partial response (stream interrupted)"}
+                          </span>
+                          {m.status === "interrupted" && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-6 text-[10px] gap-1"
+                              onClick={handleRetry}
+                              disabled={isBusy}
+                            >
+                              <RefreshCw className="h-2.5 w-2.5" /> Retry
+                            </Button>
+                          )}
+                        </div>
+                      )}
+
                     {/* Assistant Feedback (Thumbs up / down) */}
-                    {!isUser && m.id !== "m-welcome" && (
+                    {!isUser && m.id !== "m-welcome" && (m.status === "completed" || !m.status) && (
                       <div className="mt-2.5 pt-2 border-t border-border/30 flex items-center justify-between text-[11px] text-muted-foreground">
                         <span className="text-[10px]">Was this helpful?</span>
                         <div className="flex items-center gap-1">
@@ -1001,27 +1497,14 @@ export default function ChatAssistantPage() {
               );
             })}
 
-            {/* Typing / Loading Indicator Bubble */}
-            {isSending && (
-              <div className="flex justify-start">
-                <div className="max-w-[85%] rounded-2xl p-4 bg-accent/80 text-foreground border border-border/60 flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-indigo-500 shrink-0" />
-                  <span className="text-xs text-muted-foreground animate-pulse">
-                    OFC360 AI is analyzing live workforce data and formulating response…
-                  </span>
-                </div>
-              </div>
-            )}
-
             {/* Inline Error Bubble with Retry Option */}
-            {Boolean(sendError) && (
+            {Boolean(combinedError) && (
               <div className="flex justify-start">
                 <div className="max-w-[85%] rounded-2xl p-4 bg-destructive/10 text-destructive border border-destructive/30 space-y-2">
                   <div className="flex items-center gap-2">
                     <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
                     <span className="text-xs font-medium">
-                      AI Service Notice:{" "}
-                      {sendError || "Failed to receive AI response from the server."}
+                      {combinedError || "Unable to generate a response. Please try again."}
                     </span>
                   </div>
                   <div className="flex justify-end gap-2 pt-1">
@@ -1030,7 +1513,7 @@ export default function ChatAssistantPage() {
                       variant="outline"
                       className="h-7 text-xs border-destructive/40 hover:bg-destructive/20 gap-1 text-destructive cursor-pointer"
                       onClick={handleRetry}
-                      disabled={isSending}
+                      disabled={isBusy}
                     >
                       <RefreshCw className="h-3 w-3" /> Retry Message
                     </Button>
@@ -1055,20 +1538,32 @@ export default function ChatAssistantPage() {
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask or command OFC360 AI… (e.g. Schedule interview for Siddharth tomorrow 2 PM)"
               className="text-xs h-10"
-              disabled={isSending}
+              disabled={isConfirmingAction}
             />
-            <Button
-              type="submit"
-              disabled={isSending || !input.trim()}
-              className="h-10 px-4 bg-gradient-brand text-brand-foreground shadow-glow gap-1.5 cursor-pointer"
-            >
-              {isSending ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Send className="h-3.5 w-3.5" />
-              )}
-              Send
-            </Button>
+            {isStreaming ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleStopGenerating}
+                className="h-10 px-4 gap-1.5 border-destructive/40 text-destructive hover:bg-destructive/10 cursor-pointer"
+              >
+                <Square className="h-3.5 w-3.5 fill-current" />
+                Stop generating
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                disabled={isBusy || !input.trim()}
+                className="h-10 px-4 bg-gradient-brand text-brand-foreground shadow-glow gap-1.5 cursor-pointer"
+              >
+                {isBusy ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Send className="h-3.5 w-3.5" />
+                )}
+                Send
+              </Button>
+            )}
           </form>
         </div>
 
