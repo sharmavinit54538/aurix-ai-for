@@ -17,6 +17,7 @@ import {
   UserCheck,
 } from "lucide-react";
 import type { BackendHierarchyNode } from "@/store/employeeHierarchy/employeeHierarchyTypes";
+import { EmployeeAvatar } from "./EmployeeAvatar";
 
 export interface OrgChartNodeCardProps {
   node: BackendHierarchyNode;
@@ -149,17 +150,12 @@ export const OrgChartNodeCard = React.memo(function OrgChartNodeCard({
         {/* Profile Avatar & Metadata */}
         <div className="flex items-center gap-3">
           <div className="relative shrink-0">
-            {node.profile_photo_url ? (
-              <img
-                src={node.profile_photo_url}
-                alt={fullName}
-                className="h-12 w-12 rounded-xl object-cover ring-2 ring-border/80"
-              />
-            ) : (
-              <div className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-brand text-sm font-bold text-brand-foreground shadow-sm">
-                {initials}
-              </div>
-            )}
+            <EmployeeAvatar
+              src={node.profile_photo_url ?? undefined}
+              name={fullName || "Employee"}
+              className="h-12 w-12 rounded-xl object-cover ring-2 ring-border/80"
+              fallbackClassName="grid h-12 w-12 place-items-center rounded-xl bg-gradient-brand text-sm font-bold text-brand-foreground shadow-sm"
+            />
             {directReportsCount > 0 && (
               <span
                 className="absolute -bottom-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow"

@@ -268,9 +268,9 @@ export function AttendancePage() {
   }, [isEmployee]);
 
   useEffect(() => {
-    if (isEmployee) return;
+    if (isEmployee || viewMode !== "analytics") return;
     loadAnalyticsCharts();
-  }, [loadAnalyticsCharts, isEmployee]);
+  }, [loadAnalyticsCharts, isEmployee, viewMode]);
 
   const handleFiltersChange = useCallback((newFilters: Partial<AttendanceAnalyticsFilters>) => {
     setFilters((prev) => ({ ...prev, ...newFilters }));

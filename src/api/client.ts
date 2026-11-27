@@ -21,6 +21,7 @@ export interface RequestOptions {
   data?: unknown;
   timeout?: number;
   params?: Record<string, unknown>;
+  signal?: AbortSignal;
 }
 
 export async function apiRequest<T = unknown>(
@@ -38,11 +39,15 @@ export async function apiRequest<T = unknown>(
       headers: options.headers,
       timeout: options.timeout,
       params: options.params,
+      signal: options.signal,
     });
     return response.data;
   } catch (err: unknown) {
+    // Preserve Axios cancellation so superseded searches do not become visible
+    // server errors or trigger query retries.
+    if (axios.isCancel(err)) throw err;
     if (axios.isAxiosError(err)) {
-      const status = err.response?.status ?? 500;
+      const status = err.response?.status ?? 0;
       const resData = err.response?.data;
       const message =
         (resData &&

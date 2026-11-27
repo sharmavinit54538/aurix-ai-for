@@ -1,5 +1,6 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { lazy, memo, Suspense, useEffect, useMemo, useState } from "react";
+import { listenForCrossTabLogout, forceLocalLogout } from "@/lib/auth-bootstrap";
 import { PageSkeleton } from "@/components/common/PageSkeleton";
 import { BackButton } from "@/components/common/BackButton";
 // Executive Dashboards Navigation Enabled
@@ -507,6 +508,144 @@ const RECRUITER_NAV_SECTIONS: SidebarNavSection[] = [
 ];
 
 
+const NavGroup = memo(function NavGroup({
+  item,
+  pathname,
+  collapsed,
+}: {
+  item: SidebarNavParent;
+  pathname: string;
+  collapsed: boolean;
+}) {
+  const dispatch = useAppDispatch();
+  const location = useRouterState({ select: (s) => s.location });
+  const currentPathname = location.pathname;
+  const search = (location.search || {}) as Record<string, any>;
+  const expandedSections = useAppSelector(selectExpandedSections);
+  const sectionKey = item.id ?? "";
+  const isExpanded = Boolean(expandedSections[sectionKey]);
+
+  const isChildActive = (child: SidebarNavLeaf) => {
+    const targetPath = child.to ?? "";
+    const [pathOnly, searchStr] = targetPath.split("?");
+    const pathMatches = child.exact
+      ? currentPathname === pathOnly
+      : currentPathname === pathOnly || currentPathname.startsWith(pathOnly + "/");
+
+    if (!pathMatches) return false;
+
+    if (searchStr) {
+      const childParams = new URLSearchParams(searchStr);
+      for (const [key, val] of childParams.entries()) {
+        if (String(search[key] ?? "") !== val) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    if (child.exact && (search.dept || search.category)) {
+      return false;
+    }
+
+    return true;
+  };
+
+  const hasActiveChild = item.children.some((child) => isChildActive(child));
+  const basePath = item.basePath ?? "";
+  const isActive = hasActiveChild || currentPathname === basePath || currentPathname.startsWith(basePath + "/");
+
+  useEffect(() => {
+    if (isActive && !isExpanded) {
+      dispatch(setSectionExpand({ sectionKey, expanded: true }));
+    }
+  }, [isActive, sectionKey, isExpanded, dispatch]);
+
+  const Icon = item.icon;
+
+  if (collapsed) {
+    return (
+      <Link
+        to={basePath as any}
+        aria-current={isActive ? "page" : undefined}
+        className={`group relative flex items-center justify-center rounded-lg py-2 text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+          isActive
+            ? "bg-primary/10 text-primary font-semibold"
+            : "font-medium text-muted-foreground hover:bg-accent/70 hover:text-foreground"
+        }`}
+        title={item.label}
+        aria-label={item.label}
+      >
+        {isActive ? <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r bg-primary" /> : null}
+        <Icon className="h-4 w-4 shrink-0" />
+      </Link>
+    );
+  }
+
+  return (
+    <div>
+      <div
+        className={`group relative flex w-full items-center rounded-lg text-[13px] transition-colors ${
+          isActive
+            ? "bg-primary/10 text-primary font-semibold"
+            : "font-medium text-muted-foreground hover:bg-accent/70 hover:text-foreground"
+        }`}
+      >
+        {isActive ? <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r bg-primary" /> : null}
+        <button
+          type="button"
+          aria-expanded={isExpanded}
+          onClick={() => {
+            dispatch(toggleSectionExpand(sectionKey));
+          }}
+          className="flex flex-1 items-center gap-2.5 rounded-lg px-2.5 py-2 min-w-0 text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <Icon className="h-4 w-4 shrink-0" />
+          <span className="flex-1 truncate whitespace-nowrap text-[13px]">{item.label}</span>
+          {item.badge && !item.count && <NavBadge kind={item.badge} />}
+          {item.count !== undefined && !item.badge && <NavCount count={item.count} />}
+          <ChevronDown
+            className={`h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200 ${
+              isExpanded ? "rotate-180" : ""
+            }`}
+          />
+        </button>
+      </div>
+
+      {isExpanded ? (
+        <div className="ml-3 mt-1 space-y-0.5 border-l border-border pl-2.5 transition-all duration-200">
+          {item.children.map((child) => {
+            const childActive = isChildActive(child);
+            const ChildIcon = child.icon;
+            const targetPath = child.to ?? "";
+            const [pathOnly, searchStr] = targetPath.split("?");
+            const searchObj = searchStr ? Object.fromEntries(new URLSearchParams(searchStr)) : undefined;
+
+            return (
+              <Link
+                key={targetPath}
+                to={pathOnly as any}
+                search={searchObj as any}
+                aria-current={childActive ? "page" : undefined}
+                className={`flex items-center gap-2 rounded-md px-2.5 py-1.5 text-[13px] transition-colors min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                  childActive
+                    ? "bg-primary/10 text-primary font-semibold"
+                    : "text-muted-foreground hover:bg-accent/70 hover:text-foreground"
+                }`}
+              >
+                <ChildIcon className="h-3.5 w-3.5 shrink-0" />
+                <span className="flex-1 truncate whitespace-nowrap">{child.label}</span>
+                {child.badge && <NavBadge kind={child.badge} />}
+                {child.count !== undefined && !child.badge && <NavCount count={child.count} />}
+              </Link>
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
+  );
+});
+
 export function DashboardShell() {
   const ws = useAurix();
   const currentRole = useCurrentRole();
@@ -521,11 +660,10 @@ export function DashboardShell() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
-
   const userId = ws.user?.id;
   useEffect(() => {
     if (authReady && userId) {
-      dispatch(fetchSidebarPermissions(currentRole));
+      dispatch(fetchSidebarPermissions(currentRole ?? undefined));
     }
   }, [dispatch, authReady, userId, currentRole]);
 
@@ -572,6 +710,13 @@ export function DashboardShell() {
   }, [authReady, ws.isRestoring, ws.user, pathname, currentRole, navigate]);
 
   useEffect(() => { setMobileOpen(false); }, [pathname]);
+
+  // Cross-tab logout synchronization
+  useEffect(() => {
+    return listenForCrossTabLogout(() => {
+      forceLocalLogout();
+    });
+  }, []);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -628,20 +773,22 @@ export function DashboardShell() {
       for (const item of section.items) {
         if (isParent(item)) {
           const matchedChild = item.children.find((child) => {
-            const [targetPath] = child.to.split("?");
+            const targetPath = child.to ?? "";
+            const [pathOnly] = targetPath.split("?");
             return child.exact
-              ? pathname === targetPath
-              : pathname === targetPath || pathname.startsWith(targetPath + "/");
+              ? pathname === pathOnly
+              : pathname === pathOnly || pathname.startsWith(pathOnly + "/");
           });
           if (matchedChild) return matchedChild.label;
           if (pathname === item.basePath || pathname.startsWith(item.basePath + "/")) {
             return item.label;
           }
         } else {
+          const targetPath = item.to ?? "";
           const matches = item.exact
-            ? pathname === item.to
-            : pathname === item.to ||
-              pathname.startsWith(item.to + "/") ||
+            ? pathname === targetPath
+            : pathname === targetPath ||
+              pathname.startsWith(targetPath + "/") ||
               (item.matchPrefixes?.some((prefix) => pathname === prefix || pathname.startsWith(prefix + "/")) ?? false);
           if (matches) return item.label;
         }
@@ -708,11 +855,17 @@ export function DashboardShell() {
               <button
                 type="button"
                 onClick={() => setCollapsed(false)}
-                className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="rounded-md p-1.5 hover:bg-accent cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label="Expand sidebar"
-                title="Expand sidebar"
+                title="OFC360 - Expand sidebar"
               >
-                <PanelLeft className="h-4 w-4" />
+                <span
+                  role="img"
+                  aria-label="OFC360 logo"
+                  className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground shadow-xs"
+                >
+                  <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                </span>
               </button>
             )}
           </div>
@@ -755,7 +908,7 @@ export function DashboardShell() {
                         active
                           ? "bg-primary/10 text-primary font-semibold"
                           : "font-medium text-muted-foreground hover:bg-accent/70 hover:text-foreground"
-                      } ${collapsed ? "justify-center px-0" : ""}`}
+                        } ${collapsed ? "justify-center px-0" : ""}`}
                     >
                       {active ? <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r bg-primary" /> : null}
                       <Icon className="h-4 w-4 shrink-0" />
@@ -851,138 +1004,6 @@ export function DashboardShell() {
     </DocumentVerificationGuard>
   );
 }
-
-const NavGroup = memo(function NavGroup({
-  item,
-  collapsed,
-}: {
-  item: SidebarNavParent;
-  pathname?: string;
-  collapsed: boolean;
-}) {
-  const dispatch = useAppDispatch();
-  const location = useRouterState({ select: (s) => s.location });
-  const pathname = location.pathname;
-  const search = (location.search || {}) as Record<string, any>;
-  const expandedSections = useAppSelector(selectExpandedSections);
-  const isExpanded = Boolean(expandedSections[item.id]);
-
-  const isChildActive = (child: SidebarNavLeaf) => {
-    const [targetPath, searchStr] = child.to.split("?");
-    const pathMatches = child.exact
-      ? pathname === targetPath
-      : pathname === targetPath || pathname.startsWith(targetPath + "/");
-
-    if (!pathMatches) return false;
-
-    if (searchStr) {
-      const childParams = new URLSearchParams(searchStr);
-      for (const [key, val] of childParams.entries()) {
-        if (String(search[key] ?? "") !== val) {
-          return false;
-        }
-      }
-      return true;
-    }
-
-    if (child.exact && (search.dept || search.category)) {
-      return false;
-    }
-
-    return true;
-  };
-
-  const hasActiveChild = item.children.some((child) => isChildActive(child));
-  const isActive = hasActiveChild || pathname === item.basePath || pathname.startsWith(item.basePath + "/");
-
-  useEffect(() => {
-    if (isActive && !isExpanded) {
-      dispatch(setSectionExpand({ sectionKey: item.id, expanded: true }));
-    }
-  }, [isActive, item.id, isExpanded, dispatch]);
-
-  const Icon = item.icon;
-
-  if (collapsed) {
-    return (
-      <Link
-        to={item.basePath as any}
-        aria-current={isActive ? "page" : undefined}
-        className={`group relative flex items-center justify-center rounded-lg py-2 text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-          isActive
-            ? "bg-primary/10 text-primary font-semibold"
-            : "font-medium text-muted-foreground hover:bg-accent/70 hover:text-foreground"
-        }`}
-        title={item.label}
-        aria-label={item.label}
-      >
-        {isActive ? <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r bg-primary" /> : null}
-        <Icon className="h-4 w-4 shrink-0" />
-      </Link>
-    );
-  }
-
-  return (
-    <div>
-      <div
-        className={`group relative flex w-full items-center rounded-lg text-[13px] transition-colors ${
-          isActive
-            ? "bg-primary/10 text-primary font-semibold"
-            : "font-medium text-muted-foreground hover:bg-accent/70 hover:text-foreground"
-        }`}
-      >
-        {isActive ? <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r bg-primary" /> : null}
-        <button
-          type="button"
-          aria-expanded={isExpanded}
-          onClick={() => {
-            dispatch(toggleSectionExpand(item.id));
-          }}
-          className="flex flex-1 items-center gap-2.5 rounded-lg px-2.5 py-2 min-w-0 text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <Icon className="h-4 w-4 shrink-0" />
-          <span className="flex-1 truncate whitespace-nowrap text-[13px]">{item.label}</span>
-          {item.badge && !item.count && <NavBadge kind={item.badge} />}
-          {item.count !== undefined && !item.badge && <NavCount count={item.count} />}
-          <ChevronDown
-            className={`h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200 ${
-              isExpanded ? "rotate-180" : ""
-            }`}
-          />
-        </button>
-      </div>
-      {isExpanded ? (
-        <div className="ml-3 mt-1 space-y-0.5 border-l border-border pl-2.5 transition-all duration-200">
-          {item.children.map((child) => {
-            const childActive = isChildActive(child);
-            const ChildIcon = child.icon;
-            const [targetPath, searchStr] = child.to.split("?");
-            const searchObj = searchStr ? Object.fromEntries(new URLSearchParams(searchStr)) : undefined;
-
-            return (
-              <Link
-                key={child.to}
-                to={targetPath as any}
-                search={searchObj as any}
-                aria-current={childActive ? "page" : undefined}
-                className={`flex items-center gap-2 rounded-md px-2.5 py-1.5 text-[13px] transition-colors min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                  childActive
-                    ? "bg-primary/10 text-primary font-semibold"
-                    : "text-muted-foreground hover:bg-accent/70 hover:text-foreground"
-                }`}
-              >
-                <ChildIcon className="h-3.5 w-3.5 shrink-0" />
-                <span className="flex-1 truncate whitespace-nowrap">{child.label}</span>
-                {child.badge && <NavBadge kind={child.badge} />}
-                {child.count !== undefined && !child.badge && <NavCount count={child.count} />}
-              </Link>
-            );
-          })}
-        </div>
-      ) : null}
-    </div>
-  );
-});
 
 export function PageHeader({
   title,

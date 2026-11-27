@@ -1,5 +1,5 @@
 import React from "react";
-import { Laptop, RefreshCw, Download } from "lucide-react";
+import { Laptop, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -28,15 +28,6 @@ export function CioOverviewPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              disabled
-              title="Coming soon"
-              className="bg-muted text-muted-foreground text-xs opacity-70 cursor-not-allowed"
-            >
-              <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
-              Refresh Telemetry
-            </Button>
             <Button
               size="sm"
               variant="outline"

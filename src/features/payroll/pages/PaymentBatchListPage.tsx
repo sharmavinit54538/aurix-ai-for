@@ -168,17 +168,6 @@ export default function PaymentBatchListPage() {
       {/* ── Top Actions Bar ────────────────────────────────────────── */}
       <div className="flex items-center justify-end gap-2">
         <Button
-          variant="outline"
-          size="sm"
-          onClick={loadBatches}
-          disabled={loading}
-          className="h-8 gap-1.5 text-xs"
-        >
-          <RefreshCw className={loading ? "h-3.5 w-3.5 animate-spin" : "h-3.5 w-3.5"} />
-          <span>Refresh</span>
-        </Button>
-
-        <Button
           size="sm"
           onClick={handleOpenNewBatchModal}
           className="h-8 gap-1.5 text-xs"

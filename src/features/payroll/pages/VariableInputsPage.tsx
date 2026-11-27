@@ -286,17 +286,6 @@ export default function VariableInputsPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={loadInputs}
-              disabled={loading || !selectedPeriodId}
-              className="h-8 gap-1.5 text-xs rounded-xl"
-            >
-              <RefreshCw className={loading ? "h-3.5 w-3.5 animate-spin" : "h-3.5 w-3.5"} />
-              <span>Refresh</span>
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
               onClick={() => setBulkModalOpen(true)}
               disabled={!selectedPeriodId}
               className="h-8 gap-1.5 text-xs rounded-xl"

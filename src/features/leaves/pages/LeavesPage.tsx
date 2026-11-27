@@ -301,7 +301,6 @@ export function LeavesPage() {
             <ApprovalsList
               approvals={approvals}
               loading={pendingLoading}
-              onRefresh={refetchPending}
               onApproveClick={(leave) => setApproveTarget(leave)}
               onRejectClick={(leave) => setRejectTarget(leave)}
               actionLoadingId={approveMutation.variables as string | rejectMutation.variables as any}

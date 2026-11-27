@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils";
 interface ApprovalsListProps {
   approvals: LeaveRequest[];
   loading?: boolean;
-  onRefresh: () => void;
   onApproveClick: (leave: LeaveRequest) => void;
   onRejectClick: (leave: LeaveRequest) => void;
   actionLoadingId?: string | null;
@@ -19,7 +18,6 @@ interface ApprovalsListProps {
 export function ApprovalsList({
   approvals,
   loading = false,
-  onRefresh,
   onApproveClick,
   onRejectClick,
   actionLoadingId,
@@ -40,16 +38,6 @@ export function ApprovalsList({
           >
             {approvals.length} Pending
           </Badge>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onRefresh}
-            disabled={loading}
-            className="gap-2"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
         </div>
       </div>
 

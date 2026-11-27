@@ -6,7 +6,6 @@ import {
   FileSpreadsheet,
   Layers,
   Plus,
-  RefreshCw,
   Search,
   ShieldCheck,
 } from "lucide-react";
@@ -140,17 +139,6 @@ export default function SalaryStructurePage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={loadData}
-            disabled={loading}
-            className="h-8 gap-1.5 text-xs rounded-xl"
-          >
-            <RefreshCw className={loading ? "h-3.5 w-3.5 animate-spin" : "h-3.5 w-3.5"} />
-            <span>Refresh</span>
-          </Button>
-
           <Button
             size="sm"
             onClick={() => setComponentModalOpen(true)}

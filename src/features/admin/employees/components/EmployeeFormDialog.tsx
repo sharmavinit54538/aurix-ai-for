@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Briefcase,
   IndianRupee,
@@ -91,7 +91,19 @@ export function EmployeeFormDialog({
   const [departments, setDepartments] = useState<Array<{ id: string; name: string }>>([]);
   const [designations, setDesignations] = useState<Array<{ id: string; name: string }>>([]);
   const [shifts, setShifts] = useState<Array<{ id: string; name: string }>>([]);
-  const [managers, setManagers] = useState<Array<{ id: string; name: string; designation?: string; department?: string }>>([]);
+  const loadedOptionsRef = useRef(false);
+  const managers = useMemo(
+    () =>
+      existingEmployees
+        .filter((emp) => emp.id && emp.fullName)
+        .map((emp) => ({
+          id: emp.id,
+          name: emp.fullName,
+          designation: emp.designation,
+          department: emp.department,
+        })),
+    [existingEmployees],
+  );
   const [loadingOptions, setLoadingOptions] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<
     Partial<Record<"firstName" | "officialEmail" | "personalEmail", string>>
@@ -101,8 +113,9 @@ export function EmployeeFormDialog({
     setFieldErrors({});
   }, [open, draft?.id]);
 
-  // Fetch dynamic options on mount and when draft changes
+  // Fetch dynamic options only when the dialog opens (and avoid refetching when existingEmployees updates)
   useEffect(() => {
+    if (!open || loadedOptionsRef.current) return;
     let mounted = true;
     setLoadingOptions(true);
 
@@ -125,17 +138,7 @@ export function EmployeeFormDialog({
         if (shiftsRes.status === "fulfilled") {
           setShifts(shiftsRes.value.items.map((s) => ({ id: s.id, name: s.name })));
         }
-
-        // Build managers list from existing employees
-        const managerList = existingEmployees
-          .filter((emp) => emp.id && emp.fullName)
-          .map((emp) => ({
-            id: emp.id,
-            name: emp.fullName,
-            designation: emp.designation,
-            department: emp.department,
-          }));
-        setManagers(managerList);
+        loadedOptionsRef.current = true;
       } catch {
         // Ignore errors, fallback to empty arrays
       } finally {
@@ -147,7 +150,7 @@ export function EmployeeFormDialog({
     return () => {
       mounted = false;
     };
-  }, [existingEmployees]);
+  }, [open]);
 
   // Build department list with fallback for current draft value
   const departmentList = useMemo(() => {
@@ -225,7 +228,7 @@ export function EmployeeFormDialog({
       ...draft,
       managerName: val === "none" ? "" : val,
       reportingManagerName: val === "none" ? "" : val,
-      reportingManagerId: selectedManager?.id || null,
+      reportingManagerId: selectedManager?.id,
     });
   };
 

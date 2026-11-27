@@ -46,6 +46,7 @@ import {
 import { toast } from "sonner";
 import apiInstance from "@/api/apiInstance";
 import type { Employee } from "@/features/admin/employees/employeesTypes";
+import { EmployeeAvatar } from "@/features/admin/employees/components/EmployeeAvatar";
 
 export interface ItAdminDetailPageProps {
   admin: Employee;
@@ -243,7 +244,7 @@ export function ItAdminDetailPage({
             params: { search: admin.fullName || adminCode, limit: 30 },
           }),
           // 5. Expenses
-          apiInstance.get("/api/v2/expenses", {
+          apiInstance.get("/expenses", {
             params: { search: admin.fullName || adminCode, limit: 30 },
           }),
           // 6. Attendance
@@ -599,21 +600,14 @@ export function ItAdminDetailPage({
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 -mt-12 sm:-mt-14">
             {/* Avatar & Identity Info */}
             <div className="flex flex-col sm:flex-row sm:items-end gap-5 min-w-0">
-              {profileImg ? (
-                <img
-                  src={profileImg}
-                  alt={activeAdmin.fullName || "Admin"}
-                  className="h-24 w-24 sm:h-28 sm:w-28 rounded-full object-cover ring-4 ring-card border-2 border-cyan-500/30 shadow-xl flex-shrink-0 bg-muted"
-                />
-              ) : (
-                <div
-                  className={`flex h-24 w-24 sm:h-28 sm:w-28 items-center justify-center rounded-full font-bold text-white shadow-xl text-2xl sm:text-3xl flex-shrink-0 ring-4 ring-card bg-gradient-to-br ${getAvatarGradient(
-                    activeAdmin.fullName
-                  )}`}
-                >
-                  {initials}
-                </div>
-              )}
+              <EmployeeAvatar
+                src={profileImg ?? undefined}
+                name={activeAdmin.fullName || "Admin"}
+                className="h-24 w-24 sm:h-28 sm:w-28 rounded-full object-cover ring-4 ring-card border-2 border-cyan-500/30 shadow-xl flex-shrink-0 bg-muted"
+                fallbackClassName={`flex h-24 w-24 sm:h-28 sm:w-28 items-center justify-center rounded-full font-bold text-white shadow-xl text-2xl sm:text-3xl flex-shrink-0 ring-4 ring-card bg-gradient-to-br ${getAvatarGradient(
+                  activeAdmin.fullName
+                )}`}
+              />
 
               {/* Title & Metadata Line */}
               <div className="space-y-1.5 min-w-0 pt-2 sm:pt-0">

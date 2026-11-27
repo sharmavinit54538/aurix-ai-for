@@ -30,7 +30,7 @@ function unwrapData<T>(res: any): T {
 
 export const designationsApi = {
   getDesignations: async (params?: { department_id?: string; limit?: number; search?: string }): Promise<DesignationsListResponse> => {
-    const res = await apiInstance.get("/designations", { params });
+    const res = await apiInstance.get("/api/v1/settings/designations", { params });
     const payload = unwrapData<{ items: Designation[]; total: number; page: number; limit: number }>(res);
     const items: Designation[] = Array.isArray(payload) ? payload : Array.isArray(payload?.items) ? payload.items : [];
     return {
@@ -42,7 +42,7 @@ export const designationsApi = {
   },
 
   getDesignation: async (id: string): Promise<Designation> => {
-    const res = await apiInstance.get(`/designations/${id}`);
+    const res = await apiInstance.get(`/api/v1/settings/designations/${id}`);
     return unwrapData<Designation>(res);
   },
 };

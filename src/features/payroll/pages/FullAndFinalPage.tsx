@@ -240,17 +240,6 @@ export default function FullAndFinalPage() {
 
         <div className="flex items-center gap-2">
           <Button
-            variant="outline"
-            size="sm"
-            onClick={loadRecords}
-            disabled={loading}
-            className="h-8 gap-1.5 text-xs rounded-xl"
-          >
-            <RefreshCw className={loading ? "h-3.5 w-3.5 animate-spin" : "h-3.5 w-3.5"} />
-            <span>Refresh</span>
-          </Button>
-
-          <Button
             size="sm"
             onClick={() => setInitiateModalOpen(true)}
             className="h-8 gap-1.5 text-xs rounded-xl"

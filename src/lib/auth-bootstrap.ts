@@ -20,6 +20,7 @@ export { getDefaultDashboardPath, getSafeRedirectUrl };
 type AuthStatus = "bootstrapping" | "ready";
 
 const LOGGED_OUT_KEY = "aurix:logged_out";
+const LOGOUT_IN_PROGRESS_KEY = "aurix:logout_in_progress";
 
 const authBootstrapState: {
   status: AuthStatus;
@@ -182,19 +183,127 @@ export function useAuthReady(): boolean {
   );
 }
 
-export async function logout(options?: { redirect?: boolean }) {
-  safeStorage.setItem(LOGGED_OUT_KEY, "1");
-  try {
-    await apiInstance.post(AUTH_ENDPOINTS.logout, {}, { timeout: 2500 });
-  } catch {
-    // Ignore logout network error and still clear client session
+/**
+ * Checks if logout is currently in progress (for cross-tab coordination and race condition prevention)
+ */
+export function isLogoutInProgress(): boolean {
+  if (typeof window === "undefined") return false;
+  return safeStorage.getItem(LOGOUT_IN_PROGRESS_KEY) === "1";
+}
+
+/**
+ * Sets the logout in progress flag for cross-tab coordination
+ */
+export function setLogoutInProgress(value: boolean): void {
+  if (typeof window === "undefined") return;
+  if (value) {
+    safeStorage.setItem(LOGOUT_IN_PROGRESS_KEY, "1");
+  } else {
+    safeStorage.removeItem(LOGOUT_IN_PROGRESS_KEY);
   }
+}
+
+/**
+ * Broadcasts logout event to other tabs for cross-tab synchronization
+ */
+function broadcastLogout(): void {
+  if (typeof window === "undefined" || typeof BroadcastChannel === "undefined") return;
+  try {
+    const channel = new BroadcastChannel("ofc360_auth_logout_channel");
+    channel.postMessage({ type: "LOGOUT" });
+    channel.close();
+  } catch {
+    // Ignore BroadcastChannel errors
+  }
+}
+
+/**
+ * Listens for logout events from other tabs
+ */
+export function listenForCrossTabLogout(callback: () => void): () => void {
+  if (typeof window === "undefined" || typeof BroadcastChannel === "undefined") {
+    return () => {};
+  }
+  try {
+    const channel = new BroadcastChannel("ofc360_auth_logout_channel");
+    const handler = (event: MessageEvent) => {
+      if (event.data?.type === "LOGOUT") {
+        callback();
+      }
+    };
+    channel.addEventListener("message", handler);
+    return () => {
+      channel.removeEventListener("message", handler);
+      channel.close();
+    };
+  } catch {
+    return () => {};
+  }
+}
+
+export async function logout(options?: { redirect?: boolean }): Promise<void> {
+  // Prevent duplicate logout submissions
+  if (isLogoutInProgress()) {
+    return;
+  }
+
+  // Mark logout as in progress to prevent race conditions
+  setLogoutInProgress(true);
+  safeStorage.setItem(LOGGED_OUT_KEY, "1");
+
+  try {
+    // Call the backend logout API with credentials (HttpOnly cookie)
+    await apiInstance.post(AUTH_ENDPOINTS.logout, {}, { 
+      timeout: 5000,
+      withCredentials: true,
+    });
+  } catch (err: any) {
+    // Handle different error scenarios
+    const status = err?.response?.status ?? err?.status;
+    if (status === 401 || status === 403) {
+      // Session already expired or invalid - this is expected after logout
+    } else if (status === 500 || status === 503) {
+      // Server error - backend session may not be fully revoked
+      console.warn("[AUTH] Backend logout failed with server error, local session will still be cleared");
+    } else if (err?.code === "ECONNABORTED" || err?.message?.includes("timeout")) {
+      console.warn("[AUTH] Logout request timed out, local session will still be cleared");
+    }
+    // Ignore network errors and still clear client session
+  } finally {
+    // Clear frontend authentication state regardless of backend response
+    clearTokens();
+    clearSessionHint();
+    aurix.set({ user: null, company: null, isRestoring: false });
+    clearQueryCache();
+    store.dispatch(settingsApi.util.resetApiState());
+    safeStorage.clear(typeof window !== "undefined" ? window.sessionStorage : undefined);
+    
+    // Broadcast logout to other tabs
+    broadcastLogout();
+    
+    // Reset logout in progress flag
+    setLogoutInProgress(false);
+
+    // Redirect to login
+    if (options?.redirect !== false && typeof window !== "undefined") {
+      window.location.replace("/login");
+    }
+  }
+}
+
+/**
+ * Force clears local session without calling backend (for emergency/unconfirmed logout)
+ */
+export async function forceLocalLogout(): Promise<void> {
+  safeStorage.setItem(LOGGED_OUT_KEY, "1");
   clearTokens();
+  clearSessionHint();
   aurix.set({ user: null, company: null, isRestoring: false });
   clearQueryCache();
   store.dispatch(settingsApi.util.resetApiState());
   safeStorage.clear(typeof window !== "undefined" ? window.sessionStorage : undefined);
-  if (options?.redirect !== false && typeof window !== "undefined") {
+  broadcastLogout();
+  if (typeof window !== "undefined") {
     window.location.replace("/login");
   }
 }

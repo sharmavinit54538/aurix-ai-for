@@ -20,10 +20,10 @@ import {
 } from "@/components/ui/select";
 import { Calendar, AlertTriangle, Info } from "lucide-react";
 import { toast } from "sonner";
-import { api } from "@/api";
 import { LEAVE_TYPES, type LeaveBalance } from "../types";
 import { calculateEstimatedDays, getTodayDateString, statusBadgeClass, normalizeLeaveType } from "../mappers";
 import { cn } from "@/lib/utils";
+import { useApplyLeave } from "@/hooks/useLeaves";
 
 interface ApplyLeaveDialogProps {
   open: boolean;
@@ -53,12 +53,14 @@ export function ApplyLeaveDialog({
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [reason, setReason] = useState("");
-  const [loading, setLoading] = useState(false);
   const [dateError, setDateError] = useState<string | null>(null);
   const [reasonError, setReasonError] = useState<string | null>(null);
   const [startError, setStartError] = useState<string | null>(null);
 
   const todayStr = getTodayDateString();
+
+  const applyMutation = useApplyLeave();
+  const loading = applyMutation.isPending;
 
   // Sync leaveType when balances load or dialog opens
   useEffect(() => {
@@ -77,7 +79,6 @@ export function ApplyLeaveDialog({
       setStartDate("");
       setEndDate("");
       setReason("");
-      setLoading(false);
       setDateError(null);
       setStartError(null);
       setReasonError(null);
@@ -90,9 +91,11 @@ export function ApplyLeaveDialog({
   // Remaining balance of the selected type (case-insensitive, ignore spaces/underscores)
   const selectedBalance = balances.find((b) => normalizeLeaveType(b.leave_type) === normalizeLeaveType(leaveType));
   const remainingDays = selectedBalance ? Number(selectedBalance.remaining_days) || 0 : 0;
-  const isExceedingBalance = calculatedDays > 0 && calculatedDays > remainingDays;
+  const availableDays = selectedBalance?.available_days !== undefined ? Number(selectedBalance.available_days) : remainingDays;
+  const isExceedingAvailable = calculatedDays > 0 && calculatedDays > availableDays;
 
   // HR Admin can backdate; others cannot select dates earlier than today
+  // Backend supports LEAVE_BACKDATE_DAYS = 30 for non-admin users
   const minStartDate = isHrAdmin ? undefined : todayStr;
   const minEndDate = startDate || (isHrAdmin ? undefined : todayStr);
 
@@ -150,7 +153,6 @@ export function ApplyLeaveDialog({
       return;
     }
 
-    setLoading(true);
     try {
       // Backend calculates total_days, so omit it from payload per backend contract
       const payload = {
@@ -160,23 +162,16 @@ export function ApplyLeaveDialog({
         reason: reason.trim(),
       };
 
-      const res = await api.post<any>("/leaves/apply", payload);
-      if (res?.success !== false) {
-        toast.success("Leave request submitted successfully!");
-        onOpenChange(false);
-        onSuccess();
-      } else {
-        throw new Error(res?.message || "Failed to submit leave request.");
-      }
+      await applyMutation.mutateAsync(payload);
+      toast.success("Leave request submitted successfully!");
+      onOpenChange(false);
+      onSuccess();
     } catch (err: any) {
       console.error("Error submitting leave request", err);
       toast.error(
-        err?.data?.message ||
         err?.message ||
-        "Failed to apply leave. Ensure you have sufficient balance."
+        "Failed to apply leave. Ensure you have sufficient available balance."
       );
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -201,9 +196,9 @@ export function ApplyLeaveDialog({
                 Leave Type
               </Label>
               <span className="text-xs text-muted-foreground">
-                Remaining:{" "}
+                Available:{" "}
                 <span className="font-semibold text-foreground tabular-nums">
-                  {remainingDays} days
+                  {availableDays} days
                 </span>
               </span>
             </div>
@@ -298,12 +293,12 @@ export function ApplyLeaveDialog({
           )}
 
           {/* Insufficient balance warning (warns, does not block) */}
-          {isExceedingBalance && (
+          {isExceedingAvailable && (
             <div className={cn("p-3 rounded-lg flex items-start gap-2.5 text-xs border", statusBadgeClass("warning"))}>
               <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
               <p>
-                <strong>Balance Warning (estimated):</strong> Requested {calculatedDays} days exceed your remaining{" "}
-                {remainingDays} days for {leaveType}. You may still submit, but approval is subject to managerial discretion.
+                <strong>Balance Warning (estimated):</strong> Requested {calculatedDays} days exceed your available{" "}
+                {availableDays} days for {leaveType} (includes pending requests). You may still submit, but approval is subject to available balance.
               </p>
             </div>
           )}

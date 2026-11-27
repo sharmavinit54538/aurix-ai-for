@@ -85,7 +85,7 @@ const WELCOME_MESSAGE: ChatMessage = {
   sender: "assistant",
   role: "ai",
   content:
-    "Hi 👋 I am Aurix AI, your central OFC360 workforce copilot. You can ask questions about your workforce or issue text commands to search candidates, inspect job postings, review scheduled interviews, structure offers, and monitor payroll records.",
+    "Hi 👋 I am your OFC360 workforce copilot. You can ask questions about your workforce or issue text commands to search candidates, inspect job postings, review scheduled interviews, structure offers, and monitor payroll records.",
   timestamp: new Date().toISOString(),
 };
 
@@ -159,7 +159,7 @@ export default function ChatAssistantPage() {
   const [isConfirmingAction, setIsConfirmingAction] = useState(false);
 
   const [activityHistory, setActivityHistory] = useState<string[]>([
-    "Aurix AI initialized session",
+    "OFC360 AI initialized session",
   ]);
 
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -562,7 +562,7 @@ export default function ChatAssistantPage() {
               <MessageSquare className="h-4 w-4" />
             </div>
             <div className="text-sm font-semibold text-foreground">
-              Aurix People AI
+              OFC360 AI Assistant
             </div>
           </div>
           <Button
@@ -1007,7 +1007,7 @@ export default function ChatAssistantPage() {
                 <div className="max-w-[85%] rounded-2xl p-4 bg-accent/80 text-foreground border border-border/60 flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin text-indigo-500 shrink-0" />
                   <span className="text-xs text-muted-foreground animate-pulse">
-                    Aurix AI is analyzing live workforce data and formulating response…
+                    OFC360 AI is analyzing live workforce data and formulating response…
                   </span>
                 </div>
               </div>
@@ -1053,7 +1053,7 @@ export default function ChatAssistantPage() {
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask or command Aurix AI… (e.g. Schedule interview for Siddharth tomorrow 2 PM)"
+              placeholder="Ask or command OFC360 AI… (e.g. Schedule interview for Siddharth tomorrow 2 PM)"
               className="text-xs h-10"
               disabled={isSending}
             />

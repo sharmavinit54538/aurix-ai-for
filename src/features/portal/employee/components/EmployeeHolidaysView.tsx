@@ -307,18 +307,6 @@ export function EmployeeHolidaysView({ branch }: EmployeeHolidaysViewProps) {
             Applicable public, national, and company holiday schedule for your work location.
           </p>
         </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => loadHolidays(true)}
-            className="h-9 w-9 border-border bg-card/60 hover:bg-accent/60"
-            title="Refresh holidays"
-          >
-            <RefreshCw className="h-3.5 w-3.5 text-muted-foreground" />
-          </Button>
-        </div>
       </div>
 
       {/* ── Upcoming Holidays Highlight Section ── */}

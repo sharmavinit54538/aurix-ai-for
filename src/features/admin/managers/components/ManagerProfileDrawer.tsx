@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { fmtDate, avatarHue } from "../utils";
 import apiInstance from "@/api/apiInstance";
+import { EmployeeAvatar } from "@/features/admin/employees/components/EmployeeAvatar";
 
 interface ManagerDocument {
   name: string;
@@ -156,22 +157,15 @@ export function ManagerProfileDrawer({
       <SheetContent className="w-full sm:max-w-md md:max-w-lg border-l border-border bg-card/90 backdrop-blur-xl p-0 shadow-2xl flex flex-col h-full">
         <SheetHeader className="p-6 border-b border-border/60">
           <div className="flex items-center gap-4">
-            {manager.profileImage ? (
-              <img
-                src={manager.profileImage}
-                alt={manager.fullName}
-                className="h-16 w-16 rounded-2xl object-cover border border-border shadow-sm"
-              />
-            ) : (
-              <div
-                className="flex h-16 w-16 items-center justify-center rounded-2xl font-bold text-white shadow-inner text-xl"
-                style={{
-                  background: `linear-gradient(135deg, hsl(${hue}, 70%, 55%), hsl(${(hue + 40) % 360}, 75%, 45%))`,
-                }}
-              >
-                {initials}
-              </div>
-            )}
+            <EmployeeAvatar
+              src={manager.profileImage ?? undefined}
+              name={manager.fullName || "Manager"}
+              className="h-16 w-16 rounded-2xl object-cover border border-border shadow-sm"
+              fallbackClassName="flex h-16 w-16 items-center justify-center rounded-2xl font-bold text-white shadow-inner text-xl"
+              fallbackStyle={{
+                background: `linear-gradient(135deg, hsl(${hue}, 70%, 55%), hsl(${(hue + 40) % 360}, 75%, 45%))`,
+              }}
+            />
             <div className="flex-1 min-w-0">
               <SheetTitle className="text-xl font-bold truncate text-foreground flex items-center gap-2">
                 {manager.fullName}

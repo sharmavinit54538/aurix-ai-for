@@ -19,6 +19,7 @@ import {
   Crown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EmployeeAvatar, resolveEmployeeImageUrl } from "./EmployeeAvatar";
 import type {
   OrgGraphNodeDetails,
   OrgGraphNode,
@@ -140,11 +141,12 @@ export function GraphDetailPanel({
         <div className="flex items-start justify-between gap-3 p-4 pb-3 border-b border-border shrink-0">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className={`grid h-10 w-10 place-items-center rounded-xl ${config.bg} ${config.color} shrink-0`}>
-              {isEmployee && meta.profilePhotoUrl ? (
-                <img
+              {isEmployee && resolveEmployeeImageUrl(meta.profilePhotoUrl ? String(meta.profilePhotoUrl) : undefined) ? (
+                <EmployeeAvatar
                   src={String(meta.profilePhotoUrl)}
-                  alt={node.label}
+                  name={node.label || "Employee"}
                   className="h-10 w-10 rounded-xl object-cover"
+                  fallbackClassName="grid h-10 w-10 place-items-center rounded-xl text-xs font-bold"
                 />
               ) : (
                 <Icon className="h-5 w-5" />

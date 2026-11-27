@@ -21,7 +21,7 @@ import { fetchMyProfile, updateMyProfile, uploadProfileAvatar, changeMyPassword,
 import type { MyProfileForm } from "../../types";
 import { authService } from "@/api/auth";
 import { parseLoginResponse } from "@/features/auth/utils/parseLoginResponse";
-import { persistAuthSession, logout } from "@/lib/auth-bootstrap";
+import { persistAuthSession, logout, isLogoutInProgress } from "@/lib/auth-bootstrap";
 import { aurix } from "@/lib/aurix-store";
 import { UnsavedChangesBanner } from "../UnsavedChangesBanner";
 

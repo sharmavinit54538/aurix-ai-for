@@ -63,12 +63,6 @@ export function ExecutiveRoleDashboardView({ role }: ExecutiveRoleDashboardViewP
     loadData();
   }, [loadData, dateRange]);
 
-  const handleRefresh = () => {
-    loadData().then(() => {
-      toast.success(`Refreshed ${role.toUpperCase()} Executive Analytics.`);
-    });
-  };
-
   // Convert real metrics into KPI cards
   const kpis: KpiMetric[] = useMemo(() => {
     if (!data?.metrics || data.metrics.length === 0) return [];
@@ -137,7 +131,6 @@ export function ExecutiveRoleDashboardView({ role }: ExecutiveRoleDashboardViewP
         healthScore={data?.healthScore ?? 0}
         dateRange={dateRange}
         setDateRange={setDateRange}
-        onRefresh={handleRefresh}
       />
 
       {/* KPI Cards Grid */}

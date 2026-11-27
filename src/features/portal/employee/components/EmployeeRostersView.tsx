@@ -371,16 +371,6 @@ export function EmployeeRostersView({ employeeId }: EmployeeRostersViewProps) {
             <Send className="h-3.5 w-3.5" />
             Request Schedule Change
           </Button>
-
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => loadRoster(true)}
-            className="h-9 w-9 border-border bg-card/60 hover:bg-accent/60"
-            title="Refresh roster"
-          >
-            <RefreshCw className="h-3.5 w-3.5 text-muted-foreground" />
-          </Button>
         </div>
       </div>
 

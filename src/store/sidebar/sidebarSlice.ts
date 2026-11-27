@@ -32,8 +32,8 @@ export const sidebarSlice = createSlice({
     toggleSidebar(state) {
       state.sidebarOpen = !state.sidebarOpen;
     },
-    setSectionExpand(state, action: PayloadAction<{ sectionTitle: string; expanded: boolean }>) {
-      state.expandedSections[action.payload.sectionTitle] = action.payload.expanded;
+    setSectionExpand(state, action: PayloadAction<{ sectionKey: string; expanded: boolean }>) {
+      state.expandedSections[action.payload.sectionKey] = action.payload.expanded;
     },
     toggleSectionExpand(state, action: PayloadAction<string>) {
       state.expandedSections[action.payload] = !state.expandedSections[action.payload];

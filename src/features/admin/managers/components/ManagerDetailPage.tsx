@@ -44,6 +44,7 @@ import {
 import { toast } from "sonner";
 import apiInstance from "@/api/apiInstance";
 import type { Manager } from "../types";
+import { EmployeeAvatar } from "@/features/admin/employees/components/EmployeeAvatar";
 
 export interface ManagerDetailPageProps {
   manager: Manager;
@@ -248,7 +249,7 @@ export function ManagerDetailPage({
             params: { search: manager.fullName || mgrCode, limit: 30 },
           }),
           // 7. Real Expenses
-          apiInstance.get("/api/v2/expenses", {
+          apiInstance.get("/expenses", {
             params: { search: manager.fullName || mgrCode, limit: 30 },
           }),
           // 8. Attendance Summary
@@ -525,8 +526,14 @@ export function ManagerDetailPage({
           if (Array.isArray(rawExp)) {
             const mgrName = (manager.fullName || "").toLowerCase();
             const matched = rawExp.filter((x: any) => {
-              const assigned = String(x.employee_name || x.employee || x.employee_id || x.manager_name || "").toLowerCase();
-              return mgrName && assigned.includes(mgrName);
+              const empObj = x.employee && typeof x.employee === "object" ? x.employee : null;
+              const assigned = String(
+                empObj?.name || x.employee_name || (!empObj ? x.employee : "") || x.employee_id || x.manager_name || ""
+              ).toLowerCase();
+              return (
+                (mgrId && String(x.employee_id || empObj?.id || "").toLowerCase() === String(mgrId).toLowerCase()) ||
+                Boolean(mgrName && assigned.includes(mgrName))
+              );
             });
             setManagerExpenses(
               matched.map((x: any) => ({
@@ -534,7 +541,7 @@ export function ManagerDetailPage({
                 category: x.category || "General",
                 amount: Number(x.amount || 0),
                 currency: x.currency || "INR",
-                date: x.date ? String(x.date).split("T")[0] : "",
+                date: x.expense_date || x.date ? String(x.expense_date || x.date).split("T")[0] : "",
                 status: x.status || "PENDING",
                 description: x.description,
               })),
@@ -658,21 +665,14 @@ export function ManagerDetailPage({
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 -mt-12 sm:-mt-14">
             {/* Avatar & Identity Info */}
             <div className="flex flex-col sm:flex-row sm:items-end gap-5 min-w-0">
-              {activeManager.profileImage ? (
-                <img
-                  src={activeManager.profileImage}
-                  alt={activeManager.fullName}
-                  className="h-24 w-24 sm:h-28 sm:w-28 rounded-full object-cover ring-4 ring-card border-2 border-border/60 shadow-xl flex-shrink-0 bg-muted"
-                />
-              ) : (
-                <div
-                  className={`flex h-24 w-24 sm:h-28 sm:w-28 items-center justify-center rounded-full font-bold text-white shadow-xl text-2xl sm:text-3xl flex-shrink-0 ring-4 ring-card bg-gradient-to-br ${getAvatarGradient(
-                    activeManager.fullName,
-                  )}`}
-                >
-                  {initials}
-                </div>
-              )}
+              <EmployeeAvatar
+                src={activeManager.profileImage ?? undefined}
+                name={activeManager.fullName || "Manager"}
+                className="h-24 w-24 sm:h-28 sm:w-28 rounded-full object-cover ring-4 ring-card border-2 border-border/60 shadow-xl flex-shrink-0 bg-muted"
+                fallbackClassName={`flex h-24 w-24 sm:h-28 sm:w-28 items-center justify-center rounded-full font-bold text-white shadow-xl text-2xl sm:text-3xl flex-shrink-0 ring-4 ring-card bg-gradient-to-br ${getAvatarGradient(
+                  activeManager.fullName,
+                )}`}
+              />
 
               {/* Title & Metadata Line */}
               <div className="space-y-1.5 min-w-0 pt-2 sm:pt-0">
@@ -1181,26 +1181,14 @@ export function ManagerDetailPage({
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-3 min-w-0">
-                          {member.avatarUrl ? (
-                            <img
-                              src={member.avatarUrl}
-                              alt={member.name}
-                              className="h-10 w-10 rounded-full object-cover ring-2 ring-border bg-muted flex-shrink-0"
-                            />
-                          ) : (
-                            <div
-                              className={`h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-xs ring-2 ring-border flex-shrink-0 bg-gradient-to-br ${getAvatarGradient(
-                                member.name,
-                              )}`}
-                            >
-                              {member.name
-                                .split(" ")
-                                .map((n) => n[0])
-                                .slice(0, 2)
-                                .join("")
-                                .toUpperCase()}
-                            </div>
-                          )}
+                          <EmployeeAvatar
+                            src={member.avatarUrl ?? undefined}
+                            name={member.name || "Team Member"}
+                            className="h-10 w-10 rounded-full object-cover ring-2 ring-border bg-muted flex-shrink-0"
+                            fallbackClassName={`h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-xs ring-2 ring-border flex-shrink-0 bg-gradient-to-br ${getAvatarGradient(
+                              member.name,
+                            )}`}
+                          />
                           <div className="min-w-0">
                             <h4 className="font-semibold text-foreground text-sm truncate">{member.name}</h4>
                             <p className="text-xs text-muted-foreground truncate">

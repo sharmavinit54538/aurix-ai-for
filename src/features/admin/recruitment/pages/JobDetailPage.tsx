@@ -743,9 +743,6 @@ export function JobDetailPage() {
                   <h3 className="font-display text-sm font-semibold">Job Distribution Center</h3>
                   <p className="text-xs text-muted-foreground">Distribute and synchronize this role across available channels.</p>
                 </div>
-                <Button size="sm" variant="outline" onClick={fetchPublishChannels} disabled={loadingChannels} className="h-8 text-xs">
-                  {loadingChannels ? "Refreshing..." : "Refresh Status"}
-                </Button>
               </div>
 
               {loadingChannels ? (

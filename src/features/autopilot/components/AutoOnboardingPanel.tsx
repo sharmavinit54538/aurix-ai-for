@@ -11,7 +11,6 @@ import {
   Laptop,
   Loader2,
   Mail,
-  RefreshCw,
   RotateCcw,
   Sparkles,
   UserCheck,
@@ -141,15 +140,6 @@ export function AutoOnboardingPanel() {
             </p>
           </div>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => void fetchRuns()}
-          className="rounded-xl h-8 gap-1 text-xs"
-        >
-          <RefreshCw className="h-3 w-3" />
-          Refresh
-        </Button>
       </div>
 
       {error && (

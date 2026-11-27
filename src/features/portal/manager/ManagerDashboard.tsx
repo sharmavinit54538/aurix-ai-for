@@ -17,7 +17,6 @@ import {
   FileText,
   MapPin,
   Package,
-  RefreshCw,
   Sparkles,
   Target,
   TrendingDown,
@@ -561,13 +560,7 @@ function LeaveCenter() {
   return (
     <motion.div {...fadeUp}>
       <Card>
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <SectionHeader title="Leave Center" subtitle="Team leave requests and approvals" link="/dashboard/leaves" />
-          <Button variant="outline" size="sm" onClick={loadLeaveRequests} disabled={leaveLoading} className="gap-2">
-            <RefreshCw className={`h-3.5 w-3.5 ${leaveLoading ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
-        </div>
+        <SectionHeader title="Leave Center" subtitle="Team leave requests and approvals" link="/dashboard/leaves" />
         <div className="mb-4 flex gap-2">
           {(["Pending", "Approved", "Upcoming"] as LeaveTab[]).map((t) => (
             <button

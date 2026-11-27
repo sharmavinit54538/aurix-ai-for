@@ -131,7 +131,7 @@ describe("F-01: Auth and Session Management", () => {
       return { status: 200, data: {} };
     });
 
-    await expect(refreshAccessToken()).rejects.toThrow("Failed to refresh session");
+    await expect(refreshAccessToken()).rejects.toThrow("Unauthorized");
 
     expect(hasSessionHint()).toBe(false);
     expect(getTokens()).toBeNull();

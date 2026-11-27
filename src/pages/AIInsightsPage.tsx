@@ -134,17 +134,6 @@ export function AIInsightsPage() {
       <PageHeader
         title="AI Predictive Insights"
         description="Predictive attrition analytics, team sentiment monitoring, burnout risk alerts, and salary benchmarks."
-        actions={
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRetry}
-            disabled={loading}
-          >
-            <RefreshCw className={`mr-2 h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
-        }
       />
 
       {partial ? (

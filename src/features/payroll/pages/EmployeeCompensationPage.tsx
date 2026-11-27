@@ -264,17 +264,6 @@ export default function EmployeeCompensationPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={loadCompensations}
-            disabled={loading}
-            className="h-8 gap-1.5 text-xs rounded-xl"
-          >
-            <RefreshCw className={loading ? "h-3.5 w-3.5 animate-spin" : "h-3.5 w-3.5"} />
-            <span>Refresh</span>
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
             onClick={() => setBulkModalOpen(true)}
             className="h-8 gap-1.5 text-xs rounded-xl"
           >

@@ -13,7 +13,6 @@ import {
   FileSpreadsheet,
   Layers,
   Play,
-  RefreshCw,
   TrendingDown,
   TrendingUp,
   UserCheck,
@@ -93,7 +92,6 @@ interface PayrollMetricsDashboardProps {
   selectedPeriodId: string;
   onPeriodChange: (id: string) => void;
   isLoading: boolean;
-  onRefresh: () => void;
   onRunPayrollClick?: () => void;
   canRunPayroll?: boolean;
 }
@@ -103,8 +101,7 @@ export function PayrollMetricsDashboard({
   periods,
   selectedPeriodId,
   onPeriodChange,
-  isLoading,
-  onRefresh,
+  isLoading: _isLoading,
   onRunPayrollClick,
   canRunPayroll = false,
 }: PayrollMetricsDashboardProps) {
@@ -295,17 +292,6 @@ export function PayrollMetricsDashboard({
               </Select>
             </div>
           ) : null}
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onRefresh}
-            disabled={isLoading}
-            className="h-9 px-3 text-[13px] gap-1.5 cursor-pointer rounded-lg"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
 
           {canRunPayroll && onRunPayrollClick ? (
             <Button

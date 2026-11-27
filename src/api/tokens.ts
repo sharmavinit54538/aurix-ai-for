@@ -18,11 +18,13 @@ import { safeStorage } from "@/lib/safe-storage";
 import { AUTH_ENDPOINTS } from "./endpoints";
 import { API_BASE_URL } from "./baseUrl";
 import { logger } from "@/lib/logger";
+import { clearQueryCache } from "@/lib/query-client";
 
 export const SESSION_HINT_KEY = "ofc_session_hint";
 
 let inMemoryAccessToken: string | null = null;
 let isSessionExpiredHandled = false;
+let sessionVersion = 0;
 
 export function hasSessionHint(): boolean {
   if (typeof window === "undefined") return false;
@@ -51,6 +53,7 @@ export function getTokens(): Tokens | null {
 }
 
 export function setTokens(tokens: { accessToken?: string } | null) {
+  sessionVersion += 1;
   inMemoryAccessToken = tokens?.accessToken || null;
 
   if (tokens?.accessToken) {
@@ -61,6 +64,7 @@ export function setTokens(tokens: { accessToken?: string } | null) {
   if (!tokens) {
     inMemoryAccessToken = null;
     clearSessionHint();
+    clearQueryCache();
   }
 }
 
@@ -69,6 +73,7 @@ export function getAccessToken(): string | null {
 }
 
 export function setAccessToken(token: string | null) {
+  sessionVersion += 1;
   inMemoryAccessToken = token;
   if (token) {
     setSessionHint();
@@ -76,8 +81,10 @@ export function setAccessToken(token: string | null) {
 }
 
 export function clearTokens() {
+  sessionVersion += 1;
   inMemoryAccessToken = null;
   clearSessionHint();
+  clearQueryCache();
 }
 
 export function handleSessionExpired() {
@@ -169,6 +176,7 @@ export async function refreshAccessToken(options?: { silent?: boolean }): Promis
     return refreshPromise;
   }
 
+  const refreshSessionVersion = sessionVersion;
   refreshPromise = (async () => {
     try {
       return await acquireRefreshLock(async () => {
@@ -181,6 +189,7 @@ export async function refreshAccessToken(options?: { silent?: boolean }): Promis
         try {
           res = await axios.post(refreshUrl, {}, {
             withCredentials: true,
+            timeout: 15000,
             headers: {
               "Content-Type": "application/json",
             },
@@ -205,7 +214,7 @@ export async function refreshAccessToken(options?: { silent?: boolean }): Promis
                 `[AUTH] 404 Not Found received on refresh endpoint: ${refreshUrl}. Route configuration problem.`,
               );
             }
-            throw new Error(`Refresh route configuration error: ${refreshUrl} returned 404`);
+            throw postErr;
           }
 
           if (status === 401) {
@@ -221,16 +230,21 @@ export async function refreshAccessToken(options?: { silent?: boolean }): Promis
                 handleSessionExpired();
               }
             }
-            throw new Error("Failed to refresh session");
+            throw postErr;
           }
 
           throw postErr;
         }
 
+        // Logout or a new login while refresh was pending must win over its result.
+        if (sessionVersion !== refreshSessionVersion) {
+          throw new axios.CanceledError("Session changed while refresh was pending");
+        }
+
         const tokenData = res.data?.data ?? res.data;
         const accessToken = tokenData?.access_token || tokenData?.accessToken || tokenData?.token;
 
-        if (!accessToken) {
+        if (typeof accessToken !== "string" || !accessToken.trim()) {
           const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
           const isOnboardingOrVerification =
             currentPath.startsWith("/onboarding") ||

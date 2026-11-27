@@ -158,7 +158,7 @@ function BrainPage() {
               </SelectContent>
             </Select>
             <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
-              Streamed via the Aurix AI Gateway. Switch models any time — the
+              Streamed via the OFC360 AI Gateway. Switch models any time — the
               next message uses the new one.
             </p>
           </div>

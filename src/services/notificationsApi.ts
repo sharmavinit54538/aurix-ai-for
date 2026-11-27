@@ -1,15 +1,34 @@
 import apiInstance from "@/api/apiInstance";
 
+export type NotificationCategory =
+  | "recruitment"
+  | "payroll"
+  | "leave"
+  | "attendance"
+  | "documents"
+  | "assets"
+  | "onboarding_exit"
+  | "approvals"
+  | "security"
+  | "system"
+  | "ai_insights"
+  | string;
+
+export type NotificationPriority = "low" | "medium" | "high" | "critical";
+
 export interface NotificationItem {
   id: string;
   title: string;
   message: string;
   type: "info" | "success" | "warning" | "error" | string;
-  category?: string;
+  category?: NotificationCategory;
+  priority?: NotificationPriority;
   is_read: boolean;
   read?: boolean;
+  readAt?: string | null;
   created_at: string;
   action_url?: string | null;
+  link?: string | null;
 }
 
 export interface NotificationListParams {

@@ -1,4 +1,10 @@
 import apiInstance from "@/api/apiInstance";
+import {
+  getAttendanceTrends as fetchAttendanceTrendsCanonical,
+  getAttendanceDistribution as fetchAttendanceDistributionCanonical,
+  getWeeklyAttendance as fetchAttendanceWeeklyCanonical,
+  getAttendanceRateKPI as fetchAttendanceRateKPICanonical,
+} from "./attendance/todayAttendanceApi";
 import type {
   AttendanceRecord,
   AttendanceSummary,
@@ -292,65 +298,36 @@ export const attendanceApi = {
       params: filters,
     });
     const d = res.data?.data ?? res.data ?? {};
+    const totalEmployees = Number(d.totalEmployees ?? d.total_employees ?? d.total_active_employees ?? 0);
+    const present = Number(d.present ?? d.present_today ?? d.checked_in_today ?? 0);
+    const late = Number(d.late ?? d.late_today ?? d.late_check_ins_today ?? 0);
+    const onLeave = Number(d.onLeave ?? d.on_leave ?? d.on_leave_today ?? 0);
+    const absent = Number(d.absent ?? d.absent_today ?? 0);
     return {
-      totalEmployees: Number(d.totalEmployees ?? d.total_employees ?? 0),
-      present: Number(d.present ?? d.present_today ?? 0),
-      late: Number(d.late ?? d.late_today ?? 0),
-      onLeave: Number(d.onLeave ?? d.on_leave_today ?? 0),
-      absent: Number(d.absent ?? d.absent_today ?? 0),
-      presentToday: Number(d.presentToday ?? d.present_today ?? 0),
-      absentToday: Number(d.absentToday ?? d.absent_today ?? 0),
-      lateToday: Number(d.lateToday ?? d.late_today ?? 0),
-      onLeaveToday: Number(d.onLeaveToday ?? d.on_leave_today ?? 0),
-      attendanceRate: Number(d.attendanceRate ?? d.attendance_rate ?? 0),
+      totalEmployees,
+      present,
+      late,
+      onLeave,
+      absent,
+      presentToday: Number(d.presentToday ?? d.present_today ?? present),
+      absentToday: Number(d.absentToday ?? d.absent_today ?? absent),
+      lateToday: Number(d.lateToday ?? d.late_today ?? late),
+      onLeaveToday: Number(d.onLeaveToday ?? d.on_leave_today ?? onLeave),
+      attendanceRate: Number(d.attendanceRate ?? d.attendance_rate ?? d.attendance_rate_percentage ?? 0),
     };
   },
   getAttendanceTrends: async (
     filters?: AttendanceAnalyticsFilters,
-  ): Promise<AttendanceTrendsResponse> => {
-    const res = await apiInstance.get("/attendance/analytics/trends", {
-      params: filters,
-    });
-    const d = res.data?.data ?? res.data;
-    return { data: Array.isArray(d?.data) ? d.data : Array.isArray(d) ? d : [] };
-  },
+  ): Promise<AttendanceTrendsResponse> => fetchAttendanceTrendsCanonical(filters),
   getAttendanceDistribution: async (
     filters?: AttendanceAnalyticsFilters,
-  ): Promise<AttendanceDistributionResponse> => {
-    const res = await apiInstance.get("/attendance/analytics/distribution", {
-      params: filters,
-    });
-    const d = res.data?.data ?? res.data ?? {};
-    return {
-      present: Number(d.present ?? 0),
-      absent: Number(d.absent ?? 0),
-      late: Number(d.late ?? 0),
-      on_leave: Number(d.on_leave ?? d.onLeave ?? 0),
-    };
-  },
+  ): Promise<AttendanceDistributionResponse> => fetchAttendanceDistributionCanonical(filters),
   getWeeklyAttendance: async (
     filters?: AttendanceAnalyticsFilters,
-  ): Promise<WeeklyAttendanceResponse> => {
-    const res = await apiInstance.get("/attendance/analytics/weekly", {
-      params: filters,
-    });
-    const d = res.data?.data ?? res.data;
-    return { data: Array.isArray(d?.data) ? d.data : Array.isArray(d) ? d : [] };
-  },
+  ): Promise<WeeklyAttendanceResponse> => fetchAttendanceWeeklyCanonical(filters),
   getAttendanceRateKPI: async (
     filters?: AttendanceAnalyticsFilters,
-  ): Promise<AttendanceRateKPIResponse> => {
-    const res = await apiInstance.get("/attendance/analytics/rate-kpi", {
-      params: filters,
-    });
-    const d = res.data?.data ?? res.data ?? {};
-    return {
-      rate: Number(d.rate ?? 0),
-      change: Number(d.change ?? 0),
-      present_count: Number(d.present_count ?? 0),
-      total_count: Number(d.total_count ?? 0),
-    };
-  },
+  ): Promise<AttendanceRateKPIResponse> => fetchAttendanceRateKPICanonical(filters),
 };
 
 export { createHoliday, updateHoliday, deleteHoliday, importHolidays, archiveHoliday, restoreHoliday, exportHolidays, getHolidayStatistics } from "./attendance/holidaysApi";

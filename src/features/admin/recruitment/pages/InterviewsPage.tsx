@@ -9,7 +9,6 @@ import {
   Clock,
   ExternalLink,
   MapPin,
-  RefreshCw,
   Search,
   Send,
   Star,
@@ -574,15 +573,6 @@ export function InterviewsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => loadData(currentPage)}
-            disabled={interviewLoading}
-          >
-            <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${interviewLoading ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
           <Button
             size="sm"
             onClick={() => {

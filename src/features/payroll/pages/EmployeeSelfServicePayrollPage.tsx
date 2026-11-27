@@ -10,7 +10,6 @@ import {
   HelpCircle,
   Layers,
   Lock,
-  RefreshCw,
   Shield,
   ShieldCheck,
   User,
@@ -143,23 +142,6 @@ export default function EmployeeSelfServicePayrollPage() {
           <p className="mt-1 text-sm text-muted-foreground">
             View your salary statements, download digitally signed payslips, and review your tax declarations.
           </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              loadDashboard();
-              loadPayslips();
-              loadProvisionSlips();
-            }}
-            disabled={loading}
-            className="gap-2"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
         </div>
       </div>
 

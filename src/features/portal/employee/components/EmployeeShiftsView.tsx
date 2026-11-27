@@ -298,10 +298,6 @@ export function EmployeeShiftsView() {
           <Button size="sm" onClick={() => setRequestModalOpen(true)} className="h-9 gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm">
             <Send className="h-3.5 w-3.5" /> Request Shift Change
           </Button>
-
-          <Button variant="outline" size="icon" onClick={() => refetch()} className="h-9 w-9 border-border bg-card/60 hover:bg-accent/60" title="Refresh shift data">
-            <RefreshCw className="h-3.5 w-3.5 text-muted-foreground" />
-          </Button>
         </div>
       </div>
 

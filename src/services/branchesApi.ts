@@ -12,6 +12,8 @@ export interface BranchesListResult {
   limit?: number;
 }
 
+let branchesEndpointExists: boolean | null = null;
+
 function unwrapData<T>(res: any): T {
   const payload = res.data?.data ?? res.data;
   if (payload && typeof payload === "object" && "success" in payload) {
@@ -25,8 +27,12 @@ function unwrapData<T>(res: any): T {
 
 export const branchesApi = {
   getBranches: async (params?: Record<string, unknown>): Promise<BranchesListResult> => {
+    if (branchesEndpointExists === false) {
+      return { items: [], total: 0 };
+    }
     try {
       const res = await apiInstance.get("/branches", { params });
+      branchesEndpointExists = true;
       const payload = unwrapData<{ items: Branch[]; total: number; page: number; limit: number }>(res);
       const items: Branch[] = Array.isArray(payload)
         ? payload
@@ -39,8 +45,13 @@ export const branchesApi = {
         page: payload?.page,
         limit: payload?.limit,
       };
-    } catch {
-      // Branches endpoint may not exist, return empty
+    } catch (err: unknown) {
+      const status = err && typeof err === "object" && "response" in err
+        ? (err as { response?: { status?: number } }).response?.status
+        : undefined;
+      if (status === 404) {
+        branchesEndpointExists = false;
+      }
       return { items: [], total: 0 };
     }
   },

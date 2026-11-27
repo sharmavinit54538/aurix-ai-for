@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { LogOut } from "lucide-react";
+import { LogOut, Loader2 } from "lucide-react";
 import { useAurix } from "@/lib/aurix-store";
 import { normalizeRole, type Role } from "@/lib/rbac";
-import { logout } from "@/lib/auth-bootstrap";
+import { logout, isLogoutInProgress } from "@/lib/auth-bootstrap";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,6 +35,7 @@ export function UserProfileMenu({
 }: UserProfileMenuProps) {
   const ws = useAurix();
   const [open, setOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   if (!ws.user) {
     return null;
@@ -52,10 +53,20 @@ export function UserProfileMenu({
       .join("")
       .toUpperCase() || "U";
 
-  const handleLogout = (e: React.MouseEvent) => {
+  const handleLogout = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    // Prevent duplicate logout clicks
+    if (isLoggingOut || isLogoutInProgress()) {
+      return;
+    }
     setOpen(false);
-    logout();
+    setIsLoggingOut(true);
+    try {
+      await logout({ redirect: true });
+    } finally {
+      // State will be cleared by logout redirect, but handle case where redirect doesn't happen
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -157,10 +168,19 @@ export function UserProfileMenu({
         <DropdownMenuItem
           id="user-profile-logout-button"
           onClick={handleLogout}
-          className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 dark:text-rose-400 dark:hover:text-rose-300 dark:hover:bg-rose-950/40 focus:bg-rose-500/10 focus:text-rose-500 dark:focus:bg-rose-950/40 dark:focus:text-rose-300 cursor-pointer transition-colors"
+          disabled={isLoggingOut || isLogoutInProgress()}
+          className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium cursor-pointer transition-colors ${
+            isLoggingOut || isLogoutInProgress()
+              ? "text-muted-foreground/50 hover:text-muted-foreground/50 hover:bg-accent/30 cursor-not-allowed"
+              : "text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 dark:text-rose-400 dark:hover:text-rose-300 dark:hover:bg-rose-950/40 focus:bg-rose-500/10 focus:text-rose-500 dark:focus:bg-rose-950/40 dark:focus:text-rose-300"
+          }`}
         >
-          <LogOut className="h-4 w-4 shrink-0 text-rose-500 dark:text-rose-400" />
-          <span>Logout</span>
+          {isLoggingOut || isLogoutInProgress() ? (
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
+          ) : (
+            <LogOut className="h-4 w-4 shrink-0 text-rose-500 dark:text-rose-400" />
+          )}
+          <span>{isLoggingOut || isLogoutInProgress() ? "Logging out..." : "Logout"}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

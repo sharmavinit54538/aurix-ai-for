@@ -1,11 +1,11 @@
 import type { ComponentType, ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { AlertTriangle, Inbox, Info, Lock, RefreshCw, ShieldAlert, WifiOff } from "lucide-react";
+import { AlertTriangle, Inbox, Info, Lock, Loader2, LogOut, RefreshCw, ShieldAlert, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { classifyError, type ErrorKind } from "../errors";
 import { cn } from "@/lib/utils";
-import { logout } from "@/lib/auth-bootstrap";
+import { logout, isLogoutInProgress } from "@/lib/auth-bootstrap";
 import { formatCount, formatTime } from "../formatters";
 
 type IconComponent = ComponentType<{ className?: string }>;
@@ -16,23 +16,6 @@ export function Panel({ children, className }: { children: ReactNode; className?
     <div className={cn("rounded-2xl border border-border/60 bg-card/60 p-6 shadow-sm backdrop-blur-xl", className)}>
       {children}
     </div>
-  );
-}
-
-export function RefreshButton({
-  onClick,
-  refreshing,
-  label = "Refresh",
-}: {
-  onClick: () => void;
-  refreshing: boolean;
-  label?: string;
-}) {
-  return (
-    <Button variant="outline" size="sm" onClick={onClick} disabled={refreshing} className="gap-2 text-xs">
-      <RefreshCw className={cn("h-3.5 w-3.5", refreshing && "animate-spin")} />
-      {refreshing ? "Refreshing…" : label}
-    </Button>
   );
 }
 
@@ -149,8 +132,20 @@ export function ErrorState({
           </Button>
         )}
         {kind === "unauthenticated" && (
-          <Button size="sm" className="text-xs" onClick={() => void logout()}>
-            Sign in again
+          <Button 
+            size="sm" 
+            className="text-xs" 
+            onClick={() => void logout({ redirect: true })}
+            disabled={isLogoutInProgress()}
+          >
+            {isLogoutInProgress() ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                Signing out…
+              </>
+            ) : (
+              "Sign in again"
+            )}
           </Button>
         )}
       </div>
@@ -194,10 +189,20 @@ export function AccessDeniedState({ error }: { error?: unknown }) {
           {rejectedByApi ? (
             <button
               type="button"
-              onClick={() => void logout()}
-              className="inline-flex w-full items-center justify-center rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              onClick={() => void logout({ redirect: true })}
+              disabled={isLogoutInProgress()}
+              className={`inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                isLogoutInProgress() ? "opacity-70 cursor-not-allowed hover:bg-primary" : "hover:bg-primary/90"
+              }`}
             >
-              {unauthenticated ? "Sign in again" : "Sign out"}
+              {isLogoutInProgress() ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Signing out…
+                </>
+              ) : (
+                unauthenticated ? "Sign in again" : "Sign out"
+              )}
             </button>
           ) : (
             <Link

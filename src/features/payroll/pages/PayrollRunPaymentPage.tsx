@@ -221,17 +221,6 @@ export default function PayrollRunPaymentPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={loadData}
-            disabled={loadingRun}
-            className="h-8 gap-1.5 text-xs"
-          >
-            <RefreshCw className={loadingRun ? "h-3.5 w-3.5 animate-spin" : "h-3.5 w-3.5"} />
-            <span>Refresh</span>
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
             onClick={() => navigate({ to: "/dashboard/payroll/payments" as any })}
             className="h-8 gap-1.5 text-xs"
           >

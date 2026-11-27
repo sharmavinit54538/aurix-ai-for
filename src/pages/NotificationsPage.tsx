@@ -199,15 +199,6 @@ export function NotificationsPage() {
               <CheckCheck className="mr-1.5 h-3.5 w-3.5 text-emerald-500" />
               Mark all as read
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => refetch()}
-              className="cursor-pointer text-xs"
-              title="Refresh notifications"
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-            </Button>
           </div>
         }
       />

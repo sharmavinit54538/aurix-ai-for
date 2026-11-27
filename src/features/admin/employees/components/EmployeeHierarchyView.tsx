@@ -76,6 +76,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { OrgChartCanvas } from "./OrgChartCanvas";
 import { OrgChartMobileTree } from "./OrgChartMobileTree";
+import { EmployeeAvatar } from "./EmployeeAvatar";
 import { HierarchyAnalyticsPanel } from "./HierarchyAnalyticsPanel";
 import { OrganizationalGraphCanvas } from "./OrganizationalGraphView";
 import { GraphDetailPanel } from "./GraphDetailPanel";
@@ -122,7 +123,6 @@ export function EmployeeHierarchyView() {
     graphData,
     graphLoading,
     graphError,
-    graphFilters,
     selectedGraphNode,
     graphDetailPanelOpen,
     graphAiPanelOpen,
@@ -141,6 +141,16 @@ export function EmployeeHierarchyView() {
   const availableDesignations = useAppSelector(selectAvailableDesignations);
   const availableLocations = useAppSelector(selectAvailableLocations);
   const availableManagers = useAppSelector(selectAvailableManagers);
+
+  // Ensure graphFilters is always defined with defaults
+  const graphFilters = state.graphFilters ?? {
+    activeCategories: ["people", "teams", "projects", "skills", "goals", "policies", "workflows"],
+    searchQuery: "",
+    focusedNodeId: null,
+  };
+  const safeActiveCategories: OrgGraphFilterCategory[] = Array.isArray(graphFilters.activeCategories)
+    ? graphFilters.activeCategories
+    : ["people", "teams", "projects", "skills", "goals", "policies", "workflows"];
 
   // Load data on mount based on view mode
   useEffect(() => {
@@ -367,7 +377,7 @@ export function EmployeeHierarchyView() {
           <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mr-2">Filters</span>
           {filterCategories.map((cat) => {
             const Icon = cat.icon;
-            const isActive = graphFilters.activeCategories.includes(cat.id);
+            const isActive = safeActiveCategories.includes(cat.id);
             return (
               <button
                 key={cat.id}
@@ -587,7 +597,7 @@ export function EmployeeHierarchyView() {
           <OrganizationalGraphCanvas
             nodes={graphData.nodes}
             relationships={graphData.relationships}
-            activeCategories={graphFilters.activeCategories}
+            activeCategories={safeActiveCategories}
             focusedNodeId={graphFilters.focusedNodeId}
             highlightedPath={highlightedPath}
             zoomLevel={zoomLevel}
@@ -681,18 +691,12 @@ export function EmployeeHierarchyView() {
           {!loadingDetails && selectedEmployeeDetails && (
             <div className="mt-3 space-y-4 text-xs">
               <div className="flex items-center gap-3">
-                {selectedEmployeeDetails.employee.profile_photo_url ? (
-                  <img
-                    src={selectedEmployeeDetails.employee.profile_photo_url}
-                    alt={selectedEmployeeDetails.employee.first_name}
-                    className="h-12 w-12 rounded-xl object-cover ring-2 ring-primary/30"
-                  />
-                ) : (
-                  <div className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-brand text-sm font-bold text-brand-foreground">
-                    {selectedEmployeeDetails.employee.first_name?.[0]}
-                    {selectedEmployeeDetails.employee.last_name?.[0]}
-                  </div>
-                )}
+                <EmployeeAvatar
+                  src={selectedEmployeeDetails.employee.profile_photo_url ?? undefined}
+                  name={`${selectedEmployeeDetails.employee.first_name ?? ""} ${selectedEmployeeDetails.employee.last_name ?? ""}`.trim() || "Employee"}
+                  className="h-12 w-12 rounded-xl object-cover ring-2 ring-primary/30"
+                  fallbackClassName="grid h-12 w-12 place-items-center rounded-xl bg-gradient-brand text-sm font-bold text-brand-foreground"
+                />
                 <div>
                   <h4 className="font-display text-sm font-bold text-foreground">
                     {selectedEmployeeDetails.employee.first_name} {selectedEmployeeDetails.employee.last_name}

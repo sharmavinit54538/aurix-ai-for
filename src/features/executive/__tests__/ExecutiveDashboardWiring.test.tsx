@@ -77,7 +77,7 @@ describe("F-08: Executive Dashboards and Analytics Wiring", () => {
     });
   });
 
-  it("triggers data reload on refresh", async () => {
+  it("does not render manual refresh button and loads on date range change", async () => {
     const spy = vi.spyOn(executiveApi, "getOverview").mockResolvedValue({
       role: "cto",
       healthScore: 88,
@@ -91,11 +91,12 @@ describe("F-08: Executive Dashboards and Analytics Wiring", () => {
     render(<ExecutiveRoleDashboardView role="cto" />);
 
     await waitFor(() => {
-      expect(screen.getByText("Engineering Strength")).toBeInTheDocument();
+      expect(screen.getAllByText("Engineering Strength").length).toBeGreaterThan(0);
     });
 
-    const refreshBtn = screen.getByRole("button", { name: /Refresh/i });
-    fireEvent.click(refreshBtn);
+    expect(screen.queryByRole("button", { name: /Refresh/i })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /^week$/i }));
 
     await waitFor(() => {
       expect(spy).toHaveBeenCalledTimes(2);

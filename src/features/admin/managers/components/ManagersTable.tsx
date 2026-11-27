@@ -29,6 +29,7 @@ import {
 import type { Manager, SortField, SortDir } from "../types";
 import { EMPLOYMENT_TYPE_OPTIONS, STATUS_OPTIONS } from "../constants";
 import { fmtDate, fmtRelative, labelFor, avatarHue } from "../utils";
+import { EmployeeAvatar } from "@/features/admin/employees/components/EmployeeAvatar";
 
 interface ManagersTableProps {
   managers: Manager[];
@@ -175,22 +176,15 @@ export function ManagersTable({
                   {/* Avatar + Name */}
                   <TableCell className="py-3 font-medium text-foreground">
                     <div className="flex items-center gap-3">
-                      {m.profileImage ? (
-                        <img
-                          src={m.profileImage}
-                          alt={m.fullName}
-                          className="h-9 w-9 rounded-xl object-cover border border-border/80 shadow-sm"
-                        />
-                      ) : (
-                        <div
-                          className="flex h-9 w-9 items-center justify-center rounded-xl text-xs font-bold text-white shadow-inner"
-                          style={{
-                            background: `linear-gradient(135deg, hsl(${hue}, 65%, 55%), hsl(${(hue + 45) % 360}, 70%, 45%))`,
-                          }}
-                        >
-                          {initials}
-                        </div>
-                      )}
+                      <EmployeeAvatar
+                        src={m.profileImage ?? undefined}
+                        name={m.fullName || "Manager"}
+                        className="h-9 w-9 rounded-xl object-cover border border-border/80 shadow-sm"
+                        fallbackClassName="flex h-9 w-9 items-center justify-center rounded-xl text-xs font-bold text-white shadow-inner"
+                        fallbackStyle={{
+                          background: `linear-gradient(135deg, hsl(${hue}, 65%, 55%), hsl(${(hue + 45) % 360}, 70%, 45%))`,
+                        }}
+                      />
                       <div className="min-w-0">
                         <div className="font-semibold text-sm truncate hover:underline">
                           {m.fullName}

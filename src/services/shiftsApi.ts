@@ -31,7 +31,7 @@ function unwrapData<T>(res: any): T {
 
 export const shiftsApi = {
   getShifts: async (params?: { limit?: number; search?: string }): Promise<ShiftsListResponse> => {
-    const res = await apiInstance.get("/shifts", { params });
+    const res = await apiInstance.get("/api/v1/attendance/shifts", { params });
     const payload = unwrapData<{ items: Shift[]; total: number; page: number; limit: number }>(res);
     const items: Shift[] = Array.isArray(payload) ? payload : Array.isArray(payload?.items) ? payload.items : [];
     return {
@@ -43,7 +43,7 @@ export const shiftsApi = {
   },
 
   getShift: async (id: string): Promise<Shift> => {
-    const res = await apiInstance.get(`/shifts/${id}`);
+    const res = await apiInstance.get(`/api/v1/attendance/shifts/${id}`);
     return unwrapData<Shift>(res);
   },
 };

@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { Employee } from "../employeesTypes";
 import { getEmployeeStatusDetails } from "../utils/employeeStatus";
+import { EmployeeAvatar } from "./EmployeeAvatar";
 
 interface EmployeesTableProps {
   employees: Employee[];
@@ -122,17 +123,12 @@ function EmployeeRow({
           className="flex items-center gap-3 cursor-pointer"
           onClick={() => onView(employee)}
         >
-          {employee.profilePhotoUrl || employee.avatarUrl ? (
-            <img
-              src={employee.profilePhotoUrl || employee.avatarUrl}
-              alt={employee.fullName}
-              className="h-9 w-9 shrink-0 rounded-full object-cover border border-border"
-            />
-          ) : (
-            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-              {initials}
-            </div>
-          )}
+          <EmployeeAvatar
+            src={employee.profilePhotoUrl || employee.avatarUrl}
+            name={employee.fullName || "Employee"}
+            className="h-9 w-9 shrink-0 rounded-full object-cover border border-border"
+            fallbackClassName="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-primary"
+          />
           <div className="min-w-0">
             <div
               className="font-medium text-foreground group-hover:text-primary transition-colors truncate max-w-[160px] sm:max-w-[260px]"
@@ -171,11 +167,13 @@ function EmployeeRow({
           <Button
             type="button"
             variant="ghost"
-            size="sm"
+            size="icon"
             onClick={() => onView(employee)}
-            className="h-8 px-2.5 text-[13px] text-primary hover:text-primary"
+            className="h-8 w-8 p-0 text-primary hover:text-primary hover:bg-primary/10 cursor-pointer"
+            title="View Full Profile"
+            aria-label={`View profile for ${employee.fullName}`}
           >
-            View
+            <Eye className="h-4 w-4" />
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

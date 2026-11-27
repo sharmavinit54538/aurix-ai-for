@@ -13,7 +13,6 @@ import {
   Layers,
   Loader2,
   Lock,
-  RefreshCw,
   ShieldAlert,
   ShieldCheck,
   Sparkles,
@@ -112,17 +111,8 @@ export function AutoPayrollPanel() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => void fetchStatus()}
-              className="rounded-xl h-8 gap-1 text-xs cursor-pointer"
-            >
-              <RefreshCw className="h-3 w-3" />
-              Refresh
-            </Button>
-            {payrollStatus?.canReviewAndApprove && (
+          {payrollStatus?.canReviewAndApprove && (
+            <div className="flex items-center gap-2">
               <Button
                 size="sm"
                 asChild
@@ -133,8 +123,8 @@ export function AutoPayrollPanel() {
                   Review and Approve
                 </Link>
               </Button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </CardHeader>
 

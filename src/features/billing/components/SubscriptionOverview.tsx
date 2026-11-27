@@ -4,7 +4,6 @@ import {
   Users,
   Calendar,
   ArrowUpRight,
-  RefreshCw,
   Info,
   CreditCard,
 } from "lucide-react";
@@ -21,7 +20,6 @@ export interface SubscriptionOverviewProps {
   paymentMethods: SavedPaymentMethod[];
   isLoading: boolean;
   error: string | null;
-  onRefresh: () => void;
   onSelectPlanForUpgrade: (planId: OfficialPlanId, targetSeats?: number) => void;
 }
 
@@ -30,7 +28,6 @@ export const SubscriptionOverview: React.FC<SubscriptionOverviewProps> = ({
   paymentMethods,
   isLoading,
   error: _error,
-  onRefresh,
   onSelectPlanForUpgrade,
 }) => {
   const planDisplayName =
@@ -90,19 +87,6 @@ export const SubscriptionOverview: React.FC<SubscriptionOverviewProps> = ({
           >
             Current Plan & Seat Entitlements
           </h2>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={onRefresh}
-            disabled={isLoading}
-            data-testid="refresh-subscription-btn"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700/80 bg-slate-900 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800 disabled:opacity-50 whitespace-nowrap"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
-            <span>Refresh Status</span>
-          </button>
         </div>
       </div>
 

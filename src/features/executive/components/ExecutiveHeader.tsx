@@ -6,7 +6,6 @@ import {
   ChevronRight,
   Download,
   Printer,
-  RefreshCw,
   Sparkles,
   ShieldCheck,
   Crown,
@@ -28,7 +27,6 @@ export interface ExecutiveHeaderProps {
   healthScore: number;
   dateRange: DateRangeType;
   setDateRange: (range: DateRangeType) => void;
-  onRefresh?: () => void;
 }
 
 const ROLES_NAV: { role: ExecutiveRole; label: string; icon: any }[] = [
@@ -47,7 +45,6 @@ export function ExecutiveHeader({
   healthScore,
   dateRange,
   setDateRange,
-  onRefresh,
 }: ExecutiveHeaderProps) {
   const navigate = useNavigate();
 
@@ -122,7 +119,7 @@ export function ExecutiveHeader({
               ))}
             </div>
 
-            {/* Export & Refresh Actions */}
+            {/* Export Actions */}
             <div className="flex flex-wrap items-center gap-1.5">
               <Button
                 variant="outline"
@@ -151,17 +148,6 @@ export function ExecutiveHeader({
                 aria-label="Print Report"
               >
                 <Printer className="h-4 w-4" />
-              </Button>
-
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-9 w-9 cursor-pointer"
-                onClick={onRefresh || (() => toast.success("Refreshed executive dataset."))}
-                title="Refresh Dataset"
-                aria-label="Refresh Dataset"
-              >
-                <RefreshCw className="h-4 w-4" />
               </Button>
             </div>
           </div>

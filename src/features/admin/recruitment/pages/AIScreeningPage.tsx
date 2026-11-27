@@ -679,20 +679,8 @@ export function AIScreeningPage() {
         <div className="p-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 text-xs text-amber-900 dark:text-amber-200 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 shrink-0" />
-            <span>Screening is processing in background. Refresh to check latest results.</span>
+            <span>Screening is processing in background. Check back shortly for latest results.</span>
           </div>
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-7 text-xs border-amber-500/40 hover:bg-amber-500/20"
-            onClick={() => {
-              setPollingTimedOut(false);
-              loadScreening(selectedJobId);
-            }}
-          >
-            <RotateCw className="h-3 w-3 mr-1" />
-            Refresh
-          </Button>
         </div>
       )}
 

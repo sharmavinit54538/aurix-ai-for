@@ -26,7 +26,7 @@ import {
 } from "@/features/document-verification/config";
 import { useDocumentVerification } from "@/hooks/useDocumentVerification";
 import { useAurix } from "@/lib/aurix-store";
-import { logout, useAuthReady } from "@/lib/auth-bootstrap";
+import { logout, useAuthReady, isLogoutInProgress } from "@/lib/auth-bootstrap";
 import { getSafeRedirectUrl } from "@/lib/role-routing";
 import type {
   DocumentItemVerificationStatus,
@@ -293,11 +293,16 @@ export function VerifyDocumentsCallbackPage() {
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => void logout()}
-            className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+            onClick={() => void logout({ redirect: true })}
+            disabled={isLogoutInProgress()}
+            className={`gap-1.5 text-xs ${isLogoutInProgress() ? "text-muted-foreground/50 hover:text-muted-foreground/50 cursor-not-allowed" : "text-muted-foreground hover:text-foreground"}`}
           >
-            <LogOut className="h-3.5 w-3.5" />
-            Sign out
+            {isLogoutInProgress() ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <LogOut className="h-3.5 w-3.5" />
+            )}
+            {isLogoutInProgress() ? "Signing out…" : "Sign out"}
           </Button>
         </div>
       </header>

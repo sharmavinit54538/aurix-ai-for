@@ -156,17 +156,6 @@ export default function PayrollReportsPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={loadReport}
-            disabled={loading}
-            className="h-8 gap-1.5 text-xs rounded-xl"
-          >
-            <RefreshCw className={loading ? "h-3.5 w-3.5 animate-spin" : "h-3.5 w-3.5"} />
-            <span>Refresh</span>
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
             onClick={() => handleExport("csv")}
             disabled={Boolean(exportingFormat) || loading}
             className="h-8 gap-1.5 text-xs rounded-xl"

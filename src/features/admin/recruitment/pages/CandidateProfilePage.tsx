@@ -89,8 +89,8 @@ export function CandidateProfilePage() {
 
   // Initialize form default values once candidate is loaded
   if (candidate && !emailSubject) {
-    setEmailSubject(`Aurix Job Application Update - ${candidate.appliedPosition}`);
-    setEmailBody(`Dear ${candidate.name},\n\nThank you for taking the time to apply for the ${candidate.appliedPosition} role at Aurix.\n\nWe have reviewed your application and would love to move you forward to the next stage of our recruitment process.\n\nBest regards,\nRecruitment Team\nAurix`);
+    setEmailSubject(`OFC360 Job Application Update - ${candidate.appliedPosition}`);
+    setEmailBody(`Dear ${candidate.name},\n\nThank you for taking the time to apply for the ${candidate.appliedPosition} role at OFC360.\n\nWe have reviewed your application and would love to move you forward to the next stage of our recruitment process.\n\nBest regards,\nRecruitment Team\nOFC360`);
   }
 
   function move(s: Stage) {

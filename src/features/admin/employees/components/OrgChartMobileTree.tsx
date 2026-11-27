@@ -1,6 +1,7 @@
 import React from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import type { BackendHierarchyNode } from "@/store/employeeHierarchy/employeeHierarchyTypes";
+import { EmployeeAvatar } from "./EmployeeAvatar";
 
 export interface OrgChartMobileTreeProps {
   trees: BackendHierarchyNode[];
@@ -71,13 +72,12 @@ const MobileNode = React.memo(function MobileNode({
             <span className="w-6 shrink-0" />
           )}
 
-          {node.profile_photo_url ? (
-            <img src={node.profile_photo_url} alt={fullName} className="h-8 w-8 rounded-lg object-cover shrink-0" />
-          ) : (
-            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-brand text-xs font-bold text-brand-foreground">
-              {initials}
-            </div>
-          )}
+          <EmployeeAvatar
+            src={node.profile_photo_url ?? undefined}
+            name={fullName || "Employee"}
+            className="h-8 w-8 rounded-lg object-cover shrink-0"
+            fallbackClassName="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-brand text-xs font-bold text-brand-foreground"
+          />
 
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">

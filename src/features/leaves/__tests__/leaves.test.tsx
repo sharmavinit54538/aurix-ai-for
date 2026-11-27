@@ -277,7 +277,6 @@ describe("Leaves Feature Test Suite", () => {
       render(
         <ApprovalsList
           approvals={mockApprovals}
-          onRefresh={vi.fn()}
           onApproveClick={vi.fn()}
           onRejectClick={vi.fn()}
         />
@@ -306,7 +305,6 @@ describe("Leaves Feature Test Suite", () => {
       render(
         <ApprovalsList
           approvals={mockApprovals}
-          onRefresh={vi.fn()}
           onApproveClick={vi.fn()}
           onRejectClick={vi.fn()}
         />
@@ -352,7 +350,6 @@ describe("Leaves Feature Test Suite", () => {
       render(
         <ApprovalsList
           approvals={mockApprovals}
-          onRefresh={vi.fn()}
           onApproveClick={vi.fn()}
           onRejectClick={vi.fn()}
         />
@@ -384,7 +381,6 @@ describe("Leaves Feature Test Suite", () => {
       const { rerender } = render(
         <ApprovalsList
           approvals={mockApprovals}
-          onRefresh={vi.fn()}
           onApproveClick={onApproveClick}
           onRejectClick={vi.fn()}
           actionLoadingId={null}
@@ -399,7 +395,6 @@ describe("Leaves Feature Test Suite", () => {
       rerender(
         <ApprovalsList
           approvals={mockApprovals}
-          onRefresh={vi.fn()}
           onApproveClick={onApproveClick}
           onRejectClick={vi.fn()}
           actionLoadingId="app-1"

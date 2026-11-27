@@ -53,7 +53,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { GeminiIcon } from "@/components/icons/GeminiIcon";
 import { useAurix, type HRDocument } from "@/lib/aurix-store";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import { statusBadgeClass } from "@/lib/status-styles";
 import { getEventTypeDot } from "@/lib/color-maps";
 import { toast } from "sonner";
@@ -1300,23 +1299,18 @@ function ScoreWidgets() {
 
 // ── Main Executive Dashboard ──────────────────────────────────
 export function ExecutiveDashboard() {
-  const ws = useAurix();
   const live = useExecutiveDashboardData();
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Executive Overview"
-        description={`${ws.company?.name ?? "Organization"} workforce metrics, pending approvals, and operational alerts.`}
-        actions={
-          <Button asChild size="sm">
-            <Link to={"/dashboard/employees?action=add" as any}>
-              <UserPlus className="h-4 w-4" />
-              Add employee
-            </Link>
-          </Button>
-        }
-      />
+      <div className="flex justify-end">
+        <Button asChild size="sm">
+          <Link to={"/dashboard/employees?action=add" as any}>
+            <UserPlus className="h-4 w-4" />
+            Add employee
+          </Link>
+        </Button>
+      </div>
 
       {/* Live Error Banner if an API had issues */}
       {live.error && (

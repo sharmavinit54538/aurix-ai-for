@@ -45,6 +45,7 @@ import { toast } from "sonner";
 import apiInstance from "@/api/apiInstance";
 import type { Employee } from "../employeesTypes";
 import { getEmployeeStatusDetails } from "../utils/employeeStatus";
+import { EmployeeAvatar } from "./EmployeeAvatar";
 
 interface EmployeeDocument {
   id: string;
@@ -359,22 +360,15 @@ export function EmployeeProfileDrawer({
         <SheetHeader className="p-6 border-b border-border/60 bg-muted/10">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-4 min-w-0">
-              {activeEmployee.profilePhotoUrl || activeEmployee.avatarUrl ? (
-                <img
-                  src={activeEmployee.profilePhotoUrl || activeEmployee.avatarUrl}
-                  alt={activeEmployee.fullName}
-                  className="h-16 w-16 rounded-2xl object-cover border border-border shadow-md ring-2 ring-primary/20"
-                />
-              ) : (
-                <div
-                  className="flex h-16 w-16 items-center justify-center rounded-2xl font-bold text-white shadow-md text-xl flex-shrink-0"
-                  style={{
-                    background: `linear-gradient(135deg, hsl(${hue}, 75%, 55%), hsl(${(hue + 45) % 360}, 80%, 45%))`,
-                  }}
-                >
-                  {initials}
-                </div>
-              )}
+              <EmployeeAvatar
+                src={activeEmployee.profilePhotoUrl || activeEmployee.avatarUrl}
+                name={activeEmployee.fullName || "Employee"}
+                className="h-16 w-16 rounded-2xl object-cover border border-border shadow-md ring-2 ring-primary/20"
+                fallbackClassName="flex h-16 w-16 items-center justify-center rounded-2xl font-bold text-white shadow-md text-xl flex-shrink-0"
+                fallbackStyle={{
+                  background: `linear-gradient(135deg, hsl(${hue}, 75%, 55%), hsl(${(hue + 45) % 360}, 80%, 45%))`,
+                }}
+              />
               <div className="min-w-0">
                 <SheetTitle className="text-xl font-bold truncate text-foreground flex items-center gap-2">
                   <span>{activeEmployee.fullName}</span>

@@ -1,11 +1,16 @@
 import { api } from "@/api/client";
 import type { Expense } from "@/lib/hrms/types";
 import {
+  filterExpensesByEmployeeId,
   filterExpensesForEmployee,
   mapExpenseFromBackend,
 } from "@/lib/hrms/expense-helpers";
 
-export { filterExpensesForEmployee, mapExpenseFromBackend };
+export {
+  filterExpensesByEmployeeId,
+  filterExpensesForEmployee,
+  mapExpenseFromBackend,
+};
 
 function extractItems(resp: any): any[] {
   if (Array.isArray(resp)) return resp;
@@ -33,6 +38,42 @@ export const expensesApi = {
           ? resp.data.total
           : items.length;
     return { items, total };
+  },
+  getEmployeeExpenses: async (
+    employeeId: string,
+    params?: { page?: number; limit?: number },
+  ): Promise<{ items: Expense[]; total: number; page: number; limit: number; hasNext: boolean }> => {
+    const page = params?.page ?? 1;
+    const limit = params?.limit ?? 30;
+    const resp = await api.get<any>("/api/v1/expenses", {
+      params: {
+        employee_id: employeeId,
+        page,
+        limit,
+      },
+    });
+    const mapped = extractItems(resp).map(mapExpenseFromBackend);
+    const items = filterExpensesByEmployeeId(mapped, employeeId);
+    const total =
+      typeof resp?.data?.total === "number"
+        ? resp.data.total
+        : typeof resp?.total === "number"
+          ? resp.total
+          : items.length;
+    const respPage =
+      typeof resp?.data?.page === "number"
+        ? resp.data.page
+        : typeof resp?.page === "number"
+          ? resp.page
+          : page;
+    const respLimit =
+      typeof resp?.data?.limit === "number"
+        ? resp.data.limit
+        : typeof resp?.limit === "number"
+          ? resp.limit
+          : limit;
+    const hasNext = Boolean(resp?.data?.has_next ?? resp?.has_next ?? false);
+    return { items, total, page: respPage, limit: respLimit, hasNext };
   },
   getMyExpenses: async (employeeName?: string | null): Promise<{ items: Expense[]; total: number }> => {
     const resp = await api.get<any>("/expenses");

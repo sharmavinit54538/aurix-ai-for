@@ -110,6 +110,8 @@ export type ExpenseCategory = "travel" | "meals" | "lodging" | "supplies" | "tra
 export interface Expense {
   id: ID;
   employee: string;
+  employeeId?: string;
+  employeeCode?: string;
   category: ExpenseCategory;
   amount: number;
   currency: string;

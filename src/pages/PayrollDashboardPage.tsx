@@ -216,6 +216,25 @@ export function PayrollDashboardPage() {
     dashboardData?.readiness?.items?.some((item) => item.status === "Error")
   );
 
+  // Show API error if dashboard failed to load
+  if (apiError && !dashboardData) {
+    return (
+      <div className="mx-auto max-w-4xl py-12">
+        <EmptyState
+          title="Unable to Load Payroll Dashboard"
+          description={apiError}
+          icon={AlertCircle}
+          action={
+            <Button onClick={handleRefresh}>
+              <RefreshCw className="h-4 w-4" />
+              Retry
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
+
   const activeRun = useMemo(() => {
     const rawActive = dashboardData?.active_run as Record<string, any> | null | undefined;
     if (rawActive && typeof rawActive === "object") {
@@ -412,7 +431,6 @@ export function PayrollDashboardPage() {
           selectedPeriodId={selectedPeriodId}
           onPeriodChange={setSelectedPeriodId}
           isLoading={loadingDashboard || loadingPeriods}
-          onRefresh={handleRefresh}
           onRunPayrollClick={() => setConfirmModalOpen(true)}
           canRunPayroll={canRunPayroll}
         />

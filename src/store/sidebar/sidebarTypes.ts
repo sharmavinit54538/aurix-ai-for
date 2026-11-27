@@ -1,29 +1,44 @@
 export type BadgeKind = "New" | "AI" | "Beta" | "Hot" | "Live";
 
 export interface SidebarNavLeaf {
-  title: string;
-  href: string;
+  title?: string;
+  label?: string;
+  href?: string;
+  to?: string;
   icon?: any;
   badge?: BadgeKind;
   roles?: string[];
   permissions?: string[];
+  permission?: string;
+  exact?: boolean;
+  matchPrefixes?: string[];
+  basePath?: string;
+  count?: number;
+  id?: string;
 }
 
 export interface SidebarNavParent {
-  title: string;
+  title?: string;
+  label?: string;
   icon?: any;
   children: SidebarNavLeaf[];
   roles?: string[];
   permissions?: string[];
+  permission?: string;
+  basePath?: string;
+  badge?: BadgeKind;
+  count?: number;
+  id?: string;
 }
 
 export type SidebarNavItem = SidebarNavLeaf | SidebarNavParent;
 
 export interface SidebarNavSection {
-  title: string;
+  title?: string;
   items: SidebarNavItem[];
   roles?: string[];
   permissions?: string[];
+  id?: string;
 }
 
 export interface SidebarState {

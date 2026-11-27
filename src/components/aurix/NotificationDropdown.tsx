@@ -128,9 +128,10 @@ export function NotificationDropdown() {
     if (!item.readAt) {
       markReadMutation.mutate(item.id);
     }
-    if (isInternalSafeLink(item.link)) {
+    const link = item.link ?? item.action_url;
+    if (isInternalSafeLink(link)) {
       setOpen(false);
-      navigate({ to: item.link });
+      navigate({ to: link as string });
     }
   };
 

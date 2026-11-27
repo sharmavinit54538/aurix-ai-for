@@ -553,7 +553,6 @@ export const PricingAndBillingExperience: React.FC<
           paymentMethods={paymentMethods}
           isLoading={isLoadingBillingData}
           error={subscriptionError}
-          onRefresh={fetchWorkspaceBillingData}
           onSelectPlanForUpgrade={handleSelectPlanForUpgrade}
         />
       )}

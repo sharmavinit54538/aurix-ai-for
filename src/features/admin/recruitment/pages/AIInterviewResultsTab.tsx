@@ -267,16 +267,6 @@ export function AIInterviewResultsTab() {
 
         <div className="flex items-center gap-2">
           <Button
-            variant="outline"
-            size="sm"
-            onClick={fetchResults}
-            disabled={loading}
-            className="h-9 gap-1.5 text-xs"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh
-          </Button>
-
-          <Button
             size="sm"
             onClick={() => setInviteModalOpen(true)}
             className="h-9 gap-1.5 text-xs"

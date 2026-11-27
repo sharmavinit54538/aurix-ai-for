@@ -9,7 +9,6 @@ import {
   Percent,
   Clock,
   CheckCircle2,
-  RefreshCw,
   BarChart3,
   Layers,
   Flame,
@@ -94,17 +93,6 @@ export default function HelpdeskAnalyticsPage() {
             </div>
           </div>
         </div>
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={loadMetrics}
-          disabled={loading}
-          className="h-9 gap-1.5"
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-          <span>Refresh Analytics</span>
-        </Button>
       </div>
 
       {loading ? (

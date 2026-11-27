@@ -156,7 +156,6 @@ describe("PayrollMetricsDashboard Component", () => {
         selectedPeriodId="period-apr-2026"
         onPeriodChange={vi.fn()}
         isLoading={false}
-        onRefresh={vi.fn()}
       />
     );
 
@@ -194,7 +193,6 @@ describe("PayrollMetricsDashboard Component", () => {
         selectedPeriodId="period-apr-2026"
         onPeriodChange={vi.fn()}
         isLoading={false}
-        onRefresh={vi.fn()}
       />
     );
 

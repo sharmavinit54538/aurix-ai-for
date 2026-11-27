@@ -22,6 +22,7 @@ import type {
   OrgGraphNodeType,
   OrgGraphFilterCategory,
 } from "@/store/employeeHierarchy/organizationalGraphTypes";
+import { EmployeeAvatar, resolveEmployeeImageUrl } from "./EmployeeAvatar";
 
 // ── Node type visual config ──────────────────────────────────────
 const nodeTypeConfig: Record<
@@ -154,11 +155,12 @@ const GraphNodeCard = React.memo(function GraphNodeCard({
         <div className="flex items-center gap-2.5">
           {/* Avatar */}
           <div className="relative shrink-0">
-            {isEmployee && meta.profilePhotoUrl ? (
-              <img
+            {isEmployee && resolveEmployeeImageUrl(meta.profilePhotoUrl ? String(meta.profilePhotoUrl) : undefined) ? (
+              <EmployeeAvatar
                 src={String(meta.profilePhotoUrl)}
-                alt={node.label}
+                name={node.label || "Employee"}
                 className="h-9 w-9 rounded-lg object-cover ring-1 ring-border/60"
+                fallbackClassName={`grid h-9 w-9 place-items-center rounded-lg ${config.bg} ${config.color} text-xs font-bold shadow-sm`}
               />
             ) : (
               <div
@@ -245,8 +247,8 @@ export function OrganizationalGraphCanvas({
   // Filter nodes by active categories
   const visibleNodeTypes = useMemo(() => {
     const types = new Set<OrgGraphNodeType>();
-    activeCategories.forEach((cat) => {
-      categoryNodeTypes[cat].forEach((t) => types.add(t));
+    (Array.isArray(activeCategories) ? activeCategories : []).forEach((cat) => {
+      categoryNodeTypes[cat]?.forEach((t) => types.add(t));
     });
     return types;
   }, [activeCategories]);
