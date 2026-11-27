@@ -1,5 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
-import QRCode from "qrcode";
+import { useEffect, useState, useCallback, useRef } from "react";
 import {
   QrCode,
   Download,
@@ -8,20 +7,20 @@ import {
   Printer,
   RefreshCw,
   AlertCircle,
-  FileCode,
   Scan,
+  FileCode,
 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { getJobApplicationUrl } from "@/lib/publicUrl";
-import { useAurix } from "@/lib/aurix-store";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/api/utils";
+import { recruitmentApi } from "@/services/recruitmentApi";
 
 interface JobQrModalProps {
   open: boolean;
@@ -30,281 +29,214 @@ interface JobQrModalProps {
   jobTitle?: string;
 }
 
+function buildPublicApplyUrl(rawUrl?: string | null, ukey?: string | null): string {
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  if (rawUrl && /^https?:\/\//i.test(rawUrl)) return rawUrl;
+  if (rawUrl && rawUrl.startsWith("/")) return `${origin}${rawUrl}`;
+  if (ukey) return `${origin}/jobs/apply/${ukey}`;
+  return "";
+}
+
 export function JobQrModal({
   open,
   onOpenChange,
   jobId,
   jobTitle = "Job Opening",
 }: JobQrModalProps) {
-  const { company } = useAurix();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [pngDataUrl, setPngDataUrl] = useState<string>("");
-  const [svgString, setSvgString] = useState<string>("");
+  const [qrImageUrl, setQrImageUrl] = useState<string>("");
+  const [svgMarkup, setSvgMarkup] = useState<string>("");
+  const [applyUrl, setApplyUrl] = useState<string>("");
   const [copied, setCopied] = useState(false);
+  const objectUrlRef = useRef<string | null>(null);
 
-  // Single source of truth for the job application URL
-  const applyUrl = getJobApplicationUrl(jobId);
-
-  // Generate safe filename for downloads
-  const safeSlug = (jobTitle || "job")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-  const pngFilename = `${safeSlug || "job"}-${jobId}-qr.png`;
-  const svgFilename = `${safeSlug || "job"}-${jobId}-qr.svg`;
-
-  const generateQr = useCallback(async () => {
-    if (!jobId) return;
-    setLoading(true);
-    setError(null);
-
-    try {
-      // 1. Generate high-resolution PNG data URL for sharp display & download
-      const pngUrl = await QRCode.toDataURL(applyUrl, {
-        width: 600,
-        margin: 2,
-        errorCorrectionLevel: "H",
-        color: {
-          dark: "#090d16",
-          light: "#ffffff",
-        },
-      });
-
-      // 2. Generate crisp standalone SVG for vector download
-      const svg = await QRCode.toString(applyUrl, {
-        type: "svg",
-        margin: 2,
-        errorCorrectionLevel: "H",
-        color: {
-          dark: "#090d16",
-          light: "#ffffff",
-        },
-      });
-
-      setPngDataUrl(pngUrl);
-      setSvgString(svg);
-    } catch (err: any) {
-      if (import.meta.env.DEV) {
-        console.error("QR Code Generation Error:", err);
-      }
-      setError("Unable to generate QR code. Please try again.");
-    } finally {
-      setLoading(false);
+  const revokeObjectUrl = useCallback(() => {
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
     }
-  }, [applyUrl, jobId]);
+  }, []);
 
   useEffect(() => {
-    if (open) {
-      setCopied(false);
-      generateQr();
-    }
-  }, [open, generateQr]);
+    return () => {
+      revokeObjectUrl();
+    };
+  }, [revokeObjectUrl]);
 
-  const handleCopyLink = async () => {
-    try {
-      if (typeof navigator !== "undefined" && navigator.clipboard) {
-        await navigator.clipboard.writeText(applyUrl);
-      } else {
-        const textarea = document.createElement("textarea");
-        textarea.value = applyUrl;
-        textarea.style.position = "fixed";
-        textarea.style.opacity = "0";
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand("copy");
-        document.body.removeChild(textarea);
-      }
-      setCopied(true);
-      toast.success("Job application link copied to clipboard!");
-      setTimeout(() => setCopied(false), 2500);
-    } catch {
-      toast.error("Failed to copy link. Please copy it manually.");
-    }
-  };
-
-  const handleDownloadPng = () => {
-    if (!pngDataUrl || typeof window === "undefined") return;
-    try {
-      const link = document.createElement("a");
-      link.href = pngDataUrl;
-      link.download = pngFilename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast.success("QR code downloaded as PNG!");
-    } catch {
-      toast.error("Failed to download PNG.");
-    }
-  };
-
-  const handleDownloadSvg = () => {
-    if (!svgString || typeof window === "undefined") return;
-    try {
-      const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = svgFilename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      toast.success("QR code downloaded as SVG!");
-    } catch {
-      toast.error("Failed to download SVG.");
-    }
-  };
-
-  const handlePrint = () => {
-    if (!pngDataUrl || typeof window === "undefined") return;
-
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) {
-      toast.error("Pop-up blocked. Please allow pop-ups to print the QR code.");
+  const fetchBackendQr = useCallback(async () => {
+    if (!jobId) {
+      setError("Missing Job ID for QR generation.");
+      setLoading(false);
       return;
     }
 
-    const companyLogo = company?.logoDataUrl;
-    const companyName = company?.name || "Careers";
+    setLoading(true);
+    setError(null);
+    revokeObjectUrl();
+    setQrImageUrl("");
+    setSvgMarkup("");
 
-    printWindow.document.write(`<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Job QR Code - ${jobTitle}</title>
-  <style>
-    @page {
-      size: A4 portrait;
-      margin: 20mm;
-    }
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      color: #0f172a;
-      background: #ffffff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 30px 20px;
-      text-align: center;
-    }
-    .print-card {
-      border: 2px solid #e2e8f0;
-      border-radius: 24px;
-      padding: 48px 40px;
-      max-width: 440px;
-      width: 100%;
-      background: #ffffff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
-    }
-    .company-logo {
-      max-height: 48px;
-      max-width: 180px;
-      object-fit: contain;
-      margin-bottom: 16px;
-    }
-    .company-name {
-      font-size: 13px;
-      font-weight: 700;
-      color: #64748b;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin-bottom: 8px;
-    }
-    .job-title {
-      font-size: 24px;
-      font-weight: 800;
-      color: #0f172a;
-      line-height: 1.3;
-      margin-bottom: 24px;
-    }
-    .qr-frame {
-      background: #ffffff;
-      padding: 16px;
-      border-radius: 20px;
-      border: 1.5px solid #cbd5e1;
-      display: inline-block;
-      margin-bottom: 20px;
-    }
-    .qr-frame img {
-      display: block;
-      width: 240px;
-      height: 240px;
-    }
-    .scan-badge {
-      font-size: 15px;
-      font-weight: 700;
-      color: #0f172a;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .apply-url {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 11px;
-      color: #475569;
-      word-break: break-all;
-      background: #f8fafc;
-      padding: 10px 14px;
-      border-radius: 8px;
-      border: 1px solid #e2e8f0;
-      width: 100%;
-    }
-    @media print {
-      body {
-        min-height: auto;
-        padding: 0;
+    try {
+      const [qrRes, linkRes] = await Promise.allSettled([
+        recruitmentApi.getJobQr(jobId),
+        recruitmentApi.getSourcingLink(jobId),
+      ]);
+
+      if (qrRes.status === "rejected") {
+        throw qrRes.reason;
       }
-      .print-card {
-        border: none;
-        box-shadow: none;
-        padding: 10px 0;
+
+      const qrPayload = (qrRes.value || {}) as Record<string, unknown>;
+      const linkPayload =
+        linkRes.status === "fulfilled"
+          ? ((linkRes.value || {}) as Record<string, unknown>)
+          : {};
+
+      const resolvedUrl = buildPublicApplyUrl(
+        (linkPayload.sourcing_link ??
+          linkPayload.apply_url ??
+          linkPayload.url ??
+          qrPayload.apply_url ??
+          qrPayload.url) as string | undefined,
+        (linkPayload.unique_key ?? linkPayload.ukey ?? qrPayload.ukey) as string | undefined,
+      );
+      setApplyUrl(resolvedUrl || `${window.location.origin}/jobs/apply/${jobId}`);
+
+      if (typeof qrPayload.objectUrl === "string" && qrPayload.objectUrl) {
+        objectUrlRef.current = qrPayload.objectUrl;
+        setQrImageUrl(qrPayload.objectUrl);
+      } else if (typeof qrPayload.qr_data_url === "string" || typeof qrPayload.data_url === "string") {
+        setQrImageUrl(String(qrPayload.qr_data_url ?? qrPayload.data_url));
+      } else if (typeof qrPayload.qr_url === "string" || typeof qrPayload.image_url === "string") {
+        setQrImageUrl(String(qrPayload.qr_url ?? qrPayload.image_url));
+      } else if (typeof qrPayload.qr_base64 === "string" || typeof qrPayload.qr_code === "string") {
+        const rawCode = String(qrPayload.qr_base64 ?? qrPayload.qr_code);
+        if (rawCode.trim().startsWith("<svg")) {
+          setSvgMarkup(rawCode);
+          const blob = new Blob([rawCode], { type: "image/svg+xml" });
+          const blobUrl = URL.createObjectURL(blob);
+          objectUrlRef.current = blobUrl;
+          setQrImageUrl(blobUrl);
+        } else {
+          setQrImageUrl(
+            rawCode.startsWith("data:") ? rawCode : `data:image/png;base64,${rawCode}`,
+          );
+        }
+      } else if (typeof qrPayload.qr_svg === "string") {
+        setSvgMarkup(qrPayload.qr_svg);
+        const blob = new Blob([qrPayload.qr_svg], { type: "image/svg+xml" });
+        const blobUrl = URL.createObjectURL(blob);
+        objectUrlRef.current = blobUrl;
+        setQrImageUrl(blobUrl);
+      } else {
+        throw new Error("Backend returned an unrecognized QR payload format.");
       }
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to load job QR code from backend."));
+    } finally {
+      setLoading(false);
     }
-  </style>
-</head>
-<body>
-  <div class="print-card">
-    ${companyLogo ? `<img src="${companyLogo}" alt="${companyName} Logo" class="company-logo" />` : `<div class="company-name">${companyName}</div>`}
-    <h1 class="job-title">${jobTitle}</h1>
-    <div class="qr-frame">
-      <img src="${pngDataUrl}" alt="QR code for ${jobTitle} application" />
-    </div>
-    <div class="scan-badge">Scan to apply</div>
-    <div class="apply-url">${applyUrl}</div>
-  </div>
-  <script>
-    window.onload = function() {
-      setTimeout(function() {
-        window.print();
-        window.close();
-      }, 350);
-    };
-  </script>
-</body>
-</html>`);
-    printWindow.document.close();
+  }, [jobId, revokeObjectUrl]);
+
+  useEffect(() => {
+    if (open) {
+      void fetchBackendQr();
+    }
+  }, [open, fetchBackendQr]);
+
+  const handleCopyLink = async () => {
+    if (!applyUrl) return;
+    try {
+      await navigator.clipboard.writeText(applyUrl);
+      setCopied(true);
+      toast.success("Job link copied to clipboard!");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Failed to copy link.");
+    }
+  };
+
+  const handleDownloadImage = () => {
+    if (!qrImageUrl) return;
+    const link = document.createElement("a");
+    link.href = qrImageUrl;
+    const safeTitle = jobTitle.replace(/[^a-zA-Z0-9_-]/g, "_").toLowerCase();
+    link.download = `qr_${safeTitle || "job"}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("QR image downloaded!");
+  };
+
+  const handleDownloadSvg = () => {
+    if (!svgMarkup) {
+      handleDownloadImage();
+      return;
+    }
+    const blob = new Blob([svgMarkup], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    const safeTitle = jobTitle.replace(/[^a-zA-Z0-9_-]/g, "_").toLowerCase();
+    link.download = `qr_${safeTitle || "job"}.svg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success("SVG QR code downloaded!");
+  };
+
+  const handlePrint = () => {
+    if (!qrImageUrl) return;
+    const printWin = window.open("", "_blank", "width=600,height=650");
+    if (!printWin) {
+      toast.error("Pop-up blocked. Please allow pop-ups to print.");
+      return;
+    }
+    const doc = printWin.document;
+    doc.open();
+    const html = doc.createElement("html");
+    const head = doc.createElement("head");
+    const titleEl = doc.createElement("title");
+    titleEl.textContent = `QR Poster - ${jobTitle}`;
+    head.appendChild(titleEl);
+    const body = doc.createElement("body");
+    body.style.fontFamily = "system-ui, sans-serif";
+    body.style.display = "flex";
+    body.style.flexDirection = "column";
+    body.style.alignItems = "center";
+    body.style.justifyContent = "center";
+    body.style.minHeight = "100vh";
+    body.style.textAlign = "center";
+    const h1 = doc.createElement("h1");
+    h1.textContent = jobTitle;
+    const p = doc.createElement("p");
+    p.textContent = "Scan with your mobile phone camera to apply.";
+    const img = doc.createElement("img");
+    img.src = qrImageUrl;
+    img.style.width = "260px";
+    img.style.height = "260px";
+    const urlDiv = doc.createElement("div");
+    urlDiv.style.marginTop = "16px";
+    urlDiv.style.fontSize = "12px";
+    urlDiv.style.color = "#475569";
+    urlDiv.textContent = applyUrl;
+    body.append(h1, p, img, urlDiv);
+    html.append(head, body);
+    doc.appendChild(html);
+    doc.close();
+    setTimeout(() => {
+      printWin.print();
+    }, 250);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         overlayClassName="backdrop-blur-md bg-black/85"
-        className="w-[calc(100vw-1.5rem)] max-w-[360px] max-h-[90vh] overflow-y-auto overflow-x-hidden p-3.5 sm:p-4 gap-0 space-y-2.5 sm:space-y-3 rounded-2xl bg-card border border-border shadow-2xl text-left box-border [&>button]:top-3 [&>button]:right-3 [&>button]:h-6 [&>button]:w-6 [&>button_svg]:h-4 [&>button_svg]:w-4"
+        className="w-[calc(100vw-1.5rem)] max-w-[360px] max-h-[90vh] overflow-y-auto overflow-x-hidden p-3.5 sm:p-4 gap-0 space-y-2.5 sm:space-y-3 rounded-2xl bg-card border border-border shadow-2xl text-left box-border"
       >
-        {/* ── Header ── */}
         <DialogHeader className="space-y-0 text-left w-full min-w-0">
           <div className="flex items-center gap-2.5 pr-6 w-full min-w-0">
             <span className="grid h-8 w-8 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary border border-primary/20">
@@ -312,16 +244,15 @@ export function JobQrModal({
             </span>
             <div className="min-w-0 flex-1 overflow-hidden">
               <DialogTitle className="text-sm sm:text-base font-semibold text-foreground leading-tight tracking-tight truncate block">
-                Generate Job QR Code
+                Job QR Code
               </DialogTitle>
               <DialogDescription className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 leading-normal truncate block">
-                Share or print this QR code for instant mobile job application.
+                Share or print this backend-generated QR code for instant application.
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        {/* ── Target Role Card ── */}
         {jobTitle && (
           <div className="w-full min-w-0 flex items-center justify-between rounded-xl bg-muted/60 border border-border px-2.5 py-1.5 gap-2 overflow-hidden">
             <div className="min-w-0 flex-1 overflow-hidden">
@@ -338,17 +269,16 @@ export function JobQrModal({
           </div>
         )}
 
-        {/* ── QR Showcase ── */}
         <div className="w-full min-w-0 pt-0.5 pb-0 flex flex-col items-center">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-6 space-y-2">
               <div className="h-7 w-7 animate-spin rounded-full border-2 border-primary border-t-transparent" />
               <p className="text-xs font-medium text-muted-foreground">
-                Generating QR code...
+                Fetching QR code...
               </p>
             </div>
           ) : error ? (
-            <div className="flex flex-col items-center justify-center py-5 space-y-2 text-center w-full min-w-0">
+            <div role="alert" className="flex flex-col items-center justify-center py-5 space-y-2 text-center w-full min-w-0">
               <div className="grid h-8 w-8 place-items-center rounded-full bg-destructive/10 text-destructive">
                 <AlertCircle className="h-4 w-4" />
               </div>
@@ -356,7 +286,7 @@ export function JobQrModal({
               <Button
                 size="sm"
                 variant="outline"
-                onClick={generateQr}
+                onClick={() => void fetchBackendQr()}
                 className="text-xs gap-1.5 h-8"
               >
                 <RefreshCw className="h-3.5 w-3.5" /> Try Again
@@ -364,17 +294,13 @@ export function JobQrModal({
             </div>
           ) : (
             <div className="flex flex-col items-center w-full min-w-0">
-              {/* White QR container: compact and responsive */}
               <div className="rounded-xl bg-white shadow-md border border-slate-200/80 inline-flex items-center justify-center aspect-square p-2.5 sm:p-3 w-36 h-36 sm:w-40 sm:h-40">
                 <img
-                  src={pngDataUrl}
+                  src={qrImageUrl}
                   alt={`QR code for ${jobTitle} job application`}
-                  aria-label={`QR code for ${jobTitle} job application`}
                   className="w-full h-full object-contain block"
                 />
               </div>
-
-              {/* Scan caption: text-xs, mt-2 (8px) */}
               <div className="mt-2 inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-medium text-foreground/90">
                 <Scan className="h-3.5 w-3.5 shrink-0 text-primary" />
                 <span>Scan with phone camera to apply</span>
@@ -383,22 +309,17 @@ export function JobQrModal({
           )}
         </div>
 
-        {/* ── URL + Copy Row ── */}
-        <div className="w-full min-w-0 flex items-center gap-1.5 sm:gap-2 rounded-xl border border-border bg-muted/60 px-2.5 py-1.5 transition-colors focus-within:border-primary/50 overflow-hidden">
+        <div className="w-full min-w-0 flex items-center gap-1.5 sm:gap-2 rounded-xl border border-border bg-muted/60 px-2.5 py-1.5 overflow-hidden">
           <span
             className="flex-1 min-w-0 font-mono text-[10px] sm:text-[11px] text-muted-foreground select-all truncate block overflow-hidden"
             title={applyUrl}
           >
-            {applyUrl}
+            {applyUrl || "—"}
           </span>
           <Button
             size="sm"
             variant={copied ? "default" : "secondary"}
-            className={`h-6 sm:h-7 px-2 sm:px-2.5 text-[11px] sm:text-xs shrink-0 font-medium transition-all ${
-              copied
-                ? "bg-emerald-600 hover:bg-emerald-600 text-white"
-                : "hover:bg-accent"
-            }`}
+            disabled={!applyUrl}
             onClick={handleCopyLink}
             aria-label={copied ? "Link copied" : "Copy job application link"}
           >
@@ -416,42 +337,38 @@ export function JobQrModal({
           </Button>
         </div>
 
-        {/* ── Action Buttons: Single row of 3 equal columns ── */}
         <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full min-w-0 pt-0.5">
           <Button
             size="sm"
             variant="outline"
-            className="h-8 sm:h-9 py-1 px-1 sm:px-2 text-[11px] sm:text-xs font-medium gap-1 sm:gap-1.5 min-w-0 cursor-pointer overflow-hidden"
-            onClick={handleDownloadPng}
-            disabled={loading || !!error}
-            aria-label="Download QR code as PNG image"
+            className="h-8 sm:h-9 text-xs gap-1"
+            onClick={handleDownloadImage}
+            disabled={loading || !!error || !qrImageUrl}
           >
             <Download className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">PNG</span>
+            <span>Image</span>
           </Button>
 
           <Button
             size="sm"
             variant="outline"
-            className="h-8 sm:h-9 py-1 px-1 sm:px-2 text-[11px] sm:text-xs font-medium gap-1 sm:gap-1.5 min-w-0 cursor-pointer overflow-hidden"
+            className="h-8 sm:h-9 text-xs gap-1"
             onClick={handleDownloadSvg}
-            disabled={loading || !!error}
-            aria-label="Download QR code as SVG vector"
+            disabled={loading || !!error || !qrImageUrl}
           >
             <FileCode className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">SVG</span>
+            <span>SVG</span>
           </Button>
 
           <Button
             size="sm"
             variant="default"
-            className="h-8 sm:h-9 py-1 px-1 sm:px-2 text-[11px] sm:text-xs font-semibold gap-1 sm:gap-1.5 min-w-0 cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 overflow-hidden"
+            className="h-8 sm:h-9 text-xs font-semibold gap-1"
             onClick={handlePrint}
-            disabled={loading || !!error}
-            aria-label="Print QR code poster"
+            disabled={loading || !!error || !qrImageUrl}
           >
             <Printer className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">Print</span>
+            <span>Print</span>
           </Button>
         </div>
       </DialogContent>

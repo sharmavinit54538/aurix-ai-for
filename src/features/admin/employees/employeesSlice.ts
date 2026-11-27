@@ -3,13 +3,17 @@ import type { EmployeesState } from "./employeesTypes";
 import {
   activateEmployee,
   activateEmployeeByToken,
+  approveEmployee,
   createEmployee,
   deactivateEmployee,
   deleteEmployee,
+  exportEmployees,
   fetchEmployeeById,
   fetchEmployees,
   fetchEmployeeOnboardingStatus,
   fetchEmployeeStatistics,
+  importEmployees,
+  rejectEmployee,
   resendEmployeeInvite,
   resetEmployeePassword,
   updateEmployee,
@@ -38,6 +42,10 @@ const initialState: EmployeesState = {
 const mutationThunks = [
   createEmployee,
   updateEmployee,
+  importEmployees,
+  exportEmployees,
+  approveEmployee,
+  rejectEmployee,
 ];
 
 const employeesSlice = createSlice({

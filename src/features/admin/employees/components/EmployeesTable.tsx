@@ -8,6 +8,9 @@ import {
   Eye,
   Trash2,
   Edit3,
+  CheckCircle2,
+  XCircle,
+  ClipboardList,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +35,9 @@ interface EmployeesTableProps {
   onDeactivate: (id: string) => void;
   onActivate: (id: string) => void;
   onDelete: (id: string) => void;
+  onApprove?: (id: string) => void;
+  onReject?: (id: string) => void;
+  onOnboardingStatus?: (id: string) => void;
 }
 
 export function EmployeesTable({
@@ -43,6 +49,9 @@ export function EmployeesTable({
   onDeactivate,
   onActivate,
   onDelete,
+  onApprove,
+  onReject,
+  onOnboardingStatus,
 }: EmployeesTableProps) {
   return (
     <div className="overflow-x-auto">
@@ -87,6 +96,9 @@ function EmployeeRow({
   onDeactivate,
   onActivate,
   onDelete,
+  onApprove,
+  onReject,
+  onOnboardingStatus,
 }: {
   employee: Employee;
   onView: (employee: Employee) => void;
@@ -96,6 +108,9 @@ function EmployeeRow({
   onDeactivate: (id: string) => void;
   onActivate: (id: string) => void;
   onDelete: (id: string) => void;
+  onApprove?: (id: string) => void;
+  onReject?: (id: string) => void;
+  onOnboardingStatus?: (id: string) => void;
 }) {
   const status = getEmployeeStatusDetails(employee);
   const isInvited = status.text === "INVITED" || status.text === "EXPIRED";
@@ -233,6 +248,36 @@ function EmployeeRow({
                 >
                   <UserCheck className="h-4 w-4" />
                   <span>Activate Employee</span>
+                </DropdownMenuItem>
+              )}
+
+              {onApprove && status.text === "INVITED" && (
+                <DropdownMenuItem
+                  onClick={() => onApprove(employee.id)}
+                  className="cursor-pointer gap-2 text-[13px] text-emerald-700 dark:text-emerald-300 focus:text-emerald-700"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span>Approve Onboarding</span>
+                </DropdownMenuItem>
+              )}
+
+              {onReject && (status.text === "INVITED" || status.text === "PENDING") && (
+                <DropdownMenuItem
+                  onClick={() => onReject(employee.id)}
+                  className="cursor-pointer gap-2 text-[13px] text-rose-700 dark:text-rose-300 focus:text-rose-700"
+                >
+                  <XCircle className="h-4 w-4" />
+                  <span>Reject Onboarding</span>
+                </DropdownMenuItem>
+              )}
+
+              {onOnboardingStatus && (
+                <DropdownMenuItem
+                  onClick={() => onOnboardingStatus(employee.id)}
+                  className="cursor-pointer gap-2 text-[13px]"
+                >
+                  <ClipboardList className="h-4 w-4" />
+                  <span>Onboarding Status</span>
                 </DropdownMenuItem>
               )}
 

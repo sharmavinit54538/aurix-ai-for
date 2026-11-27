@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   User,
+  Users,
   Mail,
   MapPin,
   Briefcase,
@@ -36,13 +37,15 @@ import {
   ArrowLeft,
   Bell,
   Building2,
-  Users,
   AlertCircle,
+  ClipboardList,
+  CalendarDays,
+  XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import apiInstance from "@/api/apiInstance";
 import expensesApi from "@/services/expensesApi";
-import type { Employee } from "../employeesTypes";
+import type { Employee, OnboardingStatusResponse } from "../employeesTypes";
 import { getEmployeeStatusDetails } from "../utils/employeeStatus";
 import { EmployeeAvatar } from "./EmployeeAvatar";
 
@@ -54,6 +57,7 @@ interface EmployeeDetailPageProps {
   onResetPassword?: (id: string) => void;
   onDeactivate?: (id: string) => void;
   onActivate?: (id: string) => void;
+  onboardingStatus?: OnboardingStatusResponse | null;
 }
 
 interface EmployeeDocument {
@@ -558,6 +562,7 @@ export function EmployeeDetailPage({
     { id: "history", label: "Change history", icon: History },
     { id: "account", label: "Account", icon: Shield },
     { id: "notifications", label: "Notifications", icon: Bell },
+    { id: "onboarding", label: "Onboarding", icon: ClipboardList },
   ];
 
   const getStatusBadgeClass = (status: string) => {
@@ -1419,7 +1424,98 @@ export function EmployeeDetailPage({
             </Card>
           )}
 
-          {/* 12. NOTIFICATIONS VIEW */}
+          {/* 12. ONBOARDING VIEW */}
+          {activeTab === "onboarding" && (
+            <div className="space-y-6">
+              {apiErrors.onboarding ? (
+                <Card role="alert" className="rounded-2xl border-destructive/30 bg-destructive/10 p-6 text-destructive shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="font-semibold text-base">Unable to Load Onboarding Status</h3>
+                      <p className="text-xs mt-1">{apiErrors.onboarding}</p>
+                    </div>
+                  </div>
+                </Card>
+              ) : onboardingStatus ? (
+                <div className="space-y-6">
+                  <Card className="rounded-2xl border-border bg-card shadow-sm">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+                        <ClipboardList className="h-4 w-4 text-primary" /> Onboarding Progress
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <OnboardingStatusItem
+                          label="Overall Status"
+                          value={onboardingStatus.status}
+                          icon={<FileText className="h-4 w-4" />}
+                        />
+                        <OnboardingStatusItem
+                          label="Invitation"
+                          value={onboardingStatus.invitation_status || "—"}
+                          icon={<Mail className="h-4 w-4" />}
+                        />
+                        <OnboardingStatusItem
+                          label="Account Activation"
+                          value={onboardingStatus.account_activation || "—"}
+                          icon={<UserCheck className="h-4 w-4" />}
+                        />
+                        <OnboardingStatusItem
+                          label="Profile Completion"
+                          value={onboardingStatus.profile_completion !== undefined ? `${onboardingStatus.profile_completion}%` : "—"}
+                          icon={<User className="h-4 w-4" />}
+                        />
+                        <OnboardingStatusItem
+                          label="Document Verification"
+                          value={onboardingStatus.document_verification || "—"}
+                          icon={<FileText className="h-4 w-4" />}
+                        />
+                        <OnboardingStatusItem
+                          label="Approval Status"
+                          value={onboardingStatus.approval_status || "—"}
+                          icon={<CheckCircle2 className="h-4 w-4" />}
+                        />
+                        <OnboardingStatusItem
+                          label="Steps Completed"
+                          value={`${onboardingStatus.steps_completed} / ${onboardingStatus.total_steps}`}
+                          icon={<Layers className="h-4 w-4" />}
+                        />
+                        {onboardingStatus.completed_at && (
+                          <OnboardingStatusItem
+                            label="Completed At"
+                            value={onboardingStatus.completed_at}
+                            icon={<CalendarDays className="h-4 w-4" />}
+                          />
+                        )}
+                      </div>
+                      {onboardingStatus.pending_documents && onboardingStatus.pending_documents.length > 0 && (
+                        <div className="p-4 rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-900/20">
+                          <h4 className="font-semibold text-amber-800 dark:text-amber-200 mb-2">Pending Documents</h4>
+                          <ul className="list-disc pl-4 text-sm text-amber-700 dark:text-amber-300 space-y-1">
+                            {onboardingStatus.pending_documents.map((doc, idx) => (
+                              <li key={idx}>{doc}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              ) : (
+                <Card className="rounded-2xl border-border bg-card p-8 shadow-sm text-center">
+                  <ClipboardList className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
+                  <h3 className="font-semibold text-base text-foreground">No Onboarding Data Available</h3>
+                  <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+                    Onboarding progress information will appear here once the employee starts the onboarding process.
+                  </p>
+                </Card>
+              )}
+            </div>
+          )}
+
+          {/* 13. NOTIFICATIONS VIEW */}
           {activeTab === "notifications" && (
             <Card className="rounded-2xl border-border bg-card p-6 shadow-sm space-y-4">
               <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
@@ -1442,6 +1538,40 @@ export function EmployeeDetailPage({
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function OnboardingStatusItem({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value: string;
+  icon: React.ReactNode;
+}) {
+  const getStatusColor = (val: string) => {
+    const v = val.toLowerCase();
+    if (v.includes("completed") || v.includes("verified") || v.includes("approved") || v.includes("accepted")) {
+      return "text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20";
+    }
+    if (v.includes("pending") || v.includes("in_progress") || v.includes("viewed")) {
+      return "text-amber-600 bg-amber-50 dark:bg-amber-900/20";
+    }
+    if (v.includes("failed") || v.includes("rejected") || v.includes("expired")) {
+      return "text-rose-600 bg-rose-50 dark:bg-rose-900/20";
+    }
+    return "text-foreground bg-muted";
+  };
+
+  return (
+    <div className="p-4 rounded-xl border border-border/60 bg-card">
+      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+        {icon}
+        <span className="font-medium">{label}</span>
+      </div>
+      <p className={`font-semibold text-sm ${getStatusColor(value)}`}>{value}</p>
     </div>
   );
 }

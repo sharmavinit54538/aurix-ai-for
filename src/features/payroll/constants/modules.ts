@@ -386,6 +386,16 @@ export const PAYROLL_MODULES_LIST: PayrollModuleItem[] = [
     color: "from-purple-500/20 to-rose-500/20 text-purple-400 border-purple-500/30",
     row: 10,
   },
+  {
+    id: "payroll-security-sessions",
+    title: "Security & Active Sessions",
+    description:
+      "Inspect active payroll-authorized sessions and revoke stale or unauthorized device logins.",
+    icon: ShieldCheck,
+    to: "/dashboard/payroll/settings/security",
+    color: "from-emerald-500/20 to-cyan-500/20 text-emerald-400 border-emerald-500/30",
+    row: 10,
+  },
 ];
 
 /**

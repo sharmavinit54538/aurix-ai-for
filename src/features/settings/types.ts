@@ -3,6 +3,7 @@ import { normalizeRole, type AppRole } from "@/lib/roles";
 export type SettingsSectionKey =
   | "company"
   | "profile"
+  | "security"
   | "employees"
   | "attendance"
   | "leave"
@@ -46,6 +47,12 @@ export const SETTINGS_SECTIONS: SettingsSectionMetadata[] = [
     label: "My Profile",
     description:
       "Your authenticated personal account, contact info, avatar photo, and security credentials.",
+  },
+  {
+    id: "security",
+    label: "Security & MFA",
+    description:
+      "Multi-factor authentication (MFA), authenticator app verification, and backup recovery codes.",
   },
   {
     id: "employees",
@@ -104,6 +111,7 @@ export const RBAC_PERMISSIONS: Record<AppRole, Record<SettingsSectionKey, Permis
   super_admin: {
     company: "denied",
     profile: "edit",
+    security: "edit",
     employees: "denied",
     attendance: "denied",
     leave: "denied",
@@ -115,6 +123,7 @@ export const RBAC_PERMISSIONS: Record<AppRole, Record<SettingsSectionKey, Permis
   hr_admin: {
     company: "edit",
     profile: "edit",
+    security: "edit",
     employees: "edit",
     attendance: "edit",
     leave: "edit",
@@ -126,6 +135,7 @@ export const RBAC_PERMISSIONS: Record<AppRole, Record<SettingsSectionKey, Permis
   manager: {
     company: "denied",
     profile: "edit",
+    security: "edit",
     employees: "view",
     attendance: "view",
     leave: "view",
@@ -137,6 +147,7 @@ export const RBAC_PERMISSIONS: Record<AppRole, Record<SettingsSectionKey, Permis
   it_admin: {
     company: "denied",
     profile: "edit",
+    security: "edit",
     employees: "denied",
     attendance: "denied",
     leave: "denied",
@@ -148,6 +159,7 @@ export const RBAC_PERMISSIONS: Record<AppRole, Record<SettingsSectionKey, Permis
   executive: {
     company: "view",
     profile: "edit",
+    security: "edit",
     employees: "view",
     attendance: "view",
     leave: "view",
@@ -159,6 +171,7 @@ export const RBAC_PERMISSIONS: Record<AppRole, Record<SettingsSectionKey, Permis
   employee: {
     company: "denied",
     profile: "edit",
+    security: "edit",
     employees: "denied",
     attendance: "denied",
     leave: "denied",
@@ -170,6 +183,7 @@ export const RBAC_PERMISSIONS: Record<AppRole, Record<SettingsSectionKey, Permis
   recruiter: {
     company: "denied",
     profile: "edit",
+    security: "edit",
     employees: "view",
     attendance: "denied",
     leave: "view",

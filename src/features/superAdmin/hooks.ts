@@ -307,6 +307,15 @@ export function useSuperAdminAuditFeed(pageSize: number, refetchIntervalMs: numb
 
 // ─── 5. Sessions ─────────────────────────────────────────────────────────────
 
+function inferStatusFromMessage(message: string): number {
+  if (/session has expired|expired|invalid token|not authenticated|unauthorized/i.test(message)) return 401;
+  if (/super admin access required|forbidden|permission denied|insufficient permissions/i.test(message)) return 403;
+  if (/not found/i.test(message)) return 404;
+  if (/too many requests|rate limit/i.test(message)) return 429;
+  if (/unable to reach|network error/i.test(message)) return 0;
+  return 500;
+}
+
 export function useSuperAdminSessions(refetchIntervalMs: number | false = false) {
   const dispatch = useAppDispatch();
   const sessions = useAppSelector((state) => state.superAdmin.security.sessions);
@@ -331,7 +340,7 @@ export function useSuperAdminSessions(refetchIntervalMs: number | false = false)
   }, [dispatch]);
 
   const errorObj = useMemo(() => {
-    return error ? new ApiError(error, 500, null) : null;
+    return error ? new ApiError(error, inferStatusFromMessage(error), null) : null;
   }, [error]);
 
   return {
@@ -549,6 +558,124 @@ export function useSetUserActive() {
   return {
     mutateAsync,
     isPending,
+  };
+}
+
+export function useResetPlatformUserPassword() {
+  const dispatch = useAppDispatch();
+  const [isPending, setIsPending] = useState(false);
+
+  const mutateAsync = useCallback(
+    async (userId: string) => {
+      setIsPending(true);
+      try {
+        const res = await dispatch(resetPlatformUserPassword(userId)).unwrap();
+        dispatch(fetchAuditLogs());
+        return res.message;
+      } catch (err) {
+        if (typeof err === "string") {
+          throw new ApiError(err, inferStatusFromMessage(err), null);
+        }
+        throw err;
+      } finally {
+        setIsPending(false);
+      }
+    },
+    [dispatch],
+  );
+
+  return {
+    mutateAsync,
+    isPending,
+  };
+}
+
+export function useTerminateSession() {
+  const dispatch = useAppDispatch();
+  const [isPending, setIsPending] = useState(false);
+
+  const mutateAsync = useCallback(
+    async (sessionId: string) => {
+      setIsPending(true);
+      try {
+        const res = await dispatch(terminateSession(sessionId)).unwrap();
+        dispatch(fetchAuditLogs());
+        return res.message;
+      } catch (err) {
+        if (typeof err === "string") {
+          throw new ApiError(err, inferStatusFromMessage(err), null);
+        }
+        throw err;
+      } finally {
+        setIsPending(false);
+      }
+    },
+    [dispatch],
+  );
+
+  return {
+    mutateAsync,
+    isPending,
+  };
+}
+
+export function useTerminateAllSessions() {
+  const dispatch = useAppDispatch();
+  const [isPending, setIsPending] = useState(false);
+
+  const mutateAsync = useCallback(async () => {
+    setIsPending(true);
+    try {
+      const res = await dispatch(terminateAllSessions()).unwrap();
+      return res;
+    } catch (err) {
+      if (typeof err === "string") {
+        throw new ApiError(err, inferStatusFromMessage(err), null);
+      }
+      throw err;
+    } finally {
+      setIsPending(false);
+    }
+  }, [dispatch]);
+
+  return {
+    mutateAsync,
+    isPending,
+  };
+}
+
+export function usePlatformUserDetail(userId: string | null) {
+  const dispatch = useAppDispatch();
+  const selected = useAppSelector((state) => state.superAdmin.users.selected);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const load = useCallback(async () => {
+    if (!userId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      await dispatch(fetchPlatformUser(userId)).unwrap();
+    } catch (err) {
+      const msg = typeof err === "string" ? err : getErrorMessage(err, "Failed to load user details.");
+      setError(new ApiError(msg, inferStatusFromMessage(msg), null));
+    } finally {
+      setLoading(false);
+    }
+  }, [dispatch, userId]);
+
+  useEffect(() => {
+    if (userId) {
+      void load();
+    }
+  }, [userId, load]);
+
+  return {
+    data: selected && selected.id === userId ? selected : null,
+    isPending: loading,
+    isError: Boolean(error),
+    error,
+    refetch: load,
   };
 }
 

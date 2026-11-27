@@ -13,7 +13,7 @@ import type { JobStatus } from "@/features/admin/recruitment/types";
 const STATUSES: ("all" | JobStatus)[] = ["all", "active", "draft", "closed", "archived"];
 
 export function JobsPage() {
-  const jobs = useRecruitment((s) => s.jobs);
+  const { jobs, loading, error, refreshAll } = useRecruitment();
   const [view, setView] = useState<"grid" | "table">("grid");
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<"all" | JobStatus>("all");
@@ -32,9 +32,19 @@ export function JobsPage() {
 
   return (
     <>
-      <div className="mb-4 flex justify-end">
+      <div className="mb-4 flex items-center justify-end gap-2">
+        <Button variant="outline" size="sm" onClick={refreshAll} disabled={loading}>
+          {loading ? "Refreshing..." : "Refresh"}
+        </Button>
         <Button asChild><Link to="/dashboard/recruitment/jobs/new"><Plus className="mr-2 h-4 w-4" />New job</Link></Button>
       </div>
+
+      {error && (
+        <div role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+          <span>{error}</span>
+          <Button size="sm" variant="outline" onClick={refreshAll}>Retry</Button>
+        </div>
+      )}
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <div className="relative min-w-[220px] flex-1">

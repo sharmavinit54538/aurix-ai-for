@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import {
   Building2,
   User,
+  ShieldCheck,
   CreditCard,
   AlertTriangle,
 } from "lucide-react";
@@ -32,6 +33,9 @@ const CompanySection = React.lazy(() =>
 );
 const MyProfileSection = React.lazy(() =>
   import("./sections/MyProfileSection").then((m) => ({ default: m.MyProfileSection }))
+);
+const SecuritySection = React.lazy(() =>
+  import("./sections/SecuritySection").then((m) => ({ default: m.SecuritySection }))
 );
 const EmployeesSection = React.lazy(() =>
   import("./sections/EmployeesSection").then((m) => ({ default: m.EmployeesSection }))
@@ -79,6 +83,14 @@ const SETTINGS_CARDS: SettingsCardMeta[] = [
       "View and update personal details, profile avatar, account email, phone number, and password security.",
     icon: User,
     color: "from-indigo-500/20 to-violet-500/20 text-indigo-400 border-indigo-500/30",
+  },
+  {
+    id: "security",
+    label: "Security & MFA",
+    description:
+      "Manage multi-factor authentication (MFA), authenticator verification, and account security posture.",
+    icon: ShieldCheck,
+    color: "from-emerald-500/20 to-teal-500/20 text-emerald-400 border-emerald-500/30",
   },
 ];
 
@@ -253,6 +265,9 @@ export function SettingsLayout({ initialSection, onSectionChange }: SettingsLayo
               )}
               {activeSection === "profile" && (
                 <MyProfileSection canEdit={canEdit} onDirtyChange={setIsCurrentFormDirty} />
+              )}
+              {activeSection === "security" && (
+                <SecuritySection canEdit={canEdit} onDirtyChange={setIsCurrentFormDirty} />
               )}
               {activeSection === "employees" && (
                 <EmployeesSection canEdit={canEdit} onDirtyChange={setIsCurrentFormDirty} />

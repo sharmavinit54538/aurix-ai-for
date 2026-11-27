@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2, Mail, RotateCcw } from "lucide-react";
 import { AuthShell } from "@/features/auth/components/AuthShell";
 import { AuthLoadingScreen } from "@/features/auth/components/AuthLoadingScreen";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ export function VerifyEmailPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [resending, setResending] = useState(false);
+  const [resendingVerification, setResendingVerification] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const clearVerificationStorage = useCallback(() => {
@@ -115,6 +116,16 @@ export function VerifyEmailPage() {
     computeSecondsRemaining(loadOtpTimerState(timerKey)?.resendAvailableAt, 30),
   );
 
+  // Separate timer key and state for resend verification email (uses email only, no verification_id)
+  const verificationTimerKey = buildOtpTimerKey(effectiveEmail, null);
+  const [resendVerificationAvailableAt, setResendVerificationAvailableAt] = useState<string | null>(() => {
+    const existing = loadOtpTimerState(verificationTimerKey);
+    return existing?.resendAvailableAt ?? null;
+  });
+  const [resendVerificationCooldown, setResendVerificationCooldown] = useState<number>(() =>
+    computeSecondsRemaining(loadOtpTimerState(verificationTimerKey)?.resendAvailableAt, 60),
+  );
+
   useEffect(() => {
     const vid =
       searchParams.get("verification_id") ||
@@ -145,7 +156,20 @@ export function VerifyEmailPage() {
         setResendCooldown(created.resendSeconds);
       }
     }
-  }, [timerKey]);
+
+    const verificationSaved = loadOtpTimerState(verificationTimerKey);
+    if (verificationSaved) {
+      setResendVerificationAvailableAt(verificationSaved.resendAvailableAt);
+      setResendVerificationCooldown(verificationSaved.resendSeconds);
+    } else {
+      saveOtpTimerState(verificationTimerKey, null, { expirySeconds: 600, cooldownSeconds: 60 });
+      const created = loadOtpTimerState(verificationTimerKey);
+      if (created) {
+        setResendVerificationAvailableAt(created.resendAvailableAt);
+        setResendVerificationCooldown(created.resendSeconds);
+      }
+    }
+  }, [timerKey, verificationTimerKey]);
 
   // Automatic backend-authoritative redirection for already verified users or missing context
   useEffect(() => {
@@ -166,7 +190,7 @@ export function VerifyEmailPage() {
 
   // Wall-clock synchronized OTP expiry & resend cooldown tick (survives browser refresh accurately)
   useEffect(() => {
-    if (!otpExpiresAt && !resendAvailableAt) return;
+    if (!otpExpiresAt && !resendAvailableAt && !resendVerificationAvailableAt) return;
 
     const tick = () => {
       if (otpExpiresAt) {
@@ -175,12 +199,15 @@ export function VerifyEmailPage() {
       if (resendAvailableAt) {
         setResendCooldown(computeSecondsRemaining(resendAvailableAt, 0));
       }
+      if (resendVerificationAvailableAt) {
+        setResendVerificationCooldown(computeSecondsRemaining(resendVerificationAvailableAt, 0));
+      }
     };
 
     tick();
     const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
-  }, [otpExpiresAt, resendAvailableAt]);
+  }, [otpExpiresAt, resendAvailableAt, resendVerificationAvailableAt]);
 
   const formatTime = (sec: number) => {
     const mins = Math.floor(sec / 60);
@@ -410,6 +437,55 @@ export function VerifyEmailPage() {
     }
   }
 
+  async function resendVerification() {
+    if (resendingVerification || loading || resendVerificationCooldown > 0) return;
+
+    if (!effectiveEmail) {
+      toast.error("Verification session missing. Please return to sign in.");
+      return;
+    }
+
+    setResendingVerification(true);
+    setError(null);
+    try {
+      const response = await authService.resendVerification({ email: effectiveEmail });
+
+      const isSuccess = Boolean(response?.data?.success ?? response?.success ?? true);
+      const message = response?.data?.message || response?.message;
+
+      if (isSuccess) {
+        const meta = extractOtpMeta(response);
+        saveOtpTimerState(verificationTimerKey, meta, { expirySeconds: 600, cooldownSeconds: 60 });
+        const nextTimers = loadOtpTimerState(verificationTimerKey);
+        if (nextTimers) {
+          setResendVerificationAvailableAt(nextTimers.resendAvailableAt);
+          setResendVerificationCooldown(nextTimers.resendSeconds);
+        }
+
+        toast.success(message || "Verification email sent successfully.");
+      } else {
+        toast.error(message || "Failed to resend verification email");
+      }
+    } catch (err: unknown) {
+      const apiErr = err as { code?: string; data?: { code?: string }; message?: string } | null | undefined;
+      const errCode = apiErr?.code ?? apiErr?.data?.code;
+      const message = err instanceof Error ? err.message : apiErr?.message || "Please try again later.";
+
+      if (errCode === "EMAIL_ALREADY_VERIFIED" || message.toLowerCase().includes("already verified")) {
+        clearOtpTimerState(timerKey);
+        clearOtpTimerState(verificationTimerKey);
+        clearVerificationStorage();
+        toast.info("Your email is already verified. Please sign in.");
+        navigate({ to: "/login", replace: true });
+        return;
+      }
+
+      toast.error(message);
+    } finally {
+      setResendingVerification(false);
+    }
+  }
+
   if (success) {
     return (
       <AuthShell title="Email verified" subtitle="Redirecting…">
@@ -494,6 +570,37 @@ export function VerifyEmailPage() {
             {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend code"}
           </button>
         </div>
+
+        {!isLoginMode && (!verificationId || expiryTime <= 0) && (
+          <div className="pt-2 border-t">
+            <p className="text-center text-xs text-muted-foreground mb-3">
+              Didn't receive the verification email?
+            </p>
+            <button
+              type="button"
+              onClick={resendVerification}
+              disabled={resendVerificationCooldown > 0 || resendingVerification || loading}
+              className="w-full inline-flex items-center justify-center gap-2 font-medium text-foreground underline-offset-4 hover:underline disabled:cursor-not-allowed disabled:text-muted-foreground disabled:no-underline"
+            >
+              {resendingVerification ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : resendVerificationCooldown > 0 ? (
+                <>
+                  <RotateCcw className="h-4 w-4" />
+                  Resend available in {resendVerificationCooldown}s
+                </>
+              ) : (
+                <>
+                  <Mail className="h-4 w-4" />
+                  Resend verification email
+                </>
+              )}
+            </button>
+          </div>
+        )}
       </form>
     </AuthShell>
   );

@@ -1,13 +1,22 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
-  Workflow, Zap, Play, CheckCircle2, Clock, Plus, Trash2,
-  AlertCircle, Sparkles, ArrowRight
+  AlertCircle,
+  GitBranch,
+  Mail,
+  Plus,
+  RefreshCw,
+  ShieldAlert,
+  Sparkles,
+  Trash2,
+  UserCheck,
+  Zap,
 } from "lucide-react";
+import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -16,491 +25,355 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { toast } from "sonner";
+import { getErrorMessage, parseListResponse } from "@/api/utils";
 import { automationApi } from "@/services/automationApi";
-
-interface WorkflowStep {
-  id: string;
-  type: "trigger" | "condition" | "action" | "approval" | "delay";
-  title: string;
-  detail: string;
-  category: "Notification" | "Assignment" | "Approval" | "Delay" | "System";
-}
+import { EmptyState } from "@/components/hrms/Shared";
 
 interface WorkflowRule {
   id: string;
   name: string;
-  description: string;
+  trigger: string;
+  condition: string;
+  action: string;
   enabled: boolean;
-  totalRuns: number;
-  lastTriggered: string;
-  triggerEvent: string;
-  steps: WorkflowStep[];
+  runs: number;
+  lastRun?: string;
 }
 
-interface ExecutionLog {
-  id: string;
-  timestamp: string;
-  message: string;
-  status: "Success" | "Delivered" | "Pending" | "Failed";
+function mapRule(r: Record<string, unknown>): WorkflowRule {
+  return {
+    id: String(r.id ?? r.rule_id ?? ""),
+    name: String(r.name ?? "Automation Rule"),
+    trigger: String(r.trigger ?? r.trigger_event ?? "On application created"),
+    condition: String(
+      r.condition ?? (r.conditions ? JSON.stringify(r.conditions) : "Standard workflow"),
+    ),
+    action: String(
+      r.action ??
+        (Array.isArray(r.actions) && r.actions.length > 0
+          ? JSON.stringify(r.actions)
+          : "Execute action"),
+    ),
+    enabled: Boolean(r.enabled ?? r.is_active ?? true),
+    runs: Number(r.runs ?? r.execution_count ?? 0) || 0,
+    lastRun:
+      typeof r.last_run === "string"
+        ? r.last_run
+        : typeof r.updated_at === "string"
+          ? r.updated_at
+          : undefined,
+  };
 }
 
 export function RecruitmentAutomationPage() {
   const [workflows, setWorkflows] = useState<WorkflowRule[]>([]);
-  const [logs, setLogs] = useState<ExecutionLog[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeWorkflowId, setActiveWorkflowId] = useState<string | null>(null);
   const [showBuilderModal, setShowBuilderModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  // New Workflow Form
   const [newWorkflowName, setNewWorkflowName] = useState("");
-  const [newWorkflowTrigger, setNewWorkflowTrigger] = useState("Candidate applied");
-  const [newWorkflowAction, setNewWorkflowAction] = useState("Send automated email");
+  const [newWorkflowTrigger, setNewWorkflowTrigger] = useState("candidate.applied");
+  const [newWorkflowCondition, setNewWorkflowCondition] = useState("ats_score >= 80");
+  const [newWorkflowAction, setNewWorkflowAction] = useState("send_interview_invite");
 
-  const loadRules = async () => {
+  const fetchRules = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
-      const data = await automationApi.getAutomationRules();
-      if (Array.isArray(data)) {
-        const mapped: WorkflowRule[] = data.map((r, idx: number) => ({
-          id: String(r.id || `wf-${idx}`),
-          name: r.name || `Rule #${idx + 1}`,
-          description: r.description || "Automation rule",
-          enabled: Boolean(r.enabled ?? r.is_active ?? true),
-          totalRuns: Number(r.total_runs || r.runs_count || 0),
-          lastTriggered: typeof r.last_triggered === "string" ? r.last_triggered : "Never",
-          triggerEvent: typeof r.trigger_event === "string" ? r.trigger_event : "System Event",
-          steps: Array.isArray(r.steps) ? (r.steps as WorkflowStep[]) : [
-            { id: `st-${idx}-1`, type: "trigger", title: `Trigger: ${String(r.trigger_event || "Event")}`, detail: "Triggered on event", category: "System" },
-            { id: `st-${idx}-2`, type: "action", title: `Action: Automated Pipeline Step`, detail: "Dispatched automatically", category: "Notification" },
-          ],
-        }));
-        setWorkflows(mapped);
-        if (mapped.length > 0 && !activeWorkflowId) {
-          setActiveWorkflowId(mapped[0].id);
-        }
+      const raw = await automationApi.getAutomationRules();
+      const parsed = parseListResponse<Record<string, unknown>>(raw);
+      const mapped = parsed.items.map(mapRule).filter((r) => Boolean(r.id));
+      setWorkflows(mapped);
+      if (mapped.length > 0 && (!activeWorkflowId || !mapped.some((m) => m.id === activeWorkflowId))) {
+        setActiveWorkflowId(mapped[0].id);
       }
-    } catch {
-      // Backend empty or initial state
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to load recruitment automation rules."));
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeWorkflowId]);
 
   useEffect(() => {
-    loadRules();
-  }, []);
-
-  // Keep activeWorkflow valid
-  const activeWorkflow = workflows.find((w) => w.id === activeWorkflowId) || workflows[0] || null;
-
-  const handleToggleWorkflow = async (id: string) => {
-    try {
-      await automationApi.toggleAutomationRule(id);
-      setWorkflows((prev) => prev.map((w) => (w.id === id ? { ...w, enabled: !w.enabled } : w)));
-      toast.success("Workflow rule status toggled!");
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to toggle workflow rule";
-      toast.error(msg);
-    }
-  };
-
-  const handleDeleteWorkflow = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const updated = workflows.filter((w) => w.id !== id);
-    setWorkflows(updated);
-    if (activeWorkflowId === id) {
-      setActiveWorkflowId(updated[0]?.id || null);
-    }
-    toast.success("Workflow rule removed from session view.");
-  };
+    void fetchRules();
+  }, [fetchRules]);
 
   const handleCreateWorkflow = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newWorkflowName.trim()) return;
+    if (!newWorkflowName.trim()) {
+      toast.error("Please enter a workflow rule name.");
+      return;
+    }
 
+    setSubmitting(true);
     try {
-      const payload = {
-        name: newWorkflowName,
-        description: `Automated trigger on ${newWorkflowTrigger}.`,
-        trigger_event: newWorkflowTrigger,
-        action: newWorkflowAction,
-        enabled: true,
-      };
-      const created = await automationApi.createAutomationRule(payload);
-      const newWf: WorkflowRule = {
-        id: String(created.id || `wf-${Date.now()}`),
-        name: newWorkflowName,
-        description: `Automated trigger on ${newWorkflowTrigger}.`,
-        enabled: true,
-        totalRuns: 0,
-        lastTriggered: "Never",
-        triggerEvent: newWorkflowTrigger,
-        steps: [
-          { id: `st-${Date.now()}-1`, type: "trigger", title: `Trigger: ${newWorkflowTrigger}`, detail: "Initiated automatically by recruitment events", category: "System" },
-          { id: `st-${Date.now()}-2`, type: "action", title: `Action: ${newWorkflowAction}`, detail: "Dispatched without manual intervention", category: "Notification" },
-        ],
-      };
+      const created = await automationApi.createAutomationRule({
+        name: newWorkflowName.trim(),
+        trigger: newWorkflowTrigger.trim(),
+        trigger_event: newWorkflowTrigger.trim(),
+        condition: newWorkflowCondition.trim(),
+        action: newWorkflowAction.trim(),
+        is_active: true,
+      });
 
-      setWorkflows((prev) => [newWf, ...prev]);
-      setActiveWorkflowId(newWf.id);
-      toast.success(`Workflow '${newWf.name}' created and activated!`);
+      toast.success(`Automation workflow "${newWorkflowName.trim()}" saved.`);
       setShowBuilderModal(false);
       setNewWorkflowName("");
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to create workflow rule";
-      toast.error(msg);
+      await fetchRules();
+      if (created && typeof created === "object" && "id" in created) {
+        setActiveWorkflowId(String((created as { id: string }).id));
+      }
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to create automation rule."));
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const handleTestRun = async (wf: WorkflowRule) => {
-    try {
-      await automationApi.testAutomationRule(wf.id);
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-      const dateStr = now.toISOString().split("T")[0];
-
-      setWorkflows((prev) =>
-        prev.map((w) => (w.id === wf.id ? { ...w, totalRuns: w.totalRuns + 1, lastTriggered: "Just now" } : w))
-      );
-
-      const newLog: ExecutionLog = {
-        id: `log-${Date.now()}`,
-        timestamp: `${dateStr} ${timeStr}`,
-        message: `Test execution for '${wf.name}' dispatched successfully`,
-        status: "Success",
-      };
-      setLogs((prev) => [newLog, ...prev.slice(0, 19)]);
-      toast.success(`Test execution triggered for '${wf.name}'!`);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to trigger test execution";
-      toast.error(msg);
-    }
-  };
-
-  const totalRunsAll = workflows.reduce((acc, w) => acc + w.totalRuns, 0);
+  const activeWorkflow = workflows.find((w) => w.id === activeWorkflowId) ?? workflows[0] ?? null;
   const activeCount = workflows.filter((w) => w.enabled).length;
-  const hoursSaved = (totalRunsAll * 0.25).toFixed(1);
 
   return (
-    <div className="space-y-6">
-      {/* Action Bar */}
-      <div className="flex items-center justify-end">
-        <Button onClick={() => setShowBuilderModal(true)} className="gap-1.5 shadow-sm">
-          <Plus className="h-4 w-4" /> Create Workflow Rule
-        </Button>
-      </div>
+    <div className="space-y-6 pb-8">
+      <PageHeader
+        title="Hiring Automations"
+        description="Configure event-driven recruitment automation rules (`GET/POST /api/v1/automations/rules`)"
+        actions={
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => void fetchRules()} disabled={loading}>
+              <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
+            <Button
+              size="sm"
+              className="gap-1.5 bg-gradient-brand text-brand-foreground shadow-glow"
+              onClick={() => setShowBuilderModal(true)}
+            >
+              <Plus className="h-4 w-4" /> Create Automation Rule
+            </Button>
+          </div>
+        }
+      />
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>Active Automated Rules</span>
-            <Workflow className="h-4 w-4 text-indigo-500" />
-          </div>
-          <div className="mt-2 font-display text-2xl font-bold">
-            {activeCount} of {workflows.length} Active
-          </div>
-          <div className="mt-1 text-[11px] text-muted-foreground">Operating across pipelines</div>
-        </div>
-
-        <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>Total Automated Runs</span>
-            <Zap className="h-4 w-4 text-amber-500" />
-          </div>
-          <div className="mt-2 font-display text-2xl font-bold">{totalRunsAll} Executions</div>
-          <div className="mt-1 text-[11px] text-muted-foreground">Lifetime executions</div>
-        </div>
-
-        <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>Estimated Hours Saved</span>
-            <Clock className="h-4 w-4 text-emerald-500" />
-          </div>
-          <div className="mt-2 font-display text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-            {totalRunsAll > 0 ? `~${hoursSaved} hrs` : "—"}
-          </div>
-          <div className="mt-1 text-[11px] text-muted-foreground">
-            {totalRunsAll > 0 ? "Est. ~15m saved per automated run" : "No runs recorded"}
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>Execution Success Rate</span>
-            <CheckCircle2 className="h-4 w-4 text-purple-500" />
-          </div>
-          {(() => {
-            const successRuns = logs.filter((l) => l.status === "Success" || l.status === "Delivered").length;
-            const failedRuns = logs.filter((l) => l.status === "Failed").length;
-            const totalLogged = successRuns + failedRuns;
-            const rate = totalLogged > 0 ? `${Math.round((successRuns / totalLogged) * 100)}%` : "—";
-            const sub = totalLogged > 0 ? `${failedRuns} failures detected` : "Awaiting first run";
-            return (
-              <>
-                <div className="mt-2 font-display text-2xl font-bold">
-                  {rate}
-                </div>
-                <div className="mt-1 text-[11px] text-muted-foreground">
-                  {sub}
-                </div>
-              </>
-            );
-          })()}
+      <div className="flex items-start gap-2.5 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-700 dark:text-amber-300">
+        <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
+        <div>
+          <span className="font-semibold">Backend Capability Note:</span> Creating and listing
+          automation rules is connected to <code>/api/v1/automations/rules</code>. Rule toggling,
+          deletion, and test execution are disabled because the backend OpenAPI does not yet expose
+          <code>PATCH/DELETE /api/v1/automations/rules/&#123;id&#125;</code> or test-run endpoints.
         </div>
       </div>
 
-      {/* Main Workflow Builder Grid */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Left Col: Workflow Rules Directory */}
-        <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl space-y-3">
-          <div className="flex items-center justify-between font-semibold text-sm">
-            <span>Automation Library</span>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-xs">{workflows.length} Rules</Badge>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setShowBuilderModal(true)}
-                className="h-7 text-xs gap-1 shadow-2xs"
-              >
-                <Plus className="h-3 w-3" /> New
-              </Button>
-            </div>
+      {error && (
+        <div
+          role="alert"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive"
+        >
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>{error}</span>
           </div>
+          <Button size="sm" variant="outline" onClick={() => void fetchRules()}>
+            Retry
+          </Button>
+        </div>
+      )}
 
-          {workflows.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border/80 bg-card/30 p-8 text-center space-y-3">
-              <Workflow className="h-8 w-8 text-muted-foreground/40 mx-auto" />
-              <div className="text-xs font-semibold text-foreground">No automation rules configured</div>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
-                No active automation workflows. Build visual trigger rules to automate resume screening, interview invites, and candidate communications.
-              </p>
-              <Button
-                size="sm"
-                onClick={() => setShowBuilderModal(true)}
-                className="gap-1.5 text-xs mt-1"
-              >
-                <Plus className="h-3.5 w-3.5" /> Create Rule
-              </Button>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        {[
+          { k: "Total Rules", v: workflows.length, icon: Zap },
+          { k: "Active Rules", v: activeCount, icon: UserCheck },
+          {
+            k: "Recorded Executions",
+            v: workflows.reduce((acc, w) => acc + w.runs, 0),
+            icon: Mail,
+          },
+        ].map((s) => {
+          const Icon = s.icon;
+          return (
+            <div key={s.k} className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur-xl">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>{s.k}</span>
+                <Icon className="h-4 w-4" />
+              </div>
+              <div className="mt-2 font-display text-2xl font-semibold">{s.v}</div>
             </div>
-          ) : (
-            <div className="space-y-2">
-              {workflows.map((wf) => (
+          );
+        })}
+      </div>
+
+      {loading ? (
+        <div className="rounded-2xl border border-border bg-card/60 p-10 text-center text-sm text-muted-foreground">
+          Loading automation rules...
+        </div>
+      ) : workflows.length === 0 ? (
+        <EmptyState
+          icon={Zap}
+          title="No automation rules configured"
+          description="Create your first recruitment workflow rule to store trigger/action definitions."
+        />
+      ) : (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+          <div className="space-y-3 lg:col-span-5">
+            {workflows.map((wf) => {
+              const isSelected = wf.id === activeWorkflow?.id;
+              return (
                 <div
                   key={wf.id}
                   onClick={() => setActiveWorkflowId(wf.id)}
-                  className={`group p-3.5 rounded-xl border text-left transition-all cursor-pointer space-y-2 ${
-                    activeWorkflow?.id === wf.id
-                      ? "border-indigo-500 bg-accent/60 shadow-sm"
-                      : "border-border bg-card/40 hover:bg-accent/30"
+                  className={`cursor-pointer rounded-2xl border p-4 transition-all ${
+                    isSelected
+                      ? "border-primary bg-primary/5 shadow-sm"
+                      : "border-border bg-card/60 hover:bg-muted/30"
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <span className="font-bold text-xs text-foreground leading-snug">{wf.name}</span>
-                    <div className="flex items-center gap-1.5 shrink-0">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate font-semibold text-sm">{wf.name}</span>
+                        <Badge variant={wf.enabled ? "default" : "secondary"} className="text-[10px]">
+                          {wf.enabled ? "Active" : "Paused"}
+                        </Badge>
+                      </div>
+                      <p className="mt-1 truncate text-xs text-muted-foreground">
+                        Trigger: {wf.trigger}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                       <Switch
                         checked={wf.enabled}
-                        onCheckedChange={() => handleToggleWorkflow(wf.id)}
-                        onClick={(e) => e.stopPropagation()}
+                        disabled
+                        title="Blocked by backend: toggle rule endpoint unavailable"
                       />
-                      <button
-                        type="button"
-                        onClick={(e) => handleDeleteWorkflow(wf.id, e)}
-                        className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity p-1"
-                        title="Delete Rule"
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7 text-muted-foreground"
+                        disabled
+                        title="Blocked by backend: delete rule endpoint unavailable"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      </Button>
                     </div>
                   </div>
-                  <p className="text-[11px] text-muted-foreground line-clamp-2">{wf.description}</p>
-                  <div className="flex items-center justify-between text-[10px] text-muted-foreground/80 pt-1 border-t border-border/40">
-                    <span>{wf.totalRuns} runs</span>
-                    <span>Last run: {wf.lastTriggered}</span>
-                  </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+              );
+            })}
+          </div>
 
-        {/* Right 2 Cols: Visual Interactive Workflow Canvas */}
-        <div className="lg:col-span-2 space-y-4">
-          {activeWorkflow ? (
-            <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-xl space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-base text-foreground">{activeWorkflow.name}</h3>
-                    <Badge variant={activeWorkflow.enabled ? "default" : "secondary"} className="text-[10px]">
-                      {activeWorkflow.enabled ? "Active" : "Disabled"}
-                    </Badge>
+          <div className="lg:col-span-7">
+            {activeWorkflow ? (
+              <div className="rounded-2xl border border-border bg-card/60 p-5 backdrop-blur-xl space-y-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="font-display text-lg font-semibold">{activeWorkflow.name}</h3>
+                    <p className="text-xs text-muted-foreground">Rule ID: {activeWorkflow.id}</p>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">{activeWorkflow.description}</p>
-                </div>
-
-                <div className="flex items-center gap-2">
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 text-xs gap-1"
-                    onClick={() => handleTestRun(activeWorkflow)}
+                    disabled
+                    title="Blocked by backend: test-run endpoint unavailable"
                   >
-                    <Play className="h-3 w-3 fill-current" /> Test Run
+                    <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+                    Test Rule (Unavailable)
                   </Button>
                 </div>
-              </div>
 
-              {/* Visual Step Pipeline Nodes */}
-              <div className="space-y-3">
-                <span className="text-xs uppercase font-bold text-muted-foreground tracking-wider">
-                  Visual Step Pipeline Execution Flow
-                </span>
-
-                <div className="relative pl-6 space-y-4 border-l-2 border-dashed border-indigo-500/40 ml-2">
-                  {activeWorkflow.steps.map((step, idx) => (
-                    <div key={step.id} className="relative group">
-                      {/* Node Dot */}
-                      <span className="absolute -left-[31px] top-3.5 grid h-4 w-4 place-items-center rounded-full bg-indigo-500 text-[9px] text-white font-bold shadow-md">
-                        {idx + 1}
-                      </span>
-
-                      <div className="p-3.5 rounded-xl border border-border bg-card/40 hover:bg-card/75 transition-colors space-y-1">
-                        <div className="flex items-center justify-between">
-                          <div className="font-semibold text-xs text-foreground flex items-center gap-2">
-                            <span>{step.title}</span>
-                            <Badge variant="outline" className="text-[9px] uppercase font-bold">
-                              {step.type}
-                            </Badge>
-                          </div>
-                          <span className="text-[10px] text-muted-foreground">{step.category}</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground leading-relaxed">
-                          {step.detail}
-                        </p>
-                      </div>
+                <div className="space-y-3 text-xs">
+                  <div className="rounded-xl border border-border bg-muted/30 p-3">
+                    <div className="font-semibold text-muted-foreground uppercase tracking-wider text-[10px]">
+                      1. Trigger Event
                     </div>
-                  ))}
+                    <div className="mt-1 font-medium text-foreground">{activeWorkflow.trigger}</div>
+                  </div>
+                  <div className="rounded-xl border border-border bg-muted/30 p-3">
+                    <div className="font-semibold text-muted-foreground uppercase tracking-wider text-[10px]">
+                      2. Condition
+                    </div>
+                    <div className="mt-1 font-medium text-foreground">{activeWorkflow.condition}</div>
+                  </div>
+                  <div className="rounded-xl border border-border bg-muted/30 p-3">
+                    <div className="font-semibold text-muted-foreground uppercase tracking-wider text-[10px]">
+                      3. Action
+                    </div>
+                    <div className="mt-1 flex items-center gap-1.5 font-medium text-foreground">
+                      <GitBranch className="h-3.5 w-3.5 text-primary" />
+                      {activeWorkflow.action}
+                    </div>
+                  </div>
                 </div>
               </div>
-
-              {/* Workflow Execution Log Feed */}
-              <div className="pt-4 border-t border-border space-y-2">
-                <h4 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">
-                  Live Execution Stream
-                </h4>
-                {logs.length === 0 ? (
-                  <div className="p-3 rounded-xl border border-dashed border-border/70 text-center text-xs text-muted-foreground bg-muted/10">
-                    No workflow executions recorded yet. Triggers and test simulations will log live status here.
-                  </div>
-                ) : (
-                  <div className="space-y-1.5 font-mono text-[11px]">
-                    {logs.map((log) => (
-                      <div
-                        key={log.id}
-                        className="p-2 rounded bg-muted/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-between"
-                      >
-                        <span>✓ [{log.timestamp}] {log.message}</span>
-                        <span className="text-[10px] text-muted-foreground">{log.status}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="rounded-2xl border border-dashed border-border/80 bg-card/20 p-12 text-center space-y-3 flex flex-col items-center justify-center min-h-[360px]">
-              <div className="h-12 w-12 rounded-2xl bg-primary/10 grid place-items-center text-primary">
-                <Sparkles className="h-6 w-6" />
-              </div>
-              <h3 className="font-semibold text-sm text-foreground">Visual Workflow Canvas</h3>
-              <p className="text-xs text-muted-foreground max-w-md">
-                Select or create an automation workflow to configure trigger events, conditional rules, and automatic action pipelines.
-              </p>
-              <Button size="sm" onClick={() => setShowBuilderModal(true)} className="mt-2 gap-1.5">
-                <Plus className="h-3.5 w-3.5" /> Build First Automation
-              </Button>
-            </div>
-          )}
+            ) : null}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Workflow Builder Dialog */}
       <Dialog open={showBuilderModal} onOpenChange={setShowBuilderModal}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-md">
           <form onSubmit={handleCreateWorkflow}>
             <DialogHeader>
-              <DialogTitle className="text-base font-bold">Create No-Code Automation Rule</DialogTitle>
+              <DialogTitle>Create Automation Rule</DialogTitle>
               <DialogDescription>
-                Define an event trigger and subsequent automated actions.
+                Persist a new trigger-condition-action workflow rule via the backend API.
               </DialogDescription>
             </DialogHeader>
-
             <div className="space-y-3 py-3 text-xs">
               <div>
-                <Label className="text-xs">Workflow Name *</Label>
+                <Label htmlFor="rule-name">Rule Name *</Label>
                 <Input
-                  className="mt-1 h-9 text-xs"
-                  placeholder="e.g. Reject below 60% ATS score with warm feedback"
+                  id="rule-name"
                   value={newWorkflowName}
                   onChange={(e) => setNewWorkflowName(e.target.value)}
+                  placeholder="e.g. Auto-invite high ATS match"
                   required
+                  className="mt-1"
                 />
               </div>
-
               <div>
-                <Label className="text-xs">When this Event Occurs (Trigger)</Label>
-                <Select
+                <Label htmlFor="rule-trigger">Trigger Event *</Label>
+                <Input
+                  id="rule-trigger"
                   value={newWorkflowTrigger}
-                  onValueChange={setNewWorkflowTrigger}
-                >
-                  <SelectTrigger className="mt-1 h-9 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Candidate applied">Candidate submits application</SelectItem>
-                    <SelectItem value="Score exceeds 85%">AI Screening ATS score &gt; 85%</SelectItem>
-                    <SelectItem value="Interview scheduled">Interview scheduled by panel</SelectItem>
-                    <SelectItem value="Offer accepted">Candidate accepts digital offer</SelectItem>
-                    <SelectItem value="Day 1 joined">Employee orientation completed</SelectItem>
-                  </SelectContent>
-                </Select>
+                  onChange={(e) => setNewWorkflowTrigger(e.target.value)}
+                  placeholder="e.g. candidate.applied"
+                  required
+                  className="mt-1"
+                />
               </div>
-
               <div>
-                <Label className="text-xs">Then Execute this Action</Label>
-                <Select
+                <Label htmlFor="rule-condition">Condition</Label>
+                <Input
+                  id="rule-condition"
+                  value={newWorkflowCondition}
+                  onChange={(e) => setNewWorkflowCondition(e.target.value)}
+                  placeholder="e.g. ats_score >= 80"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="rule-action">Action *</Label>
+                <Input
+                  id="rule-action"
                   value={newWorkflowAction}
-                  onValueChange={setNewWorkflowAction}
-                >
-                  <SelectTrigger className="mt-1 h-9 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Send automated email">Dispatch personalized email template</SelectItem>
-                    <SelectItem value="Send WhatsApp notification">Send WhatsApp message with calendar link</SelectItem>
-                    <SelectItem value="Advance to technical interview">Move stage to Technical Interview</SelectItem>
-                    <SelectItem value="Trigger hardware provision ticket">Create IT laptop provision ticket</SelectItem>
-                    <SelectItem value="Assign onboarding buddy">Assign department mentor</SelectItem>
-                  </SelectContent>
-                </Select>
+                  onChange={(e) => setNewWorkflowAction(e.target.value)}
+                  placeholder="e.g. send_interview_invite"
+                  required
+                  className="mt-1"
+                />
               </div>
             </div>
-
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setShowBuilderModal(false)}>
                 Cancel
               </Button>
-              <Button type="submit">Activate Automation</Button>
+              <Button type="submit" disabled={submitting}>
+                {submitting ? "Saving..." : "Save Rule"}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>

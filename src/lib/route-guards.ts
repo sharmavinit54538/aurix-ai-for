@@ -45,6 +45,7 @@ export const ROUTE_ROLE_ACCESS: Record<string, AppRole[]> = {
   "/dashboard/super-admin/organizations": PLATFORM_ROLES,
   "/dashboard/super-admin/analytics": PLATFORM_ROLES,
   "/dashboard/super-admin/activity": PLATFORM_ROLES,
+  "/dashboard/super-admin/security": PLATFORM_ROLES,
   "/dashboard/super-admin/audit-logs": PLATFORM_ROLES,
   "/dashboard/super-admin/settings": PLATFORM_ROLES,
   "/dashboard/super-admin/platform-config": PLATFORM_ROLES,
@@ -64,6 +65,8 @@ export const ROUTE_ROLE_ACCESS: Record<string, AppRole[]> = {
   "/dashboard/talent/recruitment": RECRUITMENT_ROLES,
 
   // ── HR Operations & Payroll (HR_ADMIN) ──────────────────────────
+  "/dashboard/payroll/settings/security": HR_OPERATIONS_ROLES,
+  "/dashboard/payroll/security": HR_OPERATIONS_ROLES,
   "/dashboard/payroll/payslips": ["hr_admin", "employee", "manager"],
   "/dashboard/payroll/payments": HR_OPERATIONS_ROLES,
   "/dashboard/payroll/full-and-final": HR_OPERATIONS_ROLES,

@@ -203,8 +203,8 @@ export const upsertCandidate = createAsyncThunk<void, Candidate, { rejectValue: 
         first_name: firstName,
         last_name: lastName,
         email: candidate.email,
-        phone: candidate.phone || "0000000000",
-        location: candidate.location || "Unknown",
+        ...(candidate.phone?.trim() ? { phone: candidate.phone.trim() } : {}),
+        ...(candidate.location?.trim() ? { location: candidate.location.trim() } : {}),
         summary: candidate.summary || "",
         skills: candidate.skills || [],
         tags: candidate.tags || [],
@@ -240,12 +240,15 @@ export const moveStage = createAsyncThunk<
     const cand = state.recruitment.candidates.find(
       (c) => c.applicationId === id || c.id === id,
     );
-    const targetId = cand?.applicationId || (cand?.id === id ? null : id);
+    const targetId = cand?.applicationId || (!cand && isUuid(id) ? id : null);
 
-    if (targetId && isUuid(targetId)) {
-      await apiInstance.patch(`/applications/${targetId}/stage`, { stage });
+    if (!targetId || !isUuid(targetId)) {
+      return thunkAPI.rejectWithValue(
+        "Cannot move stage: missing valid backend application ID for this candidate.",
+      );
     }
 
+    await recruitmentApi.moveApplicationStage(targetId, { stage });
     await thunkAPI.dispatch(fetchRecruitmentData({ force: true }));
     return { id, stage };
   } catch (error) {
@@ -271,6 +274,34 @@ export const upsertInterview = createAsyncThunk<Interview, Interview, { rejectVa
   "recruitment/upsertInterview",
   async (interview, thunkAPI) => {
     try {
+      const hasBackendInterview =
+        Boolean(interview.interviewId) && !interview.interviewId.startsWith("iv-");
+      if (hasBackendInterview && interview.scheduledAt) {
+        await interviewApi.scheduleRound(
+          interview.interviewId,
+          interview.roundId || interview.interviewId,
+          {
+            interviewer_id: interview.interviewerId || "",
+            scheduled_at: interview.scheduledAt,
+            duration_minutes: interview.durationMinutes || 45,
+            mode: interview.mode || "ONLINE",
+            meeting_url: interview.meetingUrl || undefined,
+            location: interview.location || undefined,
+            round_name: interview.round || undefined,
+            notes: interview.notes || undefined,
+          },
+        );
+      } else if (interview.applicationId) {
+        await interviewApi.sendInterviewInvite(
+          interview.applicationId,
+          interview.round || "Interview",
+        );
+      } else {
+        return thunkAPI.rejectWithValue(
+          "Cannot schedule interview: missing valid interview or application ID.",
+        );
+      }
+
       await thunkAPI.dispatch(fetchRecruitmentData({ force: true }));
       return interview;
     } catch (error) {
@@ -577,3 +608,101 @@ export const sendInterviewInvite = createAsyncThunk<
 );
 
 
+
+export const deleteCandidate = createAsyncThunk<string, string, { rejectValue: string }>(
+  "recruitment/deleteCandidate",
+  async (id, thunkAPI) => {
+    try {
+      await recruitmentApi.deleteCandidate(id);
+      await thunkAPI.dispatch(fetchRecruitmentData({ force: true }));
+      return id;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        parseApiError(error, "Failed to delete candidate").message,
+      );
+    }
+  },
+);
+
+export const bulkMoveApplications = createAsyncThunk<
+  unknown,
+  { applicationIds: string[]; stage: Stage; notes?: string },
+  { rejectValue: string }
+>("recruitment/bulkMoveApplications", async ({ applicationIds, stage, notes }, thunkAPI) => {
+  try {
+    const res = await recruitmentApi.bulkMoveApplications({
+      application_ids: applicationIds,
+      stage,
+      notes,
+    });
+    await thunkAPI.dispatch(fetchRecruitmentData({ force: true }));
+    return res;
+  } catch (error) {
+    return thunkAPI.rejectWithValue(
+      parseApiError(error, "Failed to bulk move applications").message,
+    );
+  }
+});
+
+export const bulkTagApplications = createAsyncThunk<
+  unknown,
+  { applicationIds: string[]; tags: string[] },
+  { rejectValue: string }
+>("recruitment/bulkTagApplications", async ({ applicationIds, tags }, thunkAPI) => {
+  try {
+    const res = await recruitmentApi.bulkTagApplications({
+      application_ids: applicationIds,
+      tags,
+    });
+    await thunkAPI.dispatch(fetchRecruitmentData({ force: true }));
+    return res;
+  } catch (error) {
+    return thunkAPI.rejectWithValue(
+      parseApiError(error, "Failed to tag applications").message,
+    );
+  }
+});
+
+export const acceptOffer = createAsyncThunk<
+  unknown,
+  { offerId: string; notes?: string },
+  { rejectValue: string }
+>("recruitment/acceptOffer", async ({ offerId, notes }, thunkAPI) => {
+  try {
+    const res = await recruitmentApi.acceptOffer(offerId, notes ? { notes } : {});
+    await thunkAPI.dispatch(fetchRecruitmentData({ force: true }));
+    return res;
+  } catch (error) {
+    return thunkAPI.rejectWithValue(parseApiError(error, "Failed to accept offer").message);
+  }
+});
+
+export const rejectOffer = createAsyncThunk<
+  unknown,
+  { offerId: string; reason?: string },
+  { rejectValue: string }
+>("recruitment/rejectOffer", async ({ offerId, reason }, thunkAPI) => {
+  try {
+    const res = await recruitmentApi.rejectOffer(offerId, reason ? { reason } : {});
+    await thunkAPI.dispatch(fetchRecruitmentData({ force: true }));
+    return res;
+  } catch (error) {
+    return thunkAPI.rejectWithValue(parseApiError(error, "Failed to reject offer").message);
+  }
+});
+
+export const convertApplication = createAsyncThunk<
+  unknown,
+  { applicationId: string; payload?: Record<string, unknown> },
+  { rejectValue: string }
+>("recruitment/convertApplication", async ({ applicationId, payload }, thunkAPI) => {
+  try {
+    const res = await recruitmentApi.convertApplication(applicationId, payload);
+    await thunkAPI.dispatch(fetchRecruitmentData({ force: true }));
+    return res;
+  } catch (error) {
+    return thunkAPI.rejectWithValue(
+      parseApiError(error, "Failed to convert candidate to employee").message,
+    );
+  }
+});

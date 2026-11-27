@@ -1,6 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import apiInstance from "@/api/apiInstance";
-import { organizationalGraphApi } from "@/services/organizationalGraphApi";
+import { fetchOrganizationalGraphApi } from "@/services/organizationalGraphApi";
 import type { BackendHierarchyNode } from "./employeeHierarchyTypes";
 import type { OrganizationalGraphData } from "./organizationalGraphTypes";
 
@@ -38,5 +38,5 @@ export const fetchOrganizationalGraph = createAsyncThunk<
   OrganizationalGraphData,
   void
 >("employeeHierarchy/fetchOrgGraph", async () => {
-  return organizationalGraphApi.fetchOrganizationalGraph();
+  return fetchOrganizationalGraphApi();
 });

@@ -170,6 +170,7 @@ let refreshPromise: Promise<string> | null = null;
  * Refreshes the active access token using the canonical refresh endpoint.
  * Concurrency-safe: shares a single in-flight promise for all concurrent callers.
  * Uses HttpOnly refresh cookie (withCredentials: true) - no body needed.
+ * Falls back to /api/v1/auth/refresh-token if the primary endpoint is unavailable.
  */
 export async function refreshAccessToken(options?: { silent?: boolean }): Promise<string> {
   if (refreshPromise) {
@@ -180,14 +181,19 @@ export async function refreshAccessToken(options?: { silent?: boolean }): Promis
   refreshPromise = (async () => {
     try {
       return await acquireRefreshLock(async () => {
-        const refreshUrl = `${API_BASE_URL}${AUTH_ENDPOINTS.refresh}`;
+        // Try primary refresh endpoint first (/api/v1/auth/refresh with HttpOnly cookie)
+        const primaryRefreshUrl = `${API_BASE_URL}${AUTH_ENDPOINTS.refresh}`;
+        // Fallback refresh-token endpoint (/api/v1/auth/refresh-token with body)
+        const fallbackRefreshUrl = `${API_BASE_URL}${AUTH_ENDPOINTS.refreshToken}`;
+
         if (import.meta.env.DEV && import.meta.env.MODE !== "test" && !options?.silent) {
-          logger.debug(`[AUTH] Refreshing token: POST ${refreshUrl}`);
+          logger.debug(`[AUTH] Refreshing token: POST ${primaryRefreshUrl}`);
         }
 
         let res;
+        let usedFallback = false;
         try {
-          res = await axios.post(refreshUrl, {}, {
+          res = await axios.post(primaryRefreshUrl, {}, {
             withCredentials: true,
             timeout: 15000,
             headers: {
@@ -195,7 +201,7 @@ export async function refreshAccessToken(options?: { silent?: boolean }): Promis
             },
           });
           if (import.meta.env.DEV && import.meta.env.MODE !== "test" && !options?.silent) {
-            logger.debug(`[AUTH] Response: [REFRESH] POST ${refreshUrl} -> ${res.status}`);
+            logger.debug(`[AUTH] Response: [REFRESH] POST ${primaryRefreshUrl} -> ${res.status}`);
           }
         } catch (postErr: unknown) {
           const status = axios.isAxiosError(postErr)
@@ -205,16 +211,7 @@ export async function refreshAccessToken(options?: { silent?: boolean }): Promis
               : undefined;
 
           if (import.meta.env.DEV && import.meta.env.MODE !== "test" && !options?.silent) {
-            logger.error(`[AUTH] Refresh failed with status ${status}`);
-          }
-
-          if (status === 404) {
-            if (import.meta.env.DEV && import.meta.env.MODE !== "test" && !options?.silent) {
-              console.error(
-                `[AUTH] 404 Not Found received on refresh endpoint: ${refreshUrl}. Route configuration problem.`,
-              );
-            }
-            throw postErr;
+            logger.error(`[AUTH] Primary refresh failed with status ${status}`);
           }
 
           if (status === 401) {
@@ -233,8 +230,39 @@ export async function refreshAccessToken(options?: { silent?: boolean }): Promis
             throw postErr;
           }
 
-          throw postErr;
+          // If primary endpoint returns 404, try the fallback /refresh-token endpoint
+          if (status === 404) {
+            if (import.meta.env.DEV && import.meta.env.MODE !== "test" && !options?.silent) {
+              logger.warn(`[AUTH] Primary refresh endpoint not found, trying fallback: ${fallbackRefreshUrl}`);
+            }
+            try {
+              res = await axios.post(fallbackRefreshUrl, {}, {
+                withCredentials: true,
+                timeout: 15000,
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              });
+              usedFallback = true;
+              if (import.meta.env.DEV && import.meta.env.MODE !== "test" && !options?.silent) {
+                logger.debug(`[AUTH] Fallback refresh succeeded: POST ${fallbackRefreshUrl} -> ${res.status}`);
+              }
+            } catch (fallbackErr: unknown) {
+              const fallbackStatus = axios.isAxiosError(fallbackErr)
+                ? fallbackErr.response?.status
+                : undefined;
+              if (import.meta.env.DEV && import.meta.env.MODE !== "test" && !options?.silent) {
+                logger.error(`[AUTH] Fallback refresh also failed with status ${fallbackStatus}`);
+              }
+              throw fallbackErr;
+            }
+          } else {
+            throw postErr;
+          }
         }
+
+        // Mark usedFallback as intentionally used for logging/debugging
+        void usedFallback;
 
         // Logout or a new login while refresh was pending must win over its result.
         if (sessionVersion !== refreshSessionVersion) {
@@ -242,7 +270,12 @@ export async function refreshAccessToken(options?: { silent?: boolean }): Promis
         }
 
         const tokenData = res.data?.data ?? res.data;
+        // Support both token field names from either endpoint
         const accessToken = tokenData?.access_token || tokenData?.accessToken || tokenData?.token;
+        const refreshToken = tokenData?.refresh_token || tokenData?.refreshToken;
+
+        // Mark refreshToken as intentionally used for potential future use
+        void refreshToken;
 
         if (typeof accessToken !== "string" || !accessToken.trim()) {
           const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
@@ -261,6 +294,8 @@ export async function refreshAccessToken(options?: { silent?: boolean }): Promis
         }
 
         setTokens({ accessToken });
+        // If fallback returned a new refresh token, we could store it if needed
+        // (but HttpOnly cookie approach is preferred)
         setSessionHint();
         return accessToken;
       });

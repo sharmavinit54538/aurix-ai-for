@@ -18,16 +18,18 @@ type AxiosQueryArgs =
 
 const axiosBaseQuery: BaseQueryFn<AxiosQueryArgs, unknown, { status: number; data: unknown }> = async (
   args,
+  api,
 ) => {
   const reqConfig: AxiosRequestConfig =
     typeof args === "string"
-      ? { url: args, method: "GET" }
+      ? { url: args, method: "GET", signal: api.signal }
       : {
           url: args.url,
           method: args.method || "GET",
           data: args.body !== undefined ? args.body : args.data,
           params: args.params,
           headers: args.headers,
+          signal: api.signal,
         };
 
   try {
@@ -42,9 +44,9 @@ const axiosBaseQuery: BaseQueryFn<AxiosQueryArgs, unknown, { status: number; dat
     const axiosError = err as AxiosError;
     return {
       error: {
-        status: axiosError.response?.status ?? 500,
+        status: axiosError.response?.status ?? 0,
         data: axiosError.response?.data ?? {
-          message: axiosError.message || "Request failed",
+          message: axiosError.message || "Network request failed",
         },
       },
     };

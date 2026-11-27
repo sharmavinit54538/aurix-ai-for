@@ -131,11 +131,17 @@ export function CandidateRow({ c, onClick }: { c: Candidate; onClick?: () => voi
   );
 }
 
-export function KanbanCard({ c, onDragStart }: { c: Candidate; onDragStart: (e: React.DragEvent, id: string) => void }) {
+export function KanbanCard({
+  c,
+  onDragStart,
+}: {
+  c: Candidate;
+  onDragStart: (e: React.DragEvent, id: string, applicationId?: string) => void;
+}) {
   return (
     <div
       draggable
-      onDragStart={(e) => onDragStart(e, c.id)}
+      onDragStart={(e) => onDragStart(e, c.id, c.applicationId)}
       className="cursor-grab rounded-xl border border-border bg-card p-3 shadow-sm transition-all hover:shadow-elegant active:cursor-grabbing hover:bg-accent/20"
     >
       <div className="flex items-center gap-2">

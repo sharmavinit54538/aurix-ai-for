@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
-import { Activity, KeyRound } from "lucide-react";
+import { useMemo } from "react";
+import { Link } from "@tanstack/react-router";
+import { Activity, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useOrganizationDirectory, useSuperAdminAuditFeed, useSuperAdminSessions } from "../hooks";
+import { useOrganizationDirectory, useSuperAdminAuditFeed } from "../hooks";
 import {
   AccessDeniedState,
   EmptyState,
@@ -9,14 +10,12 @@ import {
   Panel,
   SkeletonRows,
 } from "../components/SuperAdminStates";
+import { SuperAdminSessionsManager } from "../components/SuperAdminSessionsManager";
 import { isAuthorizationError } from "../errors";
 import { formatCount, formatDateTime, formatRelativeTime, formatTime, MISSING_VALUE, shortId } from "../formatters";
 import type { PlatformAuditEvent } from "../types";
 
 const FEED_PAGE_SIZE = 25;
-const AUTO_REFRESH_MS = 30_000;
-/** Backend limit of GET /super-admin/security/sessions. */
-const SESSION_LIST_LIMIT = 50;
 
 function dayLabel(iso: string | null, now: Date): string {
   if (!iso) return "Unknown date";
@@ -44,7 +43,6 @@ function groupByDay(events: PlatformAuditEvent[]): { label: string; events: Plat
 
 export function SuperAdminActivityPage() {
   const feed = useSuperAdminAuditFeed(FEED_PAGE_SIZE, false);
-  const sessions = useSuperAdminSessions(false);
   const directory = useOrganizationDirectory();
 
   const events = useMemo(() => feed.data?.pages.flat() ?? [], [feed.data]);
@@ -140,60 +138,18 @@ export function SuperAdminActivityPage() {
           )}
         </Panel>
 
-        {/* Active sessions */}
-        <Panel className="p-0 overflow-hidden h-fit">
-          <div className="flex items-center justify-between gap-2 border-b border-border/40 px-5 py-4">
-            <div className="flex items-center gap-2">
-              <KeyRound className="h-5 w-5 text-emerald-400" />
-              <div>
-                <h2 className="text-base font-bold text-foreground">Active Sessions</h2>
-                <p className="text-xs text-muted-foreground">Non-expired, non-revoked sign-in sessions</p>
-              </div>
-            </div>
-            {sessions.data && (
-              <span className="text-lg font-bold text-foreground">
-                {formatCount(sessions.data.length)}
-                {sessions.data.length >= SESSION_LIST_LIMIT ? "+" : ""}
-              </span>
-            )}
+        {/* Active sessions with terminate controls */}
+        <div className="space-y-3 h-fit">
+          <SuperAdminSessionsManager compact />
+          <div className="flex justify-end">
+            <Button asChild variant="ghost" size="sm" className="h-7 gap-1 text-xs text-purple-400 hover:text-purple-300">
+              <Link to="/dashboard/super-admin/security/sessions">
+                Open full Sessions Manager
+                <ArrowUpRight className="h-3.5 w-3.5" />
+              </Link>
+            </Button>
           </div>
-
-          {sessions.isPending ? (
-            <SkeletonRows rows={4} className="p-4" />
-          ) : sessions.isError ? (
-            <ErrorState
-              className="m-4"
-              title="Unable to load active sessions."
-              error={sessions.error}
-              onRetry={() => void sessions.refetch()}
-              retrying={sessions.isFetching}
-            />
-          ) : sessions.data.length === 0 ? (
-            <div className="p-4">
-              <EmptyState icon={KeyRound} title="No active sessions" description="No user currently holds a valid sign-in session." />
-            </div>
-          ) : (
-            <div className="divide-y divide-border/40">
-              {sessions.data.map((session) => (
-                <div key={session.id} className="flex items-start justify-between gap-3 px-5 py-3 text-xs">
-                  <div className="min-w-0">
-                    <div className="font-semibold text-foreground truncate">{session.userName ?? MISSING_VALUE}</div>
-                    <div className="font-mono text-[11px] text-muted-foreground truncate">{session.userEmail ?? MISSING_VALUE}</div>
-                  </div>
-                  <div className="shrink-0 text-right text-muted-foreground" title={formatDateTime(session.startedAt)}>
-                    <div className="text-[10px] uppercase tracking-wide">Signed in</div>
-                    <div>{formatRelativeTime(session.startedAt)}</div>
-                  </div>
-                </div>
-              ))}
-              {sessions.data.length >= SESSION_LIST_LIMIT && (
-                <div className="px-5 py-2.5 text-[11px] text-muted-foreground">
-                  The API returns the {SESSION_LIST_LIMIT} most recent sessions; more may be active.
-                </div>
-              )}
-            </div>
-          )}
-        </Panel>
+        </div>
       </div>
     </div>
   );

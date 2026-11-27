@@ -20,6 +20,10 @@ import type {
 import { AUTH_ENDPOINTS, type AuthEndpointKey } from "./endpoints";
 export { AUTH_ENDPOINTS, type AuthEndpointKey };
 
+export interface RefreshTokenPayload {
+  refresh_token: string;
+}
+
 export interface LoginCredentials {
   identifier: string;
   password: string;
@@ -39,6 +43,10 @@ export interface VerifyEmailPayload {
 }
 
 export interface ResendOtpPayload {
+  email: string;
+}
+
+export interface ResendVerificationPayload {
   email: string;
 }
 
@@ -117,6 +125,14 @@ export const authService = {
   },
 
   /**
+   * Refreshes the session access token using the refresh-token endpoint.
+   * Accepts refresh token in request body and returns new access/refresh tokens.
+   */
+  async refreshToken(payload: RefreshTokenPayload): Promise<RefreshTokenResponse> {
+    return api.post<RefreshTokenResponse>(AUTH_ENDPOINTS.refreshToken, payload);
+  },
+
+  /**
    * Refreshes the session access token using the canonical refresh endpoint.
    * Sends request with HttpOnly refresh cookie (withCredentials: true).
    */
@@ -164,6 +180,14 @@ export const authService = {
    */
   async resendOtp(payload: ResendOtpPayload): Promise<ApiResponse> {
     return api.post<ApiResponse>(AUTH_ENDPOINTS.resendOtp, payload);
+  },
+
+  /**
+   * Resends the email verification link to the user's email.
+   * Used when the verification email was not received or the link has expired.
+   */
+  async resendVerification(payload: ResendVerificationPayload): Promise<ApiResponse> {
+    return api.post<ApiResponse>(AUTH_ENDPOINTS.resendVerification, payload);
   },
 
   /**

@@ -3,6 +3,7 @@ import { aurix } from "./aurix-store";
 import { safeStorage } from "./safe-storage";
 import {
   clearTokens,
+  clearSessionHint,
   getAccessToken,
   hasSessionHint,
   refreshAccessToken,
@@ -14,10 +15,40 @@ import { getDefaultDashboardPath, getSafeRedirectUrl } from "./role-routing";
 import { clearQueryCache } from "./query-client";
 import { store } from "@/redux/store";
 import { settingsApi } from "@/redux/settingsApi";
+import { clearRecruitment } from "@/features/admin/recruitment/recruitmentSlice";
 
 export { getDefaultDashboardPath, getSafeRedirectUrl };
 
-type AuthStatus = "bootstrapping" | "ready";
+type AuthStatus = "bootstrapping" | "ready" | "unauthenticated";
+
+interface AuthStatusResponse {
+  authenticated: boolean;
+  user?: {
+    id: string | number;
+    name?: string;
+    full_name?: string;
+    email?: string;
+    phone?: string;
+    role?: string;
+    is_verified?: boolean;
+    is_email_verified?: boolean;
+    email_verified?: boolean;
+    email_verified_at?: string;
+    onboarding_completed?: boolean;
+    onboardingCompleted?: boolean;
+    company_id?: string | number;
+    company_name?: string;
+    companyName?: string;
+    document_verification_status?: string;
+    documentVerificationStatus?: string;
+    documents_verified?: boolean;
+    documentsVerified?: boolean;
+    documents_verified_at?: string;
+    documentsVerifiedAt?: string;
+    created_at?: string;
+    createdAt?: string;
+  };
+}
 
 const LOGGED_OUT_KEY = "aurix:logged_out";
 const LOGOUT_IN_PROGRESS_KEY = "aurix:logout_in_progress";
@@ -25,11 +56,15 @@ const LOGOUT_IN_PROGRESS_KEY = "aurix:logout_in_progress";
 const authBootstrapState: {
   status: AuthStatus;
   bootstrapPromise: Promise<void> | null;
+  lastStatusCheck: number;
 } = {
   status: "ready",
   bootstrapPromise: null,
+  lastStatusCheck: 0,
 };
 const listeners = new Set<() => void>();
+
+const STATUS_CHECK_DEBOUNCE_MS = 5000; // Prevent duplicate status calls within 5 seconds
 
 function emit() {
   listeners.forEach((listener) => listener());
@@ -112,9 +147,15 @@ export async function bootstrapAuth(options?: { force?: boolean }): Promise<void
   const hasHint = hasSessionHint();
   const existingToken = getAccessToken();
 
+  // Prevent duplicate status checks within debounce window
+  const now = Date.now();
+  if (!options?.force && now - authBootstrapState.lastStatusCheck < STATUS_CHECK_DEBOUNCE_MS) {
+    return;
+  }
+
   if ((isLoggedOut && !options?.force) || (!hasHint && !existingToken && !options?.force)) {
     aurix.set({ user: null, company: null, isRestoring: false });
-    authBootstrapState.status = "ready";
+    authBootstrapState.status = "unauthenticated";
     emit();
     return;
   }
@@ -124,6 +165,7 @@ export async function bootstrapAuth(options?: { force?: boolean }): Promise<void
   }
 
   authBootstrapState.status = "bootstrapping";
+  authBootstrapState.lastStatusCheck = now;
   emit();
 
   authBootstrapState.bootstrapPromise = (async () => {
@@ -132,27 +174,58 @@ export async function bootstrapAuth(options?: { force?: boolean }): Promise<void
       if (!token && hasSessionHint()) {
         token = await refreshAccessToken({ silent: true });
       }
+      
       if (token) {
-        const res = await apiInstance.get(AUTH_ENDPOINTS.me);
-        const userPayload = res.data?.data ?? res.data?.user ?? res.data;
+        // First, try the lightweight /auth/status endpoint for quick session validation
+        let userPayload: AuthStatusResponse["user"] | null = null;
+        try {
+          const statusRes = await apiInstance.get<{ data?: AuthStatusResponse }>(AUTH_ENDPOINTS.status);
+          const statusData = statusRes.data?.data ?? statusRes.data;
+          if (statusData?.authenticated && statusData?.user) {
+            userPayload = statusData.user;
+          }
+        } catch (statusErr) {
+          // Status endpoint failed, will fall back to /auth/me
+          if (import.meta.env.DEV) {
+            console.warn("[AUTH] Status check failed, falling back to /auth/me", statusErr);
+          }
+        }
+
+        // If status endpoint didn't return user data, fall back to /auth/me
+        if (!userPayload) {
+          try {
+            const meRes = await apiInstance.get(AUTH_ENDPOINTS.me);
+            userPayload = meRes.data?.data ?? meRes.data?.user ?? meRes.data;
+          } catch (meErr) {
+            if (import.meta.env.DEV) {
+              console.warn("[AUTH] /auth/me also failed", meErr);
+            }
+            userPayload = null;
+          }
+        }
+
         if (userPayload && typeof userPayload === "object" && (userPayload.id || userPayload.email)) {
           persistAuthSession(userPayload, { accessToken: token });
+          authBootstrapState.status = "ready";
         } else {
           aurix.set({ user: null, company: null, isRestoring: false });
+          authBootstrapState.status = "unauthenticated";
         }
       } else {
         aurix.set({ user: null, company: null, isRestoring: false });
+        authBootstrapState.status = "unauthenticated";
       }
     } catch (err: any) {
       const status = err?.response?.status ?? err?.status;
       if (status === 401 || status === 403 || !getAccessToken()) {
         clearTokens();
         aurix.set({ user: null, company: null, isRestoring: false });
+        authBootstrapState.status = "unauthenticated";
       } else {
         aurix.set({ isRestoring: false });
+        authBootstrapState.status = "ready";
       }
     } finally {
-      authBootstrapState.status = "ready";
       authBootstrapState.bootstrapPromise = null;
       emit();
     }
@@ -169,6 +242,10 @@ export function waitForAuth(): Promise<void> {
   if (!isLoggedOut && !aurix.get().user && (getAccessToken() || hasSessionHint())) {
     return bootstrapAuth();
   }
+  // If we have a definite unauthenticated status, don't keep waiting
+  if (authBootstrapState.status === "unauthenticated") {
+    return Promise.resolve();
+  }
   return Promise.resolve();
 }
 
@@ -178,7 +255,7 @@ export function useAuthReady(): boolean {
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
-    () => authBootstrapState.status === "ready",
+    () => authBootstrapState.status === "ready" || authBootstrapState.status === "unauthenticated",
     () => true,
   );
 }
@@ -276,6 +353,7 @@ export async function logout(options?: { redirect?: boolean }): Promise<void> {
     aurix.set({ user: null, company: null, isRestoring: false });
     clearQueryCache();
     store.dispatch(settingsApi.util.resetApiState());
+    store.dispatch(clearRecruitment());
     safeStorage.clear(typeof window !== "undefined" ? window.sessionStorage : undefined);
     
     // Broadcast logout to other tabs
@@ -301,6 +379,7 @@ export async function forceLocalLogout(): Promise<void> {
   aurix.set({ user: null, company: null, isRestoring: false });
   clearQueryCache();
   store.dispatch(settingsApi.util.resetApiState());
+  store.dispatch(clearRecruitment());
   safeStorage.clear(typeof window !== "undefined" ? window.sessionStorage : undefined);
   broadcastLogout();
   if (typeof window !== "undefined") {

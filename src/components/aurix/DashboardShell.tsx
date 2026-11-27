@@ -401,6 +401,14 @@ const SUPER_ADMIN_NAV_SECTIONS: SidebarNavSection[] = [
         roles: ["super_admin"],
       },
       {
+        to: "/dashboard/super-admin/security",
+        label: "Security & Sessions",
+        icon: Lock,
+        permission: "platform.activity",
+        roles: ["super_admin"],
+        matchPrefixes: ["/dashboard/super-admin/security/sessions"],
+      },
+      {
         to: "/dashboard/super-admin/audit-logs",
         label: "Audit Logs",
         icon: FileText,

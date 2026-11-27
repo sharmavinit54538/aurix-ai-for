@@ -1,6 +1,6 @@
 
 import { useEffect, useState, useMemo } from "react";
-import { Building2, Mail, Phone, Plus, Star, Edit, Trash2 } from "lucide-react";
+import { AlertCircle, Building2, Edit, Eye, Mail, Phone, Plus, RefreshCw, Star, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +9,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { apiInstance } from "@/api";
+import { getErrorMessage, parseListResponse } from "@/api/utils";
+import { recruitmentApi } from "@/services/recruitmentApi";
 
 const STATUS_TONE: Record<string, string> = {
   active: "bg-emerald-500/15 text-emerald-600 ring-emerald-500/20 dark:text-emerald-300",
@@ -33,6 +34,11 @@ interface VendorRecord {
 export function RecruitmentVendorsPage() {
   const [vendorsList, setVendorsList] = useState<VendorRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [detailVendor, setDetailVendor] = useState<VendorRecord | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   const { candidates } = useRecruitment();
 
@@ -54,12 +60,31 @@ export function RecruitmentVendorsPage() {
   const loadVendors = async () => {
     try {
       setLoading(true);
-      const res = await apiInstance.get("/vendors?limit=100");
-      setVendorsList(res.data?.data?.items || []);
-    } catch {
-      toast.error("Failed to load recruitment vendors.");
+      setLoadError(null);
+      const data = await recruitmentApi.getVendors({ limit: 100 });
+      const parsed = parseListResponse<VendorRecord>(data);
+      setVendorsList(parsed.items);
+    } catch (err) {
+      const msg = getErrorMessage(err, "Failed to load recruitment vendors.");
+      setLoadError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleViewDetails = async (vendorId: string) => {
+    setShowDetailModal(true);
+    setDetailLoading(true);
+    setDetailError(null);
+    setDetailVendor(null);
+    try {
+      const detail = await recruitmentApi.getVendorById(vendorId);
+      setDetailVendor((detail || {}) as VendorRecord);
+    } catch (err) {
+      setDetailError(getErrorMessage(err, "Failed to load vendor details."));
+    } finally {
+      setDetailLoading(false);
     }
   };
 
@@ -116,7 +141,7 @@ export function RecruitmentVendorsPage() {
 
     setSubmitting(true);
     try {
-      await apiInstance.post("/vendors", {
+      await recruitmentApi.createVendor({
         name: form.name,
         contact_name: form.contactName,
         email: form.email,
@@ -163,7 +188,7 @@ export function RecruitmentVendorsPage() {
 
     setSubmitting(true);
     try {
-      await apiInstance.put(`/vendors/${selectedVendor.id}`, {
+      await recruitmentApi.updateVendor(selectedVendor.id, {
         name: form.name,
         contact_name: form.contactName,
         email: form.email,
@@ -185,7 +210,7 @@ export function RecruitmentVendorsPage() {
   const handleDeleteClick = async (id: string) => {
     if (!confirm("Are you sure you want to delete this recruitment vendor agency?")) return;
     try {
-      await apiInstance.delete(`/vendors/${id}`);
+      await recruitmentApi.deleteVendor(id);
       toast.success("Vendor agency deleted successfully!");
       loadVendors();
     } catch (err) {
@@ -198,8 +223,33 @@ export function RecruitmentVendorsPage() {
       <PageHeader
         title="Vendors & Agencies"
         description="External recruiting partners, performance & spend."
-        actions={<Button onClick={() => setShowAddModal(true)}><Plus className="mr-2 h-4 w-4" />Add Vendor</Button>}
+        actions={
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => void loadVendors()} disabled={loading}>
+              <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
+            <Button onClick={() => setShowAddModal(true)}>
+              <Plus className="mr-2 h-4 w-4" />Add Vendor
+            </Button>
+          </div>
+        }
       />
+
+      {loadError && (
+        <div
+          role="alert"
+          className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive"
+        >
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>{loadError}</span>
+          </div>
+          <Button size="sm" variant="outline" onClick={() => void loadVendors()}>
+            Retry
+          </Button>
+        </div>
+      )}
 
       <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
         <Kpi label="Active Vendors" value={resolvedVendors.filter((v) => v.status === "ACTIVE").length} />
@@ -270,8 +320,9 @@ export function RecruitmentVendorsPage() {
                   )}
                 </div>
                 <div className="flex gap-1">
-                  <Button size="sm" variant="outline" onClick={() => handleEditClick(v)}><Edit className="h-3 w-3" /></Button>
-                  <Button size="sm" variant="outline" onClick={() => handleDeleteClick(v.id)} className="hover:bg-destructive/10 hover:text-destructive hover:border-destructive/40">
+                  <Button size="sm" variant="outline" title="View Vendor Details" onClick={() => void handleViewDetails(v.id)}><Eye className="h-3 w-3" /></Button>
+                  <Button size="sm" variant="outline" title="Edit Vendor" onClick={() => handleEditClick(v)}><Edit className="h-3 w-3" /></Button>
+                  <Button size="sm" variant="outline" title="Delete Vendor" onClick={() => handleDeleteClick(v.id)} className="hover:bg-destructive/10 hover:text-destructive hover:border-destructive/40">
                     <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>
@@ -462,6 +513,57 @@ export function RecruitmentVendorsPage() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Vendor Detail Modal (GET /api/v1/vendors/{id}) */}
+      <Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{detailVendor?.name || "Vendor Details"}</DialogTitle>
+            <DialogDescription>Agency contact, fee terms, and backend status.</DialogDescription>
+          </DialogHeader>
+          {detailLoading ? (
+            <div className="py-6 text-center text-sm text-muted-foreground">Loading vendor details...</div>
+          ) : detailError ? (
+            <div role="alert" className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
+              {detailError}
+            </div>
+          ) : detailVendor ? (
+            <div className="space-y-3 text-xs">
+              <div className="grid grid-cols-2 gap-3 rounded-xl border border-border bg-muted/30 p-3">
+                <div>
+                  <span className="text-muted-foreground">Contact Person</span>
+                  <div className="mt-0.5 font-semibold">{detailVendor.contact_name || "—"}</div>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Status</span>
+                  <div className="mt-0.5 font-semibold">{detailVendor.status || "—"}</div>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Email</span>
+                  <div className="mt-0.5 font-semibold truncate">{detailVendor.email || "—"}</div>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Phone</span>
+                  <div className="mt-0.5 font-semibold">{detailVendor.phone || "—"}</div>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Commission Rate</span>
+                  <div className="mt-0.5 font-semibold">
+                    {detailVendor.commission_rate != null ? `${detailVendor.commission_rate}%` : "—"}
+                  </div>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Rating</span>
+                  <div className="mt-0.5 font-semibold">{detailVendor.rating ?? "—"}</div>
+                </div>
+              </div>
+            </div>
+          ) : null}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDetailModal(false)}>Close</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

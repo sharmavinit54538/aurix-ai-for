@@ -368,23 +368,53 @@ export function normalizeAuditEvent(raw: unknown): PlatformAuditEvent | null {
 
 export function normalizeSession(raw: unknown): SecuritySessionRecord | null {
   if (!isRecord(raw)) return null;
-  const id = toText(raw.id);
+  const id = toText(raw.id ?? raw.session_id ?? raw.sessionId);
   if (!id) return null;
 
-  const rawName = toText(raw.userName ?? raw.adminName);
+  const rawName = toText(raw.userName ?? raw.user_name ?? raw.adminName ?? raw.admin_name);
   const userName = rawName && rawName !== "Administrator" ? rawName : null;
 
-  const rawEmail = toText(raw.userEmail ?? raw.adminEmail);
+  const rawEmail = toText(raw.userEmail ?? raw.user_email ?? raw.adminEmail ?? raw.admin_email);
   const userEmail = rawEmail && rawEmail.toLowerCase() !== "admin@ofc360.com" ? rawEmail : null;
 
-  const startedAt = toIsoTimestamp(raw.startedAt ?? raw.loginTime);
+  const startedAt = toIsoTimestamp(raw.startedAt ?? raw.started_at ?? raw.loginTime ?? raw.login_time ?? raw.created_at ?? raw.createdAt);
 
-  return {
+  const result: SecuritySessionRecord = {
     id,
     userName,
     userEmail,
     startedAt,
   };
+
+  // Preserve real backend session metadata while stripping known synthesized backend constants
+  const role = toText(raw.role ?? raw.userRole ?? raw.user_role);
+  if (role) result.role = role;
+
+  const ipAddress = toText(raw.ipAddress ?? raw.ip_address);
+  if (ipAddress && ipAddress !== "127.0.0.1") result.ipAddress = ipAddress;
+
+  const location = toText(raw.location);
+  if (location && location !== "Production Gateway") result.location = location;
+
+  const browser = toText(raw.browser);
+  if (browser && browser !== "Chrome / Desktop") result.browser = browser;
+
+  const os = toText(raw.os);
+  if (os && os !== "Windows / Linux") result.os = os;
+
+  const device = toText(raw.device);
+  if (device && device !== "Desktop") result.device = device;
+
+  const lastActivity = toText(raw.lastActivity ?? raw.last_activity ?? raw.lastActivityAt ?? raw.last_activity_at);
+  if (lastActivity && lastActivity !== "Active") result.lastActivity = lastActivity;
+
+  const status = toText(raw.status);
+  if (status && status !== "Active") result.status = status;
+
+  const isCurrent = toBool(raw.isCurrentSession ?? raw.is_current_session ?? raw.isCurrent ?? raw.current);
+  if (isCurrent !== null) result.isCurrentSession = isCurrent;
+
+  return result;
 }
 
 export function normalizeSettings(body: unknown, endpoint = "GET /super-admin/settings"): PlatformSettings {

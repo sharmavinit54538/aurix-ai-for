@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Banknote, Save, RotateCcw, AlertCircle, RefreshCw } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Banknote, Save, RotateCcw, AlertCircle, RefreshCw, ShieldCheck, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -548,6 +549,18 @@ export function PayrollSection({ canEdit, onDirtyChange }: PayrollSectionProps) 
             />
           </div>
         </div>
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-4 mt-4">
+            <div className="text-xs text-muted-foreground">
+              Manage active payroll sessions and device revocations.
+            </div>
+            <Button asChild type="button" variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
+              <Link to="/dashboard/payroll/settings/security">
+                <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+                Active Payroll Sessions
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </Button>
+          </div>
       </div>
 
       {canEdit && (

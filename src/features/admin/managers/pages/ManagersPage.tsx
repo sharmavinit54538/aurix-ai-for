@@ -13,6 +13,7 @@ import { ManagersAdvancedFilters } from "../components/ManagersAdvancedFilters";
 import { ManagersPagination } from "../components/ManagersPagination";
 import { ManagersDeleteDialogs } from "../components/ManagersDeleteDialogs";
 import { ManagerDetailPage } from "../components/ManagerDetailPage";
+import { ManagerResetPasswordDialog } from "../components/ManagerResetPasswordDialog";
 import { useManagersPage } from "../hooks/useManagersPage";
 import type { Manager } from "../types";
 
@@ -68,6 +69,7 @@ export function ManagersPage() {
           onBack={handleBack}
           onEdit={(mgr) => page.handleEditClick(mgr)}
           onDelete={(mgr) => page.handleDeleteClick(mgr)}
+          onResetPassword={(id) => page.handleResetPasswordClick(page.managers.find(m => m.id === id || m.managerId === id || m.employeeId === id)!)}
         />
         <ManagerFormDialog
           open={page.formOpen}
@@ -203,16 +205,24 @@ export function ManagersPage() {
         onImport={page.handleImportManagers}
       />
 
-      <ManagersDeleteDialogs
-        deleteOpen={page.deleteAlertOpen}
-        managerToDelete={page.managerToDelete}
-        bulkDeleteOpen={page.bulkDeleteAlertOpen}
-        selectedCount={page.selectedIds.length}
-        onDeleteOpenChange={page.setDeleteAlertOpen}
-        onBulkDeleteOpenChange={page.setBulkDeleteAlertOpen}
-        onConfirmDelete={page.handleConfirmDelete}
-        onConfirmBulkDelete={page.handleConfirmBulkDelete}
-      />
+<ManagersDeleteDialogs
+          deleteOpen={page.deleteAlertOpen}
+          managerToDelete={page.managerToDelete}
+          bulkDeleteOpen={page.bulkDeleteAlertOpen}
+          selectedCount={page.selectedIds.length}
+          onDeleteOpenChange={page.setDeleteAlertOpen}
+          onBulkDeleteOpenChange={page.setBulkDeleteAlertOpen}
+          onConfirmDelete={page.handleConfirmDelete}
+          onConfirmBulkDelete={page.handleConfirmBulkDelete}
+        />
+
+        <ManagerResetPasswordDialog
+          open={page.resetPasswordAlertOpen}
+          manager={page.managerToResetPassword}
+          loading={page.resetPasswordLoading}
+          onOpenChange={page.setResetPasswordAlertOpen}
+          onConfirm={page.handleConfirmResetPassword}
+        />
     </div>
   );
 }

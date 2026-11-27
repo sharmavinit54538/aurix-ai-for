@@ -317,3 +317,25 @@ export const importManagers = createAsyncThunk<Manager[], Manager[], { rejectVal
     return managers;
   },
 );
+
+export interface ResetManagerPasswordResponse {
+  success: boolean;
+  message?: string;
+  data?: {
+    temporary_password?: string;
+    reset_token?: string;
+  };
+}
+
+export const resetManagerPassword = createAsyncThunk<
+  ResetManagerPasswordResponse,
+  string,
+  { rejectValue: ParsedError }
+>("managers/resetManagerPassword", async (id, thunkAPI) => {
+  try {
+    const response = await apiInstance.post(`/managers/${id}/reset-password`);
+    return response.data?.data ?? response.data ?? { success: true, message: "Password reset initiated" };
+  } catch (error) {
+    return thunkAPI.rejectWithValue(parseApiError(error, "Failed to reset manager password"));
+  }
+});

@@ -16,6 +16,9 @@ interface EmployeesListContentProps {
   onDeactivate: (id: string) => void;
   onActivate: (id: string) => void;
   onDelete: (id: string) => void;
+  onApprove?: (id: string) => void;
+  onReject?: (id: string) => void;
+  onOnboardingStatus?: (id: string) => void;
 }
 
 export function EmployeesListContent({
@@ -31,6 +34,9 @@ export function EmployeesListContent({
   onDeactivate,
   onActivate,
   onDelete,
+  onApprove,
+  onReject,
+  onOnboardingStatus,
 }: EmployeesListContentProps) {
   if (loading) {
     return (
@@ -86,6 +92,9 @@ export function EmployeesListContent({
       onDeactivate={onDeactivate}
       onActivate={onActivate}
       onDelete={onDelete}
+      onApprove={onApprove}
+      onReject={onReject}
+      onOnboardingStatus={onOnboardingStatus}
     />
   );
 }

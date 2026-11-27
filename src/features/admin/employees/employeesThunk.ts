@@ -16,6 +16,9 @@ import type {
   SendInvitationResponse,
   EmployeeImportResponse,
   EmployeeExportResponse,
+  ApproveEmployeeResponse,
+  RejectEmployeeResponse,
+  OnboardingStatusResponse,
 } from "./employeesTypes";
 
 function mapEmployee(emp: Record<string, unknown>): Employee {
@@ -288,19 +291,6 @@ export const fetchEmployeeStatistics = createAsyncThunk<
   }
 });
 
-export const fetchEmployeeOnboardingStatus = createAsyncThunk<
-  EmployeeOnboardingStatus,
-  string,
-  { rejectValue: ParsedError }
->("employees/fetchEmployeeOnboardingStatus", async (id, thunkAPI) => {
-  try {
-    const response = await apiInstance.get(`/employees/${id}/onboarding-status`);
-    return response.data?.data ?? response.data ?? {};
-  } catch (error) {
-    return thunkAPI.rejectWithValue(parseApiError(error, "Failed to fetch onboarding status"));
-  }
-});
-
 export const validateEmployeeInvitation = createAsyncThunk<
   InvitationValidationResponse,
   string,
@@ -326,5 +316,84 @@ export const activateEmployeeByToken = createAsyncThunk<
     return response.data?.data ?? response.data ?? { success: false, message: "Activation failed" };
   } catch (error) {
     return thunkAPI.rejectWithValue(parseApiError(error, "Failed to activate account"));
+  }
+});
+
+export const importEmployees = createAsyncThunk<
+  EmployeeImportResponse,
+  File,
+  { rejectValue: ParsedError }
+>("employees/importEmployees", async (file, thunkAPI) => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    
+    const response = await apiInstance.post("/employees/import", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data?.data ?? response.data ?? { success: false, message: "Import failed", imported: 0, failed: 0 };
+  } catch (error) {
+    return thunkAPI.rejectWithValue(parseApiError(error, "Failed to import employees"));
+  }
+});
+
+export const exportEmployees = createAsyncThunk<
+  Blob,
+  { search?: string; department?: string; designation?: string; status?: string } | void,
+  { rejectValue: ParsedError }
+>("employees/exportEmployees", async (params, thunkAPI) => {
+  try {
+    const searchParams = new URLSearchParams();
+    if (params?.search) searchParams.set("search", params.search);
+    if (params?.department && params.department !== "all") searchParams.set("department", params.department);
+    if (params?.designation && params.designation !== "all") searchParams.set("designation", params.designation);
+    if (params?.status && params.status !== "all") searchParams.set("status", params.status);
+    
+    const response = await apiInstance.get(`/employees/export?${searchParams.toString()}`, {
+      responseType: "blob",
+    });
+    return response.data as Blob;
+  } catch (error) {
+    return thunkAPI.rejectWithValue(parseApiError(error, "Failed to export employees"));
+  }
+});
+
+export const approveEmployee = createAsyncThunk<
+  ApproveEmployeeResponse,
+  string,
+  { rejectValue: ParsedError }
+>("employees/approveEmployee", async (id, thunkAPI) => {
+  try {
+    const response = await apiInstance.post(`/employees/${id}/approve`);
+    return response.data?.data ?? response.data ?? { success: true, message: "Employee approved" };
+  } catch (error) {
+    return thunkAPI.rejectWithValue(parseApiError(error, "Failed to approve employee"));
+  }
+});
+
+export const rejectEmployee = createAsyncThunk<
+  RejectEmployeeResponse,
+  { id: string; reason?: string },
+  { rejectValue: ParsedError }
+>("employees/rejectEmployee", async ({ id, reason }, thunkAPI) => {
+  try {
+    const payload = reason ? { reason } : undefined;
+    const response = await apiInstance.post(`/employees/${id}/reject`, payload);
+    return response.data?.data ?? response.data ?? { success: true, message: "Employee rejected" };
+  } catch (error) {
+    return thunkAPI.rejectWithValue(parseApiError(error, "Failed to reject employee"));
+  }
+});
+
+export const fetchEmployeeOnboardingStatus = createAsyncThunk<
+  OnboardingStatusResponse,
+  string,
+  { rejectValue: ParsedError }
+>("employees/fetchEmployeeOnboardingStatus", async (id, thunkAPI) => {
+  try {
+    const response = await apiInstance.get(`/employees/${id}/onboarding-status`);
+    return response.data?.data ?? response.data ?? {};
+  } catch (error) {
+    return thunkAPI.rejectWithValue(parseApiError(error, "Failed to fetch onboarding status"));
   }
 });

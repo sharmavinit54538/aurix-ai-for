@@ -1,32 +1,40 @@
 import apiInstance from "@/api/apiInstance";
-import type { Interviewer } from "@/features/admin/recruitment/types";
+import { RECRUITMENT_ENDPOINTS } from "@/api/endpoints";
+import { extractItems } from "@/features/admin/recruitment/utils/apiMappers";
+import type {
+  InterviewMode,
+  InterviewRecommendation,
+  InterviewStatus,
+  Interviewer,
+} from "@/features/admin/recruitment/types";
 
 export interface InterviewListParams {
   page?: number;
   limit?: number;
-  status?: string;
-  job_id?: string;
+  status?: InterviewStatus | "ALL";
+  date?: string;
   search?: string;
+  job_id?: string;
 }
 
 export interface ScheduleInterviewPayload {
-  interviewer_id?: string | null;
+  interviewer_id: string;
   scheduled_at: string;
   duration_minutes: number;
-  timezone?: string;
-  mode: "ONLINE" | "OFFLINE";
-  meeting_url?: string | null;
-  office_address?: string | null;
+  mode: InterviewMode;
+  meeting_url?: string;
+  location?: string;
+  round_name?: string;
   notes?: string;
 }
 
 export interface RescheduleInterviewPayload {
   scheduled_at: string;
   duration_minutes?: number;
-  timezone?: string;
-  mode?: "ONLINE" | "OFFLINE";
-  meeting_url?: string | null;
-  office_address?: string | null;
+  mode?: InterviewMode;
+  meeting_url?: string;
+  location?: string;
+  interviewer_id?: string;
   reason?: string;
 }
 
@@ -35,115 +43,143 @@ export interface CancelInterviewPayload {
 }
 
 export interface RoundFeedbackPayload {
-  rating?: number;
-  recommendation?: "PASS" | "REJECT" | "HOLD" | string;
-  feedback?: string;
-  notes?: string;
+  recommendation: InterviewRecommendation;
+  rating: number;
+  feedback: string;
+}
+
+function createUnsupportedInterviewError(actionLabel: string): Error & {
+  status: number;
+  isBackendBlocker: boolean;
+} {
+  const err = new Error(
+    `${actionLabel} is unavailable because the backend OpenAPI specification does not expose this endpoint.`,
+  ) as Error & { status: number; isBackendBlocker: boolean };
+  err.status = 501;
+  err.isBackendBlocker = true;
+  return err;
 }
 
 export const interviewApi = {
   getInterviews: async (params?: InterviewListParams) => {
-    const res = await apiInstance.get("/interviews", { params });
-    const payload = res.data?.data ?? res.data;
-    const items = Array.isArray(payload)
-      ? payload
-      : Array.isArray(payload?.items)
-        ? payload.items
-        : [];
+    const res = await apiInstance.get(RECRUITMENT_ENDPOINTS.INTERVIEWS, { params });
+    const raw = res.data?.data ?? res.data;
+    if (raw && !Array.isArray(raw) && Array.isArray(raw.items)) {
+      return raw;
+    }
     return {
-      items,
-      total: Number(payload?.total ?? items.length),
-      page: Number(payload?.page ?? params?.page ?? 1),
-      limit: Number(payload?.limit ?? params?.limit ?? 50),
+      items: Array.isArray(raw) ? raw : extractItems(raw),
+      total: Array.isArray(raw) ? raw.length : 0,
+      page: params?.page || 1,
+      limit: params?.limit || 50,
     };
   },
 
-  getInterviewers: async (): Promise<Interviewer[]> => {
-    const res = await apiInstance.get("/interviews/interviewers");
-    const payload = res.data?.data ?? res.data;
-    return Array.isArray(payload)
-      ? payload
-      : Array.isArray(payload?.items)
-        ? payload.items
-        : [];
+  getInterviewById: async (id: string) => {
+    const res = await apiInstance.get(RECRUITMENT_ENDPOINTS.INTERVIEW_BY_ID(id));
+    return res.data?.data ?? res.data;
   },
 
+  /**
+   * Loads active company employees as selectable interviewers via `/api/v1/employees`
+   * (`/interviews/interviewers` is absent from OpenAPI).
+   */
+  getInterviewers: async (): Promise<Interviewer[]> => {
+    const res = await apiInstance.get("/employees", { params: { limit: 100 } });
+    const rawItems = extractItems(res.data);
+    return rawItems
+      .map((emp): Interviewer | null => {
+        const id = String(emp.id ?? emp.user_id ?? "");
+        const fullName =
+          `${emp.first_name ?? ""} ${emp.last_name ?? ""}`.trim() ||
+          String(emp.full_name ?? emp.name ?? emp.email ?? "").trim();
+        if (!id || !fullName) return null;
+        return {
+          id,
+          name: fullName,
+          email: emp.email ? String(emp.email) : undefined,
+          role: emp.designation ? String(emp.designation) : emp.role ? String(emp.role) : undefined,
+          department: emp.department ? String(emp.department) : undefined,
+        };
+      })
+      .filter((item): item is Interviewer => item !== null);
+  },
+
+  /**
+   * Schedule interview slot (`POST /api/v1/interviews/{id}/schedule`).
+   */
   scheduleRound: async (
     interviewId: string,
     roundId: string,
     payload: ScheduleInterviewPayload,
   ) => {
     const res = await apiInstance.post(
-      `/interviews/${interviewId}/rounds/${roundId}/schedule`,
-      payload,
+      RECRUITMENT_ENDPOINTS.INTERVIEW_SCHEDULE(interviewId),
+      {
+        round_id: roundId,
+        ...payload,
+      },
     );
-    return res.data?.data ?? res.data ?? { success: true };
+    return res.data?.data ?? res.data;
   },
 
   rescheduleSchedule: async (
-    scheduleId: string,
-    payload: RescheduleInterviewPayload,
+    _scheduleId: string,
+    _payload: RescheduleInterviewPayload,
   ) => {
-    const res = await apiInstance.put(
-      `/interviews/schedules/${scheduleId}/reschedule`,
-      payload,
-    );
-    return res.data?.data ?? res.data ?? { success: true };
+    throw createUnsupportedInterviewError("Rescheduling interview slot");
   },
 
-  cancelSchedule: async (
-    scheduleId: string,
-    payload: CancelInterviewPayload,
-  ) => {
-    const res = await apiInstance.post(
-      `/interviews/schedules/${scheduleId}/cancel`,
-      payload,
-    );
-    return res.data?.data ?? res.data ?? { success: true };
+  cancelSchedule: async (_scheduleId: string, _payload: CancelInterviewPayload) => {
+    throw createUnsupportedInterviewError("Cancelling interview schedule");
   },
 
-  sendReminder: async (scheduleId: string) => {
-    const res = await apiInstance.post(
-      `/interviews/schedules/${scheduleId}/reminder`,
-      {},
-    );
-    return res.data?.data ?? res.data ?? { success: true };
+  sendReminder: async (_scheduleId: string) => {
+    throw createUnsupportedInterviewError("Sending interview reminder");
   },
 
-  markNoShow: async (scheduleId: string) => {
-    const res = await apiInstance.post(
-      `/interviews/schedules/${scheduleId}/no-show`,
-      {},
-    );
-    return res.data?.data ?? res.data ?? { success: true };
+  markNoShow: async (_scheduleId: string) => {
+    throw createUnsupportedInterviewError("Marking interview as no-show");
   },
 
+  /**
+   * Submit round outcome (`PATCH /api/v1/interviews/rounds/{round_id}/pass|reject|hold`).
+   */
   submitRoundFeedback: async (
     roundId: string,
-    action: string,
+    action: "PASS" | "REJECT" | "HOLD",
     payload: RoundFeedbackPayload,
   ) => {
-    const res = await apiInstance.post(
-      `/interviews/rounds/${roundId}/feedback`,
-      { ...payload, action },
-    );
-    return res.data?.data ?? res.data ?? { success: true };
+    const endpoint =
+      action === "PASS"
+        ? RECRUITMENT_ENDPOINTS.INTERVIEW_ROUND_PASS(roundId)
+        : action === "REJECT"
+          ? RECRUITMENT_ENDPOINTS.INTERVIEW_ROUND_REJECT(roundId)
+          : RECRUITMENT_ENDPOINTS.INTERVIEW_ROUND_HOLD(roundId);
+    const res = await apiInstance.patch(endpoint, payload);
+    return res.data?.data ?? res.data;
   },
 
+  /**
+   * Send interview scheduling/invite notification (`POST /api/v1/applications/{id}/send-interview`).
+   */
   sendInterviewInvite: async (applicationId: string, roundNames?: string) => {
-    const res = await apiInstance.post("/interviews/invite", {
-      application_id: applicationId,
-      round_names: roundNames,
-    });
-    return res.data?.data ?? res.data ?? { success: true };
+    const res = await apiInstance.post(
+      RECRUITMENT_ENDPOINTS.APPLICATION_SEND_INTERVIEW(applicationId),
+      {
+        application_id: applicationId,
+        round_names: roundNames || "Technical Screening",
+      },
+    );
+    return res.data?.data ?? res.data;
   },
 
-  submitScorecard: async (interviewId: string, scorecard: any) => {
-    const res = await apiInstance.post(
-      `/interviews/${interviewId}/scorecard`,
-      scorecard,
-    );
-    return res.data?.data ?? res.data ?? { success: true };
+  submitScorecard: async (interviewId: string, scorecard: Record<string, unknown>) => {
+    const res = await apiInstance.post(RECRUITMENT_ENDPOINTS.SCORECARD_SUBMISSIONS, {
+      interview_id: interviewId,
+      ...scorecard,
+    });
+    return res.data?.data ?? res.data;
   },
 };
 

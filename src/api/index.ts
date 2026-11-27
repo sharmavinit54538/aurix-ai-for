@@ -1,8 +1,18 @@
 export { default as apiInstance, clearApiCache } from "./apiInstance";
+export { publicApiInstance } from "./publicApiInstance";
 export { BASE_URL, API_BASE_URL, getApiBaseUrl } from "./baseUrl";
 export { api, apiRequest, ApiError, normalizeApiPath } from "./client";
 export type { RequestOptions } from "./client";
-export { AUTH_ENDPOINTS, type AuthEndpointKey } from "./endpoints";
+export {
+  AUTH_ENDPOINTS,
+  MANAGER_ENDPOINTS,
+  RECRUITMENT_ENDPOINTS,
+  SCREENING_V2_ENDPOINTS,
+  INTERVIEW_BOT_V2_ENDPOINTS,
+  ANALYTICS_V2_ENDPOINTS,
+  PUBLIC_CAREER_ENDPOINTS,
+  type AuthEndpointKey,
+} from "./endpoints";
 export { authService } from "./auth";
 export type {
   LoginCredentials,

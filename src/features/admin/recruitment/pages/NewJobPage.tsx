@@ -30,10 +30,7 @@ import type {
   WorkMode, 
   JobStatus 
 } from "@/features/admin/recruitment/types";
-import { 
-  getDepartmentSkills, 
-  generateSmartJobDescription 
-} from "@/features/admin/recruitment/utils/generateSmartJobDescription";
+import { getDepartmentSkills } from "@/features/admin/recruitment/utils/generateSmartJobDescription";
 import { recruitmentApi } from "@/services/recruitmentApi";
 
 // Standard departments list
@@ -211,6 +208,7 @@ export function NewJobPage() {
   }, [effectiveDepartmentName]);
 
   // AI Generation States
+  const [isAutofilling, setIsAutofilling] = useState(false);
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [isRefiningAi, setIsRefiningAi] = useState(false);
   const [aiCustomInstruction, setAiCustomInstruction] = useState("");
@@ -223,6 +221,83 @@ export function NewJobPage() {
   const [copied, setCopied] = useState(false);
 
   const locationRef = useRef<HTMLDivElement>(null);
+
+  const handleAiAutofillRole = async () => {
+    if (!title.trim()) {
+      toast.error("Please enter a job title first so AI can autofill role details.");
+      return;
+    }
+
+    const hasExistingContent =
+      Boolean(description.trim()) ||
+      skills.length > 0 ||
+      responsibilities.length > 0 ||
+      requirements.length > 0;
+
+    if (
+      hasExistingContent &&
+      !window.confirm(
+        "Autofill will overwrite existing description, skills, responsibilities, or requirements. Continue?",
+      )
+    ) {
+      return;
+    }
+
+    setIsAutofilling(true);
+    try {
+      const response = (await recruitmentApi.aiAutofillJob({
+        title: title.trim(),
+        department: effectiveDepartmentName,
+        experience,
+        employment_type: employmentType,
+        work_mode: workMode,
+      })) as Record<string, unknown>;
+
+      if (response.department && typeof response.department === "string") {
+        if (DEPARTMENTS.includes(response.department)) {
+          setDepartment(response.department);
+        } else {
+          setDepartment("Other");
+          setCustomDepartment(response.department);
+        }
+      }
+      if (response.location && typeof response.location === "string") {
+        setLocation(response.location);
+        setLocationSearch(response.location);
+      }
+      if (response.employment_type && EMPLOYMENT_TYPES.includes(response.employment_type as EmploymentType)) {
+        setEmploymentType(response.employment_type as EmploymentType);
+      }
+      if (response.work_mode && typeof response.work_mode === "string") {
+        const wm = response.work_mode.trim().toLowerCase();
+        if (wm === "remote") setWorkMode("Remote");
+        else if (wm === "hybrid") setWorkMode("Hybrid");
+        else if (wm === "onsite" || wm === "on-site") setWorkMode("Onsite");
+      }
+      if (typeof response.salary_min === "number") setSalaryMin(String(response.salary_min));
+      if (typeof response.salary_max === "number") setSalaryMax(String(response.salary_max));
+      if (Array.isArray(response.skills)) {
+        setSkills(response.skills.map(String).filter(Boolean));
+      }
+      if (Array.isArray(response.responsibilities)) {
+        setResponsibilities(response.responsibilities.map(String).filter(Boolean));
+      }
+      if (Array.isArray(response.requirements)) {
+        setRequirements(response.requirements.map(String).filter(Boolean));
+      }
+      if (typeof response.description === "string" && response.description.trim()) {
+        setDescription(response.description);
+        setEditorTab("preview");
+      }
+      toast.success("Job role fields autofilled via backend AI.");
+    } catch (err: any) {
+      toast.error(
+        err?.response?.data?.detail || err?.message || "Failed to autofill job details from AI.",
+      );
+    } finally {
+      setIsAutofilling(false);
+    }
+  };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -364,26 +439,7 @@ export function NewJobPage() {
 
       throw new Error("Backend AI returned empty content");
     } catch (err: any) {
-      console.warn("Backend AI endpoint unavailable or failed. Using smart domain-specific generator fallback:", err);
-      // 2. High-quality multi-industry fallback generator based on title and department
-      const smartResult = generateSmartJobDescription({
-        title: title.trim(),
-        department: effectiveDept,
-        employmentType,
-        experience,
-        location: location.trim(),
-        workMode,
-        skills: skills.length > 0 ? skills : undefined,
-      });
-
-      setDescription(smartResult.markdownDescription);
-      setResponsibilities(smartResult.responsibilities);
-      setRequirements(smartResult.requirements);
-      if (skills.length === 0 && smartResult.suggestedSkills.length > 0) {
-        setSkills(smartResult.suggestedSkills.slice(0, 5));
-      }
-      setEditorTab("preview");
-      toast.success("Job description generated successfully with AI assistance!");
+      toast.error(err?.response?.data?.detail || err?.message || "Failed to generate job description with AI.");
     } finally {
       setIsGeneratingAi(false);
     }
@@ -435,44 +491,7 @@ export function NewJobPage() {
 
       throw new Error("Empty refinement returned");
     } catch (err: any) {
-      console.warn("Backend AI refinement unavailable. Applying local rule-based polish:", err);
-      let updated = description;
-      if (action === "improve") {
-        updated = description
-          .replace(/^(#+)\s*([^\n]+)/gm, "$1 $2\n")
-          .replace(/\n{3,}/g, "\n\n")
-          .trim();
-      } else if (action === "expand") {
-        if (!description.toLowerCase().includes("growth") && !description.toLowerCase().includes("career")) {
-          updated = `${description.trim()}\n\n### Professional Growth & Impact\n- Clear career progression pathway with periodic merit and performance evaluations\n- Cross-functional exposure to key organizational initiatives and leadership mentorship\n- Comprehensive learning budget for certifications, workshops, and industry conferences`;
-        } else {
-          updated = `${description.trim()}\n\n### Collaborative Team Environment\n- Work alongside high-performing peers dedicated to operational excellence\n- Open culture with transparent communication and autonomy to drive impact`;
-        }
-      } else if (action === "shorten") {
-        const lines = description.split("\n");
-        const shortened = lines.filter((l) => {
-          if (l.startsWith("#") || l.trim() === "") return true;
-          return l.length < 120;
-        });
-        updated = shortened.join("\n").replace(/\n{3,}/g, "\n\n");
-      } else if (action === "professional") {
-        updated = description
-          .replace(/we are looking for/gi, "We are actively seeking")
-          .replace(/good/gi, "exemplary")
-          .replace(/help/gi, "facilitate and support")
-          .replace(/talk/gi, "communicate effectively");
-      } else if (action === "casual") {
-        updated = description
-          .replace(/actively seeking/gi, "looking for")
-          .replace(/exemplary/gi, "great")
-          .replace(/facilitate and support/gi, "help out");
-      } else if (action === "custom" && customPrompt?.trim()) {
-        updated = `${description.trim()}\n\n### Special Focus (${customPrompt.trim()})\n- ${customPrompt.trim()}`;
-        setAiCustomInstruction("");
-      }
-
-      setDescription(updated);
-      toast.success("Job description updated with AI adjustments!");
+      toast.error(err?.response?.data?.detail || err?.message || "Failed to refine job description with AI.");
     } finally {
       setIsRefiningAi(false);
     }
@@ -669,12 +688,29 @@ export function NewJobPage() {
         >
           {/* SECTION 1: ROLE OVERVIEW */}
           <div className="rounded-2xl border border-border bg-card/65 p-6 backdrop-blur-xl shadow-lg space-y-5">
-            <div className="flex items-center justify-between border-b border-border/60 pb-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-3">
               <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
                 <Briefcase className="h-4 w-4 text-primary" />
                 Basic Role Information
               </h2>
-              <span className="text-xs text-muted-foreground">* Required fields</span>
+              <div className="flex items-center gap-3">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={isAutofilling}
+                  onClick={() => void handleAiAutofillRole()}
+                  className="h-7 rounded-lg text-xs gap-1.5 border-primary/30 text-primary hover:bg-primary/10"
+                >
+                  {isAutofilling ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-3 w-3" />
+                  )}
+                  {isAutofilling ? "Autofilling..." : "AI Autofill Role"}
+                </Button>
+                <span className="text-xs text-muted-foreground">* Required fields</span>
+              </div>
             </div>
 
             <div className="space-y-4">

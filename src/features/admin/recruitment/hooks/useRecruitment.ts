@@ -3,12 +3,16 @@ import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
   clearScreeningState,
   optimisticMoveStage,
-  optimisticUpsertInterview,
 } from "../recruitmentSlice";
 import {
+  acceptOffer,
   addNote,
   archiveJob,
+  bulkMoveApplications,
+  bulkTagApplications,
   cancelInterviewSchedule,
+  convertApplication,
+  deleteCandidate,
   deleteJob,
   duplicateJob,
   fetchInterviewers,
@@ -18,6 +22,7 @@ import {
   fetchScreeningResults,
   markInterviewNoShow,
   moveStage,
+  rejectOffer,
   rescheduleInterviewSchedule,
   runScreening,
   scheduleInterviewRound,
@@ -66,8 +71,14 @@ export interface UseRecruitmentReturn extends RecruitmentResources {
   archiveJob: (id: string) => Promise<void>;
   duplicateJob: (id: string) => Promise<void>;
   upsertCandidate: (candidate: Candidate) => Promise<void>;
-  moveStage: (id: string, stage: Stage) => void;
-  addNote: (candidateId: string, text: string) => void;
+  deleteCandidate: (id: string) => Promise<void>;
+  bulkMoveApplications: (applicationIds: string[], stage: Stage, notes?: string) => Promise<unknown>;
+  bulkTagApplications: (applicationIds: string[], tags: string[]) => Promise<unknown>;
+  acceptOffer: (offerId: string, notes?: string) => Promise<unknown>;
+  rejectOffer: (offerId: string, reason?: string) => Promise<unknown>;
+  convertApplication: (applicationId: string, payload?: Record<string, unknown>) => Promise<unknown>;
+  moveStage: (id: string, stage: Stage) => Promise<void>;
+  addNote: (candidateId: string, text: string) => Promise<void>;
   upsertInterview: (interview: Interview) => Promise<void>;
   upsertOffer: (offer: Offer) => Promise<void>;
   // Screening state and actions
@@ -175,21 +186,21 @@ function useRecruitmentBase() {
 
   const deleteJobAction = useCallback(
     async (id: string) => {
-      await dispatch(deleteJob(id));
+      await dispatch(deleteJob(id)).unwrap();
     },
     [dispatch],
   );
 
   const archiveJobAction = useCallback(
     async (id: string) => {
-      await dispatch(archiveJob(id));
+      await dispatch(archiveJob(id)).unwrap();
     },
     [dispatch],
   );
 
   const duplicateJobAction = useCallback(
     async (id: string) => {
-      await dispatch(duplicateJob(id));
+      await dispatch(duplicateJob(id)).unwrap();
     },
     [dispatch],
   );
@@ -204,32 +215,82 @@ function useRecruitmentBase() {
     [dispatch],
   );
 
-  const moveStageAction = useCallback(
-    (id: string, stage: Stage) => {
-      dispatch(optimisticMoveStage({ id, stage }));
-      dispatch(moveStage({ id, stage }));
+  const deleteCandidateAction = useCallback(
+    async (id: string) => {
+      await dispatch(deleteCandidate(id)).unwrap();
     },
     [dispatch],
   );
 
+  const bulkMoveApplicationsAction = useCallback(
+    async (applicationIds: string[], stage: Stage, notes?: string) => {
+      return await dispatch(bulkMoveApplications({ applicationIds, stage, notes })).unwrap();
+    },
+    [dispatch],
+  );
+
+  const bulkTagApplicationsAction = useCallback(
+    async (applicationIds: string[], tags: string[]) => {
+      return await dispatch(bulkTagApplications({ applicationIds, tags })).unwrap();
+    },
+    [dispatch],
+  );
+
+  const acceptOfferAction = useCallback(
+    async (offerId: string, notes?: string) => {
+      return await dispatch(acceptOffer({ offerId, notes })).unwrap();
+    },
+    [dispatch],
+  );
+
+  const rejectOfferAction = useCallback(
+    async (offerId: string, reason?: string) => {
+      return await dispatch(rejectOffer({ offerId, reason })).unwrap();
+    },
+    [dispatch],
+  );
+
+  const convertApplicationAction = useCallback(
+    async (applicationId: string, payload?: Record<string, unknown>) => {
+      return await dispatch(convertApplication({ applicationId, payload })).unwrap();
+    },
+    [dispatch],
+  );
+
+  const moveStageAction = useCallback(
+    async (id: string, stage: Stage) => {
+      const prevCandidate = candidates.find((c) => c.applicationId === id || c.id === id);
+      const prevStage = prevCandidate?.stage;
+      dispatch(optimisticMoveStage({ id, stage }));
+      try {
+        await dispatch(moveStage({ id, stage })).unwrap();
+      } catch (err) {
+        if (prevStage) {
+          dispatch(optimisticMoveStage({ id, stage: prevStage }));
+        }
+        throw err;
+      }
+    },
+    [candidates, dispatch],
+  );
+
   const addNoteAction = useCallback(
-    (candidateId: string, text: string) => {
-      dispatch(addNote({ candidateId, text }));
+    async (candidateId: string, text: string) => {
+      await dispatch(addNote({ candidateId, text })).unwrap();
     },
     [dispatch],
   );
 
   const upsertInterviewAction = useCallback(
     async (interview: Interview) => {
-      dispatch(optimisticUpsertInterview(interview));
-      await dispatch(upsertInterview(interview));
+      await dispatch(upsertInterview(interview)).unwrap();
     },
     [dispatch],
   );
 
   const upsertOfferAction = useCallback(
     async (offer: Offer) => {
-      await dispatch(upsertOffer(offer));
+      await dispatch(upsertOffer(offer)).unwrap();
     },
     [dispatch],
   );
@@ -391,6 +452,12 @@ function useRecruitmentBase() {
     archiveJob: archiveJobAction,
     duplicateJob: duplicateJobAction,
     upsertCandidate: upsertCandidateAction,
+    deleteCandidate: deleteCandidateAction,
+    bulkMoveApplications: bulkMoveApplicationsAction,
+    bulkTagApplications: bulkTagApplicationsAction,
+    acceptOffer: acceptOfferAction,
+    rejectOffer: rejectOfferAction,
+    convertApplication: convertApplicationAction,
     moveStage: moveStageAction,
     addNote: addNoteAction,
     upsertInterview: upsertInterviewAction,
@@ -456,34 +523,50 @@ export function createRecruitmentApi(dispatch: ReturnType<typeof useAppDispatch>
       return result.payload;
     },
     deleteJob: async (id: string) => {
-      await dispatch(deleteJob(id));
+      await dispatch(deleteJob(id)).unwrap();
     },
     archiveJob: async (id: string) => {
-      await dispatch(archiveJob(id));
+      await dispatch(archiveJob(id)).unwrap();
     },
     duplicateJob: async (id: string) => {
-      await dispatch(duplicateJob(id));
+      await dispatch(duplicateJob(id)).unwrap();
     },
     upsertCandidate: async (candidate: Candidate) => {
-      await dispatch(upsertCandidate(candidate));
+      await dispatch(upsertCandidate(candidate)).unwrap();
     },
-    moveStage: (id: string, stage: Stage) => {
-      dispatch(optimisticMoveStage({ id, stage }));
-      dispatch(moveStage({ id, stage }));
+    deleteCandidate: async (id: string) => {
+      await dispatch(deleteCandidate(id)).unwrap();
     },
-    addNote: (candidateId: string, text: string) => {
-      dispatch(addNote({ candidateId, text }));
+    bulkMoveApplications: async (applicationIds: string[], stage: Stage, notes?: string) => {
+      return await dispatch(bulkMoveApplications({ applicationIds, stage, notes })).unwrap();
+    },
+    bulkTagApplications: async (applicationIds: string[], tags: string[]) => {
+      return await dispatch(bulkTagApplications({ applicationIds, tags })).unwrap();
+    },
+    acceptOffer: async (offerId: string, notes?: string) => {
+      return await dispatch(acceptOffer({ offerId, notes })).unwrap();
+    },
+    rejectOffer: async (offerId: string, reason?: string) => {
+      return await dispatch(rejectOffer({ offerId, reason })).unwrap();
+    },
+    convertApplication: async (applicationId: string, payload?: Record<string, unknown>) => {
+      return await dispatch(convertApplication({ applicationId, payload })).unwrap();
+    },
+    moveStage: async (id: string, stage: Stage) => {
+      await dispatch(moveStage({ id, stage })).unwrap();
+    },
+    addNote: async (candidateId: string, text: string) => {
+      await dispatch(addNote({ candidateId, text })).unwrap();
     },
     upsertInterview: async (interview: Interview) => {
-      dispatch(optimisticUpsertInterview(interview));
-      await dispatch(upsertInterview(interview));
+      await dispatch(upsertInterview(interview)).unwrap();
     },
     upsertOffer: async (offer: Offer) => {
-      await dispatch(upsertOffer(offer));
+      await dispatch(upsertOffer(offer)).unwrap();
     },
   };
 }
 
 export async function refreshAll(dispatch: ReturnType<typeof useAppDispatch>) {
-  await dispatch(fetchRecruitmentData());
+  await dispatch(fetchRecruitmentData({ force: true }));
 }

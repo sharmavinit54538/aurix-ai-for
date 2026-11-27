@@ -31,14 +31,46 @@ const apiInstance = axios.create({
   },
 });
 
+const PUBLIC_URL_PREFIXES = ["/api/public/", "/public/"];
+
+function isPublicOrExternalTarget(url: string | undefined, baseUrl: string): boolean {
+  if (!url) return false;
+  if (PUBLIC_URL_PREFIXES.some((prefix) => url.startsWith(prefix))) {
+    return true;
+  }
+  if (/^https?:\/\//i.test(url)) {
+    try {
+      const originFallback =
+        typeof window !== "undefined" ? window.location.origin : "http://localhost";
+      const targetOrigin = new URL(url).origin;
+      const apiOrigin = new URL(baseUrl, originFallback).origin;
+      return targetOrigin !== apiOrigin;
+    } catch {
+      return false;
+    }
+  }
+  return false;
+}
+
 apiInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     if (config.url) {
       config.url = normalizeApiPath(config.url);
     }
-    const token = getAccessToken();
-    if (token && config.headers && !config.headers.Authorization) {
-      config.headers.Authorization = `Bearer ${token}`;
+    const skipAuth =
+      Boolean(config.headers?.["X-Skip-Auth"]) ||
+      isPublicOrExternalTarget(
+        config.url,
+        String(config.baseURL || apiInstance.defaults.baseURL || ""),
+      );
+    if (config.headers && "X-Skip-Auth" in config.headers) {
+      delete config.headers["X-Skip-Auth"];
+    }
+    if (!skipAuth) {
+      const token = getAccessToken();
+      if (token && config.headers && !config.headers.Authorization) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },

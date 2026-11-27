@@ -60,7 +60,7 @@ export function JobDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { candidates: allCandidates, getJob, upsertJob } = useRecruitment();
+  const { candidates: allCandidates, offers, getJob, upsertJob } = useRecruitment();
   const applicants = useMemo(() => allCandidates.filter((c) => c.jobId === jobId), [allCandidates, jobId]);
 
   // Tab State
@@ -77,12 +77,7 @@ export function JobDetailPage() {
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
   const [showQr, setShowQr] = useState(false);
 
-  // Comments feed state
-  const [commentText, setCommentText] = useState("");
-  const [notesList, setNotesList] = useState<{ author: string; at: string; text: string }[]>([
-    { author: "Hiring Manager", at: "2026-06-29T10:00:00Z", text: "Approved budget allocation for hiring this quarter." },
-    { author: "HR Recruiter", at: "2026-06-29T14:30:00Z", text: "Synced job posting details across LinkedIn and Glassdoor." },
-  ]);
+  // Job-level comments notice (CRM notes are candidate-scoped in backend)
 
 
 
@@ -408,18 +403,14 @@ export function JobDetailPage() {
     setTimeout(() => setCopiedLink(null), 2000);
   }
 
-  // Add notes
-  function handleAddNote() {
-    if (!commentText.trim()) return;
-    setNotesList([{ author: "You", at: new Date().toISOString(), text: commentText.trim() }, ...notesList]);
-    setCommentText("");
-  }
-
-  // KPI calculations
-  const totalViews = 384;
+  // KPI calculations derived strictly from Redux/backend records (no hardcoded placeholders)
+  const rawViews =
+    (job as unknown as Record<string, unknown> | null)?.views ??
+    (job as unknown as Record<string, unknown> | null)?.total_views;
+  const totalViews = typeof rawViews === "number" ? rawViews : null;
   const shortlistedCount = applicants.filter(c => ["assessment", "interview", "technical", "hr"].includes(c.stage)).length;
   const interviewedCount = applicants.filter(c => ["interview", "technical"].includes(c.stage)).length;
-  const offersSent = 2;
+  const offersSent = offers.filter((o) => o.jobId === jobId).length;
   const hiredCount = applicants.filter(c => c.stage === "hired").length;
   const rejectedCount = applicants.filter(c => c.stage === "rejected").length;
   const conversionRate = applicants.length ? ((hiredCount / applicants.length) * 100).toFixed(0) : "0";
@@ -516,10 +507,10 @@ export function JobDetailPage() {
                   {job.status.toLowerCase() === "published" ? <Pause className="mr-1.5 h-4 w-4" /> : <Play className="mr-1.5 h-4 w-4" />}
                   {job.status.toLowerCase() === "published" ? "Pause" : "Activate"}
                 </Button>
-                {job.status.toLowerCase() !== "closed" && userRole !== "recruiter" && (
+                {job.status.toLowerCase() !== "closed" && userRole.toLowerCase() !== "recruiter" && userRole.toLowerCase() !== "employee" && (
                   <Button variant="outline" size="sm" onClick={() => setShowCloseDialog(true)}><Archive className="mr-1.5 h-4 w-4" />Close Job</Button>
                 )}
-                {userRole === "admin" && (
+                {["admin", "hr_admin", "hr", "tenant_admin", "org_admin"].includes(userRole.toLowerCase()) && (
                   <Button variant="outline" size="sm" onClick={remove} className="text-destructive hover:bg-destructive/10 hover:text-destructive">
                     <Trash2 className="mr-1.5 h-4 w-4" />Delete
                   </Button>
@@ -880,7 +871,7 @@ export function JobDetailPage() {
               {/* Small telemetry counters */}
               <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                 {[
-                  { label: "Job Views", value: totalViews, suffix: "", icon: Globe },
+                  { label: "Job Views", value: totalViews ?? "—", suffix: "", icon: Globe },
                   { label: "Applications", value: applicants.length, suffix: "", icon: Users },
                   { label: "Interviewed", value: interviewedCount, suffix: "", icon: CalendarClock },
                   { label: "Hired Rate", value: conversionRate, suffix: "%", icon: UserPlus },
@@ -967,41 +958,16 @@ export function JobDetailPage() {
           {/* TAB 6: ACTIVITY LOGS */}
           {activeTab === "activity" && (
             <div className="space-y-6">
-              {/* Notes submission box */}
-              <div className="rounded-xl border border-border bg-card/60 p-4 space-y-3">
-                <span className="text-xs font-semibold block">Add Notes / Comments</span>
-                <Textarea
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  placeholder="Type an internal update, tag recruiter..."
-                  rows={3}
-                  className="text-xs bg-background/50 border-border"
-                />
-                <div className="flex justify-end">
-                  <Button size="sm" onClick={handleAddNote} className="h-8 text-xs">
-                    <MessageSquare className="mr-1.5 h-3.5 w-3.5" />Submit Comment
-                  </Button>
+              {/* Job Comments Notice */}
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-2 text-xs">
+                <div className="font-semibold text-foreground">
+                  Job-level Internal Notes Unavailable (Backend Blocker)
                 </div>
-              </div>
-
-              {/* Feed List */}
-              <div className="space-y-4">
-                {notesList.map((n, idx) => (
-                  <div key={idx} className="flex gap-3 rounded-xl border border-border bg-card/40 p-4 text-xs">
-                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary/10 font-bold text-primary">
-                      {n.author.charAt(0)}
-                    </span>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-foreground">{n.author}</span>
-                        <span className="text-[10px] text-muted-foreground">{fmtDate(n.at)}</span>
-                      </div>
-                      <p className="text-muted-foreground leading-relaxed">
-                        {n.text}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                <p className="text-muted-foreground">
+                  The backend API currently persists internal notes per candidate (
+                  <code>/api/v1/crm/notes</code>) rather than per job posting. Open any candidate profile
+                  to record persistent CRM notes.
+                </p>
               </div>
             </div>
           )}
@@ -1029,7 +995,9 @@ export function JobDetailPage() {
               <Button size="sm" variant="outline" className="w-full text-xs justify-start" onClick={() => setShowDuplicateModal(true)}>
                 <Copy className="mr-2 h-4 w-4" />Duplicate Role
               </Button>
-              {userRole !== "recruiter" && (
+              {["admin", "hr_admin", "hr", "tenant_admin", "org_admin", "manager", "hiring_manager"].includes(
+                userRole.toLowerCase(),
+              ) && (
                 <Button size="sm" variant="outline" className="w-full text-xs justify-start text-destructive hover:bg-destructive/15" onClick={() => setShowCloseDialog(true)}>
                   <Archive className="mr-2 h-4 w-4" />Close Position
                 </Button>

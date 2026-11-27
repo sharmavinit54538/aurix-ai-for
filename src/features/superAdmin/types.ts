@@ -431,6 +431,7 @@ export interface SecuritySessionRecord {
   userName: string | null;
   adminEmail?: string | null;
   userEmail: string | null;
+  role?: string | null;
   ipAddress?: string | null;
   location?: string | null;
   browser?: string | null;
@@ -440,6 +441,7 @@ export interface SecuritySessionRecord {
   startedAt: string | null;
   lastActivity?: string | null;
   status?: string | null;
+  isCurrentSession?: boolean;
 }
 
 export type PlatformSession = SecuritySessionRecord;

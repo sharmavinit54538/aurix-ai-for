@@ -1,8 +1,26 @@
-import { useState, useEffect, type FormEvent } from "react";
-import { Building2, Power, Search, UserCheck, UserX, Users, X } from "lucide-react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import {
+  AlertCircle,
+  AlertTriangle,
+  CheckCircle2,
+  Eye,
+  KeyRound,
+  Loader2,
+  MoreHorizontal,
+  Power,
+  RefreshCw,
+  ShieldAlert,
+  UserCheck,
+  UserX,
+  Building2,
+  Search,
+  Users,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -11,9 +29,26 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAurix } from "@/lib/aurix-store";
+import { formatSecurityApiError } from "@/lib/security-errors";
 import { cn } from "@/lib/utils";
-import { useSetUserActive, useSuperAdminStatistics, useSuperAdminUsers } from "../hooks";
+import {
+  usePlatformUserDetail,
+  useResetPlatformUserPassword,
+  useSetUserActive,
+  useSuperAdminStatistics,
+  useSuperAdminUsers,
+} from "../hooks";
 import {
   AccessDeniedState,
   EmptyState,
@@ -59,6 +94,9 @@ export function SuperAdminUsersPage() {
   const [page, setPage] = useState(1);
 
   const [selectedUser, setSelectedUser] = useState<PlatformUser | null>(null);
+  const [detailUser, setDetailUser] = useState<PlatformUser | null>(null);
+  const [resetPasswordUser, setResetPasswordUser] = useState<PlatformUser | null>(null);
+  const [resetDialogError, setResetDialogError] = useState<string | null>(null);
 
   const params = {
     page,
@@ -70,6 +108,8 @@ export function SuperAdminUsersPage() {
   const users = useSuperAdminUsers(params);
   const statistics = useSuperAdminStatistics();
   const setUserActive = useSetUserActive();
+  const resetUserPassword = useResetPlatformUserPassword();
+  const userDetailQuery = usePlatformUserDetail(detailUser?.id ?? null);
 
   const filtersActive = Boolean(params.search || params.role || params.status);
 
@@ -93,20 +133,83 @@ export function SuperAdminUsersPage() {
     setPage(1);
   };
 
+  const isProtectedAccount = (user: PlatformUser) =>
+    user.role?.toLowerCase() === "super_admin" || user.id === ws.user?.id;
+
   const canChangeStatus = (user: PlatformUser) =>
-    user.isActive !== null && user.role?.toLowerCase() !== "super_admin" && user.id !== ws.user?.id;
+    user.isActive !== null && !isProtectedAccount(user);
+
+  const canResetPassword = (user: PlatformUser) => !isProtectedAccount(user);
 
   const confirmStatusChange = async () => {
-    if (!selectedUser || selectedUser.isActive === null) return;
+    if (!selectedUser || selectedUser.isActive === null || setUserActive.isPending) return;
     const activate = !selectedUser.isActive;
     try {
       const message = await setUserActive.mutateAsync({ userId: selectedUser.id, active: activate });
       toast.success(message ?? `User ${activate ? "activated" : "deactivated"}.`);
       setSelectedUser(null);
+      if (detailUser?.id === selectedUser.id) {
+        void userDetailQuery.refetch();
+      }
+      void users.refetch();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to update user status.");
+      const formatted = formatSecurityApiError(error, "Failed to update user status.");
+      toast.error(formatted.message);
     }
   };
+
+  const openResetPasswordDialog = (user: PlatformUser) => {
+    if (!canResetPassword(user)) return;
+    setResetDialogError(null);
+    setResetPasswordUser(user);
+  };
+
+  const handleCloseResetPasswordDialog = (open: boolean) => {
+    if (!open && resetUserPassword.isPending) return;
+    if (!open) {
+      setResetPasswordUser(null);
+      setResetDialogError(null);
+    }
+  };
+
+  const confirmResetPassword = async () => {
+    if (!resetPasswordUser || resetUserPassword.isPending) return;
+    setResetDialogError(null);
+    try {
+      const message = await resetUserPassword.mutateAsync(resetPasswordUser.id);
+      toast.success(
+        message || `Password reset instructions issued for ${resetPasswordUser.email ?? "user"}.`,
+      );
+      if (detailUser?.id === resetPasswordUser.id) {
+        void userDetailQuery.refetch();
+      }
+      void users.refetch();
+      setResetPasswordUser(null);
+    } catch (error) {
+      const formatted = formatSecurityApiError(error, "Failed to issue password reset.");
+      setResetDialogError(formatted.message);
+      toast.error(formatted.message);
+    }
+  };
+
+  const detailRecord = useMemo(() => {
+    if (!detailUser) return null;
+    const fetched = userDetailQuery.data;
+    return {
+      id: fetched?.id ?? detailUser.id,
+      name: fetched?.name ?? detailUser.name,
+      email: fetched?.email ?? detailUser.email,
+      phone: fetched?.phone ?? detailUser.phone,
+      role: fetched?.role ?? detailUser.role,
+      organizationName: detailUser.organizationName,
+      organizationId: fetched?.companyId ?? detailUser.organizationId,
+      isActive: fetched?.is_active ?? detailUser.isActive,
+      status: fetched?.status ?? detailUser.status,
+      isVerified: detailUser.isVerified,
+      createdAt: fetched?.created_at ?? detailUser.createdAt,
+      lastLoginAt: detailUser.lastLoginAt,
+    };
+  }, [detailUser, userDetailQuery.data]);
 
   if (users.isError && isAuthorizationError(users.error)) {
     return <AccessDeniedState error={users.error} />;
@@ -203,6 +306,18 @@ export function SuperAdminUsersPage() {
               <option value="inactive">Inactive</option>
             </select>
           </label>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => void users.refetch()}
+            disabled={users.isFetching}
+            className="h-9 gap-1.5 text-xs cursor-pointer"
+          >
+            <RefreshCw className={cn("h-3.5 w-3.5", users.isFetching && "animate-spin")} />
+            Refresh
+          </Button>
         </div>
       </div>
 
@@ -261,9 +376,18 @@ export function SuperAdminUsersPage() {
               <tbody className="divide-y divide-border/40">
                 {rows.map((user) => {
                   const editable = canChangeStatus(user);
+                  const resettable = canResetPassword(user);
                   return (
                     <tr key={user.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="py-3 px-4 font-semibold text-foreground">{user.name ?? MISSING_VALUE}</td>
+                      <td className="py-3 px-4 font-semibold text-foreground">
+                        <button
+                          type="button"
+                          onClick={() => setDetailUser(user)}
+                          className="text-left hover:text-primary hover:underline underline-offset-2 cursor-pointer"
+                        >
+                          {user.name ?? MISSING_VALUE}
+                        </button>
+                      </td>
                       <td className="py-3 px-4 text-muted-foreground font-mono">{user.email ?? MISSING_VALUE}</td>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-1.5 font-medium text-foreground">
@@ -291,26 +415,91 @@ export function SuperAdminUsersPage() {
                         {user.lastLoginAt ? formatRelativeTime(user.lastLoginAt) : "Never"}
                       </td>
                       <td className="py-3 px-4 text-right">
-                        {editable ? (
+                        <div className="inline-flex items-center justify-end gap-1.5">
                           <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setSelectedUser(user)}
-                            className={cn(
-                              "h-7 px-2.5 text-[11px] font-semibold gap-1",
-                              user.isActive
-                                ? "text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border-rose-500/30"
-                                : "text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 border-emerald-500/30",
-                            )}
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setDetailUser(user)}
+                            className="h-7 w-7 text-muted-foreground hover:text-primary cursor-pointer"
+                            title="View user details"
+                            aria-label={`View details for ${user.name ?? user.email ?? "user"}`}
                           >
-                            <Power className="h-3 w-3" />
-                            {user.isActive ? "Deactivate" : "Activate"}
+                            <Eye className="h-3.5 w-3.5" />
                           </Button>
-                        ) : (
-                          <span className="text-[11px] text-muted-foreground" title="Status changes are disabled for Super Admin accounts">
-                            Protected
-                          </span>
-                        )}
+
+                          {editable ? (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setSelectedUser(user)}
+                              className={cn(
+                                "h-7 px-2.5 text-[11px] font-semibold gap-1 cursor-pointer",
+                                user.isActive
+                                  ? "text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border-rose-500/30"
+                                  : "text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 border-emerald-500/30",
+                              )}
+                            >
+                              <Power className="h-3 w-3" />
+                              {user.isActive ? "Deactivate" : "Activate"}
+                            </Button>
+                          ) : (
+                            <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                              Protected
+                            </Badge>
+                          )}
+
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 cursor-pointer"
+                                aria-label={`Actions for ${user.name ?? user.email ?? "user"}`}
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                              <DropdownMenuLabel className="text-[11px] text-muted-foreground">
+                                User Management
+                              </DropdownMenuLabel>
+                              <DropdownMenuItem
+                                onClick={() => setDetailUser(user)}
+                                className="gap-2 text-xs cursor-pointer"
+                              >
+                                <Eye className="h-3.5 w-3.5" />
+                                View Account Details
+                              </DropdownMenuItem>
+                              {resettable && (
+                                <DropdownMenuItem
+                                  onClick={() => openResetPasswordDialog(user)}
+                                  className="gap-2 text-xs cursor-pointer"
+                                >
+                                  <KeyRound className="h-3.5 w-3.5 text-amber-500" />
+                                  Reset Password
+                                </DropdownMenuItem>
+                              )}
+                              {editable && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={() => setSelectedUser(user)}
+                                    className={cn(
+                                      "gap-2 text-xs cursor-pointer",
+                                      user.isActive ? "text-rose-500 focus:text-rose-500" : "text-emerald-500 focus:text-emerald-500",
+                                    )}
+                                  >
+                                    <Power className="h-3.5 w-3.5" />
+                                    {user.isActive ? "Deactivate Account" : "Activate Account"}
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -331,6 +520,239 @@ export function SuperAdminUsersPage() {
           />
         )}
       </div>
+
+      {/* ── User Account Details Dialog ──────────────────────────────────────── */}
+      <Dialog open={detailUser !== null} onOpenChange={(open) => !open && setDetailUser(null)}>
+        <DialogContent className="sm:max-w-lg bg-card border-border/60 backdrop-blur-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base font-bold">
+              <Users className="h-4 w-4 text-primary" />
+              User Account Details
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Inspect platform user identity, organization assignment, and administrative security actions.
+            </DialogDescription>
+          </DialogHeader>
+
+          {userDetailQuery.isPending && !userDetailQuery.data ? (
+            <div className="space-y-3 py-2">
+              <Skeleton className="h-16 w-full rounded-xl" />
+              <Skeleton className="h-24 w-full rounded-xl" />
+            </div>
+          ) : detailRecord ? (
+            <div className="space-y-4 py-1">
+              {userDetailQuery.isError && (
+                <InlineNotice tone="warning">
+                  Could not refresh live profile record ({userDetailQuery.error?.message}). Showing directory summary below.
+                </InlineNotice>
+              )}
+
+              <div className="rounded-xl border border-border/60 bg-background/50 p-4 space-y-2.5 text-xs">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-muted-foreground">Full Name</span>
+                  <span className="font-semibold text-foreground">{detailRecord.name ?? MISSING_VALUE}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-muted-foreground">Email Address</span>
+                  <span className="font-mono text-foreground">{detailRecord.email ?? MISSING_VALUE}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-muted-foreground">Phone</span>
+                  <span className="font-mono text-foreground">{detailRecord.phone || MISSING_VALUE}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-muted-foreground">User ID</span>
+                  <span className="font-mono text-[11px] text-muted-foreground">{detailRecord.id}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-muted-foreground">Role</span>
+                  <RoleBadge role={detailRecord.role} />
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-muted-foreground">Organization</span>
+                  <span className="text-foreground">
+                    {detailRecord.organizationName ??
+                      (detailRecord.organizationId
+                        ? shortId(detailRecord.organizationId)
+                        : detailRecord.role?.toLowerCase() === "super_admin"
+                          ? "Platform Owner"
+                          : "No organization")}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-muted-foreground">Account Status</span>
+                  <AccountStatusBadge isActive={detailRecord.isActive} />
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-muted-foreground">Email Verified</span>
+                  <span className="inline-flex items-center gap-1 font-medium text-foreground">
+                    <CheckCircle2 className={cn("h-3.5 w-3.5", detailRecord.isVerified ? "text-emerald-500" : "text-muted-foreground")} />
+                    {detailRecord.isVerified ? "Verified" : "Unverified"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-muted-foreground">Registered</span>
+                  <span className="text-muted-foreground">{formatDateTime(detailRecord.createdAt)}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-muted-foreground">Last Sign-in</span>
+                  <span className="text-muted-foreground">
+                    {detailRecord.lastLoginAt ? formatDateTime(detailRecord.lastLoginAt) : "Never"}
+                  </span>
+                </div>
+              </div>
+
+              {detailUser && isProtectedAccount(detailUser) && (
+                <InlineNotice tone="info">
+                  Administrative password resets and status toggles are restricted for protected Super Admin accounts.
+                </InlineNotice>
+              )}
+            </div>
+          ) : null}
+
+          <DialogFooter className="flex-wrap gap-2 pt-2">
+            {detailUser && canResetPassword(detailUser) && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => openResetPasswordDialog(detailUser)}
+                className="h-8 gap-1.5 border-amber-500/40 text-amber-500 hover:bg-amber-500/10 hover:text-amber-400 text-xs cursor-pointer"
+              >
+                <KeyRound className="h-3.5 w-3.5" />
+                Reset Password
+              </Button>
+            )}
+            {detailUser && canChangeStatus(detailUser) && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedUser(detailUser)}
+                className={cn(
+                  "h-8 gap-1.5 text-xs cursor-pointer",
+                  detailUser.isActive
+                    ? "text-rose-400 hover:text-rose-300 border-rose-500/30 hover:bg-rose-500/10"
+                    : "text-emerald-400 hover:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/10",
+                )}
+              >
+                <Power className="h-3.5 w-3.5" />
+                {detailUser.isActive ? "Deactivate" : "Activate"}
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setDetailUser(null)}
+              className="h-8 text-xs sm:ml-auto"
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Super Admin User Password Reset Confirmation Dialog ──────────────── */}
+      <Dialog open={resetPasswordUser !== null} onOpenChange={handleCloseResetPasswordDialog}>
+        <DialogContent className="sm:max-w-md bg-card border-border/60 backdrop-blur-xl">
+          <DialogHeader>
+            <div className="flex items-center gap-2.5">
+              <div className="grid h-9 w-9 place-items-center rounded-xl bg-amber-500/15 text-amber-500">
+                <ShieldAlert className="h-5 w-5" />
+              </div>
+              <div>
+                <DialogTitle className="text-base font-bold">Reset User Password</DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground">
+                  Issue administrative password reset instructions for this account.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          {resetPasswordUser && (
+            <div className="space-y-3 py-1">
+              <div className="rounded-xl border border-border/50 bg-background/50 p-3 space-y-1.5 text-xs">
+                <div className="flex justify-between gap-3">
+                  <span className="text-muted-foreground">Name:</span>
+                  <span className="font-semibold text-foreground">{resetPasswordUser.name ?? MISSING_VALUE}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-muted-foreground">Email:</span>
+                  <span className="font-mono text-foreground">{resetPasswordUser.email ?? MISSING_VALUE}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-muted-foreground">User ID:</span>
+                  <span className="font-mono text-[11px] text-muted-foreground">{shortId(resetPasswordUser.id)}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-muted-foreground">Role:</span>
+                  <span className="font-semibold text-foreground">{formatRoleLabel(resetPasswordUser.role)}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-muted-foreground">Organization:</span>
+                  <span className="text-foreground">{resetPasswordUser.organizationName ?? "No organization"}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-muted-foreground">Status:</span>
+                  <AccountStatusBadge isActive={resetPasswordUser.isActive} />
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-300">
+                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="font-semibold">Security Warning</p>
+                  <p className="leading-relaxed">
+                    This action dispatches password reset instructions to the user&apos;s verified email address and logs a{" "}
+                    <span className="font-mono">SUPER_ADMIN_RESET_USER_PASSWORD</span> security audit entry.
+                  </p>
+                </div>
+              </div>
+
+              {resetDialogError && (
+                <Alert variant="destructive" className="py-2.5">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="text-xs">{resetDialogError}</AlertDescription>
+                </Alert>
+              )}
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => handleCloseResetPasswordDialog(false)}
+              disabled={resetUserPassword.isPending}
+              className="text-xs h-8"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={() => void confirmResetPassword()}
+              disabled={resetUserPassword.isPending}
+              className="text-xs h-8 gap-1.5 cursor-pointer"
+            >
+              {resetUserPassword.isPending ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Sending Reset…
+                </>
+              ) : (
+                <>
+                  <KeyRound className="h-3.5 w-3.5" />
+                  Confirm Reset Password
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Confirmation Dialog for Activate/Deactivate */}
       <Dialog open={selectedUser !== null} onOpenChange={(open) => !open && !setUserActive.isPending && setSelectedUser(null)}>

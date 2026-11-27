@@ -217,9 +217,36 @@ export interface EmployeeImportResponse {
   imported: number;
   failed: number;
   errors?: Array<{ row: number; field: string; message: string }>;
+  download_url?: string;
 }
 
 export interface EmployeeExportResponse {
   url: string;
   filename: string;
+}
+
+export interface ApproveEmployeeResponse {
+  success: boolean;
+  message?: string;
+  employee?: Employee;
+}
+
+export interface RejectEmployeeResponse {
+  success: boolean;
+  message?: string;
+  employee?: Employee;
+}
+
+export interface OnboardingStatusResponse {
+  employee_id: string;
+  status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "FAILED";
+  steps_completed: number;
+  total_steps: number;
+  pending_documents: string[];
+  completed_at?: string;
+  invitation_status?: "SENT" | "VIEWED" | "EXPIRED" | "ACCEPTED";
+  account_activation?: "PENDING" | "COMPLETED";
+  profile_completion?: number;
+  document_verification?: "NOT_STARTED" | "IN_PROGRESS" | "VERIFIED" | "FAILED";
+  approval_status?: "PENDING" | "APPROVED" | "REJECTED";
 }

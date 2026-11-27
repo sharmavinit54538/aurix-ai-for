@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { clearSelectedManager } from "../managersSlice";
-import { createManager, deleteManager, fetchManagerById, fetchManagers, importManagers, updateManager } from "../managersThunk";
+import { createManager, deleteManager, fetchManagerById, fetchManagers, importManagers, updateManager, resetManagerPassword, type ResetManagerPasswordResponse } from "../managersThunk";
 import type { SaveManagerResult } from "../managersTypes";
 import type { Manager, ManagerFilters, SortDir, SortField } from "../types";
 import { DEFAULT_FILTERS } from "../constants";
@@ -62,6 +62,9 @@ export function useManagersPage() {
   const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
   const [managerToDelete, setManagerToDelete] = useState<Manager | null>(null);
   const [bulkDeleteAlertOpen, setBulkDeleteAlertOpen] = useState(false);
+  const [resetPasswordAlertOpen, setResetPasswordAlertOpen] = useState(false);
+  const [managerToResetPassword, setManagerToResetPassword] = useState<Manager | null>(null);
+  const [resetPasswordLoading, setResetPasswordLoading] = useState(false);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedSearch(searchQuery), 300);
@@ -155,6 +158,11 @@ export function useManagersPage() {
     setDeleteAlertOpen(true);
   }
 
+  function handleResetPasswordClick(manager: Manager) {
+    setManagerToResetPassword(manager);
+    setResetPasswordAlertOpen(true);
+  }
+
   async function handleConfirmDelete() {
     if (!managerToDelete) return;
 
@@ -167,6 +175,30 @@ export function useManagersPage() {
       refetchManagers();
     } else {
       toast.error(result.payload?.message ?? "Failed to delete manager");
+    }
+  }
+
+  async function handleConfirmResetPassword() {
+    if (!managerToResetPassword) return;
+
+    setResetPasswordLoading(true);
+    try {
+      const result = await dispatch(resetManagerPassword(managerToResetPassword.id));
+      if (resetManagerPassword.fulfilled.match(result)) {
+        const response = result.payload as ResetManagerPasswordResponse;
+        toast.success(response.message ?? "Password reset initiated successfully");
+        if (response.data?.temporary_password) {
+          toast.info(`Temporary password: ${response.data.temporary_password}`, { duration: 10000 });
+        }
+      } else {
+        toast.error(result.payload?.message ?? "Failed to reset password");
+      }
+    } catch {
+      toast.error("Failed to reset password");
+    } finally {
+      setResetPasswordLoading(false);
+      setResetPasswordAlertOpen(false);
+      setManagerToResetPassword(null);
     }
   }
 
@@ -317,6 +349,10 @@ export function useManagersPage() {
     managerToDelete,
     bulkDeleteAlertOpen,
     setBulkDeleteAlertOpen,
+    resetPasswordAlertOpen,
+    setResetPasswordAlertOpen,
+    managerToResetPassword,
+    resetPasswordLoading,
     handleSearchChange,
     handleFiltersChange,
     handlePerPageChange,
@@ -327,6 +363,8 @@ export function useManagersPage() {
     handleEditClick,
     handleDeleteClick,
     handleConfirmDelete,
+    handleResetPasswordClick,
+    handleConfirmResetPassword,
     handleViewClick,
     handleSaveManager,
     handleConfirmBulkDelete,

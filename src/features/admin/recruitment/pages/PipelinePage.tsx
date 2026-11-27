@@ -1,85 +1,114 @@
-
-import { useState, useMemo } from "react";
-import { LayoutGrid, Filter, Search } from "lucide-react";
+import { useMemo, useState } from "react";
+import { AlertCircle, RefreshCw, Search } from "lucide-react";
 import { PageHeader } from "@/components/aurix/DashboardShell";
 import { KanbanCard } from "@/features/admin/recruitment/components/Bits";
 import { useRecruitment } from "@/features/admin/recruitment/hooks/useRecruitment";
 import { STAGES, STAGE_LABEL, type Stage } from "@/features/admin/recruitment/types";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { getErrorMessage } from "@/api/utils";
 import { toast } from "sonner";
 
 export function PipelinePage() {
-  const { candidates, jobs, moveStage } = useRecruitment();
-  const [dragging, setDragging] = useState<string | null>(null);
+  const { candidates, jobs, loading, error, moveStage, refreshAll } = useRecruitment();
   const [over, setOver] = useState<Stage | null>(null);
-
-  const [selectedJobId, setSelectedJobId] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [q, setQ] = useState("");
+  const [jobId, setJobId] = useState("all");
+  const [movingId, setMovingId] = useState<string | null>(null);
 
   const filteredCandidates = useMemo(() => {
+    const query = q.trim().toLowerCase();
     return candidates.filter((c) => {
-      if (selectedJobId !== "all" && c.jobId !== selectedJobId) return false;
-      if (searchQuery && !c.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-      return true;
+      if (jobId !== "all" && c.jobId !== jobId) return false;
+      if (!query) return true;
+      return `${c.name} ${c.appliedPosition} ${c.skills.join(" ")}`.toLowerCase().includes(query);
     });
-  }, [candidates, selectedJobId, searchQuery]);
+  }, [candidates, jobId, q]);
 
-  function onDragStart(e: React.DragEvent, id: string) {
-    e.dataTransfer.setData("text/plain", id);
-    setDragging(id);
+  function onDragStart(e: React.DragEvent, candidateId: string, applicationId?: string) {
+    e.dataTransfer.setData("text/candidate-id", candidateId);
+    e.dataTransfer.setData("text/application-id", applicationId || "");
   }
 
-  function onDrop(e: React.DragEvent, stage: Stage) {
-    const id = e.dataTransfer.getData("text/plain");
-    if (id) {
-      const cand = candidates.find((c) => c.id === id);
-      const name = cand ? cand.name : "Candidate";
-      moveStage(id, stage);
-      toast.success(`Moved ${name} to ${STAGE_LABEL[stage]}`);
-    }
-    setDragging(null);
+  async function onDrop(e: React.DragEvent, stage: Stage) {
+    e.preventDefault();
     setOver(null);
+    const applicationId = e.dataTransfer.getData("text/application-id");
+    const candidateId = e.dataTransfer.getData("text/candidate-id");
+
+    const cand = candidates.find(
+      (c) => (applicationId && c.applicationId === applicationId) || c.id === candidateId,
+    );
+    const targetAppId = applicationId || cand?.applicationId;
+
+    if (!targetAppId) {
+      toast.error("Cannot move candidate: missing backend application ID.");
+      return;
+    }
+    if (cand && cand.stage === stage) return;
+
+    setMovingId(targetAppId);
+    try {
+      await moveStage(targetAppId, stage);
+      toast.success(`Moved ${cand?.name || "Candidate"} to ${STAGE_LABEL[stage]}.`);
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to update pipeline stage."));
+    } finally {
+      setMovingId(null);
+    }
   }
 
   return (
-    <>
+    <div className="space-y-4">
       <PageHeader
-        title="Recruitment Pipeline"
-        description="Drag candidates between stages to update their progress."
+        title="Hiring Pipeline"
+        description="Drag candidates between stages to update application status on the backend."
         actions={
-          <div className="inline-flex items-center gap-2 text-xs text-muted-foreground">
-            <LayoutGrid className="h-4 w-4" />Kanban view
-          </div>
+          <Button variant="outline" size="sm" onClick={refreshAll} disabled={loading || Boolean(movingId)}>
+            <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
         }
       />
 
-      <div className="mb-6 flex flex-wrap items-center gap-3">
-        <div className="relative min-w-[240px] flex-1">
+      {error && (
+        <div
+          role="alert"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
+        >
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+          <Button size="sm" variant="outline" onClick={refreshAll}>
+            Retry
+          </Button>
+        </div>
+      )}
+
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative min-w-[220px] flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search candidates by name..."
-            className="h-9 pl-9 bg-card/40"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Filter candidates by name, role, skills..."
+            className="h-9 pl-9"
           />
         </div>
-        
-        <div className="inline-flex items-center gap-2 rounded-md border border-border bg-card/60 px-3 py-1">
-          <Filter className="h-3.5 w-3.5 text-muted-foreground" />
-          <span className="text-xs text-muted-foreground">Job Requisition:</span>
-          <select
-            value={selectedJobId}
-            onChange={(e) => setSelectedJobId(e.target.value)}
-            className="bg-transparent text-xs outline-none text-foreground cursor-pointer font-medium"
-          >
-            <option value="all" className="bg-background">All Jobs</option>
-            {jobs.map((j) => (
-              <option key={j.id} value={j.id} className="bg-background">
-                {j.title} ({j.department})
-              </option>
-            ))}
-          </select>
-        </div>
+        <select
+          aria-label="Filter pipeline by job"
+          value={jobId}
+          onChange={(e) => setJobId(e.target.value)}
+          className="h-9 rounded-md border border-border bg-background px-2.5 text-xs"
+        >
+          <option value="all">All Roles</option>
+          {jobs.map((j) => (
+            <option key={j.id} value={j.id}>
+              {j.title}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="overflow-x-auto pb-4">
@@ -90,50 +119,67 @@ export function PipelinePage() {
             return (
               <div
                 key={s}
-                onDragOver={(e) => { e.preventDefault(); setOver(s); }}
-                onDragLeave={() => setOver((cur) => (cur === s ? null : cur))}
-                onDrop={(e) => onDrop(e, s)}
-                className={`flex w-[280px] shrink-0 flex-col rounded-2xl border bg-card/40 p-3 backdrop-blur-xl transition-colors ${
-                  isOver ? "border-foreground/40 bg-accent/40" : "border-border"
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setOver(s);
+                }}
+                onDragLeave={() => setOver(null)}
+                onDrop={(e) => void onDrop(e, s)}
+                className={`flex w-[270px] shrink-0 flex-col rounded-2xl border p-3 transition-colors ${
+                  isOver ? "border-primary bg-primary/5" : "border-border bg-card/50"
                 }`}
               >
-                <div className="mb-3 flex items-center justify-between">
+                <div className="mb-3 flex items-center justify-between px-1">
                   <div className="flex items-center gap-2">
                     <span className="h-2 w-2 rounded-full" style={{ background: stageColor(s) }} />
                     <span className="font-display text-sm font-semibold">{STAGE_LABEL[s]}</span>
                   </div>
-                  <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">{inStage.length}</span>
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                    {inStage.length}
+                  </span>
                 </div>
-                <div className="flex flex-col gap-2">
-                  {inStage.map((c) => (
-                    <KanbanCard key={c.id} c={c} onDragStart={onDragStart} />
-                  ))}
+
+                <div className="space-y-2.5">
                   {inStage.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-border/70 p-6 text-center text-[11px] text-muted-foreground">
-                      Drop candidates here
+                    <div className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+                      Drop candidate here
                     </div>
-                  ) : null}
+                  ) : (
+                    inStage.map((c) => (
+                      <div key={`${c.id}-${c.applicationId || "noapp"}`}>
+                        <KanbanCard c={c} onDragStart={onDragStart} />
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             );
           })}
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
 function stageColor(s: Stage) {
-  return {
-    applied: "oklch(0.7 0.04 260)",
-    screening: "oklch(0.7 0.18 220)",
-    assessment: "oklch(0.65 0.2 270)",
-    interview: "oklch(0.65 0.22 290)",
-    technical: "oklch(0.66 0.22 320)",
-    hr: "oklch(0.75 0.18 80)",
-    offer: "oklch(0.72 0.2 50)",
-    hired: "oklch(0.72 0.18 150)",
-    rejected: "oklch(0.7 0.2 20)",
-  }[s];
+  switch (s) {
+    case "applied":
+      return "#64748b";
+    case "screening":
+      return "#0ea5e9";
+    case "assessment":
+      return "#6366f1";
+    case "interview":
+      return "#8b5cf6";
+    case "technical":
+      return "#d946ef";
+    case "hr":
+      return "#f59e0b";
+    case "offer":
+      return "#f97316";
+    case "hired":
+      return "#10b981";
+    case "rejected":
+      return "#f43f5e";
+  }
 }
-

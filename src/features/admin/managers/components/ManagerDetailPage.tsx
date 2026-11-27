@@ -40,6 +40,8 @@ import {
   Building,
   Trash2,
   CheckCircle as CheckCircleIcon,
+  RotateCcw,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 import apiInstance from "@/api/apiInstance";
@@ -772,6 +774,17 @@ export function ManagerDetailPage({
                   onClick={() => onDelete(activeManager as unknown as Manager)}
                 >
                   <Trash2 className="h-3.5 w-3.5" /> Delete
+                </Button>
+              )}
+
+              {onResetPassword && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 gap-1.5 text-xs font-semibold px-3 rounded-lg text-amber-500 hover:bg-amber-500/10 border-amber-500/20"
+                  onClick={() => onResetPassword(activeManager.id || activeManager.managerId || activeManager.employeeId)}
+                >
+                  <RotateCcw className="h-3.5 w-3.5" /> Reset Password
                 </Button>
               )}
 

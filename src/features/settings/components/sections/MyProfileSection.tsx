@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
+import { Link } from "@tanstack/react-router";
 import {
   User,
   Mail,
@@ -8,6 +9,7 @@ import {
   Save,
   RotateCcw,
   ShieldCheck,
+  ArrowRight,
   Eye,
   EyeOff,
 } from "lucide-react";
@@ -744,7 +746,7 @@ export function MyProfileSection({ canEdit = true, onDirtyChange }: MyProfileSec
             </div>
           </div>
 
-          <div className="mt-4 pt-1">
+          <div className="mt-4 pt-1 flex flex-wrap items-center justify-between gap-3">
             <Button
               type="submit"
               size="sm"
@@ -753,6 +755,14 @@ export function MyProfileSection({ canEdit = true, onDirtyChange }: MyProfileSec
             >
               <ShieldCheck className="h-3.5 w-3.5" />
               {changingPassword ? "Updating..." : "Update Password"}
+            </Button>
+
+            <Button asChild type="button" variant="outline" size="sm" className="gap-1.5 text-xs">
+              <Link to="/dashboard/settings/security">
+                <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+                Manage Multi-Factor Authentication (MFA)
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
             </Button>
           </div>
         </form>

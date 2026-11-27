@@ -259,7 +259,12 @@ export function mapOfferToFrontend(o: Record<string, unknown>): Offer {
     salary: Number(o.ctc || 0),
     currency: "INR",
     joiningDate: String(o.joining_date || new Date().toISOString()),
-    benefits: ["Health Insurance", "Stock Options", "Flexible Hours"],
+    benefits:
+      typeof o.benefits === "string"
+        ? o.benefits.split("\n").filter(Boolean)
+        : Array.isArray(o.benefits)
+          ? o.benefits.map(String)
+          : [],
     status: String(o.status ?? "").toLowerCase() as OfferStatus,
     sentAt: String(o.created_at ?? ""),
     respondedAt: o.updated_at as string | undefined,
