@@ -25,14 +25,17 @@ export function PaymentReconciliationCard({
     summaryText,
   } = reconciliation;
 
-  const hasMismatch = mismatchPaise !== 0 || !isReconciled;
+  const hasDiscrepancy = mismatchPaise !== 0;
+  const pendingSettlement = !hasDiscrepancy && !isReconciled;
 
   return (
     <div
       className={cn(
         "rounded-2xl border p-5 backdrop-blur-xl shadow-sm transition-all",
-        hasMismatch
+        hasDiscrepancy
           ? "border-rose-500/40 bg-rose-500/5 dark:bg-rose-500/10"
+          : pendingSettlement
+          ? "border-amber-500/40 bg-amber-500/5 dark:bg-amber-500/10"
           : "border-emerald-500/40 bg-emerald-500/5 dark:bg-emerald-500/10",
         className
       )}
@@ -42,12 +45,14 @@ export function PaymentReconciliationCard({
           <div
             className={cn(
               "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
-              hasMismatch
+              hasDiscrepancy
                 ? "bg-rose-500/20 text-rose-600 dark:text-rose-400"
+                : pendingSettlement
+                ? "bg-amber-500/20 text-amber-600 dark:text-amber-400"
                 : "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
             )}
           >
-            {hasMismatch ? (
+            {hasDiscrepancy ? (
               <AlertOctagon className="h-5 w-5" aria-hidden="true" />
             ) : (
               <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
@@ -64,10 +69,15 @@ export function PaymentReconciliationCard({
         </div>
 
         <div className="flex items-center gap-2">
-          {hasMismatch ? (
+          {hasDiscrepancy ? (
             <div className="inline-flex items-center gap-1.5 rounded-xl bg-rose-500/20 px-3 py-1 text-xs font-semibold text-rose-700 dark:text-rose-300 ring-1 ring-rose-500/40">
               <ShieldAlert className="h-4 w-4" />
               <span>Paise Discrepancy Detected</span>
+            </div>
+          ) : pendingSettlement ? (
+            <div className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500/20 px-3 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300 ring-1 ring-amber-500/40">
+              <ShieldAlert className="h-4 w-4" />
+              <span>Pending Settlement Confirmation</span>
             </div>
           ) : (
             <div className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-500/40">
@@ -78,8 +88,8 @@ export function PaymentReconciliationCard({
         </div>
       </div>
 
-      {/* Discrepancy Warning Banner */}
-      {hasMismatch && (
+      {/* Discrepancy / Pending Warning Banner */}
+      {hasDiscrepancy && (
         <div className="mt-4 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3.5 text-xs text-rose-800 dark:text-rose-200">
           <div className="font-semibold flex items-center gap-1.5">
             <ShieldAlert className="h-4 w-4" />
@@ -88,7 +98,19 @@ export function PaymentReconciliationCard({
           <p className="mt-1">
             Expected total does not match sum of disbursement outcomes by{" "}
             <strong>{formatPaiseToINR(Math.abs(mismatchPaise))}</strong> ({Math.abs(mismatchPaise)} paise).
-            This payroll run cannot transition to "Paid" until all transactions are accounted for on the backend.
+            This batch cannot be marked reconciled until all transactions balance on the backend.
+          </p>
+        </div>
+      )}
+      {pendingSettlement && processingPaise > 0 && (
+        <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs text-amber-800 dark:text-amber-200">
+          <div className="font-semibold flex items-center gap-1.5">
+            <ShieldAlert className="h-4 w-4" />
+            <span>Awaiting Bank Settlement Confirmation</span>
+          </div>
+          <p className="mt-1">
+            Totals balance cleanly, with{" "}
+            <strong>{formatPaiseToINR(processingPaise)}</strong> still pending bank confirmation before formal batch reconciliation.
           </p>
         </div>
       )}

@@ -5,8 +5,6 @@
  * Strictly adheres to Zero Production Mock Data and CSV injection mitigation.
  */
 
-
-
 export type ReportKey =
   | "payroll_register"
   | "salary_statement"
@@ -18,21 +16,43 @@ export type ReportKey =
   | "ytd_payroll"
   | "accounting_export";
 
-export type ExportFormat = "csv" | "xlsx";
+export type ExportFormat = "csv" | "xlsx" | "pdf";
+
+export type ComparisonMode =
+  | "none"
+  | "previous_period"
+  | "previous_year"
+  | "mom"
+  | "qoq"
+  | "yoy"
+  | "custom";
 
 export interface ReportFilterConfig {
   periodId?: string;
   financialYear?: string;
   month?: number;
+  year?: number;
+  dateFrom?: string;
+  dateTo?: string;
+  runId?: string;
   employeeId?: string;
   employeeStatus?: "active" | "inactive" | "terminated" | "on_leave";
   department?: string;
   designation?: string;
+  branch?: string;
+  workLocation?: string;
   location?: string;
   costCenter?: string;
   employmentType?: "full_time" | "part_time" | "contract" | "intern";
   payrollStatus?: string;
   paymentStatus?: string;
+  paymentMode?: string;
+  comparisonPeriodId?: string;
+  comparisonMode?: ComparisonMode;
+  comparePreviousPeriod?: boolean;
+  comparePreviousYear?: boolean;
+  cutoffDate?: string;
+  search?: string;
 }
 
 export interface ReportColumnDef {
@@ -59,21 +79,33 @@ export interface ReportDataResponse {
   reportKey: ReportKey;
   title: string;
   generatedAt: string;
+  periodLabel?: string;
   filtersApplied: ReportFilterConfig;
   totalRecords: number;
   page: number;
   limit: number;
   columns: ReportColumnDef[];
   rows: Record<string, unknown>[];
-  summaryTotals?: Record<string, number | string>;
+  summaryTotals?: Record<string, number | string | null>;
+  kpiCards?: Array<Record<string, unknown>>;
+  charts?: Array<Record<string, unknown>>;
+  reconciliation?: Record<string, unknown>;
 }
 
 export interface AccountingExportEntry {
   id: string;
   payrollRunId: string;
+  payrollRunReference?: string;
+  payrollPeriod?: string;
   accountCode: string;
   accountName: string;
-  accountType: "earning" | "deduction" | "employer_contribution" | "bank_clearing" | "net_payable";
+  accountType:
+    | "earning"
+    | "deduction"
+    | "employer_contribution"
+    | "bank_clearing"
+    | "net_payable"
+    | string;
   costCenter?: string;
   department?: string;
   accountingDate: string;
@@ -82,6 +114,9 @@ export interface AccountingExportEntry {
   debitFormatted: string;
   creditFormatted: string;
   referenceDescription: string;
+  postingStatus?: string;
+  accountingReference?: string;
+  isMapped?: boolean;
 }
 
 export interface AccountingExportResponse {
@@ -91,6 +126,9 @@ export interface AccountingExportResponse {
   totalDebitPaise: number;
   totalCreditPaise: number;
   isBalanced: boolean;
+  unmappedCount?: number;
+  postedCount?: number;
+  pendingCount?: number;
   entries: AccountingExportEntry[];
 }
 
@@ -102,8 +140,24 @@ export const REPORT_REGISTRY: Record<ReportKey, ReportRegistryItem> = {
     description: "Complete employee-level salary calculation ledger for the selected cycle.",
     category: "operational",
     requiredPermission: "payroll.reports",
-    allowedFormats: ["csv", "xlsx"],
-    supportedFilters: ["periodId", "department", "location", "employmentType"],
+    allowedFormats: ["csv", "xlsx", "pdf"],
+    supportedFilters: [
+      "month",
+      "year",
+      "financialYear",
+      "dateFrom",
+      "dateTo",
+      "periodId",
+      "runId",
+      "department",
+      "designation",
+      "employeeId",
+      "employmentType",
+      "branch",
+      "workLocation",
+      "costCenter",
+      "payrollStatus",
+    ],
     columns: [
       { key: "employeeCode", label: "Emp Code" },
       { key: "employeeName", label: "Employee Name" },
@@ -123,14 +177,29 @@ export const REPORT_REGISTRY: Record<ReportKey, ReportRegistryItem> = {
   salary_statement: {
     key: "salary_statement",
     title: "Salary Statement",
-    description: "Official summary statement of earnings and statutory withholdings.",
+    description:
+      "Official summary statement of earnings, variable pay, and statutory withholdings.",
     category: "financial",
     requiredPermission: "payroll.reports",
-    allowedFormats: ["csv", "xlsx"],
-    supportedFilters: ["periodId", "financialYear", "department"],
+    allowedFormats: ["csv", "xlsx", "pdf"],
+    supportedFilters: [
+      "month",
+      "year",
+      "financialYear",
+      "periodId",
+      "runId",
+      "department",
+      "designation",
+      "employeeId",
+      "employmentType",
+      "branch",
+      "workLocation",
+      "payrollStatus",
+    ],
     columns: [
       { key: "employeeCode", label: "Emp Code" },
       { key: "employeeName", label: "Employee Name" },
+      { key: "department", label: "Department" },
       { key: "designation", label: "Designation" },
       { key: "bankName", label: "Bank" },
       { key: "accountNumberMasked", label: "Account No.", isSensitive: true },
@@ -142,11 +211,25 @@ export const REPORT_REGISTRY: Record<ReportKey, ReportRegistryItem> = {
   department_payroll: {
     key: "department_payroll",
     title: "Department-wise Payroll",
-    description: "Aggregated compensation costs and statutory burden grouped by organizational unit.",
+    description:
+      "Aggregated compensation costs and statutory burden grouped by organizational unit.",
     category: "financial",
     requiredPermission: "payroll.reports",
-    allowedFormats: ["csv", "xlsx"],
-    supportedFilters: ["periodId", "financialYear"],
+    allowedFormats: ["csv", "xlsx", "pdf"],
+    supportedFilters: [
+      "month",
+      "year",
+      "financialYear",
+      "dateFrom",
+      "dateTo",
+      "periodId",
+      "runId",
+      "department",
+      "branch",
+      "workLocation",
+      "employmentType",
+      "payrollStatus",
+    ],
     columns: [
       { key: "departmentName", label: "Department" },
       { key: "headcount", label: "Headcount", align: "right" },
@@ -159,28 +242,51 @@ export const REPORT_REGISTRY: Record<ReportKey, ReportRegistryItem> = {
   cost_center_payroll: {
     key: "cost_center_payroll",
     title: "Cost Center-wise Payroll",
-    description: "Financial journal allocation breakdown by accounting cost center codes.",
+    description:
+      "Financial allocation breakdown, budget variance, and cost share by cost center.",
     category: "financial",
     requiredPermission: "payroll.reports",
-    allowedFormats: ["csv", "xlsx"],
-    supportedFilters: ["periodId", "costCenter", "financialYear"],
+    allowedFormats: ["csv", "xlsx", "pdf"],
+    supportedFilters: [
+      "month",
+      "year",
+      "financialYear",
+      "periodId",
+      "runId",
+      "costCenter",
+      "department",
+      "branch",
+      "payrollStatus",
+    ],
     columns: [
       { key: "costCenterCode", label: "Cost Center Code" },
       { key: "costCenterName", label: "Cost Center Name" },
       { key: "employeeCount", label: "Employees", align: "right" },
       { key: "directSalary", label: "Direct Salary", align: "right", isCurrency: true },
-      { key: "benefitsCost", label: "Benefits & Perks", align: "right", isCurrency: true },
+      { key: "benefitsCost", label: "Employer Contributions", align: "right", isCurrency: true },
       { key: "allocatedTotal", label: "Allocated Total", align: "right", isCurrency: true },
     ],
   },
   bank_advice: {
     key: "bank_advice",
     title: "Bank Advice Report",
-    description: "Schedule of bank transfers detailing beneficiary accounts, IFSC, and net disbursement.",
+    description:
+      "Schedule of bank transfers detailing beneficiary accounts, UTRs, and payment reconciliation.",
     category: "operational",
     requiredPermission: "payroll.disburse",
-    allowedFormats: ["csv", "xlsx"],
-    supportedFilters: ["periodId", "paymentStatus"],
+    allowedFormats: ["csv", "xlsx", "pdf"],
+    supportedFilters: [
+      "month",
+      "year",
+      "financialYear",
+      "periodId",
+      "runId",
+      "department",
+      "employeeId",
+      "branch",
+      "paymentStatus",
+      "paymentMode",
+    ],
     columns: [
       { key: "employeeCode", label: "Emp Code" },
       { key: "beneficiaryName", label: "Beneficiary Name" },
@@ -195,28 +301,57 @@ export const REPORT_REGISTRY: Record<ReportKey, ReportRegistryItem> = {
   payroll_variance: {
     key: "payroll_variance",
     title: "Payroll Variance Report",
-    description: "Comparative delta analysis between current month and prior cycle figures.",
+    description:
+      "Comparative delta analysis between current and prior payroll cycles with variance drivers.",
     category: "variance",
     requiredPermission: "payroll.reports",
-    allowedFormats: ["csv", "xlsx"],
-    supportedFilters: ["periodId", "department"],
+    allowedFormats: ["csv", "xlsx", "pdf"],
+    supportedFilters: [
+      "month",
+      "year",
+      "financialYear",
+      "dateFrom",
+      "dateTo",
+      "periodId",
+      "runId",
+      "department",
+      "designation",
+      "employeeId",
+      "employmentType",
+      "comparisonMode",
+      "comparisonPeriodId",
+    ],
     columns: [
-      { key: "componentName", label: "Pay Component" },
+      { key: "componentName", label: "Employee / Component" },
       { key: "previousMonth", label: "Previous Cycle", align: "right", isCurrency: true },
       { key: "currentMonth", label: "Current Cycle", align: "right", isCurrency: true },
       { key: "varianceAmount", label: "Variance Amount", align: "right", isCurrency: true },
       { key: "variancePercentage", label: "Variance %", align: "right" },
-      { key: "explanation", label: "Variance Drivers" },
+      { key: "explanation", label: "Change Reason" },
     ],
   },
   headcount_report: {
     key: "headcount_report",
     title: "Headcount Report",
-    description: "Reconciliation of new joiners, active workforce, exits, and paid employees.",
+    description:
+      "Historical reconciliation of opening headcount, joiners, exits, and paid employees.",
     category: "operational",
     requiredPermission: "payroll.reports",
-    allowedFormats: ["csv", "xlsx"],
-    supportedFilters: ["periodId", "department", "location"],
+    allowedFormats: ["csv", "xlsx", "pdf"],
+    supportedFilters: [
+      "month",
+      "year",
+      "financialYear",
+      "dateFrom",
+      "dateTo",
+      "periodId",
+      "department",
+      "designation",
+      "employmentType",
+      "branch",
+      "workLocation",
+      "payrollStatus",
+    ],
     columns: [
       { key: "department", label: "Department" },
       { key: "openingCount", label: "Opening Count", align: "right" },
@@ -229,14 +364,27 @@ export const REPORT_REGISTRY: Record<ReportKey, ReportRegistryItem> = {
   ytd_payroll: {
     key: "ytd_payroll",
     title: "YTD Payroll Summary",
-    description: "Year-to-date cumulative earnings, tax withholdings, and statutory deductions.",
+    description:
+      "Indian FY (Apr–Mar) cumulative earnings, statutory deductions, and employer contributions.",
     category: "compliance",
     requiredPermission: "payroll.reports",
-    allowedFormats: ["csv", "xlsx"],
-    supportedFilters: ["financialYear", "employeeId", "department"],
+    allowedFormats: ["csv", "xlsx", "pdf"],
+    supportedFilters: [
+      "financialYear",
+      "month",
+      "cutoffDate",
+      "employeeId",
+      "department",
+      "designation",
+      "employmentType",
+      "branch",
+      "workLocation",
+      "costCenter",
+    ],
     columns: [
       { key: "employeeCode", label: "Emp Code" },
       { key: "employeeName", label: "Employee Name" },
+      { key: "department", label: "Department" },
       { key: "ytdGross", label: "YTD Gross", align: "right", isCurrency: true },
       { key: "ytdPf", label: "YTD PF", align: "right", isCurrency: true },
       { key: "ytdTds", label: "YTD TDS", align: "right", isCurrency: true },
@@ -249,16 +397,26 @@ export const REPORT_REGISTRY: Record<ReportKey, ReportRegistryItem> = {
     description: "General ledger double-entry journal balancing debit and credit allocations.",
     category: "financial",
     requiredPermission: "payroll.reports",
-    allowedFormats: ["csv", "xlsx"],
-    supportedFilters: ["periodId"],
+    allowedFormats: ["csv", "xlsx", "pdf"],
+    supportedFilters: [
+      "month",
+      "year",
+      "financialYear",
+      "periodId",
+      "runId",
+      "department",
+      "costCenter",
+      "payrollStatus",
+    ],
     columns: [
       { key: "accountCode", label: "GL Account Code" },
       { key: "accountName", label: "GL Account Name" },
-      { key: "accountType", label: "Type" },
+      { key: "accountType", label: "Ledger Type" },
+      { key: "department", label: "Department" },
       { key: "costCenter", label: "Cost Center" },
       { key: "debitFormatted", label: "Debit (INR)", align: "right" },
       { key: "creditFormatted", label: "Credit (INR)", align: "right" },
-      { key: "referenceDescription", label: "Description" },
+      { key: "referenceDescription", label: "Narration" },
     ],
   },
 };

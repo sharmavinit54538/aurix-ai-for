@@ -1,10 +1,9 @@
 import { ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from "@tanstack/react-router";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/hrms/Shared";
-import { formatINR, getValidationBadge, formatDate } from "../../utils/payrollPreview.utils";
+import { getValidationBadge } from "../../utils/payrollPreview.utils";
 import type { PayrollPreviewEmployee } from "@/services/payrollApi";
 import { EmployeeNetPayCard } from "./EmployeeNetPayCard";
 import { EmployeeAttendanceCard } from "./EmployeeAttendanceCard";
@@ -17,7 +16,7 @@ export function EmployeeDetailSheet({
   open,
   onClose,
   loading,
-  runId,
+  runId: _runId,
   onOpenFullDetail,
 }: {
   employee: PayrollPreviewEmployee | null;
@@ -27,6 +26,11 @@ export function EmployeeDetailSheet({
   runId: string;
   onOpenFullDetail: (employee: PayrollPreviewEmployee) => void;
 }) {
+  const displayName = employee?.name && employee?.name !== "Employee" ? employee.name : "Employee unavailable";
+  const displayCode = employee?.employeeCode || "Not available";
+  const displayDepartment = employee?.department || "Not assigned";
+  const displayDesignation = employee?.designation || "—";
+
   return (
     <Sheet open={open} onOpenChange={onClose}>
       <SheetContent className="w-full sm:max-w-xl overflow-y-auto p-6">
@@ -34,12 +38,12 @@ export function EmployeeDetailSheet({
           <div className="flex items-start justify-between gap-3">
             <div>
               <SheetTitle className="font-display text-lg font-bold text-foreground">
-                {employee?.name || "Employee Payroll Detail"}
+                {displayName}
               </SheetTitle>
               <SheetDescription className="text-xs text-muted-foreground">
-                ID: <span className="font-mono">{employee?.employeeId}</span>
-                {employee?.department ? ` • ${employee.department}` : ""}
-                {employee?.designation ? ` • ${employee.designation}` : ""}
+                Employee ID: <span className="font-mono">{displayCode}</span>
+                {displayDepartment !== "Not assigned" ? ` • ${displayDepartment}` : ""}
+                {displayDesignation !== "—" ? ` • ${displayDesignation}` : ""}
               </SheetDescription>
             </div>
             {employee?.validationStatus ? (

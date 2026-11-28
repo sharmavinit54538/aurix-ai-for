@@ -64,7 +64,10 @@ export const ROUTE_ROLE_ACCESS: Record<string, AppRole[]> = {
   "/dashboard/recruitment": RECRUITMENT_ROLES,
   "/dashboard/talent/recruitment": RECRUITMENT_ROLES,
 
-  // ── HR Operations & Payroll (HR_ADMIN) ──────────────────────────
+  // ── HR Operations & Payroll (HR_ADMIN & Authorized Executive Reports) ──
+  "/dashboard/payroll/compensation": HR_OPERATIONS_ROLES,
+  "/dashboard/payroll/variable-inputs": HR_OPERATIONS_ROLES,
+  "/dashboard/payroll/reports": ["hr_admin", "executive"],
   "/dashboard/payroll/settings/security": HR_OPERATIONS_ROLES,
   "/dashboard/payroll/security": HR_OPERATIONS_ROLES,
   "/dashboard/payroll/payslips": ["hr_admin", "employee", "manager"],

@@ -40,7 +40,7 @@ export default tseslint.config(
         "warn",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
-      "react-hooks/rules-of-hooks": "warn",
+      "react-hooks/rules-of-hooks": "error",
       "prefer-const": "off",
       "no-useless-escape": "off",
       "@typescript-eslint/no-unused-expressions": "off",

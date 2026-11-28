@@ -32,17 +32,24 @@ vi.mock("recharts", async (importOriginal) => {
 });
 
 describe("OFC360 Payroll Module Hub Constants", () => {
-  it("defines exactly 30 core payroll modules across 10 rows of 3 columns", () => {
-    expect(PAYROLL_MODULES_LIST).toHaveLength(30);
+  it("defines 28 core payroll modules across 10 rows excluding removed settings cards", () => {
+    expect(PAYROLL_MODULES_LIST).toHaveLength(28);
 
     const rows = new Set(PAYROLL_MODULES_LIST.map((m) => m.row));
     expect(rows.size).toBe(10);
 
-    // Each row should contain exactly 3 modules
-    for (let r = 1; r <= 10; r++) {
+    // Rows 1-9 contain 3 modules each; Row 10 contains Payment Configuration
+    for (let r = 1; r <= 9; r++) {
       const inRow = PAYROLL_MODULES_LIST.filter((m) => m.row === r);
       expect(inRow).toHaveLength(3);
     }
+    const row10 = PAYROLL_MODULES_LIST.filter((m) => m.row === 10);
+    expect(row10.map((m) => m.id)).toEqual(["payment-configuration"]);
+
+    const ids = PAYROLL_MODULES_LIST.map((m) => m.id);
+    expect(ids).not.toContain("payroll-integrations");
+    expect(ids).not.toContain("payroll-audit-logs");
+    expect(ids).not.toContain("payroll-security-sessions");
   });
 
   it("verifies Row 1 contains Payroll Dashboard, Payroll Periods, and Payroll Runs", () => {

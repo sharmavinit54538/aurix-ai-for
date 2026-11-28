@@ -265,6 +265,16 @@ import { Route as DashboardExecutiveCtoProjectsRouteImport } from './routes/dash
 import { Route as DashboardExecutiveCtoSecurityRouteImport } from './routes/dashboard.executive.cto.security'
 import { Route as DashboardExecutiveCtoSettingsRouteImport } from './routes/dashboard.executive.cto.settings'
 import { Route as DashboardPayrollPaymentsBatchIdRouteImport } from './routes/dashboard.payroll.payments.$batchId'
+import { Route as DashboardPayrollReportsIndexRouteImport } from './routes/dashboard.payroll.reports.index'
+import { Route as DashboardPayrollReportsAccountingJournalRouteImport } from './routes/dashboard.payroll.reports.accounting-journal'
+import { Route as DashboardPayrollReportsBankAdviceRouteImport } from './routes/dashboard.payroll.reports.bank-advice'
+import { Route as DashboardPayrollReportsCostCenterWiseRouteImport } from './routes/dashboard.payroll.reports.cost-center-wise'
+import { Route as DashboardPayrollReportsDepartmentWiseRouteImport } from './routes/dashboard.payroll.reports.department-wise'
+import { Route as DashboardPayrollReportsHeadcountRouteImport } from './routes/dashboard.payroll.reports.headcount'
+import { Route as DashboardPayrollReportsPayrollRegisterRouteImport } from './routes/dashboard.payroll.reports.payroll-register'
+import { Route as DashboardPayrollReportsSalaryStatementRouteImport } from './routes/dashboard.payroll.reports.salary-statement'
+import { Route as DashboardPayrollReportsVarianceRouteImport } from './routes/dashboard.payroll.reports.variance'
+import { Route as DashboardPayrollReportsYtdSummaryRouteImport } from './routes/dashboard.payroll.reports.ytd-summary'
 import { Route as DashboardPayrollSettingsSecurityRouteImport } from './routes/dashboard.payroll.settings.security'
 import { Route as DashboardRecruitmentCandidatesIndexRouteImport } from './routes/dashboard/recruitment/candidates/index'
 import { Route as DashboardRecruitmentCandidatesCandidateIdRouteImport } from './routes/dashboard/recruitment/candidates/$candidateId'
@@ -1702,6 +1712,66 @@ const DashboardPayrollPaymentsBatchIdRoute =
     path: '/$batchId',
     getParentRoute: () => DashboardPayrollPaymentsRoute,
   } as any)
+const DashboardPayrollReportsIndexRoute =
+  DashboardPayrollReportsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => DashboardPayrollReportsRoute,
+  } as any)
+const DashboardPayrollReportsAccountingJournalRoute =
+  DashboardPayrollReportsAccountingJournalRouteImport.update({
+    id: '/accounting-journal',
+    path: '/accounting-journal',
+    getParentRoute: () => DashboardPayrollReportsRoute,
+  } as any)
+const DashboardPayrollReportsBankAdviceRoute =
+  DashboardPayrollReportsBankAdviceRouteImport.update({
+    id: '/bank-advice',
+    path: '/bank-advice',
+    getParentRoute: () => DashboardPayrollReportsRoute,
+  } as any)
+const DashboardPayrollReportsCostCenterWiseRoute =
+  DashboardPayrollReportsCostCenterWiseRouteImport.update({
+    id: '/cost-center-wise',
+    path: '/cost-center-wise',
+    getParentRoute: () => DashboardPayrollReportsRoute,
+  } as any)
+const DashboardPayrollReportsDepartmentWiseRoute =
+  DashboardPayrollReportsDepartmentWiseRouteImport.update({
+    id: '/department-wise',
+    path: '/department-wise',
+    getParentRoute: () => DashboardPayrollReportsRoute,
+  } as any)
+const DashboardPayrollReportsHeadcountRoute =
+  DashboardPayrollReportsHeadcountRouteImport.update({
+    id: '/headcount',
+    path: '/headcount',
+    getParentRoute: () => DashboardPayrollReportsRoute,
+  } as any)
+const DashboardPayrollReportsPayrollRegisterRoute =
+  DashboardPayrollReportsPayrollRegisterRouteImport.update({
+    id: '/payroll-register',
+    path: '/payroll-register',
+    getParentRoute: () => DashboardPayrollReportsRoute,
+  } as any)
+const DashboardPayrollReportsSalaryStatementRoute =
+  DashboardPayrollReportsSalaryStatementRouteImport.update({
+    id: '/salary-statement',
+    path: '/salary-statement',
+    getParentRoute: () => DashboardPayrollReportsRoute,
+  } as any)
+const DashboardPayrollReportsVarianceRoute =
+  DashboardPayrollReportsVarianceRouteImport.update({
+    id: '/variance',
+    path: '/variance',
+    getParentRoute: () => DashboardPayrollReportsRoute,
+  } as any)
+const DashboardPayrollReportsYtdSummaryRoute =
+  DashboardPayrollReportsYtdSummaryRouteImport.update({
+    id: '/ytd-summary',
+    path: '/ytd-summary',
+    getParentRoute: () => DashboardPayrollReportsRoute,
+  } as any)
 const DashboardPayrollSettingsSecurityRoute =
   DashboardPayrollSettingsSecurityRouteImport.update({
     id: '/settings/security',
@@ -1994,7 +2064,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/payroll/payments': typeof DashboardPayrollPaymentsRouteWithChildren
   '/dashboard/payroll/payslips': typeof DashboardPayrollPayslipsRoute
   '/dashboard/payroll/periods': typeof DashboardPayrollPeriodsRoute
-  '/dashboard/payroll/reports': typeof DashboardPayrollReportsRoute
+  '/dashboard/payroll/reports': typeof DashboardPayrollReportsRouteWithChildren
   '/dashboard/payroll/salary-structure': typeof DashboardPayrollSalaryStructureRoute
   '/dashboard/payroll/security': typeof DashboardPayrollSecurityRoute
   '/dashboard/payroll/statutory': typeof DashboardPayrollStatutoryRoute
@@ -2111,6 +2181,15 @@ export interface FileRoutesByFullPath {
   '/dashboard/executive/cto/security': typeof DashboardExecutiveCtoSecurityRoute
   '/dashboard/executive/cto/settings': typeof DashboardExecutiveCtoSettingsRoute
   '/dashboard/payroll/payments/$batchId': typeof DashboardPayrollPaymentsBatchIdRoute
+  '/dashboard/payroll/reports/accounting-journal': typeof DashboardPayrollReportsAccountingJournalRoute
+  '/dashboard/payroll/reports/bank-advice': typeof DashboardPayrollReportsBankAdviceRoute
+  '/dashboard/payroll/reports/cost-center-wise': typeof DashboardPayrollReportsCostCenterWiseRoute
+  '/dashboard/payroll/reports/department-wise': typeof DashboardPayrollReportsDepartmentWiseRoute
+  '/dashboard/payroll/reports/headcount': typeof DashboardPayrollReportsHeadcountRoute
+  '/dashboard/payroll/reports/payroll-register': typeof DashboardPayrollReportsPayrollRegisterRoute
+  '/dashboard/payroll/reports/salary-statement': typeof DashboardPayrollReportsSalaryStatementRoute
+  '/dashboard/payroll/reports/variance': typeof DashboardPayrollReportsVarianceRoute
+  '/dashboard/payroll/reports/ytd-summary': typeof DashboardPayrollReportsYtdSummaryRoute
   '/dashboard/payroll/settings/security': typeof DashboardPayrollSettingsSecurityRoute
   '/dashboard/recruitment/candidates/$candidateId': typeof DashboardRecruitmentCandidatesCandidateIdRoute
   '/dashboard/recruitment/jobs/$jobId': typeof DashboardRecruitmentJobsJobIdRouteWithChildren
@@ -2125,6 +2204,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/executive/ceo/': typeof DashboardExecutiveCeoIndexRoute
   '/dashboard/executive/cio/': typeof DashboardExecutiveCioIndexRoute
   '/dashboard/executive/cto/': typeof DashboardExecutiveCtoIndexRoute
+  '/dashboard/payroll/reports/': typeof DashboardPayrollReportsIndexRoute
   '/dashboard/recruitment/candidates/': typeof DashboardRecruitmentCandidatesIndexRoute
   '/dashboard/recruitment/jobs/': typeof DashboardRecruitmentJobsIndexRoute
   '/dashboard/super-admin/security/': typeof DashboardSuperAdminSecurityIndexRoute
@@ -2255,7 +2335,6 @@ export interface FileRoutesByTo {
   '/dashboard/payroll/payments': typeof DashboardPayrollPaymentsRouteWithChildren
   '/dashboard/payroll/payslips': typeof DashboardPayrollPayslipsRoute
   '/dashboard/payroll/periods': typeof DashboardPayrollPeriodsRoute
-  '/dashboard/payroll/reports': typeof DashboardPayrollReportsRoute
   '/dashboard/payroll/salary-structure': typeof DashboardPayrollSalaryStructureRoute
   '/dashboard/payroll/security': typeof DashboardPayrollSecurityRoute
   '/dashboard/payroll/statutory': typeof DashboardPayrollStatutoryRoute
@@ -2370,6 +2449,15 @@ export interface FileRoutesByTo {
   '/dashboard/executive/cto/security': typeof DashboardExecutiveCtoSecurityRoute
   '/dashboard/executive/cto/settings': typeof DashboardExecutiveCtoSettingsRoute
   '/dashboard/payroll/payments/$batchId': typeof DashboardPayrollPaymentsBatchIdRoute
+  '/dashboard/payroll/reports/accounting-journal': typeof DashboardPayrollReportsAccountingJournalRoute
+  '/dashboard/payroll/reports/bank-advice': typeof DashboardPayrollReportsBankAdviceRoute
+  '/dashboard/payroll/reports/cost-center-wise': typeof DashboardPayrollReportsCostCenterWiseRoute
+  '/dashboard/payroll/reports/department-wise': typeof DashboardPayrollReportsDepartmentWiseRoute
+  '/dashboard/payroll/reports/headcount': typeof DashboardPayrollReportsHeadcountRoute
+  '/dashboard/payroll/reports/payroll-register': typeof DashboardPayrollReportsPayrollRegisterRoute
+  '/dashboard/payroll/reports/salary-statement': typeof DashboardPayrollReportsSalaryStatementRoute
+  '/dashboard/payroll/reports/variance': typeof DashboardPayrollReportsVarianceRoute
+  '/dashboard/payroll/reports/ytd-summary': typeof DashboardPayrollReportsYtdSummaryRoute
   '/dashboard/payroll/settings/security': typeof DashboardPayrollSettingsSecurityRoute
   '/dashboard/recruitment/candidates/$candidateId': typeof DashboardRecruitmentCandidatesCandidateIdRoute
   '/dashboard/recruitment/jobs/$jobId': typeof DashboardRecruitmentJobsJobIdRouteWithChildren
@@ -2384,6 +2472,7 @@ export interface FileRoutesByTo {
   '/dashboard/executive/ceo': typeof DashboardExecutiveCeoIndexRoute
   '/dashboard/executive/cio': typeof DashboardExecutiveCioIndexRoute
   '/dashboard/executive/cto': typeof DashboardExecutiveCtoIndexRoute
+  '/dashboard/payroll/reports': typeof DashboardPayrollReportsIndexRoute
   '/dashboard/recruitment/candidates': typeof DashboardRecruitmentCandidatesIndexRoute
   '/dashboard/recruitment/jobs': typeof DashboardRecruitmentJobsIndexRoute
   '/dashboard/super-admin/security': typeof DashboardSuperAdminSecurityIndexRoute
@@ -2538,7 +2627,7 @@ export interface FileRoutesById {
   '/dashboard/payroll/payments': typeof DashboardPayrollPaymentsRouteWithChildren
   '/dashboard/payroll/payslips': typeof DashboardPayrollPayslipsRoute
   '/dashboard/payroll/periods': typeof DashboardPayrollPeriodsRoute
-  '/dashboard/payroll/reports': typeof DashboardPayrollReportsRoute
+  '/dashboard/payroll/reports': typeof DashboardPayrollReportsRouteWithChildren
   '/dashboard/payroll/salary-structure': typeof DashboardPayrollSalaryStructureRoute
   '/dashboard/payroll/security': typeof DashboardPayrollSecurityRoute
   '/dashboard/payroll/statutory': typeof DashboardPayrollStatutoryRoute
@@ -2655,6 +2744,15 @@ export interface FileRoutesById {
   '/dashboard/executive/cto/security': typeof DashboardExecutiveCtoSecurityRoute
   '/dashboard/executive/cto/settings': typeof DashboardExecutiveCtoSettingsRoute
   '/dashboard/payroll/payments/$batchId': typeof DashboardPayrollPaymentsBatchIdRoute
+  '/dashboard/payroll/reports/accounting-journal': typeof DashboardPayrollReportsAccountingJournalRoute
+  '/dashboard/payroll/reports/bank-advice': typeof DashboardPayrollReportsBankAdviceRoute
+  '/dashboard/payroll/reports/cost-center-wise': typeof DashboardPayrollReportsCostCenterWiseRoute
+  '/dashboard/payroll/reports/department-wise': typeof DashboardPayrollReportsDepartmentWiseRoute
+  '/dashboard/payroll/reports/headcount': typeof DashboardPayrollReportsHeadcountRoute
+  '/dashboard/payroll/reports/payroll-register': typeof DashboardPayrollReportsPayrollRegisterRoute
+  '/dashboard/payroll/reports/salary-statement': typeof DashboardPayrollReportsSalaryStatementRoute
+  '/dashboard/payroll/reports/variance': typeof DashboardPayrollReportsVarianceRoute
+  '/dashboard/payroll/reports/ytd-summary': typeof DashboardPayrollReportsYtdSummaryRoute
   '/dashboard/payroll/settings/security': typeof DashboardPayrollSettingsSecurityRoute
   '/dashboard/recruitment/candidates/$candidateId': typeof DashboardRecruitmentCandidatesCandidateIdRoute
   '/dashboard/recruitment/jobs/$jobId': typeof DashboardRecruitmentJobsJobIdRouteWithChildren
@@ -2669,6 +2767,7 @@ export interface FileRoutesById {
   '/dashboard/executive/ceo/': typeof DashboardExecutiveCeoIndexRoute
   '/dashboard/executive/cio/': typeof DashboardExecutiveCioIndexRoute
   '/dashboard/executive/cto/': typeof DashboardExecutiveCtoIndexRoute
+  '/dashboard/payroll/reports/': typeof DashboardPayrollReportsIndexRoute
   '/dashboard/recruitment/candidates/': typeof DashboardRecruitmentCandidatesIndexRoute
   '/dashboard/recruitment/jobs/': typeof DashboardRecruitmentJobsIndexRoute
   '/dashboard/super-admin/security/': typeof DashboardSuperAdminSecurityIndexRoute
@@ -2941,6 +3040,15 @@ export interface FileRouteTypes {
     | '/dashboard/executive/cto/security'
     | '/dashboard/executive/cto/settings'
     | '/dashboard/payroll/payments/$batchId'
+    | '/dashboard/payroll/reports/accounting-journal'
+    | '/dashboard/payroll/reports/bank-advice'
+    | '/dashboard/payroll/reports/cost-center-wise'
+    | '/dashboard/payroll/reports/department-wise'
+    | '/dashboard/payroll/reports/headcount'
+    | '/dashboard/payroll/reports/payroll-register'
+    | '/dashboard/payroll/reports/salary-statement'
+    | '/dashboard/payroll/reports/variance'
+    | '/dashboard/payroll/reports/ytd-summary'
     | '/dashboard/payroll/settings/security'
     | '/dashboard/recruitment/candidates/$candidateId'
     | '/dashboard/recruitment/jobs/$jobId'
@@ -2955,6 +3063,7 @@ export interface FileRouteTypes {
     | '/dashboard/executive/ceo/'
     | '/dashboard/executive/cio/'
     | '/dashboard/executive/cto/'
+    | '/dashboard/payroll/reports/'
     | '/dashboard/recruitment/candidates/'
     | '/dashboard/recruitment/jobs/'
     | '/dashboard/super-admin/security/'
@@ -3085,7 +3194,6 @@ export interface FileRouteTypes {
     | '/dashboard/payroll/payments'
     | '/dashboard/payroll/payslips'
     | '/dashboard/payroll/periods'
-    | '/dashboard/payroll/reports'
     | '/dashboard/payroll/salary-structure'
     | '/dashboard/payroll/security'
     | '/dashboard/payroll/statutory'
@@ -3200,6 +3308,15 @@ export interface FileRouteTypes {
     | '/dashboard/executive/cto/security'
     | '/dashboard/executive/cto/settings'
     | '/dashboard/payroll/payments/$batchId'
+    | '/dashboard/payroll/reports/accounting-journal'
+    | '/dashboard/payroll/reports/bank-advice'
+    | '/dashboard/payroll/reports/cost-center-wise'
+    | '/dashboard/payroll/reports/department-wise'
+    | '/dashboard/payroll/reports/headcount'
+    | '/dashboard/payroll/reports/payroll-register'
+    | '/dashboard/payroll/reports/salary-statement'
+    | '/dashboard/payroll/reports/variance'
+    | '/dashboard/payroll/reports/ytd-summary'
     | '/dashboard/payroll/settings/security'
     | '/dashboard/recruitment/candidates/$candidateId'
     | '/dashboard/recruitment/jobs/$jobId'
@@ -3214,6 +3331,7 @@ export interface FileRouteTypes {
     | '/dashboard/executive/ceo'
     | '/dashboard/executive/cio'
     | '/dashboard/executive/cto'
+    | '/dashboard/payroll/reports'
     | '/dashboard/recruitment/candidates'
     | '/dashboard/recruitment/jobs'
     | '/dashboard/super-admin/security'
@@ -3484,6 +3602,15 @@ export interface FileRouteTypes {
     | '/dashboard/executive/cto/security'
     | '/dashboard/executive/cto/settings'
     | '/dashboard/payroll/payments/$batchId'
+    | '/dashboard/payroll/reports/accounting-journal'
+    | '/dashboard/payroll/reports/bank-advice'
+    | '/dashboard/payroll/reports/cost-center-wise'
+    | '/dashboard/payroll/reports/department-wise'
+    | '/dashboard/payroll/reports/headcount'
+    | '/dashboard/payroll/reports/payroll-register'
+    | '/dashboard/payroll/reports/salary-statement'
+    | '/dashboard/payroll/reports/variance'
+    | '/dashboard/payroll/reports/ytd-summary'
     | '/dashboard/payroll/settings/security'
     | '/dashboard/recruitment/candidates/$candidateId'
     | '/dashboard/recruitment/jobs/$jobId'
@@ -3498,6 +3625,7 @@ export interface FileRouteTypes {
     | '/dashboard/executive/ceo/'
     | '/dashboard/executive/cio/'
     | '/dashboard/executive/cto/'
+    | '/dashboard/payroll/reports/'
     | '/dashboard/recruitment/candidates/'
     | '/dashboard/recruitment/jobs/'
     | '/dashboard/super-admin/security/'
@@ -5350,6 +5478,76 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardPayrollPaymentsBatchIdRouteImport
       parentRoute: typeof DashboardPayrollPaymentsRoute
     }
+    '/dashboard/payroll/reports/': {
+      id: '/dashboard/payroll/reports/'
+      path: '/'
+      fullPath: '/dashboard/payroll/reports/'
+      preLoaderRoute: typeof DashboardPayrollReportsIndexRouteImport
+      parentRoute: typeof DashboardPayrollReportsRoute
+    }
+    '/dashboard/payroll/reports/accounting-journal': {
+      id: '/dashboard/payroll/reports/accounting-journal'
+      path: '/accounting-journal'
+      fullPath: '/dashboard/payroll/reports/accounting-journal'
+      preLoaderRoute: typeof DashboardPayrollReportsAccountingJournalRouteImport
+      parentRoute: typeof DashboardPayrollReportsRoute
+    }
+    '/dashboard/payroll/reports/bank-advice': {
+      id: '/dashboard/payroll/reports/bank-advice'
+      path: '/bank-advice'
+      fullPath: '/dashboard/payroll/reports/bank-advice'
+      preLoaderRoute: typeof DashboardPayrollReportsBankAdviceRouteImport
+      parentRoute: typeof DashboardPayrollReportsRoute
+    }
+    '/dashboard/payroll/reports/cost-center-wise': {
+      id: '/dashboard/payroll/reports/cost-center-wise'
+      path: '/cost-center-wise'
+      fullPath: '/dashboard/payroll/reports/cost-center-wise'
+      preLoaderRoute: typeof DashboardPayrollReportsCostCenterWiseRouteImport
+      parentRoute: typeof DashboardPayrollReportsRoute
+    }
+    '/dashboard/payroll/reports/department-wise': {
+      id: '/dashboard/payroll/reports/department-wise'
+      path: '/department-wise'
+      fullPath: '/dashboard/payroll/reports/department-wise'
+      preLoaderRoute: typeof DashboardPayrollReportsDepartmentWiseRouteImport
+      parentRoute: typeof DashboardPayrollReportsRoute
+    }
+    '/dashboard/payroll/reports/headcount': {
+      id: '/dashboard/payroll/reports/headcount'
+      path: '/headcount'
+      fullPath: '/dashboard/payroll/reports/headcount'
+      preLoaderRoute: typeof DashboardPayrollReportsHeadcountRouteImport
+      parentRoute: typeof DashboardPayrollReportsRoute
+    }
+    '/dashboard/payroll/reports/payroll-register': {
+      id: '/dashboard/payroll/reports/payroll-register'
+      path: '/payroll-register'
+      fullPath: '/dashboard/payroll/reports/payroll-register'
+      preLoaderRoute: typeof DashboardPayrollReportsPayrollRegisterRouteImport
+      parentRoute: typeof DashboardPayrollReportsRoute
+    }
+    '/dashboard/payroll/reports/salary-statement': {
+      id: '/dashboard/payroll/reports/salary-statement'
+      path: '/salary-statement'
+      fullPath: '/dashboard/payroll/reports/salary-statement'
+      preLoaderRoute: typeof DashboardPayrollReportsSalaryStatementRouteImport
+      parentRoute: typeof DashboardPayrollReportsRoute
+    }
+    '/dashboard/payroll/reports/variance': {
+      id: '/dashboard/payroll/reports/variance'
+      path: '/variance'
+      fullPath: '/dashboard/payroll/reports/variance'
+      preLoaderRoute: typeof DashboardPayrollReportsVarianceRouteImport
+      parentRoute: typeof DashboardPayrollReportsRoute
+    }
+    '/dashboard/payroll/reports/ytd-summary': {
+      id: '/dashboard/payroll/reports/ytd-summary'
+      path: '/ytd-summary'
+      fullPath: '/dashboard/payroll/reports/ytd-summary'
+      preLoaderRoute: typeof DashboardPayrollReportsYtdSummaryRouteImport
+      parentRoute: typeof DashboardPayrollReportsRoute
+    }
     '/dashboard/payroll/settings/security': {
       id: '/dashboard/payroll/settings/security'
       path: '/settings/security'
@@ -5895,6 +6093,46 @@ const DashboardPayrollPaymentsRouteWithChildren =
     DashboardPayrollPaymentsRouteChildren,
   )
 
+interface DashboardPayrollReportsRouteChildren {
+  DashboardPayrollReportsAccountingJournalRoute: typeof DashboardPayrollReportsAccountingJournalRoute
+  DashboardPayrollReportsBankAdviceRoute: typeof DashboardPayrollReportsBankAdviceRoute
+  DashboardPayrollReportsCostCenterWiseRoute: typeof DashboardPayrollReportsCostCenterWiseRoute
+  DashboardPayrollReportsDepartmentWiseRoute: typeof DashboardPayrollReportsDepartmentWiseRoute
+  DashboardPayrollReportsHeadcountRoute: typeof DashboardPayrollReportsHeadcountRoute
+  DashboardPayrollReportsPayrollRegisterRoute: typeof DashboardPayrollReportsPayrollRegisterRoute
+  DashboardPayrollReportsSalaryStatementRoute: typeof DashboardPayrollReportsSalaryStatementRoute
+  DashboardPayrollReportsVarianceRoute: typeof DashboardPayrollReportsVarianceRoute
+  DashboardPayrollReportsYtdSummaryRoute: typeof DashboardPayrollReportsYtdSummaryRoute
+  DashboardPayrollReportsIndexRoute: typeof DashboardPayrollReportsIndexRoute
+}
+
+const DashboardPayrollReportsRouteChildren: DashboardPayrollReportsRouteChildren =
+  {
+    DashboardPayrollReportsAccountingJournalRoute:
+      DashboardPayrollReportsAccountingJournalRoute,
+    DashboardPayrollReportsBankAdviceRoute:
+      DashboardPayrollReportsBankAdviceRoute,
+    DashboardPayrollReportsCostCenterWiseRoute:
+      DashboardPayrollReportsCostCenterWiseRoute,
+    DashboardPayrollReportsDepartmentWiseRoute:
+      DashboardPayrollReportsDepartmentWiseRoute,
+    DashboardPayrollReportsHeadcountRoute:
+      DashboardPayrollReportsHeadcountRoute,
+    DashboardPayrollReportsPayrollRegisterRoute:
+      DashboardPayrollReportsPayrollRegisterRoute,
+    DashboardPayrollReportsSalaryStatementRoute:
+      DashboardPayrollReportsSalaryStatementRoute,
+    DashboardPayrollReportsVarianceRoute: DashboardPayrollReportsVarianceRoute,
+    DashboardPayrollReportsYtdSummaryRoute:
+      DashboardPayrollReportsYtdSummaryRoute,
+    DashboardPayrollReportsIndexRoute: DashboardPayrollReportsIndexRoute,
+  }
+
+const DashboardPayrollReportsRouteWithChildren =
+  DashboardPayrollReportsRoute._addFileChildren(
+    DashboardPayrollReportsRouteChildren,
+  )
+
 interface DashboardPayrollRunsRunIdEmployeesEmployeeIdRouteChildren {
   DashboardPayrollRunsRunIdEmployeesEmployeeIdPayslipRoute: typeof DashboardPayrollRunsRunIdEmployeesEmployeeIdPayslipRoute
 }
@@ -5916,7 +6154,7 @@ interface DashboardPayrollRouteChildren {
   DashboardPayrollPaymentsRoute: typeof DashboardPayrollPaymentsRouteWithChildren
   DashboardPayrollPayslipsRoute: typeof DashboardPayrollPayslipsRoute
   DashboardPayrollPeriodsRoute: typeof DashboardPayrollPeriodsRoute
-  DashboardPayrollReportsRoute: typeof DashboardPayrollReportsRoute
+  DashboardPayrollReportsRoute: typeof DashboardPayrollReportsRouteWithChildren
   DashboardPayrollSalaryStructureRoute: typeof DashboardPayrollSalaryStructureRoute
   DashboardPayrollSecurityRoute: typeof DashboardPayrollSecurityRoute
   DashboardPayrollStatutoryRoute: typeof DashboardPayrollStatutoryRoute
@@ -5939,7 +6177,7 @@ const DashboardPayrollRouteChildren: DashboardPayrollRouteChildren = {
   DashboardPayrollPaymentsRoute: DashboardPayrollPaymentsRouteWithChildren,
   DashboardPayrollPayslipsRoute: DashboardPayrollPayslipsRoute,
   DashboardPayrollPeriodsRoute: DashboardPayrollPeriodsRoute,
-  DashboardPayrollReportsRoute: DashboardPayrollReportsRoute,
+  DashboardPayrollReportsRoute: DashboardPayrollReportsRouteWithChildren,
   DashboardPayrollSalaryStructureRoute: DashboardPayrollSalaryStructureRoute,
   DashboardPayrollSecurityRoute: DashboardPayrollSecurityRoute,
   DashboardPayrollStatutoryRoute: DashboardPayrollStatutoryRoute,

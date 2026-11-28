@@ -3,10 +3,20 @@
  * Backend is the source of truth for financial structures, formulas, and salary calculations.
  */
 
-
-
 export type ComponentType = "earning" | "deduction" | "employer_contribution";
 export type CalculationMethod = "flat" | "percentage_of_basic" | "percentage_of_ctc" | "formula";
+
+export type CompensationStatus =
+  | "active"
+  | "inactive"
+  | "scheduled"
+  | "expired"
+  | "pending_approval"
+  | "superseded"
+  | "draft"
+  | "historical"
+  | "not_assigned"
+  | "unknown";
 
 export interface PayComponent {
   id: string;
@@ -53,8 +63,12 @@ export interface EmployeeCompensationComponent {
   code: string;
   name: string;
   type: ComponentType;
-  monthlyAmountPaise: number;
-  annualAmountPaise: number;
+  calculationMethod?: CalculationMethod | string;
+  percentageOrAmount?: number | null;
+  isTaxable?: boolean;
+  isStatutory?: boolean;
+  monthlyAmountPaise: number | null;
+  annualAmountPaise: number | null;
   monthlyFormatted: string;
   annualFormatted: string;
 }
@@ -63,13 +77,23 @@ export interface CompensationRevisionRecord {
   id: string;
   revisionNumber: number;
   effectiveDate: string;
-  previousCtcPaise: number;
-  newCtcPaise: number;
+  revisionDate?: string | null;
+  previousCtcPaise: number | null;
+  newCtcPaise: number | null;
   previousCtcFormatted: string;
   newCtcFormatted: string;
-  changePercentage: number;
+  previousMonthlyGrossPaise?: number | null;
+  newMonthlyGrossPaise?: number | null;
+  previousMonthlyGrossFormatted?: string;
+  newMonthlyGrossFormatted?: string;
+  revisionAmountPaise?: number | null;
+  revisionAmountFormatted?: string;
+  changePercentage: number | null;
+  previousStructureName?: string | null;
+  newStructureName?: string | null;
   reason: string;
-  status: "draft" | "pending_approval" | "approved" | "rejected";
+  notes?: string | null;
+  status: "draft" | "pending_approval" | "approved" | "rejected" | string;
   hasArrearsRisk: boolean;
   arrearsEstimatedMonths?: number;
   maker: {
@@ -92,18 +116,90 @@ export interface EmployeeCompensation {
   employeeId: string;
   employeeCode: string;
   employeeName: string;
+  profileImage?: string;
+  departmentId?: string;
   department: string;
   designation: string;
+  employmentType?: string;
+  joiningDate?: string;
   structureId: string;
+  structureCode?: string;
   structureName: string;
-  ctcAnnualPaise: number;
-  ctcMonthlyPaise: number;
+  currency: string;
+  ctcAnnualPaise: number | null;
+  ctcMonthlyPaise: number | null;
+  grossAnnualPaise: number | null;
+  grossMonthlyPaise: number | null;
+  fixedPayPaise: number | null;
+  variablePayPaise: number | null;
+  employerContributionsPaise: number | null;
   ctcAnnualFormatted: string;
   ctcMonthlyFormatted: string;
+  grossAnnualFormatted: string;
+  grossMonthlyFormatted: string;
+  fixedPayFormatted: string;
+  variablePayFormatted: string;
+  employerContributionsFormatted: string;
   effectiveDate: string;
-  status: "active" | "draft" | "pending_approval" | "historical";
+  effectiveTo?: string | null;
+  lastRevisionDate?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  status: CompensationStatus;
+  statusRaw?: string | null;
   components: EmployeeCompensationComponent[];
   revisions: CompensationRevisionRecord[];
+}
+
+export interface CompensationSummaryMetrics {
+  totalEmployees: number | null;
+  assignedEmployees: number | null;
+  totalAnnualCtcPaise: number | null;
+  totalMonthlyGrossPaise: number | null;
+  averageAnnualCtcPaise: number | null;
+  pendingRevisions: number | null;
+  unassignedEmployees: number | null;
+  structuresInUse: number | null;
+  source: "backend_summary" | "dataset_computed" | "unavailable";
+}
+
+export interface EmployeeCompensationListParams {
+  page?: number;
+  limit?: number;
+  department?: string;
+  designation?: string;
+  employmentType?: string;
+  structureId?: string;
+  status?: string;
+  effectiveFrom?: string;
+  effectiveTo?: string;
+  minAnnualCtc?: number;
+  maxAnnualCtc?: number;
+  minMonthlyGross?: number;
+  maxMonthlyGross?: number;
+  sortBy?: string;
+  sortDir?: "asc" | "desc";
+  search?: string;
+}
+
+export interface EmployeeCompensationListResult {
+  items: EmployeeCompensation[];
+  total: number;
+  page: number;
+  limit: number;
+  summary: CompensationSummaryMetrics | null;
+}
+
+export interface CompensationMasterEmployee {
+  id: string;
+  employeeCode: string;
+  fullName: string;
+  department?: string;
+  departmentId?: string;
+  designation?: string;
+  employmentType?: string;
+  joiningDate?: string;
+  profileImage?: string;
 }
 
 export interface BulkCompensationRowError {

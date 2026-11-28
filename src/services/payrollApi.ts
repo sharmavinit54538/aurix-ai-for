@@ -149,16 +149,20 @@ function normalizeValidationIssue(raw: any): PayrollValidationIssue {
 function normalizePreviewEmployee(raw: any): PayrollPreviewEmployee {
   const earn = raw?.earnings && !Array.isArray(raw.earnings) ? raw.earnings : raw;
   const ded = raw?.deductions && !Array.isArray(raw.deductions) ? raw.deductions : raw;
+  const empSrc = raw?.employee ?? {};
+
   return {
-    id: String(pickFirst(raw?.id, raw?.employeeId, raw?.employee_id, "")),
-    employeeId: String(pickFirst(raw?.employeeId, raw?.employee_id, raw?.employeeCode, raw?.employee_code, raw?.id, "")),
-    name: String(pickFirst(raw?.name, raw?.employeeName, raw?.employee_name, raw?.full_name, "Employee")),
+    id: String(pickFirst(raw?.id, raw?.payrollRecordId, raw?.payroll_record_id, "")),
+    employeeId: String(pickFirst(raw?.employeeId, raw?.employee_id, empSrc?.id, empSrc?.employeeId, empSrc?.employee_id, "")),
+    employeeCode: String(pickFirst(raw?.employeeCode, raw?.employee_code, empSrc?.employeeCode, empSrc?.employee_code, empSrc?.code, "EMP-" + String(pickFirst(raw?.employeeId, raw?.employee_id, empSrc?.id, "")).slice(-6))),
+    name: String(pickFirst(raw?.name, raw?.employeeName, raw?.employee_name, empSrc?.name, empSrc?.fullName, empSrc?.full_name, "Employee")),
+    email: toNullableString(pickFirst(raw?.email, empSrc?.email)),
     role: toNullableString(raw?.role) ?? undefined,
-    department: toNullableString(raw?.department),
-    designation: toNullableString(raw?.designation),
-    employmentStatus: toNullableString(pickFirst(raw?.employmentStatus, raw?.employment_status)),
-    joiningDate: toNullableString(pickFirst(raw?.joiningDate, raw?.joining_date)),
-    location: toNullableString(raw?.location),
+    department: toNullableString(pickFirst(raw?.department, empSrc?.department)),
+    designation: toNullableString(pickFirst(raw?.designation, empSrc?.designation)),
+    employmentStatus: toNullableString(pickFirst(raw?.employmentStatus, raw?.employment_status, empSrc?.employmentStatus, empSrc?.employment_status)),
+    joiningDate: toNullableString(pickFirst(raw?.joiningDate, raw?.joining_date, empSrc?.joiningDate, empSrc?.joining_date)),
+    location: toNullableString(pickFirst(raw?.location, empSrc?.location, empSrc?.workLocation, empSrc?.work_location)),
     periodName: toNullableString(pickFirst(raw?.periodName, raw?.period_name)),
     runStatus: toNullableString(pickFirst(raw?.runStatus, raw?.run_status)),
     financialYear: toNullableString(pickFirst(raw?.financialYear, raw?.financial_year)),
@@ -166,12 +170,12 @@ function normalizePreviewEmployee(raw: any): PayrollPreviewEmployee {
     validationStatus: toNullableString(pickFirst(raw?.validationStatus, raw?.validation_status)) ?? undefined,
     issuesCount: toNullableNumber(pickFirst(raw?.issuesCount, raw?.issues_count)) ?? undefined,
     grossEarnings: resolveMonetaryField(
-      pickFirst(raw?.grossEarnings, raw?.gross_earnings, raw?.gross),
-      pickFirst(raw?.gross_paise, raw?.grossEarningsPaise)
+      pickFirst(raw?.grossEarnings, raw?.gross_earnings, raw?.gross, earn?.grossEarnings, earn?.gross_earnings),
+      pickFirst(raw?.gross_paise, raw?.grossEarningsPaise, earn?.gross_earnings_paise)
     ),
     totalDeductions: resolveMonetaryField(
-      pickFirst(raw?.totalDeductions, raw?.total_deductions),
-      pickFirst(raw?.total_deductions_paise, raw?.totalDeductionsPaise)
+      pickFirst(raw?.totalDeductions, raw?.total_deductions, ded?.totalDeductions, ded?.total_deductions),
+      pickFirst(raw?.total_deductions_paise, raw?.totalDeductionsPaise, ded?.total_deductions_paise)
     ),
     netPay: resolveMonetaryField(
       pickFirst(raw?.netPay, raw?.net_pay),
@@ -195,6 +199,7 @@ function normalizePreviewEmployee(raw: any): PayrollPreviewEmployee {
     previousComparison: raw?.previousComparison ?? raw?.previous_comparison ?? null,
     issues: Array.isArray(raw?.issues) ? raw.issues.map(normalizeValidationIssue) : undefined,
     audit: raw?.audit ?? null,
+    avatarUrl: toNullableString(pickFirst(raw?.avatarUrl, raw?.avatar_url, empSrc?.avatarUrl, empSrc?.avatar_url, empSrc?.profileImage, empSrc?.profile_image)),
   };
 }
 

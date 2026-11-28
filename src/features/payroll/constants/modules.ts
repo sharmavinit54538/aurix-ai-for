@@ -29,14 +29,12 @@ import {
   Layers,
   LayoutDashboard,
   MinusCircle,
-  Network,
   Percent,
   PlayCircle,
   Receipt,
   RotateCcw,
   Scale,
   ScanSearch,
-  ScrollText,
   Send,
   Settings2,
   ShieldAlert,
@@ -64,7 +62,7 @@ export interface PayrollModuleItem {
 }
 
 /**
- * 30 Core Payroll Modules organized in 10 rows of 3 columns
+ * Core Payroll Modules organized across 10 rows
  */
 export const PAYROLL_MODULES_LIST: PayrollModuleItem[] = [
   // ── Row 1 ─────────────────────────────────────────────────────────────
@@ -364,36 +362,6 @@ export const PAYROLL_MODULES_LIST: PayrollModuleItem[] = [
     icon: Settings2,
     to: "/dashboard/payroll/payments",
     color: "from-slate-500/20 to-indigo-500/20 text-slate-300 border-slate-500/30",
-    row: 10,
-  },
-  {
-    id: "payroll-integrations",
-    title: "Payroll Integrations",
-    description:
-      "Connect payroll with attendance, leave, accounting, banking, HR and external systems.",
-    icon: Network,
-    to: "/dashboard/settings/integrations",
-    color: "from-cyan-500/20 to-indigo-500/20 text-cyan-400 border-cyan-500/30",
-    row: 10,
-  },
-  {
-    id: "payroll-audit-logs",
-    title: "Payroll Audit Logs",
-    description:
-      "Track every payroll action, modification, approval, calculation change and system event.",
-    icon: ScrollText,
-    to: "/dashboard/settings/audit-logs",
-    color: "from-purple-500/20 to-rose-500/20 text-purple-400 border-purple-500/30",
-    row: 10,
-  },
-  {
-    id: "payroll-security-sessions",
-    title: "Security & Active Sessions",
-    description:
-      "Inspect active payroll-authorized sessions and revoke stale or unauthorized device logins.",
-    icon: ShieldCheck,
-    to: "/dashboard/payroll/settings/security",
-    color: "from-emerald-500/20 to-cyan-500/20 text-emerald-400 border-emerald-500/30",
     row: 10,
   },
 ];

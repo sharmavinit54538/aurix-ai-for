@@ -1,14 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import {
   AlertCircle,
-  ArrowRight,
   Calendar,
   Info,
   Play,
   RefreshCw,
 } from "lucide-react";
-import { PageHeader } from "@/components/aurix/DashboardShell";
 import { EmptyState, Skeleton } from "@/components/hrms/Shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -186,6 +184,60 @@ export function PayrollDashboardPage() {
     }
   };
 
+  // ── Derived State (must execute before any early returns) ───────────
+  const activeRun = useMemo(() => {
+    const rawActive = dashboardData?.active_run as Record<string, any> | null | undefined;
+    if (rawActive && typeof rawActive === "object") {
+      return {
+        id: String(rawActive.id || rawActive.runId || rawActive.run_id || ""),
+        status: String(rawActive.status || dashboardData?.status || ""),
+      };
+    }
+    const latestRecent = dashboardData?.recentRuns?.[0];
+    if (latestRecent) {
+      return {
+        id: latestRecent.id,
+        status: latestRecent.status || dashboardData?.status || "",
+      };
+    }
+    return null;
+  }, [dashboardData]);
+
+  const hasBlockingReadinessErrors = useMemo(() => {
+    return Boolean(
+      dashboardData?.readiness?.items?.some((item) => item.status === "Error")
+    );
+  }, [dashboardData]);
+
+  const currentStatus =
+    dashboardData?.status ||
+    activeRun?.status ||
+    selectedPeriod?.status ||
+    "Not started";
+
+  const normalizedRunStatus = currentStatus.toLowerCase();
+  const activeRunId = activeRun?.id;
+
+  const statusToneKey = useMemo(() => {
+    const status = normalizedRunStatus;
+    if (status.includes("fail") || status.includes("error")) return "rejected";
+    if (
+      status.includes("final") ||
+      status.includes("approv") ||
+      status.includes("paid") ||
+      status.includes("complet")
+    )
+      return "approved";
+    if (
+      status.includes("process") ||
+      status.includes("review") ||
+      status.includes("provis") ||
+      status.includes("pending")
+    )
+      return "pending";
+    return "info";
+  }, [normalizedRunStatus]);
+
   // ── Permission Guard ────────────────────────────────────────────────
   if (ws.isRestoring) {
     return (
@@ -212,10 +264,6 @@ export function PayrollDashboardPage() {
     );
   }
 
-  const hasBlockingReadinessErrors = Boolean(
-    dashboardData?.readiness?.items?.some((item) => item.status === "Error")
-  );
-
   // Show API error if dashboard failed to load
   if (apiError && !dashboardData) {
     return (
@@ -235,138 +283,8 @@ export function PayrollDashboardPage() {
     );
   }
 
-  const activeRun = useMemo(() => {
-    const rawActive = dashboardData?.active_run as Record<string, any> | null | undefined;
-    if (rawActive && typeof rawActive === "object") {
-      return {
-        id: String(rawActive.id || rawActive.runId || rawActive.run_id || ""),
-        status: String(rawActive.status || dashboardData?.status || ""),
-      };
-    }
-    const latestRecent = dashboardData?.recentRuns?.[0];
-    if (latestRecent) {
-      return {
-        id: latestRecent.id,
-        status: latestRecent.status || dashboardData?.status || "",
-      };
-    }
-    return null;
-  }, [dashboardData]);
-
-  const currentStatus =
-    dashboardData?.status ||
-    activeRun?.status ||
-    selectedPeriod?.status ||
-    "Not started";
-
-  const normalizedRunStatus = currentStatus.toLowerCase();
-  const activeRunId = activeRun?.id;
-
-  const nextAction = useMemo(() => {
-    if (!selectedPeriod && periods.length === 0) {
-      return {
-        label: "Create pay period",
-        to: "/dashboard/payroll/periods",
-        isRunAction: false,
-      };
-    }
-    if (activeRunId && (normalizedRunStatus.includes("process") || normalizedRunStatus.includes("queue"))) {
-      return {
-        label: "View processing",
-        to: `/dashboard/payroll/runs/${activeRunId}/processing`,
-        isRunAction: false,
-      };
-    }
-    if (activeRunId && (normalizedRunStatus.includes("provis") || normalizedRunStatus.includes("validat") || normalizedRunStatus.includes("preview"))) {
-      return {
-        label: "Review preview",
-        to: `/dashboard/payroll/runs/${activeRunId}/preview`,
-        isRunAction: false,
-      };
-    }
-    if (activeRunId && (normalizedRunStatus.includes("review") || normalizedRunStatus.includes("pending"))) {
-      return {
-        label: "Review & approve",
-        to: `/dashboard/payroll/runs/${activeRunId}/approval`,
-        isRunAction: false,
-      };
-    }
-    if (activeRunId && normalizedRunStatus.includes("approv")) {
-      return {
-        label: "Finalize payroll",
-        to: `/dashboard/payroll/runs/${activeRunId}/finalize`,
-        isRunAction: false,
-      };
-    }
-    if (activeRunId && (normalizedRunStatus.includes("final") || normalizedRunStatus.includes("lock"))) {
-      return {
-        label: "Manage payments",
-        to: `/dashboard/payroll/runs/${activeRunId}/payment`,
-        isRunAction: false,
-      };
-    }
-    if (normalizedRunStatus.includes("paid") || normalizedRunStatus.includes("complet")) {
-      return {
-        label: "View payslips",
-        to: "/dashboard/payroll/payslips",
-        isRunAction: false,
-      };
-    }
-    if (canRunPayroll && selectedPeriod) {
-      return {
-        label: "Run payroll",
-        to: null,
-        isRunAction: true,
-      };
-    }
-    return {
-      label: "Manage periods",
-      to: "/dashboard/payroll/periods",
-      isRunAction: false,
-    };
-  }, [selectedPeriod, periods.length, activeRunId, normalizedRunStatus, canRunPayroll]);
-
-  const statusToneKey =
-    normalizedRunStatus.includes("fail") || normalizedRunStatus.includes("error")
-      ? "rejected"
-      : normalizedRunStatus.includes("final") ||
-          normalizedRunStatus.includes("approv") ||
-          normalizedRunStatus.includes("paid") ||
-          normalizedRunStatus.includes("complet")
-        ? "approved"
-        : normalizedRunStatus.includes("process") ||
-            normalizedRunStatus.includes("review") ||
-            normalizedRunStatus.includes("provis") ||
-            normalizedRunStatus.includes("pending")
-          ? "pending"
-          : "info";
-
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Payroll"
-        description="Track the active pay cycle, review validation findings, and run payroll with audit controls."
-        actions={
-          nextAction.isRunAction ? (
-            <Button
-              size="sm"
-              onClick={() => setConfirmModalOpen(true)}
-              disabled={!selectedPeriod || loadingPeriods}
-            >
-              <Play className="h-4 w-4" />
-              {nextAction.label}
-            </Button>
-          ) : nextAction.to ? (
-            <Button asChild size="sm">
-              <Link to={nextAction.to as any}>
-                {nextAction.label}
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
-          ) : null
-        }
-      />
-
       {/* ── Active Cycle Status Strip & View Switcher ──────────────── */}
       <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 shadow-xs lg:flex-row lg:items-center lg:justify-between">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6 flex-1">

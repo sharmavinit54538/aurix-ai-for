@@ -33,6 +33,19 @@ import type {
 } from "../types/compensation";
 import { toast } from "sonner";
 
+/**
+ * Safely formats enum-like strings for display.
+ * Handles undefined, null, empty strings, and converts snake_case to Title Case.
+ */
+function formatLabel(value: unknown, fallback = "Not available"): string {
+  if (typeof value !== "string" || !value.trim()) {
+    return fallback;
+  }
+  return value
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 export default function SalaryStructurePage() {
   const [activeTab, setActiveTab] = useState<"components" | "structures">("components");
   const [loading, setLoading] = useState(false);
@@ -74,8 +87,8 @@ export default function SalaryStructurePage() {
           throw err;
         }),
       ]);
-      setComponents(compRes);
-      setStructures(structRes);
+      setComponents(Array.isArray(compRes) ? compRes : []);
+      setStructures(Array.isArray(structRes) ? structRes : []);
     } catch (err: any) {
       const msg = err?.message || "Failed to load salary structure details";
       setLoadError(msg);
@@ -230,15 +243,15 @@ export default function SalaryStructurePage() {
                   ) : (
                     components.map((c) => (
                       <tr key={c.id} className="hover:bg-muted/40 transition-colors">
-                        <td className="px-4 py-3 font-mono font-semibold text-foreground">{c.code}</td>
-                        <td className="px-4 py-3 font-medium text-foreground">{c.name}</td>
+                        <td className="px-4 py-3 font-mono font-semibold text-foreground">{c.code || "—"}</td>
+                        <td className="px-4 py-3 font-medium text-foreground">{c.name || "—"}</td>
                         <td className="px-4 py-3 capitalize">
                           <Badge variant="outline" className="text-[10px]">
-                            {c.type.replace(/_/g, " ")}
+                            {formatLabel(c.type)}
                           </Badge>
                         </td>
                         <td className="px-4 py-3 font-mono text-[11px]">
-                          {c.calculationMethod.replace(/_/g, " ")}
+                          {formatLabel(c.calculationMethod)}
                         </td>
                         <td className="px-4 py-3">{c.taxable ? "Yes" : "Exempt"}</td>
                         <td className="px-4 py-3">{c.statutory ? "Statutory" : "Standard"}</td>
@@ -251,7 +264,7 @@ export default function SalaryStructurePage() {
                             <Badge variant="secondary">Inactive</Badge>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-muted-foreground">{formatDate(c.effectiveDate)}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{c.effectiveDate ? formatDate(c.effectiveDate) : "—"}</td>
                       </tr>
                     ))
                   )}
@@ -292,10 +305,10 @@ export default function SalaryStructurePage() {
                   ) : (
                     structures.map((s) => (
                       <tr key={s.id} className="hover:bg-muted/40 transition-colors">
-                        <td className="px-4 py-3 font-mono font-semibold text-foreground">{s.code}</td>
-                        <td className="px-4 py-3 font-medium text-foreground">{s.name}</td>
-                        <td className="px-4 py-3 font-mono">{s.components?.length || 0}</td>
-                        <td className="px-4 py-3 font-mono">{s.assignedEmployeesCount || 0}</td>
+                        <td className="px-4 py-3 font-mono font-semibold text-foreground">{s.code || "—"}</td>
+                        <td className="px-4 py-3 font-medium text-foreground">{s.name || "—"}</td>
+                        <td className="px-4 py-3 font-mono">{Array.isArray(s.components) ? s.components.length : 0}</td>
+                        <td className="px-4 py-3 font-mono">{typeof s.assignedEmployeesCount === "number" ? s.assignedEmployeesCount : 0}</td>
                         <td className="px-4 py-3">
                           {s.isActive ? (
                             <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30">
@@ -305,7 +318,7 @@ export default function SalaryStructurePage() {
                             <Badge variant="secondary">Draft</Badge>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-muted-foreground">{formatDate(s.createdAt)}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{s.createdAt ? formatDate(s.createdAt) : "—"}</td>
                       </tr>
                     ))
                   )}

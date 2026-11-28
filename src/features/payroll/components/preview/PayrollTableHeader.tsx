@@ -1,5 +1,5 @@
 import { ArrowUpDown } from "lucide-react";
-import { Table, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export function PayrollTableHeader({
   onSort,
@@ -15,7 +15,12 @@ export function PayrollTableHeader({
             <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
           </div>
         </TableHead>
-        <TableHead className="hidden lg:table-cell">Employee ID</TableHead>
+        <TableHead className="hidden lg:table-cell cursor-pointer select-none" onClick={() => onSort("employeeCode")}>
+          <div className="flex items-center gap-1">
+            <span>Employee ID</span>
+            <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
+          </div>
+        </TableHead>
         <TableHead className="hidden md:table-cell cursor-pointer select-none" onClick={() => onSort("department")}>
           <div className="flex items-center gap-1">
             <span>Department</span>

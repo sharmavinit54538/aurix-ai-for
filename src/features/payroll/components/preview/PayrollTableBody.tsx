@@ -1,7 +1,7 @@
 import { Eye, FileSpreadsheet, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/hrms/Shared";
 import type { PayrollPreviewEmployee } from "@/services/payrollApi";
 import { formatINR, getValidationBadge } from "../../utils/payrollPreview.utils";
@@ -72,30 +72,44 @@ function EmployeeTableRow({
   onViewDetail: (emp: PayrollPreviewEmployee) => void;
 }) {
   const vBadge = getValidationBadge(employee.validationStatus);
+  const displayName = employee.name && employee.name !== "Employee" ? employee.name : "Employee unavailable";
+  const displayCode = employee.employeeCode || "Not available";
+  const displayDepartment = employee.department || "Not assigned";
+  const displayDesignation = employee.designation || "—";
+  const displayGrossEarnings = employee.grossEarnings !== null && employee.grossEarnings !== undefined
+    ? formatINR(employee.grossEarnings)
+    : "—";
+  const displayTotalDeductions = employee.totalDeductions !== null && employee.totalDeductions !== undefined
+    ? formatINR(employee.totalDeductions)
+    : "—";
+  const displayNetPay = employee.netPay !== null && employee.netPay !== undefined
+    ? formatINR(employee.netPay)
+    : "—";
+
   return (
     <TableRow className="text-sm">
       <TableCell className="font-medium text-foreground">
         <div className="min-w-0">
-          <div className="truncate max-w-[180px] sm:max-w-none">{employee.name}</div>
+          <div className="truncate max-w-[180px] sm:max-w-none">{displayName}</div>
           <div className="text-xs text-muted-foreground">
-            {employee.designation || employee.department || employee.employeeId}
+            {displayDesignation !== "—" ? displayDesignation : displayDepartment}
           </div>
         </div>
       </TableCell>
       <TableCell className="hidden lg:table-cell font-mono text-xs text-muted-foreground">
-        {employee.employeeId}
+        {displayCode}
       </TableCell>
       <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
-        {employee.department || "—"}
+        {displayDepartment}
       </TableCell>
       <TableCell className="hidden md:table-cell text-right font-mono text-xs">
-        {formatINR(employee.grossEarnings)}
+        {displayGrossEarnings}
       </TableCell>
       <TableCell className="hidden lg:table-cell text-right font-mono text-xs text-rose-700 dark:text-rose-300">
-        {formatINR(employee.totalDeductions)}
+        {displayTotalDeductions}
       </TableCell>
       <TableCell className="text-right font-mono text-sm font-semibold text-emerald-700 dark:text-emerald-300 whitespace-nowrap">
-        {formatINR(employee.netPay)}
+        {displayNetPay}
       </TableCell>
       <TableCell>
         <Badge

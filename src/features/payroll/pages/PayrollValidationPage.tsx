@@ -1,8 +1,5 @@
 import { usePayrollValidation } from "@/features/payroll/hooks/usePayrollValidation";
 import {
-  ValidationSubNavigation,
-  ValidationPageHeader,
-  ProvisionalValidationNotice,
   ValidationSummaryCards,
 } from "@/features/payroll/components/validation/ValidationHeader";
 import { ValidationFilters } from "@/features/payroll/components/validation/ValidationFilters";
@@ -20,7 +17,6 @@ export function PayrollValidationPage() {
     navigate,
     ws,
     canViewPayroll,
-    canRunPayroll,
     isHr,
     validationData,
     issues,
@@ -121,22 +117,6 @@ export function PayrollValidationPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 pb-16">
-      <ValidationSubNavigation runId={runId} />
-
-      <ValidationPageHeader
-        runId={runId}
-        validationData={validationData}
-        statusBadge={statusBadge}
-        canRunPayroll={canRunPayroll}
-        onNavigateToPreview={() => navigate({ to: `/dashboard/payroll/runs/${runId}/preview` as any })}
-        onNavigateToValidation={() => navigate({ to: `/dashboard/payroll/runs/${runId}/validation` as any })}
-        onNavigateToApproval={() => navigate({ to: `/dashboard/payroll/runs/${runId}/approval` as any })}
-        onRecalculate={() => setRecalculateModalOpen(true)}
-        onRevalidate={() => setRevalidateModalOpen(true)}
-      />
-
-      <ProvisionalValidationNotice />
-
       <ValidationSummaryCards
         validationData={validationData}
         statusBadge={statusBadge}

@@ -49,6 +49,7 @@ export interface PayrollEmployeeAttendance {
 export interface PayrollPreviewEmployee {
   id: string;
   employeeId: string;
+  employeeCode: string;
   name: string;
   email?: string;
   designation?: string;
@@ -126,6 +127,7 @@ export interface PayrollPreviewEmployee {
     ifscCode?: string;
     paymentMode?: string;
   } | null;
+  avatarUrl?: string | null;
   [key: string]: unknown;
 }
 
